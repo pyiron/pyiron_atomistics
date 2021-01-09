@@ -8,10 +8,10 @@ import pandas as pd
 import os
 import re
 from pyiron_base import Project, ProjectHDFio
-from pyiron_atomistic.atomistics.structure.atoms import Atoms
-from pyiron_atomistic.lammps.lammps import Lammps
-from pyiron_atomistic.lammps.base import LammpsStructure, UnfoldingPrism
-from pyiron_atomistic.lammps.control import LAMMPS_UNIT_CONVERSIONS
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.lammps.lammps import Lammps
+from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.control import LAMMPS_UNIT_CONVERSIONS
 import ase.units as units
 
 

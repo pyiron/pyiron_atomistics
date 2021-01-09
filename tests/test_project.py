@@ -5,8 +5,8 @@
 import unittest
 import mock
 import os
-from pyiron_atomistic import Project
-from pyiron_atomistic.atomistics.structure.atoms import Atoms
+from pyiron_atomistics import Project
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 
 class TestProject(unittest.TestCase):

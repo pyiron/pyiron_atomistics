@@ -4,8 +4,8 @@
 
 import os
 import unittest
-from pyiron_atomistic.lammps.potential import LammpsPotentialFile
-from pyiron_atomistic.vasp.potential import VaspPotential
+from pyiron_atomistics.lammps.potential import LammpsPotentialFile
+from pyiron_atomistics.vasp.potential import VaspPotential
 
 
 class TestLammpsPotentialFile(unittest.TestCase):

@@ -7,15 +7,15 @@ import os
 import posixpath
 import numpy as np
 
-from pyiron_atomistic.atomistics.structure.atoms import Atoms
-from pyiron_atomistic.vasp.structure import (
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.vasp.structure import (
     read_atoms,
     write_poscar,
     vasp_sorter,
     atoms_from_string,
     manip_contcar,
 )
-from pyiron_atomistic.atomistics.structure.sparse_list import SparseList
+from pyiron_atomistics.atomistics.structure.sparse_list import SparseList
 import warnings
 
 

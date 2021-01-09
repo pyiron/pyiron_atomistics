@@ -4,7 +4,7 @@
 
 import unittest
 import os
-from pyiron_atomistic.project import Project
+from pyiron_atomistics.project import Project
 
 
 def convergence_goal(self, **qwargs):

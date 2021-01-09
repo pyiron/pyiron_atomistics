@@ -5,16 +5,16 @@
 import unittest
 import numpy as np
 import os
-from pyiron_atomistic.atomistics.volumetric.generic import VolumetricData
-from pyiron_atomistic.atomistics.structure.atoms import Atoms
-from pyiron_atomistic.atomistics.structure.factory import StructureFactory
-from pyiron_atomistic.vasp.volumetric_data import VaspVolumetricData
+from pyiron_atomistics.atomistics.volumetric.generic import VolumetricData
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 
 
 """
 @author: surendralal
 
-Unittests for the pyiron_atomistic.objects.volumetric module
+Unittests for the pyiron_atomistics.objects.volumetric module
 """
 
 

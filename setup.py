@@ -5,12 +5,12 @@ from setuptools import setup, find_packages
 import versioneer
 
 setup(
-    name='pyiron-atomistic',
+    name='pyiron-atomistics',
     version=versioneer.get_version(),
     description='pyiron - an integrated development environment (IDE) for computational materials science.',
     long_description='http://pyiron.org',
 
-    url='https://github.com/pyiron/pyiron_atomistic',
+    url='https://github.com/pyiron/pyiron_atomistics',
     author='Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department',
     author_email='janssen@mpie.de',
     license='BSD',
