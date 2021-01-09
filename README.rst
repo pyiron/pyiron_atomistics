@@ -1,24 +1,24 @@
 pyiron
 ======
 
-.. image:: https://coveralls.io/repos/github/pyiron/pyiron/badge.svg?branch=master
-    :target: https://coveralls.io/github/pyiron/pyiron?branch=master
+.. image:: https://coveralls.io/repos/github/pyiron/pyiron_atomistic/badge.svg?branch=master
+    :target: https://coveralls.io/github/pyiron/pyiron_atomistic?branch=master
     :alt: Coverage Status
 
 .. image:: https://api.codacy.com/project/badge/Grade/c513254f10004df5a1f5c76425c6584b
     :target: https://app.codacy.com/app/pyiron-runner/pyiron?utm_source=github.com&utm_medium=referral&utm_content=pyiron/pyiron&utm_campaign=Badge_Grade_Settings
     :alt: Codacy Badge
 
-.. image:: https://anaconda.org/conda-forge/pyiron/badges/latest_release_date.svg
-    :target: https://anaconda.org/conda-forge/pyiron/
+.. image:: https://anaconda.org/conda-forge/pyiron_atomistic/badges/latest_release_date.svg
+    :target: https://anaconda.org/conda-forge/pyiron_atomistic/
     :alt: Release_Date
 
-.. image:: https://github.com/pyiron/pyiron/workflows/Python%20package/badge.svg
-    :target: https://github.com/pyiron//pyiron/actions
+.. image:: https://github.com/pyiron/pyiron_atomistic/workflows/Python%20package/badge.svg
+    :target: https://github.com/pyiron/pyiron_atomistic/actions
     :alt: Build Status
 
-.. image:: https://anaconda.org/conda-forge/pyiron/badges/downloads.svg
-    :target: https://anaconda.org/conda-forge/pyiron/
+.. image:: https://anaconda.org/conda-forge/pyiron_atomistic/badges/downloads.svg
+    :target: https://anaconda.org/conda-forge/pyiron_atomistic/
     :alt: Downloads
 
 .. image:: https://readthedocs.org/projects/pyiron/badge/?version=latest
@@ -47,7 +47,7 @@ See the `Documentation <http://pyiron.org>`_ page for more details.
 
 Installation
 ------------
-You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron/master?urlpath=lab>`_.
+You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron_atomistic/master?urlpath=lab>`_.
 For a local installation we recommend to install pyiron inside an `anaconda <https://www.anaconda.com>`_  environment::
 
     conda install -c conda-forge pyiron
@@ -74,7 +74,7 @@ After the successful configuration you can start your first pyiron calculation. 
 
 Open a new jupyter notebook and inside the notebook you can now validate your pyiron calculation by creating a test project, setting up an initial structure of bcc Fe and visualize it using NGLview::
 
-    from pyiron import Project
+    from pyiron_atomistic import Project
     pr = Project('test')
     structure = pr.create_structure('Fe', 'bcc', 2.78)
     structure.plot3d()
@@ -92,7 +92,7 @@ Getting started:
 Test pyiron with mybinder:
 
 .. image:: https://mybinder.org/badge_logo.svg
-     :target: https://mybinder.org/v2/gh/pyiron/pyiron/master
+     :target: https://mybinder.org/v2/gh/pyiron/pyiron_atomistic/master
      :alt: mybinder
 
 
