@@ -6,12 +6,12 @@ import unittest
 import numpy as np
 import os
 import warnings
-from pyiron_atomistic import ase_to_pyiron
-from pyiron_atomistic.atomistics.structure.atom import Atom
-from pyiron_atomistic.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_atomistic.atomistics.structure.factory import StructureFactory
-from pyiron_atomistic.atomistics.structure.sparse_list import SparseList
-from pyiron_atomistic.atomistics.structure.periodic_table import PeriodicTable, ChemicalElement
+from pyiron_atomistics import ase_to_pyiron
+from pyiron_atomistics.atomistics.structure.atom import Atom
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.atomistics.structure.sparse_list import SparseList
+from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable, ChemicalElement
 from pyiron_base import FileHDFio, ProjectHDFio, Project
 from ase.cell import Cell as ASECell
 from ase.atoms import Atoms as ASEAtoms

@@ -1,4 +1,6 @@
-from pyiron_atomistic import Project, __version__
+from pyiron_atomistics import Project, __version__
+
+
 pr = Project(
     "tests/static/backwards/V{}".format(__version__).replace(".", "_")
 )

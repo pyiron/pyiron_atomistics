@@ -7,16 +7,16 @@ import os
 import posixpath
 import numpy as np
 
-from pyiron_atomistic.atomistics.structure.atoms import Atoms
-from pyiron_atomistic.vasp.vasprun import Vasprun
-from pyiron_atomistic.dft.waves.dos import Dos
-from pyiron_atomistic.dft.waves.electronic import ElectronicStructure
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.vasp.vasprun import Vasprun
+from pyiron_atomistics.dft.waves.dos import Dos
+from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_base import FileHDFio
 
 """
 @author: surendralal
 
-Unittests for the pyiron_atomistic.objects.electronic module
+Unittests for the pyiron_atomistics.objects.electronic module
 """
 
 

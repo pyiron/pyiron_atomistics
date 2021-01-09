@@ -7,10 +7,10 @@ import numpy as np
 import unittest
 import warnings
 import scipy.constants
-from pyiron_atomistic.project import Project
-from pyiron_atomistic.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_atomistic.atomistics.structure.atoms import Atoms
-from pyiron_atomistic.sphinx.base import Group
+from pyiron_atomistics.project import Project
+from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.sphinx.base import Group
 
 BOHR_TO_ANGSTROM = (
         scipy.constants.physical_constants["Bohr radius"][0] / scipy.constants.angstrom

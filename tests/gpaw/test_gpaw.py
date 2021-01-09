@@ -6,8 +6,8 @@ import unittest
 import os
 import numpy as np
 from pyiron_base import Project, ProjectHDFio
-from pyiron_atomistic.gpaw.gpaw import Gpaw
-from pyiron_atomistic.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.gpaw.gpaw import Gpaw
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 
 class TestGpaw(unittest.TestCase):

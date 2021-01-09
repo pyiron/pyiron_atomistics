@@ -6,9 +6,9 @@ import os
 import numpy as np
 import unittest
 import warnings
-from pyiron_atomistic.project import Project
-from pyiron_atomistic.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_atomistic.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.project import Project
+from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 
 class InteractiveLibrary(object):

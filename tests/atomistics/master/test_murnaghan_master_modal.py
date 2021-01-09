@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-from pyiron_atomistic.atomistics.structure.atoms import CrystalStructure
+from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_base import Project
 import unittest
 

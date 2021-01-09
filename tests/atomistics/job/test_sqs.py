@@ -4,8 +4,8 @@
 
 import os
 import unittest
-from pyiron_atomistic.project import Project
-from pyiron_atomistic.atomistics.structure.atoms import CrystalStructure
+from pyiron_atomistics.project import Project
+from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 
 
 class TestSQS(unittest.TestCase):

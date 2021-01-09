@@ -6,7 +6,7 @@ import unittest
 import os
 import posixpath
 import numpy as np
-from pyiron_atomistic.vasp.outcar import Outcar
+from pyiron_atomistics.vasp.outcar import Outcar
 
 
 class TestOutcar(unittest.TestCase):

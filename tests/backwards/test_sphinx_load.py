@@ -1,7 +1,10 @@
 import sys
-from pyiron_atomistic import Project, __version__
+from pyiron_atomistics import Project, __version__
+
+
 pr = Project("tests/static/backwards/")
-for job in pr.iter_jobs(recursive = True, convert_to_object = False):
+
+for job in pr.iter_jobs(recursive=True, convert_to_object=False):
     if job.name == "sphinx":
         job = job.to_object()
         job.run()

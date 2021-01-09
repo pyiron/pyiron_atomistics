@@ -4,7 +4,7 @@
 
 import os
 import unittest
-from pyiron_atomistic.project import Project
+from pyiron_atomistics.project import Project
 
 
 class TestSxExtOptInteractive(unittest.TestCase):
