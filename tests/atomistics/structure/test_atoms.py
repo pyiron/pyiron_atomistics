@@ -112,8 +112,8 @@ class TestAtoms(unittest.TestCase):
         basis = Atoms(symbols="Al", positions=pos, cell=cell)
         basis.set_repeat([10, 10, 10])
         spins = np.ones(len(basis))
-        basis.new_array(name="spins", a=spins)
-        self.assertTrue(np.array_equal(basis.arrays["spins"], spins))
+        basis.new_array(name="spin_array", a=spins)
+        self.assertTrue(np.array_equal(basis.arrays["spin_array"], spins))
 
     def test_set_array(self):
         pos, cell = generate_fcc_lattice()
