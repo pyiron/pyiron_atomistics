@@ -4,7 +4,7 @@
 
 __author__ = "Yury Lysogorskiy, Jan Janssen, Marvin Poul"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "0.1"

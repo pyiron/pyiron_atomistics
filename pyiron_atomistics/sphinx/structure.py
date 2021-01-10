@@ -10,7 +10,7 @@ from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 
 __author__ = "Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"

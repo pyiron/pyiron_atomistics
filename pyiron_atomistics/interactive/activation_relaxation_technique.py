@@ -7,7 +7,7 @@ from pyiron_atomistics.atomistics.job.interactivewrapper import InteractiveWrapp
 from pyiron_base import InputList, Settings
 
 __author__ = "Osamu Waseda"
-__copyright__ = "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH " \
+__copyright__ = "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH " \
                 "- Computational Materials Design (CM) Department"
 __version__ = "1.0"
 __maintainer__ = "Osamu Waseda"

@@ -20,7 +20,7 @@ from pyiron_base import JobGenerator, Settings
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
