@@ -479,9 +479,16 @@ class TestAtoms(unittest.TestCase):
         basis *= 2
         basis.set_initial_magnetic_moments(magmoms=np.ones(len(basis)))
         self.assertTrue(np.allclose(basis.arrays["initial_magmoms"], np.ones(len(basis))))
+        self.assertTrue(np.allclose(basis.spins, np.ones(len(basis))))
         # set new magnetic moments with different shape
         basis.set_initial_magnetic_moments(magmoms=np.ones((len(basis), 3)))
+        basis.set_repeat(2)
         self.assertTrue(np.allclose(basis.arrays["initial_magmoms"], np.ones((len(basis), 3))))
+        self.assertTrue(np.allclose(basis.spins, np.ones((len(basis), 3))))
+        basis = basis[10: 30]
+        self.assertTrue(np.allclose(basis.spins, np.ones((len(basis), 3))))
+        basis.spins = None
+        self.assertIsNone(basis.spins)
         with self.assertRaises(ValueError):
             basis.set_initial_magnetic_moments(magmoms=np.ones(4))
 
