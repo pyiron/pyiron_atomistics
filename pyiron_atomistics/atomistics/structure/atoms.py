@@ -219,7 +219,7 @@ class Atoms(ASEAtoms):
             else:
                 self.new_array("initial_magmoms", val)
         else:
-            del self.arrays["initial_magmoms"]
+            self.set_array('initial_magmoms', None)
 
     @property
     def visualize(self):
