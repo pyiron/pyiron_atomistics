@@ -339,7 +339,7 @@ class GenericDFTJob(AtomisticGenericJob):
 
     def nbands_convergence_check(self):
         """
-        Function to check the convergence of nbands in the Vasp calculation
+        Function to check if there are a sufficient number of empty bands in the calculation to ensure electronic convergence.
 
         Returns:
 
