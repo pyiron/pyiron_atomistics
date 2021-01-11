@@ -213,6 +213,7 @@ class Atoms(ASEAtoms):
     @spins.setter
     def spins(self, val):
         if val is not None:
+            val = np.asarray(val)
             if self.has("initial_magmoms"):
                 self.set_array("initial_magmoms", val)
             else:
