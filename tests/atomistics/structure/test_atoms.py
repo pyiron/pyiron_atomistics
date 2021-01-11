@@ -211,13 +211,16 @@ class TestAtoms(unittest.TestCase):
         abs_filename = os.path.abspath(filename)
         hdf_obj = FileHDFio(abs_filename)
         pos, cell = generate_fcc_lattice()
-        basis = Atoms(symbols="Al", positions=pos, cell=cell)
+        basis = Atoms(symbols="Al", positions=pos, cell=cell, magmoms=[4])
         basis.set_repeat([2, 2, 2])
+        self.assertTrue(np.array_equal(basis.spins, [4] * len(basis)))
         basis.to_hdf(hdf_obj, "test_structure")
         self.assertTrue(
             np.array_equal(hdf_obj["test_structure/positions"], basis.positions)
         )
         basis_new = Atoms().from_hdf(hdf_obj, "test_structure")
+        print(basis_new.spins)
+        self.assertTrue(np.array_equal(basis_new.spins, [4] * len(basis_new)))
         self.assertEqual(basis, basis_new)
 
     def test_from_hdf(self):
@@ -489,6 +492,10 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(np.allclose(basis.spins, np.ones((len(basis), 3))))
         basis.spins = None
         self.assertIsNone(basis.spins)
+        basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2, pbc=True)
+        basis.spins = [4]
+        self.assertTrue(np.allclose(basis.arrays["initial_magmoms"], [4]))
+        self.assertTrue(np.allclose(basis.spins, [4]))
         with self.assertRaises(ValueError):
             basis.set_initial_magnetic_moments(magmoms=np.ones(4))
 
