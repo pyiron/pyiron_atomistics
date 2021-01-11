@@ -415,8 +415,6 @@ class VaspBase(GenericDFTJob):
         # Checks if sufficient empty states are present
         if not self.nbands_convergence_check():
             return False
-        if not self.nbands_convergence_check():
-            return False
         if "IBRION" in self["input/incar/data_dict"]["Parameter"]:
             ind = self["input/incar/data_dict"]["Parameter"].index("IBRION")
             ibrion = int(self["input/incar/data_dict"]["Value"][ind])
