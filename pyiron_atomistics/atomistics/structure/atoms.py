@@ -416,7 +416,7 @@ class Atoms(ASEAtoms):
 
             # hdf_structure["coordinates"] = self.positions  # "Atomic coordinates"
             hdf_structure["positions"] = self.positions  # "Atomic coordinates"
-
+            hdf_structure["spins"] = self.spins
             # potentials with explicit bonds (TIP3P, harmonic, etc.)
             if self.bonds is not None:
                 hdf_structure["explicit_bonds"] = self.bonds
@@ -484,7 +484,8 @@ class Atoms(ASEAtoms):
                 if "explicit_bonds" in hdf_atoms.list_nodes():
                     # print "bonds: "
                     self.bonds = hdf_atoms["explicit_bonds"]
-
+                if "spins" in hdf_atoms.list_nodes():
+                    self.spins = hdf_atoms["spins"]
                 if "tags" in hdf_atoms.list_groups():
                     with hdf_atoms.open("tags") as hdf_tags:
                         tags = hdf_tags.list_nodes()
