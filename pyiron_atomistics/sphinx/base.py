@@ -1379,8 +1379,16 @@ class SphinxBase(GenericDFTJob):
 
     def convergence_check(self):
         """
-        Checks if job has converged according to given cutoffs.
+        Checks for electronic and ionic convergence according to the user specified tolerance
+
+        Returns:
+
+            bool: True if converged
+
         """
+        # Checks if sufficient empty states are present
+        if not self.nbands_convergence_check():
+            return False
         if (
             self._generic_input["calc_mode"] == "minimize"
             and self._output_parser._parse_dict["scf_convergence"][-1]

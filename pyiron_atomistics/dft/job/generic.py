@@ -337,6 +337,16 @@ class GenericDFTJob(AtomisticGenericJob):
             time_step=time_step,
         )
 
+    def nbands_convergence_check(self):
+        """
+        Function to check if there are a sufficient number of empty bands in the calculation to ensure electronic convergence.
+
+        Returns:
+
+            bool : True if the highest band is unoccupied, False if the highest band is occupied
+        """
+        return np.all(np.isclose(self["output/electronic_structure/occ_matrix"][:,:,-1], 0)) #shape is n_spin x n_kpoints x n_bands
+    
     # Backward compatibility
     def get_encut(self):
         return self.encut
