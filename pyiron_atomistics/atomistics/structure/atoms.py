@@ -175,6 +175,7 @@ class Atoms(ASEAtoms):
         el_lst = [el.Abbreviation if el.Parent is None else el.Parent for el in self.species]
         symbols = np.array([el_lst[el] for el in self.indices])
         self._tag_list._length = len(symbols)
+        self._spins = None
         super(Atoms, self).__init__(symbols=symbols, positions=positions, numbers=None,
                                     tags=tags, momenta=momenta, masses=masses,
                                     magmoms=magmoms, charges=charges,
@@ -195,6 +196,30 @@ class Atoms(ASEAtoms):
             self.dimension = 0
         self._visualize = Visualize(self)
         self._analyse = Analyse(self)
+
+    @property
+    def spins(self):
+        """
+        Magnetic spins for each atom in the structure
+
+        Returns:
+            numpy.ndarray/list: The magnetic moments for reach atom as a single value or a vector (non-collinear spins)
+
+        """
+        if self.has("initial_magmoms"):
+            return self.get_array("initial_magmoms")
+        else:
+            return
+
+    @spins.setter
+    def spins(self, val):
+        if val is not None:
+            if self.has("initial_magmoms"):
+                self.set_array("initial_magmoms", val)
+            else:
+                self.new_array("initial_magmoms", val)
+        else:
+            del self.arrays["initial_magmoms"]
 
     @property
     def visualize(self):
