@@ -2548,12 +2548,9 @@ class Atoms(ASEAtoms):
                 self.add_tag(spin=None)
             for ind, spin in enumerate(magmoms):
                 self.spin[ind] = spin
-        # ASE part
-        if magmoms is None:
-            self.set_array('initial_magmoms', None)
-        else:
-            magmoms = np.asarray(magmoms)
-            self.arrays['initial_magmoms'] = magmoms
+        if magmoms is not None:
+            self.spins = None
+        self.spins = magmoms
 
     def rotate(self, a=0.0, v=None, center=(0, 0, 0), rotate_cell=False, index_list=None
     ):
