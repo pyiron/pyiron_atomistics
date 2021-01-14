@@ -32,21 +32,23 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class thermal(object):
+class Thermal:
     """
+    Holds thermal properties that are the results of the phonopy calculation.
 
     Args:
-        temps:
-        fe:
-        entropy:
-        cv:
+        temperatures (ndarray): temperatures at which the other quantities are evaluated, units of Kelvin
+        free_energies (ndarray): free energies in the quasi-harmonic approximation from phonon contributions, units of
+                                 electron volts
+        entropy (ndarray): vibrational entropy calculated from the above free energy
+        cv (ndarray): heat capacity at constant volume, units of kJ/K/mol
     """
 
-    def __init__(self, temps, fe, entropy, cv):
+    def __init__(self, temperatures, free_energies, entropy, cv):
         KJ_mol_to_eV = 0.01036410
 
-        self.temperatures = temps
-        self.free_energies = fe * KJ_mol_to_eV
+        self.temperatures = temperatures
+        self.free_energies = free_energies * KJ_mol_to_eV
         self.entropy = entropy
         self.cv = cv
 
@@ -326,7 +328,7 @@ class PhonopyJob(AtomisticParallelMaster):
             t_step=t_step, t_max=t_max, t_min=t_min, temperatures=temperatures
         )
         tp_dict = self.phonopy.get_thermal_properties_dict()
-        return thermal(tp_dict['temperatures'],
+        return Thermal(tp_dict['temperatures'],
                        tp_dict['free_energy'],
                        tp_dict['entropy'],
                        tp_dict['heat_capacity'])
