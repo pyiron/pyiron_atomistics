@@ -313,15 +313,18 @@ class PhonopyJob(AtomisticParallelMaster):
 
     def get_thermal_properties(self, t_min=1, t_max=1500, t_step=50, temperatures=None):
         """
+        Returns thermal properties at constant volume in the given temperature range.  Can only be called after job
+        successfully ran.
 
         Args:
-            t_min:
-            t_max:
-            t_step:
-            temperatures:
+            t_min (float): minimum sample temperature
+            t_max (float): minimum sample temperature
+            t_step (int):  tempeature sample interval
+            temperatures (array_like, float):  custom array of temperature samples, if given t_min, t_max, t_step are
+                                               ignored.
 
         Returns:
-
+            :class:`Thermal`: thermal properties as returned by Phonopy
         """
         self.phonopy.run_thermal_properties(
             t_step=t_step, t_max=t_max, t_min=t_min, temperatures=temperatures
