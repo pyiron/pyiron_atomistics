@@ -192,18 +192,6 @@ class Project(ProjectCore):
         obj = ObjectType(object_type, project=None, job_name=None)
         return obj
 
-    def copy(self):
-        """
-        Copy the project object - copying just the Python object but maintaining the same pyiron path
-
-        Returns:
-            Project: copy of the project object
-        """
-        new = Project(path=self.path, user=self.user, sql_query=self.sql_query)
-        new._filter = self._filter
-        new._inspect_mode = self._inspect_mode
-        return new
-
     def load_from_jobpath(self, job_id=None, db_entry=None, convert_to_object=True):
         """
         Internal function to load an existing job either based on the job ID or based on the database entry dictionary.
