@@ -139,6 +139,8 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
 
         Returns:
             volume, free energy, entropy, heat capacity
+
+        The corresponding temperature values can be obtained from `job['output/temperatures'][0]`
         """
         v0_lst, free_eng_lst, entropy_lst, cv_lst = [], [], [], []
         for i, [t, free_energy, cv, entropy, v] in enumerate(
