@@ -591,6 +591,20 @@ class EnergyVolumeFit(object):
 
 # ToDo: not all abstract methods implemented
 class Murnaghan(AtomisticParallelMaster):
+    """
+    Murnghan calculation to obtain the minimum energy volume and bulk modulus.
+
+    Example:
+
+    >>> pr = Project('my_project')
+    >>> ref_job = pr.create_job('Lammps', 'lmp')
+    >>> ref_job.structure = structure_of_your_choice
+    >>> murn = ref_job.create_job('Murnaghan', 'murn')
+    >>> murn.run()
+
+    The minimum energy volume and bulk modulus are stored in `ref_job['output/equilibrium_volume']`
+    and `ref_job['output/equilibrium_bulk_modulus/']`.
+    """
     def __init__(self, project, job_name="murnaghan"):
         """
 
