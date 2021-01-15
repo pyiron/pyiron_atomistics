@@ -59,7 +59,7 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
     >>> qha = phono.create_job('QuasiHarmonicJob', 'qha')
     >>> qha.run()
 
-    The final results can be obtained through `qha.optimize_volume()`.
+    The final results can be obtained through `qha.optimise_volume()`.
 
     The temperature range defined in the input can be modified afterwards. For this, follow these
     lines:
