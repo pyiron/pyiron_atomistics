@@ -46,7 +46,9 @@ def calc_v0_from_fit_funct(fit_funct, x, save_range=0.0, return_ind=False):
 
 class QuasiHarmonicJob(AtomisticParallelMaster):
     """
-    Obtain finite temperature properties in the framework of quasi harmonic approximation.
+    Obtain finite temperature properties in the framework of quasi harmonic approximation. For the
+    theoretical understanding take a look at the Wikipedia page:
+    https://en.wikipedia.org/wiki/Quasi-harmonic_approximation
 
     Example:
 
@@ -59,7 +61,8 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
 
     The final results can be obtained through `qha.optimize_volume()`.
 
-    The temperature range defined in the input can be modified afterwards. For this, follow:
+    The temperature range defined in the input can be modified afterwards. For this, follow these
+    lines:
 
     >>> qha.input['temperature_end'] = temperature_end
     >>> qha.input['temperature_steps'] = temperature_steps
