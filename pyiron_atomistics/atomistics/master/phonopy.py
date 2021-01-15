@@ -45,10 +45,9 @@ class Thermal:
     """
 
     def __init__(self, temperatures, free_energies, entropy, cv):
-        KJ_mol_to_eV = 0.01036410
 
         self.temperatures = temperatures
-        self.free_energies = free_energies * KJ_mol_to_eV
+        self.free_energies = free_energies
         self.entropy = entropy
         self.cv = cv
 
@@ -328,8 +327,9 @@ class PhonopyJob(AtomisticParallelMaster):
             t_step=t_step, t_max=t_max, t_min=t_min, temperatures=temperatures
         )
         tp_dict = self.phonopy.get_thermal_properties_dict()
+        kJ_mol_to_eV = 1000/scipy.constant.Avogadro/scipy.constants.electron_volt
         return Thermal(tp_dict['temperatures'],
-                       tp_dict['free_energy'],
+                       tp_dict['free_energy'] * kJ_mol_to_eV,
                        tp_dict['entropy'],
                        tp_dict['heat_capacity'])
 
