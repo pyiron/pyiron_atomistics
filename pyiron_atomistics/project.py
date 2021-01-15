@@ -221,7 +221,7 @@ class Project(ProjectCore):
         job = super(Project, self).load_from_jobpath(
             job_id=job_id, db_entry=db_entry, convert_to_object=convert_to_object
         )
-        job.project_hdf5._project = Project(path=job.project_hdf5.file_path)
+        job.project_hdf5._project = self.__class__(path=job.project_hdf5.file_path)
         return job
 
     def load_from_jobpath_string(self, job_path, convert_to_object=True):
