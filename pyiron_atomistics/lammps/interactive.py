@@ -119,7 +119,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             )
             self._interactive_lib_command(
                 "change_box all x final 0 %f y final 0 %f z final 0 %f \
-                 xy final %f xz final %f yz final %f triclinic remap units box"
+                 xy final %f xz final %f yz final %f remap units box"
                 % (lx, ly, lz, xy, xz, yz)
             )
         elif is_skewed and not is_scaled:
@@ -128,7 +128,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             )
             self._interactive_lib_command(
                 "change_box all x final 0 %f y final 0 %f z final 0 %f \
-                xy final %f xz final %f yz final %f triclinic units box"
+                xy final %f xz final %f yz final %f units box"
                 % (lx, ly, lz, xy, xz, yz)
             )
         elif not is_skewed and is_scaled:
