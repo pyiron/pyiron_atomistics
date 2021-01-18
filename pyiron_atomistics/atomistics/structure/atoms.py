@@ -206,7 +206,7 @@ class Atoms(ASEAtoms):
 
         """
         if self.has("initial_magmoms"):
-            return self.get_array("initial_magmoms")
+            return self.arrays["initial_magmoms"]
         else:
             return
 
@@ -215,7 +215,7 @@ class Atoms(ASEAtoms):
         if val is not None:
             val = np.asarray(val)
             if self.has("initial_magmoms"):
-                self.set_array("initial_magmoms", val)
+                self.arrays["initial_magmoms"][:] = val
             else:
                 self.new_array("initial_magmoms", val)
         else:
