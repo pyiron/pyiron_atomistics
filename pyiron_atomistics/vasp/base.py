@@ -1308,6 +1308,8 @@ class VaspBase(GenericDFTJob):
             spin_mixing_parameter (float):
 
         """
+        if method is None:
+            method = "PULAY"
         if method.upper() == "PULAY":
             self.input.incar["IMIX"] = 4
         if method.upper() == "KERKER":

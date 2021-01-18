@@ -407,6 +407,11 @@ class TestVasp(unittest.TestCase):
         self.assertEqual(self.job.input.incar["EDIFFG"], -0.001)
         self.assertEqual(self.job.input.incar["EDIFF"], 1e-7)
 
+    def test_mixing_parameter(self):
+        job = self.project.create_job('Vasp', 'mixing_parameter')
+        job.set_mixing_parameters(density_mixing_parameter=0.1)
+        self.assertEqual(job.input.incar['IMIX'], 4)
+
 
 if __name__ == "__main__":
     unittest.main()
