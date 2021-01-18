@@ -219,7 +219,6 @@ class TestAtoms(unittest.TestCase):
             np.array_equal(hdf_obj["test_structure/positions"], basis.positions)
         )
         basis_new = Atoms().from_hdf(hdf_obj, "test_structure")
-        print(basis_new.spins)
         self.assertTrue(np.array_equal(basis_new.spins, [4] * len(basis_new)))
         self.assertEqual(basis, basis_new)
 
@@ -505,6 +504,7 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(np.array_equal(basis.spins, [0.0, 2.0]))
         basis.set_repeat(2)
         self.assertTrue(np.array_equal(basis.spins, np.hstack([0.0, 2.0] * 8)))
+        self.assertRaises(ValueError, basis.set_initial_magnetic_moments, magmoms=[4] * (len(basis) - 1))
 
     def test_get_parent_basis(self):
         periodic_table = PeriodicTable()
