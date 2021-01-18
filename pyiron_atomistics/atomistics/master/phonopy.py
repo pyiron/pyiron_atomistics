@@ -135,6 +135,8 @@ class PhonopyJob(AtomisticParallelMaster):
     >>> phono = lmp.create_job('PhonopyJob', 'phonopy')
     >>> phono.run()
 
+    Get output via `get_thermal_properties()`.
+
     Note:
 
     - This class does not consider the thermal expansion. For this, use `QuasiHarmonicJob` (find more in its
