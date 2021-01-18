@@ -499,6 +499,13 @@ class TestAtoms(unittest.TestCase):
         with self.assertRaises(ValueError):
             basis.set_initial_magnetic_moments(magmoms=np.ones(4))
 
+        basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2, pbc=True).repeat([2, 1, 1])
+        basis.set_initial_magnetic_moments(magmoms=np.ones(len(basis)) * 2)
+        basis.spins[0] = 0
+        self.assertTrue(np.array_equal(basis.spins, [0.0, 2.0]))
+        basis.set_repeat(2)
+        self.assertTrue(np.array_equal(basis.spins, np.hstack([0.0, 2.0] * 8)))
+
     def test_get_parent_basis(self):
         periodic_table = PeriodicTable()
         periodic_table.add_element(parent_element="O", new_element="O_up")
