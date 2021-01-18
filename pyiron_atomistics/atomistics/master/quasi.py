@@ -45,6 +45,30 @@ def calc_v0_from_fit_funct(fit_funct, x, save_range=0.0, return_ind=False):
 
 
 class QuasiHarmonicJob(AtomisticParallelMaster):
+    """
+    Obtain finite temperature properties in the framework of quasi harmonic approximation. For the
+    theoretical understanding take a look at the Wikipedia page:
+    https://en.wikipedia.org/wiki/Quasi-harmonic_approximation
+
+    Example:
+
+    >>> pr = Project('my_project')
+    >>> lmp = pr.create_job('Lammps', 'lmp')
+    >>> lmp.structure = structure_of_your_choice
+    >>> phono = lmp.create_job('PhonopyJob', 'phono')
+    >>> qha = phono.create_job('QuasiHarmonicJob', 'qha')
+    >>> qha.run()
+
+    The final results can be obtained through `qha.optimise_volume()`.
+
+    The temperature range defined in the input can be modified afterwards. For this, follow these
+    lines:
+
+    >>> qha.input['temperature_end'] = temperature_end
+    >>> qha.input['temperature_steps'] = temperature_steps
+    >>> qha.input['temperature_start'] = temperature_start
+    >>> qha.collect_output()
+    """
     def __init__(self, project, job_name="murnaghan"):
         """
 
@@ -104,6 +128,20 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
                 hdf5_out[key] = val
 
     def optimise_volume(self, bulk_eng):
+        """
+        Get finite temperature properties.
+
+        Args:
+            bulk_eng (numpy.ndarray): array of bulk energies corresponding to the box sizes given
+                in the quasi harmonic calculations. For the sake of compatibility, it is strongly
+                recommended to use the pyiron Murnaghan class (and make sure that you use the
+                same values for `num_points` and `vol_range`).
+
+        Returns:
+            volume, free energy, entropy, heat capacity
+
+        The corresponding temperature values can be obtained from `job['output/temperatures'][0]`
+        """
         v0_lst, free_eng_lst, entropy_lst, cv_lst = [], [], [], []
         for i, [t, free_energy, cv, entropy, v] in enumerate(
                 zip(self["output/temperatures"].T,
