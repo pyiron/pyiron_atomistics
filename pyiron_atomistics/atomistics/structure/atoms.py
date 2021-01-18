@@ -215,7 +215,14 @@ class Atoms(ASEAtoms):
         if val is not None:
             val = np.asarray(val)
             if self.has("initial_magmoms"):
-                self.arrays["initial_magmoms"][:] = val
+                try:
+                    self.arrays["initial_magmoms"][:] = val
+                except ValueError as err:
+                    if len(self.arrays["initial_magmoms"]) == len(val):
+                        self.set_array('initial_magmoms', None)
+                        self.arrays["initial_magmoms"] = val
+                    else:
+                        raise err
             else:
                 self.new_array("initial_magmoms", val)
         else:
@@ -2549,8 +2556,6 @@ class Atoms(ASEAtoms):
                 self.add_tag(spin=None)
             for ind, spin in enumerate(magmoms):
                 self.spin[ind] = spin
-        if magmoms is not None:
-            self.spins = None
         self.spins = magmoms
 
     def rotate(self, a=0.0, v=None, center=(0, 0, 0), rotate_cell=False, index_list=None
