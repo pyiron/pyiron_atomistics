@@ -454,7 +454,7 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(np.arccos(basis.positions[1, :2].sum() / 2) / np.pi, 0.1)
         basis = unitcell.copy()
         center_of_mass = basis.get_center_of_mass()
-        basis.rotate_euler(phi=0.1 * np.pi, center="com")
+        basis.euler_rotate(phi=0.1 * 180, center="com")
         self.assertTrue(np.allclose(basis.get_center_of_mass(), center_of_mass))
         basis = unitcell.copy()
         center_of_positions = basis.positions.mean(axis=0)
