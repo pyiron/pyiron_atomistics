@@ -450,19 +450,19 @@ class TestAtoms(unittest.TestCase):
             elements="AlFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3)
         )
         basis = unitcell.copy()
-        basis.rotate_euler(phi=0.1 * np.pi)
+        basis.euler_rotate(phi=0.1 * 180)
         self.assertAlmostEqual(np.arccos(basis.positions[1, :2].sum() / 2) / np.pi, 0.1)
         basis = unitcell.copy()
         center_of_mass = basis.get_center_of_mass()
-        basis.rotate_euler(phi=0.1 * np.pi, center="com")
+        basis.euler_rotate(phi=0.1 * 180, center="com")
         self.assertTrue(np.allclose(basis.get_center_of_mass(), center_of_mass))
         basis = unitcell.copy()
         center_of_positions = basis.positions.mean(axis=0)
-        basis.rotate_euler(phi=0.1 * np.pi, center="cop")
+        basis.euler_rotate(phi=0.1 * 180, center="cop")
         self.assertTrue(np.allclose(center_of_positions, basis.positions.mean(axis=0)))
         basis = unitcell.copy()
         position = basis.positions[1]
-        basis.rotate_euler(phi=0.1 * np.pi, center="cou")
+        basis.euler_rotate(phi=0.1 * 180, center="cou")
         self.assertTrue(np.allclose(position, basis.positions[1]))
 
     def test_set_initial_magnetic_moments(self):
