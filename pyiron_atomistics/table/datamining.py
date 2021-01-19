@@ -56,6 +56,33 @@ __date__ = "Sep 1, 2018"
 
 
 class TableJob(BaseTableJob):
+    """
+    Create pyiron table to facilitate data analysis.
+
+    Example (this example requires a Murnaghan job to have run beforehand):
+
+    >>> from pyiron_atomistics import Project
+    >>> pr = Project('my_project')
+    >>> def db_filter_function(job_table):
+    >>>     # Returns a pandas Series of boolean values (True for entries that have status finished 
+    >>>     # and hamilton type Murnaghan.)
+    >>>     return (job_table.status == "finished") & (job_table.hamilton == "Murnaghan")
+    >>> def get_lattice_parameter(job):
+    >>>     return job["output/equilibrium_volume"] ** (1/3)
+    >>> def get_bm(job):
+    >>>     return job["output/equilibrium_bulk_modulus"]
+    >>> table = pr.create_table("table")
+    >>> # assigning a database filter function
+    >>> table.db_filter_function = db_filter_function
+    >>> # Adding the functions using the labels you like
+    >>> table.add["a_eq"] = get_lattice_parameter
+    >>> table.add["bulk_modulus"] = get_bm
+    >>> table.run()
+
+    Data obtained can be analysed via `table.get_dataframe()`, which returns a pandas dataframe.
+
+    More can be found on this page: https://github.com/pyiron/pyiron/blob/master/notebooks/data_mining.ipynb
+    """
     def __init__(self, project, job_name):
         super(TableJob, self).__init__(project, job_name)
         self._system_function_lst = [
