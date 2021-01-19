@@ -124,10 +124,28 @@ class PhonopyJobGenerator(JobGenerator):
 
 class PhonopyJob(AtomisticParallelMaster):
     """
+    Phonopy wrapper for the calculation of free energy in the framework of quasi harmonic approximation.
 
-    Args:
-        project:
-        job_name:
+    Example:
+
+    >>> from pyiron_atomistics import Project
+    >>> pr = Project('my_project')
+    >>> lmp = pr.create_job('Lammps', 'lammps')
+    >>> lmp.structure = pr.create_structure('Fe', 'bcc', 2.832)
+    >>> phono = lmp.create_job('PhonopyJob', 'phonopy')
+    >>> phono.run()
+
+    Get output via `get_thermal_properties()`.
+
+    Note:
+
+    - This class does not consider the thermal expansion. For this, use `QuasiHarmonicJob` (find more in its
+        docstring)
+    - Depending on the value given in `job.input['interaction_range']`, this class automatically changes the number of
+        atoms. The input parameters of the reference job might have to be set appropriately (e.g. use `k_mesh_density`
+        for DFT instead of setting k-points directly).
+    - The structure used in the reference job should be a relaxed structure.
+    - Theory behind it: https://en.wikipedia.org/wiki/Quasi-harmonic_approximation
     """
 
     def __init__(self, project, job_name):
@@ -318,7 +336,7 @@ class PhonopyJob(AtomisticParallelMaster):
 
         Args:
             t_min (float): minimum sample temperature
-            t_max (float): minimum sample temperature
+            t_max (float): maximum sample temperature
             t_step (int):  tempeature sample interval
             temperatures (array_like, float):  custom array of temperature samples, if given t_min, t_max, t_step are
                                                ignored.
