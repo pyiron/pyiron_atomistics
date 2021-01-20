@@ -6,7 +6,8 @@ import os
 import unittest
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_base import Project
-from pyiron_atomistics.atomistics.master.elastic import calc_elastic_tensor, _get_higher_order_strains
+from pyiron_atomistics.atomistics.master.elastic import (calc_elastic_tensor, _get_higher_order_strains,
+    calc_elastic_constants, get_elastic_tensor_by_orientation)
 import numpy as np
 
 
@@ -72,6 +73,20 @@ class TestElasticTensor(unittest.TestCase):
                                 rotations=self.basis.get_symmetry()['rotations'],
                                 energy=energy,
                                 volume=volume)
+
+    def test_calc_elastic_constants(self):
+        C = np.zeros((6,6))
+        K = np.random.random()
+        mu = np.random.random()
+        C[:3,:3] = K-2*mu/3
+        C[:3,:3] += 2*np.eye(3)*mu
+        C[3:,3:] = mu*np.eye(3)
+        output = calc_elastic_constants(C)
+        self.assertAlmostEqual(K, output['bulk_modulus'])
+        self.assertAlmostEqual(mu, output['shear_modulus'])
+        self.assertAlmostEqual(
+            np.linalg.norm(C-get_elastic_tensor_by_orientation([[1, 0, 0], [0, 0, -1], [0, 1, 0]], C)), 0
+        )
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ from pyiron_base import JobGenerator
 from sklearn.linear_model import LinearRegression
 from collections import defaultdict
 import warnings
+import itertools
 
 __author__ = "Sam Waseda"
 __copyright__ = (
