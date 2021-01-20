@@ -8,7 +8,7 @@ from pyiron_base import JobGenerator
 
 __author__ = "Jan Janssen"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "0.0.1"

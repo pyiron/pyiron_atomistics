@@ -27,7 +27,7 @@ import warnings
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
@@ -404,6 +404,17 @@ class VaspBase(GenericDFTJob):
             )
 
     def convergence_check(self):
+        """
+        Checks for electronic and ionic convergence according to the user specified tolerance
+
+        Returns:
+
+            bool: True if converged
+
+        """
+        # Checks if sufficient empty states are present
+        if not self.nbands_convergence_check():
+            return False
         if "IBRION" in self["input/incar/data_dict"]["Parameter"]:
             ind = self["input/incar/data_dict"]["Parameter"].index("IBRION")
             ibrion = int(self["input/incar/data_dict"]["Value"][ind])
@@ -1297,6 +1308,8 @@ class VaspBase(GenericDFTJob):
             spin_mixing_parameter (float):
 
         """
+        if method is None:
+            method = "PULAY"
         if method.upper() == "PULAY":
             self.input.incar["IMIX"] = 4
         if method.upper() == "KERKER":

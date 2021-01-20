@@ -20,7 +20,7 @@ from pyiron_base import JobGenerator, Settings
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
@@ -32,21 +32,22 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class thermal(object):
+class Thermal:
     """
+    Holds thermal properties that are the results of the phonopy calculation.
 
     Args:
-        temps:
-        fe:
-        entropy:
-        cv:
+        temperatures (ndarray): temperatures at which the other quantities are evaluated, units of Kelvin
+        free_energies (ndarray): free energies in the quasi-harmonic approximation from phonon contributions, units of
+                                 electron volts
+        entropy (ndarray): vibrational entropy calculated from the above free energy
+        cv (ndarray): heat capacity at constant volume, units of kJ/K/mol
     """
 
-    def __init__(self, temps, fe, entropy, cv):
-        KJ_mol_to_eV = 0.01036410
+    def __init__(self, temperatures, free_energies, entropy, cv):
 
-        self.temperatures = temps
-        self.free_energies = fe * KJ_mol_to_eV
+        self.temperatures = temperatures
+        self.free_energies = free_energies
         self.entropy = entropy
         self.cv = cv
 
@@ -123,10 +124,28 @@ class PhonopyJobGenerator(JobGenerator):
 
 class PhonopyJob(AtomisticParallelMaster):
     """
+    Phonopy wrapper for the calculation of free energy in the framework of quasi harmonic approximation.
 
-    Args:
-        project:
-        job_name:
+    Example:
+
+    >>> from pyiron_atomistics import Project
+    >>> pr = Project('my_project')
+    >>> lmp = pr.create_job('Lammps', 'lammps')
+    >>> lmp.structure = pr.create_structure('Fe', 'bcc', 2.832)
+    >>> phono = lmp.create_job('PhonopyJob', 'phonopy')
+    >>> phono.run()
+
+    Get output via `get_thermal_properties()`.
+
+    Note:
+
+    - This class does not consider the thermal expansion. For this, use `QuasiHarmonicJob` (find more in its
+        docstring)
+    - Depending on the value given in `job.input['interaction_range']`, this class automatically changes the number of
+        atoms. The input parameters of the reference job might have to be set appropriately (e.g. use `k_mesh_density`
+        for DFT instead of setting k-points directly).
+    - The structure used in the reference job should be a relaxed structure.
+    - Theory behind it: https://en.wikipedia.org/wiki/Quasi-harmonic_approximation
     """
 
     def __init__(self, project, job_name):
@@ -312,22 +331,26 @@ class PhonopyJob(AtomisticParallelMaster):
 
     def get_thermal_properties(self, t_min=1, t_max=1500, t_step=50, temperatures=None):
         """
+        Returns thermal properties at constant volume in the given temperature range.  Can only be called after job
+        successfully ran.
 
         Args:
-            t_min:
-            t_max:
-            t_step:
-            temperatures:
+            t_min (float): minimum sample temperature
+            t_max (float): maximum sample temperature
+            t_step (int):  tempeature sample interval
+            temperatures (array_like, float):  custom array of temperature samples, if given t_min, t_max, t_step are
+                                               ignored.
 
         Returns:
-
+            :class:`Thermal`: thermal properties as returned by Phonopy
         """
         self.phonopy.run_thermal_properties(
             t_step=t_step, t_max=t_max, t_min=t_min, temperatures=temperatures
         )
         tp_dict = self.phonopy.get_thermal_properties_dict()
-        return thermal(tp_dict['temperatures'],
-                       tp_dict['free_energy'],
+        kJ_mol_to_eV = 1000/scipy.constants.Avogadro/scipy.constants.electron_volt
+        return Thermal(tp_dict['temperatures'],
+                       tp_dict['free_energy'] * kJ_mol_to_eV,
                        tp_dict['entropy'],
                        tp_dict['heat_capacity'])
 

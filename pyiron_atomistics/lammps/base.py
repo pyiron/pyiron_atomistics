@@ -22,7 +22,7 @@ from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
-    "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH "
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH "
     "- Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
@@ -171,9 +171,11 @@ class LammpsBase(AtomisticGenericJob):
         self.input.potential.df = potential
         if "Citations" in potential.columns.values:
             pot_pub_dict = {}
-            for p in ast.literal_eval(potential["Citations"].values[0]):
-                for k in p.keys():
-                    pot_pub_dict[k] = p[k]
+            pub_lst = potential["Citations"].values[0]
+            if isinstance(pub_lst, str):
+                for p in ast.literal_eval(pub_lst):
+                    for k in p.keys():
+                        pot_pub_dict[k] = p[k]
             s.publication_add({"lammps_potential": pot_pub_dict})
         for val in ["units", "atom_style", "dimension"]:
             v = self.input.potential[val]

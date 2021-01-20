@@ -17,7 +17,7 @@ import random
 from sklearn.neighbors import KernelDensity
 
 __author__ = "Lifang Zhu, Jan Janssen"
-__copyright__ = "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH " \
+__copyright__ = "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH " \
                 "- Computational Materials Design (CM) Department"
 __version__ = "1.0"
 __maintainer__ = "Jan Janssen"
