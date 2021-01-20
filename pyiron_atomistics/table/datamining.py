@@ -81,7 +81,7 @@ class TableJob(BaseTableJob):
 
     Data obtained can be analysed via `table.get_dataframe()`, which returns a pandas dataframe.
 
-    More can be found on this page: https://github.com/pyiron/pyiron/blob/master/notebooks/data_mining.ipynb
+    More can be found on this page: https://github.com/pyiron/pyiron_atomistics/blob/master/notebooks/data_mining.ipynb
     """
     def __init__(self, project, job_name):
         super(TableJob, self).__init__(project, job_name)
