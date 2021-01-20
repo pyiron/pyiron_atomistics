@@ -70,8 +70,11 @@ class TestAtoms(unittest.TestCase):
         self.assertIsInstance(basis, Atoms)
         self.assertEqual(basis.get_spacegroup()["Number"], 225)
         basis = Atoms(elements="Al", positions=pos, cell=cell)
+        self.assertIsNone(basis.spins)
         self.assertIsInstance(basis, Atoms)
-        basis = Atoms(elements=["Al"], positions=pos, cell=cell)
+        basis = Atoms(elements=["Al"], positions=pos, cell=cell, magmoms=[4])
+        self.assertTrue(np.array_equal(basis.arrays["initial_magmoms"], [4]))
+        self.assertTrue(np.array_equal(basis.spins, [4]))
         self.assertIsInstance(basis, Atoms)
         self.assertRaises(
             ValueError, Atoms, symbols="Pt", elements="Al", positions=pos, cell=cell
@@ -112,8 +115,8 @@ class TestAtoms(unittest.TestCase):
         basis = Atoms(symbols="Al", positions=pos, cell=cell)
         basis.set_repeat([10, 10, 10])
         spins = np.ones(len(basis))
-        basis.new_array(name="spins", a=spins)
-        self.assertTrue(np.array_equal(basis.arrays["spins"], spins))
+        basis.new_array(name="spin_array", a=spins)
+        self.assertTrue(np.array_equal(basis.arrays["spin_array"], spins))
 
     def test_set_array(self):
         pos, cell = generate_fcc_lattice()
@@ -208,13 +211,15 @@ class TestAtoms(unittest.TestCase):
         abs_filename = os.path.abspath(filename)
         hdf_obj = FileHDFio(abs_filename)
         pos, cell = generate_fcc_lattice()
-        basis = Atoms(symbols="Al", positions=pos, cell=cell)
+        basis = Atoms(symbols="Al", positions=pos, cell=cell, magmoms=[4])
         basis.set_repeat([2, 2, 2])
+        self.assertTrue(np.array_equal(basis.spins, [4] * len(basis)))
         basis.to_hdf(hdf_obj, "test_structure")
         self.assertTrue(
             np.array_equal(hdf_obj["test_structure/positions"], basis.positions)
         )
         basis_new = Atoms().from_hdf(hdf_obj, "test_structure")
+        self.assertTrue(np.array_equal(basis_new.spins, [4] * len(basis_new)))
         self.assertEqual(basis, basis_new)
 
     def test_from_hdf(self):
@@ -476,11 +481,30 @@ class TestAtoms(unittest.TestCase):
         basis *= 2
         basis.set_initial_magnetic_moments(magmoms=np.ones(len(basis)))
         self.assertTrue(np.allclose(basis.arrays["initial_magmoms"], np.ones(len(basis))))
+        self.assertTrue(np.allclose(basis.spins, np.ones(len(basis))))
         # set new magnetic moments with different shape
         basis.set_initial_magnetic_moments(magmoms=np.ones((len(basis), 3)))
+        basis.set_repeat(2)
         self.assertTrue(np.allclose(basis.arrays["initial_magmoms"], np.ones((len(basis), 3))))
+        self.assertTrue(np.allclose(basis.spins, np.ones((len(basis), 3))))
+        basis = basis[10: 30]
+        self.assertTrue(np.allclose(basis.spins, np.ones((len(basis), 3))))
+        basis.spins = None
+        self.assertIsNone(basis.spins)
+        basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2, pbc=True)
+        basis.spins = [4]
+        self.assertTrue(np.allclose(basis.arrays["initial_magmoms"], [4]))
+        self.assertTrue(np.allclose(basis.spins, [4]))
         with self.assertRaises(ValueError):
             basis.set_initial_magnetic_moments(magmoms=np.ones(4))
+
+        basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2, pbc=True).repeat([2, 1, 1])
+        basis.set_initial_magnetic_moments(magmoms=np.ones(len(basis)) * 2)
+        basis.spins[0] = 0
+        self.assertTrue(np.array_equal(basis.spins, [0.0, 2.0]))
+        basis.set_repeat(2)
+        self.assertTrue(np.array_equal(basis.spins, np.hstack([0.0, 2.0] * 8)))
+        self.assertRaises(ValueError, basis.set_initial_magnetic_moments, magmoms=[4] * (len(basis) - 1))
 
     def test_get_parent_basis(self):
         periodic_table = PeriodicTable()

@@ -197,6 +197,38 @@ class Atoms(ASEAtoms):
         self._analyse = Analyse(self)
 
     @property
+    def spins(self):
+        """
+        Magnetic spins for each atom in the structure
+
+        Returns:
+            numpy.ndarray/list: The magnetic moments for reach atom as a single value or a vector (non-collinear spins)
+
+        """
+        if self.has("initial_magmoms"):
+            return self.arrays["initial_magmoms"]
+        else:
+            return
+
+    @spins.setter
+    def spins(self, val):
+        if val is not None:
+            val = np.asarray(val)
+            if self.has("initial_magmoms"):
+                try:
+                    self.arrays["initial_magmoms"][:] = val
+                except ValueError as err:
+                    if len(self.arrays["initial_magmoms"]) == len(val):
+                        self.set_array('initial_magmoms', None)
+                        self.arrays["initial_magmoms"] = val
+                    else:
+                        raise err
+            else:
+                self.new_array("initial_magmoms", val)
+        else:
+            self.set_array('initial_magmoms', None)
+
+    @property
     def visualize(self):
         return self._visualize
 
@@ -391,7 +423,7 @@ class Atoms(ASEAtoms):
 
             # hdf_structure["coordinates"] = self.positions  # "Atomic coordinates"
             hdf_structure["positions"] = self.positions  # "Atomic coordinates"
-
+            hdf_structure["spins"] = self.spins
             # potentials with explicit bonds (TIP3P, harmonic, etc.)
             if self.bonds is not None:
                 hdf_structure["explicit_bonds"] = self.bonds
@@ -459,7 +491,8 @@ class Atoms(ASEAtoms):
                 if "explicit_bonds" in hdf_atoms.list_nodes():
                     # print "bonds: "
                     self.bonds = hdf_atoms["explicit_bonds"]
-
+                if "spins" in hdf_atoms.list_nodes():
+                    self.spins = hdf_atoms["spins"]
                 if "tags" in hdf_atoms.list_groups():
                     with hdf_atoms.open("tags") as hdf_tags:
                         tags = hdf_tags.list_nodes()
@@ -2523,12 +2556,7 @@ class Atoms(ASEAtoms):
                 self.add_tag(spin=None)
             for ind, spin in enumerate(magmoms):
                 self.spin[ind] = spin
-        # ASE part
-        if magmoms is None:
-            self.set_array('initial_magmoms', None)
-        else:
-            magmoms = np.asarray(magmoms)
-            self.arrays['initial_magmoms'] = magmoms
+        self.spins = magmoms
 
     def rotate(self, a=0.0, v=None, center=(0, 0, 0), rotate_cell=False, index_list=None
     ):
