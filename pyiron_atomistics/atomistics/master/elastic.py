@@ -35,7 +35,7 @@ def get_elastic_tensor_by_orientation(orientation, elastic_tensor):
         orientation (numpy.ndarray): 3x3 orthogonal orientation (no need to be orthonormal)
         elastic_tensor (numpy.ndarray): 6x6 elastic tensor
     Returns:
-        elastic_tensor in a given orientation
+        (numpy.ndarray) 6x6 elastic_tensor in a given orientation
     """
     orientation = np.einsum('ij,i->ij', orientation, 1/np.linalg.norm(orientation, axis=-1))
     if not np.isclose(np.linalg.det(orientation), 1):
