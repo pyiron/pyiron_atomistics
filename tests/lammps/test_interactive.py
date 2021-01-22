@@ -65,8 +65,16 @@ class TestLammpsInteractive(unittest.TestCase):
     def test_interactive_cells_setter(self):
         self.job.interactive_cells_setter(np.eye(3))
         self.assertEqual(
+            self.job._interactive_library._command[-3],
+            "change_box all triclinic",
+        )
+        self.assertEqual(
+            self.job._interactive_library._command[-2],
+            "change_box all x final 0 1.000000 y final 0 1.000000 z final 0 1.000000                 xy final 0.000000 xz final 0.000000 yz final 0.000000 units box",
+        )
+        self.assertEqual(
             self.job._interactive_library._command[-1],
-            "change_box all x final 0 1.000000 y final 0 1.000000 z final 0 1.000000 units box",
+            "change_box all ortho",
         )
 
     def test_interactive_positions_setter(self):

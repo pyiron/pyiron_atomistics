@@ -115,25 +115,45 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
         if is_skewed and is_scaled:
             self._interactive_lib_command(
+                "change_box all triclinic"
+            )
+            self._interactive_lib_command(
                 "change_box all x final 0 %f y final 0 %f z final 0 %f \
-                 xy final %f xz final %f yz final %f triclinic remap units box"
+                 xy final %f xz final %f yz final %f remap units box"
                 % (lx, ly, lz, xy, xz, yz)
             )
         elif is_skewed and not is_scaled:
             self._interactive_lib_command(
+                "change_box all triclinic"
+            )
+            self._interactive_lib_command(
                 "change_box all x final 0 %f y final 0 %f z final 0 %f \
-                xy final %f xz final %f yz final %f triclinic units box"
+                xy final %f xz final %f yz final %f units box"
                 % (lx, ly, lz, xy, xz, yz)
             )
         elif not is_skewed and is_scaled:
             self._interactive_lib_command(
-                "change_box all x final 0 %f y final 0 %f z final 0 %f remap units box"
-                % (lx, ly, lz)
+                "change_box all triclinic"
+            )
+            self._interactive_lib_command(
+                "change_box all x final 0 %f y final 0 %f z final 0 %f \
+                xy final %f xz final %f yz final %f remap units box"
+                % (lx, ly, lz, 0.0, 0.0, 0.0)
+            )
+            self._interactive_lib_command(
+                "change_box all ortho"
             )
         else:  # is neither skewed nor scaled
             self._interactive_lib_command(
-                "change_box all x final 0 %f y final 0 %f z final 0 %f units box"
-                % (lx, ly, lz)
+                "change_box all triclinic"
+            )
+            self._interactive_lib_command(
+                "change_box all x final 0 %f y final 0 %f z final 0 %f \
+                xy final %f xz final %f yz final %f units box"
+                % (lx, ly, lz, 0.0, 0.0, 0.0)
+            )
+            self._interactive_lib_command(
+                "change_box all ortho"
             )
 
     def interactive_volume_getter(self):
