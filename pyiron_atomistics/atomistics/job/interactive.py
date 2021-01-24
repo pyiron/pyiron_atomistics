@@ -443,26 +443,28 @@ class GenericInteractiveOutput(GenericOutput):
 
     def _lst_from_property(self, key, prop=None):
         """
+        Fetch latest values for the given key and property.
+
+        Values are first looked up in the interactive cache, then in the interactive group in the HDF5 file
+        ('output/interactive/<key>') and if not found there via the given prop function.
 
         Args:
-            key (str):
-            prop (function):
+            key (str): output key
+            prop (function): Unbound property getter from GenericOutput
 
         Returns:
-
+            :class:`numpy.ndarray`: collected values from all previous steps
         """
-        return_lst = self._lst_from_cache(key)
-        hdf5_output = self._key_from_hdf(key)
-        if hdf5_output is not None and len(hdf5_output) != 0:
-            if isinstance(hdf5_output[-1], list):
-                return_lst = [np.array(out) for out in hdf5_output] + return_lst
-            else:
-                return_lst = hdf5_output.tolist() + return_lst
-        elif prop is not None:
-            prop_result = prop(self)
-            if prop_result is not None:
-                return_lst = prop_result.tolist() + return_lst
-        return np.array(return_lst)
+        cached = self._lst_from_cache(key)
+        fetched = self._key_from_hdf(key)
+        if fetched is None or len(fetched) == 0 and prop is not None:
+            fetched = prop(self)
+        if fetched is None or len(fetched) == 0:
+            return cached
+        elif len(cached) == 0:
+            return fetched
+        else:
+            return np.concatenate((cached, fetched))
 
     @property
     def indices(self):
