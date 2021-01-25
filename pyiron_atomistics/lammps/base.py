@@ -43,7 +43,7 @@ class LammpsBase(AtomisticGenericJob):
     LAMMPS specific input/output.
 
     Args:
-        project (pyiron_atomistics.project.Project instance):  Specifies the project path among other attributes
+        project (pyiron.project.Project instance):  Specifies the project path among other attributes
         job_name (str): Name of the job
 
     Attributes:
@@ -70,7 +70,7 @@ class LammpsBase(AtomisticGenericJob):
 
         """
         return self.input.bond_dict
-
+    
     def define_bonds(self, species, element_list, cutoff_list, max_bond_list, bond_type_list, angle_type_list=None):
         """
         Define the nature of bonds between different species. Make sure that the bonds between two species are defined
@@ -169,13 +169,12 @@ class LammpsBase(AtomisticGenericJob):
                                      structure_elements
                                 ))
         self.input.potential.df = potential
+        self.input.potential.df
         if "Citations" in potential.columns.values:
             pot_pub_dict = {}
-            pub_lst = potential["Citations"].values[0]
-            if isinstance(pub_lst, str):
-                for p in ast.literal_eval(pub_lst):
-                    for k in p.keys():
-                        pot_pub_dict[k] = p[k]
+            for p in ast.literal_eval(potential["Citations"].values[0]):
+                for k in p.keys():
+                    pot_pub_dict[k] = p[k]
             s.publication_add({"lammps_potential": pot_pub_dict})
         for val in ["units", "atom_style", "dimension"]:
             v = self.input.potential[val]
@@ -226,6 +225,7 @@ class LammpsBase(AtomisticGenericJob):
         self.input.control.read_only = True
         self.input.potential.read_only = True
 
+    
     def validate_ready_to_run(self):
         """
         Validating input parameters before LAMMPS run
@@ -256,13 +256,16 @@ class LammpsBase(AtomisticGenericJob):
         """
         return self.list_potentials()
 
-    @deprecate("use get_structure() instead")
     def get_final_structure(self):
         """
 
         Returns:
 
         """
+        warnings.warn(
+            "get_final_structure() is deprecated - please use get_structure() instead.",
+            DeprecationWarning,
+        )
         return self.get_structure(iteration_step=-1)
 
     def view_potentials(self):
@@ -274,7 +277,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
             pandas.Dataframe: Dataframe including all potential parameters.
         """
-        from pyiron_atomistics.lammps.potential import LammpsPotentialFile
+        from pyiron.lammps.potential import LammpsPotentialFile
 
         if not self.structure:
             raise ValueError("No structure set.")
@@ -309,8 +312,8 @@ class LammpsBase(AtomisticGenericJob):
         del self.input.control["dump___1"]
         self.input.control[
             "dump___1"
-        ] = "all h5md ${dumptime} dump.h5 position force create_group yes"
-
+        ] = "all h5md ${dumptime} dump.h5 position force create_group yes"       
+    
     def write_input(self):
         """
         Call routines that generate the code specific input files
@@ -394,9 +397,7 @@ class LammpsBase(AtomisticGenericJob):
 
     def collect_output(self):
         """
-
         Returns:
-
         """
         self.input.from_hdf(self._hdf5)
         if os.path.isfile(
@@ -504,7 +505,7 @@ class LammpsBase(AtomisticGenericJob):
         # TODO: Vectorize this for-loop for computational efficiency
 
         return structure_indices
-
+    
     def collect_errors(self, file_name, cwd=None):
         """
 
@@ -536,79 +537,70 @@ class LammpsBase(AtomisticGenericJob):
         """
         self.collect_errors(file_name=file_name, cwd=cwd)
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
-        if os.path.exists(file_name):
-            with open(file_name, "r") as f:
-                f = f.readlines()
-                l_start = np.where([line.startswith("Step") for line in f])[0]
-                l_end = np.where([line.startswith("Loop") for line in f])[0]
-                if len(l_start) > len(l_end):
-                    l_end = np.append(l_end, [None])
-                df = [
-                    pd.read_csv(
-                        StringIO("\n".join(f[llst:llen])), delim_whitespace=True
-                    )
-                    for llst, llen in zip(l_start, l_end)
+        with open(file_name, "r") as f:
+            f = f.readlines()
+            l_start = np.where([line.startswith("Step") for line in f])[0]
+            l_end = np.where([line.startswith("Loop") for line in f])[0]
+            if len(l_start) > len(l_end):
+                l_end = np.append(l_end, [None])
+            df = [
+                pd.read_csv(
+                    StringIO("\n".join(f[llst:llen])), delim_whitespace=True
+                )
+                for llst, llen in zip(l_start, l_end)
+            ]
+        df = df[-1]
+
+        h5_dict = {
+            "Step": "steps",
+            "Temp": "temperature",
+            "PotEng": "energy_pot",
+            "TotEng": "energy_tot",
+            "Volume": "volume",
+        }
+
+        for key in df.columns[df.columns.str.startswith('f_mean')]:
+            h5_dict[key] = key.replace('f_', '')
+
+        df = df.rename(index=str, columns=h5_dict)
+        pressures = np.stack(
+            (df.Pxx, df.Pxy, df.Pxz, df.Pxy, df.Pyy, df.Pyz, df.Pxz, df.Pyz, df.Pzz),
+            axis=-1,
+        ).reshape(-1, 3, 3).astype('float64')
+        pressures *= 0.0001  # bar -> GPa
+
+        # Rotate pressures from Lammps frame to pyiron frame if necessary
+        rotation_matrix = self._prism.R.T
+        if np.matrix.trace(rotation_matrix) != 3:
+            pressures = rotation_matrix.T @ pressures @ rotation_matrix
+
+        df = df.drop(
+            columns=df.columns[
+                ((df.columns.str.len() == 3) & df.columns.str.startswith("P"))
+            ]
+        )
+        df["pressures"] = pressures.tolist()
+        if 'mean_pressure[1]' in df.columns:
+            pressures = np.stack(
+                (df['mean_pressure[1]'], df['mean_pressure[4]'], df['mean_pressure[5]'],
+                 df['mean_pressure[4]'], df['mean_pressure[2]'], df['mean_pressure[6]'],
+                 df['mean_pressure[5]'], df['mean_pressure[6]'], df['mean_pressure[3]']),
+                axis=-1,
+            ).reshape(-1, 3, 3).astype('float64')
+            pressures *= 0.0001  # bar -> GPa
+            if np.matrix.trace(rotation_matrix) != 3:
+                pressures = rotation_matrix.T @ pressures @ rotation_matrix
+            df = df.drop(
+                columns=df.columns[
+                    (df.columns.str.startswith("mean_pressure") & df.columns.str.endswith(']'))
                 ]
-            if len(df) == 1:
-                df = df[-1]
-            else:
-                df = pd.concat(df)
+            )
+            df["mean_pressures"] = pressures.tolist()
 
-            h5_dict = {
-                "Step": "steps",
-                "Temp": "temperature",
-                "PotEng": "energy_pot",
-                "TotEng": "energy_tot",
-                "Volume": "volume",
-            }
-
-            for key in df.columns[df.columns.str.startswith('f_mean')]:
-                h5_dict[key] = key.replace('f_', '')
-
-            df = df.rename(index=str, columns=h5_dict)
-            if all([x in df.columns.values for x in ["Pxx", "Pxy", "Pxz", "Pxy", "Pyy", "Pyz", "Pxz", "Pyz", "Pzz"]]):
-                pressures = np.stack(
-                    (df.Pxx, df.Pxy, df.Pxz, df.Pxy, df.Pyy, df.Pyz, df.Pxz, df.Pyz, df.Pzz),
-                    axis=-1,
-                ).reshape(-1, 3, 3).astype('float64')
-                pressures *= 0.0001  # bar -> GPa
-
-                # Rotate pressures from Lammps frame to pyiron frame if necessary
-                rotation_matrix = self._prism.R.T
-                if np.matrix.trace(rotation_matrix) != 3:
-                    pressures = rotation_matrix.T @ pressures @ rotation_matrix
-
-                df = df.drop(
-                    columns=df.columns[
-                        ((df.columns.str.len() == 3) & df.columns.str.startswith("P"))
-                    ]
-                )
-                df["pressures"] = pressures.tolist()
-            else:
-                warnings.warn("LAMMPS warning: log.lammps does not contain the required pressure values.")
-            if 'mean_pressure[1]' in df.columns:
-                pressures = np.stack(
-                    (df['mean_pressure[1]'], df['mean_pressure[4]'], df['mean_pressure[5]'],
-                     df['mean_pressure[4]'], df['mean_pressure[2]'], df['mean_pressure[6]'],
-                     df['mean_pressure[5]'], df['mean_pressure[6]'], df['mean_pressure[3]']),
-                    axis=-1,
-                ).reshape(-1, 3, 3).astype('float64')
-                pressures *= 0.0001  # bar -> GPa
-                if np.matrix.trace(rotation_matrix) != 3:
-                    pressures = rotation_matrix.T @ pressures @ rotation_matrix
-                df = df.drop(
-                    columns=df.columns[
-                        (df.columns.str.startswith("mean_pressure") & df.columns.str.endswith(']'))
-                    ]
-                )
-                df["mean_pressures"] = pressures.tolist()
-
-            with self.project_hdf5.open("output/generic") as hdf_output:
-                # This is a hack for backward comparability
-                for k, v in df.items():
-                    hdf_output[k] = np.array(v)
-        else:
-            warnings.warn("LAMMPS warning: No log.lammps output file found.")
+        with self.project_hdf5.open("output/generic") as hdf_output:
+            # This is a hack for backward comparability
+            for k, v in df.items():
+                hdf_output[k] = np.array(v)
 
     def calc_minimize(
             self,
@@ -660,8 +652,8 @@ class LammpsBase(AtomisticGenericJob):
         self,
         temperature=None,
         pressure=None,
-        n_ionic_steps=1000,
-        time_step=1.0,
+        n_ionic_steps=1000,                                                                     
+      time_step=1.0,
         n_print=100,
         temperature_damping_timescale=100.0,
         pressure_damping_timescale=1000.0,
@@ -830,7 +822,7 @@ class LammpsBase(AtomisticGenericJob):
         super(LammpsBase, self).from_hdf(hdf=hdf, group_name=group_name)
         self._structure_from_hdf()
         self.input.from_hdf(self._hdf5)
-
+    
     def write_restart_file(self, filename="restart.out"):
         """
 
@@ -883,133 +875,114 @@ class LammpsBase(AtomisticGenericJob):
 
         """
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
-        if os.path.exists(file_name):
-            output = {}
-            with open(file_name, "r") as ff:
-                dump = ff.readlines()
+        output = {}
+        with open(file_name, "r") as ff:
+            dump = ff.readlines()
 
-            steps = np.genfromtxt(
-                [
-                    dump[nn]
-                    for nn in np.where([ll.startswith("ITEM: TIMESTEP") for ll in dump])[0]
-                    + 1
-                ],
-                dtype=int,
-            )
-            steps = np.array([steps]).flatten()
-            output["steps"] = steps
+        steps = np.genfromtxt(
+            [
+                dump[nn]
+                for nn in np.where([ll.startswith("ITEM: TIMESTEP") for ll in dump])[0]
+                + 1
+            ],
+            dtype=int,
+        )
+        steps = np.array([steps]).flatten()
+        output["steps"] = steps
 
-            natoms = np.genfromtxt(
-                [
-                    dump[nn]
-                    for nn in np.where(
-                        [ll.startswith("ITEM: NUMBER OF ATOMS") for ll in dump]
-                    )[0]
-                    + 1
-                ],
-                dtype=int,
-            )
-            natoms = np.array([natoms]).flatten()
+        natoms = np.genfromtxt(
+            [
+                dump[nn]
+                for nn in np.where(
+                    [ll.startswith("ITEM: NUMBER OF ATOMS") for ll in dump]
+                )[0]
+                + 1
+            ],
+            dtype=int,
+        )
+        natoms = np.array([natoms]).flatten()
 
-            prism = self._prism
-            rotation_lammps2orig = self._prism.R.T
-            cells = np.genfromtxt(
-                " ".join(
-                    (
-                        [
-                            " ".join(dump[nn:nn + 3])
-                            for nn in np.where(
-                                [ll.startswith("ITEM: BOX BOUNDS") for ll in dump]
-                            )[0]
-                            + 1
-                        ]
-                    )
-                ).split()
-            ).reshape(len(natoms), -1)
-            lammps_cells = np.array([to_amat(cc) for cc in cells])
-            unfolded_cells = np.array([prism.unfold_cell(cell) for cell in lammps_cells])
-            output["cells"] = unfolded_cells
-
-
-            l_start = np.where([ll.startswith("ITEM: ATOMS") for ll in dump])[0]
-            l_end = l_start + natoms + 1
-            content = [
-                pd.read_csv(
-                    StringIO("\n".join(dump[llst:llen]).replace("ITEM: ATOMS ", "")),
-                    delim_whitespace=True,
+        prism = self._prism
+        rotation_lammps2orig = self._prism.R.T
+        cells = np.genfromtxt(
+            " ".join(
+                (
+                    [
+                        " ".join(dump[nn:nn + 3])
+                        for nn in np.where(
+                            [ll.startswith("ITEM: BOX BOUNDS") for ll in dump]
+                        )[0]
+                        + 1
+                    ]
                 )
-                for llst, llen in zip(l_start, l_end)
-            ]
+            ).split()
+        ).reshape(len(natoms), -1)
+        lammps_cells = np.array([to_amat(cc) for cc in cells])
+        unfolded_cells = np.array([prism.unfold_cell(cell) for cell in lammps_cells])
+        output["cells"] = unfolded_cells
 
-            indices = np.array([cc["type"] for cc in content], dtype=int)
-            output["indices"] = self.remap_indices(indices)
 
+        l_start = np.where([ll.startswith("ITEM: ATOMS") for ll in dump])[0]
+        l_end = l_start + natoms + 1
+        content = [
+            pd.read_csv(
+                StringIO("\n".join(dump[llst:llen]).replace("ITEM: ATOMS ", "")),
+                delim_whitespace=True,
+            )
+            for llst, llen in zip(l_start, l_end)
+        ]
+
+        indices = np.array([cc["type"] for cc in content], dtype=int)
+        output["indices"] = self.remap_indices(indices)
+
+        forces = np.array(
+            [np.stack((cc["fx"], cc["fy"], cc["fz"]), axis=-1) for cc in content]
+        )
+        output["forces"] = np.matmul(forces, rotation_lammps2orig)
+
+        if 'f_mean_forces[1]' in content[0].keys():
             forces = np.array(
-                [np.stack((cc["fx"], cc["fy"], cc["fz"]), axis=-1) for cc in content]
+                [np.stack((cc["f_mean_forces[1]"],
+                           cc["f_mean_forces[2]"],
+                           cc["f_mean_forces[3]"]),
+                          axis=-1) for cc in content]
             )
-            output["forces"] = np.matmul(forces, rotation_lammps2orig)
+            output["mean_forces"] = np.matmul(forces, rotation_lammps2orig)
 
-            if 'f_mean_forces[1]' in content[0].keys():
-                forces = np.array(
-                    [np.stack((cc["f_mean_forces[1]"],
-                               cc["f_mean_forces[2]"],
-                               cc["f_mean_forces[3]"]),
-                              axis=-1) for cc in content]
-                )
-                output["mean_forces"] = np.matmul(forces, rotation_lammps2orig)
+        if np.all([flag in content[0].columns.values for flag in ["vx", "vy", "vz"]]):
+            velocities = np.array(
+                [np.stack((cc["vx"], cc["vy"], cc["vz"]), axis=-1) for cc in content]
+            )
+            output["velocities"] = np.matmul(velocities, rotation_lammps2orig)
 
-            if np.all([flag in content[0].columns.values for flag in ["vx", "vy", "vz"]]):
-                velocities = np.array(
-                    [np.stack((cc["vx"], cc["vy"], cc["vz"]), axis=-1) for cc in content]
-                )
-                output["velocities"] = np.matmul(velocities, rotation_lammps2orig)
-
-            if 'f_mean_velocities[1]' in content[0].keys():
-                velocities = np.array(
-                    [np.stack((cc["f_mean_velocities[1]"],
-                               cc["f_mean_velocities[2]"],
-                               cc["f_mean_velocities[3]"]),
-                              axis=-1) for cc in content]
-                )
-                output["mean_velocities"] = np.matmul(velocities, rotation_lammps2orig)
+        if 'f_mean_velocities[1]' in content[0].keys():
+            velocities = np.array(
+                [np.stack((cc["f_mean_velocities[1]"],
+                           cc["f_mean_velocities[2]"],
+                           cc["f_mean_velocities[3]"]),
+                          axis=-1) for cc in content]
+            )
+            output["mean_velocities"] = np.matmul(velocities, rotation_lammps2orig)
+        direct_unwrapped_positions = np.array(
+            [np.stack((cc["xsu"], cc["ysu"], cc["zsu"]), axis=-1) for cc in content]
+        )
+        unwrapped_positions = np.matmul(direct_unwrapped_positions, lammps_cells)
+        output["unwrapped_positions"] = np.matmul(unwrapped_positions, rotation_lammps2orig)
+        if 'f_mean_positions[1]' in content[0].keys():
             direct_unwrapped_positions = np.array(
-                [np.stack((cc["xsu"], cc["ysu"], cc["zsu"]), axis=-1) for cc in content]
+                [np.stack((cc["f_mean_positions[1]"],
+                           cc["f_mean_positions[2]"],
+                           cc["f_mean_positions[3]"]),
+                          axis=-1) for cc in content]
             )
-            unwrapped_positions = np.matmul(direct_unwrapped_positions, lammps_cells)
-            output["unwrapped_positions"] = np.matmul(unwrapped_positions, rotation_lammps2orig)
-            if 'f_mean_positions[1]' in content[0].keys():
-                direct_unwrapped_positions = np.array(
-                    [np.stack((cc["f_mean_positions[1]"],
-                               cc["f_mean_positions[2]"],
-                               cc["f_mean_positions[3]"]),
-                              axis=-1) for cc in content]
-                )
-                unwrapped_positions = np.matmul(direct_unwrapped_positions, lammps_cells)
-                output["mean_unwrapped_positions"] = np.matmul(unwrapped_positions, rotation_lammps2orig)
-
-            direct_positions = direct_unwrapped_positions - np.floor(direct_unwrapped_positions)
-            positions = np.matmul(direct_positions, lammps_cells)
-            output["positions"] = np.matmul(positions, rotation_lammps2orig)
-
-            keys = content[0].keys()
-            for kk in keys[keys.str.startswith('c_')]:
-                output[kk.replace('c_', '')] = np.array([cc[kk] for cc in content], dtype=float)
-
-            with self.project_hdf5.open("output/generic") as hdf_output:
-                for k, v in output.items():
-                    hdf_output[k] = v
-        else:
-            warnings.warn("LAMMPS warning: No dump.out output file found.")
+                                                                                                                    
 
     # Outdated functions:
     def set_potential(self, file_name):
         """
-
         Args:
             file_name:
-
         Returns:
-
         """
         print("This function is outdated use the potential setter instead!")
         self.potential = file_name
@@ -1018,10 +991,9 @@ class LammpsBase(AtomisticGenericJob):
         """
         Restart a new job created from an existing Lammps calculation.
         Args:
-            project (pyiron_atomistics.project.Project instance): Project instance at which the new job should be created
+            project (pyiron.project.Project instance): Project instance at which the new job should be created
             job_name (str): Job name
             job_type (str): Job type. If not specified a Lammps job type is assumed
-
         Returns:
             new_ham (lammps.lammps.Lammps instance): New job
         """
@@ -1033,10 +1005,9 @@ class LammpsBase(AtomisticGenericJob):
         """
         Restart a new job created from an existing Lammps calculation.
         Args:
-            project (pyiron_atomistics.project.Project instance): Project instance at which the new job should be created
+            project (pyiron.project.Project instance): Project instance at which the new job should be created
             job_name (str): Job name
             job_type (str): Job type. If not specified a Lammps job type is assumed
-
         Returns:
             new_ham (lammps.lammps.Lammps instance): New job
         """
@@ -1065,10 +1036,8 @@ class LammpsBase(AtomisticGenericJob):
         def structure_to_lammps(structure):
             """
             Converts a structure to the Lammps coordinate frame
-
             Args:
                 structure (pyiron.atomistics.structure.atoms.Atoms): Structure to convert.
-
             Returns:
                 pyiron.atomistics.structure.atoms.Atoms: Structure with the LAMMPS coordinate frame.
             """
@@ -1205,7 +1174,6 @@ class LammpsBase(AtomisticGenericJob):
         requested pressure for a calculation has these non-diagonal entries, we need to make sure it will run. One way
         to do this is by invoking the lammps `change_box` command, but it is easier to just force our box to to be
         triclinic by adding a very small cell perturbation (in the case where it isn't triclinic already).
-
         Args:
             pressure (float/int/list/numpy.ndarray/tuple): Between three and six pressures for the x, y, z, xy, xz, and
                 yz directions, in that order, or a single value.
@@ -1232,12 +1200,9 @@ class LammpsBase(AtomisticGenericJob):
 
     def _get_rotation_matrix(self, pressure):
         """
-
         Args:
             pressure:
-
         Returns:
-
         """
         if self.structure is not None:
             if self._prism is None:
@@ -1268,7 +1233,6 @@ class Input:
     def _load_default_bond_params(self):
         """
         Function to automatically load a few default bond params (wont automatically write them)
-
         """
         # Default bond properties of a water molecule
         self.bond_dict["O"] = dict()
@@ -1280,12 +1244,9 @@ class Input:
 
     def to_hdf(self, hdf5):
         """
-
         Args:
             hdf5:
-
         Returns:
-
         """
         with hdf5.open("input") as hdf5_input:
             self.control.to_hdf(hdf5_input)
@@ -1293,12 +1254,9 @@ class Input:
 
     def from_hdf(self, hdf5):
         """
-
         Args:
             hdf5:
-
         Returns:
-
         """
         with hdf5.open("input") as hdf5_input:
             self.control.from_hdf(hdf5_input)
@@ -1309,12 +1267,9 @@ class Input:
 
 def to_amat(l_list):
     """
-
     Args:
         l_list:
-
     Returns:
-
     """
     lst = np.reshape(l_list, -1)
     if len(lst) == 9:
