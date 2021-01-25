@@ -411,7 +411,9 @@ class GenericInteractiveOutput(GenericOutput):
 
     def _key_from_hdf(self, key):
         """
-        Get all entries from the HDF5 file for a specific key - stored under 'output/interactive/<key>'
+        Get all entries from the HDF5 file for a specific key - stored under 'output/interactive/<key>'.  If not found
+        there the key is looked up in the regular HDF storage location 'output/<key>' via the property on our super
+        class :class:`.GenericOutput`.
 
         Args:
             key (str): name of the key
@@ -419,7 +421,10 @@ class GenericInteractiveOutput(GenericOutput):
         Returns:
 
         """
-        return self._job["output/interactive/" + key]
+        fetched = self._job["output/interactive/" + key]
+        if fetched is None or len(fetched) == 0:
+            fetched = getattr(super(), key)
+        return fetched
 
     def _key_from_property(self, key, prop):
         """
@@ -461,8 +466,6 @@ class GenericInteractiveOutput(GenericOutput):
         """
         cached = self._lst_from_cache(key)
         fetched = self._key_from_hdf(key)
-        if fetched is None or len(fetched) == 0:
-            fetched = getattr(super(), key)
         if fetched is None or len(fetched) == 0:
             return cached
         elif len(cached) == 0:
