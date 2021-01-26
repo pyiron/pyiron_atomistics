@@ -126,11 +126,14 @@ class LammpsControl(GenericParameters):
     def _init_block_dict(self):
         block_dict = OrderedDict()
         block_dict["read_restart"] = "read_restart"
-        block_dict["structure"] = (
+        block_dict["environment"] = (
             "units",
             "dimension",
             "boundary",
             "atom_style",
+            "atom_modify",
+        )
+        block_dict["structure"] = (
             "read_data",
             "include",
         )
