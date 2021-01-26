@@ -53,12 +53,12 @@ HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM = HARTREE_TO_EV / BOHR_TO_ANGSTROM
 
 class SphinxBase(GenericDFTJob):
     """
-    Class to setup and run Sphinx simulations.
+    Class to setup and run SPHInX simulations.
 
     Inherits pyiron_atomistics.atomistics.job.generic.GenericJob. The functions in
     these modules are written such that the function names and attributes
-    are very Pyiron-generic (get_structure(), molecular_dynamics(),
-    version) but internally handle Sphinx specific input and output.
+    are very pyiron-generic (get_structure(), molecular_dynamics(),
+    version) but internally handle SPHInX specific input and output.
 
     Alternatively, because SPHInX inputs are built on a group-based
     format, users have the option to set specific groups and parameters
@@ -162,7 +162,7 @@ class SphinxBase(GenericDFTJob):
     @plane_wave_cutoff.setter
     def plane_wave_cutoff(self, val):
         """
-        Function to setup the energy cut-off for the Sphinx job in eV.
+        Function to setup the energy cut-off for the SPHInX job in eV.
 
         Args:
             val (int): energy cut-off in eV
@@ -297,7 +297,7 @@ class SphinxBase(GenericDFTJob):
 
     def get_structure_group(self, keep_angstrom=False):
         """
-        create a Sphinx Group object based on self.structure
+        create a SPHInX Group object based on self.structure
 
         Args:
             keep_angstrom (bool): Store distances in Angstroms or Bohr
@@ -358,7 +358,7 @@ class SphinxBase(GenericDFTJob):
 
     def load_default_input(self):
         """
-        Set defaults for generic parameters and create sphinx input groups.
+        Set defaults for generic parameters and create SPHInX input groups.
         """
 
         sph = self.input.create_group('sphinx')
@@ -385,6 +385,7 @@ class SphinxBase(GenericDFTJob):
         self.input.spinMixing = 1.0
         self.input.CheckOverlap = True
         self.input.THREADS = 1
+        self.input.use_on_the_fly_cg_optimization = True
 
     def load_structure_group(self, keep_angstrom=False):
         """
@@ -451,34 +452,30 @@ class SphinxBase(GenericDFTJob):
                 )
             )
         if "Istep" in self.input:
-            self.input.sphinx.main["ricQN"] = Group(table_name = "input")
-            self.input.sphinx.main["ricQN"]["maxSteps"] = str(self.input["Istep"])
+            optimizer = 'linQN'
+            if self.input.use_on_the_fly_cg_optimization:
+                optimizer = 'ricQN'
+            self.input.sphinx.main[optimizer] = Group(table_name = "input")
+            self.input.sphinx.main[optimizer]["maxSteps"] = str(self.input["Istep"])
             if "dE" in self.input and "dF" in self.input:
                 self.input["dE"] = 1e-3
             if "dE" in self.input:
-                self.input.sphinx.main["ricQN"]["dEnergy"] = str(
+                self.input.sphinx.main[optimizer]["dEnergy"] = str(
                     self.input["dE"] / HARTREE_TO_EV
                     )
             if "dF" in self.input:
-                self.input.sphinx.main["ricQN"]["dF"] = str(
+                self.input.sphinx.main[optimizer]["dF"] = str(
                     self.input["dF"] / HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
                 )
-            self.input.sphinx.main.ricQN.create_group("bornOppenheimer")
-            self.input.sphinx.main.ricQN.bornOppenheimer["scfDiag"] = \
-                self.get_scf_group()
+            self.input.sphinx.main[optimizer].create_group("bornOppenheimer")
+            self.input.sphinx.main[optimizer]['bornOppenheimer']["scfDiag"] = self.get_scf_group()
         else:
             scf = self.input.sphinx.main.get("scfDiag", create = True)
             if self._generic_input["restart_for_band_structure"]:
-                scf.append(
-                    self.get_scf_group(keepRhoFixed=True)
-                    )
+                scf.append(self.get_scf_group(keepRhoFixed=True))
             else:
                 scf.append(self.get_scf_group())
             if self.executable.version is not None:
-                # vers_num = [
-                #     int(vv)
-                #     for vv in self.executable.version.split("_")[0].split(".")
-                # ]
                 if self.get_version_float() > 2.5:
                     self.input.sphinx.main.create_group("evalForces")["file"] = \
                             '"relaxHist.sx"'
@@ -575,7 +572,7 @@ class SphinxBase(GenericDFTJob):
                     for spin in self.structure.get_initial_magnetic_moments()
                 ]
             ):
-                raise ValueError("Sphinx only supports collinear spins.")
+                raise ValueError("SPHInX only supports collinear spins.")
             else:
                 rho = self.input.sphinx.initialGuess.rho
                 rho.get("atomicSpin", create = True)
@@ -606,7 +603,7 @@ class SphinxBase(GenericDFTJob):
         """
         Setup the hamiltonian to perform a static SCF run.
 
-        Loads defaults for all Sphinx input groups, including a static
+        Loads defaults for all SPHInX input groups, including a static
         main Group.
 
         Args:
@@ -652,7 +649,7 @@ class SphinxBase(GenericDFTJob):
         ionic_energy_tolerance as a limit for fluctuations in energy or the
         ionic_force_tolerance.
 
-        Loads defaults for all Sphinx input groups, including a
+        Loads defaults for all SPHInX input groups, including a
         ricQN-based main Group.
 
         Args:
@@ -747,11 +744,9 @@ class SphinxBase(GenericDFTJob):
 
         Args:
             job_name (str/None): Job name
-            job_type (str/None): Job type. If not specified a Sphinx
-                                 job type is assumed (actually this is
-                                 all that's currently supported)
-            band_structure_calc (bool): has to be True for band
-                                        structure calculations.
+            job_type (str/None): Job type. If not specified a SPHInX job type is assumed (actually
+                this is all that's currently supported)
+            band_structure_calc (bool): has to be True for band structure calculations.
 
         Returns:
             pyiron_atomistics.sphinx.sphinx.sphinx: new job instance
@@ -777,9 +772,8 @@ class SphinxBase(GenericDFTJob):
 
         Args:
             job_name (str): Job name
-            job_type (str): Job type. If not specified a Sphinx
-                            job type is assumed (actually this is
-                            all that's currently supported.)
+            job_type (str): Job type. If not specified a SPHInX job type is assumed (actually
+                this is all that's currently supported.)
 
         Returns:
             pyiron_atomistics.sphinx.sphinx.sphinx: new job instance
@@ -1089,7 +1083,7 @@ class SphinxBase(GenericDFTJob):
         path_name=None,
     ):
         """
-        Function to setup the k-points for the Sphinx job
+        Function to setup the k-points for the SPHInX job
 
         Args:
             reciprocal (bool): Tells if the supplied values are in
@@ -1256,7 +1250,7 @@ class SphinxBase(GenericDFTJob):
 
     def write_input(self):
         """
-        Generate all the required input files for the Sphinx job.
+        Generate all the required input files for the SPHInX job.
 
         Creates:
         structure.sx: structure associated w/ job
@@ -1410,18 +1404,16 @@ class SphinxBase(GenericDFTJob):
 
     def collect_warnings(self):
         """
-        Collects warnings from the Sphinx run
+        Collects warnings from the SPHInX run
         """
-        # TODO: implement for Sphinx
         self._logger.info("collect_warnings() is not yet \
-            implemented for Sphinx")
+            implemented for SPHInX")
 
     def collect_errors(self):
         """
-        Collects errors from the Sphinx run
+        Collects errors from the SPHInX run
         """
-        # TODO: implement for Sphinx
-        self._logger.info("collect_errors() is not yet implemented for Sphinx")
+        self._logger.info("collect_errors() is not yet implemented for SPHInX")
 
     def get_n_ir_reciprocal_points(
         self, is_time_reversal=True, symprec=1e-5, ignore_magmoms=False
@@ -1658,8 +1650,8 @@ class SphinxBase(GenericDFTJob):
 
 class InputWriter(object):
     """
-    The Sphinx Input writer is called to write the
-    Sphinx specific input files.
+    The SPHInX Input writer is called to write the
+    SPHInX specific input files.
     """
 
     def __init__(self):
@@ -1797,7 +1789,7 @@ class InputWriter(object):
                     for spin in self.structure.get_initial_magnetic_moments()
                 ]):
                     raise ValueError(
-                        "Sphinx only supports collinear spins at the moment."
+                        "SPHInX only supports collinear spins at the moment."
                     )
                 else:
                     for spin, value in zip(
@@ -1890,7 +1882,7 @@ class Group(InputList):
 
 class Output(object):
     """
-    Handles the output from a Sphinx simulation.
+    Handles the output from a SPHInX simulation.
     """
 
     def __init__(self, job):
@@ -2330,7 +2322,7 @@ class Output(object):
 
     def collect(self, directory=os.getcwd()):
         """
-        The collect function, collects all the output from a Sphinx simulation.
+        The collect function, collects all the output from a SPHInX simulation.
 
         Args:
             directory (str): the directory to collect the output from.
