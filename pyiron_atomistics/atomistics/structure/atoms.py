@@ -158,13 +158,15 @@ class Atoms(ASEAtoms):
                             "Unknown static type for element in list: "
                             + str(type(elements[0]))
                         )
-
             if el_object_list is None:
-                el_object_list = [self.convert_element(el) for el in element_list]
-
-            self.set_species(list(set(el_object_list)))
-            # species_to_index_dict = {el: i for i, el in enumerate(self.species)}
-            el_index_lst = [self._species_to_index_dict[el] for el in el_object_list]
+                unique_list, unique_ind, unique_inv = np.unique(element_list, return_index=True, return_inverse=True)
+                sp_object_list = [self.convert_element(el) for el in np.array(element_list)[unique_ind]]
+                sp_index_list = [self._species_to_index_dict[el] for el in sp_object_list]
+                self.set_species(sp_object_list)
+                el_index_lst = list(np.array(sp_index_list)[unique_inv])
+            else:
+                self.set_species(list(set(el_object_list)))
+                el_index_lst = [self._species_to_index_dict[el] for el in el_object_list]
 
         elif indices is not None:
             el_index_lst = indices
