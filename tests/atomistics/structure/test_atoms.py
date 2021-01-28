@@ -1612,6 +1612,10 @@ class TestAtoms(unittest.TestCase):
         structure = ase_to_pyiron(molecule('H2COH'))
         structure.set_dihedral(4, 0, 1, 2, angle=90)
 
+    def test_ase_to_pyiron(self):
+        structure = ase_to_pyiron(molecule('H2COH'))
+        self.assertEqual(structure.get_chemical_formula(), 'CH3O')
+
 
 def generate_fcc_lattice(a=4.2):
     positions = [[0, 0, 0]]
