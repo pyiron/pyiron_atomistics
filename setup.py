@@ -31,7 +31,7 @@ setup(
     keywords='pyiron',
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
-        'ase==3.21.0',
+        'ase==3.21.1',
         'defusedxml==0.6.0',
         'future==0.18.2',
         'h5py==3.1.0',
