@@ -40,7 +40,7 @@ setup(
         'molmod==1.4.8',
         'numpy==1.19.5',
         'pandas==1.2.1',
-        'phonopy==2.8.1',
+        'phonopy==2.9.1',
         'pyiron_base==0.1.45',
         'quickff==2.2.4',
         'scipy==1.6.0',
