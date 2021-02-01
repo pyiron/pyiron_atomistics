@@ -44,7 +44,7 @@ setup(
         'pyiron_base==0.1.45',
         'quickff==2.2.4',
         'scipy==1.6.0',
-        'seekpath==1.9.5',
+        'seekpath==2.0.1',
         'six==1.15.0',
         'scikit-learn==0.24.1',
         'spglib==1.16.1',
