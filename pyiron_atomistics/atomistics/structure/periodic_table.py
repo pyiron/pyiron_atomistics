@@ -71,7 +71,7 @@ class ChemicalElement(object):
         self._mendeleev_property_lst = [s for s in dir(self._mendeleev_element) if not s.startswith('_')]
 
     def __getattr__(self, item):
-        if item == "__array_struct__":
+        if item in ["__array_struct__", "__array_interface__", "__array__"]:
             raise AttributeError
         return self[item]
 
