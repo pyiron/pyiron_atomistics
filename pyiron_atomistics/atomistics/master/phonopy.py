@@ -460,7 +460,7 @@ class PhonopyJob(AtomisticParallelMaster):
         """
         Plot bandstructure calculated with :method:`.get_bandstructure`.
 
-        If `.get_bandstructure` hasn't been called before, it is automatically called with the default arguments.
+        If :method:`.get_bandstructure` hasn't been called before, it is automatically called with the default arguments.
 
         Args:
             axis (matplotlib axis, optional): plot to this axis, if not given a new one is created.
