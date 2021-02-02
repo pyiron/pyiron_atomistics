@@ -77,7 +77,7 @@ class TestVasprun(unittest.TestCase):
             self.assertIsInstance(d["kpoint_weights"], np.ndarray)
             self.assertEqual(len(d["kpoint_list"]), len(d["kpoint_weights"]))
             self.assertTrue(len(d["kpoint_list"].T) == 3)
-            self.assertIsInstance(d["kpoint_weights"][-1], (float, np.float))
+            self.assertIsInstance(d["kpoint_weights"][-1], float)
 
     def test_parse_atom_info(self):
         for vp in self.vp_list:

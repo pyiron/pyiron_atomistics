@@ -733,7 +733,7 @@ class Atoms(ASEAtoms):
         """
         sp_parent_list = list()
         for sp in self.species:
-            if isinstance(sp.Parent, (float, np.float, type(None))):
+            if isinstance(sp.Parent, (float, type(None))):
                 sp_parent_list.append(sp.Abbreviation)
             else:
                 sp_parent_list.append(sp.Parent)
@@ -750,7 +750,7 @@ class Atoms(ASEAtoms):
         parent_basis = copy(self)
         new_species = np.array(parent_basis.species)
         for i, sp in enumerate(new_species):
-            if not isinstance(sp.Parent, (float, np.float, type(None))):
+            if not isinstance(sp.Parent, (float, type(None))):
                 pse = PeriodicTable()
                 new_species[i] = pse.element(sp.Parent)
         sym_list = [el.Abbreviation for el in new_species]
