@@ -425,7 +425,7 @@ class SparseArray(object):
                 if value[item] is not None:
                     new_dict[key] = value[item]
             return SparseArrayElement(**new_dict)
-        elif isinstance(item, (str, np.str, np.str_)):
+        elif isinstance(item, str):
             return self._lists[item]
 
         elif isinstance(item, (list, np.ndarray)):

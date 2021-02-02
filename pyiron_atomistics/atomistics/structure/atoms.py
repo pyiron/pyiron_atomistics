@@ -128,7 +128,7 @@ class Atoms(ASEAtoms):
                 if not all([isinstance(el, elements[0].__class__) for el in elements]):
                     object_list = list()
                     for el in elements:
-                        if isinstance(el, (str, np.str, np.str_)):
+                        if isinstance(el, str):
                             object_list.append(self.convert_element(el))
                         if isinstance(el, ChemicalElement):
                             object_list.append(el)
@@ -733,7 +733,7 @@ class Atoms(ASEAtoms):
         """
         sp_parent_list = list()
         for sp in self.species:
-            if isinstance(sp.Parent, (float, np.float, type(None))):
+            if isinstance(sp.Parent, (float, type(None))):
                 sp_parent_list.append(sp.Abbreviation)
             else:
                 sp_parent_list.append(sp.Parent)
@@ -750,7 +750,7 @@ class Atoms(ASEAtoms):
         parent_basis = copy(self)
         new_species = np.array(parent_basis.species)
         for i, sp in enumerate(new_species):
-            if not isinstance(sp.Parent, (float, np.float, type(None))):
+            if not isinstance(sp.Parent, (float, type(None))):
                 pse = PeriodicTable()
                 new_species[i] = pse.element(sp.Parent)
         sym_list = [el.Abbreviation for el in new_species]
@@ -2232,7 +2232,7 @@ class Atoms(ASEAtoms):
     def __setitem__(self, key, value):
         if isinstance(key, (int, np.integer)):
             old_el = self.species[self.indices[key]]
-            if isinstance(value, (str, np.str, np.str_)):
+            if isinstance(value, str):
                 el = PeriodicTable().element(value)
             elif isinstance(value, ChemicalElement):
                 el = value
@@ -2291,7 +2291,7 @@ class Atoms(ASEAtoms):
                 else:
                     step_val = key.step
                 key = np.arange(start_val, stop_val, step_val)
-            if isinstance(value, (str, np.str, np.str_, int, np.integer)):
+            if isinstance(value, (str, int, np.integer)):
                 el = PeriodicTable().element(value)
             elif isinstance(value, ChemicalElement):
                 el = value
