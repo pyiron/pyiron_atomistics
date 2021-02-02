@@ -71,7 +71,9 @@ class ChemicalElement(object):
         self._mendeleev_property_lst = [s for s in dir(self._mendeleev_element) if not s.startswith('_')]
 
     def __getattr__(self, item):
-        return self[item]
+        if item in self._mendeleev_translation_dict.keys() or item in self._mendeleev_property_lst or item in self.sub.index:
+            return self[item]
+        return object.__getattribute__(self, item)
 
     def __getitem__(self, item):
         if item in self._mendeleev_translation_dict.keys():
