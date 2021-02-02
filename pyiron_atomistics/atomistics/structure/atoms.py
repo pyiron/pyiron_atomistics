@@ -128,7 +128,7 @@ class Atoms(ASEAtoms):
                 if not all([isinstance(el, elements[0].__class__) for el in elements]):
                     object_list = list()
                     for el in elements:
-                        if isinstance(el, (str, np.str, np.str_)):
+                        if isinstance(el, str):
                             object_list.append(self.convert_element(el))
                         if isinstance(el, ChemicalElement):
                             object_list.append(el)
@@ -2232,7 +2232,7 @@ class Atoms(ASEAtoms):
     def __setitem__(self, key, value):
         if isinstance(key, (int, np.integer)):
             old_el = self.species[self.indices[key]]
-            if isinstance(value, (str, np.str, np.str_)):
+            if isinstance(value, str):
                 el = PeriodicTable().element(value)
             elif isinstance(value, ChemicalElement):
                 el = value
@@ -2291,7 +2291,7 @@ class Atoms(ASEAtoms):
                 else:
                     step_val = key.step
                 key = np.arange(start_val, stop_val, step_val)
-            if isinstance(value, (str, np.str, np.str_, int, np.integer)):
+            if isinstance(value, (str, int, np.integer)):
                 el = PeriodicTable().element(value)
             elif isinstance(value, ChemicalElement):
                 el = value
