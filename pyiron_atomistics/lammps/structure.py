@@ -304,7 +304,7 @@ class LammpsStructure(GenericParameters):
             el_dict[el] = object_id
 
         n_s = len(el_list)
-        bond_type = np.ones([n_s, n_s], dtype=np.int)
+        bond_type = np.ones([n_s, n_s], dtype=int)
         count = 0
         for i in range(n_s):
             for j in range(i, n_s):

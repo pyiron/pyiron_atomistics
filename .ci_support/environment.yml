@@ -11,11 +11,11 @@ dependencies:
   - matplotlib-base =3.3.4
   - mendeleev =0.6.1
   - molmod =1.4.8
-  - numpy =1.19.5
+  - numpy =1.20.0
   - pandas =1.2.1
   - phonopy =2.8.1
   - pymatgen =2020.12.31
-  - pyiron_base =0.1.45
+  - pyiron_base =0.1.46
   - pyscal =2.10.7
   - pytables =3.6.1
   - quickff =2.2.4
