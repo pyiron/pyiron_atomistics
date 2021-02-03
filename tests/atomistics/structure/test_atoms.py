@@ -1607,6 +1607,14 @@ class TestAtoms(unittest.TestCase):
             np.linalg.norm(position-structure.cell*0.1), 0
         )
 
+    def test_is_skewed(self):
+        structure = CrystalStructure("Fe", bravais_basis="bcc", lattice_constant=4.2, pbc=True)
+        self.assertFalse(structure.is_skewed())
+        structure.cell[0,0] += 0.01
+        self.assertFalse(structure.is_skewed())
+        structure.cell[1,0] += 0.01
+        self.assertTrue(structure.is_skewed())
+
     @staticmethod
     def test_set_dihedral():
         structure = ase_to_pyiron(molecule('H2COH'))
