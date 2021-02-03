@@ -1948,6 +1948,25 @@ class Atoms(ASEAtoms):
         return self._analyse.pyscal_voronoi_volume()
     get_voronoi_volume.__doc__ = Analyse.pyscal_voronoi_volume.__doc__
 
+    def is_skewed(self, tolerance=1.0e-8):
+        """
+        Check whether the simulation box is skewed/sheared. The algorithm compares the box volume
+        and the product of the box length in each direction. If these numbers do not match, the box
+        is considered to be skewed and the function returns True
+
+        Args:
+            tolerance (float): Relative tolerance above which the structure is considered as skewed
+
+        Returns:
+            (bool): Whether the box is skewed or not.
+        """
+        volume = self.get_volume()
+        prod = np.linalg.norm(self.cell, axis=-1).prod()
+        if volume > 0:
+            if abs(volume-prod)/volume < tolerance:
+                return False
+        return True
+
     def find_mic(self, v, vectors=True):
         """
         Find vectors following minimum image convention (mic). In principle this

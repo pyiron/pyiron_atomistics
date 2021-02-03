@@ -108,30 +108,20 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 "Warning: setting upper trangular matrix might slow down the calculation"
             )
 
-        is_skewed = self._prism.is_skewed()
-        is_scaled = self.structure._is_scaled
-        if is_scaled:
-            warnings.warn('set_relative() is deprecated as of 2020-02-26. It is not guaranteed from pyiron_atomistics vers. 0.3')
+        is_skewed = self._structure_current.is_skewed()
+        was_skewed = self._structure_previous.is_skewed()
 
-        if is_skewed and is_scaled:
-            self._interactive_lib_command(
-                "change_box all triclinic"
-            )
+        if is_skewed:
+            if not was_skewed:
+                self._interactive_lib_command(
+                    "change_box all triclinic"
+                )
             self._interactive_lib_command(
                 "change_box all x final 0 %f y final 0 %f z final 0 %f \
                  xy final %f xz final %f yz final %f remap units box"
                 % (lx, ly, lz, xy, xz, yz)
             )
-        elif is_skewed and not is_scaled:
-            self._interactive_lib_command(
-                "change_box all triclinic"
-            )
-            self._interactive_lib_command(
-                "change_box all x final 0 %f y final 0 %f z final 0 %f \
-                xy final %f xz final %f yz final %f units box"
-                % (lx, ly, lz, xy, xz, yz)
-            )
-        elif not is_skewed and is_scaled:
+        elif was_skewed:
             self._interactive_lib_command(
                 "change_box all triclinic"
             )
@@ -143,17 +133,10 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._interactive_lib_command(
                 "change_box all ortho"
             )
-        else:  # is neither skewed nor scaled
+        else:
             self._interactive_lib_command(
-                "change_box all triclinic"
-            )
-            self._interactive_lib_command(
-                "change_box all x final 0 %f y final 0 %f z final 0 %f \
-                xy final %f xz final %f yz final %f units box"
-                % (lx, ly, lz, 0.0, 0.0, 0.0)
-            )
-            self._interactive_lib_command(
-                "change_box all ortho"
+                "change_box all x final 0 %f y final 0 %f z final 0 %f remap units box"
+                % (lx, ly, lz)
             )
 
     def interactive_volume_getter(self):
