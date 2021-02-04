@@ -1609,11 +1609,17 @@ class TestAtoms(unittest.TestCase):
 
     def test_is_skewed(self):
         structure = CrystalStructure("Fe", bravais_basis="bcc", lattice_constant=4.2, pbc=True)
-        self.assertFalse(structure.is_skewed())
+        self.assertFalse(
+            structure.is_skewed(), "is_skewed() returned True, while structure is not skewed"
+        )
         structure.cell[0,0] += 0.01
-        self.assertFalse(structure.is_skewed())
+        self.assertFalse(
+            structure.is_skewed(), "is_skewed() returned True, while structure is not skewed"
+        )
         structure.cell[1,0] += 0.01
-        self.assertTrue(structure.is_skewed())
+        self.assertTrue(
+            structure.is_skewed(), "is_skewed() returned False, while structure is skewed"
+        )
 
     @staticmethod
     def test_set_dihedral():
