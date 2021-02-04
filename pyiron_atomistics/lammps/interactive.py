@@ -123,9 +123,6 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             )
         elif was_skewed:
             self._interactive_lib_command(
-                "change_box all triclinic"
-            )
-            self._interactive_lib_command(
                 "change_box all x final 0 %f y final 0 %f z final 0 %f \
                 xy final %f xz final %f yz final %f remap units box"
                 % (lx, ly, lz, 0.0, 0.0, 0.0)
