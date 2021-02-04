@@ -108,8 +108,8 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 "Warning: setting upper trangular matrix might slow down the calculation"
             )
 
-        is_skewed = self._structure_current.is_skewed()
-        was_skewed = self._structure_previous.is_skewed()
+        is_skewed = self._structure_current.is_skewed(tolerance=1.0e-8)
+        was_skewed = self._structure_previous.is_skewed(tolerance=1.0e-8)
 
         if is_skewed:
             if not was_skewed:
