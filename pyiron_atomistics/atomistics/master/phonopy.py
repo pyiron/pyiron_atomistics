@@ -484,8 +484,12 @@ class PhonopyJob(AtomisticParallelMaster):
             _, axis = plt.subplots(1, 1)
         axis.plot(distances, frequencies, color="black", linestyle="-")
         axis.axvline(distances[0], color="black", linestyle="--")
+        tick_positions = [distances[0]]
         for d in results["distances"]:
+            tick_positions.append(d[-1])
             axis.axvline(d[-1], color="black", linestyle="--")
+        axis.set_xticks(tick_positions)
+        axis.set_xticklabels(self.phonopy._band_structure.labels)
         axis.set_xlabel("Bandpath")
         axis.set_ylabel("Frequency [THz]")
         axis.set_title("Bandstructure")
