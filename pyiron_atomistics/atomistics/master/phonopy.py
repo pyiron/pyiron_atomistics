@@ -489,7 +489,9 @@ class PhonopyJob(AtomisticParallelMaster):
             tick_positions.append(d[-1])
             axis.axvline(d[-1], color="black", linestyle="--")
         axis.set_xticks(tick_positions)
-        axis.set_xticklabels(self.phonopy._band_structure.labels)
+        tick_labels = self.phonopy._band_structure.labels[:]
+        tick_labels.append(tick_labels[tick_positions.index(tick_positions[-1])])
+        axis.set_xticklabels(tick_labels)
         axis.set_xlabel("Bandpath")
         axis.set_ylabel("Frequency [THz]")
         axis.set_title("Bandstructure")
