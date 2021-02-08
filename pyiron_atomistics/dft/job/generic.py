@@ -178,7 +178,7 @@ class GenericDFTJob(AtomisticGenericJob):
     ):
         """
         args:
-            method ('PULAY', 'KERKER' or 'LINEAR'): mixing method (default: PULAY)
+            method ('PULAY' or 'KERKER'): mixing method (default: PULAY)
             n_pulay_steps (int): number of previous densities to use for the Pulay mixing
                 (default: 7)
             density_mixing_parameter (float): mixing proportion m defined by

@@ -927,10 +927,9 @@ class SphinxBase(GenericDFTJob):
             Further information can be found on the website:
             https://sxrepo.mpie.de
         """
-        method_list = ["PULAY", "LINEAR"]
-        assert (
-            method is None or method.upper() in method_list
-        ), "Mixing method has to be PULAY or LINEAR"
+        method_list = ["PULAY", "KERKER", "LINEAR"]
+        if method is not None and method.upper() not in method_list:
+            raise ValueError("Mixing method has to be PULAY or KERKER")
         assert n_pulay_steps is None or isinstance(
             n_pulay_steps, int
         ), "n_pulay_steps has to be an integer"
@@ -950,7 +949,7 @@ class SphinxBase(GenericDFTJob):
             )
 
         if method is not None:
-            self.input["mixingMethod"] = method.upper()
+            self.input["mixingMethod"] = method.upper().replace('KERKER', 'LINEAR')
         if n_pulay_steps is not None:
             self.input["nPulaySteps"] = n_pulay_steps
         if density_mixing_parameter is not None:
