@@ -401,7 +401,7 @@ class GenericInteractiveOutput(GenericOutput):
             key (str): name of the key
 
         Returns:
-            list:
+            list: list of arrays stored in the interactive cache
         """
         lst = self._key_from_cache(key)
         if len(lst) != 0 and isinstance(lst[-1], list):
@@ -464,7 +464,7 @@ class GenericInteractiveOutput(GenericOutput):
         Returns:
             :class:`numpy.ndarray`: collected values from all previous steps
         """
-        cached = self._lst_from_cache(key)
+        cached = np.array(self._lst_from_cache(key))
         fetched = self._key_from_hdf(key)
         if fetched is None or len(fetched) == 0:
             return cached
