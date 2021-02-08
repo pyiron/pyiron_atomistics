@@ -924,22 +924,6 @@ class SphinxBase(GenericDFTJob):
         spin_mixing_parameter=None,
     ):
         """
-        args:
-            method ('PULAY' or 'LINEAR'): mixing method (default: PULAY)
-            n_pulay_steps (int): number of previous densities to use for
-                                 the Pulay mixing (default: 7)
-            density_mixing_parameter (float): mixing proportion m defined by
-
-                rho^n = (m-1)*rho^(n-1)+m*preconditioner*rho_(opt) (default: 1)
-
-            spin_mixing_parameter (float): linear mixing parameter for
-                                           spin densities (default: 1)
-
-        comments:
-            A low value of density mixing parameter may lead
-            to a more stable convergence, but will slow down
-            the calculation if set too low.
-
             Further information can be found on the website:
             https://sxrepo.mpie.de
         """
@@ -973,6 +957,10 @@ class SphinxBase(GenericDFTJob):
             self.input["rhoMixing"] = density_mixing_parameter
         if spin_mixing_parameter is not None:
             self.input["spinMixing"] = spin_mixing_parameter
+    set_mixing_parameters.__doc__ = (
+        GenericDFTJob.set_mixing_parameters.__doc__
+        + set_mixing_parameters.__doc__ 
+    )
 
     def set_occupancy_smearing(self, smearing=None, width=None):
         """

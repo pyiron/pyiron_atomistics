@@ -1299,15 +1299,6 @@ class VaspBase(GenericDFTJob):
         density_mixing_parameter=None,
         spin_mixing_parameter=None,
     ):
-        """
-
-        Args:
-            method (str):
-            n_pulay_steps (int):
-            density_mixing_parameter (float):
-            spin_mixing_parameter (float):
-
-        """
         if method is None:
             method = "PULAY"
         if method.upper() == "PULAY":
