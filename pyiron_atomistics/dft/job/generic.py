@@ -177,8 +177,8 @@ class GenericDFTJob(AtomisticGenericJob):
         spin_mixing_parameter=None,
     ):
         """
-        args:
-            method ('PULAY' or 'KERKER'): mixing method (default: PULAY)
+        Args:
+            method (str): mixing method 'PULAY' or 'KERKER' (default: PULAY)
             n_pulay_steps (int): number of previous densities to use for the Pulay mixing
                 (default: 7)
             density_mixing_parameter (float): mixing proportion m defined by
@@ -187,7 +187,7 @@ class GenericDFTJob(AtomisticGenericJob):
 
             spin_mixing_parameter (float): linear mixing parameter for spin densities
 
-        comments:
+        Comments:
             A low value of density mixing parameter may lead to a more stable convergence, but
             will slow down the calculation if set too low. In systems with bands around the Fermi
             energy (i.e. metals, e.g. Fe, Mn), the mixing parameters should be small. In insulators
