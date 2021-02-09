@@ -473,25 +473,33 @@ class PhonopyJob(AtomisticParallelMaster):
         except ImportError:
             import matplotlib.pyplot as plt
 
+        if axis is None:
+            _, axis = plt.subplots(1, 1)
+
         try:
             results = self.phonopy.get_band_structure_dict()
         except RuntimeError:
             results = self.get_band_structure()
-        distances = np.concatenate(results["distances"])
-        frequencies = np.concatenate(results["frequencies"])
 
-        if axis is None:
-            _, axis = plt.subplots(1, 1)
-        axis.plot(distances, frequencies, color="black", linestyle="-")
-        axis.axvline(distances[0], color="black", linestyle="--")
-        tick_positions = [distances[0]]
-        for d in results["distances"]:
-            tick_positions.append(d[-1])
-            axis.axvline(d[-1], color="black", linestyle="--")
-        axis.set_xticks(tick_positions)
-        tick_labels = self.phonopy._band_structure.labels[:]
-        tick_labels.append(tick_labels[tick_positions.index(tick_positions[-1])])
-        axis.set_xticklabels(tick_labels)
+        distances = results["distances"]
+        frequencies = results["frequencies"]
+
+        # HACK: strictly speaking this breaks phonopy API and could bite us
+        path_connections = self.phonopy._band_structure.path_connections
+        labels = self.phonopy._band_structure.labels
+
+        offset = 0
+        tick_positions = [distances[0][0]]
+        for di, fi, ci in zip(distances, frequencies, path_connections):
+            axis.axvline(tick_positions[-1], color="black", linestyle="--")
+            axis.plot(offset + di, fi, color="black")
+            tick_positions.append(di[-1] + offset)
+            if not ci:
+                offset+=.05
+                plt.axvline(tick_positions[-1], color="black", linestyle="--")
+                tick_positions.append(di[-1] + offset)
+        axis.set_xticks(tick_positions[:-1])
+        axis.set_xticklabels(labels)
         axis.set_xlabel("Bandpath")
         axis.set_ylabel("Frequency [THz]")
         axis.set_title("Bandstructure")
