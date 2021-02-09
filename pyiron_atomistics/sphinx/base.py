@@ -958,7 +958,7 @@ class SphinxBase(GenericDFTJob):
             self.input["spinMixing"] = spin_mixing_parameter
     set_mixing_parameters.__doc__ = (
         GenericDFTJob.set_mixing_parameters.__doc__
-        + set_mixing_parameters.__doc__ 
+        + set_mixing_parameters.__doc__
     )
 
     def set_occupancy_smearing(self, smearing=None, width=None):
