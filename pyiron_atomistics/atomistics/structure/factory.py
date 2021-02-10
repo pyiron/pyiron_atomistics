@@ -337,11 +337,8 @@ class StructureFactory(PyironFactory):
             )
         return periodic_table.element(new_element_name)
 
-
-class GBBuilder:
-
     @staticmethod
-    def gb_info(axis, max_sigma):
+    def aimsgb_info(axis, max_sigma):
         """
         Provides a list of possible GB structures for a given rotational axis and upto the given maximum sigma value.
 
@@ -364,7 +361,7 @@ class GBBuilder:
         return GBInformation(axis=axis, max_sigma=max_sigma)
 
     @staticmethod
-    def gb_build(axis, sigma, plane, initial_struct, to_primitive=False,
+    def aimsgb_build(axis, sigma, plane, initial_struct, to_primitive=False,
                  delete_layer='0b0t0b0t', add_if_dist=0.0):
         """
         Generate a grain boundary structure based on the aimsgb.GrainBoundary module.
