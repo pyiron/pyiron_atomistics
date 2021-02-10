@@ -39,7 +39,7 @@ setup(
         'mendeleev==0.6.1',
         'molmod==1.4.8',
         'numpy==1.20.0',
-        'pandas==1.2.1',
+        'pandas==1.2.2',
         'phonopy==2.8.1',
         'pyiron_base==0.1.47',
         'quickff==2.2.4',
