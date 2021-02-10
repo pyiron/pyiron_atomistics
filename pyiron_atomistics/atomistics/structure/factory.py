@@ -32,6 +32,10 @@ from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_t
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import Settings, PyironFactory
 import types
+# modules required for aimsgb
+from pyiron.atomistics.structure.atoms import pyiron_to_pymatgen, pymatgen_to_pyiron
+from pymatgen import Structure, Lattice, PeriodicSite
+from aimsgb import GrainBoundary, Grain, GBInformation
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
@@ -333,13 +337,10 @@ class StructureFactory(PyironFactory):
             )
         return periodic_table.element(new_element_name)
 
-# importing the modules required by aimsgb
-from pyiron.atomistics.structure.atoms import pyiron_to_pymatgen, pymatgen_to_pyiron
-from pymatgen import Structure, Lattice, PeriodicSite
-from aimsgb import GrainBoundary, Grain, GBInformation
 
 class GBBuilder:
 
+    @staticmethod
     def gb_info(axis, max_sigma):
         """
         Provides a list of possible GB structures for a given rotational axis and upto the given maximum sigma value.
@@ -350,21 +351,21 @@ class GBBuilder:
             GB (for example, sigma=5)
 
         Returns:
-            A list of possible GB structures.
-        """
-        print("Possible GB structures for rotational axis",axis,"and sigma cutoff", max_sigma,"are listed in the format:\n")
-        print("{sigma value: {'theta': [theta value],")
-        print("'plane': the GB plane")
-        print("'rot_matrix': the rotational matrix,")
-        print("'csl': the csl matrix}}\n")
-        print("To construct the grain boundary select a GB plane and sigma value from the list below and \
-        \npass it to the GBBuilder.gb_build() function along with the rotational axis and initial bulk structure.")
+            A list of possible GB structures in the format:
 
+            {sigma value: {'theta': [theta value],
+                'plane': the GB planes")
+                'rot_matrix': array([the rotational matrix]),
+                'csl': [array([the csl matrix])]}}
+
+        To construct the grain boundary select a GB plane and sigma value from the list and pass it to the
+        GBBuilder.gb_build() function along with the rotational axis and initial bulk structure.
+        """
         return GBInformation(axis=axis, max_sigma=max_sigma)
 
+    @staticmethod
     def gb_build(axis, sigma, plane, initial_struct, to_primitive=False,
                  delete_layer='0b0t0b0t', add_if_dist=0.0):
-
         """
         Generate a grain boundary structure based on the aimsgb.GrainBoundary module.
 
@@ -372,15 +373,15 @@ class GBBuilder:
             axis : Rotational axis for the GB you want to construct (for example, axis=[1,0,0])
             sigma (int) : The sigma value of the GB you want to construct (for example, sigma=5)
             plane: The grain boundary plane of the GB you want to construct (for example, plane=[2,1,0])
-            initial_struct : Initial bulk structure from which you want to construct the GB (a pyiron 
+            initial_struct : Initial bulk structure from which you want to construct the GB (a pyiron
                             structure object).
-            delete_layer : To delete layers of the GB. For example, delete_layer='1b0t1b0t'. The first 
-                           4 characters is for first grain and the other 4 is for second grain. b means 
-                           bottom layer and t means top layer. Integer represents the number of layers 
-                           to be deleted. The first t and second b from the left hand side represents 
+            delete_layer : To delete layers of the GB. For example, delete_layer='1b0t1b0t'. The first
+                           4 characters is for first grain and the other 4 is for second grain. b means
+                           bottom layer and t means top layer. Integer represents the number of layers
+                           to be deleted. The first t and second b from the left hand side represents
                            the layers at the GB interface. Default value is delete_layer='0b0t0b0t', which
                            means no deletion of layers.
-            add_if_dist : If you want to add extra interface distance, you can specify add_if_dist. 
+            add_if_dist : If you want to add extra interface distance, you can specify add_if_dist.
                            Default value is add_if_dist=0.0
             to_primitive : To generate primitive or non-primitive GB structure. Default value is
                             to_primitive=False
