@@ -446,7 +446,7 @@ class TestSphinx(unittest.TestCase):
 
     def test_set_mixing_parameters(self):
         self.assertRaises(
-            AssertionError, self.sphinx.set_mixing_parameters, "LDA", 7, 1.0, 1.0
+            ValueError, self.sphinx.set_mixing_parameters, "LDA", 7, 1.0, 1.0
         )
         self.assertRaises(
             AssertionError, self.sphinx.set_mixing_parameters, "PULAY", 1.2, 1.0, 1.0

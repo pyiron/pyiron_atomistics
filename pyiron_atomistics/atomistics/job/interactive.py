@@ -284,10 +284,12 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
             el_lst = [el.Abbreviation for el in self.structure.species]
         else:
             el_lst = self._interactive_species_lst.tolist()
-        self._structure_previous.set_species([self._periodic_table.element(el) for el in el_lst])
-        self._structure_previous.indices = indices
-        self._structure_previous.positions = positions
-        self._structure_previous.cell = cell
+        self._structure_previous = self._structure_previous.__class__(
+            positions=positions,
+            cell=cell,
+            indices=indices,
+            species=[self._periodic_table.element(el) for el in el_lst],
+        )
 
     @staticmethod
     def _extend_species_elements(struct_species, species_array):
