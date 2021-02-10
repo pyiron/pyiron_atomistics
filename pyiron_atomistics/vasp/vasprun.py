@@ -710,7 +710,7 @@ def clean_character(a, remove_char=" "):
     Returns:
         str: The clean string
     """
-    if isinstance(a, (str, np.str, np.str_)):
+    if isinstance(a, str):
         return a.replace(remove_char, "")
     else:
         return a
@@ -727,7 +727,7 @@ def clean_key(a, remove_char=" "):
     Returns:
         str: The clean string
     """
-    if isinstance(a, (str, np.str, np.str_)):
+    if isinstance(a, str):
         return a.replace(remove_char, "_")
     else:
         return a

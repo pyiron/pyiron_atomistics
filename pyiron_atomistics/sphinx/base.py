@@ -457,6 +457,7 @@ class SphinxBase(GenericDFTJob):
                 optimizer = 'ricQN'
             self.input.sphinx.main[optimizer] = Group(table_name = "input")
             self.input.sphinx.main[optimizer]["maxSteps"] = str(self.input["Istep"])
+            self.input.sphinx.main[optimizer]["maxStepLength"] = str(0.1/BOHR_TO_ANGSTROM)
             if "dE" in self.input and "dF" in self.input:
                 self.input["dE"] = 1e-3
             if "dE" in self.input:
@@ -923,29 +924,12 @@ class SphinxBase(GenericDFTJob):
         spin_mixing_parameter=None,
     ):
         """
-        args:
-            method ('PULAY' or 'LINEAR'): mixing method (default: PULAY)
-            n_pulay_steps (int): number of previous densities to use for
-                                 the Pulay mixing (default: 7)
-            density_mixing_parameter (float): mixing proportion m defined by
-
-                rho^n = (m-1)*rho^(n-1)+m*preconditioner*rho_(opt) (default: 1)
-
-            spin_mixing_parameter (float): linear mixing parameter for
-                                           spin densities (default: 1)
-
-        comments:
-            A low value of density mixing parameter may lead
-            to a more stable convergence, but will slow down
-            the calculation if set too low.
-
             Further information can be found on the website:
             https://sxrepo.mpie.de
         """
-        method_list = ["PULAY", "LINEAR"]
-        assert (
-            method is None or method.upper() in method_list
-        ), "Mixing method has to be PULAY or LINEAR"
+        method_list = ["PULAY", "KERKER", "LINEAR"]
+        if method is not None and method.upper() not in method_list:
+            raise ValueError("Mixing method has to be PULAY or KERKER")
         assert n_pulay_steps is None or isinstance(
             n_pulay_steps, int
         ), "n_pulay_steps has to be an integer"
@@ -965,13 +949,17 @@ class SphinxBase(GenericDFTJob):
             )
 
         if method is not None:
-            self.input["mixingMethod"] = method.upper()
+            self.input["mixingMethod"] = method.upper().replace('KERKER', 'LINEAR')
         if n_pulay_steps is not None:
             self.input["nPulaySteps"] = n_pulay_steps
         if density_mixing_parameter is not None:
             self.input["rhoMixing"] = density_mixing_parameter
         if spin_mixing_parameter is not None:
             self.input["spinMixing"] = spin_mixing_parameter
+    set_mixing_parameters.__doc__ = (
+        GenericDFTJob.set_mixing_parameters.__doc__
+        + set_mixing_parameters.__doc__
+    )
 
     def set_occupancy_smearing(self, smearing=None, width=None):
         """

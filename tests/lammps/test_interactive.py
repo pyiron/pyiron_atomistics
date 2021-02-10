@@ -63,18 +63,29 @@ class TestLammpsInteractive(unittest.TestCase):
         project.remove(enable=True)
 
     def test_interactive_cells_setter(self):
-        self.job.interactive_cells_setter(np.eye(3))
+        atoms = Atoms("Fe8", positions=np.zeros((8, 3)), cell=np.eye(3), pbc=True)
+        self.job._structure_previous = atoms.copy()
+        self.job._structure_current = atoms.copy()
+        self.job.interactive_cells_setter(self.job._structure_current.cell)
         self.assertEqual(
-            self.job._interactive_library._command[-3],
-            "change_box all triclinic",
+            self.job._interactive_library._command[-1],
+            "change_box all x final 0 1.000000 y final 0 1.000000 z final 0 1.000000 remap units box",
         )
-        self.assertEqual(
-            self.job._interactive_library._command[-2],
-            "change_box all x final 0 1.000000 y final 0 1.000000 z final 0 1.000000                 xy final 0.000000 xz final 0.000000 yz final 0.000000 units box",
-        )
+        self.job._structure_previous = atoms.copy()
+        self.job._structure_current = atoms.copy()
+        self.job._structure_previous.cell[1,0] += 0.01
+        self.job.interactive_cells_setter(self.job._structure_current.cell)
         self.assertEqual(
             self.job._interactive_library._command[-1],
             "change_box all ortho",
+        )
+        self.job._structure_previous = atoms.copy()
+        self.job._structure_current = atoms.copy()
+        self.job._structure_current.cell[1,0] += 0.01
+        self.job.interactive_cells_setter(self.job._structure_current.cell)
+        self.assertEqual(
+            self.job._interactive_library._command[-2],
+            "change_box all triclinic",
         )
 
     def test_interactive_positions_setter(self):
