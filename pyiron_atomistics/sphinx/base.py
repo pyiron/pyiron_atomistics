@@ -1816,15 +1816,42 @@ class Group(InputList):
         self[name] = content
 
     def set_group(self, name, content=None):
+        """
+        Set a new group in SPHInX input.
+
+        Args:
+            name (str): name of the group
+            content: content to append
+
+        This creates an input group of the type `name { content }`.
+        """
         if content is None:
             self.create_group(name)
         else:
             self.set(name, content)
 
     def set_flag(self, flag, val=True):
+        """
+        Set a new flag in SPHInX input.
+
+        Args:
+            flag (str): name of the flag
+            val (bool): boolean value
+
+        This creates an input flag of the type `name = val`.
+        """
         self.set(flag, val)
 
     def set_parameter(self, parameter, val):
+        """
+        Set a new parameter in SPHInX input.
+
+        Args:
+            parameter (str): name of the flag
+            val (float): parameter value
+
+        This creates an input parameter of the type `parameter = val`.
+        """
         self.set(parameter, val)
 
     def remove(self, name):
