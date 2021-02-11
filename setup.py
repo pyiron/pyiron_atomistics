@@ -31,6 +31,7 @@ setup(
     keywords='pyiron',
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
+        'amsgb==0.1.0',
         'ase==3.21.1',
         'defusedxml==0.6.0',
         'future==0.18.2',
@@ -42,6 +43,7 @@ setup(
         'pandas==1.2.1',
         'phonopy==2.8.1',
         'pyiron_base==0.1.47',
+        'pymatgen==2021.2.8',
         'quickff==2.2.4',
         'scipy==1.6.0',
         'seekpath==2.0.1',
