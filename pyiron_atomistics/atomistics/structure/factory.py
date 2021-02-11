@@ -32,7 +32,7 @@ from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_t
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import Settings, PyironFactory
 import types
-from pyiron.atomistics.structure.atoms import pyiron_to_pymatgen, pymatgen_to_pyiron
+from pyiron_atomistics.atomistics.structure.atoms import pyiron_to_pymatgen, pymatgen_to_pyiron
 from pymatgen import Structure, Lattice, PeriodicSite
 from aimsgb import GrainBoundary, Grain, GBInformation
 
