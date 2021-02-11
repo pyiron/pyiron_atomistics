@@ -383,7 +383,7 @@ class StructureFactory(PyironFactory):
                             to_primitive=False
 
         Returns:
-            Grain boundary structure in pyiron structure file format.
+            :class:`.Atoms`: final grain boundary structure
         """
         basis_pymatgen = pyiron_to_pymatgen(initial_struct)
         grain_init = Grain(basis_pymatgen.lattice, basis_pymatgen.species, basis_pymatgen.frac_coords)
