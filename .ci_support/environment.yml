@@ -1,6 +1,7 @@
 channels:
   - conda-forge
 dependencies:
+  - aimsgb =0.1.0
   - ase =3.21.1
   - coveralls
   - coverage
@@ -14,8 +15,8 @@ dependencies:
   - numpy =1.20.0
   - pandas =1.2.1
   - phonopy =2.8.1
-  - pymatgen =2020.12.31
   - pyiron_base =0.1.47
+  - pymatgen =2021.2.8
   - pyscal =2.10.7
   - pytables =3.6.1
   - quickff =2.2.4
