@@ -2,6 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+from aimsgb import GrainBoundary, Grain, GBInformation
 from ase.build import bulk
 from ase.build import (
         add_adsorbate,
@@ -27,14 +28,13 @@ from ase.build import (
     )
 from ase.io import read
 import numpy as np
+from pymatgen import Structure, Lattice, PeriodicSite
 from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_to_pyiron, Atoms
+from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_to_pyiron, pyiron_to_pymatgen, pymatgen_to_pyiron, Atoms
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import Settings, PyironFactory
 import types
-from pyiron_atomistics.atomistics.structure.atoms import pyiron_to_pymatgen, pymatgen_to_pyiron
-from pymatgen import Structure, Lattice, PeriodicSite
-from aimsgb import GrainBoundary, Grain, GBInformation
+
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
