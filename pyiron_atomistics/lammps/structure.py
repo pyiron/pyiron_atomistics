@@ -283,7 +283,7 @@ class LammpsStructure(GenericParameters):
             + "0. {} zlo zhi\n".format(zhi)
         )
 
-        if self.prism.is_skewed():
+        if self.structure.is_skewed():
             simulation_cell += "{0} {1} {2} xy xz yz\n".format(xy, xz, yz)
 
         return simulation_cell
