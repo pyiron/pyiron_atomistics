@@ -118,6 +118,7 @@ class LammpsControl(GenericParameters):
             input_file_name=input_file_name, table_name="control_inp", comment_char="#"
         )
         self._init_block_dict()
+        self._force_skewed = False
 
     @property
     def dataset(self):
@@ -204,7 +205,7 @@ class LammpsControl(GenericParameters):
         Lammps handles complex cells in a particular way, namely by using an upper triangular cell. This means we may
         need to convert our pressure tensor to a new coordinate frame. We also handle that transformation here.
 
-        I case of a single pressure value, it is again returned as a single pressure value, to be used with the "iso"
+        In case of a single pressure value, it is again returned as a single pressure value, to be used with the "iso"
         option (i.e., coupled deformation in x, y, and z).
 
         Finally, we also ensure that the units are converted from pyiron's GPa to whatever Lammps needs.
@@ -285,8 +286,8 @@ class LammpsControl(GenericParameters):
                 lower than or equal to `ionic_energy_tolerance`, the minimisation terminates. (Default is 0.0 eV.)
             ionic_force_tolerance (float): If the magnitude of the global force vector at a step is lower than or equal
                 to `ionic_force_tolerance`, the minimisation terminates. (Default is 1e-4 eV/angstrom.)
-            e_tol (float): Sam as ionic_energy_tolerance (deprecated)
-            f_tol (float): Sam as ionic_force_tolerance (deprecated)
+            e_tol (float): Same as ionic_energy_tolerance (deprecated)
+            f_tol (float): Same as ionic_force_tolerance (deprecated)
             max_iter (int): Maximum number of minimisation steps to carry out. If the minimisation converges before
                 `max_iter` steps, terminate at the converged step. If the minimisation does not converge up to
                 `max_iter` steps, terminate at the `max_iter` step. (Default is 100000.)
@@ -317,14 +318,17 @@ class LammpsControl(GenericParameters):
         ionic_force_tolerance *= force_units
 
         if pressure is not None:
+            self._force_skewed = False
             pressure = self.pressure_to_lammps(pressure, rotation_matrix)
             if np.isscalar(pressure):
                 str_press = " iso {}".format(pressure)
             else:
                 str_press = ""
-                for press, str_axis in zip(pressure, [" x ", " y ", " z ", " xy ", " xz ", " yz "]):
+                for ii, (press, str_axis) in enumerate(zip(pressure, ["x","y","z","xy","xz","yz"])):
                     if press is not None:
-                        str_press += str_axis + str(press)
+                        str_press += ' ' + str_axis + ' ' + str(press)
+                        if ii>2:
+                            self._force_skewed = True
                 if len(str_press) > 1:
                     str_press += " couple none"
             self.set(fix___ensemble=r"all box/relax" + str_press)
@@ -429,40 +433,44 @@ class LammpsControl(GenericParameters):
         Set an MD calculation within LAMMPS. Nosé Hoover is used by default.
 
         Args:
-            temperature (None/float/list): Target temperature value(-s). If set to None, an NVE calculation is performed.
-                                           It is required when the pressure is set or langevin is set
-                                           It can be a list of temperature values, containing the initial target
-                                           temperature and the final target temperature (in between the target value
-                                           is varied linearly).
-            pressure (None/float/numpy.ndarray/list): Target pressure. If set to None, an NVE or an NVT calculation is
-                performed. If set to a scalar, the shear of the cell and the ratio of the x, y, and z components is kept
-                constant, while an isotropic, hydrostatic pressure is applied. A list of up to length 6 can be given to
-                specify xx, yy, zz, xy, xz, and yz components of the pressure tensor, respectively. These values can mix
-                floats and `None` to allow only certain degrees of cell freedom to change. (Default is None, run
-                isochorically.)
+            temperature (None/float/list): Target temperature value(-s). If set to None, an NVE
+                calculation is performed. It is required when the pressure is set or langevin is set
+                It can be a list of temperature values, containing the initial target temperature and
+                the final target temperature (in between the target value is varied linearly).
+            pressure (None/float/numpy.ndarray/list): Target pressure. If set to None, an NVE or an
+                NVT calculation is performed. If set to a scalar, the shear of the cell and the
+                ratio of the x, y, and z components is kept constant, while an isotropic, hydrostatic
+                pressure is applied. A list of up to length 6 can be given to specify xx, yy, zz, xy,
+                xz, and yz components of the pressure tensor, respectively. These values can mix
+                floats and `None` to allow only certain degrees of cell freedom to change. (Default
+                is None, run isochorically.)
             n_ionic_steps (int): Number of ionic steps
             time_step (float): Step size in fs between two steps.
             n_print (int):  Print frequency
-            temperature_damping_timescale (float): The time associated with the thermostat adjusting the temperature.
-                                                   (In fs. After rescaling to appropriate time units, is equivalent to
-                                                   Lammps' `Tdamp`.)
-            pressure_damping_timescale (float): The time associated with the barostat adjusting the temperature.
-                                                (In fs. After rescaling to appropriate time units, is equivalent to
-                                                Lammps' `Pdamp`.)
-            seed (int):  Seed for the random number generation (required for the velocity creation)
+            temperature_damping_timescale (float): The time associated with the thermostat adjusting
+                the temperature.  (In fs. After rescaling to appropriate time units, is equivalent to
+                Lammps' `Tdamp`.)
+            pressure_damping_timescale (float): The time associated with the barostat adjusting the
+                temperature.  (In fs. After rescaling to appropriate time units, is equivalent to
+                Lammps' `Pdamp`.)
+            seed (int):  Seed for the random number generation used for the intiial velocity creation
+                and langevin dynamics - otherwise ignored. If not specified, the seed is created via
+                job name
             tloop:
-            initial_temperature (None/float):  Initial temperature according to which the initial velocity field
-                                               is created. If None, the initial temperature will be twice the target
-                                               temperature (which would go immediately down to the target temperature
-                                               as described in equipartition theorem). If 0, the velocity field is not
-                                               initialized (in which case  the initial velocity given in structure will
-                                               be used). If any other number is given, this value is going to be used
-                                               for the initial temperature.
+            initial_temperature (None/float):  Initial temperature according to which the initial
+                velocity field is created. If None, the initial temperature will be twice the target
+                temperature (which would go immediately down to the target temperature as described
+                in equipartition theorem). If 0, the velocity field is not initialized (in which case
+                the initial velocity given in structure will be used). If any other number is given,
+                this value is going to be used for the initial temperature.
             langevin (bool): (True or False) Activate Langevin dynamics
-            delta_temp (float): Thermostat timescale, but in your Lammps time units, whatever those are. (DEPRECATED.)
-            delta_press (float): Barostat timescale, but in your Lammps time units, whatever those are. (DEPRECATED.)
+            delta_temp (float): Thermostat timescale, but in your Lammps time units, whatever those
+                are. (DEPRECATED.)
+            delta_press (float): Barostat timescale, but in your Lammps time units, whatever those
+                are. (DEPRECATED.)
             job_name (str): Job name of the job to generate a unique random seed.
-            rotation_matrix (numpy.ndarray): The rotation matrix from the pyiron to Lammps coordinate frame.
+            rotation_matrix (numpy.ndarray): The rotation matrix from the pyiron to Lammps coordinate
+                frame.
         """
         if self["units"] not in LAMMPS_UNIT_CONVERSIONS.keys():
             raise NotImplementedError

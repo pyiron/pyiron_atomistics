@@ -283,7 +283,7 @@ class LammpsStructure(GenericParameters):
             + "0. {} zlo zhi\n".format(zhi)
         )
 
-        if self.structure.is_skewed():
+        if self.structure.is_skewed() or self._force_skewed:
             simulation_cell += "{0} {1} {2} xy xz yz\n".format(xy, xz, yz)
 
         return simulation_cell
