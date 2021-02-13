@@ -74,7 +74,7 @@ class StructureFactory(PyironFactory):
             """
             s.publication_add(publication_ase())
             return ase_to_pyiron(ase_stack(*args, **kwargs))
-        cut.__doc__ += ase_stack.__doc__
+        stack.__doc__ += ase_stack.__doc__
 
     @classmethod
     def cut(cls, *args, **kwargs):
