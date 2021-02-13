@@ -53,6 +53,34 @@ s = Settings()
 
 
 class StructureFactory(PyironFactory):
+    class ase:
+        def cut(*args, **kwargs):
+            """
+            Returns an ASE's cut result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+
+            ase.build.cut docstring:
+
+            """
+            s.publication_add(publication_ase())
+            return ase_to_pyiron(ase_cut(*args, **kwargs))
+        cut.__doc__ += ase_cut.__doc__
+    
+    @classmethod
+    def cut(cls, *args, **kwargs):
+        """
+        Returns:
+            pyiron_atomistics.atomstic.structure.ase.cut
+        """
+        return cls.ase.cut(*args, **kwargs)
+
+    # def cut(*args, **kwargs):
+    #     """
+    #     Returns:
+    #         pyiron_atomistics.atomstic.structure.ase.cut
+    #     """
+    #     return StructureFactory.ase.cut(*args, **kwargs)
+    # cut.__doc__ += ase.cut.__doc__
+
     def ase_read(self, *args, **kwargs):
         """
         Returns a ASE's read result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
