@@ -76,6 +76,17 @@ class StructureFactory(PyironFactory):
             return ase_to_pyiron(ase_stack(*args, **kwargs))
         stack.__doc__ += ase_stack.__doc__
 
+        def crystal(*args, **kwargs):
+            """
+            Returns an ASE's crystal result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+
+            ase.spacegroup.crystal docstring:
+
+            """
+            s.publication_add(publication_ase())
+            return ase_to_pyiron(ase_crystal(*args, **kwargs))
+        crystal.__doc__ += ase_crystal.__doc__
+
     @classmethod
     def cut(cls, *args, **kwargs):
         """
