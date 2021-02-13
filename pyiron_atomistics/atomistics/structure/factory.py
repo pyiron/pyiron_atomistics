@@ -65,6 +65,17 @@ class StructureFactory(PyironFactory):
             return ase_to_pyiron(ase_cut(*args, **kwargs))
         cut.__doc__ += ase_cut.__doc__
     
+        def stack(*args, **kwargs):
+            """
+            Returns an ASE's stack result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+
+            ase.build.stack docstring:
+
+            """
+            s.publication_add(publication_ase())
+            return ase_to_pyiron(ase_stack(*args, **kwargs))
+        cut.__doc__ += ase_stack.__doc__
+
     @classmethod
     def cut(cls, *args, **kwargs):
         """
@@ -80,6 +91,14 @@ class StructureFactory(PyironFactory):
     #     """
     #     return StructureFactory.ase.cut(*args, **kwargs)
     # cut.__doc__ += ase.cut.__doc__
+
+    @classmethod
+    def stack(cls, *args, **kwargs):
+        """
+        Returns:
+            pyiron_atomistics.atomstic.structure.ase.stack
+        """
+        return cls.ase.stack(*args, **kwargs)
 
     def ase_read(self, *args, **kwargs):
         """
