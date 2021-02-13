@@ -26,6 +26,8 @@ from ase.build import (
         root_surface_analysis,
         surface as ase_surf,
     )
+from ase.build import cut as ase_cut, stack as ase_stack
+from ase.spacegroup import crystal as ase_crystal
 from ase.io import read
 import numpy as np
 from pymatgen import Structure, Lattice, PeriodicSite
