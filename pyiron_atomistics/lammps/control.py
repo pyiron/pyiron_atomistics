@@ -326,7 +326,7 @@ class LammpsControl(GenericParameters):
                 str_press = ""
                 for ii, (press, str_axis) in enumerate(zip(pressure, ["x","y","z","xy","xz","yz"])):
                     if press is not None:
-                        str_press += ' ' + str_axis + ' ' + str(press)
+                        str_press += ' {} {}'.format(str_axis, press)
                         if ii>2:
                             self._force_skewed = True
                 if len(str_press) > 1:
@@ -527,17 +527,20 @@ class LammpsControl(GenericParameters):
             if temperature is None or temperature.min() <= 0:
                 raise ValueError("Target temperature for fix nvt/npt/nph cannot be 0 or negative")
 
+            self._force_skewed = False
             pressure = self.pressure_to_lammps(pressure, rotation_matrix)
 
             if np.isscalar(pressure):
                 pressure_string = " iso {0} {0} {1}".format(pressure, pressure_damping_timescale)
             else:
                 pressure_string = ""
-                for coord, value in zip(["x", "y", "z", "xy", "xz", "yz"], pressure):
+                for ii, (coord, value) in enumerate(zip(["x", "y", "z", "xy", "xz", "yz"], pressure)):
                     if value is not None:
                         pressure_string += " {0} {1} {1} {2}".format(
                             coord, value, pressure_damping_timescale
                         )
+                    if ii > 2:
+                        self._force_skewed = True
 
             if langevin:  # NPT(Langevin)
                 fix_ensemble_str = "all nph" + pressure_string
