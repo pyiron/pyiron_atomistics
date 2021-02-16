@@ -281,9 +281,9 @@ class SphinxBase(GenericDFTJob):
             scf_group["maxSteps"] = str(self.input["Estep"])
         else:
             scf_group["maxSteps"] = str(maxSteps)
-        if "preconditioner" in self.input:
-            scf_group.create_group("preconditioner")["type"] = \
-                    self.input["preconditioner"]
+        scf_group.create_group("preconditioner")["type"] = 'KERKER'
+        scf_group.preconditioner.set_parameter('scaling', self.input["rhoResidualScaling"])
+        scf_group.preconditioner.set_parameter('spinScaling', self.input["spinResidualScaling"])
         scf_group.create_group(algorithm)
         if "maxStepsCCG" in self.input:
             scf_group[algorithm]["maxStepsCCG"] = self.input["maxStepsCCG"]
@@ -383,6 +383,8 @@ class SphinxBase(GenericDFTJob):
         self.input.SaveMemory = True
         self.input.rhoMixing = 1.0
         self.input.spinMixing = 1.0
+        self.input.rhoResidualScaling = 1.0
+        self.input.spinResidualScaling = 1.0
         self.input.CheckOverlap = True
         self.input.THREADS = 1
         self.input.use_on_the_fly_cg_optimization = True
@@ -922,6 +924,8 @@ class SphinxBase(GenericDFTJob):
         n_pulay_steps=None,
         density_mixing_parameter=None,
         spin_mixing_parameter=None,
+        density_residual_scaling=None,
+        spin_residual_scaling=None,
     ):
         """
             Further information can be found on the website:
@@ -956,6 +960,10 @@ class SphinxBase(GenericDFTJob):
             self.input["rhoMixing"] = density_mixing_parameter
         if spin_mixing_parameter is not None:
             self.input["spinMixing"] = spin_mixing_parameter
+        if density_residual_scaling is not None:
+            self.input["rhoResidualScaling"] = density_residual_scaling 
+        if spin_residual_scaling is not None:
+            self.input["spinResidualScaling"] = spin_residual_scaling 
     set_mixing_parameters.__doc__ = (
         GenericDFTJob.set_mixing_parameters.__doc__
         + set_mixing_parameters.__doc__
