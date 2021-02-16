@@ -175,23 +175,32 @@ class GenericDFTJob(AtomisticGenericJob):
         n_pulay_steps=None,
         density_mixing_parameter=None,
         spin_mixing_parameter=None,
+        density_residual_scaling=None,
+        spin_residual_scaling=None,
     ):
         """
         Args:
             method (str): mixing method 'PULAY' or 'KERKER' (default: PULAY)
             n_pulay_steps (int): number of previous densities to use for the Pulay mixing
                 (default: 7)
-            density_mixing_parameter (float): mixing proportion m defined by
-
-                rho^n = (m-1)*rho^(n-1)+m*preconditioner*rho_(opt)
-
+            density_mixing_parameter (float): mixing ratio of rho_opt to rho_in
             spin_mixing_parameter (float): linear mixing parameter for spin densities
+            density_residual_scaling (float): scaling for the residual contribution of the Kerker
+                mixing. 1 means it takes as much rho_in (input density) as residual (where Kerker
+                preconditioning applies). The lower the value, the smaller the residual
+                contribution becomes.
+            spin_residual_scaling (float): scaling for the spin residual
+                (cf. density_residual_scaling)
 
-        Comments:
-            A low value of density mixing parameter may lead to a more stable convergence, but
-            will slow down the calculation if set too low. In systems with bands around the Fermi
-            energy (i.e. metals, e.g. Fe, Mn), the mixing parameters should be small. In insulators
-            (e.g. Al, Si) the mixing parameter should be high.
+            Mixing ratio m is given by:
+
+                rho^n = (m-1)*rho_in+m*preconditioner*rho_opt
+
+
+        A low value of density mixing parameter may lead to a more stable convergence, but will slow
+        down the calculation if set too low. In systems with bands around the Fermi energy (i.e.
+        metals, e.g. Fe, Mn), the mixing parameters should be small. In insulators (e.g. Al, Si) the
+        mixing parameter should be high.
 
         """
         raise NotImplementedError(
