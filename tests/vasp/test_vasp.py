@@ -411,6 +411,8 @@ class TestVasp(unittest.TestCase):
         job = self.project.create_job('Vasp', 'mixing_parameter')
         job.set_mixing_parameters(density_mixing_parameter=0.1)
         self.assertEqual(job.input.incar['IMIX'], 4)
+        with self.assertRaises(NotImplementedError):
+            job.set_mixing_parameters(density_residual_scaling=0.1)
 
 
 if __name__ == "__main__":
