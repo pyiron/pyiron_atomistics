@@ -1298,7 +1298,11 @@ class VaspBase(GenericDFTJob):
         n_pulay_steps=None,
         density_mixing_parameter=None,
         spin_mixing_parameter=None,
+        density_residual_scaling=None,
+        spin_residual_scaling=None,
     ):
+        if density_residual_scaling is not None or spin_residual_scaling is not None:
+            raise NotImplementedError('Residual scaling is not implemented in VASP')
         if method is None:
             method = "PULAY"
         if method.upper() == "PULAY":
@@ -1309,6 +1313,7 @@ class VaspBase(GenericDFTJob):
             self.input.incar["MAXMIX"] = n_pulay_steps
         if density_mixing_parameter is not None:
             self.input.incar["AMIX"] = density_mixing_parameter
+    set_mixing_parameters.__doc__ = GenericDFTJob.set_mixing_parameters.__doc__
 
     def set_empty_states(self, n_empty_states=None):
         """
