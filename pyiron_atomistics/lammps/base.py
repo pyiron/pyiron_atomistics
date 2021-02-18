@@ -1054,6 +1054,7 @@ class LammpsBase(AtomisticGenericJob):
 
     def _get_lammps_structure(self, structure=None, cutoff_radius=None):
         lmp_structure = LammpsStructure(bond_dict=self.input.bond_dict)
+        lmp_structure._force_skewed = self.input.control._force_skewed
         lmp_structure.potential = self.input.potential
         lmp_structure.atom_type = self.input.control["atom_style"]
         if cutoff_radius is not None:
@@ -1061,7 +1062,6 @@ class LammpsBase(AtomisticGenericJob):
         else:
             lmp_structure.cutoff_radius = self.cutoff_radius
         lmp_structure.el_eam_lst = self.input.potential.get_element_lst()
-        lmp_structure._force_skewed = self.input.control._force_skewed
 
         def structure_to_lammps(structure):
             """

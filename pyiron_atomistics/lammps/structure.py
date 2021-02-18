@@ -197,6 +197,7 @@ class LammpsStructure(GenericParameters):
         self.cutoff_radius = None
         self.digits = 10
         self._bond_dict = bond_dict
+        self._force_skewed = False
 
     @property
     def potential(self):
