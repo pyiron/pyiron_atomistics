@@ -115,7 +115,7 @@ class UnfoldingPrism(Prism):
 
         self.A = apre
 
-        if self.is_skewed() and (not (pbc[0] and pbc[1] and pbc[2])):
+        if self._force_skewed and (not (pbc[0] and pbc[1] and pbc[2])):
             raise RuntimeError(
                 "Skewed lammps cells MUST have " "PBC == True in all directions!"
             )
