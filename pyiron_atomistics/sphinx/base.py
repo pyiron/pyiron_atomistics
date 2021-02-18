@@ -958,11 +958,11 @@ class SphinxBase(GenericDFTJob):
         if density_residual_scaling is not None:
             if density_residual_scaling <= 0:
                 raise ValueError('density_residual_scaling must be a positive value')
-            self.input["rhoResidualScaling"] = density_residual_scaling 
+            self.input["rhoResidualScaling"] = density_residual_scaling
         if spin_residual_scaling is not None:
             if spin_residual_scaling <= 0:
                 raise ValueError('spin_residual_scaling   must be a positive value')
-            self.input["spinResidualScaling"] = spin_residual_scaling 
+            self.input["spinResidualScaling"] = spin_residual_scaling
     set_mixing_parameters.__doc__ = (
         GenericDFTJob.set_mixing_parameters.__doc__
         + set_mixing_parameters.__doc__
