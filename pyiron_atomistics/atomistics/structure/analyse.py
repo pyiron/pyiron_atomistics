@@ -207,7 +207,7 @@ class Analyse:
         """    Calculate the Voronoi volume of atoms        """
         return analyse_voronoi_volume(atoms=self._structure)
 
-    def get_voronoi_vertices(self, epsilon=2.6544356738490314e-4, distance_threshold=0, width_buffer=10):
+    def get_voronoi_vertices(self, epsilon=2.5e-4, distance_threshold=0, width_buffer=10):
         """
         Get voronoi vertices of the box.
 
