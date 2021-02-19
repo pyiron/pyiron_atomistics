@@ -6,6 +6,7 @@ import numpy as np
 from pyiron_base import Settings
 from sklearn.cluster import AgglomerativeClustering
 from scipy.sparse import coo_matrix
+from scipy.spatial import Voronoi
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
 
@@ -206,3 +207,16 @@ class Analyse:
         """    Calculate the Voronoi volume of atoms        """
         return analyse_voronoi_volume(atoms=self._structure)
 
+    def get_voronoi_vertices(self, epsilon=2.6544356738490314e-4, distance_threshold=0):
+        voro = Voronoi(self._structure.get_extended_positions(3)+epsilon)
+        xx = voro.vertices
+        if distance_threshold > 0:
+            cluster = AgglomerativeClustering(
+                linkage='single',
+                distance_threshold=distance_threshold,
+                n_clusters=None
+            )
+            cluster.fit(xx)
+            xx = get_average_of_unique_labels(cluster.labels_, xx)
+        xx = xx[np.linalg.norm(xx-self._structure.get_wrapped_coordinates(xx), axis=-1)<epsilon]
+        return xx-epsilon
