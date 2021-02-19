@@ -92,29 +92,13 @@ class StructureFactory(PyironFactory):
     def __init__(self):
         self.ase = AseFactory()
 
-    @classmethod
-    def cut(cls, *args, **kwargs):
-        """
-        Returns:
-            pyiron_atomistics.atomstic.structure.ase.cut
-        """
-        return cls.ase.cut(*args, **kwargs)
+    def cut(self, *args, **kwargs):
+        return self.ase.cut(*args, **kwargs)
+    cut.__doc__ = AseFactory.cut.__doc__
 
-    # def cut(*args, **kwargs):
-    #     """
-    #     Returns:
-    #         pyiron_atomistics.atomstic.structure.ase.cut
-    #     """
-    #     return StructureFactory.ase.cut(*args, **kwargs)
-    # cut.__doc__ += ase.cut.__doc__
-
-    @classmethod
-    def stack(cls, *args, **kwargs):
-        """
-        Returns:
-            pyiron_atomistics.atomstic.structure.ase.stack
-        """
-        return cls.ase.stack(*args, **kwargs)
+    def stack(self, *args, **kwargs):
+        return self.ase.stack(*args, **kwargs)
+    stack.__doc__ = AseFactory.stack.__doc__
 
     def ase_read(self, *args, **kwargs):
         """
