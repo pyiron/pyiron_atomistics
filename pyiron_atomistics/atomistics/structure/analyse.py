@@ -207,8 +207,8 @@ class Analyse:
         """    Calculate the Voronoi volume of atoms        """
         return analyse_voronoi_volume(atoms=self._structure)
 
-    def get_voronoi_vertices(self, epsilon=2.6544356738490314e-4, distance_threshold=0):
-        voro = Voronoi(self._structure.get_extended_positions(3)+epsilon)
+    def get_voronoi_vertices(self, epsilon=2.6544356738490314e-4, distance_threshold=0, width_buffer=4):
+        voro = Voronoi(self._structure.get_extended_positions(width_buffer)+epsilon)
         xx = voro.vertices
         if distance_threshold > 0:
             cluster = AgglomerativeClustering(
@@ -218,5 +218,6 @@ class Analyse:
             )
             cluster.fit(xx)
             xx = get_average_of_unique_labels(cluster.labels_, xx)
-        xx = xx[np.linalg.norm(xx-self._structure.get_wrapped_coordinates(xx), axis=-1)<epsilon]
+        xx = xx[np.linalg.norm(xx-self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1)<epsilon]
         return xx-epsilon
+
