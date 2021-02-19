@@ -207,7 +207,31 @@ class Analyse:
         """    Calculate the Voronoi volume of atoms        """
         return analyse_voronoi_volume(atoms=self._structure)
 
-    def get_voronoi_vertices(self, epsilon=2.6544356738490314e-4, distance_threshold=0, width_buffer=4):
+    def get_voronoi_vertices(self, epsilon=2.6544356738490314e-4, distance_threshold=0, width_buffer=10):
+        """
+        Get voronoi vertices of the box.
+
+        Args:
+            epsilon (float): displacement to add to avoid wrapping of atoms at borders
+            distance_threshold (float): distance below which two vertices are considered as one.
+                Agglomerative clustering algorith (sklearn) is employed. Final positions are given
+                as the average positions of clusters.
+            width_buffer (float): width of the layer to be added to account for pbc.
+
+        Returns:
+            numpy.ndarray: 3d-array of vertices
+
+        This function detect octahedral and tetrahedral sites in fcc; in bcc it detects tetrahedral
+        sites. In defects (e.g. vacancy, dislocation, grain boundary etc.), it gives a list of
+        positions interstitial atoms might want to occupy. In order for this to be more successful,
+        it might make sense to look at the distance between the voronoi vertices and their nearest
+        neighboring atoms via:
+
+        >>> voronoi_vertices = structure_of_your_choice.analyse.get_voronoi_vertices()
+        >>> neigh = structure_of_your_choice.get_neighborhood(voronoi_vertices)
+        >>> print(neigh.distances.min(axis=-1))
+
+        """
         voro = Voronoi(self._structure.get_extended_positions(width_buffer)+epsilon)
         xx = voro.vertices
         if distance_threshold > 0:
