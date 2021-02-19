@@ -25,8 +25,9 @@ from ase.build import (
         root_surface,
         root_surface_analysis,
         surface as ase_surf,
+        cut as ase_cut,
+        stack as ase_stack
     )
-from ase.build import cut as ase_cut, stack as ase_stack
 from ase.spacegroup import crystal as ase_crystal
 from ase.io import read
 import numpy as np
@@ -52,40 +53,44 @@ __date__ = "May 1, 2020"
 s = Settings()
 
 
+class AseFactory:
+    def cut(self, *args, **kwargs):
+        """
+        Returns an ASE's cut result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+
+        ase.build.cut docstring:
+
+        """
+        s.publication_add(publication_ase())
+        return ase_to_pyiron(ase_cut(*args, **kwargs))
+    cut.__doc__ += ase_cut.__doc__
+
+    def stack(self, *args, **kwargs):
+        """
+        Returns an ASE's stack result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+
+        ase.build.stack docstring:
+
+        """
+        s.publication_add(publication_ase())
+        return ase_to_pyiron(ase_stack(*args, **kwargs))
+    stack.__doc__ += ase_stack.__doc__
+
+    def crystal(self, *args, **kwargs):
+        """
+        Returns an ASE's crystal result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+
+        ase.spacegroup.crystal docstring:
+
+        """
+        s.publication_add(publication_ase())
+        return ase_to_pyiron(ase_crystal(*args, **kwargs))
+    crystal.__doc__ += ase_crystal.__doc__
+
+
 class StructureFactory(PyironFactory):
-    class ase:
-        def cut(*args, **kwargs):
-            """
-            Returns an ASE's cut result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
-
-            ase.build.cut docstring:
-
-            """
-            s.publication_add(publication_ase())
-            return ase_to_pyiron(ase_cut(*args, **kwargs))
-        cut.__doc__ += ase_cut.__doc__
-    
-        def stack(*args, **kwargs):
-            """
-            Returns an ASE's stack result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
-
-            ase.build.stack docstring:
-
-            """
-            s.publication_add(publication_ase())
-            return ase_to_pyiron(ase_stack(*args, **kwargs))
-        stack.__doc__ += ase_stack.__doc__
-
-        def crystal(*args, **kwargs):
-            """
-            Returns an ASE's crystal result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
-
-            ase.spacegroup.crystal docstring:
-
-            """
-            s.publication_add(publication_ase())
-            return ase_to_pyiron(ase_crystal(*args, **kwargs))
-        crystal.__doc__ += ase_crystal.__doc__
+    def __init__(self):
+        self.ase = AseFactory()
 
     @classmethod
     def cut(cls, *args, **kwargs):
