@@ -62,6 +62,11 @@ class TestAtoms(unittest.TestCase):
             all([np.isclose(v, 0.0) for v in basis.analyse.pyscal_centro_symmetry(num_neighbors=8)])
         )
 
+    def test_get_voronoi_vertices(self):
+        basis = CrystalStructure('Al', bravais_basis='fcc', lattice_constants=4)
+        self.assertEqual(len(basis.analyse.get_voronoi_vertices()), 12)
+        self.assertEqual(len(basis.analyse.get_voronoi_vertices(distance_threshold=2)), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
