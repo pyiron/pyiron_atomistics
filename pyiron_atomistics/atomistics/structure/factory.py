@@ -63,7 +63,7 @@ class AseFactory:
 
         """
         s.publication_add(publication_ase())
-        return ase_to_pyiron(ase_cut(*args, **kwargs))
+        return ase_cut(*args, **kwargs)
 
     @wraps(ase_stack)
     def stack(self, *args, **kwargs):
@@ -74,7 +74,7 @@ class AseFactory:
 
         """
         s.publication_add(publication_ase())
-        return ase_to_pyiron(ase_stack(*args, **kwargs))
+        return ase_stack(*args, **kwargs)
 
     @wraps(ase_crystal)
     def crystal(self, *args, **kwargs):
