@@ -37,7 +37,7 @@ from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_t
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import Settings, PyironFactory
 import types
-
+from functools import wraps
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
@@ -54,6 +54,7 @@ s = Settings()
 
 
 class AseFactory:
+    @wraps(ase_cut)
     def cut(self, *args, **kwargs):
         """
         Returns an ASE's cut result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
@@ -63,8 +64,8 @@ class AseFactory:
         """
         s.publication_add(publication_ase())
         return ase_to_pyiron(ase_cut(*args, **kwargs))
-    cut.__doc__ += ase_cut.__doc__
 
+    @wraps(ase_stack)
     def stack(self, *args, **kwargs):
         """
         Returns an ASE's stack result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
@@ -74,8 +75,8 @@ class AseFactory:
         """
         s.publication_add(publication_ase())
         return ase_to_pyiron(ase_stack(*args, **kwargs))
-    stack.__doc__ += ase_stack.__doc__
 
+    @wraps(ase_crystal)
     def crystal(self, *args, **kwargs):
         """
         Returns an ASE's crystal result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
@@ -85,7 +86,6 @@ class AseFactory:
         """
         s.publication_add(publication_ase())
         return ase_to_pyiron(ase_crystal(*args, **kwargs))
-    crystal.__doc__ += ase_crystal.__doc__
 
 
 class StructureFactory(PyironFactory):
