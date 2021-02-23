@@ -6,6 +6,7 @@ import numpy as np
 from pyiron_base import Settings
 from sklearn.cluster import AgglomerativeClustering
 from scipy.sparse import coo_matrix
+from scipy.spatial import Voronoi
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
 
@@ -205,4 +206,42 @@ class Analyse:
     def pyscal_voronoi_volume(self):
         """    Calculate the Voronoi volume of atoms        """
         return analyse_voronoi_volume(atoms=self._structure)
+
+    def get_voronoi_vertices(self, epsilon=2.5e-4, distance_threshold=0, width_buffer=10):
+        """
+        Get voronoi vertices of the box.
+
+        Args:
+            epsilon (float): displacement to add to avoid wrapping of atoms at borders
+            distance_threshold (float): distance below which two vertices are considered as one.
+                Agglomerative clustering algorith (sklearn) is employed. Final positions are given
+                as the average positions of clusters.
+            width_buffer (float): width of the layer to be added to account for pbc.
+
+        Returns:
+            numpy.ndarray: 3d-array of vertices
+
+        This function detect octahedral and tetrahedral sites in fcc; in bcc it detects tetrahedral
+        sites. In defects (e.g. vacancy, dislocation, grain boundary etc.), it gives a list of
+        positions interstitial atoms might want to occupy. In order for this to be more successful,
+        it might make sense to look at the distance between the voronoi vertices and their nearest
+        neighboring atoms via:
+
+        >>> voronoi_vertices = structure_of_your_choice.analyse.get_voronoi_vertices()
+        >>> neigh = structure_of_your_choice.get_neighborhood(voronoi_vertices)
+        >>> print(neigh.distances.min(axis=-1))
+
+        """
+        voro = Voronoi(self._structure.get_extended_positions(width_buffer)+epsilon)
+        xx = voro.vertices
+        if distance_threshold > 0:
+            cluster = AgglomerativeClustering(
+                linkage='single',
+                distance_threshold=distance_threshold,
+                n_clusters=None
+            )
+            cluster.fit(xx)
+            xx = get_average_of_unique_labels(cluster.labels_, xx)
+        xx = xx[np.linalg.norm(xx-self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1)<epsilon]
+        return xx-epsilon
 
