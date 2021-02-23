@@ -218,6 +218,8 @@ class Tree:
             distance_upper_bound=cutoff_radius,
             p=self.norm_order,
         )
+        distances = np.array([distances]).reshape(-1, num_neighbors).squeeze()
+        indices = np.array([indices]).reshape(-1, num_neighbors).squeeze()
         if cutoff_radius<np.inf and np.any(distances.T[-1]<np.inf):
             warnings.warn(
                 'Number of neighbors found within the cutoff_radius is equal to (estimated) '
@@ -365,7 +367,7 @@ class Tree:
                     width_buffer=width_buffer,
                 )
             vectors = np.zeros(distances.shape+(3,))
-            vectors -= self._get_wrapped_positions(positions).reshape(distances.shape[:-1]+(1, 3))
+            vectors -= self._get_wrapped_positions(positions).reshape(distances.shape[:-1]+(-1, 3))
             vectors[distances<np.inf] += self._get_extended_positions()[
                 self._extended_indices[distances<np.inf]
             ]
