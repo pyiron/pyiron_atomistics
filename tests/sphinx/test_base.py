@@ -195,6 +195,11 @@ class TestSphinx(unittest.TestCase):
             '\t\tspinMixing = 1.0;\n',
             '\t\tdEnergy = 3.674932217565499e-06;\n',
             '\t\tmaxSteps = 100;\n',
+            '\t\tpreconditioner {\n',
+            '\t\t\ttype = KERKER;\n',
+            '\t\t\tscaling = 1.0;\n',
+            '\t\t\tspinScaling = 1.0;\n',
+            '\t\t}\n',
             '\t\tblockCCG {}\n',
             '\t}\n',
             '\tevalForces {\n',
@@ -324,6 +329,7 @@ class TestSphinx(unittest.TestCase):
                 'rhoMixing': '1.0',
                 'spinMixing': '1.0',
                 'dEnergy': 3.674932217565499e-06,
+                'preconditioner': {'type': 'KERKER', 'scaling': 1.0, 'spinScaling': 1.0},
                 'maxSteps': '100',
                 'blockCCG': {}}
             self.assertEqual(test_scf, ref_scf)
@@ -334,9 +340,7 @@ class TestSphinx(unittest.TestCase):
             'nPulaySteps': '0',
             'dEnergy': 3.674932217565499e-06,
             'maxSteps': '100',
-            'preconditioner': {
-                'type': 0
-                },
+            'preconditioner': {'type': 0},
             'blockCCG': {
             'maxStepsCCG': 0,
             'blockSize': 0,
@@ -449,17 +453,29 @@ class TestSphinx(unittest.TestCase):
             ValueError, self.sphinx.set_mixing_parameters, "LDA", 7, 1.0, 1.0
         )
         self.assertRaises(
-            AssertionError, self.sphinx.set_mixing_parameters, "PULAY", 1.2, 1.0, 1.0
-        )
-        self.assertRaises(
             ValueError, self.sphinx.set_mixing_parameters, "PULAY", 7, -0.1, 1.0
         )
         self.assertRaises(
             ValueError, self.sphinx.set_mixing_parameters, "PULAY", 7, 1.0, 2.0
         )
-        self.sphinx.set_mixing_parameters("PULAY", 7, 0.5, 0.2)
+        self.assertRaises(
+            ValueError, self.sphinx.set_mixing_parameters, "PULAY", 7, 1.0, 1.0, -0.1, 0.5
+        )
+        self.assertRaises(
+            ValueError, self.sphinx.set_mixing_parameters, "PULAY", 7, 1.0, 1.0, 0.1, -0.5
+        )
+        self.sphinx.set_mixing_parameters(
+            method="PULAY",
+            n_pulay_steps=7,
+            density_mixing_parameter=0.5,
+            spin_mixing_parameter=0.2,
+            density_residual_scaling=0.1,
+            spin_residual_scaling=0.3,
+        )
         self.assertEqual(self.sphinx.input["rhoMixing"], 0.5)
         self.assertEqual(self.sphinx.input["spinMixing"], 0.2)
+        self.assertEqual(self.sphinx.input["rhoResidualScaling"], 0.1)
+        self.assertEqual(self.sphinx.input["spinResidualScaling"], 0.3)
 
     def test_exchange_correlation_functional(self):
         with warnings.catch_warnings(record=True) as w:
