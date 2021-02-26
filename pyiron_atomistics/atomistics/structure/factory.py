@@ -49,8 +49,16 @@ s = Settings()
 
 class StructureFactory(PyironFactory):
     def __init__(self):
-        self.ase = AseFactory()
-        self.aimsgb = AimsgbFactory()
+        self._ase = AseFactory()
+        self._aimsgb = AimsgbFactory()
+
+    @property
+    def ase(self):
+        return self._ase
+
+    @property
+    def aimsgb(self):
+        return self._aimsgb
 
     def cut(self, *args, **kwargs):
         return self.ase.cut(*args, **kwargs)
