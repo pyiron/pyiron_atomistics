@@ -2,8 +2,6 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from aimsgb import GrainBoundary, Grain, GBInformation
-from ase.build import bulk
 from ase.build import (
         add_adsorbate,
         add_vacuum,
@@ -24,20 +22,16 @@ from ase.build import (
         bcc111_root,
         root_surface,
         root_surface_analysis,
-        surface as ase_surf,
-        cut as ase_cut,
-        stack as ase_stack
-    )
-from ase.spacegroup import crystal as ase_crystal
-from ase.io import read
+        surface as ase_surf
+)
 import numpy as np
-from pymatgen import Structure, Lattice, PeriodicSite
+from pyiron_atomistics.atomistics.structure.bindings.ase import AseFactory
+from pyiron_atomistics.atomistics.structure.bindings.aimsgb import AimsgbFactory
 from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_to_pyiron, pyiron_to_pymatgen, pymatgen_to_pyiron, Atoms
+from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_to_pyiron, Atoms
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_base import Settings, PyironFactory
+from pyiron_base import Settings, PyironFactory, deprecate
 import types
-from functools import wraps
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
@@ -53,44 +47,10 @@ __date__ = "May 1, 2020"
 s = Settings()
 
 
-class AseFactory:
-    @wraps(ase_cut)
-    def cut(self, *args, **kwargs):
-        """
-        Returns an ASE's cut result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
-
-        ase.build.cut docstring:
-
-        """
-        s.publication_add(publication_ase())
-        return ase_cut(*args, **kwargs)
-
-    @wraps(ase_stack)
-    def stack(self, *args, **kwargs):
-        """
-        Returns an ASE's stack result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
-
-        ase.build.stack docstring:
-
-        """
-        s.publication_add(publication_ase())
-        return ase_stack(*args, **kwargs)
-
-    @wraps(ase_crystal)
-    def crystal(self, *args, **kwargs):
-        """
-        Returns an ASE's crystal result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
-
-        ase.spacegroup.crystal docstring:
-
-        """
-        s.publication_add(publication_ase())
-        return ase_to_pyiron(ase_crystal(*args, **kwargs))
-
-
 class StructureFactory(PyironFactory):
     def __init__(self):
         self.ase = AseFactory()
+        self.aimsgb = AimsgbFactory()
 
     def cut(self, *args, **kwargs):
         return self.ase.cut(*args, **kwargs)
@@ -100,14 +60,59 @@ class StructureFactory(PyironFactory):
         return self.ase.stack(*args, **kwargs)
     stack.__doc__ = AseFactory.stack.__doc__
 
-    def ase_read(self, *args, **kwargs):
-        """
-        Returns a ASE's read result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+    def read(self, *args, **kwargs):
+        return self.ase.read(*args, **kwargs)
+    read.__doc__ += AseFactory.read.__doc__
 
-        ase.io.read docstring:
+    @deprecate(message="Please use .read or .ase.read", version="0.2.2")
+    def ase_read(self, *args, **kwargs):
+        return self.ase.read(*args, **kwargs)
+    ase_read.__doc__ += AseFactory.read.__doc__
+
+    @deprecate(message="Please use .bulk or .ase.bulk", version="0.2.2")
+    @staticmethod
+    def ase_bulk(self, *args, **kwargs):
+        return self.ase.bulk(*args, **kwargs)
+    ase_bulk.__doc__ += AseFactory.bulk.__doc__
+
+    def bulk(
+            self,
+            name,
+            crystalstructure=None,
+            a=None,
+            c=None,
+            covera=None,
+            u=None,
+            orthorhombic=False,
+            cubic=False,
+    ):
         """
-        return ase_to_pyiron(read(*args, **kwargs))
-    ase_read.__doc__ += read.__doc__
+        Creating bulk systems (using ASE bulk module). Crystal structure and lattice constant(s) will be guessed if not
+        provided.
+
+        name (str): Chemical symbol or symbols as in 'MgO' or 'NaCl'.
+        crystalstructure (str): Must be one of sc, fcc, bcc, hcp, diamond, zincblende,
+                                rocksalt, cesiumchloride, fluorite or wurtzite.
+        a (float): Lattice constant.
+        c (float): Lattice constant.
+        c_over_a (float): c/a ratio used for hcp.  Default is ideal ratio: sqrt(8/3).
+        u (float): Internal coordinate for Wurtzite structure.
+        orthorhombic (bool): Construct orthorhombic unit cell instead of primitive cell which is the default.
+        cubic (bool): Construct cubic unit cell if possible.
+
+        Returns:
+            pyiron.atomistics.structure.atoms.Atoms: Required bulk structure
+        """
+        return self.ase.bulk(
+            name=name,
+            crystalstructure=crystalstructure,
+            a=a,
+            c=c,
+            covera=covera,
+            u=u,
+            orthorhombic=orthorhombic,
+            cubic=cubic,
+        )
 
     @staticmethod
     def surface(
@@ -221,46 +226,6 @@ class StructureFactory(PyironFactory):
             bravais_basis=bravais_basis,
             lattice_constants=[lattice_constant],
         )
-
-    @staticmethod
-    def ase_bulk(
-        name,
-        crystalstructure=None,
-        a=None,
-        c=None,
-        covera=None,
-        u=None,
-        orthorhombic=False,
-        cubic=False,
-    ):
-        """
-        Creating bulk systems using ASE bulk module. Crystal structure and lattice constant(s) will be guessed if not
-        provided.
-
-        name (str): Chemical symbol or symbols as in 'MgO' or 'NaCl'.
-        crystalstructure (str): Must be one of sc, fcc, bcc, hcp, diamond, zincblende,
-                                rocksalt, cesiumchloride, fluorite or wurtzite.
-        a (float): Lattice constant.
-        c (float): Lattice constant.
-        c_over_a (float): c/a ratio used for hcp.  Default is ideal ratio: sqrt(8/3).
-        u (float): Internal coordinate for Wurtzite structure.
-        orthorhombic (bool): Construct orthorhombic unit cell instead of primitive cell which is the default.
-        cubic (bool): Construct cubic unit cell if possible.
-
-        Returns:
-            pyiron.atomistics.structure.atoms.Atoms: Required bulk structure
-        """
-        s.publication_add(publication_ase())
-        return ase_to_pyiron(bulk(
-            name=name,
-            crystalstructure=crystalstructure,
-            a=a,
-            c=c,
-            covera=covera,
-            u=u,
-            orthorhombic=orthorhombic,
-            cubic=cubic,
-        ))
 
     @staticmethod
     def atoms(
@@ -385,58 +350,29 @@ class StructureFactory(PyironFactory):
             )
         return periodic_table.element(new_element_name)
 
-    @staticmethod
-    def aimsgb_info(axis, max_sigma):
-        """
-        Provides a list of possible GB structures for a given rotational axis and upto the given maximum sigma value.
+    @deprecate(message="Use .aimsgb.info", version="0.2.2")
+    def aimsgb_info(self, axis, max_sigma):
+        self.aimsgb.info(axis=axis, max_sigma=max_sigma)
+    aimsgb_info.__doc__ += AimsgbFactory.info.__doc__
 
-        Args:
-            axis : Rotational axis for the GB you want to construct (for example, axis=[1,0,0])
-            max_sigma (int) : The maximum value of sigma upto which you want to consider for your
-            GB (for example, sigma=5)
-
-        Returns:
-            A list of possible GB structures in the format:
-
-            {sigma value: {'theta': [theta value],
-                'plane': the GB planes")
-                'rot_matrix': array([the rotational matrix]),
-                'csl': [array([the csl matrix])]}}
-
-        To construct the grain boundary select a GB plane and sigma value from the list and pass it to the
-        GBBuilder.gb_build() function along with the rotational axis and initial bulk structure.
-        """
-        return GBInformation(axis=axis, max_sigma=max_sigma)
-
-    @staticmethod
-    def aimsgb_build(axis, sigma, plane, initial_struct, to_primitive=False,
-                 delete_layer='0b0t0b0t', add_if_dist=0.0):
-        """
-        Generate a grain boundary structure based on the aimsgb.GrainBoundary module.
-
-        Args:
-            axis : Rotational axis for the GB you want to construct (for example, axis=[1,0,0])
-            sigma (int) : The sigma value of the GB you want to construct (for example, sigma=5)
-            plane: The grain boundary plane of the GB you want to construct (for example, plane=[2,1,0])
-            initial_struct : Initial bulk structure from which you want to construct the GB (a pyiron
-                            structure object).
-            delete_layer : To delete layers of the GB. For example, delete_layer='1b0t1b0t'. The first
-                           4 characters is for first grain and the other 4 is for second grain. b means
-                           bottom layer and t means top layer. Integer represents the number of layers
-                           to be deleted. The first t and second b from the left hand side represents
-                           the layers at the GB interface. Default value is delete_layer='0b0t0b0t', which
-                           means no deletion of layers.
-            add_if_dist : If you want to add extra interface distance, you can specify add_if_dist.
-                           Default value is add_if_dist=0.0
-            to_primitive : To generate primitive or non-primitive GB structure. Default value is
-                            to_primitive=False
-
-        Returns:
-            :class:`.Atoms`: final grain boundary structure
-        """
-        basis_pymatgen = pyiron_to_pymatgen(initial_struct)
-        grain_init = Grain(basis_pymatgen.lattice, basis_pymatgen.species, basis_pymatgen.frac_coords)
-        gb_obj = GrainBoundary(axis=axis, sigma=sigma, plane=plane, initial_struct=grain_init)
-
-        return pymatgen_to_pyiron(gb_obj.build_gb(to_primitive=to_primitive, delete_layer=delete_layer,
-                                                  add_if_dist=add_if_dist))
+    @deprecate(message="Use .aimsgb.build", version="0.2.2")
+    def aimsgb_build(
+            self,
+            axis,
+            sigma,
+            plane,
+            initial_struct,
+            to_primitive=False,
+            delete_layer='0b0t0b0t',
+            add_if_dist=0.0
+    ):
+        return self.aimsgb.build(
+            axis=axis,
+            sigma=sigma,
+            plane=plane,
+            initial_struct=initial_struct,
+            to_primitive=to_primitive,
+            delete_layer=delete_layer,
+            add_if_dist=add_if_dist
+        )
+    aimsgb_build.__doc__ += AimsgbFactory.build.__doc__
