@@ -25,8 +25,8 @@ from ase.build import (
         surface as ase_surf
 )
 import numpy as np
-from pyiron_atomistics.atomistics.structure.bindings.ase import AseFactory
-from pyiron_atomistics.atomistics.structure.bindings.aimsgb import AimsgbFactory
+from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
+from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
 from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_to_pyiron, Atoms
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
