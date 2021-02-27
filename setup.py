@@ -42,7 +42,7 @@ setup(
         'numpy==1.20.1',
         'pandas==1.2.2',
         'phonopy==2.8.1',
-        'pyiron_base==0.1.47',
+        'pyiron_base==0.1.48',
         'pymatgen==2021.2.16',
         'quickff==2.2.4',
         'scipy==1.6.0',
