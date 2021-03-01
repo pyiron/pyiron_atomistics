@@ -218,8 +218,8 @@ class Tree:
             distance_upper_bound=cutoff_radius,
             p=self.norm_order,
         )
-        distances = np.array([distances]).reshape(-1, num_neighbors).squeeze()
-        indices = np.array([indices]).reshape(-1, num_neighbors).squeeze()
+        distances = np.array([distances]).reshape(positions.shape[:-1]+(num_neighbors,))
+        indices = np.array([indices]).reshape(positions.shape[:-1]+(num_neighbors,))
         if cutoff_radius<np.inf and np.any(distances.T[-1]<np.inf):
             warnings.warn(
                 'Number of neighbors found within the cutoff_radius is equal to (estimated) '
