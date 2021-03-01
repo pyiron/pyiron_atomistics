@@ -165,7 +165,6 @@ class StructureListMaster(ParallelMaster):
 
     def __init__(self, project, job_name):
         super(StructureListMaster, self).__init__(project, job_name)
-        self.__name__ = "StructureListMaster"
         self.__version__ = "0.0.1"
         self._job_generator = StructureJobGenerator(self)
         self._structure_lst = []
