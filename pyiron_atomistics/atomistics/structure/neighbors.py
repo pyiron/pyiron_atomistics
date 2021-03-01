@@ -176,12 +176,12 @@ class Tree:
             return np.arange(len(self._ref_structure.positions))
         return self._wrapped_indices
 
-    def _get_wrapped_positions(self, positions):
+    def _get_wrapped_positions(self, positions, distance_buffer=1.0e-12):
         if not self.wrap_positions:
             return np.asarray(positions)
         x = np.array(positions).copy()
         cell = self._ref_structure.cell
-        x_scale = np.dot(x, np.linalg.inv(cell))+1.0e-12
+        x_scale = np.dot(x, np.linalg.inv(cell))+distance_buffer
         x[...,self._ref_structure.pbc] -= np.dot(np.floor(x_scale),
                                                  cell)[...,self._ref_structure.pbc]
         return x
