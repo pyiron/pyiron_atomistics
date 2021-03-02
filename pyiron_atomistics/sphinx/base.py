@@ -27,7 +27,7 @@ from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import find_potential_file \
     as find_potential_file_jth
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
-from pyiron_base import Settings, InputList, job_status_successful_lst, deprecate
+from pyiron_base import Settings, DataContainer, job_status_successful_lst, deprecate
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -1807,7 +1807,7 @@ class InputWriter(object):
             s.logger.debug("No magnetic moments")
 
 
-class Group(InputList):
+class Group(DataContainer):
     """
     Dictionary-like object to store SPHInX inputs.
 

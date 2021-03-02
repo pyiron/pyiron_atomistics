@@ -4,7 +4,7 @@
 
 import numpy as np
 from pyiron_atomistics.atomistics.job.interactivewrapper import InteractiveWrapper
-from pyiron_base import InputList
+from pyiron_base import DataContainer
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractiveOutput
 from scipy.optimize import minimize
 import scipy
@@ -272,7 +272,7 @@ class ScipyMinimizer(InteractiveWrapper):
         self.input.pressure_tolerance = pressure_tolerance
 
 
-class Input(InputList):
+class Input(DataContainer):
     """
     Args:
         minimizer (str): minimizer to use (currently only 'CG' and 'BFGS' run
