@@ -29,7 +29,7 @@ def _ase_header(ase_func):
     chain = getmodule(ase_func).__name__
     name = chain.split('.')[-1]
     return f"""
-    Returns an ASE's {name} result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+    Returns an ASE's {name} result as a `pyiron_atomistics.atomstic.structure.atoms.Atoms`.
 
     {chain} docstring:
 
