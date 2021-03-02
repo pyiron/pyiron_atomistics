@@ -40,7 +40,7 @@ setup(
         'mendeleev==0.6.1',
         'molmod==1.4.8',
         'numpy==1.20.1',
-        'pandas==1.2.2',
+        'pandas==1.2.3',
         'phonopy==2.8.1',
         'pyiron_base==0.2.2',
         'pymatgen==2021.2.16',
