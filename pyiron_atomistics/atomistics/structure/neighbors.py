@@ -212,13 +212,14 @@ class Tree:
                 'num_neighbors too large - make width_buffer larger and/or make '
                 + 'num_neighbors smaller'
             )
+        positions = self._get_wrapped_positions(positions)
         distances, indices = self._tree.query(
-            self._get_wrapped_positions(positions),
+            positions,
             k=num_neighbors,
             distance_upper_bound=cutoff_radius,
             p=self.norm_order,
         )
-        shape = np.asarray(positions).shape[:-1]+(num_neighbors,)
+        shape = positions.shape[:-1]+(num_neighbors,)
         distances = np.array([distances]).reshape(shape)
         indices = np.array([indices]).reshape(shape)
         if cutoff_radius<np.inf and np.any(distances.T[-1]<np.inf):
