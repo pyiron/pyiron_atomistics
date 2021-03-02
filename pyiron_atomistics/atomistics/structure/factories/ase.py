@@ -42,7 +42,7 @@ class AseFactory:
     @wraps(ase_cut)
     def cut(self, *args, **kwargs):
         s.publication_add(publication_ase())
-        return ase_to_pyiron(ase_cut(*args, **kwargs))
+        return ase_cut(*args, **kwargs)
     cut.__doc__ = ase_wrapped_doc('cut','ase.build.cut') + cut.__doc__
 
     @wraps(ase_stack)
