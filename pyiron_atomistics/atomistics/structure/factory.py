@@ -360,7 +360,7 @@ class StructureFactory(PyironFactory):
     @deprecate(message="Use .aimsgb.info", version="0.2.2")
     def aimsgb_info(self, axis, max_sigma):
         self.aimsgb.info(axis=axis, max_sigma=max_sigma)
-    aimsgb_info.__doc__ += AimsgbFactory.info.__doc__
+    aimsgb_info.__doc__ = AimsgbFactory.info.__doc__
 
     @deprecate(message="Use .aimsgb.build", version="0.2.2")
     def aimsgb_build(
@@ -382,4 +382,4 @@ class StructureFactory(PyironFactory):
             delete_layer=delete_layer,
             add_if_dist=add_if_dist
         )
-    aimsgb_build.__doc__ += AimsgbFactory.build.__doc__
+    aimsgb_build.__doc__ = AimsgbFactory.build.__doc__
