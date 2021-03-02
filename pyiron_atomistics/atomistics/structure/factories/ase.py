@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from functools import wraps
+from inspect import getmodule
 from ase.build import cut as ase_cut, stack as ase_stack, bulk as ase_bulk
 from ase.io import read as ase_read
 from ase.spacegroup import crystal as ase_crystal
@@ -24,13 +25,15 @@ __date__ = "Feb 26, 2021"
 s = Settings()
 
 
-def _ase_wrapped_doc(f_name, chain):
-    return """
-    Returns an ASE's {} result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+def _ase_wrapped_doc(func):
+    chain = getmodule(func).__name__
+    name = chain.split('.')[-1]
+    return f"""
+    Returns an ASE's {name} result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
 
-    {} docstring:
+    {chain} docstring:
 
-    """.format(f_name, chain)
+    """
 
 
 class AseFactory:
@@ -38,28 +41,28 @@ class AseFactory:
     def bulk(self, *args, **kwargs):
         s.publication_add(publication_ase())
         return ase_to_pyiron(ase_bulk(*args, **kwargs))
-    bulk.__doc__ = _ase_wrapped_doc('bulk', 'ase.build.bulk') + bulk.__doc__
+    bulk.__doc__ = _ase_wrapped_doc(ase_bulk) + bulk.__doc__
 
     @wraps(ase_cut)
     def cut(self, *args, **kwargs):
         s.publication_add(publication_ase())
         return ase_cut(*args, **kwargs)
-    cut.__doc__ = _ase_wrapped_doc('cut', 'ase.build.cut') + cut.__doc__
+    cut.__doc__ = _ase_wrapped_doc(ase_cut) + cut.__doc__
 
     @wraps(ase_stack)
     def stack(self, *args, **kwargs):
         s.publication_add(publication_ase())
         return ase_stack(*args, **kwargs)
-    stack.__doc__ = _ase_wrapped_doc('stack', 'ase.build.stack') + stack.__doc__
+    stack.__doc__ = _ase_wrapped_doc(ase_stack) + stack.__doc__
 
     @wraps(ase_crystal)
     def crystal(self, *args, **kwargs):
         s.publication_add(publication_ase())
         return ase_to_pyiron(ase_crystal(*args, **kwargs))
-    crystal.__doc__ = _ase_wrapped_doc('crystal', 'ase.spacegroup.crystal') + crystal.__doc__
+    crystal.__doc__ = _ase_wrapped_doc(ase_crystal) + crystal.__doc__
 
     @wraps(ase_read)
     def read(self, *args, **kwargs):
         s.publication_add(publication_ase())
         return ase_to_pyiron(ase_read(*args, **kwargs))
-    read.__doc__ = _ase_wrapped_doc('read', 'ase.io.read') + read.__doc__
+    read.__doc__ = _ase_wrapped_doc(ase_read) + read.__doc__
