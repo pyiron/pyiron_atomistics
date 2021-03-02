@@ -78,10 +78,9 @@ class StructureFactory(PyironFactory):
     ase_read.__doc__ = AseFactory.read.__doc__
 
     @deprecate(message="Please use .bulk or .ase.bulk", version="0.2.2")
-    @staticmethod
     def ase_bulk(self, *args, **kwargs):
         return self.ase.bulk(*args, **kwargs)
-    ase_bulk.__doc__ += AseFactory.bulk.__doc__
+    ase_bulk.__doc__ = AseFactory.bulk.__doc__
 
     def bulk(
             self,
