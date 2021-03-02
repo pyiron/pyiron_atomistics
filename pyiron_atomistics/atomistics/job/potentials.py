@@ -118,6 +118,7 @@ class PotentialAbstract(object):
         for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
             if conda_var in env.keys():  # support iprpy-data package
                 resource_path_lst += [os.path.join(env[conda_var], "share", "iprpy")]
+        df_lst = []
         for resource_path in resource_path_lst:
             if os.path.exists(os.path.join(resource_path, plugin_name, "potentials")):
                 resource_path = os.path.join(resource_path, plugin_name, "potentials")
@@ -128,7 +129,7 @@ class PotentialAbstract(object):
                             periodic_table_file_name in file_lst
                             and periodic_table_file_name.endswith(".csv")
                         ):
-                            return pandas.read_csv(
+                            df_lst.append(pandas.read_csv(
                                 os.path.join(path, periodic_table_file_name),
                                 index_col=0,
                                 converters={
@@ -143,15 +144,11 @@ class PotentialAbstract(object):
                                     .strip("[]")
                                     .split(", "),
                                 },
-                            )
-                        elif (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".h5")
-                        ):
-                            return pandas.read_hdf(
-                                os.path.join(path, periodic_table_file_name), mode="r"
-                            )
-        raise ValueError("Was not able to locate the potential files.")
+                            ))
+        if len(df_lst) > 0:
+            return pandas.concat(df_lst)
+        else:
+            raise ValueError("Was not able to locate the potential files.")
 
     @staticmethod
     def _get_potential_default_df(
