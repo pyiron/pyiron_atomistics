@@ -25,8 +25,8 @@ __date__ = "Feb 26, 2021"
 s = Settings()
 
 
-def _ase_wrapped_doc(func):
-    chain = getmodule(func).__name__
+def _ase_header(ase_func):
+    chain = getmodule(ase_func).__name__
     name = chain.split('.')[-1]
     return f"""
     Returns an ASE's {name} result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
@@ -36,33 +36,34 @@ def _ase_wrapped_doc(func):
     """
 
 
+def _ase_wraps(ase_func):
+    def decorator(func):
+        @wraps(ase_func)
+        def wrapper(*args, **kwargs):
+            s.publication_add(publication_ase())
+            return func(*args, **kwargs)
+        wrapper.__doc__ = _ase_header(ase_func) + wrapper.__doc__
+        return wrapper
+    return decorator
+
+
 class AseFactory:
-    @wraps(ase_bulk)
+    @_ase_wraps(ase_bulk)
     def bulk(self, *args, **kwargs):
-        s.publication_add(publication_ase())
         return ase_to_pyiron(ase_bulk(*args, **kwargs))
-    bulk.__doc__ = _ase_wrapped_doc(ase_bulk) + bulk.__doc__
 
-    @wraps(ase_cut)
+    @_ase_wraps(ase_cut)
     def cut(self, *args, **kwargs):
-        s.publication_add(publication_ase())
         return ase_cut(*args, **kwargs)
-    cut.__doc__ = _ase_wrapped_doc(ase_cut) + cut.__doc__
 
-    @wraps(ase_stack)
+    @_ase_wraps(ase_stack)
     def stack(self, *args, **kwargs):
-        s.publication_add(publication_ase())
         return ase_stack(*args, **kwargs)
-    stack.__doc__ = _ase_wrapped_doc(ase_stack) + stack.__doc__
 
-    @wraps(ase_crystal)
+    @_ase_wraps(ase_crystal)
     def crystal(self, *args, **kwargs):
-        s.publication_add(publication_ase())
         return ase_to_pyiron(ase_crystal(*args, **kwargs))
-    crystal.__doc__ = _ase_wrapped_doc(ase_crystal) + crystal.__doc__
 
-    @wraps(ase_read)
+    @_ase_wraps(ase_read)
     def read(self, *args, **kwargs):
-        s.publication_add(publication_ase())
         return ase_to_pyiron(ase_read(*args, **kwargs))
-    read.__doc__ = _ase_wrapped_doc(ase_read) + read.__doc__
