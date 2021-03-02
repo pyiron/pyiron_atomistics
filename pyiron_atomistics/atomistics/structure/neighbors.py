@@ -176,12 +176,12 @@ class Tree:
             return np.arange(len(self._ref_structure.positions))
         return self._wrapped_indices
 
-    def _get_wrapped_positions(self, positions):
+    def _get_wrapped_positions(self, positions, distance_buffer=1.0e-12):
         if not self.wrap_positions:
             return np.asarray(positions)
         x = np.array(positions).copy()
         cell = self._ref_structure.cell
-        x_scale = np.dot(x, np.linalg.inv(cell))+1.0e-12
+        x_scale = np.dot(x, np.linalg.inv(cell))+distance_buffer
         x[...,self._ref_structure.pbc] -= np.dot(np.floor(x_scale),
                                                  cell)[...,self._ref_structure.pbc]
         return x
@@ -212,12 +212,16 @@ class Tree:
                 'num_neighbors too large - make width_buffer larger and/or make '
                 + 'num_neighbors smaller'
             )
+        positions = self._get_wrapped_positions(positions)
         distances, indices = self._tree.query(
-            self._get_wrapped_positions(positions),
+            positions,
             k=num_neighbors,
             distance_upper_bound=cutoff_radius,
             p=self.norm_order,
         )
+        shape = positions.shape[:-1]+(num_neighbors,)
+        distances = np.array([distances]).reshape(shape)
+        indices = np.array([indices]).reshape(shape)
         if cutoff_radius<np.inf and np.any(distances.T[-1]<np.inf):
             warnings.warn(
                 'Number of neighbors found within the cutoff_radius is equal to (estimated) '
@@ -365,7 +369,7 @@ class Tree:
                     width_buffer=width_buffer,
                 )
             vectors = np.zeros(distances.shape+(3,))
-            vectors -= self._get_wrapped_positions(positions).reshape(distances.shape[:-1]+(1, 3))
+            vectors -= self._get_wrapped_positions(positions).reshape(distances.shape[:-1]+(-1, 3))
             vectors[distances<np.inf] += self._get_extended_positions()[
                 self._extended_indices[distances<np.inf]
             ]
