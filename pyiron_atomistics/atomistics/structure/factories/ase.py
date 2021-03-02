@@ -36,19 +36,19 @@ class AseFactory:
     @wraps(ase_bulk)
     def bulk(self, *args, **kwargs):
         s.publication_add(publication_ase())
-        return ase_bulk(*args, **kwargs)
+        return ase_to_pyiron(ase_bulk(*args, **kwargs))
     bulk.__doc__ = ase_wrapped_doc('bulk','ase.build.bulk') + bulk.__doc__
 
     @wraps(ase_cut)
     def cut(self, *args, **kwargs):
         s.publication_add(publication_ase())
-        return ase_cut(*args, **kwargs)
+        return ase_to_pyiron(ase_cut(*args, **kwargs))
     cut.__doc__ = ase_wrapped_doc('cut','ase.build.cut') + cut.__doc__
 
     @wraps(ase_stack)
     def stack(self, *args, **kwargs):
         s.publication_add(publication_ase())
-        return ase_stack(*args, **kwargs)
+        return ase_to_pyiron(ase_stack(*args, **kwargs))
     stack.__doc__ = ase_wrapped_doc('stack', 'ase.build.stack') + stack.__doc__
 
     @wraps(ase_crystal)
