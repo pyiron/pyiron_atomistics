@@ -29,45 +29,53 @@ class AseFactory:
     def bulk(self, *args, **kwargs):
         s.publication_add(publication_ase())
         return ase_bulk(*args, **kwargs)
+    bulk.__doc__ = """
+        Returns an ASE's bulk result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+
+        ase.build.bulk docstring:
+
+        """ + bulk.__doc__ 
 
     @wraps(ase_cut)
     def cut(self, *args, **kwargs):
-        """
+        s.publication_add(publication_ase())
+        return ase_cut(*args, **kwargs)
+    cut.__doc__ = """
         Returns an ASE's cut result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
 
         ase.build.cut docstring:
 
-        """
-        s.publication_add(publication_ase())
-        return ase_cut(*args, **kwargs)
+        """ + cut.__doc__
 
     @wraps(ase_stack)
     def stack(self, *args, **kwargs):
-        """
+        s.publication_add(publication_ase())
+        return ase_stack(*args, **kwargs)
+    stack.__doc__ = """
         Returns an ASE's stack result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
 
         ase.build.stack docstring:
 
-        """
-        s.publication_add(publication_ase())
-        return ase_stack(*args, **kwargs)
+        """ + stack.__doc__ 
 
     @wraps(ase_crystal)
     def crystal(self, *args, **kwargs):
-        """
+        s.publication_add(publication_ase())
+        return ase_to_pyiron(ase_crystal(*args, **kwargs))
+    crystal.__doc__ = """
         Returns an ASE's crystal result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
 
         ase.spacegroup.crystal docstring:
 
-        """
-        s.publication_add(publication_ase())
-        return ase_to_pyiron(ase_crystal(*args, **kwargs))
+        """ + crystal.__doc__ 
 
     @wraps(ase_read)
     def read(self, *args, **kwargs):
-        """
-        Returns a ASE's read result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
+        s.publication_add(publication_ase())
+        return ase_to_pyiron(ase_read(*args, **kwargs))
+    read.__doc__ = """
+        Returns an ASE's read result, wrapped as a `pyiron_atomistics.atomstic.structure.atoms.Atoms` object.
 
         ase.io.read docstring:
-        """
-        return ase_to_pyiron(ase_read(*args, **kwargs))
+        
+        """ + read.__doc__  
