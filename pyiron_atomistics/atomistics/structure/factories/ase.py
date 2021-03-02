@@ -48,7 +48,7 @@ class AseFactory:
     @wraps(ase_stack)
     def stack(self, *args, **kwargs):
         s.publication_add(publication_ase())
-        return ase_to_pyiron(ase_stack(*args, **kwargs))
+        return ase_stack(*args, **kwargs)
     stack.__doc__ = ase_wrapped_doc('stack', 'ase.build.stack') + stack.__doc__
 
     @wraps(ase_crystal)
