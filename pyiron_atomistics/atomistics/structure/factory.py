@@ -70,12 +70,12 @@ class StructureFactory(PyironFactory):
 
     def read(self, *args, **kwargs):
         return self.ase.read(*args, **kwargs)
-    read.__doc__ += AseFactory.read.__doc__
+    read.__doc__ = AseFactory.read.__doc__
 
     @deprecate(message="Please use .read or .ase.read", version="0.2.2")
     def ase_read(self, *args, **kwargs):
         return self.ase.read(*args, **kwargs)
-    ase_read.__doc__ += AseFactory.read.__doc__
+    ase_read.__doc__ = AseFactory.read.__doc__
 
     @deprecate(message="Please use .bulk or .ase.bulk", version="0.2.2")
     @staticmethod
