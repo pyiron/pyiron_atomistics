@@ -339,6 +339,13 @@ class TestAtoms(unittest.TestCase):
         with self.assertRaises(ValueError):
             neigh.norm_order = 3
 
+    def test_chemical_symbols(self):
+        basis = CrystalStructure("Fe", bravais_basis="bcc", lattice_constants=1)
+        basis[0] = 'Ni'
+        neigh = basis.get_neighbors(num_neighbors=1)
+        self.assertEqual(neigh.chemical_symbols[0,0], 'Fe')
+        self.assertEqual(neigh.chemical_symbols[1,0], 'Ni')
+
 
 if __name__ == "__main__":
     unittest.main()
