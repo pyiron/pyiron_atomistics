@@ -570,6 +570,11 @@ class Neighbors(Tree):
         return to_return.replace('given positions', 'each atom')
 
     @property
+    def chemical_symbols(self):
+        """Returns chemical symbols of the neighboring atoms."""
+        return self._ref_structure.get_chemical_symbols()[self.indices]
+
+    @property
     def shells(self):
         """
             Returns the cell numbers of each atom according to the distances

@@ -5,6 +5,7 @@
 import unittest
 import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 import warnings
 
 
@@ -338,6 +339,13 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(len(neigh.indices[0]), 34)
         with self.assertRaises(ValueError):
             neigh.norm_order = 3
+
+    def test_chemical_symbols(self):
+        basis = StructureFactory().ase_bulk('Fe', cubic=True)
+        basis[0] = 'Ni'
+        neigh = basis.get_neighbors(num_neighbors=1)
+        self.assertEqual(neigh.chemical_symbols[0,0], 'Fe')
+        self.assertEqual(neigh.chemical_symbols[1,0], 'Ni')
 
 
 if __name__ == "__main__":
