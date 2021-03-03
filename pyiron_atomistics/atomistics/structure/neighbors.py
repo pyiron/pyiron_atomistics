@@ -571,9 +571,7 @@ class Neighbors(Tree):
 
     @property
     def chemical_symbols(self):
-        """
-            Returns chemical symbols of the neighboring atoms.
-        """
+        """ Returns chemical symbols of the neighboring atoms.  """
         return self._ref_structure.get_chemical_symbols()[self.indices]
 
     @property
