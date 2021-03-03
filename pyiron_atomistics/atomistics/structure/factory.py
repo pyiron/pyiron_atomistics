@@ -173,7 +173,7 @@ class StructureFactory(PyironFactory):
             surface.pbc = pbc
             return ase_to_pyiron(surface)
         else:
-            return None
+            raise ValueError(f"Surface type {surface_type} not recognized.")
 
     @staticmethod
     def surface_hkl(lattice, hkl, layers, vacuum=1.0, center=False, pbc=True):
