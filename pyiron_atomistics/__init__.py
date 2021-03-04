@@ -8,7 +8,7 @@ from pyiron_base import Notebook, install_dialog, JOB_CLASS_DICT
 # To maintain backwards compatibility until we deprecate the old structure creation functions:
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory as _StructureFactory
 create_surface = _StructureFactory.surface
-create_ase_bulk = _StructureFactory.ase_bulk
+create_ase_bulk = _StructureFactory().ase.bulk
 create_structure = _StructureFactory.crystal
 
 # Make classes available for new pyiron version
