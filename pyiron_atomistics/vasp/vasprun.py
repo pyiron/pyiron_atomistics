@@ -455,10 +455,19 @@ class Vasprun(object):
             if item.tag == "projected":
                 self.parse_projected_dos_to_dict(item, d)
 
+            if "cce" in item.tag:
+                self.parse_cce_to_dict(item, d)
+
         d["scf_energies"].append(scf_energies)
         d["scf_fr_energies"].append(scf_fr_energies)
         d["scf_0_energies"].append(scf_0_energies)
         d["scf_dipole_moments"].append(scf_moments)
+
+    def parse_cce_to_dict(self, node, d):
+        for item in node:
+            if item.attrib['name'] not in list(d.keys()):
+                d[item.attrib['name']] = list()
+            d[item.attrib['name']].append(float(item.text))
 
     def parse_eigenvalues_to_dict(self, node, d):
         """
