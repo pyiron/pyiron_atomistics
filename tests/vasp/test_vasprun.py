@@ -40,6 +40,13 @@ class TestVasprun(unittest.TestCase):
         filename = posixpath.join(self.direc, "vasprun_spoilt.xml")
         self.assertRaises(VasprunError, vp.from_file, filename)
 
+    def test_get_potentiostat_output(self):
+        for i, vp in enumerate(self.vp_list):
+            if i == 8:
+                self.assertIsInstance(vp.get_potentiostat_output(), dict)
+            else:
+                self.assertIsNone(vp.get_potentiostat_output())
+
     def test_parse_generator(self):
         for vp in self.vp_list:
             self.assertIsInstance(vp.vasprun_dict["generator"], dict)
