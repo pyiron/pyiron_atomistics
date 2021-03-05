@@ -572,7 +572,10 @@ class Neighbors(Tree):
     @property
     def chemical_symbols(self):
         """Returns chemical symbols of the neighboring atoms."""
-        return self._ref_structure.get_chemical_symbols()[self.indices]
+        chemical_symbols = np.tile(['v'], self.indices.shape).astype('<U2')
+        cond = self.indices<len(self._ref_structure)
+        chemical_symbols[cond] = self._ref_structure.get_chemical_symbols()[self.indices[cond]]
+        return chemical_symbols
 
     @property
     def shells(self):
