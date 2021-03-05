@@ -709,6 +709,18 @@ class Vasprun(object):
         es_obj.generate_from_matrices()
         return es_obj
 
+    def get_potentiostat_output(self):
+        if "dftnw_pot" not in self.vasprun_dict.keys():
+            return
+        potstat_dict = dict()
+        potstat_dict["potential_drop"] = np.array(self.vasprun_dict["dftnw_pot"])
+        potstat_dict["Ne_charge"] = np.array(self.vasprun_dict["dftnw_zval"])
+        potstat_dict["electrode_charge"] = np.array(self.vasprun_dict["dftnw_electrodecharge"])
+        potstat_dict["vac_level_upper"] = np.array(self.vasprun_dict["dftnw_vaclevel_upperside_surf"])
+        potstat_dict["vac_level_lower"] = np.array(self.vasprun_dict["dftnw_vaclevel_lowerside_surf"])
+        potstat_dict["fermi_level"] = np.array(self.vasprun_dict["dftnw_efermi"])
+        return potstat_dict
+
 
 def clean_character(a, remove_char=" "):
     """
