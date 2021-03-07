@@ -571,8 +571,16 @@ class Neighbors(Tree):
 
     @property
     def chemical_symbols(self):
-        """Returns chemical symbols of the neighboring atoms."""
-        return self._ref_structure.get_chemical_symbols()[self.indices]
+        """
+        Returns chemical symbols of the neighboring atoms.
+
+        Undefined neighbors (i.e. if the neighbor distance is beyond the cutoff radius) are
+        considered as vacancies and are marked by 'v'
+        """
+        chemical_symbols = np.tile(['v'], self.indices.shape).astype('<U2')
+        cond = self.indices<len(self._ref_structure)
+        chemical_symbols[cond] = self._ref_structure.get_chemical_symbols()[self.indices[cond]]
+        return chemical_symbols
 
     @property
     def shells(self):
