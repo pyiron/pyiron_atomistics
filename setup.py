@@ -33,7 +33,7 @@ setup(
     install_requires=[
         'aimsgb==0.1.0',
         'ase==3.21.1',
-        'defusedxml==0.6.0',
+        'defusedxml==0.7.0',
         'future==0.18.2',
         'h5py==3.1.0',
         'matplotlib==3.3.4',
