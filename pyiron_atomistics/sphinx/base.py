@@ -1940,7 +1940,7 @@ class Output(object):
             return None
         spins = np.loadtxt(posixpath.join(cwd, file_name))
         self._parse_dict["atom_scf_spins"] = self.splitter(
-            [ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]],
+            np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]),
             spins[:, 0]
         )
 
