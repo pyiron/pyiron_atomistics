@@ -1363,6 +1363,8 @@ class Atoms(ASEAtoms):
         get_tree=False,
         norm_order=2,
     ):
+        if num_neighbors is not None and num_neighbors<=0:
+            raise ValueError('invalid number of neighbors')
         if width_buffer<0:
             raise ValueError('width_buffer must be a positive float')
         if get_tree:
