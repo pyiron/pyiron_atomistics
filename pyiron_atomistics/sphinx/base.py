@@ -1359,13 +1359,13 @@ class SphinxBase(GenericDFTJob):
             es_obj.atoms = self.get_structure(-1)
             return es_obj
 
-    def collect_output(self, force_update=False, compress=True):
+    def collect_output(self, force_update=False, compress_files=True):
         """
         Collects the outputs and stores them to the hdf file
         """
         self._output_parser.collect(directory=self.working_directory)
         self._output_parser.to_hdf(self._hdf5, force_update=force_update)
-        if compress:
+        if compress_files:
             self.compress()
 
     def convergence_check(self):
@@ -1940,7 +1940,7 @@ class Output(object):
             return None
         spins = np.loadtxt(posixpath.join(cwd, file_name))
         self._parse_dict["atom_scf_spins"] = self.splitter(
-            np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]),
+            [ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]],
             spins[:, 0]
         )
 
