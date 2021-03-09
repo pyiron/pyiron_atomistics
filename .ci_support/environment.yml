@@ -6,7 +6,7 @@ dependencies:
   - coveralls
   - coverage
   - codacy-coverage
-  - defusedxml =0.7.0
+  - defusedxml =0.7.1
   - future =0.18.2
   - h5py =3.1.0
   - matplotlib-base =3.3.4
