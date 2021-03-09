@@ -712,14 +712,24 @@ class Vasprun(object):
     def get_potentiostat_output(self):
         if "dftnw_pot" not in self.vasprun_dict.keys():
             return
-        potstat_dict = dict()
-        potstat_dict["potential_drop"] = np.array(self.vasprun_dict["dftnw_pot"])
-        potstat_dict["Ne_charge"] = np.array(self.vasprun_dict["dftnw_zval"])
-        potstat_dict["electrode_charge"] = np.array(self.vasprun_dict["dftnw_electrodecharge"])
-        potstat_dict["vac_level_upper"] = np.array(self.vasprun_dict["dftnw_vaclevel_upperside_surf"])
-        potstat_dict["vac_level_lower"] = np.array(self.vasprun_dict["dftnw_vaclevel_lowerside_surf"])
-        potstat_dict["fermi_level"] = np.array(self.vasprun_dict["dftnw_efermi"])
-        return potstat_dict
+        try:
+            potstat_dict = dict()
+            potstat_dict["potential_drop"] = np.array(self.vasprun_dict["dftnw_pot"])
+            potstat_dict["Ne_charge"] = np.array(self.vasprun_dict["dftnw_zval"])
+            if "dftnw_electrodecharge" in self.vasprun_dict.keys():
+                potstat_dict["electrode_charge"] = np.array(self.vasprun_dict["dftnw_electrodecharge"])
+            else:
+                potstat_dict["electrode_charge"] = np.array(self.vasprun_dict["dtfnw_electrodecharge"])
+            potstat_dict["vac_level_upper"] = np.array(self.vasprun_dict["dftnw_vaclevel_upperside_surf"])
+            potstat_dict["vac_level_lower"] = np.array(self.vasprun_dict["dftnw_vaclevel_lowerside_surf"])
+            potstat_dict["fermi_level"] = np.array(self.vasprun_dict["dftnw_efermi"])
+            return potstat_dict
+        except KeyError:
+            if len(potstat_dict.keys()) > 0:
+                return potstat_dict
+            else:
+                return
+
 
 
 def clean_character(a, remove_char=" "):
