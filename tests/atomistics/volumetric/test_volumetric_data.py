@@ -25,6 +25,7 @@ class TestVolumetricData(unittest.TestCase):
         cls.data_dict = dict()
         cls.data_dict["cubic"] = np.ones((100, 100, 100))
         cls.data_dict["non_cubic"] = np.zeros((200, 50, 100))
+        cls.structure_factory = StructureFactory()
 
     @classmethod
     def tearDownClass(cls):
@@ -65,7 +66,7 @@ class TestVolumetricData(unittest.TestCase):
         vd = VolumetricData()
         n_x, n_y, n_z = (10, 15, 20)
         vd.total_data = np.random.rand(n_x, n_y, n_z)
-        struct = StructureFactory.ase_bulk("Al")
+        struct = self.structure_factory.bulk("Al")
         cyl_avg = vd.cylindrical_average_potential(struct, spherical_center=[0, 0, 0],
                                                    axis_of_cyl=2, rad=2, fwhm=0.529177)
         self.assertIsInstance(cyl_avg, float)

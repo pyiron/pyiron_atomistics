@@ -441,7 +441,7 @@ class Project(ProjectCore):
         #     "Project.create_ase_bulk is deprecated as of v0.3. Please use Project.create.structure.ase_bulk.",
         #     DeprecationWarning
         # )
-        return self.create.structure.ase_bulk(name=name, crystalstructure=crystalstructure, a=a, c=c,
+        return self.create.structure.ase.bulk(name=name, crystalstructure=crystalstructure, a=a, c=c,
                                               covera=covera, u=u, orthorhombic=orthorhombic, cubic=cubic)
 
     def create_structure(self, element, bravais_basis, lattice_constant):

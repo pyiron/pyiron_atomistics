@@ -213,8 +213,8 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
                                     "interactive/atom_spin_constraints"
                                 ]
 
-    def collect_output(self, force_update=False):
-        super(SphinxInteractive, self).collect_output(force_update=force_update)
+    def collect_output(self, force_update=False, compress_files=True):
+        super(SphinxInteractive, self).collect_output(force_update=force_update, compress_files=compress_files)
         self._output_interactive_to_generic()
 
     def interactive_close(self):
