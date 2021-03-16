@@ -2225,6 +2225,12 @@ class Atoms(ASEAtoms):
             return self._tag_list._lists[item]
         return object.__getattribute__(self, item)
 
+    def __dir__(self):
+        new_dir = super().__dir__()
+        for key in self._tag_list.keys():
+            new_dir.append(key)
+        return new_dir
+
     # def __len__(self):
     #     return len(self.indices)
 
