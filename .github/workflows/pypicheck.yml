@@ -1,4 +1,4 @@
-ame: Pip check
+name: Pip check
 
 on:
   push:
@@ -26,6 +26,5 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
-        python .ci_support/pyironconfig.py
         pip install --no-deps .
         pip check
