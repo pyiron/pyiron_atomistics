@@ -29,7 +29,6 @@ JOB_CLASS_DICT["Murnaghan"] = "pyiron_atomistics.atomistics.master.murnaghan"
 JOB_CLASS_DICT["MurnaghanDFT"] = "pyiron_atomistics.dft.master.murnaghan_dft"
 JOB_CLASS_DICT["PhonopyJob"] = "pyiron_atomistics.atomistics.master.phonopy"
 JOB_CLASS_DICT["QuasiHarmonicJob"] = "pyiron_atomistics.atomistics.master.quasi"
-JOB_CLASS_DICT["QuickFF"] = "pyiron_atomistics.quickff.quickff"
 JOB_CLASS_DICT["ScipyMinimizer"] = "pyiron_atomistics.interactive.scipy_minimizer"
 JOB_CLASS_DICT["SerialMaster"] = "pyiron_atomistics.atomistics.master.serial"
 JOB_CLASS_DICT["Sphinx"] = "pyiron_atomistics.sphinx.sphinx"
@@ -46,7 +45,6 @@ JOB_CLASS_DICT["TableJob"] = "pyiron_atomistics.table.datamining"
 JOB_CLASS_DICT["Vasp"] = "pyiron_atomistics.vasp.vasp"
 JOB_CLASS_DICT["VaspMetadyn"] = "pyiron_atomistics.vasp.metadyn"
 JOB_CLASS_DICT["VaspSol"] = "pyiron_atomistics.vasp.vaspsol"
-JOB_CLASS_DICT["Yaff"] = "pyiron_atomistics.yaff.yaff"
 
 from ._version import get_versions
 
