@@ -8,7 +8,7 @@ dependencies:
   - codacy-coverage
   - defusedxml =0.7.1
   - future =0.18.2
-  - greenlet =0.4.17  # required by sqlalchemy
+  - greenlet =0.4.16  # required by sqlalchemy
   - h5py =3.1.0
   - matplotlib-base =3.3.4
   - mendeleev =0.6.1
