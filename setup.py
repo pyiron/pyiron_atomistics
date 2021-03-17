@@ -43,7 +43,7 @@ setup(
         'pyiron_base==0.2.2',
         'pymatgen==2022.0.4',
         'quickff==2.2.4',
-        'scipy==1.6.0',
+        'scipy==1.6.1',
         'seekpath==2.0.1',
         'six==1.15.0',
         'scikit-learn==0.24.1',
