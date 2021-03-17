@@ -81,7 +81,9 @@ def find_potential_file(path):
     resource_path_lst = s.resource_paths
     for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
         if conda_var in env.keys():  # support sphinx-data package
-            resource_path_lst += [os.path.join(os.environ[conda_var], "share", "sphinxdft")]
+            path_to_add = os.path.join(env[conda_var], "share", "sphinxdft")
+            if path_to_add not in resource_path_lst:
+                resource_path_lst += [path_to_add]
     return find_potential_file_base(
         path=path,
         resource_path_lst=resource_path_lst,

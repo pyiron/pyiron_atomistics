@@ -122,7 +122,6 @@ class AtomisticGenericJob(GenericJobCore):
 
     def __init__(self, project, job_name):
         super(AtomisticGenericJob, self).__init__(project, job_name)
-        self.__name__ = "AtomisticGenericJob"
         self.__version__ = "0.1"
         self._structure = None
         self._generic_input = GenericInput()

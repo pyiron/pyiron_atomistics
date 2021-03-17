@@ -417,6 +417,94 @@ class PhonopyJob(AtomisticParallelMaster):
         ax.set_title("Phonon DOS vs Energy")
         return ax
 
+    def get_band_structure(self, npoints=101, with_eigenvectors=False, with_group_velocities=False):
+        """
+        Calculate band structure with automatic path through reciprocal space.
+
+        Can only be called after job is finished.
+
+        Args:
+            npoints (int, optional):  Number of sample points between high symmetry points.
+            with_eigenvectors (boolean, optional):  Calculate eigenvectors, too
+            with_group_velocities (boolean, optional):  Calculate group velocities, too
+
+        Returns:
+            :class:`dict` of the results from phonopy under the following keys
+                - 'qpoints':  list of (npoints, 3), samples paths in reciprocal space
+                - 'distances':  list of (npoints,), distance along the paths in reciprocal space
+                - 'frequencies':  list of (npoints, band), phonon frequencies
+                - 'eigenvectors':  list of (npoints, band, band//3, 3), phonon eigenvectors
+                - 'group_velocities': list of (npoints, band), group velocities
+            where band is the number of bands (number of atoms * 3).  Each entry is a list of arrays, and each array
+            corresponds to one path between two high-symmetry points automatically picked by Phonopy and may be of
+            different length than other paths.  As compared to the phonopy output this method also reshapes the
+            eigenvectors so that they directly have the same shape as the underlying structure.
+
+        Raises:
+            :exception:`ValueError`: method is called on a job that is not finished or aborted
+        """
+        if not self.status.finished:
+            raise ValueError("Job must be successfully run, before calling this method.")
+
+        self.phonopy.auto_band_structure(npoints,
+                                        with_eigenvectors=with_eigenvectors,
+                                        with_group_velocities=with_group_velocities)
+        results = self.phonopy.get_band_structure_dict()
+        if results["eigenvectors"] is not None:
+            # see https://phonopy.github.io/phonopy/phonopy-module.html#eigenvectors for the way phonopy stores the
+            # eigenvectors
+            results["eigenvectors"] = [e.transpose(0, 2, 1).reshape(*e.shape[:2], -1, 3) for e in results["eigenvectors"]]
+        return results
+
+    def plot_band_structure(self, axis=None):
+        """
+        Plot bandstructure calculated with :method:`.get_bandstructure`.
+
+        If :method:`.get_bandstructure` hasn't been called before, it is automatically called with the default arguments.
+
+        Args:
+            axis (matplotlib axis, optional): plot to this axis, if not given a new one is created.
+
+        Returns:
+            matplib axis: the axis the figure has been drawn to, if axis is given the same object is returned
+        """
+        try:
+            import pylab as plt
+        except ImportError:
+            import matplotlib.pyplot as plt
+
+        if axis is None:
+            _, axis = plt.subplots(1, 1)
+
+        try:
+            results = self.phonopy.get_band_structure_dict()
+        except RuntimeError:
+            results = self.get_band_structure()
+
+        distances = results["distances"]
+        frequencies = results["frequencies"]
+
+        # HACK: strictly speaking this breaks phonopy API and could bite us
+        path_connections = self.phonopy._band_structure.path_connections
+        labels = self.phonopy._band_structure.labels
+
+        offset = 0
+        tick_positions = [distances[0][0]]
+        for di, fi, ci in zip(distances, frequencies, path_connections):
+            axis.axvline(tick_positions[-1], color="black", linestyle="--")
+            axis.plot(offset + di, fi, color="black")
+            tick_positions.append(di[-1] + offset)
+            if not ci:
+                offset+=.05
+                plt.axvline(tick_positions[-1], color="black", linestyle="--")
+                tick_positions.append(di[-1] + offset)
+        axis.set_xticks(tick_positions[:-1])
+        axis.set_xticklabels(labels)
+        axis.set_xlabel("Bandpath")
+        axis.set_ylabel("Frequency [THz]")
+        axis.set_title("Bandstructure")
+        return axis
+
     def validate_ready_to_run(self):
         if self.ref_job._generic_input["calc_mode"] != "static":
             raise ValueError("Phonopy reference jobs should be static calculations, but got {}".format(

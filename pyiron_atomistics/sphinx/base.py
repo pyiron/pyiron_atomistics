@@ -1359,12 +1359,14 @@ class SphinxBase(GenericDFTJob):
             es_obj.atoms = self.get_structure(-1)
             return es_obj
 
-    def collect_output(self, force_update=False):
+    def collect_output(self, force_update=False, compress_files=True):
         """
         Collects the outputs and stores them to the hdf file
         """
         self._output_parser.collect(directory=self.working_directory)
         self._output_parser.to_hdf(self._hdf5, force_update=force_update)
+        if compress_files:
+            self.compress()
 
     def convergence_check(self):
         """
@@ -2361,7 +2363,6 @@ class Output(object):
                                              cwd=directory)
         self.collect_charge_density(file_name="rho.sxb",
                                     cwd=directory)
-        self._job.compress()
 
     def to_hdf(self, hdf, force_update=False):
         """

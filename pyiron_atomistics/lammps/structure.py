@@ -7,6 +7,7 @@ from collections import OrderedDict
 import numpy as np
 from pyiron_base import GenericParameters
 import decimal as dec
+import warnings
 
 try:
     from ase.calculators.lammps import Prism
@@ -116,9 +117,7 @@ class UnfoldingPrism(Prism):
         self.A = apre
 
         if self.is_skewed() and (not (pbc[0] and pbc[1] and pbc[2])):
-            raise RuntimeError(
-                "Skewed lammps cells MUST have " "PBC == True in all directions!"
-            )
+            warnings.warn( "Skewed lammps cells should have PBC == True in all directions!")
 
     def unfold_cell(self, cell):
         """
@@ -197,6 +196,7 @@ class LammpsStructure(GenericParameters):
         self.cutoff_radius = None
         self.digits = 10
         self._bond_dict = bond_dict
+        self._force_skewed = False
 
     @property
     def potential(self):
@@ -283,7 +283,7 @@ class LammpsStructure(GenericParameters):
             + "0. {} zlo zhi\n".format(zhi)
         )
 
-        if self.prism.is_skewed():
+        if self.structure.is_skewed() or self._force_skewed:
             simulation_cell += "{0} {1} {2} xy xz yz\n".format(xy, xz, yz)
 
         return simulation_cell

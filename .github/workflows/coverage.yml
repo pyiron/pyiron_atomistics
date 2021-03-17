@@ -23,6 +23,7 @@ jobs:
       with:
         auto-update-conda: true
         python-version: 3.9
+        channel-priority: strict
         environment-file: .ci_support/environment.yml
     - name: Setup
       shell: bash -l {0}

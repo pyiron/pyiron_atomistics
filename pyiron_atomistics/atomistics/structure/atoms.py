@@ -1363,6 +1363,8 @@ class Atoms(ASEAtoms):
         get_tree=False,
         norm_order=2,
     ):
+        if num_neighbors is not None and num_neighbors<=0:
+            raise ValueError('invalid number of neighbors')
         if width_buffer<0:
             raise ValueError('width_buffer must be a positive float')
         if get_tree:
@@ -2222,6 +2224,12 @@ class Atoms(ASEAtoms):
         if item in self._tag_list.keys():
             return self._tag_list._lists[item]
         return object.__getattribute__(self, item)
+
+    def __dir__(self):
+        new_dir = super().__dir__()
+        for key in self._tag_list.keys():
+            new_dir.append(key)
+        return new_dir
 
     # def __len__(self):
     #     return len(self.indices)
