@@ -455,10 +455,19 @@ class Vasprun(object):
             if item.tag == "projected":
                 self.parse_projected_dos_to_dict(item, d)
 
+            if "cce" in item.tag:
+                self.parse_cce_to_dict(item, d)
+
         d["scf_energies"].append(scf_energies)
         d["scf_fr_energies"].append(scf_fr_energies)
         d["scf_0_energies"].append(scf_0_energies)
         d["scf_dipole_moments"].append(scf_moments)
+
+    def parse_cce_to_dict(self, node, d):
+        for item in node:
+            if item.attrib['name'] not in list(d.keys()):
+                d[item.attrib['name']] = list()
+            d[item.attrib['name']].append(float(item.text))
 
     def parse_eigenvalues_to_dict(self, node, d):
         """
@@ -699,6 +708,20 @@ class Vasprun(object):
             es_obj.orbital_dict = self.vasprun_dict["orbital_dict"]
         es_obj.generate_from_matrices()
         return es_obj
+
+    def get_potentiostat_output(self):
+        if "dftnw_pot" not in self.vasprun_dict.keys():
+            return
+        try:
+            vasprun_dict_keys = ["dftnw_pot", "dftnw_zval", "dftnw_electrodecharge", "dftnw_vaclevel_upperside_surf", "dftnw_vaclevel_lowerside_surf", "dftnw_efermi"]
+            potstat_dict_keys = ["potential_drop", "Ne_charge", "electrode_charge", "vac_level_upper", "vac_level_lower", "fermi_level"]
+            return {k: np.array(self.vasprun_dict[vk]) for k, vk in zip(potstat_dict_keys, vasprun_dict_keys) if vk in self.vasprun_dict.keys()}
+        except KeyError:
+            if len(potstat_dict.keys()) > 0:
+                return potstat_dict
+            else:
+                return
+
 
 
 def clean_character(a, remove_char=" "):
