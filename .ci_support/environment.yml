@@ -10,7 +10,7 @@ dependencies:
   - future =0.18.2
   - h5py =3.1.0
   - matplotlib-base =3.3.4
-  - mendeleev =0.6.1
+  - mendeleev =0.7.0
   - molmod =1.4.8
   - numpy =1.20.1
   - pandas =1.2.3
