@@ -35,7 +35,7 @@ setup(
         'future==0.18.2',
         'h5py==3.1.0',
         'matplotlib==3.3.4',
-        'mendeleev==0.6.1',
+        'mendeleev==0.7.0',
         'numpy==1.20.1',
         'pandas==1.2.3',
         'phonopy==2.9.3',
