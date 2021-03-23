@@ -9,7 +9,6 @@ from __future__ import print_function
 import numpy as np
 from numpy import transpose as tr
 from numpy.linalg import inv, norm
-from pyiron_base import PyironObject
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -44,7 +43,7 @@ class BandPath(object):
                 spl_distances.append(np.linalg.norm(x2 - x1))
 
 
-class Bandstructure(PyironObject):
+class Bandstructure:
     translate_to_pylab = {"Gamma": r"$\Gamma$", "G'": r"$\Gamma^\prime$"}
 
     def __init__(self, structure=None, prec=1e-5):

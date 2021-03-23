@@ -1963,6 +1963,7 @@ class Output:
                 ] = self.electronic_structure.resolved_densities[:, :, :, :].copy()
             self.structure.positions = log_dict["positions"][-1]
             self.structure.set_cell(log_dict["cells"][-1])
+            self.generic_output.dft_log_dict["potentiostat_output"] = self.vp_new.get_potentiostat_output()
 
         elif outcar_working:
             # log_dict = self.outcar.parse_dict.copy()

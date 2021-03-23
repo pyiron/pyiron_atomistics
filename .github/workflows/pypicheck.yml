@@ -1,7 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: Python package
+name: Pip check
 
 on:
   push:
@@ -15,8 +12,8 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.8, 3.9]
+        operating-system: [ubuntu-latest]
+        python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -29,8 +26,5 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
-        python .ci_support/pyironconfig.py
         pip install --no-deps .
-    - name: Tests
-      shell: bash -l {0}
-      run: coverage run --omit pyiron_atomistics/_version.py -m unittest discover tests
+        pip check

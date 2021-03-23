@@ -4,7 +4,7 @@
 
 import numpy as np
 from pyiron_atomistics.atomistics.job.interactivewrapper import InteractiveWrapper, ReferenceJobOutput
-from pyiron_base import InputList, Settings
+from pyiron_base import DataContainer, Settings
 
 __author__ = "Osamu Waseda"
 __copyright__ = "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH " \
@@ -105,7 +105,7 @@ class ART(InteractiveWrapper):
     def __init__(self, project, job_name):
         super(ART, self).__init__(project, job_name)
         self.__name__ = "ART"
-        self.input = InputList(table_name='custom_dict')
+        self.input = DataContainer(table_name='custom_dict')
         self.input.gamma = 0.1
         self.input.fix_layer = False
         self.input.non_art_id = None

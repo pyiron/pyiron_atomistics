@@ -331,6 +331,13 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(len(basis[0:10]), 10)
         self.assertEqual(basis[0, 10], basis[[0, 10]])
 
+    def test__dir__(self):
+        pos, cell = generate_fcc_lattice()
+        basis = Atoms(symbols="Al", positions=pos, cell=cell).repeat(5)
+        self.assertFalse("selective_dynamics" in basis.__dir__())
+        basis.add_tag(selective_dynamics=[True, True, True])
+        self.assertTrue("selective_dynamics" in basis.__dir__())
+
     def test_positions(self):
         self.assertEqual(self.CO2[1:].positions[1:].tolist(), [[0.0, 1.5, 0.0]])
         self.CO2.positions[1][0] = 5.0

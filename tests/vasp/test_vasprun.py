@@ -28,8 +28,7 @@ class TestVasprun(unittest.TestCase):
         )
         file_list = sorted(os.listdir(cls.direc))
         del file_list[file_list.index("vasprun_spoilt.xml")]
-        cls.num_species = [3, 1, 2, 2, 3, 4, 4, 4, 2]
-
+        cls.num_species = [3, 1, 2, 2, 3, 4, 4, 4, 10, 2]
         for f in file_list:
             vp = Vasprun()
             filename = posixpath.join(cls.direc, f)
@@ -40,6 +39,13 @@ class TestVasprun(unittest.TestCase):
         vp = Vasprun()
         filename = posixpath.join(self.direc, "vasprun_spoilt.xml")
         self.assertRaises(VasprunError, vp.from_file, filename)
+
+    def test_get_potentiostat_output(self):
+        for i, vp in enumerate(self.vp_list):
+            if i == 8:
+                self.assertIsInstance(vp.get_potentiostat_output(), dict)
+            else:
+                self.assertIsNone(vp.get_potentiostat_output())
 
     def test_parse_generator(self):
         for vp in self.vp_list:

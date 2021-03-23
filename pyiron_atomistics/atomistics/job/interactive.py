@@ -403,7 +403,7 @@ class GenericInteractiveOutput(GenericOutput):
             key (str): name of the key
 
         Returns:
-            list:
+            list: list of arrays stored in the interactive cache
         """
         lst = self._key_from_cache(key)
         if len(lst) != 0 and isinstance(lst[-1], list):
@@ -413,7 +413,9 @@ class GenericInteractiveOutput(GenericOutput):
 
     def _key_from_hdf(self, key):
         """
-        Get all entries from the HDF5 file for a specific key - stored under 'output/interactive/<key>'
+        Get all entries from the HDF5 file for a specific key - stored under 'output/interactive/<key>'.  If not found
+        there the key is looked up in the regular HDF storage location 'output/<key>' via the property on our super
+        class :class:`.GenericOutput`.
 
         Args:
             key (str): name of the key
@@ -421,10 +423,17 @@ class GenericInteractiveOutput(GenericOutput):
         Returns:
 
         """
-        return self._job["output/interactive/" + key]
+        fetched = self._job["output/interactive/" + key]
+        if fetched is None or len(fetched) == 0:
+            fetched = getattr(super(), key)
+        return fetched
 
     def _key_from_property(self, key, prop):
         """
+        Fetch values for the given and property from interactive HDF5.
+
+        Values are first looked up in the interactive cache, then in the interactive group in the HDF5 file
+        ('output/interactive/<key>') and if not found there via the given prop function.
 
         Args:
             key (str): name of the key
@@ -443,32 +452,32 @@ class GenericInteractiveOutput(GenericOutput):
                 return_lst = prop(self).tolist() + return_lst
         return np.array(return_lst)
 
-    def _lst_from_property(self, key, prop=None):
+    def _lst_from_property(self, key):
         """
+        Fetch latest values for the given property.
+
+        Values are first looked up in the interactive cache, then in the interactive group in the HDF5 file
+        ('output/interactive/<key>') and if not found there via approriate getter from our super class (GenericOutput).
+        That means that key needs to be a property defined there.
 
         Args:
-            key (str):
-            prop (function):
+            key (str): output key
 
         Returns:
-
+            :class:`numpy.ndarray`: collected values from all previous steps
         """
-        return_lst = self._lst_from_cache(key)
-        hdf5_output = self._key_from_hdf(key)
-        if hdf5_output is not None and len(hdf5_output) != 0:
-            if isinstance(hdf5_output[-1], list):
-                return_lst = [np.array(out) for out in hdf5_output] + return_lst
-            else:
-                return_lst = hdf5_output.tolist() + return_lst
-        elif prop is not None:
-            prop_result = prop(self)
-            if prop_result is not None:
-                return_lst = prop_result.tolist() + return_lst
-        return np.array(return_lst)
+        cached = np.array(self._lst_from_cache(key))
+        fetched = self._key_from_hdf(key)
+        if fetched is None or len(fetched) == 0:
+            return cached
+        elif len(cached) == 0:
+            return fetched
+        else:
+            return np.concatenate((cached, fetched))
 
     @property
     def indices(self):
-        return self._lst_from_property(key="indices", prop=GenericOutput.indices.fget)
+        return self._lst_from_property("indices")
 
     @property
     def cells(self):
@@ -488,13 +497,11 @@ class GenericInteractiveOutput(GenericOutput):
 
     @property
     def forces(self):
-        return self._lst_from_property(key="forces", prop=GenericOutput.forces.fget)
+        return self._lst_from_property("forces")
 
     @property
     def positions(self):
-        return self._lst_from_property(
-            key="positions", prop=GenericOutput.positions.fget
-        )
+        return self._lst_from_property("positions")
 
     @property
     def pressures(self):
@@ -520,9 +527,7 @@ class GenericInteractiveOutput(GenericOutput):
 
     @property
     def unwrapped_positions(self):
-        return self._lst_from_property(
-            key="unwrapped_positions", prop=GenericOutput.unwrapped_positions.fget
-        )
+        return self._lst_from_property("unwrapped_positions")
 
     @property
     def volume(self):
