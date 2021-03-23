@@ -3,15 +3,11 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-import os
-import time
-import warnings
-from pyiron_base import Settings, GenericParameters, Executable, deprecate
+from pyiron_base import Settings, GenericParameters, deprecate
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
 )
-from pyiron_atomistics.atomistics.job.interactive import InteractiveInterface
 
 __author__ = "Jan Janssen, Osamu Waseda"
 __copyright__ = (
@@ -23,7 +19,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2018"
-
 
 s = Settings()
 
