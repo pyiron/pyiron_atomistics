@@ -27,7 +27,7 @@ from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import find_potential_file \
     as find_potential_file_jth
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
-from pyiron_base import Settings, InputList, job_status_successful_lst, deprecate
+from pyiron_base import Settings, DataContainer, job_status_successful_lst, deprecate
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -421,19 +421,19 @@ class SphinxBase(GenericDFTJob):
             else:
                 elem = species_obj.Abbreviation
             if potformat == "JTH":
-                self.input.sphinx.pawPot["species"].append({
+                self.input.sphinx.pawPot["species"].append(Group({
                             "name": '"' + elem + '"',
                             "potType": '"AtomPAW"',
                             "element": '"' + elem + '"',
                             "potential": f'"{elem}_GGA.atomicdata"',
-                })
+                }))
             elif potformat == "VASP":
-                self.input.sphinx.pawPot["species"].append({
+                self.input.sphinx.pawPot["species"].append(Group({
                             "name": '"' + elem + '"',
                             "potType": '"VASP"',
                             "element": '"' + elem + '"',
                             "potential": '"' + elem + "_POTCAR" + '"',
-                })
+                }))
             else:
                 raise ValueError('Potential must be JTH or VASP')
         if not check_overlap:
@@ -1809,7 +1809,7 @@ class InputWriter(object):
             s.logger.debug("No magnetic moments")
 
 
-class Group(InputList):
+class Group(DataContainer):
     """
     Dictionary-like object to store SPHInX inputs.
 

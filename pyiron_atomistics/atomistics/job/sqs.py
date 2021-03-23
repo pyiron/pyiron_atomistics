@@ -4,7 +4,7 @@
 
 from multiprocessing import cpu_count
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
-from pyiron_base import InputList, GenericParameters, Settings, ImportAlarm
+from pyiron_base import DataContainer, GenericParameters, Settings, ImportAlarm
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron, pyiron_to_ase
 from pymatgen.io.ase import AseAtomsAdaptor
 import numpy as np
@@ -127,7 +127,7 @@ class SQSJob(AtomisticGenericJob):
     def __init__(self, project, job_name):
         super(SQSJob, self).__init__(project, job_name)
         # self.input = InputList(table_name='input')
-        self.input = InputList(table_name='custom_dict')
+        self.input = DataContainer(table_name='custom_dict')
         self.input.mole_fractions = dict()
         self.input.weights = None
         self.input.objective = 0.0

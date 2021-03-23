@@ -13,7 +13,7 @@ __email__ = "poul@mpie.de"
 __status__ = "development"
 __date__ = "Aug 12, 2020"
 
-from pyiron_base import InputList, GenericJob
+from pyiron_base import DataContainer, GenericJob
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
@@ -30,13 +30,13 @@ class StructureContainer(AtomisticGenericJob):
         super().__init__(project, job_name)
         self.__version__ = "0.2.0"
         self.__hdf_version__ = "0.2.0"
-        self._structure_lst = InputList(table_name = "structures")
+        self._structure_lst = DataContainer(table_name = "structures")
         self.server.run_mode.interactive = True
 
     @property
     def structure_lst(self):
         """
-        :class:`.InputList`: list of :class:`~.Atoms`
+        :class:`.DataContainer`: list of :class:`~.Atoms`
         """
         return self._structure_lst
 
