@@ -102,7 +102,6 @@ class QuasiNewton(InteractiveWrapper):
         )  # Reset the version number to the executable is set automatically
         self.input = Input()
         self.output = QuasiNewtonOutput(job=self)
-        self._interactive_number_of_steps = 0
 
     def set_input_to_read_only(self):
         """
@@ -130,7 +129,7 @@ class QuasiNewton(InteractiveWrapper):
         self._logger.info("job status: %s", self.status)
         new_positions = self.ref_job.structure.positions
         self.ref_job_initialize()
-        while 1:
+        for _ in range(self.input["ionic_steps"]):
             str_temp = self.ref_job.structure
             str_temp.positions = new_positions
             self.ref_job.structure = str_temp
@@ -140,17 +139,13 @@ class QuasiNewton(InteractiveWrapper):
                 self._logger.debug("QuasiNewton: step finished!")
             else:
                 self.ref_job.run(delete_existing_job=True)
-            if self.ref_job.output.force_max.max() < self.input['ionic_force_tolerance']:
+            if self.ref_job.output.force_max[-1].max() < self.input['ionic_force_tolerance']:
                 break
             self._interactive_interface.set_forces(forces=self.get_forces())
             new_positions = self._interactive_interface.get_positions()
-            self._interactive_number_of_steps += 1
-            if self._interactive_number_of_steps > self.input["ionic_steps"]:
-                break
         self.status.collect = True
         if self.ref_job.server.run_mode.interactive:
             self.ref_job.interactive_close()
-        self._interactive_interface.interactive_close()
         self.run()
 
     def get_forces(self):
