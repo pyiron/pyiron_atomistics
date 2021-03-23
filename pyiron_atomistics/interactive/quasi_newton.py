@@ -39,7 +39,7 @@ class QuasiNewtonInteractive:
         self.ref_structure = structure
         self.max_step_length = max_step_length
         self.reverse_regularization_eigenvalues = True
-        self.max_number_of_ridge_iterations = 1000
+        self.max_number_of_ridge_iterations = 100
         self.gradient = np.zeros_like(structure.positions)
 
     def reverse_hessian(self, diffusion_vector, diffusion_id=None):
@@ -54,8 +54,8 @@ class QuasiNewtonInteractive:
         v = np.einsum('i,j->ij', v, v)/np.linalg.norm(v)**2
         self.hessian -= (np.absolute(self.hessian).max()+1)*v
 
-    def set_forces(forces):
-        qn.update_hessian(-forces)
+    def set_forces(self, forces):
+        self.update_hessian(-forces)
 
     def get_positions(self):
         ridge_parameter = 0
@@ -140,7 +140,7 @@ class QuasiNewton(InteractiveWrapper):
                 self._logger.debug("QuasiNewton: step finished!")
             else:
                 self.ref_job.run(delete_existing_job=True)
-            if self.ref_job.output.force_max < self.input['ionic_force_tolerance']:
+            if self.ref_job.output.force_max.max() < self.input['ionic_force_tolerance']:
                 break
             self._interactive_interface.set_forces(forces=self.get_forces())
             new_positions = self._interactive_interface.get_positions()
@@ -184,7 +184,7 @@ class Input(GenericParameters):
         Loads the default file content
         """
         file_content = (
-            "ionic_steps = 1000 // maximum number of ionic steps\n"
+            "ionic_steps = 100 // maximum number of ionic steps\n"
             "ionic_energy_tolerance = 1.0e-3\n"
             "ionic_force_tolerance = 1.0e-2\n"
             "max_step_length = 1.0e-1 // maximum displacement at each step\n"
