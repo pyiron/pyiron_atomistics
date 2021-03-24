@@ -287,6 +287,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         langevin=False,
         delta_temp=None,
         delta_press=None,
+        msd=False,
     ):
         super(LammpsInteractive, self).calc_md(
             temperature=temperature,
@@ -302,6 +303,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             langevin=langevin,
             delta_temp=delta_temp,
             delta_press=delta_press,
+            msd=msd,
         )
         if self.interactive_is_activated() and (
             self.server.run_mode.interactive

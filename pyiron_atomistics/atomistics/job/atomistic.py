@@ -244,6 +244,7 @@ class AtomisticGenericJob(GenericJobCore):
         tloop=None,
         initial_temperature=True,
         langevin=False,
+        msd=False,
     ):
         self._generic_input["calc_mode"] = "md"
         self._generic_input["temperature"] = temperature
@@ -891,3 +892,15 @@ class GenericOutput(object):
             return hdf5_path.list_nodes()
         else:
             return []
+
+    @property
+    def mean_squared_displacement(self):
+        """
+        The mean-squared displacement computed directly within Lammps.
+
+        WARNINGS:
+            1. This works only if the job is a `Lammps` job.
+            2. Returns an output ONLY when the `msd` flag in set to True in `calc_md` for a Lammps job.
+            3. Returns None if used with `calc_static`, `calc_minimize` and `calc_vcsgc` for a Lammps job.
+        """
+        return self._job["output/generic/mean_squared_displacement"]

@@ -603,6 +603,9 @@ class LammpsBase(AtomisticGenericJob):
                 )
                 df["mean_pressures"] = pressures.tolist()
 
+            if "v_msd" in df:
+                df["mean_squared_displacement"] = df.pop("v_msd")
+
             with self.project_hdf5.open("output/generic") as hdf_output:
                 # This is a hack for backward comparability
                 for k, v in df.items():
@@ -671,6 +674,7 @@ class LammpsBase(AtomisticGenericJob):
         langevin=False,
         delta_temp=None,
         delta_press=None,
+        msd=False,
     ):
         # Docstring set programmatically -- Ensure that changes to signature or defaults stay consistent!
         if self.server.run_mode.interactive_non_modal:
@@ -690,6 +694,7 @@ class LammpsBase(AtomisticGenericJob):
             tloop=tloop,
             initial_temperature=initial_temperature,
             langevin=langevin,
+            msd=msd,
         )
         self.input.control.calc_md(
             temperature=temperature,
@@ -706,7 +711,8 @@ class LammpsBase(AtomisticGenericJob):
             delta_temp=delta_temp,
             delta_press=delta_press,
             job_name=self.job_name,
-            rotation_matrix=rotation_matrix
+            rotation_matrix=rotation_matrix,
+            msd=msd
         )
     calc_md.__doc__ = LammpsControl.calc_md.__doc__
 

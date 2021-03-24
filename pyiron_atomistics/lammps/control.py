@@ -427,7 +427,8 @@ class LammpsControl(GenericParameters):
         delta_temp=None,
         delta_press=None,
         job_name="",
-        rotation_matrix=None
+        rotation_matrix=None,
+        msd=False
     ):
         """
         Set an MD calculation within LAMMPS. Nosé Hoover is used by default.
@@ -471,6 +472,8 @@ class LammpsControl(GenericParameters):
             job_name (str): Job name of the job to generate a unique random seed.
             rotation_matrix (numpy.ndarray): The rotation matrix from the pyiron to Lammps coordinate
                 frame.
+            msd (bool): (True or False) Calculate the mean-squared displacement over all the atoms in the structure
+                for a Lammps job
         """
         if self["units"] not in LAMMPS_UNIT_CONVERSIONS.keys():
             raise NotImplementedError
@@ -605,6 +608,14 @@ class LammpsControl(GenericParameters):
                 seed=seed,
                 gaussian=True,
                 job_name=job_name
+            )
+
+        if msd:
+            self.modify(
+                compute___1="all msd com yes",
+                variable___msd=" equal c_1[4]",
+                thermo_style=self.get("thermo_style") + " v_msd",
+                append_if_not_present=True,
             )
 
     def calc_vcsgc(
