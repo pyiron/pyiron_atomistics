@@ -68,6 +68,10 @@ class TestAtomisticGenericJob(unittest.TestCase):
             disp_ref.append(np.dot(diff, cell))
         self.assertTrue(np.allclose(disp, disp_ref))
 
+    def test_get_mean_squared_displacement(self):
+        self.job["output/generic/mean_squared_displacement"] = None
+        self.assertIsNone(self.job.output.mean_squared_displacement)
+
 
 if __name__ == "__main__":
     unittest.main()

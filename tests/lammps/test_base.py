@@ -619,6 +619,13 @@ class TestLammps(unittest.TestCase):
         self.assertTrue(np.isclose(float(m.group(7)), 0.0 * cnv))
         self.assertTrue(np.isclose(float(m.group(8)), 0.0 * cnv))
 
+        # test if msd flag works
+        self.md_control_job.calc_md(temperature=300., msd=True)
+        self.assertEqual(self.md_control_job.input.control["compute___1"], "all msd com yes")
+        self.assertEqual(self.md_control_job.input.control["variable___msd"], " equal c_1[4]")
+        self.assertEqual(self.md_control_job.input.control["thermo_style"],
+                         "custom step temp pe etotal pxx pxy pxz pyy pyz pzz vol v_msd")
+
     def test_read_restart_file(self):
         self.job_read_restart.read_restart_file()
         self.assertIsNone(self.job_read_restart['dimension'])
