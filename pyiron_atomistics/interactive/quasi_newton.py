@@ -89,6 +89,21 @@ class QuasiNewtonInteractive:
 
 
 class QuasiNewton(InteractiveWrapper):
+    """
+    Quasi Newton class to get an optimized structure.
+
+    Example:
+
+    >>> from pyiron_atomistics import Project
+    >>> pr = Project('QN')
+    >>> lmp = pr.create.Lammps('lmp')
+    >>> lmp.structure = structure_of_your_choice
+    >>> qn = lmp.create_job('QuasiNewton', 'qn')
+    >>> qn.run()
+
+    If the Hessian matrix is not positive definite, the optimized structure is a metastable or
+    unstable state. If this is not desired, use BFGS algorithm (not implemented yet).
+    """
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self.__name__ = "QuasiNewton"
