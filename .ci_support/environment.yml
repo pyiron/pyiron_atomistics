@@ -18,7 +18,7 @@ dependencies:
   - pymatgen =2022.0.5
   - pyscal =2.10.12
   - pytables =3.6.1
-  - scipy =1.6.1
+  - scipy =1.6.2
   - seekpath =2.0.1
   - six =1.15.0
   - scikit-learn =0.24.1
