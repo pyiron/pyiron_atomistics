@@ -603,10 +603,18 @@ class LammpsBase(AtomisticGenericJob):
                 )
                 df["mean_pressures"] = pressures.tolist()
 
+            generic_keys_lst = list(h5_dict.values()) + ["pressures", "mean_pressures", ]
             with self.project_hdf5.open("output/generic") as hdf_output:
                 # This is a hack for backward comparability
                 for k, v in df.items():
-                    hdf_output[k] = np.array(v)
+                    if k in generic_keys_lst:
+                        hdf_output[k] = np.array(v)
+
+            with self.project_hdf5.open("output/lammps") as hdf_output:
+                # This is a hack for backward comparability
+                for k, v in df.items():
+                    if k not in generic_keys_lst:
+                        hdf_output[k] = np.array(v)
         else:
             warnings.warn("LAMMPS warning: No log.lammps output file found.")
 
