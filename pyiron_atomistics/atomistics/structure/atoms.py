@@ -1653,7 +1653,7 @@ class Atoms(ASEAtoms):
         """
         struct_copy = self.copy()
         points = np.array(points).reshape(-1, 3)
-        struct_copy += Atoms(elements=len(points) * ["Hs"], positions=points)
+        struct_copy += Atoms(elements=len(points) * ["Hs"], positions=points, cell=self.cell)
         struct_copy.center_coordinates_in_unit_cell()
         group_IDs = struct_copy.get_symmetry(
             use_magmoms=use_magmoms,
@@ -1662,7 +1662,7 @@ class Atoms(ASEAtoms):
             angle_tolerance=angle_tolerance,
         )["equivalent_atoms"][struct_copy.select_index("Hs")]
         return [
-            np.round(points[group_IDs == ID], decimals=8) for ID in np.unique(group_IDs)
+            points[group_IDs == ID] for ID in np.unique(group_IDs)
         ]
 
     def _get_voronoi_vertices(self, minimum_dist=0.1):
