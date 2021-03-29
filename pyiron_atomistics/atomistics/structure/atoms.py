@@ -1560,10 +1560,11 @@ class Atoms(ASEAtoms):
         """
 
         Args:
-            use_magmoms:
-            use_elements: True or False. If False, chemical elements will be ignored
-            symprec:
-            angle_tolerance:
+            use_magmoms (bool): Whether to consider magnetic moments (cf.
+            get_initial_magnetic_moments())
+            use_elements (bool): If False, chemical elements will be ignored
+            symprec (float): Symmetry search precision
+            angle_tolerance (float): Angle search tolerance
 
         Returns:
 
@@ -1629,25 +1630,37 @@ class Atoms(ASEAtoms):
                          vectors[self._symmetry_dataset['indices']])/len(self._symmetry_dataset['rotations'])
 
     @deprecate_soon
-    def group_points_by_symmetry(self, points):
+    def group_points_by_symmetry(
+        self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
+    ):
+        
         """
-            This function classifies the points into groups according to the box symmetry given by spglib.
+        This function classifies the points into groups according to the box symmetry given by
+        spglib.
 
-            Args:
-                points: (np.array/list) nx3 array which contains positions
+        Args:
+            points: (np.array/list) nx3 array which contains positions
+            use_magmoms (bool): Whether to consider magnetic moments (cf.
+            get_initial_magnetic_moments())
+            use_elements (bool): If False, chemical elements will be ignored
+            symprec (float): Symmetry search precision
+            angle_tolerance (float): Angle search tolerance
 
-            Returns: list of arrays containing geometrically equivalent positions
+        Returns: list of arrays containing geometrically equivalent positions
 
-            It is possible that the original points are not found in the returned list, as the positions outsie
-            the box will be projected back to the box.
+        It is possible that the original points are not found in the returned list, as the
+        positions outsie the box will be projected back to the box.
         """
         struct_copy = self.copy()
         points = np.array(points).reshape(-1, 3)
         struct_copy += Atoms(elements=len(points) * ["Hs"], positions=points)
         struct_copy.center_coordinates_in_unit_cell()
-        group_IDs = struct_copy.get_symmetry()["equivalent_atoms"][
-            struct_copy.select_index("Hs")
-        ]
+        group_IDs = struct_copy.get_symmetry(
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance,
+        )["equivalent_atoms"][struct_copy.select_index("Hs")]
         return [
             np.round(points[group_IDs == ID], decimals=8) for ID in np.unique(group_IDs)
         ]
