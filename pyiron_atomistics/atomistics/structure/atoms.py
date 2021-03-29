@@ -1633,7 +1633,6 @@ class Atoms(ASEAtoms):
     def group_points_by_symmetry(
         self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
-        
         """
         This function classifies the points into groups according to the box symmetry given by
         spglib.
