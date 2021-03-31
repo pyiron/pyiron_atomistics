@@ -34,7 +34,7 @@ setup(
         'defusedxml==0.7.1',
         'future==0.18.2',
         'h5py==3.1.0',
-        'matplotlib==3.3.4',
+        'matplotlib==3.4.1',
         'mendeleev==0.7.0',
         'numpy==1.20.2',
         'pandas==1.2.3',
