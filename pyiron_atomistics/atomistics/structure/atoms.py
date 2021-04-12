@@ -3139,10 +3139,6 @@ def ase_to_pyiron(ase_obj):
         pyiron.atomistics.structure.atoms.Atoms: The equivalent pyiron structure
 
     """
-    try:
-        import ase
-    except ImportError:
-        raise ValueError("ASE package not yet installed")
     element_list = ase_obj.get_chemical_symbols()
     cell = ase_obj.cell
     positions = ase_obj.get_positions()
@@ -3183,10 +3179,7 @@ def ase_to_pyiron(ase_obj):
 
 
 def pyiron_to_ase(pyiron_obj):
-    try:
-        from pyiron_atomistics.atomistics.structure.pyironase import ASEAtoms
-    except ImportError:
-        raise ValueError("ASE package not yet installed")
+    from pyiron_atomistics.atomistics.structure.pyironase import ASEAtoms
     element_list = pyiron_obj.get_parent_symbols()
     cell = pyiron_obj.cell
     positions = pyiron_obj.positions
