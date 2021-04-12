@@ -21,6 +21,7 @@ from pyiron_atomistics.atomistics.structure.periodic_table import (
     ChemicalElement
 )
 from pyiron_base import Settings, deprecate, deprecate_soon
+from pyiron_atomistics.atomistics.structure.pyironase import publication
 
 from scipy.spatial import cKDTree, Voronoi
 import spglib
@@ -3179,7 +3180,6 @@ def ase_to_pyiron(ase_obj):
 
 
 def pyiron_to_ase(pyiron_obj):
-    from pyiron_atomistics.atomistics.structure.pyironase import ASEAtoms
     element_list = pyiron_obj.get_parent_symbols()
     cell = pyiron_obj.cell
     positions = pyiron_obj.positions
