@@ -2644,6 +2644,9 @@ class Atoms(ASEAtoms):
             dummy_basis.rotate(a=a, v=v, center=center, rotate_cell=rotate_cell)
             self.positions[index_list] = dummy_basis.positions[index_list]
 
+    def to_ase(self):
+        return pyiron_to_ase(self)
+
 
 class _CrystalStructure(Atoms):
     """

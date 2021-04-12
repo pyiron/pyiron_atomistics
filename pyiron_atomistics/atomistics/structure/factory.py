@@ -32,6 +32,7 @@ from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_t
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import Settings, PyironFactory, deprecate
 import types
+from functools import wraps
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
@@ -383,3 +384,8 @@ class StructureFactory(PyironFactory):
             add_if_dist=add_if_dist
         )
     aimsgb_build.__doc__ = AimsgbFactory.build.__doc__
+
+    @staticmethod
+    @wraps(ase_to_pyiron)
+    def from_ase(ase_atoms):
+        return ase_to_pyiron(ase_atoms)
