@@ -28,7 +28,8 @@ import numpy as np
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
 from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_to_pyiron, Atoms
+from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, Atoms, \
+    ase_to_pyiron, pymatgen_to_pyiron, ovito_to_pyiron
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import Settings, PyironFactory, deprecate
 import types
@@ -389,3 +390,13 @@ class StructureFactory(PyironFactory):
     @wraps(ase_to_pyiron)
     def from_ase(ase_atoms):
         return ase_to_pyiron(ase_atoms)
+
+    @staticmethod
+    @wraps(pymatgen_to_pyiron)
+    def from_ase(pymatgen_obj):
+        return pymatgen_to_pyiron(pymatgen_obj)
+
+    @staticmethod
+    @wraps(ovito_to_pyiron)
+    def from_ase(ovito_obj):
+        return ovito_to_pyiron(ovito_obj)

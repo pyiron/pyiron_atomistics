@@ -2647,6 +2647,12 @@ class Atoms(ASEAtoms):
     def to_ase(self):
         return pyiron_to_ase(self)
 
+    def to_pymatgen(self):
+        return pyiron_to_pymatgen(self)
+
+    def to_ovito(self):
+        return pyiron_to_ovito(self)
+
 
 class _CrystalStructure(Atoms):
     """
