@@ -67,7 +67,7 @@ See the `Documentation-Installation <https://pyiron.readthedocs.io/en/latest/sou
 
 Example
 -------
-After the successful configuration you can start your first pyiron calculation. Navigate to the the projects directory and start a jupyter notebook or jupyter lab session correspondingly::
+After the successful configuration you can start your first pyiron calculation. Navigate to the projects directory and start a jupyter notebook or jupyter lab session correspondingly::
 
     cd ~/pyiron/projects
     jupyter notebook
