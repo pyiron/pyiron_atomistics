@@ -393,10 +393,10 @@ class StructureFactory(PyironFactory):
 
     @staticmethod
     @wraps(pymatgen_to_pyiron)
-    def from_ase(pymatgen_obj):
+    def from_pymatgen(pymatgen_obj):
         return pymatgen_to_pyiron(pymatgen_obj)
 
     @staticmethod
     @wraps(ovito_to_pyiron)
-    def from_ase(ovito_obj):
+    def from_ovito(ovito_obj):
         return ovito_to_pyiron(ovito_obj)
