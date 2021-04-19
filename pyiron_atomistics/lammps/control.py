@@ -793,6 +793,9 @@ class LammpsControl(GenericParameters):
             raise NotImplementedError(key+' is not implemented')
 
     def energy_pot_per_atom(self):
+        """
+        Enable the output of atomic energies.  This will add an additional key 'energy_pot_per_atom' to the HDF output.
+        """
         if self['compute___energy_pot_per_atom'] is None:
             self['compute___energy_pot_per_atom'] = 'all pe/atom'
             self['dump___1'] += ' c_energy_pot_per_atom'
