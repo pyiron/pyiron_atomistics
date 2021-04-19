@@ -21,6 +21,8 @@ from pyiron_atomistics.atomistics.structure.periodic_table import (
     ChemicalElement
 )
 from pyiron_base import Settings, deprecate, deprecate_soon
+from pyiron_atomistics.atomistics.structure.pyironase import publication
+from pymatgen.io.ase import AseAtomsAdaptor
 
 from scipy.spatial import cKDTree, Voronoi
 import spglib
@@ -3148,10 +3150,6 @@ def ase_to_pyiron(ase_obj):
         pyiron.atomistics.structure.atoms.Atoms: The equivalent pyiron structure
 
     """
-    try:
-        import ase
-    except ImportError:
-        raise ValueError("ASE package not yet installed")
     element_list = ase_obj.get_chemical_symbols()
     cell = ase_obj.cell
     positions = ase_obj.get_positions()
@@ -3192,10 +3190,6 @@ def ase_to_pyiron(ase_obj):
 
 
 def pyiron_to_ase(pyiron_obj):
-    try:
-        from pyiron_atomistics.atomistics.structure.pyironase import ASEAtoms
-    except ImportError:
-        raise ValueError("ASE package not yet installed")
     element_list = pyiron_obj.get_parent_symbols()
     cell = pyiron_obj.cell
     positions = pyiron_obj.positions
@@ -3254,10 +3248,6 @@ def pymatgen_to_pyiron(pymatgen_obj):
     Returns:
         pyiron atoms object
     """
-    try:
-        from pymatgen.io.ase import AseAtomsAdaptor
-    except ImportError:
-        raise ValueError("PyMatGen package not yet installed")
     return ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=pymatgen_obj))
 
 
@@ -3271,10 +3261,6 @@ def pyiron_to_pymatgen(pyiron_obj):
     Returns:
         pymatgen atoms object
     """
-    try:
-        from pymatgen.io.ase import AseAtomsAdaptor
-    except ImportError:
-        raise ValueError("PyMatGen package not yet installed")
     ase_atoms = pyiron_to_ase(pyiron_obj)
     _check_if_simple_atoms(atoms=ase_atoms)
     return AseAtomsAdaptor().get_structure(atoms=ase_atoms, cls=None)
