@@ -359,7 +359,7 @@ class StructureFactory(PyironFactory):
 
     @deprecate(message="Use .aimsgb.info", version="0.2.2")
     def aimsgb_info(self, axis, max_sigma):
-        self.aimsgb.info(axis=axis, max_sigma=max_sigma)
+        return self.aimsgb.info(axis=axis, max_sigma=max_sigma)
     aimsgb_info.__doc__ = AimsgbFactory.info.__doc__
 
     @deprecate(message="Use .aimsgb.build", version="0.2.2")
