@@ -616,18 +616,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         return self.get_structure(iteration_step=-1)
 
-    def get_structure(self, iteration_step=-1, wrap_atoms=True):
-        """
-        Gets the structure from a given iteration step of the simulation (MD/ionic relaxation). For static calculations
-        there is only one ionic iteration step
-
-        Args:
-            iteration_step (int): Step for which the structure is requested
-            wrap_atoms (bool): True if the atoms are to be wrapped back into the unit cell
-
-        Returns:
-            pyiron.atomistics.structure.atoms.Atoms: The required structure
-        """
+    def _get_structure_impl(self, iteration_step=-1, wrap_atoms=True):
         if self.structure is None:
             raise AssertionError('Structure not set')
         snapshot = self.structure.copy()
@@ -636,7 +625,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 snapshot.cell = self.output.cells[iteration_step]
             except IndexError:
                 if wrap_atoms:
-                    raise IndexError('cell at step ', iteration_step, ' not found')
+                    raise IndexError('cell at step ', iteration_step, ' not found') from None
                 snapshot.cell = None
         if self.output.indices is not None:
             try:
@@ -653,9 +642,8 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 snapshot.positions += self.output.total_displacements[iteration_step]
         return snapshot
 
-    def get_number_of_structures(self):
+    def _number_of_structures_impl(self):
         return self.output.positions.shape[0]
-    get_number_of_structures.__doc__ = HasStructure.get_number_of_structures.__doc__
 
     def map(self, function, parameter_lst):
         master = self.create_job(
