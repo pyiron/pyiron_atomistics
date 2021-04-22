@@ -9,6 +9,7 @@ import numpy as np
 import warnings
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from ..structure.has_structure import HasStructure
 from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
 
 try:
@@ -28,7 +29,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class AtomisticGenericJob(GenericJobCore):
+class AtomisticGenericJob(GenericJobCore, HasStructure):
     """
     Atomistic Generic Job class extends the Generic Job class with all the functionality to run jobs containing
     atomistic structures. From this class all specific atomistic Hamiltonians are derived. Therefore it should contain
@@ -651,6 +652,10 @@ class AtomisticGenericJob(GenericJobCore):
             else:
                 snapshot.positions += self.output.total_displacements[iteration_step]
         return snapshot
+
+    def get_number_of_structures(self):
+        return self.output.positions.shape[0]
+    get_number_of_structures.__doc__ = HasStructure.get_number_of_structures.__doc__
 
     def map(self, function, parameter_lst):
         master = self.create_job(
