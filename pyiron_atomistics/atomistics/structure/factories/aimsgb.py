@@ -52,7 +52,9 @@ class AimsgbFactory:
             initial_struct,
             to_primitive=False,
             delete_layer='0b0t0b0t',
-            add_if_dist=0.0
+            add_if_dist=0.0,
+            uc_a=1,
+            uc_b=1
     ):
         """
         Generate a grain boundary structure based on the aimsgb.GrainBoundary module.
@@ -73,13 +75,15 @@ class AimsgbFactory:
                            Default value is add_if_dist=0.0
             to_primitive : To generate primitive or non-primitive GB structure. Default value is
                             to_primitive=False
+            uc_a (int): Number of unit cell of grain A. Default to 1.
+            uc_b (int): Number of unit cell of grain B. Default to 1.
 
         Returns:
             :class:`.Atoms`: final grain boundary structure
         """
         basis_pymatgen = pyiron_to_pymatgen(initial_struct)
         grain_init = Grain(basis_pymatgen.lattice, basis_pymatgen.species, basis_pymatgen.frac_coords)
-        gb_obj = GrainBoundary(axis=axis, sigma=sigma, plane=plane, initial_struct=grain_init)
+        gb_obj = GrainBoundary(axis=axis, sigma=sigma, plane=plane, initial_struct=grain_init, uc_a=uc_a, uc_b=uc_b)
 
         return pymatgen_to_pyiron(gb_obj.build_gb(to_primitive=to_primitive, delete_layer=delete_layer,
                                                   add_if_dist=add_if_dist))
