@@ -30,6 +30,7 @@ class TestVaspImport(unittest.TestCase):
             )
         self.project.import_from_path(path=folder_path, recursive=False)
         ham = self.project.load("full_job_sample")
+        self.assertTrue(ham.status.finished)
         self.assertTrue(isinstance(ham, Vasp))
         self.assertEqual(ham.get_nelect(), 16)
         self.assertTrue(
@@ -49,6 +50,7 @@ class TestVaspImport(unittest.TestCase):
             self.project.import_from_path(path=folder_path, recursive=False)
             self.assertEqual(len(w), 4)
         ham = self.project.load("full_job_minor_glitch")
+        self.assertTrue(ham.status.finished)
         self.assertTrue(isinstance(ham, Vasp))
         self.assertEqual(ham.get_nelect(), 16)
         self.assertIsInstance(ham.output.unwrapped_positions, np.ndarray)
@@ -56,6 +58,12 @@ class TestVaspImport(unittest.TestCase):
         self.assertEqual(ham["output/electronic_structure/occ_matrix"].shape, (1, 4, 12))
         self.assertEqual(ham["output/electronic_structure/eig_matrix"].shape, (1, 4, 12))
         self.assertEqual(ham._generic_input["reduce_kpoint_symmetry"], ham.reduce_kpoint_symmetry)
+        folder_path = os.path.join(
+            self.file_location, "../static/vasp_test_files/full_job_another_glitch"
+        )
+        self.project.import_from_path(path=folder_path, recursive=False)
+        ham = self.project.load("full_job_another_glitch")
+        self.assertTrue(ham.status.finished)
 
     def test_incar_import(self):
         file_path = os.path.join(
