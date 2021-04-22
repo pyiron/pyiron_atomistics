@@ -609,8 +609,11 @@ class VaspBase(GenericDFTJob):
                     pass
             if "POSCAR" in files:
                 if "POTCAR" in files:
-                    structure = read_atoms(posixpath.join(directory, "POSCAR"),
-                                           species_from_potcar=True)
+                    try:
+                        structure = read_atoms(posixpath.join(directory, "POSCAR"), species_from_potcar=True)
+                    # In order to handle cases where the species info. is corrputed in POTCAR files
+                    except KeyError:
+                        structure = read_atoms(posixpath.join(directory, "POSCAR"))
                 else:
                     structure = read_atoms(posixpath.join(directory, "POSCAR"))
             elif "CONTCAR" in files:
