@@ -15,7 +15,7 @@ dependencies:
   - pandas =1.2.4
   - phonopy =2.9.3
   - pyiron_base =0.2.9
-  - pymatgen =2022.0.5
+  - pymatgen =2022.0.6
   - pyscal =2.10.12
   - pytables =3.6.1
   - scipy =1.6.2
