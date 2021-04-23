@@ -54,6 +54,23 @@ class GenericOutput(OrderedDict):
 
 
 class MapMaster(AtomisticParallelMaster):
+    """
+    Atomistic parallel master job that computes a given function in the given arguments in parallel.
+
+    Example usage:
+
+    >>> master = self.create_job(
+    ...     job_type=self.project.job_type.MapMaster, job_name="map_" + self.job_name
+    ... )
+    >>> master.modify_function = function
+    >>> master.parameter_list = parameter_lst
+
+    or simpler
+
+    >>> master = job.map(function, parameter_lst)
+
+
+    """
     def __init__(self, project, job_name):
         """
 
