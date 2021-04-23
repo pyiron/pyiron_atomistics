@@ -396,7 +396,7 @@ class AtomisticGenericJob(GenericJobCore):
                 parent_structure = self.structure.copy()
             chem_formula = parent_structure.get_chemical_formula()
             if len(chem_formula) > 30:
-                chem_formula = chem_formula[:29]+"+"
+                chem_formula = "<OVERFLOW_ERROR>"
             db_dict["ChemicalFormula"] = chem_formula
         return db_dict
 
