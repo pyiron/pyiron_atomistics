@@ -28,10 +28,12 @@ import numpy as np
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
 from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, ase_to_pyiron, Atoms
+from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, Atoms, \
+    ase_to_pyiron, pymatgen_to_pyiron, ovito_to_pyiron
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import Settings, PyironFactory, deprecate
 import types
+from functools import wraps
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
@@ -359,7 +361,7 @@ class StructureFactory(PyironFactory):
 
     @deprecate(message="Use .aimsgb.info", version="0.2.2")
     def aimsgb_info(self, axis, max_sigma):
-        self.aimsgb.info(axis=axis, max_sigma=max_sigma)
+        return self.aimsgb.info(axis=axis, max_sigma=max_sigma)
     aimsgb_info.__doc__ = AimsgbFactory.info.__doc__
 
     @deprecate(message="Use .aimsgb.build", version="0.2.2")
@@ -383,3 +385,18 @@ class StructureFactory(PyironFactory):
             add_if_dist=add_if_dist
         )
     aimsgb_build.__doc__ = AimsgbFactory.build.__doc__
+
+    @staticmethod
+    @wraps(ase_to_pyiron)
+    def from_ase(ase_atoms):
+        return ase_to_pyiron(ase_atoms)
+
+    @staticmethod
+    @wraps(pymatgen_to_pyiron)
+    def from_pymatgen(pymatgen_obj):
+        return pymatgen_to_pyiron(pymatgen_obj)
+
+    @staticmethod
+    @wraps(ovito_to_pyiron)
+    def from_ovito(ovito_obj):
+        return ovito_to_pyiron(ovito_obj)
