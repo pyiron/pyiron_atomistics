@@ -222,7 +222,7 @@ class AseJob(GenericInteractive):
             self._logger.debug("Generic library: indices changed!")
             self.interactive_indices_setter(self._structure_current.indices)
 
-    def get_structure(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
         """
         Gets the structure from a given iteration step of the simulation (MD/ionic relaxation). For static calculations
         there is only one ionic iteration step
@@ -275,7 +275,7 @@ class AseJob(GenericInteractive):
                 self.get("output/generic/cells") is not None
                 and len(self.get("output/generic/cells")) != 0
             ):
-                return super(AseJob, self).get_structure(
+                return super()._get_structure(
                     iteration_step=iteration_step, wrap_atoms=wrap_atoms
                 )
             else:
