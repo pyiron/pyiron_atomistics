@@ -394,7 +394,10 @@ class AtomisticGenericJob(GenericJobCore):
                 parent_structure = self.structure.get_parent_basis()
             else:
                 parent_structure = self.structure.copy()
-            db_dict["ChemicalFormula"] = parent_structure.get_chemical_formula()
+            chem_formula = parent_structure.get_chemical_formula()
+            if len(chem_formula) > 30:
+                chem_formula = chem_formula[:29]+"+"
+            db_dict["ChemicalFormula"] = chem_formula
         return db_dict
 
     def restart(self, job_name=None, job_type=None):
