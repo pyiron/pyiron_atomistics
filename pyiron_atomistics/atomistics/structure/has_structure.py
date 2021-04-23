@@ -61,20 +61,20 @@ class HasStructure(ABC):
         there is only one ionic iteration step.
 
         Args:
-            iteration_step (int): Step for which the structure is requested
+            iteration_step (int): Step for which the structure is requested, if negative count from the back
             wrap_atoms (bool): True if the atoms are to be wrapped back into the unit cell
 
         Returns:
             :class:`pyiron_atomistics.atomistics.structure.atoms.Atoms`: the requested structure
 
         Raises:
-            IndexError: if not 0 < iteration_step < :property:`.number_of_structures`
+            IndexError: if not -:property:`.number_of_structures` <= iteration_step < :property:`.number_of_structures`
         """
         num_structures = self.number_of_structures
         if iteration_step < 0:
             iteration_step += num_structures
         if not (0 <= iteration_step < num_structures):
-            raise IndexError(f"iteration_step {iteration_step} out of range [0, {num_structures}).")
+            raise IndexError(f"iteration_step {iteration_step} out of range [-{num_structures}, {num_structures}).")
 
         return self._get_structure(iteration_step=iteration_step, wrap_atoms=wrap_atoms)
 
