@@ -397,6 +397,9 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         except IndexError:
             return self.structure
 
+    def _number_of_structures(self):
+        return max(1, super()._number_of_structures())
+
     @structure.setter
     def structure(self, structure):
         """
