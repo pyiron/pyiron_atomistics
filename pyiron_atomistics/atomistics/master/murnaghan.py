@@ -591,7 +591,7 @@ class EnergyVolumeFit(object):
 
 
 # ToDo: not all abstract methods implemented
-class Murnaghan(AtomisticParallelMaster, HasStructure):
+class Murnaghan(AtomisticParallelMaster):
     """
     Murnghan calculation to obtain the minimum energy volume and bulk modulus.
 
