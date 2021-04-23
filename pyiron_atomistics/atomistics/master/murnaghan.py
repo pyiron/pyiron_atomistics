@@ -827,7 +827,7 @@ class Murnaghan(AtomisticParallelMaster, HasStructure):
         if plt_show:
             plt.show()
 
-    def _get_structure_impl(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
         """
         Gives original structure or final one with equilibrium volume.
 
@@ -848,7 +848,7 @@ class Murnaghan(AtomisticParallelMaster, HasStructure):
         elif iteration_step == 0:
             return self.structure
 
-    def _number_of_structures_impl(self):
+    def _number_of_structures(self):
         if self.structure is None:
             return 0
         elif not self.status.finished:

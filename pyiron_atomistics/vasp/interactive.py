@@ -57,14 +57,14 @@ class VaspInteractive(VaspBase, GenericInteractive):
             "interactive_enforce_structure_reset() is not implemented!"
         )
 
-    def _get_structure_impl(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
         if (
             self.server.run_mode.interactive
             or self.server.run_mode.interactive_non_modal
         ):
-            return super(GenericInteractive, self)._get_structure_impl(iteration_step=iteration_step, wrap_atoms=wrap_atoms)
+            return super(GenericInteractive, self)._get_structure(iteration_step=iteration_step, wrap_atoms=wrap_atoms)
         else:
-            return super(VaspBase, self)._get_structure_impl(iteration_step=iteration_step, wrap_atoms=wrap_atoms)
+            return super(VaspBase, self)._get_structure(iteration_step=iteration_step, wrap_atoms=wrap_atoms)
 
     def interactive_close(self):
         if self.interactive_is_activated():

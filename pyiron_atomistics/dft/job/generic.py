@@ -150,8 +150,8 @@ class GenericDFTJob(AtomisticGenericJob):
             raise AssertionError()
         self._generic_input["fix_symmetry"] = boolean
 
-    def _get_structure_impl(self, iteration_step=-1, wrap_atoms=True):
-        snapshot = super(GenericDFTJob, self)._get_structure_impl(
+    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
+        snapshot = super(GenericDFTJob, self)._get_structure(
             iteration_step=iteration_step, wrap_atoms=wrap_atoms
         )
         spins = self.get_magnetic_moments(iteration_step=iteration_step)

@@ -616,7 +616,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         return self.get_structure(iteration_step=-1)
 
-    def _get_structure_impl(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
         if self.structure is None:
             raise AssertionError('Structure not set')
         snapshot = self.structure.copy()
@@ -642,7 +642,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 snapshot.positions += self.output.total_displacements[iteration_step]
         return snapshot
 
-    def _number_of_structures_impl(self):
+    def _number_of_structures(self):
         return self.output.positions.shape[0]
 
     def map(self, function, parameter_lst):

@@ -24,11 +24,11 @@ class HasStructure(ABC):
     """
     Mixin for classes that have one or more structures attached to them.
 
-    Necessary overrides are :abstractmethod:`._get_structure_impl()` and
-    :abstractmethod:`._number_of_structures_impl()`.
+    Necessary overrides are :abstractmethod:`._get_structure()` and
+    :abstractmethod:`._number_of_structures()`.
 
     :method:`.get_structure()` checks that iteration_step is valid; implementations of
-    :abstractmethod:`._get_structure_impl()` therefore don't have to check it.
+    :abstractmethod:`._get_structure()` therefore don't have to check it.
 
     :method:`.get_number_of_structures()` may return zero, e.g. if there's no structure stored in the object yet or a
     job will compute this structure, but hasn't been run yet.
@@ -37,9 +37,9 @@ class HasStructure(ABC):
 
     >>> from pyiron_atomistics.atomistics.structure.atoms import Atoms
     >>> class Foo(HasStructure):
-    ...     def _get_structure_impl(self, iteration_step=-1, wrap_atoms=True):
+    ...     def _get_structure(self, iteration_step=-1, wrap_atoms=True):
     ...         return Atoms(symbols=['Fe'], positions=[[0,0,0]])
-    ...     def _number_of_structures_impl(self):
+    ...     def _number_of_structures(self):
     ...         return 1
 
     >>> f = Foo()
@@ -76,10 +76,10 @@ class HasStructure(ABC):
         if not (0 <= iteration_step < num_structures):
             raise IndexError(f"iteration_step {iteration_step} out of range [0, {num_structures}).")
 
-        return self._get_structure_impl(iteration_step=iteration_step, wrap_atoms=wrap_atoms)
+        return self._get_structure(iteration_step=iteration_step, wrap_atoms=wrap_atoms)
 
     @abstractmethod
-    def _get_structure_impl(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
         pass
 
     @property
@@ -87,10 +87,10 @@ class HasStructure(ABC):
         """
         `int`: maximum `iteration_step` + 1 that can be passed to :method:`.get_structure()`.
         """
-        return self._number_of_structures_impl()
+        return self._number_of_structures()
 
     @abstractmethod
-    def _number_of_structures_impl(self):
+    def _number_of_structures(self):
         pass
 
     def iter_structures(self, wrap_atoms=True):
@@ -105,4 +105,4 @@ class HasStructure(ABC):
             :class:`pyiron_atomistics.atomistitcs.structure.atoms.Atoms`: every structure attached to the object
         """
         for i in range(self.number_of_structures):
-            yield self._get_structure_impl(iteration_step=i, wrap_atoms=wrap_atoms)
+            yield self._get_structure(iteration_step=i, wrap_atoms=wrap_atoms)
