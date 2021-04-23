@@ -933,16 +933,16 @@ class Atoms(ASEAtoms):
 
     def center_coordinates_in_unit_cell(self, origin=0, eps=1e-4):
         """
-        Wrap atomic coordinates within the supercell as given by a1, a2., a3
+        Wrap atomic coordinates within the supercell.
+
+        Modifies object in place and returns itself.
 
         Args:
             origin (float):  0 to confine between 0 and 1, -0.5 to confine between -0.5 and 0.5
             eps (float): Tolerance to detect atoms at cell edges
 
         Returns:
-
-            pyiron.atomistics.structure.atoms.Atoms: Wrapped structure
-
+            :class:`pyiron_atomistics.atomistics.structure.atoms.Atoms`: reference to this structure
         """
         if any(self.pbc):
             self.set_scaled_positions(
