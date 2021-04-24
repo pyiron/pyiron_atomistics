@@ -43,6 +43,8 @@ def read_atoms(
     potcar_file = "/".join([directory, "POTCAR"])
     if (species_list is None) and species_from_potcar:
         species_list = get_species_list_from_potcar(potcar_file)
+        if len(species_list) == 0:
+            warnings.warn("Warning! Unable to read species information from POTCAR")
     file_string = list()
     with open(filename) as f:
         for line in f:
