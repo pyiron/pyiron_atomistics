@@ -19,6 +19,17 @@ __date__ = "Oct 29, 2020"
 
 
 class SQSMaster(AtomisticParallelMaster):
+    """
+    Master job to compute SQS structures for a list of concentrations.
+
+    The input keys "species_one", "species_two" and "fraction_lst" are combined into dictionaries that are then passed
+    to the input "mole_fractions" as defined on :class:`.SQSJob` according to the pseudo code
+
+    >>> for f in fraction_lst:
+    ...     {species_one: f, species_two: 1-f}
+
+    The other options to :class:`.SQSJob` must be set on the reference job.
+    """
     def __init__(self, project, job_name):
         super(SQSMaster, self).__init__(project, job_name)
         self.__name__ = "SQSMaster"
@@ -33,9 +44,18 @@ class SQSMaster(AtomisticParallelMaster):
 
     @property
     def list_of_structures(self):
+        """
+        list: `len(self.input["fraction_lst"])` with the top-scoring structure from each sub job
+        """
         return [self.project_hdf5.load(job_id).list_of_structures[0] for job_id in self.child_ids]
 
     def list_structures(self):
+        """
+        List of top-scoring structures from each sub job.
+
+        Returns:
+            list: value of :attribute:`.list_of_structures`
+        """
         return self.list_of_structures
 
 
