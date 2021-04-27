@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from pyiron_atomistics.atomistics.master.murnaghan import Murnaghan, DebyeModel
+from pyiron_base import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -18,6 +19,7 @@ __date__ = "Sep 1, 2017"
 
 
 class MurnaghanDFT(Murnaghan):
+    @deprecate("use standard Murnaghan instead")
     def __init__(self, project, job_name="murnaghan"):
         super(MurnaghanDFT, self).__init__(project, job_name)
         self.__name__ = "MurnaghanDFT"
