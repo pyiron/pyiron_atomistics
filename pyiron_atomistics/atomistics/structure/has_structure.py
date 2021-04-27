@@ -33,10 +33,18 @@ class HasStructure(ABC):
     :method:`.get_number_of_structures()` may return zero, e.g. if there's no structure stored in the object yet or a
     job will compute this structure, but hasn't been run yet.
 
+    Sub classes that wish to document special behavior of their implementation of :method:`.get_structure` may do so by
+    adding documention to it in the "Methods:" sub section of their class docstring.
+
     The example below shows how to implement this mixin and how to check whether an object derives from it
 
     >>> from pyiron_atomistics.atomistics.structure.atoms import Atoms
     >>> class Foo(HasStructure):
+    ...     '''
+    ...     Methods:
+    ...         .. method:: get_structure
+    ...             returns structure with single Fe atom at (0, 0, 0)
+    ...     '''
     ...     def _get_structure(self, iteration_step=-1, wrap_atoms=True):
     ...         return Atoms(symbols=['Fe'], positions=[[0,0,0]])
     ...     def _number_of_structures(self):
