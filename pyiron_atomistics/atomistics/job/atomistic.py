@@ -653,6 +653,18 @@ class AtomisticGenericJob(GenericJobCore):
         return snapshot
 
     def map(self, function, parameter_lst):
+        """
+        Create :class:`.MapMaster` with the current job as reference job.
+
+        The job name is created as 'map_{self.name}'
+
+        Args:
+            function (callable): passed as `modify_function` to the map master
+            parameter_list (list): passed as `parameter_list` to the map master
+
+        Returns:
+            :class:`.MapMaster`: newly created master job
+        """
         master = self.create_job(
             job_type=self.project.job_type.MapMaster, job_name="map_" + self.job_name
         )
