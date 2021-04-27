@@ -8,7 +8,8 @@ from __future__ import print_function
 import sys
 import copy
 import numpy as np
-from collections import OrderedDict, Sequence
+from collections import OrderedDict
+from collections.abc import Sequence
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (
