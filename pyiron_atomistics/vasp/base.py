@@ -23,6 +23,7 @@ from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 from pyiron_atomistics.vasp.potential import get_enmax_among_potentials
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
+from pyiron_atomistics.dft.job.bader import Bader
 import warnings
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
@@ -395,6 +396,14 @@ class VaspBase(GenericDFTJob):
         except (IOError, ValueError, FileNotFoundError):
             pass
 
+        # Bader analysis
+        if os.path.isfile(self.working_directory + "/AECCAR0") and os.path.isfile(self.working_directory + "/AECCAR2"):
+            bader = Bader(self)
+            charges, volumes = bader.call_bader()
+            charges[self.sorted_indices] = charges
+            volumes[self.sorted_indices] = volumes
+            self._output_parser.generic_output.dft_log_dict["bader_charges"] = charges
+            self._output_parser.generic_output.dft_log_dict["bader_volumes"] = volumes
         self._output_parser.to_hdf(self._hdf5)
         if len(self._exclude_groups_hdf) > 0 or len(self._exclude_nodes_hdf) > 0:
             self.project_hdf5.rewrite_hdf5(
@@ -1383,13 +1392,14 @@ class VaspBase(GenericDFTJob):
 
     def get_valence_and_total_charge_density(self):
         cd_core = VaspVolumetricData()
-        cd_core.from_file(self.working_directory + "/AECCAR0")
-        cd_val = VaspVolumetricData()
-        cd_val.from_file(self.working_directory + "/AECCAR2")
-        cd_val.atoms = cd_val.atoms
         cd_total = VaspVolumetricData()
-        cd_total.total_data = cd_core.total_data + cd_val.total_data
-        cd_total.atoms = cd_val.atoms
+        cd_val = VaspVolumetricData()
+        if os.path.isfile(self.working_directory + "/AECCAR0"):
+            cd_core.from_file(self.working_directory + "/AECCAR0")
+            cd_val.from_file(self.working_directory + "/AECCAR2")
+            cd_val.atoms = cd_val.atoms
+            cd_total.total_data = cd_core.total_data + cd_val.total_data
+            cd_total.atoms = cd_val.atoms
         return cd_val, cd_total
 
     def get_electrostatic_potential(self):
@@ -1595,7 +1605,7 @@ class VaspBase(GenericDFTJob):
             files_to_compress = [
                 f
                 for f in list(self.list_files())
-                if f not in ["CHGCAR", "CONTCAR", "WAVECAR", "STOPCAR", "AECCAR1", 'AECCAR2']
+                if f not in ["CHGCAR", "CONTCAR", "WAVECAR", "STOPCAR", "AECCAR0", "AECCAR1", 'AECCAR2']
             ]
         # delete empty files
         for f in list(self.list_files()):
