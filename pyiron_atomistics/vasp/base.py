@@ -399,9 +399,10 @@ class VaspBase(GenericDFTJob):
         # Bader analysis
         if os.path.isfile(self.working_directory + "/AECCAR0") and os.path.isfile(self.working_directory + "/AECCAR2"):
             bader = Bader(self)
-            charges, volumes = bader.call_bader_from_job()
-            charges[self.sorted_indices] = charges
-            volumes[self.sorted_indices] = volumes
+            charges_orig, volumes_orig = bader.call_bader_from_job()
+            charges, volumes = charges_orig.copy(), volumes_orig.copy()
+            charges[self.sorted_indices] = charges_orig
+            volumes[self.sorted_indices] = volumes_orig
             if "valence_charges" in self._output_parser.generic_output.dft_log_dict.keys():
                 valence_charges = self._output_parser.generic_output.dft_log_dict["valence_charges"]
                 # Positive values indicate electron depletion
@@ -1991,8 +1992,9 @@ class Output:
             self.structure.positions = log_dict["positions"][-1]
             self.structure.set_cell(log_dict["cells"][-1])
             self.generic_output.dft_log_dict["potentiostat_output"] = self.vp_new.get_potentiostat_output()
-            valence_charges = self.vp_new.get_valence_electrons_per_atom()
-            valence_charges[sorted_indices] = valence_charges
+            valence_charges_orig = self.vp_new.get_valence_electrons_per_atom()
+            valence_charges = valence_charges_orig.copy()
+            valence_charges[sorted_indices] = valence_charges_orig
             self.generic_output.dft_log_dict["valence_charges"] = valence_charges
 
         elif outcar_working:
