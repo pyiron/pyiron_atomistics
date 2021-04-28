@@ -26,7 +26,7 @@ class Bader:
         self._structure = job.structure
 
     def create_cube_files(self):
-        cd_val, cd_total = self.job.get_valence_and_total_cd()
+        cd_val, cd_total = self.job.get_valence_and_total_charge_density()
         cd_val.write_cube_file(filename=os.path.join(self._working_directory, "valence_charge.CUBE"))
         cd_total.write_cube_file(filename=os.path.join(self._working_directory, "total_charge.CUBE"))
 
