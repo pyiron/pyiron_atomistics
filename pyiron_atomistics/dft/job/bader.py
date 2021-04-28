@@ -19,7 +19,12 @@ __date__ = "Sep 1, 2017"
 
 
 class Bader:
+    """
+    Module to apply the Bader charge partitioning scheme to finished DFT jobs. This module is interfaced with the
+    `Bader code`_ from the Greame Henkelmann group.
 
+    .. _Bader code: http://theory.cm.utexas.edu/henkelman/code/bader
+    """
     def __init__(self, job):
         self.job = job
         self._working_directory = job.working_directory
