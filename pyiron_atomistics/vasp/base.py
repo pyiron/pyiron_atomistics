@@ -399,7 +399,7 @@ class VaspBase(GenericDFTJob):
         # Bader analysis
         if os.path.isfile(self.working_directory + "/AECCAR0") and os.path.isfile(self.working_directory + "/AECCAR2"):
             bader = Bader(self)
-            charges, volumes = bader.call_bader()
+            charges, volumes = bader.call_bader_from_job()
             charges[self.sorted_indices] = charges
             volumes[self.sorted_indices] = volumes
             self._output_parser.generic_output.dft_log_dict["bader_charges"] = charges

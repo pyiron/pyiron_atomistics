@@ -26,6 +26,12 @@ class Bader:
     .. _Bader code: http://theory.cm.utexas.edu/henkelman/code/bader
     """
     def __init__(self, job):
+        """
+        Initialize the Bader module
+
+        Args:
+            job (pyiron_atomistics.dft.job.generic.GenericDFTJob): A DFT job instance (finished/converged job)
+        """
         self.job = job
         self._working_directory = job.working_directory
         self._structure = job.structure
@@ -35,17 +41,9 @@ class Bader:
         cd_val.write_cube_file(filename=os.path.join(self._working_directory, "valence_charge.CUBE"))
         cd_total.write_cube_file(filename=os.path.join(self._working_directory, "total_charge.CUBE"))
 
-    def call_bader(self, extra_arguments=None):
+    def call_bader_from_job(self, extra_arguments=None):
         self.create_cube_files()
-        # Go to the working directory to do this
-        cmd_1 = "cd {}".format(self._working_directory)
-        cmd_2 = list()
-        cmd_2.append("bader")
-        cmd_2.append("{0}/valence_charge.CUBE -ref {0}/total_charge.CUBE".format(self._working_directory))
-        if extra_arguments is not None:
-            cmd_2.append(extra_arguments)
-        cmd_2 = " ".join(cmd_2)
-        subprocess.call(";".join([cmd_1, cmd_2]), shell=True)
+        call_bader(filename=self._working_directory, extra_arguments=extra_arguments)
         self.remove_cube_files()
         return self.parse_charge_vol()
 
@@ -55,8 +53,24 @@ class Bader:
 
     def parse_charge_vol(self):
         filename = os.path.join(self._working_directory, "ACF.dat")
-        with open(filename) as f:
-            lines = f.readlines()
-            charges = np.genfromtxt(lines[2:], max_rows=len(self._structure))[:, 4]
-            volumes = np.genfromtxt(lines[2:], max_rows=len(self._structure))[:, 6]
-        return charges, volumes
+        return parse_charge_vol_file(structure=self._structure, filename=filename)
+
+
+def call_bader(filename, extra_arguments=None):
+    # Go to the working directory to do this
+    cmd_1 = "cd {}".format(filename)
+    cmd_2 = list()
+    cmd_2.append("bader")
+    cmd_2.append("{0}/valence_charge.CUBE -ref {0}/total_charge.CUBE".format(filename))
+    if extra_arguments is not None:
+        cmd_2.append(extra_arguments)
+    cmd_2 = " ".join(cmd_2)
+    subprocess.call(";".join([cmd_1, cmd_2]), shell=True)
+
+
+def parse_charge_vol_file(structure, filename="ACF.dat"):
+    with open(filename) as f:
+        lines = f.readlines()
+        charges = np.genfromtxt(lines[2:], max_rows=len(structure))[:, 4]
+        volumes = np.genfromtxt(lines[2:], max_rows=len(structure))[:, 6]
+    return charges, volumes
