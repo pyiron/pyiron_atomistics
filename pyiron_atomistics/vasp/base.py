@@ -1988,6 +1988,9 @@ class Output:
             self.structure.positions = log_dict["positions"][-1]
             self.structure.set_cell(log_dict["cells"][-1])
             self.generic_output.dft_log_dict["potentiostat_output"] = self.vp_new.get_potentiostat_output()
+            valence_charges = self.vp_new.get_valence_electrons_per_atom()
+            valence_charges[sorted_indices] = valence_charges
+            self.generic_output.dft_log_dict["valence_charges"] = valence_charges
 
         elif outcar_working:
             # log_dict = self.outcar.parse_dict.copy()
