@@ -1381,6 +1381,17 @@ class VaspBase(GenericDFTJob):
                 cd_obj.from_hdf(ho, "charge_density")
             return cd_obj
 
+    def get_valence_and_total_charge_density(self):
+        cd_core = VaspVolumetricData()
+        cd_core.from_file(self.working_directory + "/AECCAR0")
+        cd_val = VaspVolumetricData()
+        cd_val.from_file(self.working_directory + "/AECCAR2")
+        cd_val.atoms = cd_val.atoms
+        cd_total = VaspVolumetricData()
+        cd_total.total_data = cd_core.total_data + cd_val.total_data
+        cd_total.atoms = cd_val.atoms
+        return cd_val, cd_total
+
     def get_electrostatic_potential(self):
         """
         Gets the electrostatic potential from the hdf5 file.
