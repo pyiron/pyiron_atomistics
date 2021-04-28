@@ -1584,7 +1584,7 @@ class VaspBase(GenericDFTJob):
             files_to_compress = [
                 f
                 for f in list(self.list_files())
-                if f not in ["CHGCAR", "CONTCAR", "WAVECAR", "STOPCAR"]
+                if f not in ["CHGCAR", "CONTCAR", "WAVECAR", "STOPCAR", "AECCAR1", 'AECCAR2']
             ]
         # delete empty files
         for f in list(self.list_files()):
