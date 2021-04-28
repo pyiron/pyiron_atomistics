@@ -710,18 +710,23 @@ class Vasprun(object):
         return es_obj
 
     def get_potentiostat_output(self):
+        potstat_dict = dict()
         if "dftnw_pot" not in self.vasprun_dict.keys():
             return
         try:
-            vasprun_dict_keys = ["dftnw_pot", "dftnw_zval", "dftnw_electrodecharge", "dftnw_vaclevel_upperside_surf", "dftnw_vaclevel_lowerside_surf", "dftnw_efermi"]
-            potstat_dict_keys = ["potential_drop", "Ne_charge", "electrode_charge", "vac_level_upper", "vac_level_lower", "fermi_level"]
-            return {k: np.array(self.vasprun_dict[vk]) for k, vk in zip(potstat_dict_keys, vasprun_dict_keys) if vk in self.vasprun_dict.keys()}
+            vasprun_dict_keys = ["dftnw_pot", "dftnw_zval", "dftnw_electrodecharge", "dftnw_vaclevel_upperside_surf",
+                                 "dftnw_vaclevel_lowerside_surf", "dftnw_efermi"]
+            potstat_dict_keys = ["potential_drop", "Ne_charge", "electrode_charge", "vac_level_upper",
+                                 "vac_level_lower", "fermi_level"]
+            for k, vk in zip(potstat_dict_keys, vasprun_dict_keys):
+                if vk in self.vasprun_dict.keys():
+                    potstat_dict[k] = np.array(self.vasprun_dict[vk])
+            return potstat_dict
         except KeyError:
             if len(potstat_dict.keys()) > 0:
                 return potstat_dict
             else:
                 return
-
 
 
 def clean_character(a, remove_char=" "):
