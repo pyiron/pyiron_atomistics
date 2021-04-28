@@ -463,7 +463,8 @@ class Vasprun(object):
         d["scf_0_energies"].append(scf_0_energies)
         d["scf_dipole_moments"].append(scf_moments)
 
-    def parse_cce_to_dict(self, node, d):
+    @staticmethod
+    def parse_cce_to_dict(node, d):
         for item in node:
             if item.attrib['name'] not in list(d.keys()):
                 d[item.attrib['name']] = list()
