@@ -736,6 +736,14 @@ class Vasprun(object):
                 return
 
     def get_valence_electrons_per_atom(self):
+        """
+        Gets the number of valence electrons for each atom in the final structure
+
+        Returns:
+            numpy.ndarray: Array of valence charges
+        """
+        sp_dict = self.vasprun_dict["atominfo"]["species_dict"]
+        return np.hstack([[val["valence"]] * val["n_atoms"] for val in sp_dict.values()])
 
 
 def clean_character(a, remove_char=" "):
