@@ -243,6 +243,11 @@ class GenericDFTJob(AtomisticGenericJob):
             "The get_kpoints() function is not implemented for this code."
         )
 
+    def get_valence_and_total_charge_density(self):
+        raise NotImplementedError(
+            "The get_valence_and_total_charge_density() function is not implemented for this code."
+        )
+
     def get_k_mesh_by_cell(self, k_mesh_spacing, cell=None):
         """
         Get k-mesh density according to the box size.
