@@ -710,6 +710,13 @@ class Vasprun(object):
         return es_obj
 
     def get_potentiostat_output(self):
+        """
+        Gets the input from the vasp potentiostat output and stores it using intuitive names
+
+        Returns:
+            dict/None: Dictionary with potentiostat output
+
+        """
         potstat_dict = dict()
         if "dftnw_pot" not in self.vasprun_dict.keys():
             return
@@ -727,6 +734,8 @@ class Vasprun(object):
                 return potstat_dict
             else:
                 return
+
+    def get_valence_electrons_per_atom(self):
 
 
 def clean_character(a, remove_char=" "):
