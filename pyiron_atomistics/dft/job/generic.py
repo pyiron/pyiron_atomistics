@@ -394,6 +394,26 @@ class GenericDFTJob(AtomisticGenericJob):
             "The set_empty_states function is not implemented for this code."
         )
 
+    def get_bader_charges(self):
+        """
+        Returns the total charge on every atom determined by the Bader charge partitioning scheme.
+
+        Returns:
+            numpy.ndarray: The Bader charges for each atom
+
+        """
+        return self["output/generic/dft/bader_charges"]
+
+    def get_bader_volumes(self):
+        """
+        Returns the integration volume around every atom from the Bader charge partitioning scheme.
+
+        Returns:
+            numpy.ndarray: The Bader charges for each atom
+
+        """
+        return self["output/generic/dft/bader_volumes"]
+
     def _set_kpoints(
         self,
         mesh=None,
