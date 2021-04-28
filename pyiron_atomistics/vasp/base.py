@@ -404,7 +404,8 @@ class VaspBase(GenericDFTJob):
             volumes[self.sorted_indices] = volumes
             if "valence_charges" in self._output_parser.generic_output.dft_log_dict.keys():
                 valence_charges = self._output_parser.generic_output.dft_log_dict["valence_charges"]
-                self._output_parser.generic_output.dft_log_dict["bader_charges"] = charges - valence_charges
+                # Positive values indicate electron depletion
+                self._output_parser.generic_output.dft_log_dict["bader_charges"] = valence_charges - charges
             self._output_parser.generic_output.dft_log_dict["bader_volumes"] = volumes
         self._output_parser.to_hdf(self._hdf5)
         if len(self._exclude_groups_hdf) > 0 or len(self._exclude_nodes_hdf) > 0:
