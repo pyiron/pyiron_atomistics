@@ -402,8 +402,8 @@ class VaspBase(GenericDFTJob):
             charges, volumes = bader.call_bader_from_job()
             charges[self.sorted_indices] = charges
             volumes[self.sorted_indices] = volumes
-            valence_charges = self._output_parser.generic_output.dft_log_dict["bader_charges"]
-            if valence_charges is not None:
+            if "valence_charges" in self._output_parser.generic_output.dft_log_dict.keys():
+                valence_charges = self._output_parser.generic_output.dft_log_dict["valence_charges"]
                 self._output_parser.generic_output.dft_log_dict["bader_charges"] = charges - valence_charges
             self._output_parser.generic_output.dft_log_dict["bader_volumes"] = volumes
         self._output_parser.to_hdf(self._hdf5)
