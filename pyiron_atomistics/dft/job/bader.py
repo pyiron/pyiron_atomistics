@@ -45,6 +45,7 @@ class Bader:
         self.create_cube_files()
         error_code = call_bader(filename=self._working_directory, extra_arguments=extra_arguments)
         if error_code > 0:
+            self.remove_cube_files()
             raise ValueError("Invoking Bader charge analysis failed!")
         self.remove_cube_files()
         return self.parse_charge_vol()
