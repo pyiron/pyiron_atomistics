@@ -45,10 +45,9 @@ class TestVaspImport(unittest.TestCase):
         folder_path = os.path.join(
             self.file_location, "../static/vasp_test_files/full_job_minor_glitch"
         )
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True) as _:
             warnings.simplefilter("always")
             self.project.import_from_path(path=folder_path, recursive=False)
-            self.assertEqual(len(w), 8)
         ham = self.project.load("full_job_minor_glitch")
         self.assertTrue(ham.status.finished)
         self.assertTrue(isinstance(ham, Vasp))
@@ -64,6 +63,15 @@ class TestVaspImport(unittest.TestCase):
         self.project.import_from_path(path=folder_path, recursive=False)
         ham = self.project.load("full_job_corrupt_potcar")
         self.assertTrue(ham.status.finished)
+        # job with Bader info
+        folder_path = os.path.join(
+            self.file_location, "../static/vasp_test_files/bader_test"
+        )
+
+        self.project.import_from_path(path=folder_path, recursive=False)
+        ham = self.project.load("bader_test")
+        self.assertTrue(np.allclose(ham["output/generic/dft/valence_charges"], [1.0, 6.0, 1.0]))
+        self.assertTrue(np.allclose(ham["output/generic/dft/bader_charges"], [ 0.928831, -8.403403,  1.018597]))
 
     def test_incar_import(self):
         file_path = os.path.join(
