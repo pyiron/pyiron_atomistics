@@ -71,7 +71,7 @@ class TestVaspImport(unittest.TestCase):
         self.project.import_from_path(path=folder_path, recursive=False)
         ham = self.project.load("bader_test")
         self.assertTrue(np.allclose(ham["output/generic/dft/valence_charges"], [1.0, 6.0, 1.0]))
-        self.assertTrue(np.allclose(ham["output/generic/dft/bader_charges"], [ 0.928831, -8.403403,  1.018597]))
+        self.assertTrue(np.allclose(ham["output/generic/dft/bader_charges"], [0.928831, -8.403403,  1.018597]))
 
     def test_incar_import(self):
         file_path = os.path.join(
