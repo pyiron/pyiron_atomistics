@@ -43,7 +43,9 @@ class Bader:
 
     def call_bader_from_job(self, extra_arguments=None):
         self.create_cube_files()
-        call_bader(filename=self._working_directory, extra_arguments=extra_arguments)
+        error_code = call_bader(filename=self._working_directory, extra_arguments=extra_arguments)
+        if error_code > 0:
+            raise ValueError("Invoking Bader charge analysis failed!")
         self.remove_cube_files()
         return self.parse_charge_vol()
 
@@ -65,7 +67,7 @@ def call_bader(filename, extra_arguments=None):
     if extra_arguments is not None:
         cmd_2.append(extra_arguments)
     cmd_2 = " ".join(cmd_2)
-    subprocess.call(";".join([cmd_1, cmd_2]), shell=True)
+    return subprocess.call(";".join([cmd_1, cmd_2]), shell=True)
 
 
 def parse_charge_vol_file(structure, filename="ACF.dat"):
