@@ -36,7 +36,7 @@ class Bader:
         self._working_directory = job.working_directory
         self._structure = job.structure
 
-    def create_cube_files(self):
+    def _create_cube_files(self):
         """
         Create CUBE format files of the total and valce charges to be used by the Bader program
         """
@@ -55,22 +55,22 @@ class Bader:
             tuple: Charges and volumes as numpy arrays
 
         """
-        self.create_cube_files()
+        self._create_cube_files()
         error_code = call_bader(foldername=self._working_directory, extra_arguments=extra_arguments)
         if error_code > 0:
-            self.remove_cube_files()
+            self._remove_cube_files()
             raise ValueError("Invoking Bader charge analysis failed!")
-        self.remove_cube_files()
-        return self.parse_charge_vol()
+        self._remove_cube_files()
+        return self._parse_charge_vol()
 
-    def remove_cube_files(self):
+    def _remove_cube_files(self):
         """
         Delete created CUBE files
         """
         os.remove(os.path.join(self._working_directory, "valence_charge.CUBE"))
         os.remove(os.path.join(self._working_directory, "total_charge.CUBE"))
 
-    def parse_charge_vol(self):
+    def _parse_charge_vol(self):
         """
         Parse Bader charges and volumes
 
