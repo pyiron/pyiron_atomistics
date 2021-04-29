@@ -23,7 +23,7 @@ from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 from pyiron_atomistics.vasp.potential import get_enmax_among_potentials
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
-from pyiron_atomistics.dft.job.bader import Bader
+from pyiron_atomistics.dft.bader import Bader
 import warnings
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
