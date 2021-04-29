@@ -37,13 +37,26 @@ class Bader:
         self._structure = job.structure
 
     def create_cube_files(self):
+        """
+        Create CUBE format files of the total and valce charges to be used by the Bader program
+        """
         cd_val, cd_total = self.job.get_valence_and_total_charge_density()
         cd_val.write_cube_file(filename=os.path.join(self._working_directory, "valence_charge.CUBE"))
         cd_total.write_cube_file(filename=os.path.join(self._working_directory, "total_charge.CUBE"))
 
     def call_bader_from_job(self, extra_arguments=None):
+        """
+        Run Bader analysis on the output from the DFT job
+
+        Args:
+            extra_arguments (str): Extra arguments to the Bader program
+
+        Returns:
+            tuple: Charges and volumes as numpy arrays
+
+        """
         self.create_cube_files()
-        error_code = call_bader(filename=self._working_directory, extra_arguments=extra_arguments)
+        error_code = call_bader(foldername=self._working_directory, extra_arguments=extra_arguments)
         if error_code > 0:
             self.remove_cube_files()
             raise ValueError("Invoking Bader charge analysis failed!")
@@ -51,20 +64,41 @@ class Bader:
         return self.parse_charge_vol()
 
     def remove_cube_files(self):
+        """
+        Delete created CUBE files
+        """
         os.remove(os.path.join(self._working_directory, "valence_charge.CUBE"))
         os.remove(os.path.join(self._working_directory, "total_charge.CUBE"))
 
     def parse_charge_vol(self):
+        """
+        Parse Bader charges and volumes
+
+        Returns:
+            tuple: charges and volumes
+
+        """
         filename = os.path.join(self._working_directory, "ACF.dat")
         return parse_charge_vol_file(structure=self._structure, filename=filename)
 
 
-def call_bader(filename, extra_arguments=None):
+def call_bader(foldername, extra_arguments=None):
+    """
+    Call the Bader program inside a given folder
+
+    Args:
+        foldername (str): Folder path
+        extra_arguments (str): Extra arguments to the Bader program
+
+    Returns:
+        int: Result from the subprocess call (>0 if an error occurs)
+
+    """
     # Go to the working directory to do this
-    cmd_1 = "cd {}".format(filename)
+    cmd_1 = "cd {}".format(foldername)
     cmd_2 = list()
     cmd_2.append("bader")
-    cmd_2.append("{0}/valence_charge.CUBE -ref {0}/total_charge.CUBE".format(filename))
+    cmd_2.append("{0}/valence_charge.CUBE -ref {0}/total_charge.CUBE".format(foldername))
     if extra_arguments is not None:
         cmd_2.append(extra_arguments)
     cmd_2 = " ".join(cmd_2)
@@ -72,6 +106,17 @@ def call_bader(filename, extra_arguments=None):
 
 
 def parse_charge_vol_file(structure, filename="ACF.dat"):
+    """
+    Parse charges and volumes from the output file
+
+    Args:
+        structure (pyiron_atomistics.atomistics.structure.atoms.Atoms): The snapshot to be analyzed
+        filename (str): Filename of the output file
+
+    Returns:
+        tuple: charges and volumes
+
+    """
     with open(filename) as f:
         lines = f.readlines()
         charges = np.genfromtxt(lines[2:], max_rows=len(structure))[:, 4]

@@ -1399,6 +1399,12 @@ class VaspBase(GenericDFTJob):
             return cd_obj
 
     def get_valence_and_total_charge_density(self):
+        """
+        Gives the valence and total charge densities
+
+        Returns:
+            tuple: The required charge densities
+        """
         cd_core = VaspVolumetricData()
         cd_total = VaspVolumetricData()
         cd_val = VaspVolumetricData()
