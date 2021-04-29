@@ -8,6 +8,8 @@ from scipy.sparse import coo_matrix
 from scipy.special import gamma
 from pyiron_base import Settings
 from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique_labels
+from scipy.spatial.transform import Rotation
+from scipy.special import sph_harm
 import warnings
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
@@ -523,6 +525,47 @@ class Tree:
             ).max() > width:
                 return True
         return False
+
+    def get_spherical_harmonics(self, l, m, rotation=None):
+        """
+        Args:
+            l (int/numpy.array): Degree of the harmonic (int); must have ``l >= 0``.
+            m (int/numpy.array): Order of the harmonic (int); must have ``|m| <= l``.
+            rotation (numpy.array/list): Rotation to make sure phi does not become nan
+
+        Returns:
+            (numpy.array) spherical harmonic values
+
+        Spherical harmonics defined as follows
+
+        Y^m_l(\theta,\phi) = \sqrt{\frac{2l+1}{4\pi} \frac{(l-m)!}{(l+m)!}}
+        e^{i m \theta} P^m_l(\cos(\phi))
+
+        See more on: scipy.special.sph_harm
+
+        """
+        vecs = self.vecs
+        if rotation is not None:
+            vecs = np.einsum('ij,nkj->nki', rotation, vecs)
+        not_inf = self.distances<np.inf
+        phi = np.zeros_like(self.distances)
+        theta = np.zeros_like(self.distances)
+        phi[not_inf] = np.arctan2(vecs[not_inf,1], vecs[not_inf,0])
+        theta[not_inf] = np.arctan2(np.linalg.norm(vecs[not_inf,:2], axis=-1), vecs[not_inf,2])
+        return np.sum(sph_harm(m, l, phi, theta)*not_inf, axis=-1)/np.sum(not_inf, axis=-1)
+
+    def get_steinhardt_parameter(self, l):
+        """
+        Args:
+            l (int/numpy.array): Order of Steinhardt parameter
+
+        See more on https://pyscal.org/part3/steinhardt.html
+        """
+        random_rotation = Rotation.from_mrp(np.random.random(3)).as_matrix()
+        return np.sqrt(4*np.pi/(2*l+1)*np.sum([
+            np.absolute(self.get_spherical_harmonics(l, m, random_rotation))**2
+            for m in np.arange(-l, l+1)
+        ], axis=0))
 
 
 class Neighbors(Tree):
