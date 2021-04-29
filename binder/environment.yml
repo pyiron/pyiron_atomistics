@@ -17,4 +17,3 @@ dependencies:
 - pyiron-data >=0.0.5
 - sqsgenerator
 - pymatgen
-- bader
