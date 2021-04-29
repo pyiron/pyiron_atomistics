@@ -15,7 +15,7 @@ __version__ = "1.0"
 __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
-__date__ = "Sep 1, 2017"
+__date__ = "May 1, 2021"
 
 
 class Bader:
