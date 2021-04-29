@@ -44,7 +44,7 @@ setup(
         'scipy==1.6.3',
         'seekpath==2.0.1',
         'six==1.15.0',
-        'scikit-learn==0.24.1',
+        'scikit-learn==0.24.2',
         'spglib==1.16.1',
         'tables==3.6.1'
     ],
