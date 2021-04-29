@@ -3,7 +3,6 @@ channels:
 dependencies:
   - aimsgb =0.1.0
   - ase =3.21.1
-  - bader
   - coveralls
   - coverage
   - codacy-coverage
