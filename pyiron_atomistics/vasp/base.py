@@ -401,6 +401,10 @@ class VaspBase(GenericDFTJob):
             bader = Bader(self)
             try:
                 charges_orig, volumes_orig = bader.compute_bader_charges()
+            except ValueError:
+                warnings.warn("Invoking Bader charge analysis failed")
+                self.logger.warning("Invoking Bader charge analysis failed")
+            else:
                 charges, volumes = charges_orig.copy(), volumes_orig.copy()
                 charges[self.sorted_indices] = charges_orig
                 volumes[self.sorted_indices] = volumes_orig
@@ -409,9 +413,6 @@ class VaspBase(GenericDFTJob):
                     # Positive values indicate electron depletion
                     self._output_parser.generic_output.dft_log_dict["bader_charges"] = valence_charges - charges
                 self._output_parser.generic_output.dft_log_dict["bader_volumes"] = volumes
-            except ValueError:
-                warnings.warn("Invoking Bader charge analysis failed")
-                self.logger.warning("Invoking Bader charge analysis failed")
         self._output_parser.to_hdf(self._hdf5)
         if len(self._exclude_groups_hdf) > 0 or len(self._exclude_nodes_hdf) > 0:
             self.project_hdf5.rewrite_hdf5(
