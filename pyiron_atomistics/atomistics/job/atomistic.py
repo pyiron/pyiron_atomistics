@@ -9,7 +9,7 @@ import numpy as np
 import warnings
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from ..structure.has_structure import HasStructure
+from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
 
 try:
