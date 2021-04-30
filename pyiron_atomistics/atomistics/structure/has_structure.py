@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from abc import ABC, abstractmethod, abstractproperty
+from pyiron_base import deprecate
 
 """
 Mixin for classes that have one or more structures attached to them.
@@ -63,13 +64,15 @@ class HasStructure(ABC):
     True
     """
 
-    def get_structure(self, iteration_step=-1, wrap_atoms=True):
+    @deprecate(iteration_step="use frame instead")
+    def get_structure(self, frame=-1, wrap_atoms=True, iteration_step=None):
         """
-        Gets the structure from a given iteration step of the simulation (MD/ionic relaxation). For static calculations
-        there is only one ionic iteration step.
+        Retrieve structure from object.  The number of available structures depends on the job and what kind of
+        calculation has been run on it, see :property:`.number_of_structures`.
 
         Args:
-            iteration_step (int): Step for which the structure is requested, if negative count from the back
+            frame (int): index of the structure requested, if negative count from the back
+            iteration_step (int): deprecated alias for frame
             wrap_atoms (bool): True if the atoms are to be wrapped back into the unit cell
 
         Returns:
@@ -78,13 +81,15 @@ class HasStructure(ABC):
         Raises:
             IndexError: if not -:property:`.number_of_structures` <= iteration_step < :property:`.number_of_structures`
         """
+        if iteration_step is not None:
+            frame = iteration_step
         num_structures = self.number_of_structures
-        if iteration_step < 0:
-            iteration_step += num_structures
-        if not (0 <= iteration_step < num_structures):
-            raise IndexError(f"iteration_step {iteration_step} out of range [-{num_structures}, {num_structures}).")
+        if frame < 0:
+            frame += num_structures
+        if not (0 <= frame < num_structures):
+            raise IndexError(f"iteration_step {frame} out of range [-{num_structures}, {num_structures}).")
 
-        return self._get_structure(iteration_step=iteration_step, wrap_atoms=wrap_atoms)
+        return self._get_structure(iteration_step=frame, wrap_atoms=wrap_atoms)
 
     @abstractmethod
     def _get_structure(self, iteration_step=-1, wrap_atoms=True):
