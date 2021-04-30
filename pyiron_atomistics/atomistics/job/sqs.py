@@ -181,8 +181,8 @@ class SQSJob(AtomisticGenericJob):
         else:
             return []
 
-    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
-        return self.list_structures()[iteration_step]
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        return self.list_structures()[frame]
 
     def _number_of_structures(self):
         return len(self.list_structures())

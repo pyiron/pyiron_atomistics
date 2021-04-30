@@ -616,30 +616,30 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         return self.get_structure(iteration_step=-1)
 
-    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         if self.structure is None:
             raise AssertionError('Structure not set')
         snapshot = self.structure.copy()
         if self.output.cells is not None:
             try:
-                snapshot.cell = self.output.cells[iteration_step]
+                snapshot.cell = self.output.cells[frame]
             except IndexError:
                 if wrap_atoms:
-                    raise IndexError('cell at step ', iteration_step, ' not found') from None
+                    raise IndexError('cell at step ', frame, ' not found') from None
                 snapshot.cell = None
         if self.output.indices is not None:
             try:
-                snapshot.indices = self.output.indices[iteration_step]
+                snapshot.indices = self.output.indices[frame]
             except IndexError:
                 pass
         if self.output.positions is not None:
             if wrap_atoms:
-                snapshot.positions = self.output.positions[iteration_step]
+                snapshot.positions = self.output.positions[frame]
                 snapshot.center_coordinates_in_unit_cell()
-            elif len(self.output.unwrapped_positions) > max([iteration_step, 0]):
-                snapshot.positions = self.output.unwrapped_positions[iteration_step]
+            elif len(self.output.unwrapped_positions) > max([frame, 0]):
+                snapshot.positions = self.output.unwrapped_positions[frame]
             else:
-                snapshot.positions += self.output.total_displacements[iteration_step]
+                snapshot.positions += self.output.total_displacements[frame]
         return snapshot
 
     def _number_of_structures(self):

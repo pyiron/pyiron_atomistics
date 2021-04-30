@@ -146,9 +146,9 @@ class SerialMaster(SerialMasterBase, AtomisticGenericJob):
                 "A structure can only be set after a start job has been assinged."
             )
 
-    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         return self.project.load(self.child_ids[-1]).get_structure(
-            iteration_step=iteration_step, wrap_atoms=wrap_atoms
+            frame=frame, wrap_atoms=wrap_atoms
         )
 
     def _number_of_structures(self):

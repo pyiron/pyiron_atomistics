@@ -54,7 +54,7 @@ class MurnaghanDFT(Murnaghan):
         else:
             return None
 
-    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         # base class makes sure we only get called when self.structure is set already
         snapshot = self.structure.copy()
         old_vol = snapshot.get_volume()

@@ -826,7 +826,7 @@ class Murnaghan(AtomisticParallelMaster):
         if plt_show:
             plt.show()
 
-    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         """
         Gives original structure or final one with equilibrium volume.
 
@@ -836,7 +836,7 @@ class Murnaghan(AtomisticParallelMaster):
         Returns:
             :class:`pyiron_atomistics.atomistics.structure.atoms.Atoms`: requested structure
         """
-        if iteration_step == 1:
+        if frame == 1:
             snapshot = self.structure.copy()
             old_vol = snapshot.get_volume()
             new_vol = self["output/equilibrium_volume"]
@@ -844,7 +844,7 @@ class Murnaghan(AtomisticParallelMaster):
             new_cell = snapshot.cell * k
             snapshot.set_cell(new_cell, scale_atoms=True)
             return snapshot
-        elif iteration_step == 0:
+        elif frame == 0:
             return self.structure
 
     def _number_of_structures(self):

@@ -389,10 +389,10 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         """
         return self._structure
 
-    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         try:
             return super()._get_structure(
-                iteration_step=iteration_step, wrap_atoms=wrap_atoms
+                frame=frame, wrap_atoms=wrap_atoms
             )
         except IndexError:
             return self.structure

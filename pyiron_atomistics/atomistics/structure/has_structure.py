@@ -89,10 +89,10 @@ class HasStructure(ABC):
         if not (0 <= frame < num_structures):
             raise IndexError(f"iteration_step {frame} out of range [-{num_structures}, {num_structures}).")
 
-        return self._get_structure(iteration_step=frame, wrap_atoms=wrap_atoms)
+        return self._get_structure(frame=frame, wrap_atoms=wrap_atoms)
 
     @abstractmethod
-    def _get_structure(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         pass
 
     @property
@@ -118,4 +118,4 @@ class HasStructure(ABC):
             :class:`pyiron_atomistics.atomistitcs.structure.atoms.Atoms`: every structure attached to the object
         """
         for i in range(self.number_of_structures):
-            yield self._get_structure(iteration_step=i, wrap_atoms=wrap_atoms)
+            yield self._get_structure(frame=i, wrap_atoms=wrap_atoms)
