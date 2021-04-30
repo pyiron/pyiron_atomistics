@@ -45,9 +45,10 @@ class TestVaspImport(unittest.TestCase):
         folder_path = os.path.join(
             self.file_location, "../static/vasp_test_files/full_job_minor_glitch"
         )
-        with warnings.catch_warnings(record=True) as _:
+        with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             self.project.import_from_path(path=folder_path, recursive=False)
+            self.assertEqual(len(w), 4)
         ham = self.project.load("full_job_minor_glitch")
         self.assertTrue(ham.status.finished)
         self.assertTrue(isinstance(ham, Vasp))
