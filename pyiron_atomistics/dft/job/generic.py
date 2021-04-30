@@ -243,6 +243,11 @@ class GenericDFTJob(AtomisticGenericJob):
             "The get_kpoints() function is not implemented for this code."
         )
 
+    def get_valence_and_total_charge_density(self):
+        raise NotImplementedError(
+            "The get_valence_and_total_charge_density() function is not implemented for this code."
+        )
+
     def get_k_mesh_by_cell(self, k_mesh_spacing, cell=None):
         """
         Get k-mesh density according to the box size.
@@ -393,6 +398,26 @@ class GenericDFTJob(AtomisticGenericJob):
         raise NotImplementedError(
             "The set_empty_states function is not implemented for this code."
         )
+
+    def get_bader_charges(self):
+        """
+        Returns the total charge on every atom determined by the Bader charge partitioning scheme.
+
+        Returns:
+            numpy.ndarray: The Bader charges for each atom
+
+        """
+        return self["output/generic/dft/bader_charges"]
+
+    def get_bader_volumes(self):
+        """
+        Returns the integration volume around every atom from the Bader charge partitioning scheme.
+
+        Returns:
+            numpy.ndarray: The Bader charges for each atom
+
+        """
+        return self["output/generic/dft/bader_volumes"]
 
     def _set_kpoints(
         self,

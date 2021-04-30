@@ -65,6 +65,17 @@ class TestVaspImport(unittest.TestCase):
         ham = self.project.load("full_job_corrupt_potcar")
         self.assertTrue(ham.status.finished)
 
+    def test_import_bader(self):
+        folder_path = os.path.join(
+            self.file_location, "../static/vasp_test_files/bader_test"
+        )
+        self.project.import_from_path(path=folder_path, recursive=False)
+        ham = self.project.load("bader_test")
+        self.assertTrue(np.allclose(ham["output/generic/dft/valence_charges"], [1.0, 1.0, 6.0]))
+        # Only check if Bader is installed!
+        if os.system("bader") == 0:
+            self.assertTrue(np.allclose(ham["output/generic/dft/bader_charges"], [0.928831, 1.018597, -8.403403]))
+
     def test_incar_import(self):
         file_path = os.path.join(
             self.file_location, "../static/vasp_test_files/incar_samples/INCAR_1"

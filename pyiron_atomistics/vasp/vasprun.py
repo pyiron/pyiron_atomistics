@@ -463,7 +463,8 @@ class Vasprun(object):
         d["scf_0_energies"].append(scf_0_energies)
         d["scf_dipole_moments"].append(scf_moments)
 
-    def parse_cce_to_dict(self, node, d):
+    @staticmethod
+    def parse_cce_to_dict(node, d):
         for item in node:
             if item.attrib['name'] not in list(d.keys()):
                 d[item.attrib['name']] = list()
@@ -710,18 +711,40 @@ class Vasprun(object):
         return es_obj
 
     def get_potentiostat_output(self):
+        """
+        Gets the input from the vasp potentiostat output and stores it using intuitive names
+
+        Returns:
+            dict/None: Dictionary with potentiostat output
+
+        """
+        potstat_dict = dict()
         if "dftnw_pot" not in self.vasprun_dict.keys():
             return
         try:
-            vasprun_dict_keys = ["dftnw_pot", "dftnw_zval", "dftnw_electrodecharge", "dftnw_vaclevel_upperside_surf", "dftnw_vaclevel_lowerside_surf", "dftnw_efermi"]
-            potstat_dict_keys = ["potential_drop", "Ne_charge", "electrode_charge", "vac_level_upper", "vac_level_lower", "fermi_level"]
-            return {k: np.array(self.vasprun_dict[vk]) for k, vk in zip(potstat_dict_keys, vasprun_dict_keys) if vk in self.vasprun_dict.keys()}
+            vasprun_dict_keys = ["dftnw_pot", "dftnw_zval", "dftnw_electrodecharge", "dftnw_vaclevel_upperside_surf",
+                                 "dftnw_vaclevel_lowerside_surf", "dftnw_efermi"]
+            potstat_dict_keys = ["potential_drop", "Ne_charge", "electrode_charge", "vac_level_upper",
+                                 "vac_level_lower", "fermi_level"]
+            for k, vk in zip(potstat_dict_keys, vasprun_dict_keys):
+                if vk in self.vasprun_dict.keys():
+                    potstat_dict[k] = np.array(self.vasprun_dict[vk])
+            return potstat_dict
         except KeyError:
             if len(potstat_dict.keys()) > 0:
                 return potstat_dict
             else:
                 return
 
+    def get_valence_electrons_per_atom(self):
+        """
+        Gets the number of valence electrons for each atom in the final structure
+
+        Returns:
+            numpy.ndarray: Array of valence charges
+        """
+        sp_dict = self.vasprun_dict["atominfo"]["species_dict"]
+        return np.hstack([[val["valence"]] * val["n_atoms"] for val in sp_dict.values()])
 
 
 def clean_character(a, remove_char=" "):

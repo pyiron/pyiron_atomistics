@@ -23,6 +23,7 @@ from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 from pyiron_atomistics.vasp.potential import get_enmax_among_potentials
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
+from pyiron_atomistics.dft.bader import Bader
 import warnings
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
@@ -395,6 +396,24 @@ class VaspBase(GenericDFTJob):
         except (IOError, ValueError, FileNotFoundError):
             pass
 
+        # Bader analysis
+        if os.path.isfile(os.path.join(self.working_directory, "AECCAR0")) and \
+                os.path.isfile(os.path.join(self.working_directory, "AECCAR2")):
+            bader = Bader(self)
+            try:
+                charges_orig, volumes_orig = bader.compute_bader_charges()
+            except ValueError:
+                warnings.warn("Invoking Bader charge analysis failed")
+                self.logger.warning("Invoking Bader charge analysis failed")
+            else:
+                charges, volumes = charges_orig.copy(), volumes_orig.copy()
+                charges[self.sorted_indices] = charges_orig
+                volumes[self.sorted_indices] = volumes_orig
+                if "valence_charges" in self._output_parser.generic_output.dft_log_dict.keys():
+                    valence_charges = self._output_parser.generic_output.dft_log_dict["valence_charges"]
+                    # Positive values indicate electron depletion
+                    self._output_parser.generic_output.dft_log_dict["bader_charges"] = valence_charges - charges
+                self._output_parser.generic_output.dft_log_dict["bader_volumes"] = volumes
         self._output_parser.to_hdf(self._hdf5)
         if len(self._exclude_groups_hdf) > 0 or len(self._exclude_nodes_hdf) > 0:
             self.project_hdf5.rewrite_hdf5(
@@ -1381,6 +1400,24 @@ class VaspBase(GenericDFTJob):
                 cd_obj.from_hdf(ho, "charge_density")
             return cd_obj
 
+    def get_valence_and_total_charge_density(self):
+        """
+        Gives the valence and total charge densities
+
+        Returns:
+            tuple: The required charge densities
+        """
+        cd_core = VaspVolumetricData()
+        cd_total = VaspVolumetricData()
+        cd_val = VaspVolumetricData()
+        if os.path.isfile(self.working_directory + "/AECCAR0"):
+            cd_core.from_file(self.working_directory + "/AECCAR0")
+            cd_val.from_file(self.working_directory + "/AECCAR2")
+            cd_val.atoms = cd_val.atoms
+            cd_total.total_data = cd_core.total_data + cd_val.total_data
+            cd_total.atoms = cd_val.atoms
+        return cd_val, cd_total
+
     def get_electrostatic_potential(self):
         """
         Gets the electrostatic potential from the hdf5 file.
@@ -1584,7 +1621,7 @@ class VaspBase(GenericDFTJob):
             files_to_compress = [
                 f
                 for f in list(self.list_files())
-                if f not in ["CHGCAR", "CONTCAR", "WAVECAR", "STOPCAR"]
+                if f not in ["CHGCAR", "CONTCAR", "WAVECAR", "STOPCAR", "AECCAR0", "AECCAR1", "AECCAR2"]
             ]
         # delete empty files
         for f in list(self.list_files()):
@@ -1967,6 +2004,10 @@ class Output:
             self.structure.positions = log_dict["positions"][-1]
             self.structure.set_cell(log_dict["cells"][-1])
             self.generic_output.dft_log_dict["potentiostat_output"] = self.vp_new.get_potentiostat_output()
+            valence_charges_orig = self.vp_new.get_valence_electrons_per_atom()
+            valence_charges = valence_charges_orig.copy()
+            valence_charges[sorted_indices] = valence_charges_orig
+            self.generic_output.dft_log_dict["valence_charges"] = valence_charges
 
         elif outcar_working:
             # log_dict = self.outcar.parse_dict.copy()
