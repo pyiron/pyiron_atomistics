@@ -94,15 +94,10 @@ def call_bader(foldername, extra_arguments=None):
         int: Result from the subprocess call (>0 if an error occurs)
 
     """
-    # Go to the working directory to do this
-    cmd_1 = "cd {}".format(foldername)
-    cmd_2 = list()
-    cmd_2.append("bader")
-    cmd_2.append("{0}/valence_charge.CUBE -ref {0}/total_charge.CUBE".format(foldername))
-    if extra_arguments is not None:
-        cmd_2.append(extra_arguments)
-    cmd_2 = " ".join(cmd_2)
-    return subprocess.call(";".join([cmd_1, cmd_2]), shell=True)
+    if extra_arguments is None:
+        extra_arguments = ""
+    cmd = "bader valence_charge.CUBE -ref total_charge.CUBE {0}".format(extra_arguments)
+    return subprocess.call(cmd, shell=True, cwd=foldername)
 
 
 def parse_charge_vol_file(structure, filename="ACF.dat"):
