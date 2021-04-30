@@ -389,13 +389,16 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         """
         return self._structure
 
-    def get_structure(self, iteration_step=-1, wrap_atoms=True):
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         try:
-            return super(AtomisticExampleJob, self).get_structure(
-                iteration_step=iteration_step, wrap_atoms=wrap_atoms
+            return super()._get_structure(
+                frame=frame, wrap_atoms=wrap_atoms
             )
         except IndexError:
             return self.structure
+
+    def _number_of_structures(self):
+        return max(1, super()._number_of_structures())
 
     @structure.setter
     def structure(self, structure):

@@ -53,6 +53,10 @@ class TestMurnaghan(unittest.TestCase):
         murn.run()
         self.assertAlmostEqual(self.basis.get_volume(), murn['output/equilibrium_volume'])
 
+        optimal = murn.get_structure()
+        self.assertAlmostEqual(optimal.get_volume(), murn['output/equilibrium_volume'],
+                               msg="Output of get_structure should have equilibrium volume")
+
     def test_run(self):
         job = self.project.create_job(
             'AtomisticExampleJob', "job_test"
@@ -68,6 +72,7 @@ class TestMurnaghan(unittest.TestCase):
         murn.input['num_points'] = 3
         murn.run()
         self.assertTrue(murn.status.finished)
+
         murn.remove()
         job_ser.remove()
 

@@ -222,24 +222,14 @@ class AseJob(GenericInteractive):
             self._logger.debug("Generic library: indices changed!")
             self.interactive_indices_setter(self._structure_current.indices)
 
-    def get_structure(self, iteration_step=-1, wrap_atoms=True):
-        """
-        Gets the structure from a given iteration step of the simulation (MD/ionic relaxation). For static calculations
-        there is only one ionic iteration step
-        Args:
-            iteration_step (int): Step for which the structure is requested
-            wrap_atoms (bool):
-
-        Returns:
-            atomistics.structure.atoms.Atoms object
-        """
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         if (
             self.server.run_mode.interactive
             or self.server.run_mode.interactive_non_modal
         ):
             # Warning: We only copy symbols, positions and cell information - no tags.
             if self.output.indices is not None and len(self.output.indices) != 0:
-                indices = self.output.indices[iteration_step]
+                indices = self.output.indices[frame]
             else:
                 return None
             if len(self._interactive_species_lst) == 0:
@@ -250,19 +240,19 @@ class AseJob(GenericInteractive):
                 el_lst = self._interactive_species_lst.tolist()
             if indices is not None:
                 if wrap_atoms:
-                    positions = self.output.positions[iteration_step]
+                    positions = self.output.positions[frame]
                 else:
-                    if len(self.output.unwrapped_positions) > max([iteration_step, 0]):
-                        positions = self.output.unwrapped_positions[iteration_step]
+                    if len(self.output.unwrapped_positions) > max([frame, 0]):
+                        positions = self.output.unwrapped_positions[frame]
                     else:
                         positions = (
-                            self.output.positions[iteration_step]
-                            + self.output.total_displacements[iteration_step]
+                            self.output.positions[frame]
+                            + self.output.total_displacements[frame]
                         )
                 atoms = Atoms(
                     symbols=np.array([el_lst[el] for el in indices]),
                     positions=positions,
-                    cell=self.output.cells[iteration_step],
+                    cell=self.output.cells[frame],
                     pbc=self.structure.pbc,
                 )
                 # Update indicies to match the indicies in the cache.
@@ -275,8 +265,8 @@ class AseJob(GenericInteractive):
                 self.get("output/generic/cells") is not None
                 and len(self.get("output/generic/cells")) != 0
             ):
-                return super(AseJob, self).get_structure(
-                    iteration_step=iteration_step, wrap_atoms=wrap_atoms
+                return super()._get_structure(
+                    frame=frame, wrap_atoms=wrap_atoms
                 )
             else:
                 return None

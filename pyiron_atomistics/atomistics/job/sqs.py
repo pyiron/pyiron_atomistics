@@ -180,19 +180,13 @@ class SQSJob(AtomisticGenericJob):
             return self._lst_of_struct
         else:
             return []
-    
-    def get_structure(self, iteration_step=-1, wrap_atoms=True):
-        """
-        Gets the structure from a given iteration step of the simulation (MD/ionic relaxation). For static calculations
-        there is only one ionic iteration step
-        Args:
-            iteration_step (int): Step for which the structure is requested
-            wrap_atoms (bool): True if the atoms are to be wrapped back into the unit cell
-        Returns:
-            pyiron.atomistics.structure.atoms.Atoms: The required structure
-        """
-        return self.list_structures()[iteration_step]
-    
+
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        return self.list_structures()[frame]
+
+    def _number_of_structures(self):
+        return len(self.list_structures())
+
     # This function is executed 
     def run_static(self):
         self._lst_of_struct, decmp, iterations, cycle_time = get_sqs_structures(

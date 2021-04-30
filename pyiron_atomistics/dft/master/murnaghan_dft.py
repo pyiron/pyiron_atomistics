@@ -56,20 +56,14 @@ class MurnaghanDFT(Murnaghan):
         else:
             return None
 
-    def get_structure(self, iteration_step=-1):
-        """
-
-        Returns: Structure with equilibrium volume
-
-        """
-        if not (iteration_step == -1):
-            raise AssertionError()
-        if not (self.structure is not None):
-            raise AssertionError()
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        # base class makes sure we only get called when self.structure is set already
         snapshot = self.structure.copy()
         old_vol = snapshot.get_volume()
         new_vol = self["output/equilibrium_volume"]
         k = (new_vol / old_vol) ** (1.0 / 3.0)
         new_cell = snapshot.cell * k
         snapshot.set_cell(new_cell, scale_atoms=True)
+        if wrap_atoms:
+            snapshot.center_coordinates_in_unit_cell()
         return snapshot

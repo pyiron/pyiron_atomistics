@@ -9,6 +9,7 @@ import numpy as np
 import warnings
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
 
 try:
@@ -28,7 +29,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class AtomisticGenericJob(GenericJobCore):
+class AtomisticGenericJob(GenericJobCore, HasStructure):
     """
     Atomistic Generic Job class extends the Generic Job class with all the functionality to run jobs containing
     atomistic structures. From this class all specific atomistic Hamiltonians are derived. Therefore it should contain
@@ -615,42 +616,34 @@ class AtomisticGenericJob(GenericJobCore):
         """
         return self.get_structure(iteration_step=-1)
 
-    def get_structure(self, iteration_step=-1, wrap_atoms=True):
-        """
-        Gets the structure from a given iteration step of the simulation (MD/ionic relaxation). For static calculations
-        there is only one ionic iteration step
-
-        Args:
-            iteration_step (int): Step for which the structure is requested
-            wrap_atoms (bool): True if the atoms are to be wrapped back into the unit cell
-
-        Returns:
-            pyiron.atomistics.structure.atoms.Atoms: The required structure
-        """
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         if self.structure is None:
             raise AssertionError('Structure not set')
         snapshot = self.structure.copy()
         if self.output.cells is not None:
             try:
-                snapshot.cell = self.output.cells[iteration_step]
+                snapshot.cell = self.output.cells[frame]
             except IndexError:
                 if wrap_atoms:
-                    raise IndexError('cell at step ', iteration_step, ' not found')
+                    raise IndexError('cell at step ', frame, ' not found') from None
                 snapshot.cell = None
         if self.output.indices is not None:
             try:
-                snapshot.indices = self.output.indices[iteration_step]
+                snapshot.indices = self.output.indices[frame]
             except IndexError:
                 pass
         if self.output.positions is not None:
             if wrap_atoms:
-                snapshot.positions = self.output.positions[iteration_step]
+                snapshot.positions = self.output.positions[frame]
                 snapshot.center_coordinates_in_unit_cell()
-            elif len(self.output.unwrapped_positions) > max([iteration_step, 0]):
-                snapshot.positions = self.output.unwrapped_positions[iteration_step]
+            elif len(self.output.unwrapped_positions) > max([frame, 0]):
+                snapshot.positions = self.output.unwrapped_positions[frame]
             else:
-                snapshot.positions += self.output.total_displacements[iteration_step]
+                snapshot.positions += self.output.total_displacements[frame]
         return snapshot
+
+    def _number_of_structures(self):
+        return self.output.positions.shape[0]
 
     def map(self, function, parameter_lst):
         """

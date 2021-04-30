@@ -51,9 +51,9 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
                 element_lst=structure.get_species_symbols().tolist()
             )
 
-    def get_structure(self, iteration_step=-1, wrap_atoms=True):
-        return GenericInteractive.get_structure(
-            self, iteration_step=iteration_step, wrap_atoms=wrap_atoms
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        return GenericInteractive._get_structure(
+            self, frame=frame, wrap_atoms=wrap_atoms
         )
 
     def interactive_energy_tot_getter(self):

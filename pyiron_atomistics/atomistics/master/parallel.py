@@ -41,11 +41,11 @@ class AtomisticParallelMaster(ParallelMaster, AtomisticGenericJob):
                 "A structure can only be set after a reference job has been assinged."
             )
 
-    def get_structure(self, iteration_step=-1):
-        if iteration_step == 0:
-            return self.structure
-        else:
-            raise ValueError("iteration_step should be either 0.")
+    def _get_structure(self, frame=0, wrap_atoms=True):
+        return self.structure
+
+    def _number_of_structures(self):
+        return 1
 
 
 class GenericOutput(OrderedDict):
