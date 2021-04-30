@@ -44,7 +44,7 @@ class Bader:
         cd_val.write_cube_file(filename=os.path.join(self._working_directory, "valence_charge.CUBE"))
         cd_total.write_cube_file(filename=os.path.join(self._working_directory, "total_charge.CUBE"))
 
-    def call_bader_from_job(self, extra_arguments=None):
+    def compute_bader_charges(self, extra_arguments=None):
         """
         Run Bader analysis on the output from the DFT job
 

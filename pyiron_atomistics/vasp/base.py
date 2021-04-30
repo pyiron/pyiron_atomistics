@@ -400,7 +400,7 @@ class VaspBase(GenericDFTJob):
         if os.path.isfile(self.working_directory + "/AECCAR0") and os.path.isfile(self.working_directory + "/AECCAR2"):
             bader = Bader(self)
             try:
-                charges_orig, volumes_orig = bader.call_bader_from_job()
+                charges_orig, volumes_orig = bader.compute_bader_charges()
                 charges, volumes = charges_orig.copy(), volumes_orig.copy()
                 charges[self.sorted_indices] = charges_orig
                 volumes[self.sorted_indices] = volumes_orig
