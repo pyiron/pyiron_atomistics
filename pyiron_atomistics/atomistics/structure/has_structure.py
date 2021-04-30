@@ -46,7 +46,7 @@ class HasStructure(ABC):
     ...         .. method:: get_structure
     ...             returns structure with single Fe atom at (0, 0, 0)
     ...     '''
-    ...     def _get_structure(self, iteration_step=-1, wrap_atoms=True):
+    ...     def _get_structure(self, frame=-1, wrap_atoms=True):
     ...         return Atoms(symbols=['Fe'], positions=[[0,0,0]])
     ...     def _number_of_structures(self):
     ...         return 1
@@ -87,7 +87,7 @@ class HasStructure(ABC):
         if frame < 0:
             frame += num_structures
         if not (0 <= frame < num_structures):
-            raise IndexError(f"iteration_step {frame} out of range [-{num_structures}, {num_structures}).")
+            raise IndexError(f"argument frame {frame} out of range [-{num_structures}, {num_structures}).")
 
         return self._get_structure(frame=frame, wrap_atoms=wrap_atoms)
 
