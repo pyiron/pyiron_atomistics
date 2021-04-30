@@ -51,14 +51,6 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._prism = UnfoldingPrism(structure.cell)
         GenericInteractive.structure.fset(self, structure)
 
-    def _get_structure(self, frame=-1, wrap_atoms=True):
-        return super(GenericInteractive, self)._get_structure(
-            frame=frame, wrap_atoms=wrap_atoms
-        )
-
-    def _number_of_structures(self):
-        return super(GenericInteractive, self)._number_of_structures()
-
     def _interactive_lib_command(self, command):
         self._logger.debug("Lammps library: " + command)
         self._interactive_library.command(command)
