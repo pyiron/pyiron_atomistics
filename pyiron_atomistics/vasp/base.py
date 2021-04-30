@@ -397,7 +397,8 @@ class VaspBase(GenericDFTJob):
             pass
 
         # Bader analysis
-        if os.path.isfile(self.working_directory + "/AECCAR0") and os.path.isfile(self.working_directory + "/AECCAR2"):
+        if os.path.isfile(os.path.join(self.working_directory, "AECCAR0")) and \
+                os.path.isfile(os.path.join(self.working_directory, "AECCAR2")):
             bader = Bader(self)
             try:
                 charges_orig, volumes_orig = bader.compute_bader_charges()
