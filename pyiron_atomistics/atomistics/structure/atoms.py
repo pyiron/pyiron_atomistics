@@ -3444,11 +3444,18 @@ def default(data, dflt):
 class Symbols(ASESymbols):
 
     def __init__(self, numbers):
+        self.__doc__ = "Derived from the ase symbols class which has the following docs: \n" + super().__doc__
         super().__init__(numbers)
         self._structure = None
 
     @property
     def structure(self):
+        """
+        The structure to which the symbol is assigned to
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.atoms.Atoms: The required structure
+        """
         return self._structure
 
     @structure.setter
