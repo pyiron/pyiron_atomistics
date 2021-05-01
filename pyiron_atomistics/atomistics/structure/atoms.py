@@ -2385,6 +2385,8 @@ class Atoms(ASEAtoms):
                     self.set_species(new_species)
         else:
             raise NotImplementedError()
+        # For ASE compatibility
+        self.numbers = self.get_atomic_numbers()
 
     __mul__ = repeat
 
