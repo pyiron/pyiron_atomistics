@@ -265,10 +265,12 @@ class Atoms(ASEAtoms):
 
     @property
     def symbols(self):
-        """Get chemical symbols as a :class:`ase.symbols.Symbols` object.
+        """
+        Get chemical symbols as a :class:`ase.symbols.Symbols` object.
 
         The object works like ``atoms.numbers`` except its values
-        are strings.  It supports in-place editing."""
+        are strings.  It supports in-place editing.
+        """
         sym_obj = Symbols(self.numbers)
         sym_obj.structure = self
         return sym_obj
