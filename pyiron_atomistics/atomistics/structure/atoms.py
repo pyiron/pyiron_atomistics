@@ -4,6 +4,7 @@
 
 from __future__ import division, print_function
 from ase.atoms import Atoms as ASEAtoms, Atom as ASEAtom
+from ase.symbols import Symbols as ASESymbols
 import ast
 from copy import copy
 from collections import OrderedDict
@@ -261,6 +262,21 @@ class Atoms(ASEAtoms):
         self._species_to_index_dict = {el: i for i, el in enumerate(value)}
         self._species = value[:]
         self._store_elements = {el.Abbreviation: el for el in value}
+
+    @property
+    def symbols(self):
+        """Get chemical symbols as a :class:`ase.symbols.Symbols` object.
+
+        The object works like ``atoms.numbers`` except its values
+        are strings.  It supports in-place editing."""
+        sym_obj = Symbols(self.numbers)
+        sym_obj.structure = self
+        return sym_obj
+
+    @symbols.setter
+    def symbols(self, obj):
+        new_symbols = Symbols.fromsymbols(obj)
+        self.numbers[:] = new_symbols.numbers
 
     @property
     def elements(self):
@@ -3424,3 +3440,25 @@ def default(data, dflt):
     else:
         return data
 
+
+class Symbols(ASESymbols):
+
+    def __init__(self, numbers):
+        super().__init__(numbers)
+        self._structure = None
+
+    @property
+    def structure(self):
+        return self._structure
+
+    @structure.setter
+    def structure(self, val):
+        self._structure = val
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        if self._structure is not None:
+            index_array = np.argwhere(self.numbers != self._structure.get_atomic_numbers()).flatten()
+            replace_elements = self.structure.numbers_to_elements(self.numbers[index_array])
+            for i, el in enumerate(replace_elements):
+                self._structure[index_array[i]] = el
