@@ -3443,8 +3443,15 @@ def default(data, dflt):
 
 class Symbols(ASESymbols):
 
+    """
+    Derived from the ase symbols class which has the following docs:
+
+    Args:
+        numbers list/numpy.ndarray): List of atomic numbers
+    """
+
     def __init__(self, numbers):
-        self.__doc__ = "Derived from the ase symbols class which has the following docs: \n" + super().__doc__
+        self.__doc__ = self.__doc__ + "\n" + super().__doc__
         super().__init__(numbers)
         self._structure = None
 
