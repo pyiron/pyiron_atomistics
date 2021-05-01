@@ -3,7 +3,8 @@ updates:
 - package-ecosystem: pip
   directory: "/"
   schedule:
-    interval: daily
+    interval: weekly
+    day: monday
   open-pull-requests-limit: 10
   ignore:
   - dependency-name: pyiron-base
