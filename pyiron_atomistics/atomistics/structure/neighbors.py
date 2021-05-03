@@ -526,7 +526,7 @@ class Tree:
                 return True
         return False
 
-    def get_spherical_harmonics(self, l, m, rotation=None):
+    def get_spherical_harmonics(self, l, m, cutoff_radius=np.inf, rotation=None):
         """
         Args:
             l (int/numpy.array): Degree of the harmonic (int); must have ``l >= 0``.
@@ -547,14 +547,18 @@ class Tree:
         vecs = self.vecs
         if rotation is not None:
             vecs = np.einsum('ij,nkj->nki', rotation, vecs)
-        not_inf = self.distances<np.inf
+        within_cutoff = self.distances<cutoff_radius
         phi = np.zeros_like(self.distances)
         theta = np.zeros_like(self.distances)
-        phi[not_inf] = np.arctan2(vecs[not_inf,1], vecs[not_inf,0])
-        theta[not_inf] = np.arctan2(np.linalg.norm(vecs[not_inf,:2], axis=-1), vecs[not_inf,2])
-        return np.sum(sph_harm(m, l, phi, theta)*not_inf, axis=-1)/np.sum(not_inf, axis=-1)
+        theta[within_cutoff] = np.arctan2(vecs[within_cutoff,1], vecs[within_cutoff,0])
+        phi[within_cutoff] = np.arctan2(
+            np.linalg.norm(vecs[within_cutoff,:2], axis=-1), vecs[within_cutoff,2]
+        )
+        return np.sum(
+            sph_harm(m, l, theta, phi)*within_cutoff, axis=-1
+        )/np.sum(within_cutoff, axis=-1)
 
-    def get_steinhardt_parameter(self, l):
+    def get_steinhardt_parameter(self, l, cutoff_radius=np.inf):
         """
         Args:
             l (int/numpy.array): Order of Steinhardt parameter
@@ -563,7 +567,9 @@ class Tree:
         """
         random_rotation = Rotation.from_mrp(np.random.random(3)).as_matrix()
         return np.sqrt(4*np.pi/(2*l+1)*np.sum([
-            np.absolute(self.get_spherical_harmonics(l, m, random_rotation))**2
+            np.absolute(self.get_spherical_harmonics(
+                l=l, m=m, cutoff_radius=cutoff_radius, random_rotation=random_rotation
+            ))**2
             for m in np.arange(-l, l+1)
         ], axis=0))
 
