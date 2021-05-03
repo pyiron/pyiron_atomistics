@@ -357,14 +357,14 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(0, neigh.get_steinhardt_parameter(2)[0])
         self.assertAlmostEqual(0.19094065395649323, neigh.get_steinhardt_parameter(4)[0])
         self.assertAlmostEqual(0.5745242597140696, neigh.get_steinhardt_parameter(6)[0])
-        neigh = StructureFactory().ase_bulk('Ti').get_neighbors(num_neighbors=12)
-        self.assertAlmostEqual(0.0845126986439901, neigh.get_steinhardt_parameter(4)[0])
-        self.assertAlmostEqual(0.4812230183483194, neigh.get_steinhardt_parameter(6)[0])
+        neigh = StructureFactory().ase_bulk('Mg', a=1, c=np.sqrt(8/3)).get_neighbors(num_neighbors=12)
+        self.assertAlmostEqual(0, neigh.get_steinhardt_parameter(2)[0])
+        self.assertAlmostEqual(0.097222222, neigh.get_steinhardt_parameter(4)[0])
+        self.assertAlmostEqual(0.484761685, neigh.get_steinhardt_parameter(6)[0])
         neigh = StructureFactory().ase_bulk('Fe').get_neighbors(num_neighbors=14)
         self.assertAlmostEqual(0.03636964837266537, neigh.get_steinhardt_parameter(4)[0])
         self.assertAlmostEqual(0.5106882308569508, neigh.get_steinhardt_parameter(6)[0])
-        with self.assertRaises(ValueError):
-            neigh.get_steinhardt_parameter(2, 2)
+        self.assertRaises(ValueError, neigh.get_steinhardt_parameter, 2, 2)
 
 if __name__ == "__main__":
     unittest.main()

@@ -531,6 +531,8 @@ class Tree:
         Args:
             l (int/numpy.array): Degree of the harmonic (int); must have ``l >= 0``.
             m (int/numpy.array): Order of the harmonic (int); must have ``|m| <= l``.
+            cutoff_radius (float): maximum neighbor distance to include (default: inf, i.e. all
+            atoms included in the neighbor search).
             rotation (numpy.array/list): Rotation to make sure phi does not become nan
 
         Returns:
@@ -564,6 +566,8 @@ class Tree:
         """
         Args:
             l (int/numpy.array): Order of Steinhardt parameter
+            cutoff_radius (float): maximum neighbor distance to include (default: inf, i.e. all
+            atoms included in the neighbor search).
 
         See more on https://pyscal.org/part3/steinhardt.html
 
