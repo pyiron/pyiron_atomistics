@@ -533,7 +533,7 @@ class Tree:
             m (int/numpy.array): Order of the harmonic (int); must have ``|m| <= l``.
             cutoff_radius (float): maximum neighbor distance to include (default: inf, i.e. all
             atoms included in the neighbor search).
-            rotation (numpy.array/list): Rotation to make sure phi does not become nan
+            rotation ( (3,3) numpy.array/list): Rotation to make sure phi does not become nan
 
         Returns:
             (numpy.array) spherical harmonic values
@@ -542,6 +542,9 @@ class Tree:
 
         Y^m_l(\theta,\phi) = \sqrt{\frac{2l+1}{4\pi} \frac{(l-m)!}{(l+m)!}}
         e^{i m \theta} P^m_l(\cos(\phi))
+
+        The angles are calculated based on `self.vecs`, where the azimuthal angle is defined on the
+        xy-plane and the polar angle is along the z-axis.
 
         See more on: scipy.special.sph_harm
 
