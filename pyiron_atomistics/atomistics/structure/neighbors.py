@@ -548,7 +548,7 @@ class Tree:
         if rotation is not None:
             vecs = np.einsum('ij,nkj->nki', rotation, vecs)
         within_cutoff = self.distances<cutoff_radius
-        if np.any(~np.all(within_cutoff, axis=-1)):
+        if np.any(np.all(~within_cutoff, axis=-1)):
             raise ValueError('cutoff_radius too small - some atoms have no neighbors')
         phi = np.zeros_like(self.distances)
         theta = np.zeros_like(self.distances)
