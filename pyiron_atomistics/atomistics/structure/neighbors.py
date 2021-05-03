@@ -564,6 +564,9 @@ class Tree:
             l (int/numpy.array): Order of Steinhardt parameter
 
         See more on https://pyscal.org/part3/steinhardt.html
+
+        Note: This function does not have an internal algorithm to calculate a suitable cutoff
+        radius. For automated uses, see Atoms.analyse.pyscal_steinhardt_parameter()
         """
         random_rotation = Rotation.from_mrp(np.random.random(3)).as_matrix()
         return np.sqrt(4*np.pi/(2*l+1)*np.sum([
