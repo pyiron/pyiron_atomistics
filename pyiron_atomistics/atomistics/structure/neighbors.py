@@ -548,6 +548,8 @@ class Tree:
         if rotation is not None:
             vecs = np.einsum('ij,nkj->nki', rotation, vecs)
         within_cutoff = self.distances<cutoff_radius
+        if np.any(~np.all(within_cutoff, axis=-1)):
+            raise ValueError('cutoff_radius too small - some atoms have no neighbors')
         phi = np.zeros_like(self.distances)
         theta = np.zeros_like(self.distances)
         theta[within_cutoff] = np.arctan2(vecs[within_cutoff,1], vecs[within_cutoff,0])
@@ -571,7 +573,7 @@ class Tree:
         random_rotation = Rotation.from_mrp(np.random.random(3)).as_matrix()
         return np.sqrt(4*np.pi/(2*l+1)*np.sum([
             np.absolute(self.get_spherical_harmonics(
-                l=l, m=m, cutoff_radius=cutoff_radius, random_rotation=random_rotation
+                l=l, m=m, cutoff_radius=cutoff_radius, rotation=random_rotation
             ))**2
             for m in np.arange(-l, l+1)
         ], axis=0))
