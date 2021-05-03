@@ -536,7 +536,7 @@ class Tree:
             rotation ( (3,3) numpy.array/list): Rotation to make sure phi does not become nan
 
         Returns:
-            (numpy.array) spherical harmonic values
+            ( (natoms,) numpy.array) spherical harmonic values
 
         Spherical harmonics defined as follows
 
@@ -571,6 +571,9 @@ class Tree:
             l (int/numpy.array): Order of Steinhardt parameter
             cutoff_radius (float): maximum neighbor distance to include (default: inf, i.e. all
             atoms included in the neighbor search).
+
+        Returns:
+            ( (natoms,) numpy.array) Steinhardt parameter values
 
         See more on https://pyscal.org/part3/steinhardt.html
 
