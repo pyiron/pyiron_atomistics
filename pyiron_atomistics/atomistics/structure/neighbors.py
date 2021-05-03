@@ -8,6 +8,8 @@ from scipy.sparse import coo_matrix
 from scipy.special import gamma
 from pyiron_base import Settings
 from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique_labels
+from scipy.spatial.transform import Rotation
+from scipy.special import sph_harm
 import warnings
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
@@ -523,6 +525,68 @@ class Tree:
             ).max() > width:
                 return True
         return False
+
+    def get_spherical_harmonics(self, l, m, cutoff_radius=np.inf, rotation=None):
+        """
+        Args:
+            l (int/numpy.array): Degree of the harmonic (int); must have ``l >= 0``.
+            m (int/numpy.array): Order of the harmonic (int); must have ``|m| <= l``.
+            cutoff_radius (float): maximum neighbor distance to include (default: inf, i.e. all
+            atoms included in the neighbor search).
+            rotation ( (3,3) numpy.array/list): Rotation to make sure phi does not become nan
+
+        Returns:
+            ( (natoms,) numpy.array) spherical harmonic values
+
+        Spherical harmonics defined as follows
+
+        Y^m_l(\theta,\phi) = \sqrt{\frac{2l+1}{4\pi} \frac{(l-m)!}{(l+m)!}}
+        e^{i m \theta} P^m_l(\cos(\phi))
+
+        The angles are calculated based on `self.vecs`, where the azimuthal angle is defined on the
+        xy-plane and the polar angle is along the z-axis.
+
+        See more on: scipy.special.sph_harm
+
+        """
+        vecs = self.vecs
+        if rotation is not None:
+            vecs = np.einsum('ij,nkj->nki', rotation, vecs)
+        within_cutoff = self.distances<cutoff_radius
+        if np.any(np.all(~within_cutoff, axis=-1)):
+            raise ValueError('cutoff_radius too small - some atoms have no neighbors')
+        phi = np.zeros_like(self.distances)
+        theta = np.zeros_like(self.distances)
+        theta[within_cutoff] = np.arctan2(vecs[within_cutoff,1], vecs[within_cutoff,0])
+        phi[within_cutoff] = np.arctan2(
+            np.linalg.norm(vecs[within_cutoff,:2], axis=-1), vecs[within_cutoff,2]
+        )
+        return np.sum(
+            sph_harm(m, l, theta, phi)*within_cutoff, axis=-1
+        )/np.sum(within_cutoff, axis=-1)
+
+    def get_steinhardt_parameter(self, l, cutoff_radius=np.inf):
+        """
+        Args:
+            l (int/numpy.array): Order of Steinhardt parameter
+            cutoff_radius (float): maximum neighbor distance to include (default: inf, i.e. all
+            atoms included in the neighbor search).
+
+        Returns:
+            ( (natoms,) numpy.array) Steinhardt parameter values
+
+        See more on https://pyscal.org/part3/steinhardt.html
+
+        Note: This function does not have an internal algorithm to calculate a suitable cutoff
+        radius. For automated uses, see Atoms.analyse.pyscal_steinhardt_parameter()
+        """
+        random_rotation = Rotation.from_mrp(np.random.random(3)).as_matrix()
+        return np.sqrt(4*np.pi/(2*l+1)*np.sum([
+            np.absolute(self.get_spherical_harmonics(
+                l=l, m=m, cutoff_radius=cutoff_radius, rotation=random_rotation
+            ))**2
+            for m in np.arange(-l, l+1)
+        ], axis=0))
 
 
 class Neighbors(Tree):

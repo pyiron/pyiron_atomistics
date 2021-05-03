@@ -351,6 +351,20 @@ class TestAtoms(unittest.TestCase):
         neigh = vacancy.get_neighbors(num_neighbors=None, cutoff_radius=3)
         self.assertEqual(neigh.chemical_symbols[0,-1], 'v')
 
+    def test_steinhardt_parameters(self):
+        neigh = StructureFactory().ase_bulk('Al').get_neighbors(num_neighbors=12)
+        # values obtained with pyscal
+        self.assertAlmostEqual(0, neigh.get_steinhardt_parameter(2)[0])
+        self.assertAlmostEqual(0.19094065395649323, neigh.get_steinhardt_parameter(4)[0])
+        self.assertAlmostEqual(0.5745242597140696, neigh.get_steinhardt_parameter(6)[0])
+        neigh = StructureFactory().ase_bulk('Mg', a=1, c=np.sqrt(8/3)).get_neighbors(num_neighbors=12)
+        self.assertAlmostEqual(0, neigh.get_steinhardt_parameter(2)[0])
+        self.assertAlmostEqual(0.097222222, neigh.get_steinhardt_parameter(4)[0])
+        self.assertAlmostEqual(0.484761685, neigh.get_steinhardt_parameter(6)[0])
+        neigh = StructureFactory().ase_bulk('Fe').get_neighbors(num_neighbors=14)
+        self.assertAlmostEqual(0.03636964837266537, neigh.get_steinhardt_parameter(4)[0])
+        self.assertAlmostEqual(0.5106882308569508, neigh.get_steinhardt_parameter(6)[0])
+        self.assertRaises(ValueError, neigh.get_steinhardt_parameter, 2, 2)
 
 if __name__ == "__main__":
     unittest.main()
