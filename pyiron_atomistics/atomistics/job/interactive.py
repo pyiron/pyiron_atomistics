@@ -423,7 +423,7 @@ class GenericInteractiveOutput(GenericOutput):
         Returns:
 
         """
-        fetched = self._job["output/interactive/" + key]
+        fetched = self._job.project_hdf5["output/interactive/" + key]
         if fetched is None or len(fetched) == 0:
             fetched = getattr(super(), key)
         return fetched

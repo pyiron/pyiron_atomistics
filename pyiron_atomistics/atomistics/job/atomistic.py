@@ -778,19 +778,19 @@ class GenericOutput(object):
 
     @property
     def cells(self):
-        return self._job["output/generic/cells"]
+        return self._job.project_hdf5["output/generic/cells"]
 
     @property
     def energy_pot(self):
-        return self._job["output/generic/energy_pot"]
+        return self._job.project_hdf5["output/generic/energy_pot"]
 
     @property
     def energy_tot(self):
-        return self._job["output/generic/energy_tot"]
+        return self._job.project_hdf5["output/generic/energy_tot"]
 
     @property
     def forces(self):
-        return self._job["output/generic/forces"]
+        return self._job.project_hdf5["output/generic/forces"]
 
     @property
     def force_max(self):
@@ -802,27 +802,27 @@ class GenericOutput(object):
 
     @property
     def positions(self):
-        return self._job["output/generic/positions"]
+        return self._job.project_hdf5["output/generic/positions"]
 
     @property
     def pressures(self):
-        return self._job["output/generic/pressures"]
+        return self._job.project_hdf5["output/generic/pressures"]
 
     @property
     def steps(self):
-        return self._job["output/generic/steps"]
+        return self._job.project_hdf5["output/generic/steps"]
 
     @property
     def temperature(self):
-        return self._job["output/generic/temperature"]
+        return self._job.project_hdf5["output/generic/temperature"]
 
     @property
     def computation_time(self):
-        return self._job["output/generic/computation_time"]
+        return self._job.project_hdf5["output/generic/computation_time"]
 
     @property
     def unwrapped_positions(self):
-        unwrapped_positions = self._job["output/generic/unwrapped_positions"]
+        unwrapped_positions = self._job.project_hdf5["output/generic/unwrapped_positions"]
         if unwrapped_positions is not None:
             return unwrapped_positions
         else:
@@ -830,11 +830,11 @@ class GenericOutput(object):
 
     @property
     def volume(self):
-        return self._job["output/generic/volume"]
+        return self._job.project_hdf5["output/generic/volume"]
 
     @property
     def indices(self):
-        return self._job["output/generic/indices"]
+        return self._job.project_hdf5["output/generic/indices"]
 
     @property
     def displacements(self):
@@ -891,7 +891,7 @@ class GenericOutput(object):
         return np.cumsum(self.displacements, axis=0)
 
     def __dir__(self):
-        hdf5_path = self._job["output/generic"]
+        hdf5_path = self._job.project_hdf5["output/generic"]
         if hdf5_path is not None:
             return hdf5_path.list_nodes()
         else:
