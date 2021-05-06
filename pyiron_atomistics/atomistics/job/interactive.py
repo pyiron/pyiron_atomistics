@@ -449,8 +449,7 @@ class GenericInteractiveOutput(GenericOutput):
         else:
             prop_result = prop(self)
             if prop_result is not None:
-                return_lst = prop(self).tolist() + return_lst
-                return np.concatenate([prop(self), *return_lst])
+                return np.concatenate([prop_result, *return_lst])
             else:
                 return np.asarray(return_lst)
 
