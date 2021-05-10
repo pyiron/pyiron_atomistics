@@ -43,7 +43,7 @@ setup(
         'pymatgen==2022.0.7',
         'scipy==1.6.3',
         'seekpath==2.0.1',
-        'six==1.15.0',
+        'six==1.16.0',
         'scikit-learn==0.24.2',
         'spglib==1.16.1',
         'tables==3.6.1'
