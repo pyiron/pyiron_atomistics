@@ -158,25 +158,30 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         self._generic_input.read_only = True
 
-    def copy_to(
-        self, project=None, new_job_name=None, input_only=False, new_database_entry=True
-    ):
+    def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
+                delete_existing_job=False):
         """
+        Copy the content of the job including the HDF5 file to a new location.
 
         Args:
-            destination:
-            new_job_name:
-            input_only:
-            new_database_entry:
+            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
+                (Default is None, use the same project.)
+            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
+                project as the copied job. (Default is None, try to keep the same name.)
+            input_only (bool): [True/False] Whether to copy only the input. (Default is False.)
+            new_database_entry (bool): [True/False] Whether to create a new database entry. If input_only is True then
+                new_database_entry is False. (Default is True.)
+            delete_existing_job (bool): [True/False] Delete existing job in case it exists already (Default is False.)
 
         Returns:
-
+            AtomisticGenericJob: AtomisticGenericJob object pointing to the new location.
         """
         new_generic_job = super(AtomisticGenericJob, self).copy_to(
             project=project,
             new_job_name=new_job_name,
             input_only=input_only,
             new_database_entry=new_database_entry,
+            delete_existing_job=delete_existing_job
         )
         if not new_generic_job._structure:
             new_generic_job._structure = copy.copy(self._structure)
