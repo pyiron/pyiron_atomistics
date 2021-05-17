@@ -11,6 +11,7 @@ import warnings
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
+from functools import wraps
 
 try:
     from pyiron_base import ProjectGUI
@@ -158,24 +159,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         self._generic_input.read_only = True
 
+    @wraps(GenericJobCore.copy_to)
     def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
                 delete_existing_job=False):
-        """
-        Copy the content of the job including the HDF5 file to a new location.
-
-        Args:
-            project (JobCore/ProjectHDFio/Project/None): The project to copy the job to.
-                (Default is None, use the same project.)
-            new_job_name (str): The new name to assign the duplicate job. Required if the project is `None` or the same
-                project as the copied job. (Default is None, try to keep the same name.)
-            input_only (bool): [True/False] Whether to copy only the input. (Default is False.)
-            new_database_entry (bool): [True/False] Whether to create a new database entry. If input_only is True then
-                new_database_entry is False. (Default is True.)
-            delete_existing_job (bool): [True/False] Delete existing job in case it exists already (Default is False.)
-
-        Returns:
-            AtomisticGenericJob: AtomisticGenericJob object pointing to the new location.
-        """
         new_generic_job = super(AtomisticGenericJob, self).copy_to(
             project=project,
             new_job_name=new_job_name,
@@ -186,6 +172,8 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         if not new_generic_job._structure:
             new_generic_job._structure = copy.copy(self._structure)
         return new_generic_job
+    copy_to.__doc__ = copy_to.__doc__.split('Returns:')[0] + \
+                      f'Returns:\n            {__qualname__}: Object pointing to the new location.'
 
     def calc_minimize(
         self, ionic_energy_tolerance=0, ionic_force_tolerance=1e-4, e_tol=None, f_tol=None, max_iter=1000, pressure=None, n_print=1
