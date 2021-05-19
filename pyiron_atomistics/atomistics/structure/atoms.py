@@ -1397,23 +1397,11 @@ class Atoms(ASEAtoms):
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
         )
-        if (width<0.5*np.min(self.cell.diagonal())
-                and np.isclose(np.linalg.norm(self.cell-np.eye(3)*self.cell.diagonal()), 0)
-                and np.all(self.pbc)
-                and cutoff_radius==np.inf):
-            neigh._cell = self.cell.diagonal()
-            extended_positions = self.get_extended_positions(
-                0,
-                return_indices=False,
-                norm_order=norm_order
-            ).copy()
-            extended_positions -= neigh._cell*np.floor(extended_positions/neigh._cell)
-        else:
-            extended_positions, neigh._wrapped_indices = self.get_extended_positions(
-                width, return_indices=True, norm_order=norm_order
-            )
-            neigh._extended_positions = extended_positions
-        neigh._tree = cKDTree(extended_positions, boxsize=neigh._cell)
+        extended_positions, neigh._wrapped_indices = self.get_extended_positions(
+            width, return_indices=True, norm_order=norm_order
+        )
+        neigh._extended_positions = extended_positions
+        neigh._tree = cKDTree(extended_positions)
         if get_tree:
             return neigh
         positions = self.positions
