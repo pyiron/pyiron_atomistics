@@ -67,7 +67,7 @@ class Analyse:
                 description: sklearn.cluster.AgglomerativeClustering
             id_list (list/numpy.ndarray): List of atoms for which the layers
                 should be considered.
-            wrap_atoms: TODO.
+            wrap_atoms (bool): Whether to consider periodic boundary conditions according to the box definition or not. If set to `False`, atoms lying on box boundaries are considered to belong to different layers, regardless of whether the box itself has the periodic boundary condition in this direction or not. If `planes` is not `None` and `wrap_atoms` is `True`, this tag has the same effect as calling `get_layers()` after calling `center_coordinates_in_unit_cell()`
             planes (list/numpy.ndarray): Planes along which the layers are calculated. Planes are
                 given in vectors, i.e. [1, 0, 0] gives the layers along the x-axis. Default planes
                 are orthogonal unit vectors: [[1, 0, 0], [0, 1, 0], [0, 0, 1]]. If you have a
