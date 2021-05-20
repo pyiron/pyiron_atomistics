@@ -137,7 +137,7 @@ class Analyse:
         return np.vstack(layers).T
 
     def pyscal_steinhardt_parameter(self, neighbor_method="cutoff", cutoff=0, n_clusters=2,
-                                    q=(4, 6), averaged=False, clustering=True):
+                                    q=None, averaged=False, clustering=True):
         """
         Calculate Steinhardts parameters
 
@@ -145,7 +145,8 @@ class Analyse:
             neighbor_method (str) : can be ['cutoff', 'voronoi']. (Default is 'cutoff'.)
             cutoff (float) : Can be 0 for adaptive cutoff or any other value. (Default is 0, adaptive.)
             n_clusters (int) : number of clusters for K means clustering. (Default is 2.)
-            q (list) : Values can be integers from 2-12, the required q values to be calculated. (Default is (4, 6).)
+            q (list) : Values can be integers from 2-12, the required q values to be calculated. (Default is None, which
+                uses (4, 6).)
             averaged (bool) : If True, calculates the averaged versions of the parameter. (Default is False.)
             clustering (bool) : If True, cluster based on the q values and return cluster indices. (Default is True.)
 
