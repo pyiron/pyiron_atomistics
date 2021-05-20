@@ -7,6 +7,8 @@ from pyiron_base import Settings
 import pyiron_atomistics.atomistics.structure.atoms
 import pyscal.core as pc
 from sklearn import cluster
+from pyiron_base.generic.util import Deprecator
+deprecate = Deprecator()
 
 __author__ = "Sarath Menon, Jan Janssen"
 __copyright__ = (
@@ -22,8 +24,9 @@ __date__ = "Nov 6, 2019"
 s = Settings()
 
 
+@deprecate(arguments={"clustering": "use n_clusters=None instead of clustering=False."})
 def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0, n_clusters=2,
-                                       q=None, averaged=False):
+                                       q=None, averaged=False, clustering=None):
     """
     Calculate Steinhardts parameters
 
@@ -42,6 +45,8 @@ def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0
     """
     s.publication_add(publication())
     q = (4, 6) if q is None else q
+    if clustering == False:
+        n_clusters = None
     sys = pc.System()
     sys.read_inputfile(
         pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(atoms),

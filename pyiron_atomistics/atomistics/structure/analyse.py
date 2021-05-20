@@ -9,6 +9,8 @@ from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
+from pyiron_base.generic.util import Deprecator
+deprecate = Deprecator()
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -136,8 +138,9 @@ class Analyse:
             return np.asarray(layers).flatten()
         return np.vstack(layers).T
 
+    @deprecate(arguments={"clustering": "use n_clusters=None instead of clustering=False."})
     def pyscal_steinhardt_parameter(self, neighbor_method="cutoff", cutoff=0, n_clusters=2,
-                                    q=None, averaged=False):
+                                    q=None, averaged=False, clustering=None):
         """
         Calculate Steinhardts parameters
 
@@ -155,7 +158,7 @@ class Analyse:
         """
         return get_steinhardt_parameter_structure(
             self._structure, neighbor_method=neighbor_method, cutoff=cutoff, n_clusters=n_clusters,
-            q=q, averaged=averaged
+            q=q, averaged=averaged, clustering=clustering
         )
 
     def pyscal_cna_adaptive(self, mode="total", ovito_compatibility=False):
