@@ -137,18 +137,17 @@ class Analyse:
         return np.vstack(layers).T
 
     def pyscal_steinhardt_parameter(self, neighbor_method="cutoff", cutoff=0, n_clusters=2,
-                                    q=None, averaged=False, clustering=True):
+                                    q=None, averaged=False):
         """
         Calculate Steinhardts parameters
 
         Args:
             neighbor_method (str) : can be ['cutoff', 'voronoi']. (Default is 'cutoff'.)
             cutoff (float) : Can be 0 for adaptive cutoff or any other value. (Default is 0, adaptive.)
-            n_clusters (int) : number of clusters for K means clustering. (Default is 2.)
+            n_clusters (int/None) : Number of clusters for K means clustering or None to not cluster. (Default is 2.)
             q (list) : Values can be integers from 2-12, the required q values to be calculated. (Default is None, which
                 uses (4, 6).)
             averaged (bool) : If True, calculates the averaged versions of the parameter. (Default is False.)
-            clustering (bool) : If True, cluster based on the q values and return cluster indices. (Default is True.)
 
         Returns:
             numpy.ndarray: (number of q's, number of atoms) shaped array of q parameters
@@ -156,7 +155,7 @@ class Analyse:
         """
         return get_steinhardt_parameter_structure(
             self._structure, neighbor_method=neighbor_method, cutoff=cutoff, n_clusters=n_clusters,
-            q=q, averaged=averaged, clustering=clustering
+            q=q, averaged=averaged
         )
 
     def pyscal_cna_adaptive(self, mode="total", ovito_compatibility=False):

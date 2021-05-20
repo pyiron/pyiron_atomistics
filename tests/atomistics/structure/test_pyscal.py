@@ -32,7 +32,7 @@ class Testpyscal(TestWithCleanProject):
     def test_steinhardt_parameters_returns(self):
         self.assertEqual(2, len(pas.get_steinhardt_parameter_structure(self.structure)),
                          msg='Expected default return value to be a tuple of qs and cluster indices.')
-        self.assertIsInstance(pas.get_steinhardt_parameter_structure(self.structure, clustering=False), np.ndarray,
+        self.assertIsInstance(pas.get_steinhardt_parameter_structure(self.structure, n_clusters=None), np.ndarray,
                               msg='Expected just the qs when no clustering is used.')
 
     def test_steinhardt_parameters_qs(self):
