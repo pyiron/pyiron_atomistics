@@ -42,6 +42,12 @@ class Testpyscal(TestWithCleanProject):
         for c, q in enumerate(qs):
             self.assertLess(np.abs(np.mean(q) - perfect_vals[qtest[c]-2]), 1E-3)
 
+        noisy_structure = self.structure.copy()
+        noisy_structure.positions += 0.5 * np.random.rand(*noisy_structure.positions.shape)
+        n_clusters = 3
+        _, inds = pas.get_steinhardt_parameter_structure(noisy_structure, n_clusters=n_clusters)
+        self.assertEqual(n_clusters, len(np.unique(inds)), msg='Expected to find one label for each cluster.')
+
     def test_centrosymmetry(self):
         csm = pas.analyse_centro_symmetry(self.structure, num_neighbors=12)
         self.assertLess(np.mean(csm), 1E-5)
