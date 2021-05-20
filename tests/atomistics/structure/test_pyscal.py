@@ -29,7 +29,13 @@ class Testpyscal(TestWithCleanProject):
         sysp.read_inputfile(self.structure, format="ase")
         self.assertEqual(len(sysp.atoms), 256)
 
-    def test_steinhardt_parameters(self):
+    def test_steinhardt_parameters_returns(self):
+        self.assertEqual(2, len(pas.get_steinhardt_parameter_structure(self.structure)),
+                         msg='Expected default return value to be a tuple of qs and cluster indices.')
+        self.assertIsInstance(pas.get_steinhardt_parameter_structure(self.structure, clustering=False), np.ndarray,
+                              msg='Expected just the qs when no clustering is used.')
+
+    def test_steinhardt_parameters_qs(self):
         """
         Test the calculation of Steinhardts parameters
         """
@@ -38,15 +44,11 @@ class Testpyscal(TestWithCleanProject):
 
         qtest = np.random.randint(2, 13, size=2)
 
-        self.assertEqual(2, len(pas.get_steinhardt_parameter_structure(self.structure)),
-                         msg='Expected default return value to be a tuple of qs and cluster indices.')
-        self.assertIsInstance(pas.get_steinhardt_parameter_structure(self.structure, clustering=False), np.ndarray,
-                              msg='Expected just the qs when no clustering is used.')
-
         qs, _ = pas.get_steinhardt_parameter_structure(self.structure, cutoff=0, n_clusters=2, q=qtest)
         for c, q in enumerate(qs):
             self.assertLess(np.abs(np.mean(q) - perfect_vals[qtest[c]-2]), 1E-3)
 
+    def test_steinhardt_parameters_clustering(self):
         noisy_structure = self.structure.copy()
         noisy_structure.positions += 0.5 * np.random.rand(*noisy_structure.positions.shape)
         n_clusters = 3
