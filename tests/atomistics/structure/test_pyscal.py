@@ -5,45 +5,28 @@
 import unittest
 import numpy as np
 import pyscal.core as pc
-from pyiron_atomistics.project import Project
-from pyiron_base import ProjectHDFio
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-import os
 from ase.build import bulk
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 import pyiron_atomistics.atomistics.structure.pyscal as pas
+from pyiron_atomistics._tests import TestWithCleanProject
 
 
-class Testpyscal(unittest.TestCase):
+class Testpyscal(TestWithCleanProject):
     @classmethod
     def setUpClass(cls):
-        cls.execution_path = os.path.dirname(os.path.abspath(__file__))
-        cls.project = Project(os.path.join(cls.execution_path, "test_job"))
-        cls.job = AtomisticGenericJob(
-            project=ProjectHDFio(project=cls.project, file_name="test_job"),
-            job_name="test_job",
-        )
-        cls.job.structure = CrystalStructure(
-            element="Al", bravais_basis="fcc", lattice_constants=4
-        ).repeat(4)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.execution_path = os.path.dirname(os.path.abspath(__file__))
-        project = Project(os.path.join(cls.execution_path, "test_job"))
-        project.remove_jobs_silently(recursive=True)
-        project.remove(enable=True)
+        super().setUpClass()
+        cls.structure = cls.project.create.structure.bulk('Al', a=4, cubic=True).repeat(4)
 
     def test_attributes(self):
-        self.assertIsInstance(self.job.structure, Atoms)
+        self.assertIsInstance(self.structure, Atoms)
 
     def test_simple_system(self):
         """
         Test a simple ase to pyscal conversion
         """
         sysp = pc.System()
-        sysp.read_inputfile(self.job.structure, format="ase")
+        sysp.read_inputfile(self.structure, format="ase")
         self.assertEqual(len(sysp.atoms), 256)
 
     def test_steinhardt_parameters(self):
@@ -55,28 +38,28 @@ class Testpyscal(unittest.TestCase):
 
         qtest = np.random.randint(2, 13, size=2)
 
-        qs, _ = pas.get_steinhardt_parameter_structure(self.job.structure, cutoff=0, n_clusters=2, q=qtest)
+        qs, _ = pas.get_steinhardt_parameter_structure(self.structure, cutoff=0, n_clusters=2, q=qtest)
         for c, q in enumerate(qs):
             self.assertLess(np.abs(np.mean(q) - perfect_vals[qtest[c]-2]), 1E-3)
 
     def test_centrosymmetry(self):
-        csm = pas.analyse_centro_symmetry(self.job.structure, num_neighbors=12)
+        csm = pas.analyse_centro_symmetry(self.structure, num_neighbors=12)
         self.assertLess(np.mean(csm), 1E-5)
 
     def test_cna(self):
-        cna = pas.analyse_cna_adaptive(self.job.structure)
-        self.assertEqual(cna['fcc'], len(self.job.structure))
+        cna = pas.analyse_cna_adaptive(self.structure)
+        self.assertEqual(cna['fcc'], len(self.structure))
 
-        rand = np.random.randint(0, len(self.job.structure))
+        rand = np.random.randint(0, len(self.structure))
 
-        cna = pas.analyse_cna_adaptive(self.job.structure, mode="numeric")
+        cna = pas.analyse_cna_adaptive(self.structure, mode="numeric")
         self.assertEqual(cna[rand], 1)
 
-        cna = pas.analyse_cna_adaptive(self.job.structure, mode="str")
+        cna = pas.analyse_cna_adaptive(self.structure, mode="str")
         self.assertEqual(cna[rand], "fcc")
 
     def test_volume(self):
-        vols = pas.analyse_voronoi_volume(self.job.structure)
+        vols = pas.analyse_voronoi_volume(self.structure)
         self.assertLess(np.abs(np.mean(vols) - 16.0), 1E-3)
 
 
