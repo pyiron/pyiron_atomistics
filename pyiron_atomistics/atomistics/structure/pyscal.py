@@ -28,17 +28,17 @@ def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0
     Calculate Steinhardts parameters
 
     Args:
-        atoms: Atoms object
-        neighbor_method (str) : can be ['cutoff', 'voronoi']
-        cutoff (float) : can be 0 for adaptive cutoff or any other value
-        n_clusters (int) : number of clusters for K means clustering
-        q (list) : can be from 2-12, the required q values to be calculated
-        averaged (bool) : If True, calculates the averaged versions of the parameter
-        clustering (bool) : If True, cluster based on the q values
+        atoms (Atoms): The structure to analyse.
+        neighbor_method (str) : can be ['cutoff', 'voronoi']. (Default is 'cutoff'.)
+        cutoff (float) : Can be 0 for adaptive cutoff or any other value. (Default is 0, adaptive.)
+        n_clusters (int) : number of clusters for K means clustering. (Default is 2.)
+        q (list) : Values can be integers from 2-12, the required q values to be calculated. (Default is (4, 6).)
+        averaged (bool) : If True, calculates the averaged versions of the parameter. (Default is False.)
+        clustering (bool) : If True, cluster based on the q values and return cluster indices. (Default is True.)
 
     Returns:
-        q (list) : calculated q parameters
-
+        numpy.ndarray: (number of q's, number of atoms) shaped array of q parameters
+        numpy.ndarray: If `clustering=True`, an additional per-atom array of cluster ids is also returned
     """
     s.publication_add(publication())
     sys = pc.System()
@@ -57,17 +57,17 @@ def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0
         averaged=averaged
     )
 
-    sysq = sys.get_qvals(
+    sysq = np.array(sys.get_qvals(
         q,
         averaged=averaged
-    )
+    ))
 
     if clustering:
         cl = cluster.KMeans(
             n_clusters=n_clusters
         )
 
-        ind = cl.fit(list(zip(*sysq))).labels_ == 0
+        ind = cl.fit(list(zip(*sysq))).labels_
         return sysq, ind
     else:
         return sysq

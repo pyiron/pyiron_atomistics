@@ -142,16 +142,16 @@ class Analyse:
         Calculate Steinhardts parameters
 
         Args:
-            neighbor_method (str) : can be ['cutoff', 'voronoi']
-            cutoff (float) : can be 0 for adaptive cutoff or any other value
-            n_clusters (int) : number of clusters for K means clustering
-            q (list) : can be from 2-12, the required q values to be calculated
-            averaged (bool) : If True, calculates the averaged versions of the parameter
-            clustering (bool) : If True, cluster based on the q values
+            neighbor_method (str) : can be ['cutoff', 'voronoi']. (Default is 'cutoff'.)
+            cutoff (float) : Can be 0 for adaptive cutoff or any other value. (Default is 0, adaptive.)
+            n_clusters (int) : number of clusters for K means clustering. (Default is 2.)
+            q (list) : Values can be integers from 2-12, the required q values to be calculated. (Default is (4, 6).)
+            averaged (bool) : If True, calculates the averaged versions of the parameter. (Default is False.)
+            clustering (bool) : If True, cluster based on the q values and return cluster indices. (Default is True.)
 
         Returns:
-            list: calculated q parameters
-
+            numpy.ndarray: (number of q's, number of atoms) shaped array of q parameters
+            numpy.ndarray: If `clustering=True`, an additional per-atom array of cluster ids is also returned
         """
         return get_steinhardt_parameter_structure(
             self._structure, neighbor_method=neighbor_method, cutoff=cutoff, n_clusters=n_clusters,
