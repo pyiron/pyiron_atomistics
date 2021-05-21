@@ -36,7 +36,7 @@ setup(
         'h5py==3.2.1',
         'matplotlib==3.4.2',
         'mendeleev==0.7.0',
-        'numpy==1.20.2',
+        'numpy==1.20.3',
         'pandas==1.2.4',
         'phonopy==2.9.3',
         'pyiron_base==0.2.12',
