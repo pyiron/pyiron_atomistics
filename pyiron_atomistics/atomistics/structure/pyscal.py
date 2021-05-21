@@ -7,6 +7,8 @@ from pyiron_base import Settings
 import pyiron_atomistics.atomistics.structure.atoms
 import pyscal.core as pc
 from sklearn import cluster
+from pyiron_base.generic.util import Deprecator
+deprecate = Deprecator()
 
 __author__ = "Sarath Menon, Jan Janssen"
 __copyright__ = (
@@ -22,25 +24,29 @@ __date__ = "Nov 6, 2019"
 s = Settings()
 
 
+@deprecate(arguments={"clustering": "use n_clusters=None instead of clustering=False."})
 def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0, n_clusters=2,
-                                       q=(4, 6), averaged=False, clustering=True):
+                                       q=None, averaged=False, clustering=None):
     """
     Calculate Steinhardts parameters
 
     Args:
-        atoms: Atoms object
-        neighbor_method (str) : can be ['cutoff', 'voronoi']
-        cutoff (float) : can be 0 for adaptive cutoff or any other value
-        n_clusters (int) : number of clusters for K means clustering
-        q (list) : can be from 2-12, the required q values to be calculated
-        averaged (bool) : If True, calculates the averaged versions of the parameter
-        clustering (bool) : If True, cluster based on the q values
+        atoms (Atoms): The structure to analyse.
+        neighbor_method (str) : can be ['cutoff', 'voronoi']. (Default is 'cutoff'.)
+        cutoff (float) : Can be 0 for adaptive cutoff or any other value. (Default is 0, adaptive.)
+        n_clusters (int/None) : Number of clusters for K means clustering or None to not cluster. (Default is 2.)
+        q (list) : Values can be integers from 2-12, the required q values to be calculated. (Default is None, which
+            uses (4, 6).)
+        averaged (bool) : If True, calculates the averaged versions of the parameter. (Default is False.)
 
     Returns:
-        q (list) : calculated q parameters
-
+        numpy.ndarray: (number of q's, number of atoms) shaped array of q parameters
+        numpy.ndarray: If `clustering=True`, an additional per-atom array of cluster ids is also returned
     """
     s.publication_add(publication())
+    q = (4, 6) if q is None else q
+    if clustering == False:
+        n_clusters = None
     sys = pc.System()
     sys.read_inputfile(
         pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(atoms),
@@ -57,17 +63,17 @@ def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0
         averaged=averaged
     )
 
-    sysq = sys.get_qvals(
+    sysq = np.array(sys.get_qvals(
         q,
         averaged=averaged
-    )
+    ))
 
-    if clustering:
+    if n_clusters is not None:
         cl = cluster.KMeans(
             n_clusters=n_clusters
         )
 
-        ind = cl.fit(list(zip(*sysq))).labels_ == 0
+        ind = cl.fit(list(zip(*sysq))).labels_
         return sysq, ind
     else:
         return sysq

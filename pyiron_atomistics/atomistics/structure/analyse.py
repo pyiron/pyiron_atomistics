@@ -4,11 +4,13 @@
 
 import numpy as np
 from pyiron_base import Settings
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering  # TODO: Handle sklearn in dependencies or wrap in import warning
 from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
+from pyiron_base.generic.util import Deprecator
+deprecate = Deprecator()
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -22,6 +24,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 s = Settings()
+
 
 def get_average_of_unique_labels(labels, values):
     """
@@ -40,9 +43,10 @@ def get_average_of_unique_labels(labels, values):
     unique_labels = np.unique(labels)
     mat = coo_matrix((np.ones_like(labels), (labels, np.arange(len(labels)))))
     mean_values = np.asarray(mat.dot(np.asarray(values).reshape(len(labels), -1))/mat.sum(axis=1))
-    if np.prod(mean_values.shape).astype(int)==len(unique_labels):
+    if np.prod(mean_values.shape).astype(int) == len(unique_labels):
         return mean_values.flatten()
     return mean_values
+
 
 class Analyse:
     """ Class to analyse atom structure.  """
@@ -63,6 +67,11 @@ class Analyse:
                 description: sklearn.cluster.AgglomerativeClustering
             id_list (list/numpy.ndarray): List of atoms for which the layers
                 should be considered.
+            wrap_atoms (bool): Whether to consider periodic boundary conditions according to the box definition or not.
+                If set to `False`, atoms lying on opposite box boundaries are considered to belong to different layers,
+                regardless of whether the box itself has the periodic boundary condition in this direction or not.
+                If `planes` is not `None` and `wrap_atoms` is `True`, this tag has the same effect as calling
+                `get_layers()` after calling `center_coordinates_in_unit_cell()`
             planes (list/numpy.ndarray): Planes along which the layers are calculated. Planes are
                 given in vectors, i.e. [1, 0, 0] gives the layers along the x-axis. Default planes
                 are orthogonal unit vectors: [[1, 0, 0], [0, 1, 0], [0, 0, 1]]. If you have a
@@ -93,7 +102,7 @@ class Analyse:
             )
             if id_list is not None:
                 id_list = np.arange(len(self._structure))[np.array(id_list)]
-                id_list = np.any(id_list[:,np.newaxis]==indices[np.newaxis,:], axis=0)
+                id_list = np.any(id_list[:, np.newaxis] == indices[np.newaxis, :], axis=0)
                 positions = positions[id_list]
                 indices = indices[id_list]
         else:
@@ -106,12 +115,12 @@ class Analyse:
             mat = np.asarray(planes).reshape(-1, 3)
             positions = np.einsum('ij,i,nj->ni', mat, 1/np.linalg.norm(mat, axis=-1), positions)
         layers = []
-        for ii,x in enumerate(positions.T):
+        for ii, x in enumerate(positions.T):
             cluster = AgglomerativeClustering(
                 linkage='complete',
                 n_clusters=None,
                 distance_threshold=distance_threshold
-            ).fit(x.reshape(-1,1))
+            ).fit(x.reshape(-1, 1))
             first_occurrences = np.unique(cluster.labels_, return_index=True)[1]
             permutation = x[first_occurrences].argsort().argsort()
             labels = permutation[cluster.labels_]
@@ -120,35 +129,36 @@ class Analyse:
                 scaled_positions = np.einsum(
                     'ji,nj->ni', np.linalg.inv(self._structure.cell), mean_positions
                 )
-                unique_inside_box = np.all(np.absolute(scaled_positions-0.5+1.0e-8)<0.5, axis=-1)
+                unique_inside_box = np.all(np.absolute(scaled_positions-0.5+1.0e-8) < 0.5, axis=-1)
                 arr_inside_box = np.any(
-                    labels[:,None]==np.unique(labels)[unique_inside_box][None,:], axis=-1
+                    labels[:, None] == np.unique(labels)[unique_inside_box][None, :], axis=-1
                 )
                 first_occurences = np.unique(indices[arr_inside_box], return_index=True)[1]
                 labels = labels[arr_inside_box]
                 labels -= np.min(labels)
                 labels = labels[first_occurences]
             layers.append(labels)
-        if planes is not None and len(np.asarray(planes).shape)==1:
+        if planes is not None and len(np.asarray(planes).shape) == 1:
             return np.asarray(layers).flatten()
         return np.vstack(layers).T
 
+    @deprecate(arguments={"clustering": "use n_clusters=None instead of clustering=False."})
     def pyscal_steinhardt_parameter(self, neighbor_method="cutoff", cutoff=0, n_clusters=2,
-                                            q=(4, 6), averaged=False, clustering=True):
+                                    q=None, averaged=False, clustering=None):
         """
         Calculate Steinhardts parameters
 
         Args:
-            neighbor_method (str) : can be ['cutoff', 'voronoi']
-            cutoff (float) : can be 0 for adaptive cutoff or any other value
-            n_clusters (int) : number of clusters for K means clustering
-            q (list) : can be from 2-12, the required q values to be calculated
-            averaged (bool) : If True, calculates the averaged versions of the parameter
-            clustering (bool) : If True, cluster based on the q values
+            neighbor_method (str) : can be ['cutoff', 'voronoi']. (Default is 'cutoff'.)
+            cutoff (float) : Can be 0 for adaptive cutoff or any other value. (Default is 0, adaptive.)
+            n_clusters (int/None) : Number of clusters for K means clustering or None to not cluster. (Default is 2.)
+            q (list) : Values can be integers from 2-12, the required q values to be calculated. (Default is None, which
+                uses (4, 6).)
+            averaged (bool) : If True, calculates the averaged versions of the parameter. (Default is False.)
 
         Returns:
-            list: calculated q parameters
-
+            numpy.ndarray: (number of q's, number of atoms) shaped array of q parameters
+            numpy.ndarray: If `clustering=True`, an additional per-atom array of cluster ids is also returned
         """
         return get_steinhardt_parameter_structure(
             self._structure, neighbor_method=neighbor_method, cutoff=cutoff, n_clusters=n_clusters,
@@ -242,6 +252,5 @@ class Analyse:
             )
             cluster.fit(xx)
             xx = get_average_of_unique_labels(cluster.labels_, xx)
-        xx = xx[np.linalg.norm(xx-self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1)<epsilon]
+        xx = xx[np.linalg.norm(xx-self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1) < epsilon]
         return xx-epsilon
-
