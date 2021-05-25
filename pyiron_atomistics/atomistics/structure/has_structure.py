@@ -15,7 +15,7 @@ __copyright__ = (
     "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
-__version__ = "1.0"
+__version__ = "1.1"
 __maintainer__ = "Marvin Poul"
 __email__ = "poul@mpie.de"
 __status__ = "production"
