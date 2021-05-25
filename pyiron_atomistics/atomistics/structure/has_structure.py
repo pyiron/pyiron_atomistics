@@ -31,7 +31,7 @@ class HasStructure(ABC):
     :method:`.get_structure()` checks that iteration_step is valid; implementations of
     :abstractmethod:`._get_structure()` therefore don't have to check it.
 
-    :method:`.get_number_of_structures()` may return zero, e.g. if there's no structure stored in the object yet or a
+    :property:`.number_of_structures` may be zero, e.g. if there's no structure stored in the object yet or a
     job will compute this structure, but hasn't been run yet.
 
     Sub classes that wish to document special behavior of their implementation of :method:`.get_structure` may do so by
