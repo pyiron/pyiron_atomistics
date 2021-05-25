@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from abc import ABC, abstractmethod, abstractproperty
+import numbers
 from pyiron_base import deprecate
 
 """
@@ -87,7 +88,7 @@ class HasStructure(ABC):
         """
         if iteration_step is not None:
             frame = iteration_step
-        if not isinstance(frame, int):
+        if not isinstance(frame, numbers.Integral):
             try:
                 frame = self._translate_frame(frame)
             except NotImplementedError:
