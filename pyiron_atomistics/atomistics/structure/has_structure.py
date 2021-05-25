@@ -37,6 +37,9 @@ class HasStructure(ABC):
     Sub classes that wish to document special behavior of their implementation of :method:`.get_structure` may do so by
     adding documention to it in the "Methods:" sub section of their class docstring.
 
+    Sub classes may support custom data types as indices for `frame` in :method:`.get_structure()` by overriding
+    :method:`._translate_frame()`.
+
     The example below shows how to implement this mixin and how to check whether an object derives from it
 
     >>> from pyiron_atomistics.atomistics.structure.atoms import Atoms
@@ -71,7 +74,8 @@ class HasStructure(ABC):
         calculation has been run on it, see :property:`.number_of_structures`.
 
         Args:
-            frame (int): index of the structure requested, if negative count from the back
+            frame (int, object): index of the structure requested, if negative count from the back; if
+            :method:`_translate_frame()` is overridden, frame will pass through it
             iteration_step (int): deprecated alias for frame
             wrap_atoms (bool): True if the atoms are to be wrapped back into the unit cell
 
@@ -83,6 +87,12 @@ class HasStructure(ABC):
         """
         if iteration_step is not None:
             frame = iteration_step
+        if not isinstance(frame, int):
+            try:
+                frame = self._translate_frame(frame)
+            except NotImplementedError:
+                raise KeyError(f"argument frame {frame} is not an integer and _translate_frame() not implemented!") \
+                        from None
         num_structures = self.number_of_structures
         if frame < 0:
             frame += num_structures
@@ -90,6 +100,21 @@ class HasStructure(ABC):
             raise IndexError(f"argument frame {frame} out of range [-{num_structures}, {num_structures}).")
 
         return self._get_structure(frame=frame, wrap_atoms=wrap_atoms)
+
+    def _translate_frame(self, frame):
+        """
+        Translate frame to an integer for :method:`_get_structure()`.
+
+        Args:
+            frame (object): any object to translate into an integer id
+
+        Returns:
+            int: valid integer to be passed to :method:`._get_structure()`
+
+        Raises:
+            KeyError: if given frame does not exist in this object
+        """
+        raise NotImplementedError("No frame translation implemented!")
 
     @abstractmethod
     def _get_structure(self, frame=-1, wrap_atoms=True):
