@@ -24,7 +24,7 @@ class TestPhonopy(TestWithCleanProject):
         job.set_force_constants(1)
         # phono.run() # removed because somehow it's extremely slow
 
-    def test_run(self):
+    def test_number_of_snapshots(self):
         basis = self.project.create.structure.bulk('Al', cubic=True)
         job = self.project.create.job.HessianJob('job_test')
         job.set_reference_structure(basis)
@@ -32,7 +32,7 @@ class TestPhonopy(TestWithCleanProject):
 
         interaction_range = np.min(np.linalg.norm(basis.cell.array, axis=0)) - 1e-8
 
-        phono = self.project.create.job.PhonopyJob('phono1')
+        phono = self.project.create.job.PhonopyJob('phono')
         phono.ref_job = job
         phono.input['interaction_range'] = interaction_range
         phono.input['number_of_snapshots'] = 1
