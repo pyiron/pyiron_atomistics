@@ -16,7 +16,7 @@ from phonopy.file_IO import write_FORCE_CONSTANTS
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_atomistics.atomistics.structure.phonopy import publication as phonopy_publication
-from pyiron_base import JobGenerator, Settings
+from pyiron_base import JobGenerator, Settings, ImportAlarm
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"
 __copyright__ = (
@@ -522,4 +522,11 @@ class PhonopyJob(AtomisticParallelMaster):
             raise ValueError("Phonopy reference jobs should be static calculations, but got {}".format(
                 self.ref_job._generic_input["calc_mode"]
             ))
+        if self.input["number_of_snapshots"] is not None:
+            with ImportAlarm(
+                    "Phonopy with random snapshot displacement relies on the alm module but this unavailable. Please "
+                    "ensure your python environment contains alm, e.g. by running `conda install -c conda-forge alm`."
+                    "Note: at time of writing alm is only available for Linux and OSX systems."
+            ) as import_alarm:
+                import alm
         super().validate_ready_to_run()
