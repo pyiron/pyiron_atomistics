@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_atomistics._tests import TestWithCleanProject
+import numpy as np
 
 
 class TestPhonopy(TestWithCleanProject):
@@ -22,6 +23,25 @@ class TestPhonopy(TestWithCleanProject):
         job.structure.set_repeat(rep)
         job.set_force_constants(1)
         # phono.run() # removed because somehow it's extremely slow
+
+    def test_run(self):
+        basis = self.project.create.structure.bulk('Al', cubic=True)
+        job = self.project.create.job.HessianJob('job_test')
+        job.set_reference_structure(basis)
+        job.set_force_constants(1)
+
+        interaction_range = np.min(np.linalg.norm(basis.cell.array, axis=0)) - 1e-8
+
+        phono = self.project.create.job.PhonopyJob('phono1')
+        phono.ref_job = job
+        phono.input['interaction_range'] = interaction_range
+        phono.input['number_of_snapshots'] = 1
+        self.assertEqual(1, len(phono.list_structures()))
+
+        phono.input['number_of_snapshots'] = 10
+        phono.phonopy = None  # Otherwise our input update won't get logged...
+        # TODO: At least give a warning when input gets ignored
+        self.assertEqual(10, len(phono.list_structures()))
 
     def test_non_static_ref_job(self):
         phon_ref_job = self.project.create.job.Lammps('ref_job')

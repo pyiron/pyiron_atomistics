@@ -160,6 +160,13 @@ class PhonopyJob(AtomisticParallelMaster):
         self.input["displacement"] = (0.01, "atoms displacement, Ang")
         self.input["dos_mesh"] = (20, "mesh size for DOS calculation")
         self.input["primitive_matrix"] = None
+        self.input["number_of_snapshots"] = (
+            None,
+            "int or None, optional. Number of snapshots of supercells with random displacements. Random displacements "
+            "are generated displacing all atoms in random directions with a fixed displacement distance specified by "
+            "'distance' parameter, i.e., all atoms in supercell are displaced with the same displacement distance in "
+            "direct space. (Copied directly from phonopy docs. Requires the alm package to work.)"
+        )
 
         self.phonopy = None
         self._job_generator = PhonopyJobGenerator(self)
@@ -190,7 +197,10 @@ class PhonopyJob(AtomisticParallelMaster):
                     primitive_matrix=self.input["primitive_matrix"],
                     factor=self.input["factor"],
                 )
-                self.phonopy.generate_displacements(distance=self.input["displacement"])
+                self.phonopy.generate_displacements(
+                    distance=self.input["displacement"],
+                    number_of_snapshots=self.input["number_of_snapshots"]
+                )
                 self.to_hdf()
             else:
                 raise ValueError("No reference job/ No reference structure found.")
@@ -274,7 +284,9 @@ class PhonopyJob(AtomisticParallelMaster):
                 for job_name in self._get_jobs_sorted()
             ]
         self.phonopy.set_forces(forces_lst)
-        self.phonopy.produce_force_constants()
+        self.phonopy.produce_force_constants(
+            fc_calculator=None if self.input["number_of_snapshots"] is None else "alm"
+        )
         self.phonopy.run_mesh(mesh=[self.input["dos_mesh"]] * 3)
         mesh_dict = self.phonopy.get_mesh_dict()
         self.phonopy.run_total_dos()
