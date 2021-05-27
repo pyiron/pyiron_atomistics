@@ -529,4 +529,5 @@ class PhonopyJob(AtomisticParallelMaster):
                     "Note: at time of writing alm is only available for Linux and OSX systems."
             ) as import_alarm:
                 import alm
+                import_alarm.warn_if_failed()
         super().validate_ready_to_run()
