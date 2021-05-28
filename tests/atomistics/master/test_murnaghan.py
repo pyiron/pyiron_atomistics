@@ -69,7 +69,7 @@ class TestMurnaghan(TestWithProject):
         murn.remove()
         job_ser.remove()
 
-    def test_plot(self):
+    def test_fitting_routines(self):
         ref_job = self.project.create.job.Lammps('ref')
         murn = ref_job.create_job('Murnaghan', 'murn')
         murn.structure = self.basis
@@ -104,6 +104,16 @@ class TestMurnaghan(TestWithProject):
             murn.fit_birch_murnaghan()
             self.assertAlmostEqual(-90.72005405262217, murn.equilibrium_energy)
             self.assertAlmostEqual(448.41909755611437, murn.equilibrium_volume)
+
+        with self.subTest(msg="vinet"):
+            murn.fit_vinet()
+            self.assertAlmostEqual(-90.72000006839492, murn.equilibrium_energy)
+            self.assertAlmostEqual(448.40333840970357, murn.equilibrium_volume)
+
+        with self.subTest(msg='murnaghan'):
+            murn.fit_murnaghan()
+            self.assertAlmostEqual(-90.72018572197015, murn.equilibrium_energy)
+            self.assertAlmostEqual(448.4556825322108, murn.equilibrium_volume)
 
 
 if __name__ == "__main__":
