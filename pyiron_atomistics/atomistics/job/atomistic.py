@@ -172,7 +172,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         return self.project.create_pipeline(job=self, step_lst=step_lst, delete_existing_job=delete_existing_job)
 
     def _after_generic_copy_to(self, original, new_database_entry, reloaded):
-        if not self._structure:
+        if self._structure is None:
             self._structure = copy.copy(original._structure)
 
     def calc_minimize(
