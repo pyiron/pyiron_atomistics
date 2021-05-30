@@ -321,8 +321,10 @@ class TestLammps(unittest.TestCase):
             )
         )
         self.assertTrue(
-            np.allclose(self.job_water_dump["output/generic/forces"], forces)
+            np.allclose(self.job_water_dump["output/generic/forces"], forces / LAMMPS_UNIT_CONVERSIONS["real"]["force"])
         )
+        self.assertEqual(round(self.job_water_dump["output/generic/energy_tot"][-1], 4), -256.1287)
+
         self.job_water_dump.write_traj(filename="test.xyz",
                                        file_format="xyz")
         atom_indices = self.job_water_dump.structure.select_index("H")
