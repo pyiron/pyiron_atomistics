@@ -19,6 +19,8 @@ from pyiron_base import Settings, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
+
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -464,7 +466,8 @@ class LammpsBase(AtomisticGenericJob):
             ]
             indices = [indices_i.tolist() for indices_i in h5md["/particles/all/indices/value"]]
         with self.project_hdf5.open("output/generic") as h5_file:
-            h5_file["forces"] = np.array(forces)
+            # Store after converting to pyiron units
+            h5_file["forces"] = np.array(forces) / LAMMPS_UNIT_CONVERSIONS[self.input.control["units"]]["force"]
             h5_file["positions"] = np.array(positions)
             h5_file["steps"] = np.array(steps)
             h5_file["cells"] = cell
@@ -601,14 +604,28 @@ class LammpsBase(AtomisticGenericJob):
                         (df.columns.str.startswith("mean_pressure") & df.columns.str.endswith(']'))
                     ]
                 )
+                # Conversion to list for some reason?
                 df["mean_pressures"] = pressures.tolist()
 
             generic_keys_lst = list(h5_dict.values()) + ["pressures", "mean_pressures", ]
+
+            # For unit conversion
+            units_key_list = np.array(list(LAMMPS_UNIT_CONVERSIONS[self.input.control["units"]].keys()))
             with self.project_hdf5.open("output/generic") as hdf_output:
                 # This is a hack for backward comparability
                 for k, v in df.items():
                     if k in generic_keys_lst:
-                        hdf_output[k] = np.array(v)
+                        # Convert to pyiron units wherever necessary
+                        array_quantity = np.array(v)
+                        key_check = np.array([val in k for val in units_key_list])
+                        if any(key_check):
+                            # Convert list element to numpy array
+                            if isinstance(array_quantity[0], list):
+                                array_quantity = np.array([np.array(val) for val in array_quantity])
+                            hdf_output[k] = array_quantity / LAMMPS_UNIT_CONVERSIONS[
+                                self.input.control["units"]][units_key_list[key_check == True][0]]
+                        else:
+                            hdf_output[k] = array_quantity
 
             with self.project_hdf5.open("output/lammps") as hdf_output:
                 # This is a hack for backward comparability
@@ -1002,10 +1019,18 @@ class LammpsBase(AtomisticGenericJob):
             keys = content[0].keys()
             for kk in keys[keys.str.startswith('c_')]:
                 output[kk.replace('c_', '')] = np.array([cc[kk] for cc in content], dtype=float)
-
+            units_key_list = np.array(list(LAMMPS_UNIT_CONVERSIONS[self.input.control["units"]].keys()))
             with self.project_hdf5.open("output/generic") as hdf_output:
                 for k, v in output.items():
-                    hdf_output[k] = v
+
+                    # Convert to pyiron units wherever necessary
+                    key_check = np.array([val in k for val in units_key_list])
+                    if any(key_check):
+                        hdf_output[k] = v \
+                                        / LAMMPS_UNIT_CONVERSIONS[self.input.control["units"]][units_key_list[
+                            key_check == True][0]]
+                    else:
+                        hdf_output[k] = v
         else:
             warnings.warn("LAMMPS warning: No dump.out output file found.")
 
