@@ -569,12 +569,12 @@ class LammpsBase(AtomisticGenericJob):
                 h5_dict[key] = key.replace('f_', '')
 
             df = df.rename(index=str, columns=h5_dict)
+            pressure_dict = dict()
             if all([x in df.columns.values for x in ["Pxx", "Pxy", "Pxz", "Pxy", "Pyy", "Pyz", "Pxz", "Pyz", "Pzz"]]):
                 pressures = np.stack(
                     (df.Pxx, df.Pxy, df.Pxz, df.Pxy, df.Pyy, df.Pyz, df.Pxz, df.Pyz, df.Pzz),
                     axis=-1,
                 ).reshape(-1, 3, 3).astype('float64')
-                pressures *= 0.0001  # bar -> GPa
 
                 # Rotate pressures from Lammps frame to pyiron frame if necessary
                 rotation_matrix = self._prism.R.T
@@ -586,7 +586,7 @@ class LammpsBase(AtomisticGenericJob):
                         ((df.columns.str.len() == 3) & df.columns.str.startswith("P"))
                     ]
                 )
-                df["pressures"] = pressures.tolist()
+                pressure_dict["pressure"] = pressures
             else:
                 warnings.warn("LAMMPS warning: log.lammps does not contain the required pressure values.")
             if 'mean_pressure[1]' in df.columns:
@@ -596,7 +596,6 @@ class LammpsBase(AtomisticGenericJob):
                      df['mean_pressure[5]'], df['mean_pressure[6]'], df['mean_pressure[3]']),
                     axis=-1,
                 ).reshape(-1, 3, 3).astype('float64')
-                pressures *= 0.0001  # bar -> GPa
                 if np.matrix.trace(rotation_matrix) != 3:
                     pressures = rotation_matrix.T @ pressures @ rotation_matrix
                 df = df.drop(
@@ -604,11 +603,9 @@ class LammpsBase(AtomisticGenericJob):
                         (df.columns.str.startswith("mean_pressure") & df.columns.str.endswith(']'))
                     ]
                 )
-                # Conversion to list for some reason?
-                df["mean_pressures"] = pressures.tolist()
+                pressure_dict["mean_pressures"] = pressures
 
-            generic_keys_lst = list(h5_dict.values()) + ["pressures", "mean_pressures", ]
-
+            generic_keys_lst = list(h5_dict.values())
             # For unit conversion
             units_key_list = np.array(list(LAMMPS_UNIT_CONVERSIONS[self.input.control["units"]].keys()))
             with self.project_hdf5.open("output/generic") as hdf_output:
@@ -619,13 +616,13 @@ class LammpsBase(AtomisticGenericJob):
                         array_quantity = np.array(v)
                         key_check = np.array([val in k for val in units_key_list])
                         if any(key_check):
-                            # Convert list element to numpy array
-                            if isinstance(array_quantity[0], list):
-                                array_quantity = np.array([np.array(val) for val in array_quantity])
                             hdf_output[k] = array_quantity / LAMMPS_UNIT_CONVERSIONS[
                                 self.input.control["units"]][units_key_list[key_check == True][0]]
                         else:
                             hdf_output[k] = array_quantity
+                # Store pressures as numpy arrays
+                for key, val in pressure_dict.items():
+                    hdf_output[key] = val / LAMMPS_UNIT_CONVERSIONS[self.input.control["units"]]["pressure"]
 
             with self.project_hdf5.open("output/lammps") as hdf_output:
                 # This is a hack for backward comparability
