@@ -323,7 +323,10 @@ class TestLammps(unittest.TestCase):
         self.assertTrue(
             np.allclose(self.job_water_dump["output/generic/forces"], forces / LAMMPS_UNIT_CONVERSIONS["real"]["force"])
         )
-        self.assertEqual(round(self.job_water_dump["output/generic/energy_tot"][-1], 4), -256.1287)
+        self.assertEqual(self.job_water_dump["output/generic/energy_tot"][-1], -5906.46836142123 /
+                         LAMMPS_UNIT_CONVERSIONS["real"]["energy"])
+        self.assertEqual(self.job_water_dump["output/generic/pressure"][-2][0, 0], 515832.570508186 /
+                         LAMMPS_UNIT_CONVERSIONS["real"]["pressure"])
 
         self.job_water_dump.write_traj(filename="test.xyz",
                                        file_format="xyz")
