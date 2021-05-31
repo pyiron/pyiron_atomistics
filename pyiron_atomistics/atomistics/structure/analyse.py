@@ -26,6 +26,33 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
+def get_mean_positions(positions, cell, pbc, labels=None):
+    """
+    Args:
+        positions (numpy.ndarray (n, 3)): Coordinates to be averaged
+        cell (numpy.ndarray (3, 3)): Cell dimensions
+        pbc (numpy.ndarray (3,)): Periodic boundary conditions (in boolean)
+        labels (numpy.ndarray (n,)): (optional) labels according to which the atoms are
+            grouped
+
+    Returns:
+        (numpy.ndarray): mean positions
+
+    This function calculates the average position(-s) across periodic boundary conditions. If the
+    labels are specified, the positions are grouped accordingly.
+    """
+    if labels is None:
+        labels = np.zeros(len(positions)).astype(int)
+    _, labels, counts = np.unique(labels, return_inverse=True, return_counts=True)
+    mean_positions = positions[np.unique(labels, return_index=True)[1]]
+    all_positions = positions-mean_positions[labels]
+    all_positions = np.einsum('ji,nj->ni', np.linalg.inv(cell), all_positions)
+    all_positions -= np.rint(all_positions)[:,pbc]
+    all_positions = np.einsum('ji,nj->ni', cell, all_positions)
+    np.add.at(mean_positions, labels, (all_positions.T/counts[labels]).T)
+    return mean_positions
+
+
 def get_average_of_unique_labels(labels, values):
     """
 
