@@ -251,7 +251,7 @@ class TestLammps(unittest.TestCase):
             "positions",
             "forces",
             "cells",
-            "pressures",
+            "pressure",
             "unwrapped_positions",
         ]
         with self.job_water.project_hdf5.open("output/generic") as h_gen:
