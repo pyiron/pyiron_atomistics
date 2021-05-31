@@ -575,7 +575,6 @@ class LammpsBase(AtomisticGenericJob):
                     (df.Pxx, df.Pxy, df.Pxz, df.Pxy, df.Pyy, df.Pyz, df.Pxz, df.Pyz, df.Pzz),
                     axis=-1,
                 ).reshape(-1, 3, 3).astype('float64')
-
                 # Rotate pressures from Lammps frame to pyiron frame if necessary
                 rotation_matrix = self._prism.R.T
                 if np.matrix.trace(rotation_matrix) != 3:
@@ -586,7 +585,7 @@ class LammpsBase(AtomisticGenericJob):
                         ((df.columns.str.len() == 3) & df.columns.str.startswith("P"))
                     ]
                 )
-                pressure_dict["pressure"] = pressures
+                pressure_dict["pressures"] = pressures
             else:
                 warnings.warn("LAMMPS warning: log.lammps does not contain the required pressure values.")
             if 'mean_pressure[1]' in df.columns:
@@ -604,7 +603,6 @@ class LammpsBase(AtomisticGenericJob):
                     ]
                 )
                 pressure_dict["mean_pressures"] = pressures
-
             generic_keys_lst = list(h5_dict.values())
             # For unit conversion
             units_key_list = np.array(list(LAMMPS_UNIT_CONVERSIONS[self.input.control["units"]].keys()))
