@@ -277,6 +277,9 @@ class VaspInteractive(VaspBase, GenericInteractive):
     def _check_incar_parameter(self, parameter, value):
         if parameter not in self.input.incar._dataset["Parameter"]:
             self.input.incar[parameter] = value
+        if parameter == "NSW":
+            self._logger.debug("setting NSW to {}".format(value))
+            self.input.incar["NSW"] = value
 
     def _interactive_check_output(self):
         while self._interactive_library.poll() is None:
