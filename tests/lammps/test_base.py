@@ -11,7 +11,7 @@ from pyiron_base import Project, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
-from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
+from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 import ase.units as units
 
 
@@ -320,14 +320,18 @@ class TestLammps(unittest.TestCase):
                 self.job_water_dump["output/generic/unwrapped_positions"], positions
             )
         )
+        uc = UnitConverter(self.job_water_dump.input.control["units"])
         self.assertTrue(
-            np.allclose(self.job_water_dump["output/generic/forces"], forces / LAMMPS_UNIT_CONVERSIONS["real"]["force"])
+            np.allclose(self.job_water_dump["output/generic/forces"], uc.convert_array_to_pyiron_units(forces,
+                                                                                                       "forces"))
         )
-        self.assertEqual(self.job_water_dump["output/generic/energy_tot"][-1], -5906.46836142123 /
-                         LAMMPS_UNIT_CONVERSIONS["real"]["energy"])
+        self.assertEqual(self.job_water_dump["output/generic/energy_tot"][-1], -5906.46836142123 *
+                         uc.lammps_to_pyiron("energy"))
+        self.assertEqual(self.job_water_dump["output/generic/energy_pot"][-1], -5982.82004785158 *
+                         uc.lammps_to_pyiron("energy"))
 
         self.assertAlmostEqual(self.job_water_dump["output/generic/pressures"][-2][0, 0], 515832.570508186 /
-                         LAMMPS_UNIT_CONVERSIONS["real"]["pressure"], 2)
+                               uc.pyiron_to_lammps("pressure"), 2)
 
         self.job_water_dump.write_traj(filename="test.xyz",
                                        file_format="xyz")
