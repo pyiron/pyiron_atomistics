@@ -27,6 +27,7 @@ jobs:
         python .ci_support/pyironconfig.py
         pip install --no-deps .
         conda env update --name test --file .ci_support/environment-docs.yml
+        conda list
     - name: Documentation
       shell: bash -l {0}
       run: ./.ci_support/build_docs.sh
