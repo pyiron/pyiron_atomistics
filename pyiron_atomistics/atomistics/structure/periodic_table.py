@@ -9,6 +9,7 @@ from pyiron_base import Settings
 from mendeleev import element
 import sys
 import pandas
+from functools import lru_cache
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Martin Boeckmann"
 __copyright__ = (
@@ -358,6 +359,7 @@ class PeriodicTable(object):
         return self.element(new_element)
 
     @staticmethod
+    @lru_cache(maxsize=1)
     def _get_periodic_table_df(file_name):
         """
 
