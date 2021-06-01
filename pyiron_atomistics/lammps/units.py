@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import scipy.constants as spc
+import warnings
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -101,3 +102,46 @@ LAMMPS_UNIT_CONVERSIONS = {
         "charge": 1.
     },
 }
+
+# Hard coded list of all quantities we store in pyiron and the type of quantity it stores (Expand if necessary)
+conversion_dict = dict()
+conversion_dict["distance"] = ["positions", "cells", "unwrapped_positions"]
+conversion_dict["pressure"] = ["pressure", "pressures", "mean_pressures"]
+conversion_dict["volume"] = ["volume"]
+conversion_dict["time"] = ["time"]
+conversion_dict["energy"] = ["energy_tot", "energy_pot"]
+conversion_dict["temperature"] = ["temperature", "temperatures"]
+conversion_dict["velocity"] = ["velocity"]
+conversion_dict["mass"] = ["mass"]
+conversion_dict["charge"] = ["charges", "charge"]
+
+
+# Reverse conversion_dict
+quantity_dict = dict()
+for key, val in conversion_dict.items():
+    for v in val:
+        quantity_dict[v] = key
+
+
+class UnitConverter:
+
+    def __init__(self, units):
+        self._units = units
+        self._dict = LAMMPS_UNIT_CONVERSIONS[self._units]
+
+    def __getitem__(self, quantity):
+        return self._dict[quantity]
+
+    def lammps_to_pyiron(self, quantity):
+        return 1. / self[quantity]
+
+    def pyiron_to_lammps(self, quantity):
+        return self[quantity]
+
+    def convert_array_to_pyiron_units(self, array, label):
+        if label in conversion_dict.keys():
+            return array * self.lammps_to_pyiron(conversion_dict[label])
+        else:
+            warnings.warn(message="Warning: Couldn't determine the LAMMPS to pyiron unit conversion type of quantity "
+                                  "{}. Returning un-normalized quantity".format(label))
+            return array
