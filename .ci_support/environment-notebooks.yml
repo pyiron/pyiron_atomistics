@@ -3,7 +3,7 @@ channels:
 dependencies:
   - gpaw >=20
   - jupyter
-  - lammps
+  - lammps < 2021.05.27
   - nglview
   - papermill
   - seaborn
