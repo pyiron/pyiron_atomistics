@@ -103,22 +103,28 @@ LAMMPS_UNIT_CONVERSIONS = {
     },
 }
 
+# Define conversion for volumes based on distances
+for values in LAMMPS_UNIT_CONVERSIONS.values():
+    values["volume"] = values["distance"] ** 3
+
+
 # Hard coded list of all quantities we store in pyiron and the type of quantity it stores (Expand if necessary)
-conversion_dict = dict()
-conversion_dict["distance"] = ["positions", "cells", "unwrapped_positions"]
-conversion_dict["pressure"] = ["pressure", "pressures", "mean_pressures"]
-conversion_dict["volume"] = ["volume"]
-conversion_dict["time"] = ["time"]
-conversion_dict["energy"] = ["energy_tot", "energy_pot"]
-conversion_dict["temperature"] = ["temperature", "temperatures"]
-conversion_dict["velocity"] = ["velocity"]
-conversion_dict["mass"] = ["mass"]
-conversion_dict["charge"] = ["charges", "charge"]
+_conversion_dict = dict()
+_conversion_dict["distance"] = ["positions", "cells", "unwrapped_positions"]
+_conversion_dict["volume"] = ["volume", "volumes"]
+_conversion_dict["pressure"] = ["pressure", "pressures", "mean_pressures"]
+_conversion_dict["time"] = ["time"]
+_conversion_dict["energy"] = ["energy_tot", "energy_pot"]
+_conversion_dict["temperature"] = ["temperature", "temperatures"]
+_conversion_dict["velocity"] = ["velocity"]
+_conversion_dict["mass"] = ["mass"]
+_conversion_dict["charge"] = ["charges", "charge"]
+_conversion_dict["force"] = ["forces", "force"]
 
 
-# Reverse conversion_dict
+# Reverse _conversion_dict
 quantity_dict = dict()
-for key, val in conversion_dict.items():
+for key, val in _conversion_dict.items():
     for v in val:
         quantity_dict[v] = key
 
@@ -139,8 +145,8 @@ class UnitConverter:
         return self[quantity]
 
     def convert_array_to_pyiron_units(self, array, label):
-        if label in conversion_dict.keys():
-            return array * self.lammps_to_pyiron(conversion_dict[label])
+        if label in quantity_dict.keys():
+            return array * self.lammps_to_pyiron(quantity_dict[label])
         else:
             warnings.warn(message="Warning: Couldn't determine the LAMMPS to pyiron unit conversion type of quantity "
                                   "{}. Returning un-normalized quantity".format(label))
