@@ -11,6 +11,7 @@ from scipy.spatial import Voronoi
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
 from pyiron_base.generic.util import Deprecator
+from scipy.spatial import ConvexHull
 deprecate = Deprecator()
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
@@ -91,12 +92,46 @@ class Interstitials:
         if min_distance > 0:
             self._remove_too_close()
 
+    @property
+    def num_neighbors(self):
+        return self._num_neighbors
+
+    @num_neighbors.setter
+    def num_neighbors(self, n):
+        self.reset()
+        self._num_neighbors = n
+
+    def reset(self):
+        self._hull = None
+        self._neigh = None
+
+    @property
+    def neigh(self):
+        if self._neigh is None:
+            self._neigh = self.structure.get_neighborhood(
+                self.positions, num_neighbors=self.num_neighbors
+            )
+        return self._neigh
+
+    @property
+    def positions(self):
+        return self._positions
+
+    @positions.setter
+    def positions(self, x):
+        self.reset()
+        self._positions = x
+
+    @property
+    def hull(self):
+        if self._hull is None:
+            self._hull = [ConvexHull(v) for v in self.neigh.vecs]
+        return self._hull
+
     def _create_gridpoints(self, n_gridpoints_per_angstrom=5):
         cell = self.structure.cell.diagonal()
         gridpoints = (n_gridpoints_per_angstrom*cell).astype(int)
-        positions = np.array(
-            [np.linspace(0, cell[i], gridpoints[i], endpoint=False) for i in range(3)]
-        )
+        positions = [np.linspace(0, cell[i], gridpoints[i], endpoint=False) for i in range(3)]
         positions = np.meshgrid(*positions)
         return np.stack(positions, axis=-1).reshape(-1, 3)
 
@@ -104,13 +139,9 @@ class Interstitials:
         neigh = self.structure.get_neighborhood(self.positions, num_neighbors=1)
         self.positions = self.positions[neigh.distances.flatten()>self.min_distance]
 
-    def initialize_neighborhood(self, num_neighbors):
-        self.neigh = self.structure.get_neighborhood(self.positions, num_neighbors=num_neighbors)
-
-    def _set_interstitials_to_high_symmetry_points(self, num_neighbors):
-        self.positions += np.mean(self.neigh.vecs, axis=-2)
+    def _set_interstitials_to_high_symmetry_points(self):
+        self.positions = self.positions+np.mean(self.neigh.vecs, axis=-2)
         self.positions = self.structure.get_wrapped_coordinates(self.positions)
-        self.initialize_neighborhood(num_neighbors=num_neighbors)
 
     def _kick_out_points(self, variance_buffer=0.01):
         variance = self.get_variance()
@@ -136,12 +167,11 @@ class Interstitials:
         n_iterations=2,
         eps=0.1,
     ):
-        self.initialize_neighborhood(num_neighbors=num_neighbors)
+        self.num_neighbors = num_neighbors
         for _ in range(n_iterations):
-            self._set_interstitials_to_high_symmetry_points(num_neighbors=num_neighbors)
+            self._set_interstitials_to_high_symmetry_points()
         self._kick_out_points(variance_buffer=variance_buffer)
         self._cluster_points(eps=eps)
-        self.initialize_neighborhood(num_neighbors=num_neighbors)
         return self.positions
 
     def get_variance(self):
@@ -161,6 +191,14 @@ class Interstitials:
             (numpy.array (n,)) Steinhardt parameter values
         """
         return self.neigh.get_steinhardt_parameter(l=l)
+
+    def get_volume(self):
+        """Get convex hull volume of each site"""
+        return np.array([h.volume for h in self.hull])
+
+    def get_area(self):
+        """Get convex hull area of each site"""
+        return np.array([h.area for h in self.hull])
 
 
 class Analyse:
