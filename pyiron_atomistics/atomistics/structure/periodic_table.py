@@ -6,7 +6,7 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 import os
 from pyiron_base import Settings
-from mendeleev import element
+import mendeleev
 import sys
 import pandas
 from functools import lru_cache
@@ -25,6 +25,9 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 pandas.options.mode.chained_assignment = None
 
+@lru_cache(maxsize=118)
+def element(*args):
+    return mendeleev.element(*args)
 
 class ChemicalElement(object):
     """
