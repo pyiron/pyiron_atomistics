@@ -81,6 +81,9 @@ class Interstitials:
     Class to identify interstitial positions
     """
     def __init__(self, structure, n_gridpoints_per_angstrom=5, min_distance=1, use_voronoi=False):
+        """
+        Class to identify interstitial positions
+        """
         self.min_distance = min_distance
         self.structure = structure
         if use_voronoi:
@@ -153,7 +156,6 @@ class Interstitials:
             eps, return_indices=True, positions=self.positions
         )
         labels = DBSCAN(eps=eps, min_samples=1).fit_predict(extended_positions)
-        x = get_average_of_unique_labels(labels, extended_positions)
         coo = coo_matrix((labels, (np.arange(len(labels)), indices)))
         labels = coo.max(axis=0).toarray().flatten()
         self.positions = get_mean_positions(
@@ -175,11 +177,11 @@ class Interstitials:
         return self.positions
 
     def get_variance(self):
-        """Get variance of neighboring distances"""
+        """Get variance of neighboring distances."""
         return np.std(self.neigh.distances, axis=-1)
 
     def get_distance(self, function_to_apply=np.min):
-        """Get per-position return values of a given function for the neighbors"""
+        """Get per-position return values of a given function for the neighbors."""
         return function_to_apply(self.neigh.distances, axis=-1)
 
     def get_steinhardt_parameter(self, l):
@@ -193,11 +195,11 @@ class Interstitials:
         return self.neigh.get_steinhardt_parameter(l=l)
 
     def get_volume(self):
-        """Get convex hull volume of each site"""
+        """Get convex hull volume of each site."""
         return np.array([h.volume for h in self.hull])
 
     def get_area(self):
-        """Get convex hull area of each site"""
+        """Get convex hull area of each site."""
         return np.array([h.area for h in self.hull])
 
 
