@@ -177,11 +177,27 @@ class Interstitials:
         return self.positions
 
     def get_variance(self):
-        """Get variance of neighboring distances."""
+        """
+        Get variance of neighboring distances. Since interstitial sites are mostly in symmetric
+        sites, the variance values tend to be small. In the case of fcc, both tetrahedral and
+        octahedral sites as well as tetrahedral sites in bcc should hvae the value of 0.
+
+        Returns:
+            (numpy.array (n,)) Variance values
+        """
         return np.std(self.neigh.distances, axis=-1)
 
     def get_distance(self, function_to_apply=np.min):
-        """Get per-position return values of a given function for the neighbors."""
+        """
+        Get per-position return values of a given function for the neighbors.
+
+        Args:
+            function_to_apply (function): Function to apply to the distance array. Default is
+                numpy.minimum
+
+        Returns:
+            (numpy.array (n,)) Function values on the distance array
+        """
         return function_to_apply(self.neigh.distances, axis=-1)
 
     def get_steinhardt_parameter(self, l):
@@ -195,11 +211,17 @@ class Interstitials:
         return self.neigh.get_steinhardt_parameter(l=l)
 
     def get_volume(self):
-        """Get convex hull volume of each site."""
+        """
+            Returns:
+                (numpy.array (n,)): Convex hull volume of each site.
+        """
         return np.array([h.volume for h in self.hull])
 
     def get_area(self):
-        """Get convex hull area of each site."""
+        """
+            Returns:
+                (numpy.array (n,)): Convex hull area of each site.
+        """
         return np.array([h.area for h in self.hull])
 
 
