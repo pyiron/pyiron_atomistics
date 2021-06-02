@@ -299,6 +299,16 @@ class VaspInteractive(VaspBase, GenericInteractive):
             self._check_incar_parameter(parameter="ISYM", value=0)
         super(VaspInteractive, self)._run_if_new(debug=debug)
 
+    def convergence_check(self):
+        """
+        We don't care about convergence for interactive jobs! Always returns True
+
+        Returns:
+            bool: Always True
+
+        """
+        return True
+
 
 class Output(OutputBase):
     """

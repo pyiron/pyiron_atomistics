@@ -175,6 +175,18 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
     copy_to.__doc__ = copy_to.__doc__.split('Returns:')[0] + \
                       f'Returns:\n            {__qualname__}: Object pointing to the new location.'
 
+    def create_pipeline(self, step_lst, delete_existing_job=False):
+        """
+        Create a job pipeline
+
+        Args:
+            step_lst (list): List of functions which create calculations
+
+        Returns:
+            FlexibleMaster:
+        """
+        return self.project.create_pipeline(job=self, step_lst=step_lst, delete_existing_job=delete_existing_job)
+
     def calc_minimize(
         self, ionic_energy_tolerance=0, ionic_force_tolerance=1e-4, e_tol=None, f_tol=None, max_iter=1000, pressure=None, n_print=1
     ):
