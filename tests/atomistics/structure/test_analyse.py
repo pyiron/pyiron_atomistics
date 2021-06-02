@@ -5,6 +5,7 @@
 import unittest
 import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 
 
 class TestAtoms(unittest.TestCase):
@@ -66,6 +67,46 @@ class TestAtoms(unittest.TestCase):
         basis = CrystalStructure('Al', bravais_basis='fcc', lattice_constants=4)
         self.assertEqual(len(basis.analyse.get_voronoi_vertices()), 12)
         self.assertEqual(len(basis.analyse.get_voronoi_vertices(distance_threshold=2)), 1)
+
+    def test_get_interstitials_bcc(self):
+        bcc = StructureFactory().ase_bulk('Fe', cubic=True)
+        x_octa_ref = bcc.positions[:,None,:]+0.5*bcc.cell[None,:,:]
+        x_octa_ref = x_octa_ref.reshape(-1, 3)
+        x_octa_ref = bcc.get_wrapped_coordinates(x_octa_ref)
+        x_octa = bcc.analyse.get_interstitials(num_neighbors=6)
+        self.assertEqual(len(x_octa), len(x_octa_ref))
+        self.assertAlmostEqual(
+            np.linalg.norm(x_octa_ref[:,None,:]-x_octa[None,:,:], axis=-1).min(axis=0).sum(), 0
+        )
+        x_tetra = bcc.analyse.get_interstitials(num_neighbors=4)
+        x_tetra_ref = bcc.get_wrapped_coordinates(bcc.analyse.get_voronoi_vertices())
+        self.assertEqual(len(x_tetra), len(x_tetra_ref))
+        self.assertAlmostEqual(
+            np.linalg.norm(x_tetra_ref[:,None,:]-x_tetra[None,:,:], axis=-1).min(axis=0).sum(), 0
+        )
+
+    def test_get_interstitials_fcc(self):
+        fcc = StructureFactory().ase_bulk('Al', cubic=True)
+        a_0 = fcc.cell[0,0]
+        x_tetra_ref = 0.25*a_0*np.ones(3)*np.array([[1],[-1]])+fcc.positions[:,None,:]
+        x_tetra_ref = fcc.get_wrapped_coordinates(x_tetra_ref).reshape(-1, 3)
+        x_tetra = fcc.analyse.get_interstitials(num_neighbors=4)
+        self.assertEqual(len(x_tetra), len(x_tetra_ref))
+        self.assertAlmostEqual(
+            np.linalg.norm(x_tetra_ref[:,None,:]-x_tetra[None,:,:], axis=-1).min(axis=0).sum(), 0
+        )
+        x_octa_ref = 0.5*a_0*np.array([1, 0, 0])+fcc.positions
+        x_octa_ref = fcc.get_wrapped_coordinates(x_octa_ref)
+        x_octa = fcc.analyse.get_interstitials(num_neighbors=6)
+        self.assertEqual(len(x_octa), len(x_octa_ref))
+        self.assertAlmostEqual(
+            np.linalg.norm(x_octa_ref[:,None,:]-x_octa[None,:,:], axis=-1).min(axis=0).sum(), 0
+        )
+        self.assertTrue(np.all(fcc.analyse.interstitials.get_area()>0))
+        self.assertTrue(np.all(fcc.analyse.interstitials.get_volume()>0))
+        self.assertTrue(np.all(fcc.analyse.interstitials.get_distance()>0))
+        self.assertTrue(np.all(fcc.analyse.interstitials.get_steinhardt_parameter(4)>0))
+        self.assertAlmostEqual(fcc.analyse.interstitials.get_variance().sum(), 0)
 
 
 if __name__ == "__main__":

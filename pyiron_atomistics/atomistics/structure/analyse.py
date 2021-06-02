@@ -279,6 +279,8 @@ class Analyse:
             - `get_variance()`
             - `get_distance()`
             - `get_steinhardt_parameter()`
+            - `get_volume()`
+            - `get_area()`
         """
         self._interstitials = Interstitials(
             structure=self._structure,
