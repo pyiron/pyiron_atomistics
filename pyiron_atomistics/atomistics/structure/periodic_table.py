@@ -355,13 +355,9 @@ class PeriodicTable(object):
             self.dataframe = self.dataframe.append(parent_element_data_series)
         else:
             self.dataframe.loc[new_element] = parent_element_data_series
-        if len(qwargs) != 0:
-            if "tags" not in self.dataframe.columns.values:
-                self.dataframe["tags"] = None
-            self.dataframe["tags"][new_element] = qwargs
         if use_parent_potential:
             self._parent_element = parent_element
-        return self.element(new_element)
+        return self.element(new_element, **qwargs)
 
     @staticmethod
     @lru_cache(maxsize=1)
