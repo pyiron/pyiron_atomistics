@@ -25,9 +25,11 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 pandas.options.mode.chained_assignment = None
 
+
 @lru_cache(maxsize=118)
 def element(*args):
     return mendeleev.element(*args)
+
 
 class ChemicalElement(object):
     """
@@ -272,7 +274,6 @@ class PeriodicTable(object):
         Returns element (ChemicalElement): a element with all its properties (Abbreviation, AtomicMass, Weight, ...)
 
         """
-
         stringtypes = str
         if isinstance(arg, stringtypes):
             if arg in self.dataframe.index.values:
@@ -287,8 +288,9 @@ class PeriodicTable(object):
         else:
             raise ValueError("type not defined: " + str(type(arg)))
 
-        if qwargs is not None and "tags" not in self.dataframe.columns.values:
-            self.dataframe["tags"] = None
+        if qwargs is not None:
+            if "tags" not in self.dataframe.columns.values:
+                self.dataframe["tags"] = None
             self.dataframe["tags"][self.el] = qwargs
 
         element = self.dataframe.loc[self.el]
