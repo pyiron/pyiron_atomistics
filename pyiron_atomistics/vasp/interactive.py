@@ -304,7 +304,8 @@ class VaspInteractive(VaspBase, GenericInteractive):
             bool: Always True
 
         """
-        return True
+        if self.server.run_mode.interactive:
+            return True
 
 
 class Output(OutputBase):
