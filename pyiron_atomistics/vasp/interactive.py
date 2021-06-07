@@ -306,6 +306,8 @@ class VaspInteractive(VaspBase, GenericInteractive):
         """
         if self.server.run_mode.interactive:
             return True
+        else:
+            return super(VaspBase).convergence_check()
 
 
 class Output(OutputBase):
