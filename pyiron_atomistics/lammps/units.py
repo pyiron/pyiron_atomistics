@@ -131,7 +131,19 @@ for key, val in _conversion_dict.items():
 
 class UnitConverter:
 
+    """
+    This is a class to aid conversion of physical quantities between LAMMPS and pyiron units.
+
+    """
+
     def __init__(self, units):
+        """
+        Initialize the class by specifiying the type of lammps units used
+
+        Args:
+            units (str): The type of LAMMPS units used (eg. metal, real, cgs, lj, etc.)
+
+        """
         self._units = units
         self._dict = LAMMPS_UNIT_CONVERSIONS[self._units]
 
@@ -139,12 +151,45 @@ class UnitConverter:
         return self._dict[quantity]
 
     def lammps_to_pyiron(self, quantity):
+        """
+        Get the conversion factor for a given physical quantity to be converted from LAMMPS to pyiron units
+
+        Args:
+            quantity (str): The physical quantity (must be a key in the dictionary `_conversion_dict`)
+
+        Returns:
+
+            float: The conversion factor
+
+        """
         return 1. / self[quantity]
 
     def pyiron_to_lammps(self, quantity):
+        """
+        Get the conversion factor for a given physical quantity to be converted from pyiron to LAMMPS units
+
+        Args:
+            quantity (str): The physical quantity (must be a key in the dictionary `_conversion_dict`)
+
+        Returns:
+
+            float: The conversion factor
+
+        """
         return self[quantity]
 
     def convert_array_to_pyiron_units(self, array, label):
+        """
+        Convert a labelled numpy array into pyiron units based on the physical quantity the label corresponds to
+
+        Args:
+            array (numpy.ndarray): The array to be converted
+            label (str): The label of the quantity (must be a key in the dictionary `quantity_dict`)
+
+        Returns:
+            numpy.ndarray: The array after conversion
+
+        """
         if label in quantity_dict.keys():
             return array * self.lammps_to_pyiron(quantity_dict[label])
         else:
