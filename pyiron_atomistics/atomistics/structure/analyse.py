@@ -91,7 +91,7 @@ class Interstitials:
             neighboring atom sites/vertices.
         5. Kick out points with large neighbor distance variances; this eliminates "irregular"
             shaped interstitials
-        6. Cluster interstitial candidates to avoir point overlapping.
+        6. Cluster interstitial candidates to avoid point overlapping.
 
     The interstitial sites can be obtained through `get_positions`
 
@@ -274,7 +274,7 @@ class Interstitials:
                 neighboring atom sites/vertices.
             5. Kick out points with large neighbor distance variances; this eliminates "irregular"
                 shaped interstitials
-            6. Cluster interstitial candidates to avoir point overlapping.
+            6. Cluster interstitial candidates to avoid point overlapping.
 
         In complex structures (i.e. grain boundary, dislocation etc.), the default parameters
         should be chosen properly. In order to see other quantities, which potentially
@@ -298,7 +298,7 @@ class Interstitials:
         """
         Get variance of neighboring distances. Since interstitial sites are mostly in symmetric
         sites, the variance values tend to be small. In the case of fcc, both tetrahedral and
-        octahedral sites as well as tetrahedral sites in bcc should hvae the value of 0.
+        octahedral sites as well as tetrahedral sites in bcc should have the value of 0.
 
         Returns:
             (numpy.array (n,)) Variance values
@@ -412,7 +412,7 @@ class Analyse:
                 neighboring atom sites/vertices.
             5. Kick out points with large neighbor distance variances; this eliminates "irregular"
                 shaped interstitials
-            6. Cluster interstitial candidates to avoir point overlapping.
+            6. Cluster interstitial candidates to avoid point overlapping.
 
         In complex structures (i.e. grain boundary, dislocation etc.), the default parameters
         should be chosen properly. In order to see other quantities, which potentially
@@ -558,8 +558,8 @@ class Analyse:
                 - total : return number of atoms belonging to each structure
                 - numeric : return a per atom list of numbers- 0 for unknown,
                     1 fcc, 2 hcp, 3 bcc and 4 icosa
-                - str : return a per atom string of sructures
-            ovito_compatibility(bool): use ovito compatiblity mode
+                - str : return a per atom string of structures
+            ovito_compatibility(bool): use ovito compatibility mode
 
         Returns:
             (depends on `mode`)
@@ -588,8 +588,8 @@ class Analyse:
                 - total : return number of atoms belonging to each structure
                 - numeric : return a per atom list of numbers- 0 for unknown,
                     1 fcc, 2 hcp, 3 bcc and 4 icosa
-                - str : return a per atom string of sructures
-            ovito_compatibility(bool): use ovito compatiblity mode
+                - str : return a per atom string of structures
+            ovito_compatibility(bool): use ovito compatibility mode
 
         Returns:
             (depends on `mode`)
@@ -607,7 +607,7 @@ class Analyse:
         Args:
             epsilon (float): displacement to add to avoid wrapping of atoms at borders
             distance_threshold (float): distance below which two vertices are considered as one.
-                Agglomerative clustering algorith (sklearn) is employed. Final positions are given
+                Agglomerative clustering algorithm (sklearn) is employed. Final positions are given
                 as the average positions of clusters.
             width_buffer (float): width of the layer to be added to account for pbc.
 
