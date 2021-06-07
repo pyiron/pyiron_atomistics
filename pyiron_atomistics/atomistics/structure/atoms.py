@@ -1185,6 +1185,23 @@ class Atoms(ASEAtoms):
         xyz = self.get_scaled_positions(wrap=False)
         return xyz[:, 0], xyz[:, 1], xyz[:, 2]
 
+    def get_vertical_length(self, norm_order=2):
+        """
+        Return the length of the cell in each direction projected on the vector vertical to the
+        plane.
+
+        Example:
+
+        For a cell `[[1, 1, 0], [0, 1, 0], [0, 0, 1]]`, this function returns
+        `[[1, 0, 0], [0, 0.70710678, 0], [0, 0, 1]]` because the first cell vector is projected on
+        the vector vertical to the yz-plane (as well as the y component on the xz-plane).
+        """
+        return np.linalg.det(self.cell)/np.linalg.norm(
+            np.cross(np.roll(self.cell, -1, axis=0), np.roll(self.cell, 1, axis=0)),
+            axis=-1,
+            ord=norm_order,
+        )
+
     def get_extended_positions(self, width, return_indices=False, norm_order=2, positions=None):
         """
         Get all atoms in the boundary around the supercell which have a distance
@@ -1212,12 +1229,7 @@ class Atoms(ASEAtoms):
             if return_indices:
                 return positions, np.arange(len(positions))
             return positions
-        width /= np.linalg.det(self.cell)
-        width *= np.linalg.norm(
-            np.cross(np.roll(self.cell, -1, axis=0), np.roll(self.cell, 1, axis=0)),
-            axis=-1,
-            ord=norm_order,
-        )
+        width /= self.get_vertical_length(norm_order=norm_order)
         rep = 2*np.ceil(width).astype(int)*self.pbc+1
         rep = [np.arange(r)-int(r/2) for r in rep]
         meshgrid = np.meshgrid(rep[0], rep[1], rep[2])
