@@ -272,7 +272,8 @@ class Interstitials:
             3. Initialize neighbor environment using `get_neighbors`
             4. Shift interstitial candidates to the nearest symmetric points with respect to the
                 neighboring atom sites/vertices.
-            5. Kick out points with large neighbor distance variances
+            5. Kick out points with large neighbor distance variances; this eliminates "irregular"
+                shaped interstitials
             6. Cluster interstitial candidates to avoir point overlapping.
 
         In complex structures (i.e. grain boundary, dislocation etc.), the default parameters
@@ -409,7 +410,8 @@ class Analyse:
             3. Initialize neighbor environment using `get_neighbors`
             4. Shift interstitial candidates to the nearest symmetric points with respect to the
                 neighboring atom sites/vertices.
-            5. Kick out points with large neighbor distance variances
+            5. Kick out points with large neighbor distance variances; this eliminates "irregular"
+                shaped interstitials
             6. Cluster interstitial candidates to avoir point overlapping.
 
         In complex structures (i.e. grain boundary, dislocation etc.), the default parameters
