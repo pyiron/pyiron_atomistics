@@ -609,8 +609,7 @@ class LammpsBase(AtomisticGenericJob):
                 # This is a hack for backward comparability
                 for k, v in df.items():
                     if k in generic_keys_lst:
-                        array_quantity = np.array(v)
-                        hdf_output[k] = uc.convert_array_to_pyiron_units(array_quantity, label=k)
+                        hdf_output[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
                 # Store pressures as numpy arrays
                 for key, val in pressure_dict.items():
                     hdf_output[key] = uc.convert_array_to_pyiron_units(val, label=key)
