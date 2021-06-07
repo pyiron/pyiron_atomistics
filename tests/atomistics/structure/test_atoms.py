@@ -1037,7 +1037,6 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(np.array_equal(np.sort(bonds[0]['Al'][0]),
                         np.sort(neigh.indices[0, neigh.shells[0]==1])))
 
-
     def test_get_symmetr(self):
         cell = 2.2 * np.identity(3)
         Al = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell)
@@ -1196,6 +1195,17 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(x[0, 0], 0)
         x = basis_Fe.get_spherical_coordinates()
         self.assertAlmostEqual(x[1, 2], 0.25*np.pi)
+
+    def test_get_initial_magnetic_moments(self):
+        pt = PeriodicTable()
+        pt.add_element(parent_element="Fe", new_element="Fe_up", spin="0.5")
+        Fe_up = pt.element("Fe_up")
+        basis = Atoms(
+            elements=[Fe_up, Fe_up],
+            scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+            cell=2.6 * np.eye(3),
+        )
+        self.assertTrue(np.array_equal(basis.get_initial_magnetic_moments(), ["0.5"] * 2))
 
     def test_occupy_lattice(self):
         basis_Mg = CrystalStructure("Mg", bravais_basis="fcc", lattice_constant=4.2)
