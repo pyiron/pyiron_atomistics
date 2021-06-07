@@ -467,7 +467,6 @@ class LammpsBase(AtomisticGenericJob):
             ]
             indices = [indices_i.tolist() for indices_i in h5md["/particles/all/indices/value"]]
         with self.project_hdf5.open("output/generic") as h5_file:
-            # Store after converting to pyiron units
             h5_file["forces"] = uc.convert_array_to_pyiron_units(np.array(forces), "forces")
             h5_file["positions"] = uc.convert_array_to_pyiron_units(np.array(positions), "positions")
             h5_file["steps"] = uc.convert_array_to_pyiron_units(np.array(steps), "steps")
@@ -610,7 +609,6 @@ class LammpsBase(AtomisticGenericJob):
                 # This is a hack for backward comparability
                 for k, v in df.items():
                     if k in generic_keys_lst:
-                        # Convert to pyiron units
                         array_quantity = np.array(v)
                         hdf_output[k] = uc.convert_array_to_pyiron_units(array_quantity, label=k)
                 # Store pressures as numpy arrays
@@ -1012,7 +1010,6 @@ class LammpsBase(AtomisticGenericJob):
                 output[kk.replace('c_', '')] = np.array([cc[kk] for cc in content], dtype=float)
             with self.project_hdf5.open("output/generic") as hdf_output:
                 for k, v in output.items():
-                    # Convert to pyiron units
                     hdf_output[k] = uc.convert_array_to_pyiron_units(v, label=k)
         else:
             warnings.warn("LAMMPS warning: No dump.out output file found.")
