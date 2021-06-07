@@ -130,7 +130,6 @@ for key, val in _conversion_dict.items():
 
 
 class UnitConverter:
-
     """This is a class to aid conversion of physical quantities between LAMMPS and pyiron units."""
 
     def __init__(self, units):
