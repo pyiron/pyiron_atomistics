@@ -30,6 +30,9 @@ s = Settings()
 
 def get_mean_positions(positions, cell, pbc, labels=None):
     """
+    This function calculates the average position(-s) across periodic boundary conditions. If the
+    labels are specified, the positions are grouped accordingly.
+
     Args:
         positions (numpy.ndarray (n, 3)): Coordinates to be averaged
         cell (numpy.ndarray (3, 3)): Cell dimensions
@@ -39,9 +42,6 @@ def get_mean_positions(positions, cell, pbc, labels=None):
 
     Returns:
         (numpy.ndarray): mean positions
-
-    This function calculates the average position(-s) across periodic boundary conditions. If the
-    labels are specified, the positions are grouped accordingly.
     """
     if labels is None:
         labels = np.zeros(len(positions)).astype(int)
@@ -89,10 +89,11 @@ class Interstitials:
         3. Initialize neighbor environment using `get_neighbors`
         4. Shift interstitial candidates to the nearest symmetric points with respect to the
             neighboring atom sites/vertices.
-        5. Kick out points with large neighbor distance variances
+        5. Kick out points with large neighbor distance variances; this eliminates "irregular"
+            shaped interstitials
         6. Cluster interstitial candidates to avoir point overlapping.
 
-    The interstitial sites can be obtained through `get_interstitials`
+    The interstitial sites can be obtained through `get_positions`
 
     In complex structures (i.e. grain boundary, dislocation etc.), the default parameters
     should be chosen properly. In order to see other quantities, which potentially
@@ -131,6 +132,10 @@ class Interstitials:
 
     @property
     def num_neighbors(self):
+        """
+        Number of atoms (vertices) to consider for each interstitial atom. By definition,
+        tetrahedral sites should have 4 and octahedral sites 6.
+        """
         return self._num_neighbors
 
     @num_neighbors.setter
@@ -144,6 +149,12 @@ class Interstitials:
 
     @property
     def neigh(self):
+        """
+        Neighborhood information of each interstitial candidate and their surrounding atoms. E.g.
+        `class.neigh.distances[0][0]` gives the distance from the first interstitial candidate to
+        its nearest neighboring atoms. The functionalities of `neigh` follow those of
+        `pyiron_atomistics.structure.atoms.neighbors`.
+        """
         if self._neigh is None:
             self._neigh = self.structure.get_neighborhood(
                 self.positions, num_neighbors=self.num_neighbors
@@ -152,6 +163,26 @@ class Interstitials:
 
     @property
     def positions(self):
+        """
+        Positions of the interstitial candidates (and not those of the atoms).
+
+        IMPORTANT: Do not set positions via numpy setter, i.e.
+
+        BAD:
+        ```
+        >>> neigh.positions[0][0] = x
+        ```
+
+        GOOD:
+        ```
+        >>> positions = neigh.positions
+        >>> positions[0][0] = x
+        >>> neigh.positions = positions
+        ```
+
+        This is because in the first case related properties (most importantly the neighborhood
+        information) is not updated, which might lead to inconsistencies.
+        """
         return self._positions
 
     @positions.setter
@@ -161,6 +192,10 @@ class Interstitials:
 
     @property
     def hull(self):
+        """
+        Convex hull of each atom. It is mainly used for the volume and area calculation of each
+        interstitial candidate. For more info, see `get_volume` and `get_area`.
+        """
         if self._hull is None:
             self._hull = [ConvexHull(v) for v in self.neigh.vecs]
         return self._hull
@@ -196,7 +231,7 @@ class Interstitials:
             self.positions, self.structure.cell, self.structure.pbc, labels
         )
 
-    def get_interstitials(
+    def get_positions(
         self,
         num_neighbors,
         variance_buffer=0.01,
@@ -292,15 +327,15 @@ class Interstitials:
 
     def get_volume(self):
         """
-            Returns:
-                (numpy.array (n,)): Convex hull volume of each site.
+        Returns:
+            (numpy.array (n,)): Convex hull volume of each site.
         """
         return np.array([h.volume for h in self.hull])
 
     def get_area(self):
         """
-            Returns:
-                (numpy.array (n,)): Convex hull area of each site.
+        Returns:
+            (numpy.array (n,)): Convex hull area of each site.
         """
         return np.array([h.area for h in self.hull])
 
@@ -394,7 +429,7 @@ class Analyse:
         )
         if initialize_only:
             return self.interstitials
-        return self._interstitials.get_interstitials(
+        return self._interstitials.get_positions(
             num_neighbors=num_neighbors,
             variance_buffer=variance_buffer,
             n_iterations=n_iterations,
