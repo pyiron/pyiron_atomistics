@@ -287,12 +287,10 @@ class PeriodicTable(object):
                 self.el = self.dataframe.iloc[index].name
         else:
             raise ValueError("type not defined: " + str(type(arg)))
-
-        if qwargs is not None:
+        if len(qwargs.values()) > 0:
             if "tags" not in self.dataframe.columns.values:
                 self.dataframe["tags"] = None
             self.dataframe["tags"][self.el] = qwargs
-
         element = self.dataframe.loc[self.el]
         # element['CovalentRadius'] /= 100
         return ChemicalElement(element)
