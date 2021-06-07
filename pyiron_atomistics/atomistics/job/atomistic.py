@@ -2,16 +2,16 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from ase.io import write as ase_write
 import copy
+import warnings
+from functools import wraps
 
 import numpy as np
-import warnings
+from ase.io import write as ase_write
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
-from functools import wraps
 
 try:
     from pyiron_base import ProjectGUI
@@ -174,6 +174,18 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         return new_generic_job
     copy_to.__doc__ = copy_to.__doc__.split('Returns:')[0] + \
                       f'Returns:\n            {__qualname__}: Object pointing to the new location.'
+
+    def create_pipeline(self, step_lst, delete_existing_job=False):
+        """
+        Create a job pipeline
+
+        Args:
+            step_lst (list): List of functions which create calculations
+
+        Returns:
+            FlexibleMaster:
+        """
+        return self.project.create_pipeline(job=self, step_lst=step_lst, delete_existing_job=delete_existing_job)
 
     def calc_minimize(
         self, ionic_energy_tolerance=0, ionic_force_tolerance=1e-4, e_tol=None, f_tol=None, max_iter=1000, pressure=None, n_print=1
@@ -408,7 +420,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         if isinstance(new_ham, GenericMaster) and not isinstance(self, GenericMaster):
             new_child = self.restart(job_name=None, job_type=None)
             new_ham.append(new_child)
-        new_ham.structure = self.get_structure(iteration_step=-1)
+        new_ham.structure = self.get_structure(frame=-1)
         if new_ham.structure is None:
             new_ham.structure = self.structure.copy()
         new_ham._generic_input['structure'] = 'atoms'

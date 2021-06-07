@@ -2,6 +2,7 @@
 Setuptools based setup module
 """
 from setuptools import setup, find_packages
+
 import versioneer
 
 setup(
@@ -39,7 +40,7 @@ setup(
         'numpy==1.20.3',
         'pandas==1.2.4',
         'phonopy==2.9.3',
-        'pyiron_base==0.2.13',
+        'pyiron_base==0.2.15',
         'pymatgen==2022.0.8',
         'scipy==1.6.3',
         'seekpath==2.0.1',
