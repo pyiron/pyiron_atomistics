@@ -131,10 +131,7 @@ for key, val in _conversion_dict.items():
 
 class UnitConverter:
 
-    """
-    This is a class to aid conversion of physical quantities between LAMMPS and pyiron units.
-
-    """
+    """This is a class to aid conversion of physical quantities between LAMMPS and pyiron units."""
 
     def __init__(self, units):
         """
@@ -148,6 +145,15 @@ class UnitConverter:
         self._dict = LAMMPS_UNIT_CONVERSIONS[self._units]
 
     def __getitem__(self, quantity):
+        """
+        Get quantity from `_dict`
+
+        Args:
+            quantity (str): The physical quantity
+
+        Returns:
+            float: The conversion factor
+        """
         return self._dict[quantity]
 
     def lammps_to_pyiron(self, quantity):
