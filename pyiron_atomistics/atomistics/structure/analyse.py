@@ -42,12 +42,17 @@ def get_mean_positions(positions, cell, pbc, labels):
     Returns:
         (numpy.ndarray): mean positions
     """
+    # Translate labels to integer enumeration (0, 1, 2, ... etc.) and get their counts
     _, labels, counts = np.unique(labels, return_inverse=True, return_counts=True)
+    # Get reference point for each unique label
     mean_positions = positions[np.unique(labels, return_index=True)[1]]
+    # Get displacement vectors from reference points to all other points for the same labels
     all_positions = positions-mean_positions[labels]
+    # Account for pbc
     all_positions = np.einsum('ji,nj->ni', np.linalg.inv(cell), all_positions)
     all_positions -= np.rint(all_positions)[:,pbc]
     all_positions = np.einsum('ji,nj->ni', cell, all_positions)
+    # Add average displacement vector of each label to the reference point
     np.add.at(mean_positions, labels, (all_positions.T/counts[labels]).T)
     return mean_positions
 
