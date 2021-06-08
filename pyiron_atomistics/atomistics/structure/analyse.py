@@ -140,7 +140,7 @@ class Interstitials:
             n_iterations (int): Number of iterations for the shifting of the candidate positions
                 to the nearest symmetric positions with respect to `num_neighbors`. In most of the
                 cases, 1 is enough. In some rare cases (notably tetrahedral sites in bcc), it
-                should be at least 2. It is unlikely that it has to be larger than 2. Set 
+                should be at least 2. It is unlikely that it has to be larger than 2. Set
                 `n_iterations` to 0 if no shifting should take place.
             eps (float): Distance below which two interstitial candidate sites to be considered as
                 one site after the symmetrization of the points. Set `eps` to 0 if clustering should
@@ -170,7 +170,7 @@ class Interstitials:
         eps=0.1
     ):
         if use_voronoi:
-            self.positions = structure.analyse.get_voronoi_vertices()
+            self.positions = self.structure.analyse.get_voronoi_vertices()
         else:
             self.positions = self._create_gridpoints(
                 n_gridpoints_per_angstrom=n_gridpoints_per_angstrom
