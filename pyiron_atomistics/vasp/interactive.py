@@ -295,7 +295,7 @@ class VaspInteractive(VaspBase, GenericInteractive):
             self._check_incar_parameter(parameter="INTERACTIVE", value=True)
             self._check_incar_parameter(parameter="IBRION", value=-1)
             self._check_incar_parameter(parameter="POTIM", value=0.0)
-            self._check_incar_parameter(parameter="NSW", value=1000)
+            self._check_incar_parameter(parameter="NSW", value=np.iinfo(np.int32).max - 1)
             self._check_incar_parameter(parameter="ISYM", value=0)
         super(VaspInteractive, self)._run_if_new(debug=debug)
 
