@@ -50,7 +50,7 @@ def get_mean_positions(positions, cell, pbc, labels):
     all_positions = positions-mean_positions[labels]
     # Account for pbc
     all_positions = np.einsum('ji,nj->ni', np.linalg.inv(cell), all_positions)
-    all_positions -= np.rint(all_positions)[:,pbc]
+    all_positions[:,pbc] -= np.rint(all_positions)[:,pbc]
     all_positions = np.einsum('ji,nj->ni', cell, all_positions)
     # Add average displacement vector of each label to the reference point
     np.add.at(mean_positions, labels, (all_positions.T/counts[labels]).T)
