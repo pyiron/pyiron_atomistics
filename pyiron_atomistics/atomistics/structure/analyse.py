@@ -80,7 +80,7 @@ def get_average_of_unique_labels(labels, values):
 
 class Interstitials:
     """
-    Class to locate interstitial sites
+    Class to search for interstitial sites
 
     This class internally does the following steps:
 
@@ -176,14 +176,14 @@ class Interstitials:
 
         BAD:
         ```
-        >>> neigh.positions[0][0] = x
+        >>> Interstitials.neigh.positions[0][0] = x
         ```
 
         GOOD:
         ```
-        >>> positions = neigh.positions
+        >>> positions = Interstitials.neigh.positions
         >>> positions[0][0] = x
-        >>> neigh.positions = positions
+        >>> Interstitialsneigh.positions = positions
         ```
 
         This is because in the first case related properties (most importantly the neighborhood
@@ -263,8 +263,6 @@ class Interstitials:
                 should be at least 2. It is unlikely that it has to be larger than 2.
             eps (float): Distance below which two interstitial candidate sites to be considered as
                 one site after the symmetrization of the points.
-            initialize_only (bool): Only initialize the grid points/Voronoi points and do not
-                initiate the symmetrization of interstitial candidate sites.
 
         Returns:
             ( (n, 3) numpy.ndarray) Interstitial candidate positions.
@@ -374,7 +372,6 @@ class Analyse:
         variance_buffer=0.01,
         n_iterations=2,
         eps=0.1,
-        initialize_only=False
     ):
         """
         Get potential interstitial positions
@@ -401,8 +398,6 @@ class Analyse:
                 should be at least 2. It is unlikely that it has to be larger than 2.
             eps (float): Distance below which two interstitial candidate sites to be considered as
                 one site after the symmetrization of the points.
-            initialize_only (bool): Only initialize the grid points/Voronoi points and do not
-                initiate the symmetrization of interstitial candidate sites.
 
         Returns:
             ( (n, 3) numpy.ndarray) Interstitial candidate positions.
@@ -437,8 +432,6 @@ class Analyse:
             min_distance=min_distance,
             use_voronoi=use_voronoi,
         )
-        if initialize_only:
-            return self.interstitials
         return self._interstitials.get_positions(
             num_neighbors=num_neighbors,
             variance_buffer=variance_buffer,

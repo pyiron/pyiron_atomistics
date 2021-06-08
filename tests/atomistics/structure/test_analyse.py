@@ -69,7 +69,7 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(len(basis.analyse.get_voronoi_vertices(distance_threshold=2)), 1)
 
     def test_get_interstitials_bcc(self):
-        bcc = StructureFactory().ase_bulk('Fe', cubic=True)
+        bcc = StructureFactory().ase.bulk('Fe', cubic=True)
         x_octa_ref = bcc.positions[:,None,:]+0.5*bcc.cell[None,:,:]
         x_octa_ref = x_octa_ref.reshape(-1, 3)
         x_octa_ref = bcc.get_wrapped_coordinates(x_octa_ref)
@@ -86,7 +86,7 @@ class TestAtoms(unittest.TestCase):
         )
 
     def test_get_interstitials_fcc(self):
-        fcc = StructureFactory().ase_bulk('Al', cubic=True)
+        fcc = StructureFactory().ase.bulk('Al', cubic=True)
         a_0 = fcc.cell[0,0]
         x_tetra_ref = 0.25*a_0*np.ones(3)*np.array([[1],[-1]])+fcc.positions[:,None,:]
         x_tetra_ref = fcc.get_wrapped_coordinates(x_tetra_ref).reshape(-1, 3)
@@ -102,11 +102,26 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(
             np.linalg.norm(x_octa_ref[:,None,:]-x_octa[None,:,:], axis=-1).min(axis=0).sum(), 0
         )
-        self.assertTrue(np.allclose(fcc.analyse.interstitials.get_areas(), a_0**2*np.sqrt(3)))
-        self.assertTrue(np.allclose(fcc.analyse.interstitials.get_volumes(), a_0**3/6))
-        self.assertTrue(np.allclose(fcc.analyse.interstitials.get_distances(), a_0/2))
-        self.assertTrue(np.all(fcc.analyse.interstitials.get_steinhardt_parameters(4)>0))
-        self.assertAlmostEqual(fcc.analyse.interstitials.get_variances().sum(), 0)
+        self.assertTrue(
+            np.allclose(fcc.analyse.interstitials.get_areas(), a_0**2*np.sqrt(3)),
+            msg='Convex hull area comparison with analytical value failed'
+        )
+        self.assertTrue(
+            np.allclose(fcc.analyse.interstitials.get_volumes(), a_0**3/6),
+            msg='Convex hull volume comparison with analytical value failed'
+        )
+        self.assertTrue(
+            np.allclose(fcc.analyse.interstitials.get_distances(), a_0/2),
+            msg='Distance comparison with analytical value failed'
+        )
+        self.assertTrue(
+            np.all(fcc.analyse.interstitials.get_steinhardt_parameters(4)>0),
+            msg='Illegal Steinhardt parameter'
+        )
+        self.assertAlmostEqual(
+            fcc.analyse.interstitials.get_variances().sum(), 0,
+            msg='Distance variance in FCC must be 0'
+        )
 
 
 if __name__ == "__main__":
