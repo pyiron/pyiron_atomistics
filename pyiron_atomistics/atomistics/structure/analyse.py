@@ -253,12 +253,10 @@ class Interstitials:
 
     def _create_gridpoints(self, n_gridpoints_per_angstrom=5):
         cell = self.structure.get_vertical_length()
-        gridpoints = (n_gridpoints_per_angstrom*cell).astype(int)
-        positions = [np.linspace(0, 1, gridpoints[i], endpoint=False) for i in range(3)]
-        positions = np.meshgrid(*positions)
-        return np.einsum(
-            'ji,nj->ni', self.structure.cell, np.stack(positions, axis=-1).reshape(-1, 3)
-        )
+        n_points = (n_gridpoints_per_angstrom*cell).astype(int)
+        positions = np.meshgrid(*[np.linspace(0, 1, n_points[i], endpoint=False) for i in range(3)])
+        positions = np.stack(positions, axis=-1).reshape(-1, 3)
+        return np.einsum('ji,nj->ni', self.structure.cell, positions)
 
     def _remove_too_close(self, min_distance=1):
         neigh = self.structure.get_neighborhood(self.positions, num_neighbors=1)
