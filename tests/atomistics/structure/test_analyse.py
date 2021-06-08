@@ -102,11 +102,11 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(
             np.linalg.norm(x_octa_ref[:,None,:]-x_octa[None,:,:], axis=-1).min(axis=0).sum(), 0
         )
-        self.assertTrue(np.allclose(fcc.analyse.interstitials.get_area(), a_0**2*np.sqrt(3)))
-        self.assertTrue(np.allclose(fcc.analyse.interstitials.get_volume(), a_0**3/6))
-        self.assertTrue(np.allclose(fcc.analyse.interstitials.get_distance(), a_0/2))
-        self.assertTrue(np.all(fcc.analyse.interstitials.get_steinhardt_parameter(4)>0))
-        self.assertAlmostEqual(fcc.analyse.interstitials.get_variance().sum(), 0)
+        self.assertTrue(np.allclose(fcc.analyse.interstitials.get_areas(), a_0**2*np.sqrt(3)))
+        self.assertTrue(np.allclose(fcc.analyse.interstitials.get_volumes(), a_0**3/6))
+        self.assertTrue(np.allclose(fcc.analyse.interstitials.get_distances(), a_0/2))
+        self.assertTrue(np.all(fcc.analyse.interstitials.get_steinhardt_parameters(4)>0))
+        self.assertAlmostEqual(fcc.analyse.interstitials.get_variances().sum(), 0)
 
 
 if __name__ == "__main__":

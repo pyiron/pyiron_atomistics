@@ -80,7 +80,7 @@ def get_average_of_unique_labels(labels, values):
 
 class Interstitials:
     """
-    Class to analyse interstitial sites
+    Class to locate interstitial sites
 
     This class internally does the following steps:
 
@@ -102,11 +102,11 @@ class Interstitials:
     characterize interstitial sites, see the following functions from
     `structure.analyse.interstitials`:
 
-        - `get_variance()`
-        - `get_distance()`
-        - `get_steinhardt_parameter()`
-        - `get_volume()`
-        - `get_area()`
+        - `get_variances()`
+        - `get_distances()`
+        - `get_steinhardt_parameters()`
+        - `get_volumes()`
+        - `get_areas()`
     """
     def __init__(self, structure, n_gridpoints_per_angstrom=5, min_distance=1, use_voronoi=False):
         """
@@ -121,6 +121,10 @@ class Interstitials:
             use_voronoi (bool): Use Voronoi vertices for the initial interstitial candidate
                 positions instead of grid points.
         """
+        self._num_neighbors = None
+        self._hull = None
+        self._neigh = None
+        self._positions = None
         self.min_distance = min_distance
         self.structure = structure
         if use_voronoi:
@@ -196,7 +200,7 @@ class Interstitials:
     def hull(self):
         """
         Convex hull of each atom. It is mainly used for the volume and area calculation of each
-        interstitial candidate. For more info, see `get_volume` and `get_area`.
+        interstitial candidate. For more info, see `get_volumes` and `get_areas`.
         """
         if self._hull is None:
             self._hull = [ConvexHull(v) for v in self.neigh.vecs]
@@ -213,16 +217,16 @@ class Interstitials:
 
     def _remove_too_close(self):
         neigh = self.structure.get_neighborhood(self.positions, num_neighbors=1)
-        self.positions = self.positions[neigh.distances.flatten()>self.min_distance]
+        self.positions = self.positions[neigh.distances.flatten() > self.min_distance]
 
     def _set_interstitials_to_high_symmetry_points(self):
         self.positions = self.positions+np.mean(self.neigh.vecs, axis=-2)
         self.positions = self.structure.get_wrapped_coordinates(self.positions)
 
     def _kick_out_points(self, variance_buffer=0.01):
-        variance = self.get_variance()
+        variance = self.get_variances()
         min_var = variance.min()
-        self.positions = self.positions[variance<min_var+variance_buffer]
+        self.positions = self.positions[variance < min_var+variance_buffer]
 
     def _cluster_points(self, eps=0.1):
         extended_positions, indices = self.structure.get_extended_positions(
@@ -283,11 +287,11 @@ class Interstitials:
         characterize interstitial sites, see the following functions from
         `structure.analyse.interstitials`:
 
-            - `get_variance()`
-            - `get_distance()`
-            - `get_steinhardt_parameter()`
-            - `get_volume()`
-            - `get_area()`
+            - `get_variances()`
+            - `get_distances()`
+            - `get_steinhardt_parameters()`
+            - `get_volumes()`
+            - `get_areas()`
         """
         self.num_neighbors = num_neighbors
         for _ in range(n_iterations):
@@ -296,7 +300,7 @@ class Interstitials:
         self._cluster_points(eps=eps)
         return self.positions
 
-    def get_variance(self):
+    def get_variances(self):
         """
         Get variance of neighboring distances. Since interstitial sites are mostly in symmetric
         sites, the variance values tend to be small. In the case of fcc, both tetrahedral and
@@ -307,7 +311,7 @@ class Interstitials:
         """
         return np.std(self.neigh.distances, axis=-1)
 
-    def get_distance(self, function_to_apply=np.min):
+    def get_distances(self, function_to_apply=np.min):
         """
         Get per-position return values of a given function for the neighbors.
 
@@ -320,7 +324,7 @@ class Interstitials:
         """
         return function_to_apply(self.neigh.distances, axis=-1)
 
-    def get_steinhardt_parameter(self, l):
+    def get_steinhardt_parameters(self, l):
         """
         Args:
             l (int/numpy.array): Order of Steinhardt parameter
@@ -330,14 +334,14 @@ class Interstitials:
         """
         return self.neigh.get_steinhardt_parameter(l=l)
 
-    def get_volume(self):
+    def get_volumes(self):
         """
         Returns:
             (numpy.array (n,)): Convex hull volume of each site.
         """
         return np.array([h.volume for h in self.hull])
 
-    def get_area(self):
+    def get_areas(self):
         """
         Returns:
             (numpy.array (n,)): Convex hull area of each site.
@@ -421,11 +425,11 @@ class Analyse:
         characterize interstitial sites, see the following functions from
         `structure.analyse.interstitials`:
 
-            - `get_variance()`
-            - `get_distance()`
-            - `get_steinhardt_parameter()`
-            - `get_volume()`
-            - `get_area()`
+            - `get_variances()`
+            - `get_distances()`
+            - `get_steinhardt_parameters()`
+            - `get_volumes()`
+            - `get_areas()`
         """
         self._interstitials = Interstitials(
             structure=self._structure,
