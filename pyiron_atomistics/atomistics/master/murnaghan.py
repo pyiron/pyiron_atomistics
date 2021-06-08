@@ -5,12 +5,12 @@
 from __future__ import print_function
 
 import numpy as np
+import scipy.constants
 import scipy.integrate
 import scipy.optimize as spy
-import scipy.constants
-import warnings
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
+
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 from pyiron_base import JobGenerator
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
@@ -663,7 +663,7 @@ class Murnaghan(AtomisticParallelMaster):
 
     def _final_struct_to_hdf(self):
         with self._hdf5.open("output") as hdf5:
-            structure = self.get_structure(iteration_step=-1)
+            structure = self.get_structure(frame=-1)
             if not isinstance(structure, Atoms):
                 structure = ase_to_pyiron(structure)
             structure.to_hdf(hdf5)
