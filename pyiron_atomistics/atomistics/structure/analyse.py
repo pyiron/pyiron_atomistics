@@ -4,7 +4,6 @@
 
 import numpy as np
 from pyiron_base import Settings
-# TODO: Handle sklearn in dependencies or wrap in import warning
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi
