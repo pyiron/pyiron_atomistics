@@ -1185,7 +1185,27 @@ class Atoms(ASEAtoms):
         xyz = self.get_scaled_positions(wrap=False)
         return xyz[:, 0], xyz[:, 1], xyz[:, 2]
 
-    def get_extended_positions(self, width, return_indices=False, norm_order=2):
+    def get_vertical_length(self, norm_order=2):
+        """
+        Return the length of the cell in each direction projected on the vector vertical to the
+        plane.
+
+        Example:
+
+        For a cell `[[1, 1, 0], [0, 1, 0], [0, 0, 1]]`, this function returns
+        `[[1, 0, 0], [0, 0.70710678, 0], [0, 0, 1]]` because the first cell vector is projected on
+        the vector vertical to the yz-plane (as well as the y component on the xz-plane).
+
+        Args:
+            norm_order (int): Norm order (cf. numpy.linalg.norm)
+        """
+        return np.linalg.det(self.cell)/np.linalg.norm(
+            np.cross(np.roll(self.cell, -1, axis=0), np.roll(self.cell, 1, axis=0)),
+            axis=-1,
+            ord=norm_order,
+        )
+
+    def get_extended_positions(self, width, return_indices=False, norm_order=2, positions=None):
         """
         Get all atoms in the boundary around the supercell which have a distance
         to the supercell boundary of less than dist
@@ -1196,6 +1216,8 @@ class Atoms(ASEAtoms):
             return_indices (bool): Whether or not return the original indices of the appended
                 atoms.
             norm_order (float): Order of Lp-norm.
+            positions (numpy.ndarray): Positions for which the extended positions are returned.
+                If None, the atom positions of the structure are used.
 
         Returns:
             numpy.ndarray: Positions of all atoms in the extended box, indices of atoms in
@@ -1204,28 +1226,25 @@ class Atoms(ASEAtoms):
         """
         if width<0:
             raise ValueError('Invalid width')
+        if positions is None:
+            positions = self.positions
         if width==0:
             if return_indices:
-                return self.positions, np.arange(len(self))
-            return self.positions
-        width /= np.linalg.det(self.cell)
-        width *= np.linalg.norm(
-            np.cross(np.roll(self.cell, -1, axis=0), np.roll(self.cell, 1, axis=0)),
-            axis=-1,
-            ord=norm_order,
-        )
+                return positions, np.arange(len(positions))
+            return positions
+        width /= self.get_vertical_length(norm_order=norm_order)
         rep = 2*np.ceil(width).astype(int)*self.pbc+1
         rep = [np.arange(r)-int(r/2) for r in rep]
         meshgrid = np.meshgrid(rep[0], rep[1], rep[2])
         meshgrid = np.stack(meshgrid, axis=-1).reshape(-1, 3)
         v_repeated = np.einsum('ni,ij->nj', meshgrid, self.cell)
-        v_repeated = v_repeated[:,np.newaxis,:]+self.positions[np.newaxis,:,:]
+        v_repeated = v_repeated[:,np.newaxis,:]+positions[np.newaxis,:,:]
         v_repeated = v_repeated.reshape(-1, 3)
-        indices = np.tile(np.arange(len(self)), len(meshgrid))
+        indices = np.tile(np.arange(len(positions)), len(meshgrid))
         dist = v_repeated-np.sum(self.cell*0.5, axis=0)
         dist = np.absolute(np.einsum('ni,ij->nj', dist+1e-8, np.linalg.inv(self.cell)))-0.5
         check_dist = np.all(dist-width<0, axis=-1)
-        indices = indices[check_dist]%len(self)
+        indices = indices[check_dist]%len(positions)
         v_repeated = v_repeated[check_dist]
         if return_indices:
             return v_repeated, indices
