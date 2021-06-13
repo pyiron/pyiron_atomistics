@@ -455,6 +455,11 @@ class ElasticTensor(AtomisticParallelMaster):
             + ' reference structure is not exactly in the zero pressure state.'
             + ' Setting this to True does not correct the second order strains'
         )
+        self.input['use_pressure'] = (
+            True,
+            'Whether to use the pressure values instead of energy or not. Ignored if pressure'
+            + 'values are not available'
+        )
         self._job_generator = _ElasticJobGenerator(self)
 
     @property
