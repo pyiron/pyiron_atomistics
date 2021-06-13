@@ -243,6 +243,7 @@ class Tree:
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
+        flatten=False,
     ):
         """
         Get current indices or neighbor indices for given positions using the same Tree structure
@@ -254,16 +255,18 @@ class Tree:
             positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
                 are to be computed (None to get current vectors)
             allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
+                numpy.ndarray filled with np.inf for values outside cutoff_radius. Ignored if
+                flatten = True
             num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
                 Ignored if `positions` is None.
             cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
             width_buffer (float): Buffer length for the estimation of num_neighbors. Ignored if
                 `positions` is None.
+            flatten (bool): Whether or not to flatten the indices.
 
         Returns:
-            (list/numpy.ndarray) list (if allow_ragged=True) or numpy.ndarray (otherwise) of
-                neighbor indices
+            (list/numpy.ndarray) list (if allow_ragged=True and flatten=False) or numpy.ndarray
+                (otherwise) of neighbor indices.
 
         """
         return self._get_distances_and_indices(
