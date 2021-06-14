@@ -292,12 +292,18 @@ class VaspInteractive(VaspBase, GenericInteractive):
             self.server.run_mode.interactive
             or self.server.run_mode.interactive_non_modal
         ):
-            self._check_incar_parameter(parameter="INTERACTIVE", value=True)
-            self._check_incar_parameter(parameter="IBRION", value=-1)
-            self._check_incar_parameter(parameter="POTIM", value=0.0)
-            self._check_incar_parameter(parameter="NSW", value=np.iinfo(np.int32).max - 1)
-            self._check_incar_parameter(parameter="ISYM", value=0)
+            self.interactive_prepare()
         super(VaspInteractive, self)._run_if_new(debug=debug)
+
+    def interactive_prepare(self):
+        """
+        Modifies/adds tags in the INCAR file that make it possible to run the VASP interactively
+        """
+        self._check_incar_parameter(parameter="INTERACTIVE", value=True)
+        self._check_incar_parameter(parameter="IBRION", value=-1)
+        self._check_incar_parameter(parameter="POTIM", value=0.0)
+        self._check_incar_parameter(parameter="NSW", value=np.iinfo(np.int32).max - 1)
+        self._check_incar_parameter(parameter="ISYM", value=0)
 
     def convergence_check(self):
         """
