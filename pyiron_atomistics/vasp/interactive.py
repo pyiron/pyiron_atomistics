@@ -277,6 +277,9 @@ class VaspInteractive(VaspBase, GenericInteractive):
     def _check_incar_parameter(self, parameter, value):
         if parameter not in self.input.incar._dataset["Parameter"]:
             self.input.incar[parameter] = value
+        if parameter == "NSW":
+            self._logger.debug("setting NSW to {}".format(value))
+            self.input.incar["NSW"] = value
 
     def _interactive_check_output(self):
         while self._interactive_library.poll() is None:
@@ -292,7 +295,7 @@ class VaspInteractive(VaspBase, GenericInteractive):
             self._check_incar_parameter(parameter="INTERACTIVE", value=True)
             self._check_incar_parameter(parameter="IBRION", value=-1)
             self._check_incar_parameter(parameter="POTIM", value=0.0)
-            self._check_incar_parameter(parameter="NSW", value=1000)
+            self._check_incar_parameter(parameter="NSW", value=np.iinfo(np.int32).max - 1)
             self._check_incar_parameter(parameter="ISYM", value=0)
         super(VaspInteractive, self)._run_if_new(debug=debug)
 
