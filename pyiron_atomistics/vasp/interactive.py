@@ -297,7 +297,7 @@ class VaspInteractive(VaspBase, GenericInteractive):
 
     def interactive_prepare(self):
         """
-        Modifies/adds tags in the INCAR file that make it possible to run the VASP interactively
+        Modifies/adds tags in the INCAR file that make it possible to run VASP interactively
         """
         self._check_incar_parameter(parameter="INTERACTIVE", value=True)
         self._check_incar_parameter(parameter="IBRION", value=-1)
