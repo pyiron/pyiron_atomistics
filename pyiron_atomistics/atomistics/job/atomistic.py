@@ -159,22 +159,6 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         self._generic_input.read_only = True
 
-    @wraps(GenericJobCore.copy_to)
-    def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
-                delete_existing_job=False):
-        new_generic_job = super(AtomisticGenericJob, self).copy_to(
-            project=project,
-            new_job_name=new_job_name,
-            input_only=input_only,
-            new_database_entry=new_database_entry,
-            delete_existing_job=delete_existing_job
-        )
-        if not new_generic_job._structure:
-            new_generic_job._structure = copy.copy(self._structure)
-        return new_generic_job
-    copy_to.__doc__ = copy_to.__doc__.split('Returns:')[0] + \
-                      f'Returns:\n            {__qualname__}: Object pointing to the new location.'
-
     def create_pipeline(self, step_lst, delete_existing_job=False):
         """
         Create a job pipeline
@@ -186,6 +170,10 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             FlexibleMaster:
         """
         return self.project.create_pipeline(job=self, step_lst=step_lst, delete_existing_job=delete_existing_job)
+
+    def _after_generic_copy_to(self, original, new_database_entry, reloaded):
+        if self._structure is None:
+            self._structure = copy.copy(original._structure)
 
     def calc_minimize(
         self, ionic_energy_tolerance=0, ionic_force_tolerance=1e-4, e_tol=None, f_tol=None, max_iter=1000, pressure=None, n_print=1
