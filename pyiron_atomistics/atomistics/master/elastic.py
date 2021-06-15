@@ -526,6 +526,8 @@ class ElasticTensor(AtomisticParallelMaster):
         energy = output_data['energy_tot']
         if len(output_data['energy_pot'])==len(output_data['volume']):
             energy = output_data['energy_pot']
+        if not self.input['use_pressure']:
+            output_data['pressures'] = []
         elastic_tensor, score = calc_elastic_tensor(
             strain=self.input['strain_matrices'],
             stress=-np.array(output_data['pressures']),
