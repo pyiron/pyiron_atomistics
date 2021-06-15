@@ -270,7 +270,7 @@ def calc_elastic_tensor(
         rotations = rotations[np.unique(indices)]
     else:
         rotations = np.eye(3).reshape(1, 3, 3)
-    if stress is not None and len(stress)==len(strain):
+    if stress is not None and np.asarray(stress).shape==np.asarray(strain).shape:
         coeff, score = _fit_coeffs_with_stress(
             strain=strain,
             stress=stress,
@@ -412,7 +412,6 @@ class ElasticTensor(AtomisticParallelMaster):
         super().__init__(project, job_name)
         self.__name__ = "ElasticTensor"
         self.__version__ = "0.1.0"
-
         self.input["min_num_measurements"] = (
             11, "minimum number of samples to be taken"
         )
@@ -454,6 +453,11 @@ class ElasticTensor(AtomisticParallelMaster):
             + ' be necessary, but might stabilize the calculation if the'
             + ' reference structure is not exactly in the zero pressure state.'
             + ' Setting this to True does not correct the second order strains'
+        )
+        self.input['use_pressure'] = (
+            True,
+            'Whether to use the pressure values instead of energy or not. Ignored if pressure'
+            + 'values are not available'
         )
         self._job_generator = _ElasticJobGenerator(self)
 
@@ -522,6 +526,8 @@ class ElasticTensor(AtomisticParallelMaster):
         energy = output_data['energy_tot']
         if len(output_data['energy_pot'])==len(output_data['volume']):
             energy = output_data['energy_pot']
+        if not self.input['use_pressure']:
+            output_data['pressures'] = []
         elastic_tensor, score = calc_elastic_tensor(
             strain=self.input['strain_matrices'],
             stress=-np.array(output_data['pressures']),
