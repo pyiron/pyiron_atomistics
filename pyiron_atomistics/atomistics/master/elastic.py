@@ -270,7 +270,7 @@ def calc_elastic_tensor(
         rotations = rotations[np.unique(indices)]
     else:
         rotations = np.eye(3).reshape(1, 3, 3)
-    if stress is not None and len(stress)==len(strain):
+    if stress is not None and np.asarray(stress).shape==np.asarray(strain).shape:
         coeff, score = _fit_coeffs_with_stress(
             strain=strain,
             stress=stress,
@@ -412,7 +412,6 @@ class ElasticTensor(AtomisticParallelMaster):
         super().__init__(project, job_name)
         self.__name__ = "ElasticTensor"
         self.__version__ = "0.1.0"
-
         self.input["min_num_measurements"] = (
             11, "minimum number of samples to be taken"
         )
