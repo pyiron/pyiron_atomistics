@@ -129,12 +129,14 @@ class Tree:
         new_neigh._norm_order = self._norm_order
         return new_neigh
 
-    def _reshape(self, value):
-        if self._mode['filled']:
+    def _reshape(self, value, key=None):
+        if key is None:
+            key = self.mode
+        if key == 'filled':
             return value
-        elif self._mode['ragged']:
+        elif key == 'ragged':
             return self._contract(value)
-        elif self._mode['flattened']:
+        elif key == 'flattened':
             return value[self._distances < np.inf]
 
     @property
