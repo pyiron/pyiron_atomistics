@@ -84,7 +84,7 @@ class Tree:
         - 'ragged': Create lists of different lengths.
 
         - 'flattened': Return flattened arrays for distances, vecs and shells. The indices
-            corresponding to the row numbers in 'filled' and 'ragged' are in `atomic_numbers`
+            corresponding to the row numbers in 'filled' and 'ragged' are in `atom_numbers`
 
         The variables are stored in the `filled` mode.
         """
