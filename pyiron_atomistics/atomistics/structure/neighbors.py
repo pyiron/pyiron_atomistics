@@ -6,11 +6,11 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from scipy.sparse import coo_matrix
 from scipy.special import gamma
-from pyiron_base import Settings
 from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique_labels
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
 import warnings
+from pyiron_base import Settings, deprecate, deprecate_soon
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -129,13 +129,13 @@ class Tree:
         new_neigh._norm_order = self._norm_order
         return new_neigh
 
-    def _reshape(self, value, key=None):
+    def _reshape(self, value, key=None, ref_vector=None):
         if key is None:
             key = self.mode
         if key == 'filled':
             return value
         elif key == 'ragged':
-            return self._contract(value)
+            return self._contract(value, ref_vector=ref_vector)
         elif key == 'flattened':
             return value[self._distances < np.inf]
 
@@ -197,6 +197,7 @@ class Tree:
         return [vv[:np.sum(dist<np.inf)] for vv, dist in zip(value, self._distances)]
 
     @property
+    @deprecate("Use mode", version="1.0.0")
     def allow_ragged(self):
         """
         Whether to allow ragged list of distancs/vectors/indices or fill empty slots with numpy.inf
@@ -205,13 +206,16 @@ class Tree:
         return self._mode['ragged']
 
     @allow_ragged.setter
+    @deprecate("Use mode", version="1.0.0")
     def allow_ragged(self, new_bool):
         if not isinstance(new_bool, bool):
             raise ValueError('allow_ragged must be a boolean')
+        self.mode = self._allow_ragged_to_mode(new_bool)
+
+    def _allow_ragged_to_mode(self, new_bool):
         if new_bool:
-            self.mode = 'ragged'
-        else:
-            self.mode = 'filled'
+            return 'ragged'
+        return 'filled'
 
     def _get_extended_positions(self):
         if self._extended_positions is None:
@@ -234,19 +238,20 @@ class Tree:
         )[...,self._ref_structure.pbc]
         return x
 
+    @deprecate(allow_ragged="use mode instead.")
     def _get_distances_and_indices(
         self,
         positions=None,
-        allow_ragged=False,
+        mode='filled',
+        allow_ragged=None,
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
     ):
+        if allow_ragged is not None:
+            mode = self._allow_ragged_to_mode(allow_ragged)
         if positions is None:
-            if allow_ragged:
-                return self._contract(self._distances), self._contract(self._indices)
-            else:
-                return self._distances, self._indices
+            return self._reshape(self._distances, mode), self._reshape(self._indices, mode)
         num_neighbors = self._estimate_num_neighbors(
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
@@ -275,14 +280,13 @@ class Tree:
             )
         self._extended_indices = indices.copy()
         indices[distances<np.inf] = self._get_wrapped_indices()[indices[distances<np.inf]]
-        if allow_ragged:
-            return self._contract(distances, distances), self._contract(indices, distances)
-        return distances, indices
+        return self._reshape(distances, mode, distances), self._reshape(indices, mode, distances)
 
     def get_indices(
         self,
         positions=None,
         allow_ragged=None,
+        mode='filled',
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
@@ -315,6 +319,7 @@ class Tree:
         return self._get_distances_and_indices(
             positions=positions,
             allow_ragged=allow_ragged,
+            mode=mode,
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
@@ -332,6 +337,7 @@ class Tree:
         self,
         positions=None,
         allow_ragged=None,
+        mode='filled',
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
@@ -360,6 +366,7 @@ class Tree:
         return self._get_distances_and_indices(
             positions=positions,
             allow_ragged=allow_ragged,
+            mode=mode,
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
@@ -368,7 +375,8 @@ class Tree:
     def get_vectors(
         self,
         positions=None,
-        allow_ragged=False,
+        allow_ragged=None,
+        mode='filled',
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
@@ -398,43 +406,51 @@ class Tree:
         return self._get_vectors(
             positions=positions,
             allow_ragged=allow_ragged,
+            mode=mode,
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
         )
 
+    @deprecate(allow_ragged="use mode instead.")
     def _get_vectors(
         self,
         positions=None,
         allow_ragged=None,
+        mode='filled',
         num_neighbors=None,
         cutoff_radius=np.inf,
         distances=None,
         indices=None,
         width_buffer=1.2,
     ):
+        if allow_ragged is not None:
+            mode = self._allow_ragged_to_mode(allow_ragged)
         if positions is not None:
             if distances is None or indices is None:
                 distances, indices = self._get_distances_and_indices(
                     positions=positions,
-                    allow_ragged=False,
+                    mode='filled',
                     num_neighbors=num_neighbors,
                     cutoff_radius=cutoff_radius,
                     width_buffer=width_buffer,
                 )
             vectors = np.zeros(distances.shape+(3,))
-            vectors -= self._get_wrapped_positions(positions).reshape(distances.shape[:-1]+(-1, 3))
+            vectors -= self._get_wrapped_positions(
+                positions
+            ).reshape(distances.shape[:-1]+(-1, 3))
             vectors[distances<np.inf] += self._get_extended_positions()[
                 self._extended_indices[distances<np.inf]
             ]
             vectors[distances==np.inf] = np.array(3*[np.inf])
         elif self._vecs is not None:
             vectors = self._vecs
+            distances = self._distances
         else:
             raise AssertionError(
                 'vectors not created yet -> put positions or reinitialize with t_vec=True'
             )
-        return vectors
+        return self._reshape(vectors, mode, distances)
 
     def _estimate_num_neighbors(self, num_neighbors=None, cutoff_radius=np.inf, width_buffer=1.2):
         """
@@ -868,9 +884,6 @@ class Neighbors(Tree):
                 `euclidean` is accepted.
 
         """
-        allow_ragged = self.allow_ragged
-        if allow_ragged:
-            self.allow_ragged = False
         if distance_threshold is None and n_clusters is None:
             distance_threshold = np.min(self._distances)
         dr = self._vecs[self._distances<np.inf]
@@ -886,7 +899,6 @@ class Neighbors(Tree):
         new_labels = -np.ones_like(self._indices).astype(int)
         new_labels[self._distances<np.inf] = self._cluster_vecs.labels_
         self._cluster_vecs.labels_ = new_labels
-        self.allow_ragged = allow_ragged
 
     def cluster_by_distances(
         self,
@@ -919,9 +931,6 @@ class Neighbors(Tree):
                 obtained from the clustered vectors is used for the distance clustering. Otherwise
                 neigh.distances is used.
         """
-        allow_ragged = self.allow_ragged
-        if allow_ragged:
-            self.allow_ragged = False
         if distance_threshold is None:
             distance_threshold = 0.1*np.min(self._distances)
         dr = self._distances[self._distances<np.inf]
@@ -946,7 +955,6 @@ class Neighbors(Tree):
         new_labels = -np.ones_like(self._indices).astype(int)
         new_labels[self._distances<np.inf] = self._cluster_dist.labels_
         self._cluster_dist.labels_ = new_labels
-        self.allow_ragged = allow_ragged
 
     def reset_clusters(self, vecs=True, distances=True):
         """
