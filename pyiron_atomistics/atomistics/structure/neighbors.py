@@ -636,35 +636,6 @@ class Tree:
 
 
 class Neighbors(Tree):
-    """
-    Class for storage of the neighbor information for a given atom based on the KDtree algorithm
-
-    Main attributes (do not modify them):
-
-    - distances (numpy.ndarray/list): Distances to the neighbors of all atoms
-    - indices (numpy.ndarray/list): Indices of the neighbors of all atoms
-    - vecs (numpy.ndarray/list): Vectors to the neighbors of all atoms
-
-    Auxiliary attributes:
-
-    - allow_ragged (bool): Whether to allow a ragged list of numpy arrays or not. This is relevant
-        only if the cutoff length was specified, in which case the number of neighbor atoms for each
-        atom could differ. `allow_ragged = False` is computationally more efficient in most of the
-        methods. When `allow_ragged = False`, the variables are filled as follows:
-        `np.inf` in `distances`, `numpy.array([np.inf, np.inf, np.inf])` in `vecs`, `n_atoms+1` (or
-        a larger value) in `indices` and -1 in `shells`
-    - wrap_positions (bool): Whether to wrap back the positions entered by user in get_neighborhood
-        etc. Since the information outside the original box is limited to a few layer,
-        wrap_positions=False might miss some points without issuing an error.
-
-    Furthermore, you can re-employ the original tree structure to get neighborhood information via
-    get_indices, get_vectors, get_distances and get_neighborhood. The information delivered by
-    get_neighborhood is the same as what can be obtained through the other three getters (except
-    for the fact that get_neighborhood returns a Tree instance, while the others return numpy
-    arrays), but since get_vectors anyway has to call get_distances and get_indices internally, the
-    computational cost of get_neighborhood and get_vectors is the same.
-    """
-
     def __init__(self, ref_structure, tolerance=2):
         super().__init__(ref_structure=ref_structure)
         self._shells = None
@@ -1085,4 +1056,6 @@ class Neighbors(Tree):
                     ia_shells_dict[el].append(ia_lst)
             ind_shell.append(ia_shells_dict)
         return ind_shell
+
+Neighbors.__doc__ = Tree.__doc__
 
