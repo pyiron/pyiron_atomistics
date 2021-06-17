@@ -310,10 +310,10 @@ class TestAtoms(unittest.TestCase):
         neigh = basis.get_neighbors(cutoff_radius=3.5, num_neighbors=None)
         self.assertEqual(len(neigh.get_indices(np.random.random(3), num_neighbors=12)), 12)
         self.assertEqual(
-            len(neigh.get_distances(np.random.random(3), num_neighbors=12, allow_ragged=True)), 12
+            len(neigh.get_distances(np.random.random(3), num_neighbors=12, mode='ragged')), 12
         )
         self.assertLessEqual(
-            len(neigh.get_vectors(np.random.random(3), num_neighbors=12, allow_ragged=True, cutoff_radius=3.5)), 12
+            len(neigh.get_vectors(np.random.random(3), num_neighbors=12, mode='ragged', cutoff_radius=3.5)), 12
         )
         self.assertTrue(neigh.get_vectors(np.random.random((2,3)), num_neighbors=12).shape==(2,12,3))
         neigh = basis.get_neighbors(num_neighbors=50)

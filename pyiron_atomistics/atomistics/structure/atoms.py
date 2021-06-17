@@ -1250,7 +1250,7 @@ class Atoms(ASEAtoms):
             return v_repeated, indices
         return v_repeated
 
-    @deprecate("Use get_neighbors and call numbers_of_neighbors", version="1.0.0")
+    @deprecate("Use get_neighbors and call numbers_of_neighbors")
     def get_numbers_of_neighbors_in_sphere(
         self,
         cutoff_radius=10,
@@ -1270,36 +1270,12 @@ class Atoms(ASEAtoms):
             (np.ndarray) : for each atom the number of neighbors found in the sphere of radius
                            cutoff_radius (<= num_neighbors if specified)
         """
-        if num_neighbors is not None:
-            neigh = self._get_neighbors(
-                num_neighbors=num_neighbors,
-                t_vec=False,
-                id_list=id_list,
-                cutoff_radius=cutoff_radius,
-                width_buffer=width_buffer,
-            )
-            num_neighbors_per_atom = np.sum(neigh.distances < np.inf, axis=-1)
-        else:
-            volume_per_atom = self.get_volume(per_atom=True)
-            if id_list is not None:
-                volume_per_atom = self.get_volume() / len(id_list)
-            num_neighbors = int((1 + width_buffer) *
-                                4. / 3. * np.pi * cutoff_radius ** 3 / volume_per_atom)
-            num_neighbors_old = num_neighbors - 1
-            while num_neighbors_old < num_neighbors:
-                neigh = self._get_neighbors(
-                    num_neighbors=num_neighbors,
-                    t_vec=False,
-                    id_list=id_list,
-                    cutoff_radius=cutoff_radius,
-                    width_buffer=width_buffer,
-                )
-                num_neighbors_old = num_neighbors
-                num_neighbors_per_atom = np.sum(neigh.distances < np.inf, axis=-1)
-                num_neighbors = num_neighbors_per_atom.max()
-                if num_neighbors == num_neighbors_old:
-                    num_neighbors = 2 * num_neighbors
-        return num_neighbors_per_atom
+        return self.get_neighbors(
+            cutoff_radius=cutoff_radius,
+            num_neighbors=num_neighbors,
+            id_list=id_list,
+            width_buffer=width_buffer,
+        ).numbers_of_neighbors
 
     @deprecate("Use get_neighbors", version="1.0.0")
     def get_neighbors_by_distance(
