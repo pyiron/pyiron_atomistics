@@ -320,6 +320,14 @@ class Tree:
             width_buffer=width_buffer,
         )[1]
 
+    @property
+    def numbers_of_neighbors(self):
+        """
+        Get number of neighbors for each atom. Same number is returned if `cutoff_radius` was not
+        given in the initialization.
+        """
+        return np.sum(self._distances < np.inf, axis=-1)
+
     def get_distances(
         self,
         positions=None,
