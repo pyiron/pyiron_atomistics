@@ -277,6 +277,15 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(len(np.unique(neigh.shells)), 1)
         self.assertEqual(len(neigh.shells), 360)
 
+    def test_get_distances_flattened(self):
+        structure = CrystalStructure(
+            elements='Al', lattice_constants=4, bravais_basis='fcc'
+        ).repeat(2)
+        del structure[0]
+        neigh = structure.get_neighbors(cutoff_radius=3.5, num_neighbors=None, mode='flattened')
+        self.assertEqual(len(np.unique(neigh.distances)), 1)
+        self.assertEqual(len(neigh.distances), 360)
+
     def test_get_shell_matrix(self):
         structure = CrystalStructure(
             elements='Fe', lattice_constants=2.83, bravais_basis='bcc'
