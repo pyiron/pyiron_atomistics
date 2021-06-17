@@ -213,7 +213,9 @@ class Tree:
         self.mode = self._allow_ragged_to_mode(new_bool)
 
     def _allow_ragged_to_mode(self, new_bool):
-        if new_bool:
+        if new_bool is None:
+            return self.mode
+        elif new_bool:
             return 'ragged'
         return 'filled'
 
@@ -688,10 +690,10 @@ class Neighbors(Tree):
             Returns the cell numbers of each atom according to the distances
         """
         if self._shells is None:
-            self._shells = self.get_local_shells()
+            self._shells = self.get_local_shells(mode='filled')
         return self._reshape(self._shells)
 
-    def get_local_shells(self, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
+    def get_local_shells(self, mode=None, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
         """
         Set shell indices based on distances available to each atom. Clustering methods can be used
         at the same time, which will be useful at finite temperature results, but depending on how
@@ -713,6 +715,8 @@ class Neighbors(Tree):
         """
         if tolerance is None:
             tolerance = self._tolerance
+        if mode is None:
+            mode = self.mode
         if cluster_by_distances:
             if self._cluster_dist is None:
                 self.cluster_by_distances(use_vecs=cluster_by_vecs)
@@ -741,9 +745,9 @@ class Neighbors(Tree):
                 for dist in distances
             ])
             shells[self._distances==np.inf] = -1
-        return self._reshape(shells)
+        return self._reshape(shells, key=mode)
 
-    def get_global_shells(self, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
+    def get_global_shells(self, mode=None, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
         """
         Set shell indices based on all distances available in the system instead of
         setting them according to the local distances (in contrast to shells defined
@@ -767,6 +771,8 @@ class Neighbors(Tree):
         """
         if tolerance is None:
             tolerance = self._tolerance
+        if mode is None:
+            mode = self.mode
         if self._distances is None:
             raise ValueError('neighbors not set')
         distances = self._distances

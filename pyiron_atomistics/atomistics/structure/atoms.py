@@ -1277,6 +1277,7 @@ class Atoms(ASEAtoms):
             width_buffer=width_buffer,
         ).numbers_of_neighbors
 
+    @deprecate(allow_ragged="use mode instead.")
     @deprecate("Use get_neighbors", version="1.0.0")
     def get_neighbors_by_distance(
         self,
@@ -1287,6 +1288,7 @@ class Atoms(ASEAtoms):
         id_list=None,
         width_buffer=1.2,
         allow_ragged=True,
+        mode='ragged',
         norm_order=2,
     ):
         """
@@ -1320,9 +1322,11 @@ class Atoms(ASEAtoms):
             id_list=id_list,
             width_buffer=width_buffer,
             allow_ragged=allow_ragged,
+            mode=mode,
             norm_order=norm_order,
         )
 
+    @deprecate(allow_ragged="use mode instead.")
     def get_neighbors(
         self,
         num_neighbors=12,
@@ -1331,7 +1335,8 @@ class Atoms(ASEAtoms):
         id_list=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
-        allow_ragged=False,
+        allow_ragged=None,
+        mode='filled',
         norm_order=2,
     ):
         """
@@ -1366,7 +1371,9 @@ class Atoms(ASEAtoms):
             width_buffer=width_buffer,
             norm_order=norm_order,
         )
-        neigh.allow_ragged = allow_ragged
+        neigh.mode = mode
+        if allow_ragged is not None:
+            neigh.allow_ragged = allow_ragged
         return neigh
 
     def _get_neighbors(

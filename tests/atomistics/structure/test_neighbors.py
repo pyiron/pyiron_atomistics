@@ -260,6 +260,23 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_local_shells(cluster_by_vecs=True)]), 12)
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_local_shells(cluster_by_distances=True, cluster_by_vecs=True)]), 12)
 
+    def test_get_shells_flattened(self):
+        structure = CrystalStructure(
+            elements='Al', lattice_constants=4, bravais_basis='fcc'
+        ).repeat(2)
+        del structure[0]
+        neigh = structure.get_neighbors(cutoff_radius=3.5, num_neighbors=None, mode='flattened')
+        self.assertEqual(len(np.unique(neigh.shells)), 1)
+        self.assertEqual(len(neigh.shells), 360)
+        self.assertEqual(len(np.unique(neigh.get_local_shells())), 1)
+        self.assertEqual(len(neigh.get_local_shells()), 360)
+        self.assertEqual(len(np.unique(neigh.get_global_shells())), 1)
+        self.assertEqual(len(neigh.get_global_shells()), 360)
+        neigh = structure.get_neighbors(cutoff_radius=3.5, num_neighbors=None)
+        neigh.mode = 'flattened'
+        self.assertEqual(len(np.unique(neigh.shells)), 1)
+        self.assertEqual(len(neigh.shells), 360)
+
     def test_get_shell_matrix(self):
         structure = CrystalStructure(
             elements='Fe', lattice_constants=2.83, bravais_basis='bcc'
