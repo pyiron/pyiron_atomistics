@@ -63,7 +63,6 @@ class Tree:
         self._mode = {'filled': True, 'ragged': False, 'flattened': False}
         self._extended_positions = None
         self._wrapped_indices = None
-        self._allow_ragged = False
         self._extended_indices = None
         self._ref_structure = ref_structure.copy()
         self.wrap_positions = False
@@ -91,7 +90,7 @@ class Tree:
         """
         for k,v in self._mode.items():
             if v:
-                print('Current mode:', k)
+                return k
 
     @mode.setter
     def mode(self, new_mode):
@@ -122,7 +121,6 @@ class Tree:
         new_neigh._indices = self._indices.copy()
         new_neigh._extended_positions = self._extended_positions
         new_neigh._wrapped_indices = self._wrapped_indices
-        new_neigh._allow_ragged = self._allow_ragged
         new_neigh._extended_indices = self._extended_indices
         new_neigh.wrap_positions = self.wrap_positions
         new_neigh._tree = self._tree

@@ -254,7 +254,7 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(
             np.sum(neigh.get_local_shells(cluster_by_distances=True, cluster_by_vecs=True)==-1), 12
         )
-        neigh.allow_ragged = True
+        neigh.mode = 'ragged'
         self.assertEqual(np.sum([len(s)==11 for s in neigh.shells]), 12)
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_local_shells(cluster_by_distances=True)]), 12)
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_local_shells(cluster_by_vecs=True)]), 12)
@@ -373,6 +373,17 @@ class TestAtoms(unittest.TestCase):
         n, c = np.unique(neigh.numbers_of_neighbors, return_counts=True)
         self.assertTrue(np.alltrue(n==np.array([11, 12])))
         self.assertTrue(np.alltrue(c==np.array([12, 19])))
+
+    def test_modes(self):
+        basis = StructureFactory().ase.bulk('Al', cubic=True)
+        neigh = basis.get_neighbors()
+        self.assertTrue(neigh.mode=='filled')
+        neigh.mode = 'ragged'
+        self.assertTrue(neigh.mode=='ragged')
+        neigh.mode = 'flattened'
+        self.assertTrue(neigh.mode=='flattened')
+        with self.assertRaises(KeyError):
+            neigh.mode = 'random_key'
 
 if __name__ == "__main__":
     unittest.main()
