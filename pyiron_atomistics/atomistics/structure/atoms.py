@@ -1250,12 +1250,13 @@ class Atoms(ASEAtoms):
             return v_repeated, indices
         return v_repeated
 
+    @deprecate("Use get_neighbors and call numbers_of_neighbors", version="1.0.0")
     def get_numbers_of_neighbors_in_sphere(
-            self,
-            cutoff_radius=10,
-            num_neighbors=None,
-            id_list=None,
-            width_buffer=1.2,
+        self,
+        cutoff_radius=10,
+        num_neighbors=None,
+        id_list=None,
+        width_buffer=1.2,
     ):
         """
         Function to compute the maximum number of neighbors in a sphere around each atom.
@@ -1300,6 +1301,7 @@ class Atoms(ASEAtoms):
                     num_neighbors = 2 * num_neighbors
         return num_neighbors_per_atom
 
+    @deprecate("Use get_neighbors", version="1.0.0")
     def get_neighbors_by_distance(
         self,
         cutoff_radius=5,
