@@ -282,6 +282,7 @@ class Tree:
         indices[distances<np.inf] = self._get_wrapped_indices()[indices[distances<np.inf]]
         return self._reshape(distances, mode, distances), self._reshape(indices, mode, distances)
 
+    @deprecate(allow_ragged="use mode instead.")
     def get_indices(
         self,
         positions=None,
@@ -333,6 +334,7 @@ class Tree:
         """
         return np.sum(self._distances < np.inf, axis=-1)
 
+    @deprecate(allow_ragged="use mode instead.")
     def get_distances(
         self,
         positions=None,
@@ -372,6 +374,7 @@ class Tree:
             width_buffer=width_buffer,
         )[0]
 
+    @deprecate(allow_ragged="use mode instead.")
     def get_vectors(
         self,
         positions=None,
