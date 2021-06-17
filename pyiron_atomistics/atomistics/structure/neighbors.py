@@ -306,8 +306,8 @@ class Tree:
                 are to be computed (None to get current vectors)
             allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
                 rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
-            mode (str): Representation of per-atom quantities (distances etc.). Choose from
-                'filled', 'ragged' and 'flattened'.
+            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
+                'flattened'.
             num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
                 Ignored if `positions` is None.
             cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
@@ -358,8 +358,8 @@ class Tree:
                 are to be computed (None to get current vectors)
             allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
                 rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
-            mode (str): Representation of per-atom quantities (distances etc.). Choose from
-                'filled', 'ragged' and 'flattened'.
+            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
+                'flattened'.
             num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
                 Ignored if `positions` is None.
             cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
@@ -400,8 +400,8 @@ class Tree:
                 are to be computed (None to get current vectors)
             allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
                 rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
-            mode (str): Representation of per-atom quantities (distances etc.). Choose from
-                'filled', 'ragged' and 'flattened'.
+            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
+                'flattened'.
             num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
                 Ignored if `positions` is None.
             cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
@@ -707,6 +707,8 @@ class Neighbors(Tree):
         and does not execute the clustering method(-s) again.
 
         Args:
+            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
+                'flattened'.
             tolerance (int): decimals in np.round for rounding up distances
             cluster_by_distances (bool): If True, `cluster_by_distances` is called first and the distances obtained
                 from the clustered distances are used to calculate the shells. If cluster_by_vecs is True at the same
@@ -763,6 +765,8 @@ class Neighbors(Tree):
         available and does not execute the clustering method(-s) again.
 
         Args:
+            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
+                'flattened'.
             tolerance (int): decimals in np.round for rounding up distances (default: 2)
             cluster_by_distances (bool): If True, `cluster_by_distances` is called first and the distances obtained
                 from the clustered distances are used to calculate the shells. If cluster_by_vecs is True at the same
@@ -802,7 +806,7 @@ class Neighbors(Tree):
         shells[distances<np.inf] = np.absolute(
             distances[distances<np.inf, np.newaxis]-dist_lst[np.newaxis, dist_lst<np.inf]
         ).argmin(axis=-1)+1
-        return self._reshape(shells)
+        return self._reshape(shells, key=mode)
 
     def get_shell_matrix(
         self, chemical_pair=None, cluster_by_distances=False, cluster_by_vecs=False
