@@ -304,9 +304,10 @@ class Tree:
         Args:
             positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
                 are to be computed (None to get current vectors)
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius. Ignored if
-                flatten = True
+            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
+                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
+            mode (str): Representation of per-atom quantities (distances etc.). Choose from
+                'filled', 'ragged' and 'flattened'.
             num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
                 Ignored if `positions` is None.
             cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
@@ -355,8 +356,10 @@ class Tree:
         Args:
             positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
                 are to be computed (None to get current vectors)
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
+            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
+                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
+            mode (str): Representation of per-atom quantities (distances etc.). Choose from
+                'filled', 'ragged' and 'flattened'.
             num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
                 Ignored if `positions` is None.
             cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
@@ -395,8 +398,10 @@ class Tree:
         Args:
             positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
                 are to be computed (None to get current vectors)
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
+            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
+                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
+            mode (str): Representation of per-atom quantities (distances etc.). Choose from
+                'filled', 'ragged' and 'flattened'.
             num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
                 Ignored if `positions` is None.
             cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
@@ -405,7 +410,7 @@ class Tree:
 
 
         Returns:
-            (list/numpy.ndarray) list (if allow_ragged=True) or numpy.ndarray (otherwise) of
+            (list/numpy.ndarray) list (if mode='ragged') or numpy.ndarray (otherwise) of
                 neighbor vectors
         """
         return self._get_vectors(

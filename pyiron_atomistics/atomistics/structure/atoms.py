@@ -1301,8 +1301,10 @@ class Atoms(ASEAtoms):
             tolerance (int): tolerance (round decimal points) used for computing neighbor shells
             id_list (list): list of atoms the neighbors are to be looked for
             width_buffer (float): width of the layer to be added to account for pbc.
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
+            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
+                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
+            mode (str): Representation of per-atom quantities (distances etc.). Choose from
+                'filled', 'ragged' and 'flattened'.
             norm_order (int): Norm to use for the neighborhood search and shell recognition. The
                 definition follows the conventional Lp norm (cf.
                 https://en.wikipedia.org/wiki/Lp_space). This is an feature and for anything
@@ -1349,8 +1351,10 @@ class Atoms(ASEAtoms):
             id_list (list): list of atoms the neighbors are to be looked for
             cutoff_radius (float): Upper bound of the distance to which the search must be done
             width_buffer (float): width of the layer to be added to account for pbc.
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
+            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
+                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
+            mode (str): Representation of per-atom quantities (distances etc.). Choose from
+                'filled', 'ragged' and 'flattened'.
             norm_order (int): Norm to use for the neighborhood search and shell recognition. The
                 definition follows the conventional Lp norm (cf.
                 https://en.wikipedia.org/wiki/Lp_space). This is an feature and for anything

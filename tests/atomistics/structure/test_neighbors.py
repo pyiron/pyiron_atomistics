@@ -261,30 +261,46 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_local_shells(cluster_by_distances=True, cluster_by_vecs=True)]), 12)
 
     def test_get_shells_flattened(self):
-        structure = CrystalStructure(
-            elements='Al', lattice_constants=4, bravais_basis='fcc'
-        ).repeat(2)
+        structure = StructureFactory().ase.bulk('Al', cubic=True).repeat(2)
         del structure[0]
-        neigh = structure.get_neighbors(cutoff_radius=3.5, num_neighbors=None, mode='flattened')
+        r = structure.cell[0,0]*0.49
+        neigh = structure.get_neighbors(cutoff_radius=r, num_neighbors=None, mode='flattened')
         self.assertEqual(len(np.unique(neigh.shells)), 1)
         self.assertEqual(len(neigh.shells), 360)
         self.assertEqual(len(np.unique(neigh.get_local_shells())), 1)
         self.assertEqual(len(neigh.get_local_shells()), 360)
         self.assertEqual(len(np.unique(neigh.get_global_shells())), 1)
         self.assertEqual(len(neigh.get_global_shells()), 360)
-        neigh = structure.get_neighbors(cutoff_radius=3.5, num_neighbors=None)
+        neigh = structure.get_neighbors(cutoff_radius=r, num_neighbors=None)
         neigh.mode = 'flattened'
         self.assertEqual(len(np.unique(neigh.shells)), 1)
         self.assertEqual(len(neigh.shells), 360)
 
     def test_get_distances_flattened(self):
-        structure = CrystalStructure(
-            elements='Al', lattice_constants=4, bravais_basis='fcc'
-        ).repeat(2)
+        structure = StructureFactory().ase.bulk('Al', cubic=True).repeat(2)
         del structure[0]
-        neigh = structure.get_neighbors(cutoff_radius=3.5, num_neighbors=None, mode='flattened')
-        self.assertEqual(len(np.unique(neigh.distances)), 1)
+        r = structure.cell[0,0]*0.49
+        neigh = structure.get_neighbors(cutoff_radius=r, num_neighbors=None, mode='flattened')
+        self.assertAlmostEqual(np.std(neigh.distances), 0)
         self.assertEqual(len(neigh.distances), 360)
+        self.assertEqual(neigh.vecs.shape, (360, 3, ))
+
+    def test_atom_numbers(self):
+        structure = StructureFactory().ase.bulk('Al', cubic=True).repeat(2)
+        del structure[0]
+        r = structure.cell[0,0]*0.49
+        neigh = structure.get_neighbors(cutoff_radius=r, num_neighbors=None, mode='filled')
+        n = len(structure)
+        self.assertEqual(neigh.atom_numbers.sum(), int(n*(n-1)/2*12))
+        neigh = structure.get_neighbors(cutoff_radius=r, num_neighbors=None, mode='ragged')
+        for i, (a, d) in enumerate(zip(neigh.atom_numbers, neigh.distances)):
+            self.assertEqual(np.sum(a-len(d)*[i]), 0)
+        neigh = structure.get_neighbors(cutoff_radius=r, num_neighbors=None, mode='flattened')
+        labels, counts = np.unique(
+            np.unique(neigh.atom_numbers, return_counts=True)[1], return_counts=True
+        )
+        self.assertEqual(labels.tolist(), [11, 12])
+        self.assertEqual(counts.tolist(), [12, 19])
 
     def test_get_shell_matrix(self):
         structure = CrystalStructure(
@@ -397,8 +413,8 @@ class TestAtoms(unittest.TestCase):
         del basis[0]
         neigh = basis.get_neighbors(num_neighbors=None, cutoff_radius=0.45*basis.cell[0,0])
         n, c = np.unique(neigh.numbers_of_neighbors, return_counts=True)
-        self.assertTrue(np.alltrue(n==np.array([11, 12])))
-        self.assertTrue(np.alltrue(c==np.array([12, 19])))
+        self.assertEqual(n.tolist(), [11, 12])
+        self.assertEqual(c.tolist(), [12, 19])
 
     def test_modes(self):
         basis = StructureFactory().ase.bulk('Al', cubic=True)
