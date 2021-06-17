@@ -366,5 +366,13 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(0.5106882308569508, neigh.get_steinhardt_parameter(6)[0])
         self.assertRaises(ValueError, neigh.get_steinhardt_parameter, 2, 2)
 
+    def test_numbers_of_neighbors(self):
+        basis = StructureFactory().ase.bulk('Al', cubic=True).repeat(2)
+        del basis[0]
+        neigh = basis.get_neighbors(num_neighbors=None, cutoff_radius=0.45*basis.cell[0,0])
+        n, c = np.unique(neigh.numbers_of_neighbors, return_counts=True)
+        self.assertTrue(np.alltrue(n==np.array([11, 12])))
+        self.assertTrue(np.alltrue(c==np.array([12, 19])))
+
 if __name__ == "__main__":
     unittest.main()
