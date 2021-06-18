@@ -149,18 +149,26 @@ class Tree:
 
     @property
     def distances(self):
+        """Distances to neighboring atoms"""
         return self._reshape(self._distances)
 
     @property
     def vecs(self):
+        """Vectors to neighboring atoms"""
+        if self._vecs is None:
+            raise ValueError(
+                'vectors were not created in the initialization. Reinitialize with t_vec=True'
+            )
         return self._reshape(self._vecs)
 
     @property
     def indices(self):
+        """Indices of neighboring atoms"""
         return self._reshape(self._indices)
 
     @property
     def atom_numbers(self):
+        """Indices of atoms"""
         n = np.zeros_like(self._indices)
         n.T[:,:] = np.arange(len(n))
         return self._reshape(n)
