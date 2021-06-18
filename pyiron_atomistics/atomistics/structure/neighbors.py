@@ -240,18 +240,14 @@ class Tree:
         )[...,self._ref_structure.pbc]
         return x
 
-    @deprecate(allow_ragged="use mode instead.")
     def _get_distances_and_indices(
         self,
         positions=None,
         mode='filled',
-        allow_ragged=None,
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
     ):
-        if allow_ragged is not None:
-            mode = self._allow_ragged_to_mode(allow_ragged)
         if positions is None:
             return self._reshape(self._distances, mode), self._reshape(self._indices, mode)
         num_neighbors = self._estimate_num_neighbors(
@@ -293,7 +289,6 @@ class Tree:
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
-        flatten=False,
     ):
         """
         Get current indices or neighbor indices for given positions using the same Tree structure
@@ -313,16 +308,16 @@ class Tree:
             cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
             width_buffer (float): Buffer length for the estimation of num_neighbors. Ignored if
                 `positions` is None.
-            flatten (bool): Whether or not to flatten the indices.
 
         Returns:
             (list/numpy.ndarray) list (if allow_ragged=True and flatten=False) or numpy.ndarray
                 (otherwise) of neighbor indices.
 
         """
+        if allow_ragged is not None:
+            mode = self._allow_ragged_to_mode(allow_ragged)
         return self._get_distances_and_indices(
             positions=positions,
-            allow_ragged=allow_ragged,
             mode=mode,
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
@@ -370,9 +365,10 @@ class Tree:
             (list/numpy.ndarray) list (if allow_ragged=True) or numpy.ndarray (otherwise) of
                 neighbor distances
         """
+        if allow_ragged is not None:
+            mode = self._allow_ragged_to_mode(allow_ragged)
         return self._get_distances_and_indices(
             positions=positions,
-            allow_ragged=allow_ragged,
             mode=mode,
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
@@ -413,20 +409,19 @@ class Tree:
             (list/numpy.ndarray) list (if mode='ragged') or numpy.ndarray (otherwise) of
                 neighbor vectors
         """
+        if allow_ragged is not None:
+            mode = self._allow_ragged_to_mode(allow_ragged)
         return self._get_vectors(
             positions=positions,
-            allow_ragged=allow_ragged,
             mode=mode,
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
         )
 
-    @deprecate(allow_ragged="use mode instead.")
     def _get_vectors(
         self,
         positions=None,
-        allow_ragged=None,
         mode='filled',
         num_neighbors=None,
         cutoff_radius=np.inf,
@@ -434,8 +429,6 @@ class Tree:
         indices=None,
         width_buffer=1.2,
     ):
-        if allow_ragged is not None:
-            mode = self._allow_ragged_to_mode(allow_ragged)
         if positions is not None:
             if distances is None or indices is None:
                 distances, indices = self._get_distances_and_indices(
