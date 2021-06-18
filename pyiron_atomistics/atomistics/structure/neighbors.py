@@ -10,7 +10,7 @@ from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
 import warnings
-from pyiron_base import Settings, deprecate, deprecate_soon
+from pyiron_base import Settings, deprecate
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -138,14 +138,6 @@ class Tree:
             return self._contract(value, ref_vector=ref_vector)
         elif key == 'flattened':
             return value[self._distances < np.inf]
-
-    @property
-    def numbers_of_neighbors(self):
-        """
-        Numbers of neighbors for each atom. If `cutoff` was not specified for the initialization,
-        the same number is shown for all atoms.
-        """
-        return np.sum(self._distances < np.inf, axis=-1)
 
     @property
     def distances(self):
