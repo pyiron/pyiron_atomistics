@@ -98,7 +98,7 @@ class Tree:
             raise KeyError(
                 new_mode + " not found. Available modes: 'filled', 'ragged', 'flattened'"
             )
-        self._mode = dict.fromkeys(list(self._mode.keys()), False)
+        self._mode = {key: False for key in self._mode.keys()}
         self._mode[new_mode] = True
 
     def __repr__(self):
