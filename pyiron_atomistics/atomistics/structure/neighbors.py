@@ -117,7 +117,6 @@ class Tree:
     def copy(self):
         new_neigh = Tree(self._ref_structure)
         new_neigh._distances = self._distances.copy()
-        new_neigh._vecs = self._vecs.copy()
         new_neigh._indices = self._indices.copy()
         new_neigh._extended_positions = self._extended_positions
         new_neigh._wrapped_indices = self._wrapped_indices
@@ -127,6 +126,8 @@ class Tree:
         new_neigh.num_neighbors = self.num_neighbors
         new_neigh.cutoff_radius = self.cutoff_radius
         new_neigh._norm_order = self._norm_order
+        if self._vecs is not None:
+            new_neigh._vecs = self._vecs.copy()
         return new_neigh
 
     def _reshape(self, value, key=None, ref_vector=None):
@@ -148,7 +149,7 @@ class Tree:
     def vecs(self):
         """Vectors to neighboring atoms"""
         if self._vecs is None:
-            raise ValueError(
+            raise AssertionError(
                 'vectors were not created in the initialization. Reinitialize with t_vec=True'
             )
         return self._reshape(self._vecs)
@@ -620,7 +621,7 @@ class Tree:
         See more on: scipy.special.sph_harm
 
         """
-        vecs = self._vecs
+        vecs = self.get_vectors(mode='filled')
         if rotation is not None:
             vecs = np.einsum('ij,nkj->nki', rotation, vecs)
         within_cutoff = self._distances<cutoff_radius
@@ -871,7 +872,7 @@ class Neighbors(Tree):
         """
 
         z = np.zeros(len(self._ref_structure)*3).reshape(-1, 3)
-        v = np.append(z[:,np.newaxis,:], self._vecs, axis=1)
+        v = np.append(z[:,np.newaxis,:], self.get_vectors(mode='filled'), axis=1)
         dist = np.linalg.norm(v-np.array(vector), axis=-1, ord=self.norm_order)
         indices = np.append(np.arange(len(self._ref_structure))[:,np.newaxis], self._indices, axis=1)
         if return_deviation:
@@ -903,7 +904,7 @@ class Neighbors(Tree):
         """
         if distance_threshold is None and n_clusters is None:
             distance_threshold = np.min(self._distances)
-        dr = self._vecs[self._distances<np.inf]
+        dr = self.get_vectors(mode='filled')[self._distances<np.inf]
         self._cluster_vecs = AgglomerativeClustering(
             distance_threshold=distance_threshold,
             n_clusters=n_clusters,
