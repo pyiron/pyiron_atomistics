@@ -285,7 +285,7 @@ class Tree:
         self,
         positions=None,
         allow_ragged=None,
-        mode='filled',
+        mode=None,
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
@@ -314,8 +314,10 @@ class Tree:
                 (otherwise) of neighbor indices.
 
         """
-        if allow_ragged is not None:
+        if allow_ragged is not None and mode is None:
             mode = self._allow_ragged_to_mode(allow_ragged)
+        elif mode is None:
+            mode = self.mode
         return self._get_distances_and_indices(
             positions=positions,
             mode=mode,
@@ -337,7 +339,7 @@ class Tree:
         self,
         positions=None,
         allow_ragged=None,
-        mode='filled',
+        mode=None,
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
@@ -365,8 +367,10 @@ class Tree:
             (list/numpy.ndarray) list (if allow_ragged=True) or numpy.ndarray (otherwise) of
                 neighbor distances
         """
-        if allow_ragged is not None:
+        if allow_ragged is not None and mode is None:
             mode = self._allow_ragged_to_mode(allow_ragged)
+        elif mode is None:
+            mode = self.mode
         return self._get_distances_and_indices(
             positions=positions,
             mode=mode,
@@ -380,7 +384,7 @@ class Tree:
         self,
         positions=None,
         allow_ragged=None,
-        mode='filled',
+        mode=None,
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
@@ -409,8 +413,10 @@ class Tree:
             (list/numpy.ndarray) list (if mode='ragged') or numpy.ndarray (otherwise) of
                 neighbor vectors
         """
-        if allow_ragged is not None:
+        if allow_ragged is not None and mode is None:
             mode = self._allow_ragged_to_mode(allow_ragged)
+        elif mode is None:
+            mode = self.mode
         return self._get_vectors(
             positions=positions,
             mode=mode,
