@@ -427,15 +427,5 @@ class TestAtoms(unittest.TestCase):
         with self.assertRaises(KeyError):
             neigh.mode = 'random_key'
 
-    def test_t_vec(self):
-        basis = StructureFactory().ase.bulk('Al', cubic=True)
-        neigh = basis.get_neighbors(t_vec=False)
-        with self.assertRaises(AssertionError):
-            _ = neigh.vecs
-        self.assertRaises(AssertionError, neigh.get_global_shells, cluster_by_vecs=True)
-        self.assertRaises(AssertionError, neigh.get_spherical_harmonics, 0, 0)
-        self.assertRaises(AssertionError, neigh.find_neighbors_by_vector, np.ones(3))
-        self.assertRaises(AssertionError, neigh.cluster_by_vecs)
-
 if __name__ == "__main__":
     unittest.main()

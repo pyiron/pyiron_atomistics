@@ -62,6 +62,7 @@ class Tree:
         self._indices = None
         self._mode = {'filled': True, 'ragged': False, 'flattened': False}
         self._extended_positions = None
+        self._positions = None
         self._wrapped_indices = None
         self._extended_indices = None
         self._ref_structure = ref_structure.copy()
@@ -126,8 +127,7 @@ class Tree:
         new_neigh.num_neighbors = self.num_neighbors
         new_neigh.cutoff_radius = self.cutoff_radius
         new_neigh._norm_order = self._norm_order
-        if self._vecs is not None:
-            new_neigh._vecs = self._vecs.copy()
+        new_neigh._positions = self._positions.copy()
         return new_neigh
 
     def _reshape(self, value, key=None, ref_vector=None):
@@ -149,8 +149,10 @@ class Tree:
     def vecs(self):
         """Vectors to neighboring atoms"""
         if self._vecs is None:
-            raise AssertionError(
-                'vectors were not created in the initialization. Reinitialize with t_vec=True'
+            self._vecs = self._get_vectors(
+                positions=self._positions,
+                distances=self._distances,
+                indices=self._extended_indices
             )
         return self._reshape(self._vecs)
 
@@ -453,13 +455,11 @@ class Tree:
                 self._extended_indices[distances<np.inf]
             ]
             vectors[distances==np.inf] = np.array(3*[np.inf])
-        elif self._vecs is not None:
+        else:
+            if self._vecs is None:
+                _ = self.vecs
             vectors = self._vecs
             distances = self._distances
-        else:
-            raise AssertionError(
-                'vectors not created yet -> put positions or reinitialize with t_vec=True'
-            )
         return self._reshape(vectors, mode, distances)
 
     def _estimate_num_neighbors(self, num_neighbors=None, cutoff_radius=np.inf, width_buffer=1.2):
@@ -523,7 +523,6 @@ class Tree:
         self,
         positions,
         num_neighbors=None,
-        t_vec=True,
         cutoff_radius=np.inf,
         width_buffer=1.2,
     ):
@@ -536,7 +535,6 @@ class Tree:
         Args:
             position: Position in a box whose neighborhood information is analysed
             num_neighbors (int): Number of nearest neighbors
-            t_vec (bool): True: compute distance vectors (pbc are taken into account)
             cutoff_radius (float): Upper bound of the distance to which the search is to be done
             width_buffer (float): Width of the layer to be added to account for pbc.
 
@@ -550,7 +548,6 @@ class Tree:
         return new_neigh._get_neighborhood(
             positions=positions,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             cutoff_radius=cutoff_radius,
             exclude_self=False,
             width_buffer=width_buffer,
@@ -560,7 +557,6 @@ class Tree:
         self,
         positions,
         num_neighbors=12,
-        t_vec=True,
         cutoff_radius=np.inf,
         exclude_self=False,
         width_buffer=1.2,
@@ -582,10 +578,7 @@ class Tree:
         self._distances = distances[...,start_column:max_column]
         self._indices = indices[...,start_column:max_column]
         self._extended_indices = self._extended_indices[...,start_column:max_column]
-        if t_vec:
-            self._vecs = self._get_vectors(
-                positions=positions, distances=self._distances, indices=self._extended_indices
-            )
+        self._positions = positions
         return self
 
     def _check_width(self, width, pbc):

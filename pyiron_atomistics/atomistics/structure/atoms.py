@@ -1283,7 +1283,6 @@ class Atoms(ASEAtoms):
         self,
         cutoff_radius=5,
         num_neighbors=None,
-        t_vec=True,
         tolerance=2,
         id_list=None,
         width_buffer=1.2,
@@ -1296,8 +1295,6 @@ class Atoms(ASEAtoms):
         Args:
             cutoff_radius (float): Upper bound of the distance to which the search must be done
             num_neighbors (int/None): maximum number of neighbors found; if None this is estimated based on the density.
-            t_vec (bool): True: compute distance vectors
-                        (pbc are automatically taken into account)
             tolerance (int): tolerance (round decimal points) used for computing neighbor shells
             id_list (list): list of atoms the neighbors are to be looked for
             width_buffer (float): width of the layer to be added to account for pbc.
@@ -1319,7 +1316,6 @@ class Atoms(ASEAtoms):
         return self.get_neighbors(
             cutoff_radius=cutoff_radius,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             tolerance=tolerance,
             id_list=id_list,
             width_buffer=width_buffer,
@@ -1332,7 +1328,6 @@ class Atoms(ASEAtoms):
     def get_neighbors(
         self,
         num_neighbors=12,
-        t_vec=True,
         tolerance=2,
         id_list=None,
         cutoff_radius=np.inf,
@@ -1345,8 +1340,6 @@ class Atoms(ASEAtoms):
 
         Args:
             num_neighbors (int): number of neighbors
-            t_vec (bool): True: compute distance vectors
-                        (pbc are automatically taken into account)
             tolerance (int): tolerance (round decimal points) used for computing neighbor shells
             id_list (list): list of atoms the neighbors are to be looked for
             cutoff_radius (float): Upper bound of the distance to which the search must be done
@@ -1368,7 +1361,6 @@ class Atoms(ASEAtoms):
         """
         neigh = self._get_neighbors(
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             tolerance=tolerance,
             id_list=id_list,
             cutoff_radius=cutoff_radius,
@@ -1383,7 +1375,6 @@ class Atoms(ASEAtoms):
     def _get_neighbors(
         self,
         num_neighbors=12,
-        t_vec=True,
         tolerance=2,
         id_list=None,
         cutoff_radius=np.inf,
@@ -1418,7 +1409,6 @@ class Atoms(ASEAtoms):
         neigh._get_neighborhood(
             positions=positions,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             cutoff_radius=cutoff_radius,
             exclude_self=True,
             width_buffer=width_buffer,
@@ -1432,7 +1422,6 @@ class Atoms(ASEAtoms):
         self,
         positions,
         num_neighbors=12,
-        t_vec=True,
         cutoff_radius=np.inf,
         width_buffer=1.2,
         norm_order=2,
@@ -1442,7 +1431,6 @@ class Atoms(ASEAtoms):
         Args:
             position: Position in a box whose neighborhood information is analysed
             num_neighbors (int): Number of nearest neighbors
-            t_vec (bool): True: compute distance vectors (pbc are taken into account)
             cutoff_radius (float): Upper bound of the distance to which the search is to be done
             width_buffer (float): Width of the layer to be added to account for pbc.
             norm_order (int): Norm to use for the neighborhood search and shell recognition. The
@@ -1461,14 +1449,12 @@ class Atoms(ASEAtoms):
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
-            t_vec=t_vec,
             get_tree=True,
             norm_order=norm_order,
         )
         return neigh._get_neighborhood(
             positions=positions,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             cutoff_radius=cutoff_radius,
         )
 
@@ -1545,7 +1531,7 @@ class Atoms(ASEAtoms):
                 radius = neigh.distances[0][indices]
                 radius = np.mean(radius)
                 # print "radius: ", radius
-            neighbors = self.get_neighbors_by_distance(cutoff_radius=radius, t_vec=False)
+            neighbors = self.get_neighbors_by_distance(cutoff_radius=radius)
         return neighbors.cluster_analysis(id_list=id_list, return_cluster_sizes=return_cluster_sizes)
 
     # TODO: combine with corresponding routine in plot3d
