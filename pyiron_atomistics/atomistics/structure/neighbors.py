@@ -44,11 +44,7 @@ class Tree:
     Change representation mode via :attribute:`.Neighbors.mode`  (cf. its DocString)
 
     Furthermore, you can re-employ the original tree structure to get neighborhood information via
-    get_indices, get_vectors, get_distances and get_neighborhood. The information delivered by
-    get_neighborhood is the same as what can be obtained through the other three getters (except
-    for the fact that get_neighborhood returns a Tree instance, while the others return numpy
-    arrays), but since get_vectors anyway has to call get_distances and get_indices internally, the
-    computational cost of get_neighborhood and get_vectors is the same.
+    get_neighborhood.
 
     """
     def __init__(self, ref_structure):
@@ -281,6 +277,7 @@ class Tree:
             )
         self._extended_indices = indices.copy()
         indices[distances<np.inf] = self._get_wrapped_indices()[indices[distances<np.inf]]
+        indices[distances==np.inf] = np.iinfo(np.int32).max
         return self._reshape(distances, mode, distances), self._reshape(indices, mode, distances)
 
     @deprecate(allow_ragged="use mode instead.")
@@ -336,51 +333,6 @@ class Tree:
         given in the initialization.
         """
         return np.sum(self._distances < np.inf, axis=-1)
-
-    @deprecate(allow_ragged="use mode instead.")
-    def get_distances(
-        self,
-        positions=None,
-        allow_ragged=None,
-        mode=None,
-        num_neighbors=None,
-        cutoff_radius=np.inf,
-        width_buffer=1.2,
-    ):
-        """
-        Get current positions or neighbor positions for given positions using the same Tree
-        structure used for the instantiation of the Neighbor class. This function should not be
-        used if the structure changed in the meantime. If `positions` is None and `allow_ragged` is
-        None, this function returns the same content as `positions`.
-
-        Args:
-            positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
-                are to be computed (None to get current vectors)
-            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
-                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
-            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
-                'flattened'.
-            num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
-                Ignored if `positions` is None.
-            cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
-            width_buffer (float): Buffer length for the estimation of num_neighbors. Ignored if
-                `positions` is None.
-
-        Returns:
-            (list/numpy.ndarray) list (if allow_ragged=True) or numpy.ndarray (otherwise) of
-                neighbor distances
-        """
-        if allow_ragged is not None and mode is None:
-            mode = self._allow_ragged_to_mode(allow_ragged)
-        elif mode is None:
-            mode = self.mode
-        return self._get_distances_and_indices(
-            positions=positions,
-            mode=mode,
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
-        )[0]
 
     @deprecate(allow_ragged="use mode instead.")
     def get_vectors(
