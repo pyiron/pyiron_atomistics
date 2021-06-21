@@ -41,7 +41,7 @@ class Tree:
         etc. Since the information outside the original box is limited to a few layer,
         wrap_positions=False might miss some points without issuing an error.
 
-    Change representation mode via `mode` (cf. its DocString)
+    Change representation mode via :attribute:`.Neighbors.mode`  (cf. its DocString)
 
     Furthermore, you can re-employ the original tree structure to get neighborhood information via
     get_indices, get_vectors, get_distances and get_neighborhood. The information delivered by
