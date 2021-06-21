@@ -171,6 +171,8 @@ class Atoms(ASEAtoms):
 
         elif indices is not None:
             el_index_lst = indices
+            if species is None:
+                raise ValueError("species must be given if indices is given, but is None.")
             self.set_species(species)
 
         self.indices = np.array(el_index_lst, dtype=int)

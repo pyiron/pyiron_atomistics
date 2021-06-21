@@ -612,19 +612,23 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
     def _get_structure(self, frame=-1, wrap_atoms=True):
         if self.structure is None:
             raise AssertionError('Structure not set')
-        snapshot = self.structure.copy()
         if self.output.cells is not None:
             try:
-                snapshot.cell = self.output.cells[frame]
+                cell = self.output.cells[frame]
             except IndexError:
                 if wrap_atoms:
                     raise IndexError('cell at step ', frame, ' not found') from None
-                snapshot.cell = None
+                cell = None
         if self.output.indices is not None:
             try:
-                snapshot.indices = self.output.indices[frame]
+                indices = self.output.indices[frame]
             except IndexError:
-                pass
+                indices = None
+        if indices is not None and len(indices) != len(self.structure):
+            snapshot = Atoms(species=self.structure.species, indices=indices,
+                             positions=np.zeros(indices.shape + (3,)), cell=cell, pbc=self.structure.pbc)
+        else:
+            snapshot = self.structure.copy()
         if self.output.positions is not None:
             if wrap_atoms:
                 snapshot.positions = self.output.positions[frame]
