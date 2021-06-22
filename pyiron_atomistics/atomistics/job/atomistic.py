@@ -635,7 +635,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             if indices is not None:
                 snapshot.indices = indices
             if species is not None:
-                snapshot.species = species
+                snapshot.set_species(species)
         if self.output.positions is not None:
             if wrap_atoms:
                 snapshot.positions = self.output.positions[frame]
