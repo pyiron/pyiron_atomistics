@@ -624,9 +624,8 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 indices = self.output.indices[frame]
             except IndexError:
                 indices = None
-        species = self['output/structure/species']
         if indices is not None and len(indices) != len(self.structure):
-            snapshot = Atoms(species=species, indices=indices,
+            snapshot = Atoms(species=self.structure.species, indices=indices,
                              positions=np.zeros(indices.shape + (3,)), cell=cell, pbc=self.structure.pbc)
         else:
             snapshot = self.structure.copy()
@@ -634,8 +633,6 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 snapshot.cell = cell
             if indices is not None:
                 snapshot.indices = indices
-            if species is not None:
-                snapshot.set_species(species)
         if self.output.positions is not None:
             if wrap_atoms:
                 snapshot.positions = self.output.positions[frame]
