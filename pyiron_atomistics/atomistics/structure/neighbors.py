@@ -334,7 +334,7 @@ class Tree:
         """
         return np.sum(self._distances < np.inf, axis=-1)
 
-    @deprecate(allow_ragged="use mode instead.")
+    @deprecate(allow_ragged="use `mode='ragged'` instead.")
     def get_vectors(
         self,
         positions=None,
