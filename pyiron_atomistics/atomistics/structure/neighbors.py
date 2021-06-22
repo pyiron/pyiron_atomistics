@@ -205,7 +205,7 @@ class Tree:
         return self._mode['ragged']
 
     @allow_ragged.setter
-    @deprecate("Use mode", version="1.0.0")
+    @deprecate("Use `mode='ragged'`", version="1.0.0")
     def allow_ragged(self, new_bool):
         if not isinstance(new_bool, bool):
             raise ValueError('allow_ragged must be a boolean')
@@ -1029,4 +1029,3 @@ class Neighbors(Tree):
         return ind_shell
 
 Neighbors.__doc__ = Tree.__doc__
-
