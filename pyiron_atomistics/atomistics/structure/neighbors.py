@@ -93,7 +93,7 @@ class Tree:
     def mode(self, new_mode):
         if new_mode not in self._mode.keys():
             raise KeyError(
-                new_mode + " not found. Available modes: 'filled', 'ragged', 'flattened'"
+                f"{new_mode} not found. Available modes: {', '.join(self._mode.keys())}"
             )
         self._mode = {key: False for key in self._mode.keys()}
         self._mode[new_mode] = True

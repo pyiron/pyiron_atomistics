@@ -1277,7 +1277,7 @@ class Atoms(ASEAtoms):
             width_buffer=width_buffer,
         ).numbers_of_neighbors
 
-    @deprecate(allow_ragged="use mode instead.")
+    @deprecate(allow_ragged="use `mode='ragged'` instead.")
     @deprecate("Use get_neighbors", version="1.0.0")
     def get_neighbors_by_distance(
         self,
@@ -1290,29 +1290,6 @@ class Atoms(ASEAtoms):
         mode='ragged',
         norm_order=2,
     ):
-        """
-
-        Args:
-            cutoff_radius (float): Upper bound of the distance to which the search must be done
-            num_neighbors (int/None): maximum number of neighbors found; if None this is estimated based on the density.
-            tolerance (int): tolerance (round decimal points) used for computing neighbor shells
-            id_list (list): list of atoms the neighbors are to be looked for
-            width_buffer (float): width of the layer to be added to account for pbc.
-            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
-                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
-            mode (str): Representation of per-atom quantities (distances etc.). Choose from
-                'filled', 'ragged' and 'flattened'.
-            norm_order (int): Norm to use for the neighborhood search and shell recognition. The
-                definition follows the conventional Lp norm (cf.
-                https://en.wikipedia.org/wiki/Lp_space). This is an feature and for anything
-                other than norm_order=2, there is no guarantee that this works flawlessly.
-
-        Returns:
-
-            pyiron.atomistics.structure.atoms.Neighbors: Neighbors instances with the neighbor
-                indices, distances and vectors
-
-        """
         return self.get_neighbors(
             cutoff_radius=cutoff_radius,
             num_neighbors=num_neighbors,
@@ -1323,8 +1300,9 @@ class Atoms(ASEAtoms):
             mode=mode,
             norm_order=norm_order,
         )
+    get_neighbors_by_distance.__doc__ = get_neighbors.__doc__
 
-    @deprecate(allow_ragged="use mode instead.")
+    @deprecate(allow_ragged="use `mode='ragged'` instead.")
     def get_neighbors(
         self,
         num_neighbors=12,
