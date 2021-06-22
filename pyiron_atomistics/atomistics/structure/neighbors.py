@@ -280,7 +280,7 @@ class Tree:
         indices[distances==np.inf] = np.iinfo(np.int32).max
         return self._reshape(distances, mode, distances), self._reshape(indices, mode, distances)
 
-    @deprecate(allow_ragged="use mode instead.")
+    @deprecate(allow_ragged="use `mode='ragged'` instead.")
     def get_indices(
         self,
         positions=None,
