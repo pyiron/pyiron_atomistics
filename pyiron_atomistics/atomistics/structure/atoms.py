@@ -1278,31 +1278,6 @@ class Atoms(ASEAtoms):
         ).numbers_of_neighbors
 
     @deprecate(allow_ragged="use `mode='ragged'` instead.")
-    @deprecate("Use get_neighbors", version="1.0.0")
-    def get_neighbors_by_distance(
-        self,
-        cutoff_radius=5,
-        num_neighbors=None,
-        tolerance=2,
-        id_list=None,
-        width_buffer=1.2,
-        allow_ragged=True,
-        mode='ragged',
-        norm_order=2,
-    ):
-        return self.get_neighbors(
-            cutoff_radius=cutoff_radius,
-            num_neighbors=num_neighbors,
-            tolerance=tolerance,
-            id_list=id_list,
-            width_buffer=width_buffer,
-            allow_ragged=allow_ragged,
-            mode=mode,
-            norm_order=norm_order,
-        )
-    get_neighbors_by_distance.__doc__ = get_neighbors.__doc__
-
-    @deprecate(allow_ragged="use `mode='ragged'` instead.")
     def get_neighbors(
         self,
         num_neighbors=12,
@@ -1349,6 +1324,31 @@ class Atoms(ASEAtoms):
         if allow_ragged is not None:
             neigh.allow_ragged = allow_ragged
         return neigh
+
+    @deprecate(allow_ragged="use `mode='ragged'` instead.")
+    @deprecate("Use get_neighbors", version="1.0.0")
+    def get_neighbors_by_distance(
+        self,
+        cutoff_radius=5,
+        num_neighbors=None,
+        tolerance=2,
+        id_list=None,
+        width_buffer=1.2,
+        allow_ragged=True,
+        mode='ragged',
+        norm_order=2,
+    ):
+        return self.get_neighbors(
+            cutoff_radius=cutoff_radius,
+            num_neighbors=num_neighbors,
+            tolerance=tolerance,
+            id_list=id_list,
+            width_buffer=width_buffer,
+            allow_ragged=allow_ragged,
+            mode=mode,
+            norm_order=norm_order,
+        )
+    get_neighbors_by_distance.__doc__ = get_neighbors.__doc__
 
     def _get_neighbors(
         self,
