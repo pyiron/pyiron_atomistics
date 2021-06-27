@@ -1047,3 +1047,107 @@ class Neighbors(Tree):
             ind_shell.append(ia_shells_dict)
         return ind_shell
 
+
+class NeighborsTraj:
+
+    """
+    This class generates the neighbors for a given atomistic trajectory. The assumption here is that the trajectory is
+    canonical (no change in the number and types of species throughout the trajectory). The resulting indices,
+    distances, and vectors are stored as numpy arrays.
+
+    """
+
+    def __init__(self, init_structure, positions, cells=None, num_neighbors=12, **kwargs):
+        """
+
+        Args:
+            init_structure (pyiron_atomistics.atomistics.structure.atoms.Atoms): Any given structure of the trajectory
+            positions (numpy.ndarray): The cartesian positions of the trajectories
+            cells (numpy.ndarray/None): The varying cell shapes
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+        """
+        self._init_structure = init_structure
+        self._neighbor_indices = None
+        self._neighbor_distances = None
+        self._neighbor_vectors = None
+        self._positions = positions
+        self._cells = cells
+        self._num_neighbors = num_neighbors
+        self._get_neighbors_kwargs = kwargs
+
+    @property
+    def neighbor_indices(self):
+        """
+        Neighbour indices (excluding itself) of each atom computed using the get_neighbors_traj() method
+
+        Returns:
+
+            numpy.ndarray: An array of dimension N_steps / stride x N_atoms x N_neighbors
+
+        """
+        return self._neighbor_indices
+
+    @property
+    def neighbor_distances(self):
+        """
+        Neighbour distances (excluding itself) of each atom computed using the get_neighbors_traj() method
+
+        Returns:
+
+            numpy.ndarray: An array of dimension N_steps / stride x N_atoms x N_neighbors
+
+        """
+        return self._neighbor_distances
+
+    @property
+    def neighbor_vectors(self):
+        """
+        Neighbour vectors (excluding itself) of each atom computed using the get_neighbors_traj() method
+
+        Returns:
+
+            numpy.ndarray: An array of dimension N_steps / stride x N_atoms x N_neighbors x 3
+
+        """
+        return self._neighbor_vectors
+
+    @property
+    def num_neighbors(self):
+        """
+        The maximum number of neighbors to be computed
+
+        Returns:
+
+            int: The max number of neighbors
+        """
+        return self._num_neighbors
+
+    def compute_neighbors(self):
+        """
+        Compute the neighbors across the trajectory
+        """
+        self._neighbor_indices, self._neighbor_distances, self._neighbor_vectors = \
+            _get_neighbors(self._init_structure,
+                           positions=self._positions,
+                           cells=self._cells,
+                           num_neighbors=self._num_neighbors, kwargs=self._get_neighbors_kwargs)
+
+
+def _get_neighbors(struct, positions, cells=None, num_neighbors=20, **kwargs):
+    [n_steps, n_atoms, _] = positions.shape
+    indices, distances = [np.zeros((n_steps, n_atoms, num_neighbors)) for _ in range(2)]
+    vecs = np.zeros((n_steps, n_atoms, num_neighbors, 3))
+    struct = struct.copy()
+    for t, pos in enumerate(positions):
+        struct.positions = pos
+        # Do cell lookup only if its shape changes
+        if cells is not None:
+            struct.cell = cells[t]
+        # Change the `allow_ragged` based on the changes in get_neighbors()
+        neigh = struct.get_neighbors(num_neighbors=num_neighbors, allowed_ragged=False, kwargs=kwargs)
+        indices[t, :, :] = neigh.indices
+        distances[t, :, :] = neigh.distances
+        vecs[t, :, :, :] = neigh.vecs
+    return indices, distances, vecs
