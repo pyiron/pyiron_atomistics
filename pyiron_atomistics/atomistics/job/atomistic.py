@@ -732,6 +732,42 @@ class Trajectory(object):
         self._neighbor_distances = None
         self._neighbor_vectors = None
 
+    @property
+    def neighbor_indices(self):
+        """
+        Neighbour indices (excluding itself) of each atom computed using the get_neighbors_traj() method
+
+        Returns:
+
+            numpy.ndarray: An array of dimension N_steps / stride x N_atoms x N_neighbors
+
+        """
+        return self._neighbor_indices
+
+    @property
+    def neighbor_distances(self):
+        """
+        Neighbour distances (excluding itself) of each atom computed using the get_neighbors_traj() method
+
+        Returns:
+
+            numpy.ndarray: An array of dimension N_steps / stride x N_atoms x N_neighbors
+
+        """
+        return self._neighbor_distances
+
+    @property
+    def neighbor_vectors(self):
+        """
+        Neighbour vectors (excluding itself) of each atom computed using the get_neighbors_traj() method
+
+        Returns:
+
+            numpy.ndarray: An array of dimension N_steps / stride x N_atoms x N_neighbors x 3
+
+        """
+        return self._neighbor_vectors
+
     def __getitem__(self, item):
         new_structure = self._structure.copy()
         if self._cells is not None:
