@@ -903,20 +903,13 @@ def get_neighbors_traj(struct, positions, cells=None, num_neighbors=20):
     indices, distances = [np.zeros((n_steps, n_atoms, num_neighbors)) for _ in range(2)]
     vecs = np.zeros((n_steps, n_atoms, num_neighbors, 3))
     struct = struct.copy()
-    # Do cell lookup only if its shape changes
-    if cells is not None:
-        for t, pos in enumerate(positions):
-            struct.positions = pos
+    for t, pos in enumerate(positions):
+        struct.positions = pos
+        # Do cell lookup only if its shape changes
+        if cells is not None:
             struct.cell = cells[t]
-            neigh = struct.get_neighbors(num_neighbors=num_neighbors)
-            indices[t, :, :] = neigh.indices
-            distances[t, :, :] = neigh.distances
-            vecs[t, :, :, :] = neigh.vecs
-    else:
-        for t, pos in enumerate(positions):
-            struct.positions = pos
-            neigh = struct.get_neighbors(num_neighbors=num_neighbors)
-            indices[t, :, :] = neigh.indices
-            distances[t, :, :] = neigh.indices
-            vecs[t, :, :, :] = neigh.vecs
+        neigh = struct.get_neighbors(num_neighbors=num_neighbors)
+        indices[t, :, :] = neigh.indices
+        distances[t, :, :] = neigh.distances
+        vecs[t, :, :, :] = neigh.vecs
     return indices, distances, vecs
