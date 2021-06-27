@@ -728,6 +728,9 @@ class Trajectory(object):
         self._structure = structure
         self._cells = cells
         self._indices = indices
+        self._neighbor_indices = None
+        self._neighbor_distances = None
+        self._neighbor_vectors = None
 
     def __getitem__(self, item):
         new_structure = self._structure.copy()
@@ -743,6 +746,10 @@ class Trajectory(object):
 
     def __len__(self):
         return len(self._positions)
+
+    def get_neighbors_traj(self, start=0, stop=-1, stride=1):
+        self._neighbor_indices, self._neighbor_distances, self._neighbor_vectors = \
+            get_neighbors_traj(self._structure, positions=self._positions[start:stop:stride])
 
 
 class GenericInput(GenericParameters):
@@ -889,3 +896,25 @@ class GenericOutput(object):
             return hdf5_path.list_nodes()
         else:
             return []
+
+def get_neighbors_traj(struct, positions, cells=None, num_neighbors=20):
+    [n_steps, n_atoms, _] = positions.shape
+    indices, distances = [np.zeros((n_steps, n_atoms, num_neighbors)) for _ in range(2)]
+    vecs = np.zeros((n_steps, n_atoms, num_neighbors, 3))
+    struct = struct.copy()
+    if cells is not None:
+        for t, pos in enumerate(positions):
+            struct.positions = pos
+            struct.cell = cells[t]
+            neigh = struct.get_neighbors(num_neighbors=num_neighbors)
+            indices[t, :, :] = neigh.indices
+            distances[t, :, :] = neigh.indices
+            vecs[t, :, :, :] = neigh.vecs
+    else:
+        for t, pos in enumerate(positions):
+            struct.positions = pos
+            neigh = struct.get_neighbors(num_neighbors=num_neighbors)
+            indices[t, :, :] = neigh.indices
+            distances[t, :, :] = neigh.indices
+            vecs[t, :, :, :] = neigh.vecs
+    return indices, distances, vecs
