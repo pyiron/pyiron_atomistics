@@ -4,12 +4,10 @@
 
 import copy
 import warnings
-from functools import wraps
-
 import numpy as np
 from ase.io import write as ase_write
-
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTraj
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
 
@@ -743,6 +741,48 @@ class Trajectory(object):
 
     def __len__(self):
         return len(self._positions)
+
+    def get_neighbors_slice(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors only for the required snapshots from the trajectory
+
+        Args:
+            snapshot_indices (list/numpy.ndarray): Snapshots for which the the neighbors need to be computed
+                                                   (eg. [1, 5, 10,..., 100]
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTraj: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        if snapshot_indices is None:
+            snapshot_indices = np.arange(len(self), dtype=int)
+
+        return NeighborsTraj(init_structure=self._structure,
+                             positions=self._positions[snapshot_indices],
+                             cells=self._cells[snapshot_indices],
+                             num_neighbors=num_neighbors, kwargs=kwargs)
+
+    def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors for a given section of
+
+        Args:
+            start (int): Start point
+            stop (int): Stop point
+            stride (int): Samples the snapshots evert `stride` steps
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTraj: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        snapshot_indices = np.arange(len(self))[start:stop:stride]
+        return self.get_neighbors_slice(snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, kwargs=kwargs)
 
 
 class GenericInput(GenericParameters):
