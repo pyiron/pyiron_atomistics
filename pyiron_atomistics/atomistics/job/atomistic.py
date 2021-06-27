@@ -897,6 +897,7 @@ class GenericOutput(object):
         else:
             return []
 
+
 def get_neighbors_traj(struct, positions, cells=None, num_neighbors=20):
     [n_steps, n_atoms, _] = positions.shape
     indices, distances = [np.zeros((n_steps, n_atoms, num_neighbors)) for _ in range(2)]
