@@ -598,6 +598,43 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             **kwargs
         )
 
+    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors only for the required snapshots from the trajectory
+
+        Args:
+            snapshot_indices (list/numpy.ndarray): Snapshots for which the the neighbors need to be computed
+                                                   (eg. [1, 5, 10,..., 100]
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTraj: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        return self.trajectory().get_neighbors_snapshots(snapshot_indices=snapshot_indices,
+                                                         num_neighbors=num_neighbors, **kwargs)
+
+    def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors for a given section of the trajectory
+
+        Args:
+            start (int): Start point of the slice of the trajectory to be sampled
+            stop (int): End point of of the slice of the trajectory to be sampled
+            stride (int): Samples the snapshots evert `stride` steps
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTraj: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        return self.trajectory().get_neighbors(start=start, stop=stop, stride=stride,
+                                               num_neighbors=num_neighbors, **kwargs)
+
     # Compatibility functions
     @deprecate("Use get_structure()")
     def get_final_structure(self):
@@ -744,7 +781,7 @@ class Trajectory(object):
     def __len__(self):
         return len(self._positions)
 
-    def get_neighbors_slice(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
         """
         Get the neighbors only for the required snapshots from the trajectory
 
@@ -771,7 +808,7 @@ class Trajectory(object):
 
     def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
         """
-        Get the neighbors for a given section of
+        Get the neighbors for a given section of the trajectory
 
         Args:
             start (int): Start point of the slice of the trajectory to be sampled
@@ -786,7 +823,7 @@ class Trajectory(object):
                                                                              containing the neighbor information.
         """
         snapshot_indices = np.arange(len(self))[start:stop:stride]
-        return self.get_neighbors_slice(snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs)
+        return self.get_neighbors_snapshots(snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs)
 
 
 class GenericInput(GenericParameters):
