@@ -427,14 +427,14 @@ class Analyse:
         if planes is not None:
             mat = np.asarray(planes).reshape(-1, 3)
             positions = np.einsum('ij,i,nj->ni', mat, 1/np.linalg.norm(mat, axis=-1), positions)
+        if cluster_method is None:
+            cluster_method = AgglomerativeClustering(
+                linkage='complete',
+                n_clusters=None,
+                distance_threshold=distance_threshold
+            )
         layers = []
         for ii, x in enumerate(positions.T):
-            if cluster_method is None:
-                cluster_method = AgglomerativeClustering(
-                    linkage='complete',
-                    n_clusters=None,
-                    distance_threshold=distance_threshold
-                )
             cluster = cluster_method.fit(x.reshape(-1, 1))
             first_occurrences = np.unique(cluster.labels_, return_index=True)[1]
             permutation = x[first_occurrences].argsort().argsort()
