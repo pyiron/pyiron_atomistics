@@ -462,6 +462,8 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             snapshot_indices=None, overwrite_positions=None, overwrite_cells=None
     ):
         """
+        Returns a `Trajectory` instance containing the necessary information to describe the evolution of the atomic
+        structure during the atomistic simulation
 
         Args:
             stride (int): The trajectories are generated with every 'stride' steps
@@ -475,7 +477,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                                                  have the same length of `overwrite_positions`
 
         Returns:
-            pyiron.atomistics.job.atomistic.Trajectory: Trajectory instance
+            pyiron_atomistics.atomistics.job.atomistic.Trajectory: Trajectory instance
 
         """
         cells = self.output.cells
