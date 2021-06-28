@@ -963,8 +963,10 @@ class VaspBase(GenericDFTJob):
         else:
             if pressure == 0.0:
                 self.input.incar["ISIF"] = 3
-            else:
+            elif pressure is None:
                 self.input.incar["ISIF"] = 2
+            else:
+                raise ValueError("Non-zero pressure not supported!")
 
         if max_iter:
             electronic_steps = max_iter
