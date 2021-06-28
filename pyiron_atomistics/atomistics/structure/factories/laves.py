@@ -29,6 +29,10 @@ class LavesFactory:
         """
         Builds a cubic $A B_2$ C15 Laves phase cell.
 
+        Example use:
+        >>> structure = C15('Al', 'Ca')
+        >>> structure.repeat(2).plot3d(view_plane=([1, 1, 0], [0, 0, -1]))
+
         Args:
             element_a (str): The chemical symbol for the A element.
             element_b (str): The chemical symbol for the B element.
