@@ -463,7 +463,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
     ):
         """
         Returns a `Trajectory` instance containing the necessary information to describe the evolution of the atomic
-        structure during the atomistic simulation
+        structure during the atomistic simulation.
 
         Args:
             stride (int): The trajectories are generated with every 'stride' steps
