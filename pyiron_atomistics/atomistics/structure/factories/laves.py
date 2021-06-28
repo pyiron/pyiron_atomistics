@@ -58,6 +58,7 @@ class LavesFactory:
                 sub.positions += np.dot(sub.cell.array, shift.T)
                 structure += sub
 
+        structure.wrap()
         return structure
 
     def C36(self):
