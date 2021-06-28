@@ -1132,7 +1132,7 @@ class NeighborsTraj:
             _get_neighbors(self._init_structure,
                            positions=self._positions,
                            cells=self._cells,
-                           num_neighbors=self._num_neighbors, kwargs=self._get_neighbors_kwargs)
+                           num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
 
 
 def _get_neighbors(struct, positions, cells=None, num_neighbors=20, **kwargs):
@@ -1146,8 +1146,9 @@ def _get_neighbors(struct, positions, cells=None, num_neighbors=20, **kwargs):
         if cells is not None:
             struct.cell = cells[t]
         # Change the `allow_ragged` based on the changes in get_neighbors()
-        neigh = struct.get_neighbors(num_neighbors=num_neighbors, allowed_ragged=False, kwargs=kwargs)
+        neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
         indices[t, :, :] = neigh.indices
         distances[t, :, :] = neigh.distances
         vecs[t, :, :, :] = neigh.vecs
+    indices = np.array(indices, dtype=int)
     return indices, distances, vecs
