@@ -404,11 +404,20 @@ class TestLammps(unittest.TestCase):
                                            snapshot_indices=snap_indices)._positions,
             orig_pos[snap_indices][:, atom_indices, :]))
         with self.job_water_dump.project_hdf5.open("output/generic") as h_out:
-            h_out["cells"] = np.array([np.zeros((3, 3))] * len(h_out["positions"]))
+            h_out["cells"] = np.repeat([np.array(water.cell)], len(h_out["positions"]), axis=0)
         self.assertTrue(np.array_equal(
             self.job_water_dump.trajectory(atom_indices=atom_indices,
                                            snapshot_indices=snap_indices)._positions,
             orig_pos[snap_indices][:, atom_indices, :]))
+        traj_obj = self.job_water_dump.trajectory()
+        neigh_traj_obj = traj_obj.get_neighbors()
+        self.assertTrue(np.allclose(np.linalg.norm(neigh_traj_obj.neighbor_vectors, axis=-1),
+                                    neigh_traj_obj.neighbor_distances))
+        h_indices = self.job_water_dump.structure.select_index("H")
+        o_indices = self.job_water_dump.structure.select_index("O")
+
+        self.assertTrue(np.alltrue([np.in1d(np.unique(ind_mat.flatten()), h_indices) for ind_mat in
+                                    neigh_traj_obj.neighbor_indices[:, o_indices, :2]]))
 
     def test_dump_parser(self):
         structure = Atoms(
