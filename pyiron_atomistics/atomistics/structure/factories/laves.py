@@ -19,13 +19,13 @@ __date__ = "Jun 28, 2021"
 
 class LavesFactory:
     """A collection of routines for constructing Laves phase structures."""
-    def __init__(self):
-        self._bulk = AseFactory().bulk
 
-    def C14(self):
+    @staticmethod
+    def C14():
         raise NotImplementedError
 
-    def C15(self, element_a, element_b, a=None):
+    @staticmethod
+    def C15(element_a, element_b, a=None):
         """
         Builds a cubic $A B_2$ C15 Laves phase cell.
 
@@ -42,11 +42,12 @@ class LavesFactory:
         Returns:
             (Atoms): The C15 unit cell.
         """
+        bulk = AseFactory().bulk
         if a is None:
-            a = self._bulk(name=element_a).get_neighbors(num_neighbors=1).distances[0, 0] * (4 / np.sqrt(3))
+            a = bulk(name=element_a).get_neighbors(num_neighbors=1).distances[0, 0] * (4 / np.sqrt(3))
 
-        structure = self._bulk(name=element_a, crystalstructure='diamond', a=a, cubic=True)
-        secondary = self._bulk(name=element_b, crystalstructure='diamond', a=a, cubic=True)
+        structure = bulk(name=element_a, crystalstructure='diamond', a=a, cubic=True)
+        secondary = bulk(name=element_b, crystalstructure='diamond', a=a, cubic=True)
         evens = secondary[[i for i in range(len(secondary)) if i % 2 == 0]]
         odds = secondary[[i for i in range(len(secondary)) if i % 2 == 1]]
 
@@ -65,5 +66,6 @@ class LavesFactory:
         structure.wrap()
         return structure
 
-    def C36(self):
+    @staticmethod
+    def C36():
         raise NotImplementedError
