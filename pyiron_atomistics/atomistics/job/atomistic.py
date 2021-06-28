@@ -760,18 +760,20 @@ class Trajectory(object):
         if snapshot_indices is None:
             snapshot_indices = np.arange(len(self), dtype=int)
 
-        return NeighborsTraj(init_structure=self._structure,
-                             positions=self._positions[snapshot_indices],
-                             cells=self._cells[snapshot_indices],
-                             num_neighbors=num_neighbors, kwargs=kwargs)
+        n_obj = NeighborsTraj(init_structure=self._structure,
+                              positions=self._positions[snapshot_indices],
+                              cells=self._cells[snapshot_indices],
+                              num_neighbors=num_neighbors, **kwargs)
+        n_obj.compute_neighbors()
+        return n_obj
 
     def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
         """
         Get the neighbors for a given section of
 
         Args:
-            start (int): Start point
-            stop (int): Stop point
+            start (int): Start point of the slice of the trajectory to be sampled
+            stop (int): End point of of the slice of the trajectory to be sampled
             stride (int): Samples the snapshots evert `stride` steps
             num_neighbors (int): The cutoff for the number of neighbors
             **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
@@ -782,7 +784,7 @@ class Trajectory(object):
                                                                              containing the neighbor information.
         """
         snapshot_indices = np.arange(len(self))[start:stop:stride]
-        return self.get_neighbors_slice(snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, kwargs=kwargs)
+        return self.get_neighbors_slice(snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs)
 
 
 class GenericInput(GenericParameters):
