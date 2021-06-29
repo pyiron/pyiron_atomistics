@@ -78,6 +78,43 @@ class AtomskBuilder:
         return meth
 
 class AtomskFactory:
+    """
+    Wrapper around the atomsk CLI.
+
+    Use :method:`.create()` to create a new structure and :method:`.modify()` to pass an existing structure to atomsk.
+    Both of them return a :class:`.AtomskBuilder`, which has methods named like the flags of atomsk.  Calling them with
+    the appropriate arguments adds the flags to the command line.  Once you added all flags, call
+    :method:`.AtomskBuilder.build()` to create the new structure.
+
+    >>> from pyiron_atomistics import Project
+    >>> pr = Project('atomsk')
+    >>> pr.create.structure.atomsk.create("fcc", 3.6, "Cu").duplicate(2).build()
+    Cu: [0. 0. 0.]
+    Cu: [1.8 1.8 0. ]
+    Cu: [0.  1.8 1.8]
+    Cu: [1.8 0.  1.8]
+    Cu: [3.6 0.  0. ]
+    Cu: [5.4 1.8 0. ]
+    Cu: [3.6 1.8 1.8]
+    Cu: [5.4 0.  1.8]
+    pbc: [ True  True  True]
+    cell: 
+    Cell([7.2, 3.6, 3.6])
+    >>> s = pr.create.structure.atomsk.create("fcc", 3.6, "Cu").duplicate(2).build()
+    >>> pr.create.structure.atomsk.modify(s).cell("add", 3, "x").build()
+    Cu: [0. 0. 0.]
+    Cu: [1.8 1.8 0. ]
+    Cu: [0.  1.8 1.8]
+    Cu: [1.8 0.  1.8]
+    Cu: [3.6 0.  0. ]
+    Cu: [5.4 1.8 0. ]
+    Cu: [3.6 1.8 1.8]
+    Cu: [5.4 0.  1.8]
+    pbc: [ True  True  True]
+    cell: 
+    Cell([10.2, 3.6, 3.6])
+    """
+
     def create(self, lattice, a, *species, c=None, hkl=None):
         return AtomskBuilder.create(lattice, a, *species, c=c, hkl=hkl)
 
