@@ -12,10 +12,10 @@ class TestCompoundFactory(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.laves = CompoundFactory()
+        cls.compound = CompoundFactory()
 
     def test_C14(self):
-        structure = self.laves.C14()
+        structure = self.compound.C14()
 
     def test_C15(self):
         """
@@ -24,7 +24,7 @@ class TestCompoundFactory(TestCase):
 
         a_type = 'Mg'
         b_type = 'Cu'
-        structure = self.laves.C15(a_type, b_type)
+        structure = self.compound.C15(a_type, b_type)
 
         a_type_nn_distance = StructureFactory().bulk(a_type).get_neighbors(num_neighbors=1).distances[0, 0]
         self.assertAlmostEqual((4 / np.sqrt(3)) * a_type_nn_distance, structure.cell.array[0, 0],
@@ -49,4 +49,4 @@ class TestCompoundFactory(TestCase):
         self.assertEqual(6, np.sum(symbols[b_neighs] == b_type))
 
     def test_C36(self):
-        structure = self.laves.C36()
+        structure = self.compound.C36()
