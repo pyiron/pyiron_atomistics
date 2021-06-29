@@ -113,6 +113,11 @@ class AtomskFactory:
     pbc: [ True  True  True]
     cell: 
     Cell([10.2, 3.6, 3.6])
+
+    Methods that you call on :class:`.AtomskBuilder` are automatically translated into options, translating '_' in the
+    method name to '-' and appending all arguments as strings.  All atomsk options are therefore supported, but no error
+    checking is performed whether the translated options exist or follow the syntax prescribed by atomsk, except for
+    special cases defined on the class.
     """
 
     def create(self, lattice, a, *species, c=None, hkl=None):
