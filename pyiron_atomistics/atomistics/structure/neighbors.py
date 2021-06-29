@@ -11,6 +11,7 @@ from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
 import warnings
+import itertools
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -652,6 +653,18 @@ class Neighbors(Tree):
         if self.allow_ragged:
             return self._contract(self._shells)
         return self._shells
+
+    @property
+    def centrosymmetry(self):
+        l = self.distances.shape[-1]
+        if l%2!=0:
+            raise AssertionError(
+                'Centrosymmetry parameter can be calculated only if the number of neighbors is even'
+            )
+        all_arr = np.array(list(itertools.permutations(np.arange(l),l)))
+        return np.linalg.norm(
+            self.vecs[:,all_arr[:,int(l/2):]]+self.vecs[:,all_arr[:,:int(l/2)]], axis=-1
+        ).sum(axis=-1).min(axis=-1)/2
 
     def get_local_shells(self, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
         """
