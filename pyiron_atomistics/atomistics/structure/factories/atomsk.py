@@ -116,6 +116,25 @@ class AtomskFactory:
     """
 
     def create(self, lattice, a, *species, c=None, hkl=None):
+        """
+        Create a new structure with Atomsk.
+
+        See https://atomsk.univ-lille.fr/doc/en/mode_create.html for supported lattices.
+
+        Call :method:`.AtomskBuilder.build()` on the returned object to actually create a structures.
+
+        Args:
+            lattice (str): lattice type to create
+            a (float): first lattice parameter
+            *species (list of str): chemical short symbols for the type of atoms to create, length depends on lattice
+                                    type
+            c (float, optional): third lattice parameter, only necessary for some lattice types
+            hkl (array of int, (3,3)): three hkl vectors giving the crystallographic axes that should point along the x,
+                                       y, z directions
+
+        Returns:
+            AtomskBuilder: builder instances
+        """
         return AtomskBuilder.create(lattice, a, *species, c=c, hkl=hkl)
 
     def modify(self, structure):
