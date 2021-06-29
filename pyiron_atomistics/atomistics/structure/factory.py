@@ -27,7 +27,7 @@ from ase.build import (
 import numpy as np
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
-from pyiron_atomistics.atomistics.structure.factories.laves import LavesFactory
+from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
 from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, Atoms, \
     ase_to_pyiron, pymatgen_to_pyiron, ovito_to_pyiron
@@ -54,7 +54,7 @@ class StructureFactory(PyironFactory):
     def __init__(self):
         self._ase = AseFactory()
         self._aimsgb = AimsgbFactory()
-        self._laves = LavesFactory()
+        self._compound = CompoundFactory()
 
     @property
     def ase(self):
@@ -65,8 +65,8 @@ class StructureFactory(PyironFactory):
         return self._aimsgb
 
     @property
-    def laves(self):
-        return self._laves
+    def compound(self):
+        return self._compound
 
     def cut(self, *args, **kwargs):
         return self.ase.cut(*args, **kwargs)

@@ -3,16 +3,16 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from unittest import TestCase
-from pyiron_atomistics.atomistics.structure.factories.laves import LavesFactory
+from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 import numpy as np
 
 
-class TestAimsgbFactory(TestCase):
+class TestCompoundFactory(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.laves = LavesFactory()
+        cls.laves = CompoundFactory()
 
     def test_C14(self):
         structure = self.laves.C14()

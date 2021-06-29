@@ -17,7 +17,7 @@ __status__ = "production"
 __date__ = "Jun 28, 2021"
 
 
-class LavesFactory:
+class CompoundFactory:
     """A collection of routines for constructing Laves phase structures."""
 
     @staticmethod
