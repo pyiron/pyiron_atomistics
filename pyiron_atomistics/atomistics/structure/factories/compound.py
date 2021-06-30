@@ -42,29 +42,11 @@ class CompoundFactory:
         Returns:
             (Atoms): The C15 unit cell.
         """
-        bulk = AseFactory().bulk
+        ase = AseFactory()
         if a is None:
-            a = bulk(name=element_a).get_neighbors(num_neighbors=1).distances[0, 0] * (4 / np.sqrt(3))
+            a = ase.bulk(name=element_a).get_neighbors(num_neighbors=1).distances[0, 0] * (4 / np.sqrt(3))
 
-        structure = bulk(name=element_a, crystalstructure='diamond', a=a, cubic=True)
-        secondary = bulk(name=element_b, crystalstructure='diamond', a=a, cubic=True)
-        evens = secondary[[i for i in range(len(secondary)) if i % 2 == 0]]
-        odds = secondary[[i for i in range(len(secondary)) if i % 2 == 1]]
-
-        for shifts, sublattice in zip(
-                0.125 * np.array([
-                    [[-1, 3, -1], [-1, -3, 1]],
-                    [[-1, -3, -1], [-1, 3, 1]]
-                ]),
-                [odds, evens]
-        ):
-            for shift in shifts:
-                sub = sublattice.copy()
-                sub.positions += np.dot(sub.cell.array, shift.T)
-                structure += sub
-
-        structure.wrap()
-        return structure
+        return ase.crystal((element_a,element_b), [(0,0,0), (1/8,5/8,1/8)], spacegroup=227, cell=(a, a, a))
 
     @staticmethod
     def C36():
