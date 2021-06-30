@@ -48,10 +48,8 @@ class AtomskBuilder:
         a_and_c = str(a) if c is None else f"{a} {c}"
         line = f"--create {lattice} {a_and_c} {' '.join(species)}"
         if hkl is not None:
-            if len(hkl) != 3:
-                raise ValueError(f"hkl must have exactly three entries, not {len(hkl)}!")
-            if any(len(i) != 3 for i in hkl):
-                raise ValueError(f"Every entry in hkl must have exactly three entries not {hkl}!")
+            if np.asarray(hkl).shape != (3, 3):
+                raise ValueError(f"hkl must have shape 3x3 if provided, not {hkl}!")
             line += f" orient {' '.join(hkl[0])} {' '.join(hkl[1])} {' '.join(hkl[2])}"
         # TODO: check len(species) etc. with the document list of supported phases
         self._options.append(line)
