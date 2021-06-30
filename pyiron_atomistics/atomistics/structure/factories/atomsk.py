@@ -11,7 +11,11 @@ from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 from ase.io import read, write
 
+class AtomskError(Exception):
+    pass
+
 class AtomskBuilder:
+    """Class to build CLI arguments to Atomsk."""
 
     def __init__(self):
         self._options = []
@@ -87,9 +91,15 @@ class AtomskBuilder:
                 write(os.path.join(temp_dir, "input.exyz"), self._structure, format="extxyz")
             proc = subprocess.run(["atomsk", *" ".join(self._options).split()],
                                   capture_output=True, cwd=temp_dir)
-            return ase_to_pyiron(read(io.StringIO(proc.stdout.decode("utf8")), format="extxyz"))
+            output = proc.stdout.decode("utf8")
+            for l in output.split("\n"):
+                if l.strip().startswith("X!X ERROR:"):
+                    raise AtomskError(f"atomsk returned error: {output}")
+            return ase_to_pyiron(read(io.StringIO(output), format="extxyz"))
 
     def __getattr__(self, name):
+        # magic method to map method calls of the form self.foo_bar to options like -foo-bar; arguments converted str
+        # and appended after option, keyword arguments are mapped to strings like 'key value'
         def meth(*args, **kwargs):
             args_str = " ".join(map(str, args))
             kwargs_str = " ".join(f"{k} {v}" for k, v in kwargs.items())
