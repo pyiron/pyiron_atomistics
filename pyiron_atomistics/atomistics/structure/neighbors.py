@@ -1057,7 +1057,7 @@ class NeighborsTraj:
 
     """
 
-    def __init__(self, init_structure, positions, cells=None, num_neighbors=12, **kwargs):
+    def __init__(self, init_structure=None, positions=None, cells=None, num_neighbors=12, **kwargs):
         """
 
         Args:
@@ -1133,6 +1133,45 @@ class NeighborsTraj:
                            positions=self._positions,
                            cells=self._cells,
                            num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
+
+    def to_hdf(self, hdf, group_name="neighbors_traj"):
+        """
+        Store this `NeighborTraj` instance in a .h5 file.
+
+        Args:
+            hdf (pyiron_base.generic.hdfio.FileHDFio): HDF5 group or file
+            group_name (str): Name of the HDF5 group
+
+        """
+        with hdf.open(group_name) as h_g:
+            h_g["TYPE"] = str(type(self))
+            h_g["neighbor_vectors"] = self._neighbor_vectors
+            h_g["neighbor_distances"] = self._neighbor_distances
+            h_g["neighbor_indices"] = self._neighbor_indices
+            h_g["positions"] = self._positions
+            h_g["cells"] = self._cells
+            h_g["num_neighbors"] = self._num_neighbors
+            h_g["get_neighbors_kwargs"] = self._get_neighbors_kwargs
+            self._init_structure.to_hdf(h_g, group_name="structure")
+
+    def from_hdf(self, hdf, group_name="neighbors_traj"):
+        """
+        Recreate the `NeighborTraj` instance stored in a .h5 file.
+
+        Args:
+            hdf (pyiron_base.generic.hdfio.FileHDFio): HDF5 group or file
+            group_name (str): Name of the HDF5 group
+
+        """
+        with hdf.open(group_name) as h_g:
+            self._neighbor_vectors = h_g["neighbor_vectors"]
+            self._neighbor_distances = h_g["neighbor_distances"]
+            self._neighbor_indices = h_g["neighbor_indices"]
+            self._positions = h_g["positions"]
+            self._cells = h_g["cells"]
+            self._num_neighbors = h_g["num_neighbors"]
+            self._get_neighbors_kwargs = h_g["get_neighbors_kwargs"]
+            self._init_structure = h_g["structure"].to_object()
 
 
 def _get_neighbors(struct, positions, cells=None, num_neighbors=20, **kwargs):
