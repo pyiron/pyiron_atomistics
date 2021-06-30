@@ -449,8 +449,8 @@ class LammpsControl(GenericParameters):
                         pressure_string += " {0} {1} {1} {2}".format(
                             coord, value, pressure_damping_timescale
                         )
-                    if ii > 2:
-                        self._force_skewed = True
+                        if ii > 2:
+                            self._force_skewed = True
 
             if langevin:  # NPT(Langevin)
                 fix_ensemble_str = "all nph" + pressure_string
