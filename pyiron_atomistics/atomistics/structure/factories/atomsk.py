@@ -10,6 +10,7 @@ import os.path
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 from ase.io import read, write
+import numpy as np
 
 __author__ = "Marvin Poul"
 __copyright__ = (
