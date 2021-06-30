@@ -11,6 +11,17 @@ from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 from ase.io import read, write
 
+__author__ = "Marvin Poul"
+__copyright__ = (
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Computational Materials Design (CM) Department"
+)
+__version__ = "1.0"
+__maintainer__ = "Marvin Poul"
+__email__ = "poul@mpie.de"
+__status__ = "production"
+__date__ = "Jun 30, 2021"
+
 class AtomskError(Exception):
     pass
 
