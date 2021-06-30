@@ -585,6 +585,25 @@ class Tree:
             for m in np.arange(-l, l+1)
         ], axis=0))
 
+    @property
+    def centrosymmetry(self):
+        l = self.distances.shape[-1]
+        if l%2!=0:
+            raise AssertionError(
+                'Centrosymmetry parameter can be calculated only if the number of neighbors is even'
+            )
+        all_arr = np.array(list(itertools.permutations(np.arange(l),l)))
+        all_arr = all_arr.reshape(len(all_arr), -1, 2)
+        all_arr.sort(axis=-1)
+        all_arr = all_arr[np.unique(all_arr.reshape(-1, l), axis=0, return_index=True)[1]]
+        indices = np.indices(all_arr.shape)
+        all_arr = all_arr[indices[0], all_arr[:,:,0].argsort(axis=-1)[:,:,np.newaxis], indices[2]]
+        all_arr = all_arr[np.unique(all_arr.reshape(-1, l), axis=0, return_index=True)[1]]
+        indices = np.indices((len(self.vecs),)+all_arr.shape[:-1])
+        v = self.vecs[indices[0],all_arr[np.newaxis,:,:,0]]
+        v += self.vecs[indices[0],all_arr[np.newaxis,:,:,1]]
+        return np.linalg.norm(v, axis=-1).sum(axis=-1).min(axis=-1)
+
 
 class Neighbors(Tree):
     """
@@ -653,18 +672,6 @@ class Neighbors(Tree):
         if self.allow_ragged:
             return self._contract(self._shells)
         return self._shells
-
-    @property
-    def centrosymmetry(self):
-        l = self.distances.shape[-1]
-        if l%2!=0:
-            raise AssertionError(
-                'Centrosymmetry parameter can be calculated only if the number of neighbors is even'
-            )
-        all_arr = np.array(list(itertools.permutations(np.arange(l),l)))
-        return np.linalg.norm(
-            self.vecs[:,all_arr[:,int(l/2):]]+self.vecs[:,all_arr[:,:int(l/2)]], axis=-1
-        ).sum(axis=-1).min(axis=-1)/2
 
     def get_local_shells(self, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
         """
