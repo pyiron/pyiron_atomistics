@@ -20,7 +20,12 @@ class AtomskBuilder:
     @classmethod
     def create(cls, lattice, a, *species, c=None, hkl=None):
         """
-        See https://atomsk.univ-lille.fr/doc/en/mode_create.html
+        Instiate new builder and add create mode.
+
+        See https://atomsk.univ-lille.fr/doc/en/mode_create.html or :method:`.AtomskFactory.create` for arguments.
+
+        Returns:
+            :class:`.AtomskBuilder`: self
         """
 
         self = cls()
@@ -39,6 +44,14 @@ class AtomskBuilder:
 
     @classmethod
     def modify(cls, structure):
+        """"
+        Instiate new builder to modify and existing structure.
+
+        See :method:`.AtomskFactory.modify` for arguments.
+
+        Returns:
+            :class:`.AtomskBuilder`: self
+        """
         self = cls()
         self._structure = structure
         self._options.append("input.exyz")
@@ -47,20 +60,27 @@ class AtomskBuilder:
     def duplicate(self, nx, ny=None, nz=None):
         """
         See https://atomsk.univ-lille.fr/doc/en/option_duplicate.html
+
+        Args:
+            nx (int): replicas in x directions
+            ny (int, optional): replicas in y directions, default to nx
+            nz (int, optional): replicas in z directions, default to ny
+
+        Returns:
+            :class:`.AtomskBuilder`: self
         """
         if ny is None: ny = nx
         if nz is None: nz = ny
         self._options.append(f"-duplicate {nx} {ny} {nz}")
         return self
 
-    def orthogonal(self):
-        """
-        See https://atomsk.univ-lille.fr/doc/en/option_orthocell.html
-        """
-        self._options.append("-orthogonal-cell")
-        return self
-
     def build(self):
+        """
+        Call Atomsk with the options accumulated so far.
+
+        Returns:
+            :class:`.Atoms`: new structure
+        """
         self._options.append("- exyz") # output to stdout as exyz format
         with tempfile.TemporaryDirectory() as temp_dir:
             if self._structure is not None:
@@ -84,7 +104,8 @@ class AtomskFactory:
     Use :method:`.create()` to create a new structure and :method:`.modify()` to pass an existing structure to atomsk.
     Both of them return a :class:`.AtomskBuilder`, which has methods named like the flags of atomsk.  Calling them with
     the appropriate arguments adds the flags to the command line.  Once you added all flags, call
-    :method:`.AtomskBuilder.build()` to create the new structure.
+    :method:`.AtomskBuilder.build()` to create the new structure.  All methods to add flags return the
+    :class:`AtomskBuilder` instance they are called on to allow method chaining.
 
     >>> from pyiron_atomistics import Project
     >>> pr = Project('atomsk')
@@ -126,7 +147,7 @@ class AtomskFactory:
 
         See https://atomsk.univ-lille.fr/doc/en/mode_create.html for supported lattices.
 
-        Call :method:`.AtomskBuilder.build()` on the returned object to actually create a structures.
+        Call :method:`.AtomskBuilder.build()` on the returned object to actually create a structure.
 
         Args:
             lattice (str): lattice type to create
@@ -143,4 +164,15 @@ class AtomskFactory:
         return AtomskBuilder.create(lattice, a, *species, c=c, hkl=hkl)
 
     def modify(self, structure):
+        """
+        Modify existing structure with Atomsk.
+
+        Call :method:`.AtomskBuilder.build()` on the returned object to actually create a structure.
+
+        Args:
+            structure (:class:`.Atoms`): input structure
+
+        Returns:
+            AtomskBuilder: builder instances
+        """
         return AtomskBuilder.modify(structure)
