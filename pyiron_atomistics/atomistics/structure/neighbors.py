@@ -585,20 +585,31 @@ class Tree:
             for m in np.arange(-l, l+1)
         ], axis=0))
 
-    @property
-    def centrosymmetry(self):
-        l = self.distances.shape[-1]
-        if l%2!=0:
-            raise AssertionError(
-                'Centrosymmetry parameter can be calculated only if the number of neighbors is even'
-            )
+    @staticmethod
+    def _get_all_possible_pairs(l):
         all_arr = np.array(list(itertools.permutations(np.arange(l),l)))
         all_arr = all_arr.reshape(len(all_arr), -1, 2)
         all_arr.sort(axis=-1)
         all_arr = all_arr[np.unique(all_arr.reshape(-1, l), axis=0, return_index=True)[1]]
         indices = np.indices(all_arr.shape)
         all_arr = all_arr[indices[0], all_arr[:,:,0].argsort(axis=-1)[:,:,np.newaxis], indices[2]]
-        all_arr = all_arr[np.unique(all_arr.reshape(-1, l), axis=0, return_index=True)[1]]
+        return all_arr[np.unique(all_arr.reshape(-1, l), axis=0, return_index=True)[1]]
+
+    @property
+    def centrosymmetry(self):
+        """
+        Calculate centrosymmetry parameter for the given environment.
+
+        cf. https://doi.org/10.1103/PhysRevB.58.11085
+
+        NB: Currently very memory intensive for a large number of neighbors (works maybe up to 10)
+        """
+        l = self.distances.shape[-1]
+        if l%2!=0:
+            raise AssertionError(
+                'Centrosymmetry parameter can be calculated only if the number of neighbors is even'
+            )
+        all_arr = self._get_all_possible_pairs(l)
         indices = np.indices((len(self.vecs),)+all_arr.shape[:-1])
         v = self.vecs[indices[0],all_arr[np.newaxis,:,:,0]]
         v += self.vecs[indices[0],all_arr[np.newaxis,:,:,1]]
