@@ -366,5 +366,19 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(0.5106882308569508, neigh.get_steinhardt_parameter(6)[0])
         self.assertRaises(ValueError, neigh.get_steinhardt_parameter, 2, 2)
 
+    def test_centrosymmetry(self):
+        structure = StructureFactory().ase_bulk('Fe').repeat(4)
+        cs = structure.get_neighbors(num_neighbors=8).centrosymmetry
+        self.assertAlmostEqual(cs.max(), 0)
+        self.assertAlmostEqual(cs.min(), 0)
+        structure.positions += 0.01*(2*np.random.random(structure.positions.shape)-1)
+        neigh = structure.get_neighbors(num_neighbors=8)
+        self.assertGreater(neigh.centrosymmetry.min(), 0)
+        self.assertTrue(
+            np.allclose(
+                neigh.centrosymmetry, structure.analyse.pyscal_centro_symmetry(num_neighbors=8)
+            )
+        )
+
 if __name__ == "__main__":
     unittest.main()

@@ -602,7 +602,7 @@ class Tree:
         indices = np.indices((len(self.vecs),)+all_arr.shape[:-1])
         v = self.vecs[indices[0],all_arr[np.newaxis,:,:,0]]
         v += self.vecs[indices[0],all_arr[np.newaxis,:,:,1]]
-        return np.linalg.norm(v, axis=-1).sum(axis=-1).min(axis=-1)
+        return np.sum(v**2, axis=-1).sum(axis=-1).min(axis=-1)
 
 
 class Neighbors(Tree):
