@@ -1998,11 +1998,11 @@ class Output(object):
             return None
         if len(residue[0]) == 2:
             self._parse_dict["scf_residue"] = self.splitter(
-                residue[:, 1] * HARTREE_TO_EV, residue[:, 0]
+                residue[:, 1], residue[:, 0]
             )
         else:
             self._parse_dict["scf_residue"] = self.splitter(
-                residue[:, 1:] * HARTREE_TO_EV, residue[:, 0]
+                residue[:, 1:], residue[:, 0]
             )
 
     def collect_eps_dat(self, file_name="eps.dat", cwd=None):
