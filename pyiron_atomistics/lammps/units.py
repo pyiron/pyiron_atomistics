@@ -106,21 +106,22 @@ LAMMPS_UNIT_CONVERSIONS = {
 # Define conversion for volumes based on distances
 for values in LAMMPS_UNIT_CONVERSIONS.values():
     values["volume"] = values["distance"] ** 3
+    values["unitless_quantity"] = 1
 
 
 # Hard coded list of all quantities we store in pyiron and the type of quantity it stores (Expand if necessary)
 _conversion_dict = dict()
-_conversion_dict["distance"] = ["positions", "cells", "unwrapped_positions"]
+_conversion_dict["distance"] = ["positions", "cells", "unwrapped_positions", "mean_unwrapped_positions"]
 _conversion_dict["volume"] = ["volume", "volumes"]
 _conversion_dict["pressure"] = ["pressure", "pressures", "mean_pressures"]
 _conversion_dict["time"] = ["time"]
-_conversion_dict["energy"] = ["energy_tot", "energy_pot"]
+_conversion_dict["energy"] = ["energy_tot", "energy_pot", "energy_pot_per_atom", "mean_energy_pot"]
 _conversion_dict["temperature"] = ["temperature", "temperatures"]
-_conversion_dict["velocity"] = ["velocity"]
+_conversion_dict["velocity"] = ["velocity", "velocities", "mean_velocities"]
 _conversion_dict["mass"] = ["mass"]
 _conversion_dict["charge"] = ["charges", "charge"]
-_conversion_dict["force"] = ["forces", "force"]
-
+_conversion_dict["force"] = ["forces", "force", "mean_forces"]
+_conversion_dict["unitless_quantity"] = ["steps", "indices"]
 
 # Reverse _conversion_dict
 quantity_dict = dict()
