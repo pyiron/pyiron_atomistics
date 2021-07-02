@@ -16,20 +16,23 @@ __email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Jun 28, 2021"
 
+_ase = AseFactory()
+
+
+def _bcc_lattice_constant_from_nn_distance(element):
+    """
+    Build a BCC lattice constant by making the BCC have the same nearest neighbour distance as the regular cell.
+
+    Works because the NN distance doesn't even care what crystal structure the regular unit cell is.
+    """
+    return AseFactory().bulk(name=element).get_neighbors(num_neighbors=1).distances[0, 0] * (2 / np.sqrt(3))
+
 
 class CompoundFactory:
     """A collection of routines for constructing Laves phase structures."""
 
     @staticmethod
-    def _bcc_lattice_constant_from_nn_distance(element):
-        """
-        Build a BCC lattice constant by making the BCC have the same nearest neighbour distance as the regular cell.
-
-        Works because the NN distance doesn't even care what crystal structure the regular unit cell is.
-        """
-        return AseFactory().bulk(name=element).get_neighbors(num_neighbors=1).distances[0, 0] * (2 / np.sqrt(3))
-
-    def B2(self, element_a, element_b, a=None):
+    def B2(element_a, element_b, a=None):
         """
         Builds a cubic $AB$ B2 structure of interpenetrating simple cubic lattices.
 
@@ -41,10 +44,9 @@ class CompoundFactory:
         Returns:
             (Atoms): The B2 unit cell.
         """
-        ase = AseFactory()
-        a = self._bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
+        a = _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
 
-        return ase.crystal((element_a, element_b), [(0, 0, 0), (1 / 2, 1 / 2, 1 / 2)], spacegroup=221, cell=(a, a, a))
+        return _ase.crystal((element_a, element_b), [(0, 0, 0), (1/2, 1/2, 1/2)], spacegroup=221, cell=(a, a, a))
 
     @staticmethod
     def C14():
@@ -68,11 +70,9 @@ class CompoundFactory:
         Returns:
             (Atoms): The C15 unit cell.
         """
-        ase = AseFactory()
-        if a is None:
-            a = ase.bulk(name=element_a).get_neighbors(num_neighbors=1).distances[0, 0] * (4 / np.sqrt(3))
+        a = 2 * _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
 
-        return ase.crystal((element_a,element_b), [(0,0,0), (1/8,5/8,1/8)], spacegroup=227, cell=(a, a, a))
+        return _ase.crystal((element_a, element_b), [(0, 0, 0), (1/8, 5/8, 1/8)], spacegroup=227, cell=(a, a, a))
 
     @staticmethod
     def C36():
