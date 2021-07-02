@@ -2,6 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import numpy as np
 import scipy.constants as spc
 import warnings
 
@@ -106,7 +107,7 @@ LAMMPS_UNIT_CONVERSIONS = {
 # Define conversion for volumes based on distances
 for values in LAMMPS_UNIT_CONVERSIONS.values():
     values["volume"] = values["distance"] ** 3
-    values["unitless_quantity"] = 1
+    values["dimensionless_integer_quantity"] = 1
 
 
 # Hard coded list of all quantities we store in pyiron and the type of quantity it stores (Expand if necessary)
@@ -121,13 +122,23 @@ _conversion_dict["velocity"] = ["velocity", "velocities", "mean_velocities"]
 _conversion_dict["mass"] = ["mass"]
 _conversion_dict["charge"] = ["charges", "charge"]
 _conversion_dict["force"] = ["forces", "force", "mean_forces"]
-_conversion_dict["unitless_quantity"] = ["steps", "indices"]
+_conversion_dict["dimensionless_integer_quantity"] = ["steps", "indices"]
 
 # Reverse _conversion_dict
 quantity_dict = dict()
 for key, val in _conversion_dict.items():
     for v in val:
         quantity_dict[v] = key
+
+# Data type dict to ensure that the units are converted to the proper units
+dtype_dict = dict()
+for key, val in _conversion_dict.items():
+    for v in val:
+        # Everything except dimensionless integer quantities are stored as floats
+        if key in ["dimensionless_integer_quantity"]:
+            dtype_dict[v] = np.int
+        else:
+            dtype_dict[v] = np.float
 
 
 class UnitConverter:
@@ -189,7 +200,7 @@ class UnitConverter:
         Convert a labelled numpy array into pyiron units based on the physical quantity the label corresponds to
 
         Args:
-            array (numpy.ndarray): The array to be converted
+            array (numpy.ndarray/list): The array to be converted
             label (str): The label of the quantity (must be a key in the dictionary `quantity_dict`)
 
         Returns:
@@ -197,7 +208,7 @@ class UnitConverter:
 
         """
         if label in quantity_dict.keys():
-            return array * self.lammps_to_pyiron(quantity_dict[label])
+            return np.array(array * self.lammps_to_pyiron(quantity_dict[label]), dtype_dict[label])
         else:
             warnings.warn(message="Warning: Couldn't determine the LAMMPS to pyiron unit conversion type of quantity "
                                   "{}. Returning un-normalized quantity".format(label))
