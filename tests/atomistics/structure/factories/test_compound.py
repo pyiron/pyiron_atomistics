@@ -65,3 +65,19 @@ class TestCompoundFactory(TestCase):
 
     def test_C36(self):
         structure = self.compound.C36()
+
+    def test_D03(self):
+        element_a, element_b = 'Al', 'Fe'
+        structure = self.compound.D03(element_a, element_b)
+        symbols = structure.get_chemical_symbols()
+        neigh = structure.get_neighbors(num_neighbors=8)
+
+        a_neighbors = neigh.indices[symbols == element_a]
+        self.assertTrue(np.all(symbols[a_neighbors] == element_b), msg="A-type should only have B-type neighbors.")
+
+        b_neighbors = neigh.indices[symbols == element_b]
+        sorted_vals, counts = np.unique(np.mean(symbols[b_neighbors] == 'Al', axis=1), return_counts=True)
+        self.assertAlmostEqual(0, sorted_vals[0], msg="Shared sub-lattice has no A-type neighbors.")
+        self.assertAlmostEqual(0.5, sorted_vals[1], msg="B-type sub-lattice has half A-type neighbors.")
+        self.assertEqual(4, counts[0], msg="Shared sub-lattice should be only 1/4 of atoms.")
+        self.assertEqual(8, counts[1], msg="Pure-B sub-lattice should be 1/2 of atoms.")

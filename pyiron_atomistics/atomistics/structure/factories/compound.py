@@ -79,8 +79,27 @@ class CompoundFactory:
         raise NotImplementedError
 
     @staticmethod
-    def D03():
-        raise NotImplementedError
+    def D03(element_a, element_b, a=None):
+        """
+        Builds a cubic $A B_3$ D03 cubic cell.
+
+        Args:
+            element_a (str): The chemical symbol for the A element.
+            element_b (str): The chemical symbol for the B element.
+            a (float): The lattice constant. (Default is None, which uses the default nearest-neighbour distance for
+                the A-type element.)
+
+        Returns:
+            (Atoms): The D03 unit cell.
+        """
+        a = 2 * _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
+
+        return _ase.crystal(
+            (element_b, element_a, element_b),
+            [(0, 0, 0), (1 / 2, 1 / 2, 1 / 2), (1 / 4, 1 / 4, 1 / 4)],
+            spacegroup=225,
+            cell=(a, a, a)
+        )
 
     @staticmethod
     def Heusler(element_a, element_b, element_c):
