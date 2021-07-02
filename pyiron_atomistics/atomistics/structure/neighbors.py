@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from scipy.sparse import coo_matrix
 from scipy.special import gamma
-from pyiron_base import Settings
+from pyiron_base import Settings, DataContainer
 from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique_labels
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
@@ -1048,7 +1048,7 @@ class Neighbors(Tree):
         return ind_shell
 
 
-class NeighborsTraj:
+class NeighborsTraj(DataContainer):
 
     """
     This class generates the neighbors for a given atomistic trajectory. The assumption here is that the trajectory is
@@ -1068,6 +1068,7 @@ class NeighborsTraj:
             **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
                              (eg. cutoff_radius, norm_order , etc.)
         """
+        super().__init__()
         self._init_structure = init_structure
         self._neighbor_indices = None
         self._neighbor_distances = None
@@ -1084,7 +1085,7 @@ class NeighborsTraj:
 
         Returns:
 
-            numpy.ndarray: An array of dimension N_steps / stride x N_atoms x N_neighbors
+            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
 
         """
         return self._neighbor_indices
@@ -1096,7 +1097,7 @@ class NeighborsTraj:
 
         Returns:
 
-            numpy.ndarray: An array of dimension N_steps / stride x N_atoms x N_neighbors
+            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
 
         """
         return self._neighbor_distances
@@ -1108,7 +1109,7 @@ class NeighborsTraj:
 
         Returns:
 
-            numpy.ndarray: An array of dimension N_steps / stride x N_atoms x N_neighbors x 3
+            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors x 3
 
         """
         return self._neighbor_vectors
@@ -1143,35 +1144,7 @@ class NeighborsTraj:
             group_name (str): Name of the HDF5 group
 
         """
-        with hdf.open(group_name) as h_g:
-            h_g["TYPE"] = str(type(self))
-            h_g["neighbor_vectors"] = self._neighbor_vectors
-            h_g["neighbor_distances"] = self._neighbor_distances
-            h_g["neighbor_indices"] = self._neighbor_indices
-            h_g["positions"] = self._positions
-            h_g["cells"] = self._cells
-            h_g["num_neighbors"] = self._num_neighbors
-            h_g["get_neighbors_kwargs"] = self._get_neighbors_kwargs
-            self._init_structure.to_hdf(h_g, group_name="structure")
-
-    def from_hdf(self, hdf, group_name="neighbors_traj"):
-        """
-        Recreate the `NeighborTraj` instance stored in a .h5 file.
-
-        Args:
-            hdf (pyiron_base.generic.hdfio.FileHDFio): HDF5 group or file
-            group_name (str): Name of the HDF5 group
-
-        """
-        with hdf.open(group_name) as h_g:
-            self._neighbor_vectors = h_g["neighbor_vectors"]
-            self._neighbor_distances = h_g["neighbor_distances"]
-            self._neighbor_indices = h_g["neighbor_indices"]
-            self._positions = h_g["positions"]
-            self._cells = h_g["cells"]
-            self._num_neighbors = h_g["num_neighbors"]
-            self._get_neighbors_kwargs = h_g["get_neighbors_kwargs"]
-            self._init_structure = h_g["structure"].to_object()
+        super().to_hdf(hdf=hdf, group_name=group_name)
 
 
 def _get_neighbors(struct, positions, cells=None, num_neighbors=20, **kwargs):
