@@ -77,3 +77,11 @@ class CompoundFactory:
     @staticmethod
     def C36():
         raise NotImplementedError
+
+    @staticmethod
+    def D03():
+        raise NotImplementedError
+
+    @staticmethod
+    def Heusler(element_a, element_b, element_c):
+        raise NotImplementedError
