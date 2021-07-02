@@ -741,7 +741,7 @@ class Trajectory(HasStructure):
         # new_structure.arrays['cells'] = new_structure.cell
         return new_structure
 
-    def _get_structure(self, frame, wrap_atoms=True):
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
 
     def __len__(self):
