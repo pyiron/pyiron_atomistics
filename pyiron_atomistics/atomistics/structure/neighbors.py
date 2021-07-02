@@ -587,6 +587,10 @@ class Tree:
 
     @staticmethod
     def _get_all_possible_pairs(l):
+        if l%2!=0:
+            raise ValueError(
+                'Pairs cannot be formed for an uneven number of groups.'
+            )
         all_arr = np.array(list(itertools.permutations(np.arange(l),l)))
         all_arr = all_arr.reshape(len(all_arr), -1, 2)
         all_arr.sort(axis=-1)
@@ -604,12 +608,7 @@ class Tree:
 
         NB: Currently very memory intensive for a large number of neighbors (works maybe up to 10)
         """
-        l = self.distances.shape[-1]
-        if l%2!=0:
-            raise AssertionError(
-                'Centrosymmetry parameter can be calculated only if the number of neighbors is even'
-            )
-        all_arr = self._get_all_possible_pairs(l)
+        all_arr = self._get_all_possible_pairs(self.distances.shape[-1])
         indices = np.indices((len(self.vecs),)+all_arr.shape[:-1])
         v = self.vecs[indices[0],all_arr[np.newaxis,:,:,0]]
         v += self.vecs[indices[0],all_arr[np.newaxis,:,:,1]]

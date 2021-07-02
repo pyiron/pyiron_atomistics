@@ -380,5 +380,24 @@ class TestAtoms(unittest.TestCase):
             )
         )
 
+    def test_get_all_pairs(self):
+        structure = StructureFactory().ase_bulk('Fe').repeat(4)
+        neigh = structure.get_neighbors(num_neighbors=8)
+        for n in [2, 4, 6]:
+            pairs = neigh._get_all_possible_pairs(n)
+            self.assertEqual(
+                (np.prod(np.arange(int(n/2))*2+1), int(n/2), 2),
+                pairs.shape
+            )
+            for i in range(2**(n-2)):
+                a = np.sort(np.random.choice(np.arange(n), 2, replace=False))
+                self.assertEqual(
+                    np.sum(np.all(a==pairs, axis=-1)), np.prod(np.arange(int((n-1)/2))*2+1)
+                )
+        self.assertEqual(
+            np.ptp(np.unique(neigh._get_all_possible_pairs(6), return_counts=True)[1]), 0
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
