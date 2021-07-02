@@ -12,7 +12,22 @@ class TestCompoundFactory(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.sf = StructureFactory()
         cls.compound = CompoundFactory()
+
+    def test_B2(self):
+        structure = self.compound.B2('Fe', 'Al')
+        self.assertAlmostEqual(self.sf.bulk('Fe', cubic=True).cell[0, 0], structure.cell[0, 0],
+                         msg="Docstring claims lattice constant defaults to primary species")
+        self.assertEqual(2, len(structure))
+        neigh = structure.get_neighbors(num_neighbors=8)
+        symbols = structure.get_chemical_symbols()
+        self.assertEqual(8, np.sum(symbols[neigh.indices[0]] == 'Al'),
+                         msg="Expected the primary atom to have all secondary neighbors")
+        self.assertEqual(8, np.sum(symbols[neigh.indices[1]] == 'Fe'),
+                         msg="Expected the secondary atom to have all primary neighbors")
+        structure = self.compound.B2('Fe', 'Al', a=1)
+        self.assertTrue(np.allclose(np.diag(structure.cell.array), 1), "Expected cubic cell with specified size.")
 
     def test_C14(self):
         structure = self.compound.C14()

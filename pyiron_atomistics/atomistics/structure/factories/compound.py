@@ -21,6 +21,32 @@ class CompoundFactory:
     """A collection of routines for constructing Laves phase structures."""
 
     @staticmethod
+    def _bcc_lattice_constant_from_nn_distance(element):
+        """
+        Build a BCC lattice constant by making the BCC have the same nearest neighbour distance as the regular cell.
+
+        Works because the NN distance doesn't even care what crystal structure the regular unit cell is.
+        """
+        return AseFactory().bulk(name=element).get_neighbors(num_neighbors=1).distances[0, 0] * (2 / np.sqrt(3))
+
+    def B2(self, element_a, element_b, a=None):
+        """
+        Builds a cubic $AB$ B2 structure of interpenetrating simple cubic lattices.
+
+        Args:
+            element_a (str): The chemical symbol for the A element.
+            element_b (str): The chemical symbol for the B element.
+            a (float): The lattice constant. (Default is None, which uses the default for element A.)
+
+        Returns:
+            (Atoms): The B2 unit cell.
+        """
+        ase = AseFactory()
+        a = self._bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
+
+        return ase.crystal((element_a, element_b), [(0, 0, 0), (1 / 2, 1 / 2, 1 / 2)], spacegroup=221, cell=(a, a, a))
+
+    @staticmethod
     def C14():
         raise NotImplementedError
 
