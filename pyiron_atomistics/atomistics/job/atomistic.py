@@ -703,7 +703,7 @@ class MapFunctions(object):
         self.set_structure = set_structure
 
 
-class Trajectory(object):
+class Trajectory(HasStructure):
     """
     A trajectory instance compatible with the ase.io class
 
@@ -741,8 +741,14 @@ class Trajectory(object):
         # new_structure.arrays['cells'] = new_structure.cell
         return new_structure
 
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        return self[frame]
+
     def __len__(self):
         return len(self._positions)
+
+    _number_of_structures = __len__
+
 
 
 class GenericInput(GenericParameters):
