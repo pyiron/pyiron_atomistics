@@ -403,7 +403,7 @@ class Tree:
         elif num_neighbors is None and self.num_neighbors is None:
             volume = self._ref_structure.get_volume(per_atom=True)
             width_buffer = 1+width_buffer
-            width_buffer *= 8*gamma(1+1/self.norm_order)**3/gamma(1+3/self.norm_order)
+            width_buffer *= get_volume_of_n_sphere_in_p_norm(3, self.norm_order)
             num_neighbors = max(14, int(width_buffer*cutoff_radius**3/volume))
         elif num_neighbors is None:
             num_neighbors = self.num_neighbors
@@ -433,14 +433,10 @@ class Tree:
             return 0
         elif cutoff_radius!=np.inf:
             return cutoff_radius
-        pbc = self._ref_structure.pbc
-        n = sum(pbc)
-        prefactor = 2**n*gamma(1+1/self.norm_order)**2/gamma(1+n/self.norm_order)
-        width = np.prod((
-            np.linalg.norm(self._ref_structure.cell, axis=-1, ord=self.norm_order)-np.ones(3)
-        )*pbc+np.ones(3))
+        prefactor = get_volume_of_n_sphere_in_p_norm(3, self.norm_order)
+        width = np.prod(np.linalg.norm(self._ref_structure.cell, axis=-1, ord=self.norm_order))
         width *= prefactor*np.max([num_neighbors, 8])/len(self._ref_structure)
-        cutoff_radius = width_buffer*width**(1/np.sum(pbc))
+        cutoff_radius = width_buffer*width**(1/3)
         return cutoff_radius
 
     def get_neighborhood(
@@ -1046,4 +1042,12 @@ class Neighbors(Tree):
                     ia_shells_dict[el].append(ia_lst)
             ind_shell.append(ia_shells_dict)
         return ind_shell
+
+def get_volume_of_n_sphere_in_p_norm(n=3, p=2):
+    """
+    Volume of an n-sphere in p-norm. For more info:
+
+    https://en.wikipedia.org/wiki/Volume_of_an_n-ball#Balls_in_Lp_norms
+    """
+    return (2*gamma(1+1/p))**n/gamma(1+n/p)
 
