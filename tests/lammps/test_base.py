@@ -506,7 +506,7 @@ class TestLammps(unittest.TestCase):
         self.job_vcsgc_input.calc_vcsgc(**args)
         self.assertEqual(self.job_vcsgc_input.input.control['fix___vcsgc'], input_string)
 
-        args['temperature_mc'] = 100.,
+        args['temperature_mc'] = 100.
         input_string = 'all sgcmc {0} {1} {2} {3} randseed {4}'.format(
             args['mc_step_interval'],
             args['swap_fraction'],
