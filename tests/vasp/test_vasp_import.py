@@ -7,6 +7,7 @@ import numpy as np
 import os
 from pyiron_atomistics.project import Project
 from pyiron_atomistics.vasp.vasp import Vasp
+from pyiron_atomistics.vasp.vasprun import VasprunWarning
 from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 import warnings
 
@@ -46,9 +47,10 @@ class TestVaspImport(unittest.TestCase):
             self.file_location, "../static/vasp_test_files/full_job_minor_glitch"
         )
         with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+            warnings.simplefilter("ignore")
+            warnings.simplefilter("always", category=VasprunWarning)
             self.project.import_from_path(path=folder_path, recursive=False)
-            self.assertEqual(len(w), 4)
+            self.assertEqual(len(w), 3)
         ham = self.project.load("full_job_minor_glitch")
         self.assertTrue(ham.status.finished)
         self.assertTrue(isinstance(ham, Vasp))

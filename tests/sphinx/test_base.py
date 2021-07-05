@@ -565,7 +565,7 @@ class TestSphinx(unittest.TestCase):
             self.file_location, "../static/sphinx/sphinx_test_2_3_hdf5/sphinx_test_2_3/"
         )
         residue_lst = np.loadtxt(file_location + "residue.dat")[:, 1].reshape(1, -1)
-        residue_lst = (residue_lst * HARTREE_TO_EV).tolist()
+        residue_lst = (residue_lst).tolist()
         energy_int_lst = np.loadtxt(file_location + "energy.dat")[:, 2].reshape(1, -1)
         energy_int_lst = (energy_int_lst * HARTREE_TO_EV).tolist()
         with open(file_location + "sphinx.log") as ffile:

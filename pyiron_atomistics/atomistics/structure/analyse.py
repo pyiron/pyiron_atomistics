@@ -363,7 +363,7 @@ class Analyse:
         )
     get_interstitials.__doc__ = Interstitials.__doc__.replace('Class', 'Function') + Interstitials.__init__.__doc__
 
-    def get_layers(self, distance_threshold=0.01, id_list=None, wrap_atoms=True, planes=None):
+    def get_layers(self, distance_threshold=0.01, id_list=None, wrap_atoms=True, planes=None, cluster_method=None):
         """
         Get an array of layer numbers.
 
@@ -385,6 +385,8 @@ class Analyse:
                 vectors, use `planes=np.linalg.inv(structure.cell).T`. Whatever values are
                 inserted, they are internally normalized, so whether [1, 0, 0] is entered or
                 [2, 0, 0], the results will be the same.
+            cluster_method (scikit-learn cluster algorithm): if given overrides the clustering method used, must be an
+                instance of a cluster algorithm from scikit-learn (or compatible interface)
 
         Returns: Array of layer numbers (same shape as structure.positions)
 
@@ -397,6 +399,11 @@ class Analyse:
 
         >>> print('Iron layers:', structure.analyse.get_layers(
         ...       id_list=structure.select_index('Fe')))
+
+        The clustering algorithm can be changed with the cluster_method argument
+
+        >>> from sklearn.cluster import DBSCAN
+        >>> layers = structure.analyse.get_layers(cluster_method=DBSCAN())
         """
         if distance_threshold <= 0:
             raise ValueError('distance_threshold must be a positive float')
@@ -420,13 +427,15 @@ class Analyse:
         if planes is not None:
             mat = np.asarray(planes).reshape(-1, 3)
             positions = np.einsum('ij,i,nj->ni', mat, 1/np.linalg.norm(mat, axis=-1), positions)
-        layers = []
-        for ii, x in enumerate(positions.T):
-            cluster = AgglomerativeClustering(
+        if cluster_method is None:
+            cluster_method = AgglomerativeClustering(
                 linkage='complete',
                 n_clusters=None,
                 distance_threshold=distance_threshold
-            ).fit(x.reshape(-1, 1))
+            )
+        layers = []
+        for ii, x in enumerate(positions.T):
+            cluster = cluster_method.fit(x.reshape(-1, 1))
             first_occurrences = np.unique(cluster.labels_, return_index=True)[1]
             permutation = x[first_occurrences].argsort().argsort()
             labels = permutation[cluster.labels_]

@@ -7,11 +7,13 @@ import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 
+from sklearn.cluster import AgglomerativeClustering, DBSCAN
 
 class TestAtoms(unittest.TestCase):
     def test_get_layers(self):
         a_0 = 4
         struct = CrystalStructure('Al', lattice_constants=a_0, bravais_basis='fcc').repeat(10)
+        struct_pure = struct.copy()
         layers = struct.analyse.get_layers()
         self.assertAlmostEqual(np.linalg.norm(layers-np.rint(2*struct.positions/a_0).astype(int)), 0)
         struct.append(Atoms(elements=['C'], positions=np.random.random((1,3))))
@@ -28,6 +30,19 @@ class TestAtoms(unittest.TestCase):
             _ = struct.analyse.get_layers(distance_threshold=0)
         with self.assertRaises(ValueError):
             _ = struct.analyse.get_layers(id_list=[])
+
+        self.assertTrue(np.all(
+                            struct.analyse.get_layers() == \
+                            struct.analyse.get_layers(cluster_method=AgglomerativeClustering(
+                                    linkage='complete',
+                                    n_clusters=None,
+                                    distance_threshold=0.01
+                            ))
+                        ), "Overriding cluster method with default parameters does not return the same results.")
+        self.assertTrue(np.all(
+                            struct_pure.analyse.get_layers() == \
+                            struct_pure.analyse.get_layers(cluster_method=DBSCAN(eps=0.01))
+                         ), "Overriding cluster method with DBSCAN does not return the same results for symmetric structure.")
 
     def test_get_layers_other_planes(self):
         structure = CrystalStructure('Fe', bravais_basis='fcc', lattice_constants=3.5).repeat(2)

@@ -408,6 +408,7 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(0.5106882308569508, neigh.get_steinhardt_parameter(6)[0])
         self.assertRaises(ValueError, neigh.get_steinhardt_parameter, 2, 2)
 
+<<<<<<< HEAD
     def test_numbers_of_neighbors(self):
         basis = StructureFactory().ase.bulk('Al', cubic=True).repeat(2)
         del basis[0]
@@ -426,6 +427,40 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(neigh.mode=='flattened')
         with self.assertRaises(KeyError):
             neigh.mode = 'random_key'
+=======
+    def test_centrosymmetry(self):
+        structure = StructureFactory().ase_bulk('Fe').repeat(4)
+        cs = structure.get_neighbors(num_neighbors=8).centrosymmetry
+        self.assertAlmostEqual(cs.max(), 0)
+        self.assertAlmostEqual(cs.min(), 0)
+        structure.positions += 0.01*(2*np.random.random(structure.positions.shape)-1)
+        neigh = structure.get_neighbors(num_neighbors=8)
+        self.assertGreater(neigh.centrosymmetry.min(), 0)
+        self.assertTrue(
+            np.allclose(
+                neigh.centrosymmetry, structure.analyse.pyscal_centro_symmetry(num_neighbors=8)
+            )
+        )
+
+    def test_get_all_pairs(self):
+        structure = StructureFactory().ase_bulk('Fe').repeat(4)
+        neigh = structure.get_neighbors(num_neighbors=8)
+        for n in [2, 4, 6]:
+            pairs = neigh._get_all_possible_pairs(n)
+            self.assertEqual(
+                (np.prod(np.arange(int(n/2))*2+1), int(n/2), 2),
+                pairs.shape
+            )
+            for i in range(2**(n-2)):
+                a = np.sort(np.random.choice(np.arange(n), 2, replace=False))
+                self.assertEqual(
+                    np.sum(np.all(a==pairs, axis=-1)), np.prod(np.arange(int((n-1)/2))*2+1)
+                )
+        self.assertEqual(
+            np.ptp(np.unique(neigh._get_all_possible_pairs(6), return_counts=True)[1]), 0
+        )
+
+>>>>>>> origin
 
 if __name__ == "__main__":
     unittest.main()
