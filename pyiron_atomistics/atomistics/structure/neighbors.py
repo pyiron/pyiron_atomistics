@@ -1147,7 +1147,7 @@ class NeighborsTraj(DataContainer):
         super().to_hdf(hdf=hdf, group_name=group_name)
 
 
-def _get_neighbors(struct, positions, cells=None, num_neighbors=20, **kwargs):
+def _get_neighbors(struct, positions, cells=None, num_neighbors=12, **kwargs):
     [n_steps, n_atoms, _] = positions.shape
     indices, distances = [np.zeros((n_steps, n_atoms, num_neighbors)) for _ in range(2)]
     vecs = np.zeros((n_steps, n_atoms, num_neighbors, 3))
