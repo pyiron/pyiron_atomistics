@@ -1057,24 +1057,20 @@ class NeighborsTraj(DataContainer):
 
     """
 
-    def __init__(self, init_structure=None, positions=None, cells=None, num_neighbors=12, **kwargs):
+    def __init__(self, has_structure, num_neighbors=12, **kwargs):
         """
 
         Args:
-            init_structure (pyiron_atomistics.atomistics.structure.atoms.Atoms): Any given structure of the trajectory
-            positions (numpy.ndarray): The cartesian positions of the trajectories
-            cells (numpy.ndarray/None): The varying cell shapes
+            has_structure (:class:`.HasStructure`): object containing the structures to compute the neighbors on
             num_neighbors (int): The cutoff for the number of neighbors
             **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
                              (eg. cutoff_radius, norm_order , etc.)
         """
         super().__init__()
-        self._init_structure = init_structure
+        self._has_structure = has_structure
         self._neighbor_indices = None
         self._neighbor_distances = None
         self._neighbor_vectors = None
-        self._positions = positions
-        self._cells = cells
         self._num_neighbors = num_neighbors
         self._get_neighbors_kwargs = kwargs
 
@@ -1130,9 +1126,7 @@ class NeighborsTraj(DataContainer):
         Compute the neighbors across the trajectory
         """
         self._neighbor_indices, self._neighbor_distances, self._neighbor_vectors = \
-            _get_neighbors(self._init_structure,
-                           positions=self._positions,
-                           cells=self._cells,
+            _get_neighbors(self._has_structure,
                            num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
 
     def to_hdf(self, hdf, group_name="neighbors_traj"):
@@ -1147,20 +1141,16 @@ class NeighborsTraj(DataContainer):
         super().to_hdf(hdf=hdf, group_name=group_name)
 
 
-def _get_neighbors(struct, positions, cells=None, num_neighbors=20, **kwargs):
-    [n_steps, n_atoms, _] = positions.shape
-    indices, distances = [np.zeros((n_steps, n_atoms, num_neighbors)) for _ in range(2)]
+def _get_neighbors(has_structure, num_neighbors=20, **kwargs):
+    n_steps = len(has_structure)
+    n_atoms = len(has_structure.get_structure(frame=0))
+    indices = np.zeros((n_steps, n_atoms, num_neighbors), dtype=np.int64)
+    disances = np.zeros((n_steps, n_atoms, num_neighbors))
     vecs = np.zeros((n_steps, n_atoms, num_neighbors, 3))
-    struct = struct.copy()
-    for t, pos in enumerate(positions):
-        struct.positions = pos
-        # Do cell lookup only if its shape changes
-        if cells is not None:
-            struct.cell = cells[t]
+    for struct in has_structure.iter_structures():
         # Change the `allow_ragged` based on the changes in get_neighbors()
         neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
         indices[t, :, :] = neigh.indices
         distances[t, :, :] = neigh.distances
         vecs[t, :, :, :] = neigh.vecs
-    indices = np.array(indices, dtype=int)
     return indices, distances, vecs
