@@ -11,6 +11,7 @@ from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
 import warnings
+import itertools
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -403,7 +404,7 @@ class Tree:
         elif num_neighbors is None and self.num_neighbors is None:
             volume = self._ref_structure.get_volume(per_atom=True)
             width_buffer = 1+width_buffer
-            width_buffer *= 8*gamma(1+1/self.norm_order)**3/gamma(1+3/self.norm_order)
+            width_buffer *= get_volume_of_n_sphere_in_p_norm(3, self.norm_order)
             num_neighbors = max(14, int(width_buffer*cutoff_radius**3/volume))
         elif num_neighbors is None:
             num_neighbors = self.num_neighbors
@@ -433,14 +434,10 @@ class Tree:
             return 0
         elif cutoff_radius!=np.inf:
             return cutoff_radius
-        pbc = self._ref_structure.pbc
-        n = sum(pbc)
-        prefactor = 2**n*gamma(1+1/self.norm_order)**2/gamma(1+n/self.norm_order)
-        width = np.prod((
-            np.linalg.norm(self._ref_structure.cell, axis=-1, ord=self.norm_order)-np.ones(3)
-        )*pbc+np.ones(3))
+        prefactor = get_volume_of_n_sphere_in_p_norm(3, self.norm_order)
+        width = np.prod(np.linalg.norm(self._ref_structure.cell, axis=-1, ord=self.norm_order))
         width *= prefactor*np.max([num_neighbors, 8])/len(self._ref_structure)
-        cutoff_radius = width_buffer*width**(1/np.sum(pbc))
+        cutoff_radius = width_buffer*width**(1/3)
         return cutoff_radius
 
     def get_neighborhood(
@@ -583,6 +580,35 @@ class Tree:
             ))**2
             for m in np.arange(-l, l+1)
         ], axis=0))
+
+    @staticmethod
+    def _get_all_possible_pairs(l):
+        if l%2!=0:
+            raise ValueError(
+                'Pairs cannot be formed for an uneven number of groups.'
+            )
+        all_arr = np.array(list(itertools.permutations(np.arange(l),l)))
+        all_arr = all_arr.reshape(len(all_arr), -1, 2)
+        all_arr.sort(axis=-1)
+        all_arr = all_arr[np.unique(all_arr.reshape(-1, l), axis=0, return_index=True)[1]]
+        indices = np.indices(all_arr.shape)
+        all_arr = all_arr[indices[0], all_arr[:,:,0].argsort(axis=-1)[:,:,np.newaxis], indices[2]]
+        return all_arr[np.unique(all_arr.reshape(-1, l), axis=0, return_index=True)[1]]
+
+    @property
+    def centrosymmetry(self):
+        """
+        Calculate centrosymmetry parameter for the given environment.
+
+        cf. https://doi.org/10.1103/PhysRevB.58.11085
+
+        NB: Currently very memory intensive for a large number of neighbors (works maybe up to 10)
+        """
+        all_arr = self._get_all_possible_pairs(self.distances.shape[-1])
+        indices = np.indices((len(self.vecs),)+all_arr.shape[:-1])
+        v = self.vecs[indices[0],all_arr[np.newaxis,:,:,0]]
+        v += self.vecs[indices[0],all_arr[np.newaxis,:,:,1]]
+        return np.sum(v**2, axis=-1).sum(axis=-1).min(axis=-1)
 
 
 class Neighbors(Tree):
@@ -1046,6 +1072,15 @@ class Neighbors(Tree):
                     ia_shells_dict[el].append(ia_lst)
             ind_shell.append(ia_shells_dict)
         return ind_shell
+
+
+def get_volume_of_n_sphere_in_p_norm(n=3, p=2):
+    """
+    Volume of an n-sphere in p-norm. For more info:
+
+    https://en.wikipedia.org/wiki/Volume_of_an_n-ball#Balls_in_Lp_norms
+    """
+    return (2*gamma(1+1/p))**n/gamma(1+n/p)
 
 
 class NeighborsTraj(DataContainer):

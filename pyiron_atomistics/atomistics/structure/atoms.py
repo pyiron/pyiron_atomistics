@@ -1193,8 +1193,8 @@ class Atoms(ASEAtoms):
         Example:
 
         For a cell `[[1, 1, 0], [0, 1, 0], [0, 0, 1]]`, this function returns
-        `[[1, 0, 0], [0, 0.70710678, 0], [0, 0, 1]]` because the first cell vector is projected on
-        the vector vertical to the yz-plane (as well as the y component on the xz-plane).
+        `[1., 0.70710678, 1.]` because the first cell vector is projected on the vector vertical
+        to the yz-plane (as well as the y component on the xz-plane).
 
         Args:
             norm_order (int): Norm order (cf. numpy.linalg.norm)
