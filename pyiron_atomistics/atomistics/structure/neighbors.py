@@ -1092,7 +1092,8 @@ class NeighborsTraj(DataContainer):
 
     """
 
-    def __init__(self, init_structure=None, positions=None, cells=None, num_neighbors=12, **kwargs):
+    def __init__(self, init_structure=None, positions=None, cells=None, num_neighbors=12,
+                 table_name="neighbors_traj", **kwargs):
         """
 
         Args:
@@ -1100,10 +1101,12 @@ class NeighborsTraj(DataContainer):
             positions (numpy.ndarray): The cartesian positions of the trajectories
             cells (numpy.ndarray/None): The varying cell shapes
             num_neighbors (int): The cutoff for the number of neighbors
+            table_name (str): Table name for the base `DataContainer` (stores this object as a group in a
+                              HDF5 file with this name)
             **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
                              (eg. cutoff_radius, norm_order , etc.)
         """
-        super().__init__()
+        super().__init__(table_name=table_name)
         self._init_structure = init_structure
         self._neighbor_indices = None
         self._neighbor_distances = None
@@ -1169,17 +1172,6 @@ class NeighborsTraj(DataContainer):
                            positions=self._positions,
                            cells=self._cells,
                            num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
-
-    def to_hdf(self, hdf, group_name="neighbors_traj"):
-        """
-        Store this `NeighborTraj` instance in a .h5 file.
-
-        Args:
-            hdf (pyiron_base.generic.hdfio.FileHDFio): HDF5 group or file
-            group_name (str): Name of the HDF5 group
-
-        """
-        super().to_hdf(hdf=hdf, group_name=group_name)
 
 
 def _get_neighbors(struct, positions, cells=None, num_neighbors=12, **kwargs):
