@@ -1147,7 +1147,7 @@ def _get_neighbors(has_structure, num_neighbors=20, **kwargs):
     indices = np.zeros((n_steps, n_atoms, num_neighbors), dtype=np.int64)
     disances = np.zeros((n_steps, n_atoms, num_neighbors))
     vecs = np.zeros((n_steps, n_atoms, num_neighbors, 3))
-    for struct in has_structure.iter_structures():
+    for t, struct in enumerate(has_structure.iter_structures()):
         # Change the `allow_ragged` based on the changes in get_neighbors()
         neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
         indices[t, :, :] = neigh.indices
