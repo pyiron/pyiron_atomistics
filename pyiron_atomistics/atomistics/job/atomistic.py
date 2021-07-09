@@ -804,10 +804,7 @@ class Trajectory(HasStructure):
         if snapshot_indices is None:
             snapshot_indices = np.arange(len(self), dtype=int)
 
-        n_obj = NeighborsTraj(init_structure=self._structure,
-                              positions=self._positions[snapshot_indices],
-                              cells=self._cells[snapshot_indices],
-                              num_neighbors=num_neighbors, **kwargs)
+        n_obj = NeighborsTraj(self, num_neighbors=num_neighbors, **kwargs)
         n_obj.compute_neighbors()
         return n_obj
 
