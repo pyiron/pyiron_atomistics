@@ -5,13 +5,14 @@
 import unittest
 import numpy as np
 import os
+import time
 import warnings
 from pyiron_atomistics import ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseList
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable, ChemicalElement
+from pyiron_atomistics.atomistics.structure.periodic_table import element, PeriodicTable, ChemicalElement
 from pyiron_base import FileHDFio, ProjectHDFio, Project
 from ase.cell import Cell as ASECell
 from ase.atoms import Atoms as ASEAtoms
@@ -1659,6 +1660,22 @@ class TestAtoms(unittest.TestCase):
     def test_set_dihedral():
         structure = ase_to_pyiron(molecule('H2COH'))
         structure.set_dihedral(4, 0, 1, 2, angle=90)
+
+    def test_cached_speed(self):
+        """Creating an atoms should be faster after the first time, due to caches in periodictable/mendeleev."""
+
+        element.cache_clear()
+        PeriodicTable._get_periodic_table_df.cache_clear()
+
+        pos, cell = generate_fcc_lattice()
+
+        t1 = time.perf_counter()
+        Atoms(symbols="Al", positions=pos, cell=cell)
+        t2 = time.perf_counter()
+        Atoms(symbols="Al", positions=pos, cell=cell)
+        t3 = time.perf_counter()
+
+        self.assertGreater(t2 - t1, t3 - t2, "Atom creation not speed up by caches!")
 
 
 def generate_fcc_lattice(a=4.2):
