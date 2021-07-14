@@ -138,7 +138,7 @@ class Tree:
 
     @property
     def distances(self):
-        """Distances to neighboring atoms"""
+        """Distances to neighboring atoms."""
         return self._reshape(self._distances)
 
     @property
@@ -153,17 +153,17 @@ class Tree:
 
     @property
     def vecs(self):
-        """Vectors to neighboring atoms"""
+        """Vectors to neighboring atoms."""
         return self._reshape(self._vecs)
 
     @property
     def indices(self):
-        """Indices of neighboring atoms"""
+        """Indices of neighboring atoms."""
         return self._reshape(self._indices)
 
     @property
     def atom_numbers(self):
-        """Indices of atoms"""
+        """Indices of atoms."""
         n = np.zeros_like(self._indices)
         n.T[:,:] = np.arange(len(n))
         return self._reshape(n)
@@ -535,15 +535,23 @@ class Tree:
         return np.sum(v**2, axis=-1).sum(axis=-1).min(axis=-1)
 
     def __getattr__(self, name):
+        """Attributes for the mode. Same as setting `neigh.mode`."""
         if name not in ['filled', 'ragged', 'flattened']:
             raise AttributeError(self.__class__.__name__+" object has no attribute "+name)
         return Mode(name, self)
 
     def __dir__(self):
+        """Attributes for the mode."""
         return ['filled', 'ragged', 'flattened']+super().__dir__()
 
 class Mode:
+    """Helper class for mode"""
     def __init__(self, mode, ref_neigh):
+        """
+        Args:
+            mode (str): Mode (`filled`, `ragged` or `flattened`)
+            ref_neigh (Neighbors): Reference neighbor class
+        """
         self.mode = mode
         self.ref_neigh = ref_neigh
 
