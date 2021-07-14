@@ -538,6 +538,17 @@ class TestLammps(unittest.TestCase):
         self.job_vcsgc_input.calc_vcsgc(**args)
         self.assertEqual(self.job_vcsgc_input.input.control['fix___vcsgc'], input_string)
 
+        self.job_vcsgc_input.to_hdf()
+        for k, v in args.items():
+            if k not in ("mu", "target_concentration", "mc_step_interval", "swap_fraction", "temperature_mc"):
+                continue
+            self.assertEqual(self.job_vcsgc_input._generic_input[k], v,
+                             f"Wrong value stored in generic input for parameter {k}!")
+            # decode saved GenericParameters manually...
+            data = self.job_vcsgc_input["input/generic/data_dict"]
+            self.assertEqual(data["Value"][data["Parameter"].index(k)], str(v),
+                             f"Wrong value stored in HDF for parameter {k}!")
+
     def test_calc_minimize_input(self):
         # Ensure that defaults match control defaults
         atoms = Atoms("Fe8", positions=np.zeros((8, 3)), cell=np.eye(3))
@@ -693,7 +704,6 @@ class TestLammps(unittest.TestCase):
 
         potential['Species'][0][0] = 'Al'
         self.job.potential = potential # shouldn't raise ValueError
-
 
 if __name__ == "__main__":
     unittest.main()
