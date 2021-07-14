@@ -55,7 +55,7 @@ class Tree:
                     structure.
         """
         self._distances = None
-        self._vecs = None
+        self._vectors = None
         self._indices = None
         self._mode = {'filled': True, 'ragged': False, 'flattened': False}
         self._extended_positions = None
@@ -107,9 +107,8 @@ class Tree:
             "Main attributes:\n"
             + "- distances : Distances to the neighbors of given positions\n"
             + "- indices : Indices of the neighbors of given positions\n"
+            + "- vecs : Vectors to the neighbors of given positions\n"
         )
-        if self._vecs is not None:
-            to_return += "- vecs : Vectors to the neighbors of given positions\n"
         return to_return
 
     def copy(self):
@@ -143,14 +142,18 @@ class Tree:
         return self._reshape(self._distances)
 
     @property
-    def vecs(self):
-        """Vectors to neighboring atoms"""
-        if self._vecs is None:
-            self._vecs = self._get_vectors(
+    def _vecs(self):
+        if self._vectors is None:
+            self._vectors = self._get_vectors(
                 positions=self._positions,
                 distances=self._distances,
                 indices=self._extended_indices
             )
+        return self._vectors
+
+    @property
+    def vecs(self):
+        """Vectors to neighboring atoms"""
         return self._reshape(self._vecs)
 
     @property
@@ -242,14 +245,11 @@ class Tree:
 
     def _get_distances_and_indices(
         self,
-        positions=None,
-        mode='filled',
+        positions,
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
     ):
-        if positions is None:
-            return self._reshape(self._distances, mode), self._reshape(self._indices, mode)
         num_neighbors = self._estimate_num_neighbors(
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
@@ -279,53 +279,10 @@ class Tree:
         self._extended_indices = indices.copy()
         indices[distances<np.inf] = self._get_wrapped_indices()[indices[distances<np.inf]]
         indices[distances==np.inf] = np.iinfo(np.int32).max
-        return self._reshape(distances, mode, distances), self._reshape(indices, mode, distances)
-
-    @deprecate(allow_ragged="use `mode='ragged'` instead.")
-    def get_indices(
-        self,
-        positions=None,
-        allow_ragged=None,
-        mode=None,
-        num_neighbors=None,
-        cutoff_radius=np.inf,
-        width_buffer=1.2,
-    ):
-        """
-        Get current indices or neighbor indices for given positions using the same Tree structure
-        used for the instantiation of the Neighbor class. This function should not be used if the
-        structure changed in the meantime. If `positions` is None and `allow_ragged` is None, this
-        function returns the same content as `indices`.
-
-        Args:
-            positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
-                are to be computed (None to get current vectors)
-            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
-                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
-            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
-                'flattened'.
-            num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
-                Ignored if `positions` is None.
-            cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
-            width_buffer (float): Buffer length for the estimation of num_neighbors. Ignored if
-                `positions` is None.
-
-        Returns:
-            (list/numpy.ndarray) list (if allow_ragged=True and flatten=False) or numpy.ndarray
-                (otherwise) of neighbor indices.
-
-        """
-        if allow_ragged is not None and mode is None:
-            mode = self._allow_ragged_to_mode(allow_ragged)
-        elif mode is None:
-            mode = self.mode
-        return self._get_distances_and_indices(
-            positions=positions,
-            mode=mode,
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
-        )[1]
+        return (
+            self._reshape(distances, ref_vector=distances),
+            self._reshape(indices, ref_vector=distances)
+        )
 
     @property
     def numbers_of_neighbors(self):
@@ -335,85 +292,31 @@ class Tree:
         """
         return np.sum(self._distances < np.inf, axis=-1)
 
-    @deprecate(allow_ragged="use `mode='ragged'` instead.")
-    def get_vectors(
-        self,
-        positions=None,
-        allow_ragged=None,
-        mode=None,
-        num_neighbors=None,
-        cutoff_radius=np.inf,
-        width_buffer=1.2,
-    ):
-        """
-        Get current vectors or neighbor vectors for given positions using the same Tree structure
-        used for the instantiation of the Neighbor class. This function should not be used if the
-        structure changed in the meantime. If `positions` is None and `allow_ragged` is None, this
-        function returns the same content as `vecs`.
-
-        Args:
-            positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
-                are to be computed (None to get current vectors)
-            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
-                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
-            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
-                'flattened'.
-            num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
-                Ignored if `positions` is None.
-            cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
-            width_buffer (float): Buffer length for the estimation of num_neighbors. Ignored if
-                `positions` is None.
-
-
-        Returns:
-            (list/numpy.ndarray) list (if mode='ragged') or numpy.ndarray (otherwise) of
-                neighbor vectors
-        """
-        if allow_ragged is not None and mode is None:
-            mode = self._allow_ragged_to_mode(allow_ragged)
-        elif mode is None:
-            mode = self.mode
-        return self._get_vectors(
-            positions=positions,
-            mode=mode,
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
-        )
-
     def _get_vectors(
         self,
-        positions=None,
-        mode='filled',
+        positions,
         num_neighbors=None,
         cutoff_radius=np.inf,
         distances=None,
         indices=None,
         width_buffer=1.2,
     ):
-        if positions is not None:
-            if distances is None or indices is None:
-                distances, indices = self._get_distances_and_indices(
-                    positions=positions,
-                    mode='filled',
-                    num_neighbors=num_neighbors,
-                    cutoff_radius=cutoff_radius,
-                    width_buffer=width_buffer,
-                )
-            vectors = np.zeros(distances.shape+(3,))
-            vectors -= self._get_wrapped_positions(
-                positions
-            ).reshape(distances.shape[:-1]+(-1, 3))
-            vectors[distances<np.inf] += self._get_extended_positions()[
-                self._extended_indices[distances<np.inf]
-            ]
-            vectors[distances==np.inf] = np.array(3*[np.inf])
-        else:
-            if self._vecs is None:
-                _ = self.vecs
-            vectors = self._vecs
-            distances = self._distances
-        return self._reshape(vectors, mode, distances)
+        if distances is None or indices is None:
+            distances, indices = self._get_distances_and_indices(
+                positions=positions,
+                num_neighbors=num_neighbors,
+                cutoff_radius=cutoff_radius,
+                width_buffer=width_buffer,
+            )
+        vectors = np.zeros(distances.shape+(3,))
+        vectors -= self._get_wrapped_positions(
+            positions
+        ).reshape(distances.shape[:-1]+(-1, 3))
+        vectors[distances<np.inf] += self._get_extended_positions()[
+            self._extended_indices[distances<np.inf]
+        ]
+        vectors[distances==np.inf] = np.array(3*[np.inf])
+        return vectors
 
     def _estimate_num_neighbors(self, num_neighbors=None, cutoff_radius=np.inf, width_buffer=1.2):
         """
@@ -531,7 +434,7 @@ class Tree:
         return self
 
     def _check_width(self, width, pbc):
-        if any(pbc) and np.prod(self._distances.shape)>0 and self._vecs is not None:
+        if any(pbc) and np.prod(self._distances.shape)>0:
             if np.linalg.norm(
                 self._vecs[...,pbc],
                 axis=-1,
@@ -563,9 +466,9 @@ class Tree:
         See more on: scipy.special.sph_harm
 
         """
-        vecs = self.get_vectors(mode='filled')
+        vecs = self.filled.vecs
         if rotation is not None:
-            vecs = np.einsum('ij,nkj->nki', rotation, vecs)
+            vecs = np.einsum('ij,nmj->nmi', rotation, vecs)
         within_cutoff = self._distances<cutoff_radius
         if np.any(np.all(~within_cutoff, axis=-1)):
             raise ValueError('cutoff_radius too small - some atoms have no neighbors')
@@ -645,6 +548,8 @@ class Mode:
         self.ref_neigh = ref_neigh
 
     def __getattr__(self, name):
+        if '_'+name in self.ref_neigh.__dir__():
+            name = '_'+name
         return self.ref_neigh._reshape(self.ref_neigh.__getattribute__(name), key=self.mode)
 
     def __dir__(self):
@@ -864,7 +769,7 @@ class Neighbors(Tree):
         """
 
         z = np.zeros(len(self._ref_structure)*3).reshape(-1, 3)
-        v = np.append(z[:,np.newaxis,:], self.get_vectors(mode='filled'), axis=1)
+        v = np.append(z[:,np.newaxis,:], self.filled.vecs, axis=1)
         dist = np.linalg.norm(v-np.array(vector), axis=-1, ord=self.norm_order)
         indices = np.append(np.arange(len(self._ref_structure))[:,np.newaxis], self._indices, axis=1)
         if return_deviation:
@@ -896,7 +801,7 @@ class Neighbors(Tree):
         """
         if distance_threshold is None and n_clusters is None:
             distance_threshold = np.min(self._distances)
-        dr = self.get_vectors(mode='filled')[self._distances<np.inf]
+        dr = self.flattened.vecs
         self._cluster_vecs = AgglomerativeClustering(
             distance_threshold=distance_threshold,
             n_clusters=n_clusters,

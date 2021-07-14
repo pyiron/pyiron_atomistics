@@ -38,21 +38,14 @@ class TestAtoms(unittest.TestCase):
         self.assertFalse(neigh.allow_ragged)
         self.assertTrue(isinstance(neigh.indices, np.ndarray))
 
-    def test_getters(self):
-        struct = CrystalStructure(elements='Al', lattice_constants=4, bravais_basis='fcc')
-        neigh = struct.get_neighbors()
-        self.assertTrue(np.array_equal(neigh.distances, neigh.get_distances()))
-        self.assertTrue(np.array_equal(neigh.vecs, neigh.get_vectors()))
-        self.assertTrue(np.array_equal(neigh.indices, neigh.get_indices()))
-
     def test_getter_and_ragged(self):
         struct = CrystalStructure(elements='Al', lattice_constants=4, bravais_basis='fcc').repeat(2)
         del struct[0]
         neigh = struct.get_neighbors_by_distance(cutoff_radius=3)
-        vecs = neigh.get_vectors(allow_ragged=False)
-        distances = neigh.get_distances(allow_ragged=False)
-        indices = neigh.get_indices(allow_ragged=False)
-        neigh.allow_ragged = False
+        vecs = neigh.filled.vecs
+        distances = neigh.filled.distances
+        indices = neigh.filled.indices
+        neigh.mode = 'filled'
         self.assertTrue(np.array_equal(neigh.distances, distances))
         self.assertTrue(np.array_equal(neigh.indices, indices))
         self.assertTrue(np.array_equal(neigh.vecs, vecs))
@@ -67,18 +60,6 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(np.array_equal(neigh.distances, distances))
         neigh.allow_ragged = False
         self.assertTrue(np.array_equal(neigh.distances, distances))
-
-    def test_get_neighborhood(self):
-        struct = CrystalStructure(elements='Al', lattice_constants=4, bravais_basis='fcc')
-        struct.positions += 0.01*(2*np.random.random(struct.positions.shape)-1)
-        struct = struct.center_coordinates_in_unit_cell()
-        positions = np.random.random((2, 3)).dot(struct.cell)
-        neigh = struct.get_neighborhood(positions)
-        positions = np.random.random((2, 3)).dot(struct.cell)
-        new_neigh = neigh.get_neighborhood(positions)
-        self.assertTrue(np.array_equal(new_neigh.distances, neigh.get_distances(positions)))
-        self.assertTrue(np.array_equal(new_neigh.vecs, neigh.get_vectors(positions)))
-        self.assertTrue(np.array_equal(new_neigh.indices, neigh.get_indices(positions)))
 
     def test_get_neighbors(self):
         struct = CrystalStructure(
@@ -174,11 +155,11 @@ class TestAtoms(unittest.TestCase):
         distances = neigh.distances
         new_positions = structure.positions+structure.cell.diagonal()*2
         self.assertFalse(
-            np.all(np.isclose(distances, neigh.get_distances(new_positions, num_neighbors=13)[:,1:]))
+            np.all(np.isclose(distances, neigh.get_neighborhood(new_positions, num_neighbors=13).distances[:,1:]))
         )
         neigh.wrap_positions = True
         self.assertTrue(
-            np.all(np.isclose(distances, neigh.get_distances(new_positions, num_neighbors=13)[:,1:]))
+            np.all(np.isclose(distances, neigh.get_neighborhood(new_positions, num_neighbors=13).distances[:,1:]))
         )
 
     def test_get_global_shells(self):
@@ -350,23 +331,23 @@ class TestAtoms(unittest.TestCase):
     def test_get_distances_arbitrary_array(self):
         basis = CrystalStructure("Al", bravais_basis="fcc", lattice_constants=4.2).repeat(3)
         neigh = basis.get_neighbors(cutoff_radius=3.5, num_neighbors=None)
-        self.assertEqual(len(neigh.get_indices(np.random.random(3), num_neighbors=12)), 12)
+        self.assertEqual(len(neigh.get_neighborhood(np.random.random(3), num_neighbors=12).indices), 12)
         self.assertEqual(
-            len(neigh.get_distances(np.random.random(3), num_neighbors=12, mode='ragged')), 12
+            len(neigh.get_neighborhood(np.random.random(3), num_neighbors=12).ragged.distances), 12
         )
         self.assertLessEqual(
-            len(neigh.get_vectors(np.random.random(3), num_neighbors=12, mode='ragged', cutoff_radius=3.5)), 12
+            len(neigh.get_neighborhood(np.random.random(3), num_neighbors=12, cutoff_radius=3.5).ragged.vecs), 12
         )
-        self.assertTrue(neigh.get_vectors(np.random.random((2,3)), num_neighbors=12).shape==(2,12,3))
+        self.assertTrue(neigh.get_neighborhood(np.random.random((2,3)), num_neighbors=12).vecs.shape==(2,12,3))
         neigh = basis.get_neighbors(num_neighbors=50)
-        self.assertTrue(neigh.get_distances(np.random.random(3)).shape==(50,))
-        self.assertTrue(neigh.get_indices(np.random.random((2,3))).shape==(2,50))
-        self.assertTrue(neigh.get_vectors(np.random.random((2,2,3))).shape==(2,2,50,3))
+        self.assertTrue(neigh.get_neighborhood(np.random.random(3)).distances.shape==(50,))
+        self.assertTrue(neigh.get_neighborhood(np.random.random((2,3))).indices.shape==(2,50))
+        self.assertTrue(neigh.get_neighborhood(np.random.random((2,2,3))).vecs.shape==(2,2,50,3))
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             _ = neigh.get_neighborhood(np.random.random(3), num_neighbors=51)
             self.assertEqual(len(w), 1)
-            _ = neigh.get_distances(np.random.random(3), num_neighbors=51)
+            _ = neigh.get_neighborhood(np.random.random(3), num_neighbors=51).distances
             self.assertEqual(len(w), 2)
 
     def test_repr(self):
@@ -408,7 +389,6 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(0.5106882308569508, neigh.get_steinhardt_parameter(6)[0])
         self.assertRaises(ValueError, neigh.get_steinhardt_parameter, 2, 2)
 
-<<<<<<< HEAD
     def test_numbers_of_neighbors(self):
         basis = StructureFactory().ase.bulk('Al', cubic=True).repeat(2)
         del basis[0]
@@ -427,7 +407,7 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(neigh.mode=='flattened')
         with self.assertRaises(KeyError):
             neigh.mode = 'random_key'
-=======
+
     def test_centrosymmetry(self):
         structure = StructureFactory().ase_bulk('Fe').repeat(4)
         cs = structure.get_neighbors(num_neighbors=8).centrosymmetry
@@ -459,8 +439,6 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(
             np.ptp(np.unique(neigh._get_all_possible_pairs(6), return_counts=True)[1]), 0
         )
-
->>>>>>> origin
 
 if __name__ == "__main__":
     unittest.main()
