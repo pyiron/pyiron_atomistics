@@ -767,16 +767,24 @@ class Trajectory(HasStructure):
         self._indices = indices
 
     def __getitem__(self, item):
-        new_structure = self._structure.copy()
-        if self._cells is not None:
-            new_structure.cell = self._cells[item]
-        if self._indices is not None:
-            new_structure.indices = self._indices[item]
-        new_structure.positions = self._positions[item]
-        # This step is necessary for using ase.io.write for trajectories
-        new_structure.arrays["positions"] = new_structure.positions
-        # new_structure.arrays['cells'] = new_structure.cell
-        return new_structure
+        if isinstance(item, (int, np.int_)):
+            new_structure = self._structure.copy()
+            if self._cells is not None:
+                new_structure.cell = self._cells[item]
+            if self._indices is not None:
+                new_structure.indices = self._indices[item]
+            new_structure.positions = self._positions[item]
+            # This step is necessary for using ase.io.write for trajectories
+            new_structure.arrays["positions"] = new_structure.positions
+            # new_structure.arrays['cells'] = new_structure.cell
+            return new_structure
+        elif isinstance(item, (list, np.ndarray, slice)):
+            snapshots = np.arange(len(self), dtype=int)[item]
+            return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
+                              structure=self[snapshots[0]], indices=self._indices[snapshots])
+
+        else:
+            print(type(item))
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
@@ -804,7 +812,7 @@ class Trajectory(HasStructure):
         if snapshot_indices is None:
             snapshot_indices = np.arange(len(self), dtype=int)
 
-        n_obj = NeighborsTraj(self, num_neighbors=num_neighbors, **kwargs)
+        n_obj = NeighborsTraj(self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
         n_obj.compute_neighbors()
         return n_obj
 
