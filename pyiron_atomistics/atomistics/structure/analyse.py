@@ -569,3 +569,46 @@ class Analyse:
             xx = get_average_of_unique_labels(cluster.labels_, xx)
         xx = xx[np.linalg.norm(xx-self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1) < epsilon]
         return xx-epsilon
+
+    def get_equivalent_points(
+        self,
+        points,
+        use_magmoms=False,
+        use_elements=True,
+        symprec=1e-5,
+        angle_tolerance=-1.0,
+        return_unique=True
+    ):
+        """
+
+        Args:
+            points (list/ndarray): 3d vector
+            use_magmoms (bool): cf. get_symmetry()
+            use_elements (bool): cf. get_symmetry()
+            symprec (float): cf. get_symmetry()
+            angle_tolerance (float): cf. get_symmetry()
+            return_unique (bool): Return only points which appear once.
+
+        Returns:
+            (ndarray): array of equivalent points with respect to box symmetries
+        """
+        symmetry_operations = self._structure.get_symmetry(
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
+        )
+        R = symmetry_operations['rotations']
+        t = symmetry_operations['translations']
+        x = np.einsum('jk,nj->nk', np.linalg.inv(self._structure.cell), np.atleast_2d(points))
+        x = np.einsum('nxy,my->mnx', R, x)+t
+        x -= np.floor(x)
+        if not return_unique:
+            return np.einsum(
+                'ji,mnj->mni', self._structure.cell, x
+            ).reshape((len(R),)+np.asarray(points).shape)
+        x = x.reshape(-1, 3)
+        _, indices = np.unique(
+            np.round(x, decimals=int(-np.log10(symprec))), return_index=True, axis=0
+        )
+        return np.einsum('ji,mj->mi', self._structure.cell, x[indices])
