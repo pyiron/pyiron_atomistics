@@ -144,6 +144,27 @@ class TestAtoms(unittest.TestCase):
             msg='Distance variance in FCC must be 0'
         )
 
+    def test_group_points_by_symmetry(self):
+        a_0 = 4.0
+        structure = StructureFactory().ase.bulk('Al', cubic=True, a=a_0).repeat(2)
+        sites = structure.get_wrapped_coordinates(structure.positions+np.array([0, 0, 0.5*a_0]))
+        v_position = structure.positions[0]
+        del structure[0]
+        pairs = np.stack((
+            structure.analyse.group_points_by_symmetry(sites),
+            np.unique(np.round(structure.get_distances_array(v_position, sites), decimals=2), return_inverse=True)[1]
+        ), axis=-1)
+        unique_pairs = np.unique(pairs, axis=0)
+        self.assertEqual(len(unique_pairs), len(np.unique(unique_pairs[:,0])))
+
+    def test_get_equivalent_points(self):
+        a_0 = 4
+        structure = StructureFactory().ase.bulk('Al', cubic=True, a=a_0)
+        self.assertEqual(
+            len(structure),
+            len(structure.analyse.get_equivalent_points([0, 0, 0.5*a_0]))
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
