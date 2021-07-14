@@ -358,7 +358,7 @@ class PeriodicTable(object):
         return self.element(new_element, **qwargs)
 
     @staticmethod
-    # @lru_cache(maxsize=1)
+    @lru_cache(maxsize=1)
     def _get_periodic_table_df(file_name):
         """
 
