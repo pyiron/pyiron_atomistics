@@ -1662,20 +1662,38 @@ class TestAtoms(unittest.TestCase):
         structure.set_dihedral(4, 0, 1, 2, angle=90)
 
     def test_cached_speed(self):
-        """Creating an atoms should be faster after the first time, due to caches in periodictable/mendeleev."""
+        """
+        Creating atoms should be faster after the first time, due to caches in periodictable/mendeleev.
 
-        element.cache_clear()
-        PeriodicTable._get_periodic_table_df.cache_clear()
-
+        """
         pos, cell = generate_fcc_lattice()
+        expected_speedup_factor = 15
+        n_timing_loop = 5
+        for _ in range(n_timing_loop):
+            element.cache_clear()
+            PeriodicTable._get_periodic_table_df.cache_clear()
+            t1 = time.perf_counter()
+            Atoms(symbols="Al", positions=pos, cell=cell)
+            t2 = time.perf_counter()
+            Atoms(symbols="Al", positions=pos, cell=cell)
+            t3 = time.perf_counter()
+            Atoms(symbols="Cu", positions=pos, cell=cell)
+            t4 = time.perf_counter()
+            Atoms(symbols="CuAl", positions=[[0., 0., 0.], [0.5, 0.5, 0.5]], cell=cell)
+            t5 = time.perf_counter()
 
-        t1 = time.perf_counter()
-        Atoms(symbols="Al", positions=pos, cell=cell)
-        t2 = time.perf_counter()
-        Atoms(symbols="Al", positions=pos, cell=cell)
-        t3 = time.perf_counter()
-
-        self.assertGreater(t2 - t1, t3 - t2, "Atom creation not speed up by caches!")
+            self.assertGreater(t2 - t1, t3 - t2, "Atom creation not speed up by caches!")
+            self.assertGreater((t2 - t1) / (t3 - t2), expected_speedup_factor,
+                               "Atom creation not speed up to the required level by caches!")
+            self.assertGreater((t4 - t3) / (t5 - t4), expected_speedup_factor,
+                               "Atom creation not speed up to the required level by caches!")
+            t6 = time.perf_counter()
+            Atoms(symbols="MgO", positions=[[0., 0., 0.], [0.5, 0.5, 0.5]], cell=cell)
+            t7 = time.perf_counter()
+            Atoms(symbols="AlMgO", positions=[[0., 0., 0.], [0.5, 0.5, 0.5], [0.5, 0.5, 0.]], cell=cell)
+            t8 = time.perf_counter()
+            self.assertGreater((t7 - t6) / (t8 - t7), expected_speedup_factor,
+                               "Atom creation not speed up to the required level by caches!")
 
 
 def generate_fcc_lattice(a=4.2):
