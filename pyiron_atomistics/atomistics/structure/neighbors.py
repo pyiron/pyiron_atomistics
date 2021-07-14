@@ -631,6 +631,27 @@ class Tree:
         v += self.vecs[indices[0],all_arr[np.newaxis,:,:,1]]
         return np.sum(v**2, axis=-1).sum(axis=-1).min(axis=-1)
 
+    def __getattr__(self, name):
+        if name not in ['filled', 'ragged', 'flattened']:
+            raise AttributeError(self.__class__.__name__+" object has no attribute "+name)
+        return Mode(name, self)
+
+    def __dir__(self):
+        return ['filled', 'ragged', 'flattened']+super().__dir__()
+
+class Mode:
+    def __init__(self, mode, ref_neigh):
+        self.mode = mode
+        self.ref_neigh = ref_neigh
+
+    def __getattr__(self, name):
+        return self.ref_neigh._reshape(self.ref_neigh.__getattribute__(name), key=self.mode)
+
+    def __dir__(self):
+        return list(set([
+            'distances', 'vecs', 'indices', 'shells', 'atom_numbers'
+        ]).intersection(self.ref_neigh.__dir__()))
+
 
 class Neighbors(Tree):
     def __init__(self, ref_structure, tolerance=2):
