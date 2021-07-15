@@ -127,6 +127,8 @@ class Tree:
         return new_neigh
 
     def _reshape(self, value, key=None, ref_vector=None):
+        if value is None:
+            raise ValueError('Neighbors not initialized yet')
         if key is None:
             key = self.mode
         if key == 'filled':
@@ -146,7 +148,7 @@ class Tree:
         if self._vectors is None:
             self._vectors = self._get_vectors(
                 positions=self._positions,
-                distances=self._distances,
+                distances=self.filled.distances,
                 indices=self._extended_indices
             )
         return self._vectors
@@ -164,7 +166,7 @@ class Tree:
     @property
     def atom_numbers(self):
         """Indices of atoms."""
-        n = np.zeros_like(self._indices)
+        n = np.zeros_like(self.filled.indices)
         n.T[:,:] = np.arange(len(n))
         return self._reshape(n)
 
@@ -187,7 +189,7 @@ class Tree:
 
     def _get_max_length(self, ref_vector=None):
         if ref_vector is None:
-            ref_vector = self._distances
+            ref_vector = self.filled.distances
         if (ref_vector is None
             or len(ref_vector)==0
             or not hasattr(ref_vector[0], '__len__')):
@@ -197,7 +199,7 @@ class Tree:
     def _contract(self, value, ref_vector=None):
         if self._get_max_length(ref_vector=ref_vector) is None:
             return value
-        return [vv[:np.sum(dist<np.inf)] for vv, dist in zip(value, self._distances)]
+        return [vv[:np.sum(dist<np.inf)] for vv, dist in zip(value, self.filled.distances)]
 
     @property
     @deprecate("Use mode", version="1.0.0")
@@ -290,7 +292,7 @@ class Tree:
         Get number of neighbors for each atom. Same number is returned if `cutoff_radius` was not
         given in the initialization.
         """
-        return np.sum(self._distances < np.inf, axis=-1)
+        return np.sum(self.filled.distances < np.inf, axis=-1)
 
     def _get_vectors(
         self,
@@ -434,9 +436,9 @@ class Tree:
         return self
 
     def _check_width(self, width, pbc):
-        if any(pbc) and np.prod(self._distances.shape)>0:
+        if any(pbc) and np.prod(self.filled.distances.shape)>0:
             if np.linalg.norm(
-                self._vecs[...,pbc],
+                self.flattened.vecs[...,pbc],
                 axis=-1,
                 ord=self.norm_order
             ).max() > width:
@@ -469,11 +471,11 @@ class Tree:
         vecs = self.filled.vecs
         if rotation is not None:
             vecs = np.einsum('ij,nmj->nmi', rotation, vecs)
-        within_cutoff = self._distances<cutoff_radius
+        within_cutoff = self.filled.distances<cutoff_radius
         if np.any(np.all(~within_cutoff, axis=-1)):
             raise ValueError('cutoff_radius too small - some atoms have no neighbors')
-        phi = np.zeros_like(self._distances)
-        theta = np.zeros_like(self._distances)
+        phi = np.zeros_like(self.filled.distances)
+        theta = np.zeros_like(self.filled.distances)
         theta[within_cutoff] = np.arctan2(vecs[within_cutoff,1], vecs[within_cutoff,0])
         phi[within_cutoff] = np.arctan2(
             np.linalg.norm(vecs[within_cutoff,:2], axis=-1), vecs[within_cutoff,2]
@@ -592,9 +594,9 @@ class Neighbors(Tree):
         Undefined neighbors (i.e. if the neighbor distance is beyond the cutoff radius) are
         considered as vacancies and are marked by 'v'
         """
-        chemical_symbols = np.tile(['v'], self._indices.shape).astype('<U2')
-        cond = self._indices<len(self._ref_structure)
-        chemical_symbols[cond] = self._ref_structure.get_chemical_symbols()[self._indices[cond]]
+        chemical_symbols = np.tile(['v'], self.filled.indices.shape).astype('<U2')
+        cond = self.filled.indices<len(self._ref_structure)
+        chemical_symbols[cond] = self._ref_structure.get_chemical_symbols()[self.filled.indices[cond]]
         return chemical_symbols
 
     @property
@@ -639,7 +641,7 @@ class Neighbors(Tree):
                          for dist in self._cluster_dist.cluster_centers_[self._cluster_dist.labels_]
                      ])
             shells[self._cluster_dist.labels_<0] = -1
-            shells = shells.reshape(self._indices.shape)
+            shells = shells.reshape(self.filled.indices.shape)
         elif cluster_by_vecs:
             if self._cluster_vecs is None:
                 self.cluster_by_vecs()
@@ -651,15 +653,15 @@ class Neighbors(Tree):
                         )
                      ])
             shells[self._cluster_vecs.labels_<0] = -1
-            shells = shells.reshape(self._indices.shape)
+            shells = shells.reshape(self.filled.indices.shape)
         else:
-            distances = self._distances.copy()
+            distances = self.filled.distances.copy()
             distances[distances==np.inf] = np.max(distances[distances<np.inf])+1
             shells = np.array([
                 np.unique(np.round(dist, decimals=tolerance), return_inverse=True)[1]+1
                 for dist in distances
             ])
-            shells[self._distances==np.inf] = -1
+            shells[self.filled.distances==np.inf] = -1
         return self._reshape(shells, key=mode)
 
     def get_global_shells(self, mode=None, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
@@ -690,15 +692,13 @@ class Neighbors(Tree):
             tolerance = self._tolerance
         if mode is None:
             mode = self.mode
-        if self._distances is None:
-            raise ValueError('neighbors not set')
-        distances = self._distances
+        distances = self.filled.distances
         if cluster_by_distances:
             if self._cluster_dist is None:
                 self.cluster_by_distances(use_vecs=cluster_by_vecs)
             distances = self._cluster_dist.cluster_centers_[
                 self._cluster_dist.labels_
-            ].reshape(self._distances.shape)
+            ].reshape(self.filled.distances.shape)
             distances[self._cluster_dist.labels_<0] = np.inf
         elif cluster_by_vecs:
             if self._cluster_vecs is None:
@@ -707,10 +707,10 @@ class Neighbors(Tree):
                 self._cluster_vecs.cluster_centers_[self._cluster_vecs.labels_],
                 axis=-1,
                 ord=self.norm_order,
-            ).reshape(self._distances.shape)
+            ).reshape(self.filled.distances.shape)
             distances[self._cluster_vecs.labels_<0] = np.inf
         dist_lst = np.unique(np.round(a=distances, decimals=tolerance))
-        shells = -np.ones_like(self._indices).astype(int)
+        shells = -np.ones_like(self.filled.indices).astype(int)
         shells[distances<np.inf] = np.absolute(
             distances[distances<np.inf, np.newaxis]-dist_lst[np.newaxis, dist_lst<np.inf]
         ).argmin(axis=-1)+1
@@ -740,8 +740,8 @@ class Neighbors(Tree):
             print('Energy =', 0.5*J*magmoms.dot(shell_matrices[0].dot(matmoms)))
         """
 
-        pairs = np.stack((self._indices,
-            np.ones_like(self._indices)*np.arange(len(self._indices))[:,np.newaxis],
+        pairs = np.stack((self.filled.indices,
+            np.ones_like(self.filled.indices)*np.arange(len(self.filled.indices))[:,np.newaxis],
             self.get_global_shells(cluster_by_distances=cluster_by_distances, cluster_by_vecs=cluster_by_vecs)-1),
             axis=-1
         ).reshape(-1, 3)
@@ -782,7 +782,7 @@ class Neighbors(Tree):
         z = np.zeros(len(self._ref_structure)*3).reshape(-1, 3)
         v = np.append(z[:,np.newaxis,:], self.filled.vecs, axis=1)
         dist = np.linalg.norm(v-np.array(vector), axis=-1, ord=self.norm_order)
-        indices = np.append(np.arange(len(self._ref_structure))[:,np.newaxis], self._indices, axis=1)
+        indices = np.append(np.arange(len(self._ref_structure))[:,np.newaxis], self.filled.indices, axis=1)
         if return_deviation:
             return indices[np.arange(len(dist)), np.argmin(dist, axis=-1)], np.min(dist, axis=-1)
         return indices[np.arange(len(dist)), np.argmin(dist, axis=-1)]
@@ -811,7 +811,7 @@ class Neighbors(Tree):
 
         """
         if distance_threshold is None and n_clusters is None:
-            distance_threshold = np.min(self._distances)
+            distance_threshold = np.min(self.filled.distances)
         dr = self.flattened.vecs
         self._cluster_vecs = AgglomerativeClustering(
             distance_threshold=distance_threshold,
@@ -822,8 +822,8 @@ class Neighbors(Tree):
         self._cluster_vecs.cluster_centers_ = get_average_of_unique_labels(
             self._cluster_vecs.labels_, dr
         )
-        new_labels = -np.ones_like(self._indices).astype(int)
-        new_labels[self._distances<np.inf] = self._cluster_vecs.labels_
+        new_labels = -np.ones_like(self.filled.indices).astype(int)
+        new_labels[self.filled.distances<np.inf] = self._cluster_vecs.labels_
         self._cluster_vecs.labels_ = new_labels
 
     def cluster_by_distances(
@@ -858,8 +858,8 @@ class Neighbors(Tree):
                 neigh.distances is used.
         """
         if distance_threshold is None:
-            distance_threshold = 0.1*np.min(self._distances)
-        dr = self._distances[self._distances<np.inf]
+            distance_threshold = 0.1*np.min(self.flattened.distances)
+        dr = self.flattened.distances
         if use_vecs:
             if self._cluster_vecs is None:
                 self.cluster_by_vecs()
@@ -878,8 +878,8 @@ class Neighbors(Tree):
         self._cluster_dist.cluster_centers_ = get_average_of_unique_labels(
             self._cluster_dist.labels_, dr
         )
-        new_labels = -np.ones_like(self._indices).astype(int)
-        new_labels[self._distances<np.inf] = self._cluster_dist.labels_
+        new_labels = -np.ones_like(self.filled.indices).astype(int)
+        new_labels[self.filled.distances<np.inf] = self._cluster_dist.labels_
         self._cluster_dist.labels_ = new_labels
 
     def reset_clusters(self, vecs=True, distances=True):
@@ -912,7 +912,7 @@ class Neighbors(Tree):
         # element_list = self.get_atomic_numbers()
         for ia in id_list:
             # el0 = element_list[ia]
-            nbrs = self._indices[ia]
+            nbrs = self.ragged.indices[ia]
             # print ("nbrs: ", ia, nbrs)
             if self._cluster[ia] == 0:
                 self._cluster[ia] = c_count
@@ -944,7 +944,7 @@ class Neighbors(Tree):
             if self._cluster[nbr_id] == 0:
                 if nbr_id in id_list:  # TODO: check also for ordered structures
                     self._cluster[nbr_id] = c_count
-                    nbrs = self._indices[nbr_id]
+                    nbrs = self.ragged.indices[nbr_id]
                     self.__probe_cluster(c_count, nbrs, id_list)
 
     # TODO: combine with corresponding routine in plot3d
@@ -965,8 +965,8 @@ class Neighbors(Tree):
             ind_vec_cl = [np.sort(group) for group in np.split(ind_vec, ind_where)]
             return ind_vec_cl
 
-        dist = self._distances
-        ind = self._indices
+        dist = self.filled.distances
+        ind = self.ragged.indices
         el_list = self._ref_structure.get_chemical_symbols()
 
         ind_shell = []
