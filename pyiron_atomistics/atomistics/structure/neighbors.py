@@ -547,8 +547,10 @@ class Tree:
         return ['filled', 'ragged', 'flattened']+super().__dir__()
 
 class Mode:
-
-    """Helper class for mode"""
+    """Helper class for mode
+    
+    Attributes: `distances`, `vecs`, `indices`, `shells`, `atom_numbers` and maybe more
+    """
     def __init__(self, mode, ref_neigh):
         """
         Args:
