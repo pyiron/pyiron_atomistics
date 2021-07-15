@@ -545,6 +545,7 @@ class Tree:
         return ['filled', 'ragged', 'flattened']+super().__dir__()
 
 class Mode:
+
     """Helper class for mode"""
     def __init__(self, mode, ref_neigh):
         """
@@ -556,11 +557,13 @@ class Mode:
         self.ref_neigh = ref_neigh
 
     def __getattr__(self, name):
+        """Return values according to their filling mode."""
         if '_'+name in self.ref_neigh.__dir__():
             name = '_'+name
         return self.ref_neigh._reshape(self.ref_neigh.__getattribute__(name), key=self.mode)
 
     def __dir__(self):
+        """Show value names which are available for different filling modes."""
         return list(set([
             'distances', 'vecs', 'indices', 'shells', 'atom_numbers'
         ]).intersection(self.ref_neigh.__dir__()))
