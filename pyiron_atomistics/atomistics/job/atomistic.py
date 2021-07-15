@@ -9,7 +9,7 @@ from ase.io import write as ase_write
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTraj
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
-from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
+from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate, DataContainer
 
 try:
     from pyiron_base import ProjectGUI
@@ -753,7 +753,8 @@ class Trajectory(HasStructure):
                                 varies
     """
 
-    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None):
+    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None, table_name="trajectory"):
+
         if center_of_mass:
             pos = np.copy(positions)
             pos[:, :, 0] = (pos[:, :, 0].T - np.mean(pos[:, :, 0], axis=1)).T
@@ -783,8 +784,6 @@ class Trajectory(HasStructure):
             return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
                               structure=self[snapshots[0]], indices=self._indices[snapshots])
 
-        else:
-            print(type(item))
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
