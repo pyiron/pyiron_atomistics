@@ -16,6 +16,7 @@ from pyiron_atomistics.atomistics.structure.atom import Atom, ase_to_pyiron as a
 from pyiron_atomistics.atomistics.structure.neighbors import Neighbors, Tree
 from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
+from pyiron_atomistics.atomistics.structure.symmetry import Symmetry
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseArray, SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
@@ -198,6 +199,7 @@ class Atoms(ASEAtoms):
             self.dimension = 0
         self._visualize = Visualize(self)
         self._analyse = Analyse(self)
+        self._symmetry = Symmetry(self)
 
     @property
     def spins(self):
@@ -238,6 +240,10 @@ class Atoms(ASEAtoms):
     @property
     def analyse(self):
         return self._analyse
+
+    @property
+    def symmetry(self):
+        return self._symmetry
 
     @property
     def species(self):
