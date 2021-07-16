@@ -784,7 +784,6 @@ class Trajectory(HasStructure):
             return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
                               structure=self[snapshots[0]], indices=self._indices[snapshots])
 
-
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
 
