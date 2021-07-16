@@ -86,10 +86,10 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
             self.server.run_mode.interactive
             or self.server.run_mode.interactive_non_modal
         ):
-            self._structure_current = super().structure
+            self._structure_current = AtomisticGenericJob.structure.fget(self)
             return self._structure_current
         else:
-            return super().structure
+            return AtomisticGenericJob.structure.fget(self)
 
     @structure.setter
     def structure(self, structure):
@@ -98,16 +98,16 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
             or self.server.run_mode.interactive_non_modal
         ):
             # only overwrite the initial structure if it is not set already.
-            old_structure = super().structure
+            old_structure = AtomisticGenericJob.structure.fget(self)
             if old_structure is None:
-                super().structure = structure.copy()
+                AtomisticGenericJob.structure.fset(self, structure.copy())
             else:
                 if len(old_structure) != len(structure):
                     self.interactive_enforce_structure_reset = True
 
             self._structure_current = structure
         else:
-            super().structure = structure
+            AtomisticGenericJob.structure.fset(self, structure)
 
     def species_from_hdf(self):
         if (
