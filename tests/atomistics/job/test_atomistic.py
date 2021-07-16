@@ -5,6 +5,7 @@
 import unittest
 import numpy as np
 import os
+import shutil
 from pyiron_atomistics.project import Project
 from pyiron_base import ProjectHDFio
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
