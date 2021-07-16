@@ -1092,7 +1092,10 @@ class NeighborsTraj(DataContainer):
     distances, and vectors are stored as numpy arrays.
 
     """
-
+def __new__(cls, *args, **kwargs):
+    instance = super().__new__(cls, *args, **kwargs)
+    object.__setattr__(instance, "_has_structure", None)
+    return instance
     def __init__(self, has_structure, num_neighbors=12, table_name="neighbors_traj", **kwargs):
         """
 
