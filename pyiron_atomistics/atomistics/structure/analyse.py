@@ -626,7 +626,6 @@ class Analyse:
         epsilon=1.0e-8
     ):
         """
-
         Group points according to the box symmetries
 
         Args:
