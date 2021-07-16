@@ -1169,7 +1169,7 @@ class NeighborsTraj(DataContainer):
 
 
 def _get_neighbors(has_structure, num_neighbors=20, **kwargs):
-    n_steps = len(has_structure)
+    n_steps = has_structure.number_of_structures
     n_atoms = len(has_structure.get_structure(frame=0))
     indices = np.zeros((n_steps, n_atoms, num_neighbors), dtype=np.int64)
     distances = np.zeros((n_steps, n_atoms, num_neighbors))
