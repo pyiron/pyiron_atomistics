@@ -69,5 +69,26 @@ class TestAtomisticGenericJob(unittest.TestCase):
         self.assertTrue(np.allclose(disp, disp_ref))
 
 
+    def test_get_structure(self):
+        """get_structure() should return structures with the exact values from the HDF files even if the size of
+        structures changes."""
+
+        # tested here with lammps as a concrete instantiation of AtomisticGenericJob
+        # have to do extra tango because Project.unpack is weird right now
+        cwd = os.curdir
+        to_dir = os.path.join(self.project.path, "..")
+        shutil.copy("tests/static/lammps_test_files/get_structure_test.tar.gz", to_dir)
+        shutil.copy("tests/static/lammps_test_files/export.csv", to_dir)
+        os.chdir(to_dir)
+        self.project.unpack("get_structure_test")
+        job = self.project.load("inter_calculator")
+        os.chdir(cwd)
+
+        for i, struct in enumerate(job.iter_structures()):
+            # breakpoint()
+            self.assertTrue(np.allclose(job.output.positions[i], struct.positions))
+            self.assertTrue(np.allclose(job.output.cells[i], struct.cell.array))
+            self.assertTrue(np.allclose(job.output.indices[i], struct.indices))
+
 if __name__ == "__main__":
     unittest.main()
