@@ -1320,7 +1320,7 @@ class Atoms(ASEAtoms):
             width_buffer=width_buffer,
             norm_order=norm_order,
         )
-        neigh.mode = mode
+        neigh._set_mode(mode)
         if allow_ragged is not None:
             neigh.allow_ragged = allow_ragged
         return neigh
@@ -1334,7 +1334,7 @@ class Atoms(ASEAtoms):
         tolerance=2,
         id_list=None,
         width_buffer=1.2,
-        allow_ragged=True,
+        allow_ragged=None,
         mode='ragged',
         norm_order=2,
     ):

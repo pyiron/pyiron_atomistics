@@ -41,11 +41,10 @@ class TestAtoms(unittest.TestCase):
     def test_getter_and_ragged(self):
         struct = CrystalStructure(elements='Al', lattice_constants=4, bravais_basis='fcc').repeat(2)
         del struct[0]
-        neigh = struct.get_neighbors_by_distance(cutoff_radius=3)
+        neigh = struct.get_neighbors_by_distance(cutoff_radius=3, mode='filled')
         vecs = neigh.filled.vecs
         distances = neigh.filled.distances
         indices = neigh.filled.indices
-        neigh.mode = 'filled'
         self.assertTrue(np.array_equal(neigh.distances, distances))
         self.assertTrue(np.array_equal(neigh.indices, indices))
         self.assertTrue(np.array_equal(neigh.vecs, vecs))
@@ -235,7 +234,7 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(
             np.sum(neigh.get_local_shells(cluster_by_distances=True, cluster_by_vecs=True)==-1), 12
         )
-        neigh.mode = 'ragged'
+        neigh = structure.get_neighbors(cutoff_radius=3.5, num_neighbors=None, mode='ragged')
         self.assertEqual(np.sum([len(s)==11 for s in neigh.shells]), 12)
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_local_shells(cluster_by_distances=True)]), 12)
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_local_shells(cluster_by_vecs=True)]), 12)
@@ -253,9 +252,8 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(len(np.unique(neigh.get_global_shells())), 1)
         self.assertEqual(len(neigh.get_global_shells()), 360)
         neigh = structure.get_neighbors(cutoff_radius=r, num_neighbors=None)
-        neigh.mode = 'flattened'
-        self.assertEqual(len(np.unique(neigh.shells)), 1)
-        self.assertEqual(len(neigh.shells), 360)
+        self.assertEqual(len(np.unique(neigh.flattened.shells)), 1)
+        self.assertEqual(len(neigh.flattened.shells), 360)
 
     def test_get_distances_flattened(self):
         structure = StructureFactory().ase.bulk('Al', cubic=True).repeat(2)
@@ -401,12 +399,8 @@ class TestAtoms(unittest.TestCase):
         basis = StructureFactory().ase.bulk('Al', cubic=True)
         neigh = basis.get_neighbors()
         self.assertTrue(neigh.mode=='filled')
-        neigh.mode = 'ragged'
-        self.assertTrue(neigh.mode=='ragged')
-        neigh.mode = 'flattened'
-        self.assertTrue(neigh.mode=='flattened')
         with self.assertRaises(KeyError):
-            neigh.mode = 'random_key'
+            neigh = basis.get_neighbors(mode='random_key')
 
     def test_centrosymmetry(self):
         structure = StructureFactory().ase_bulk('Fe').repeat(4)

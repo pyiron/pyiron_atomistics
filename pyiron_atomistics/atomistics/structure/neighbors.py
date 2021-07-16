@@ -90,8 +90,7 @@ class Tree:
             if v:
                 return k
 
-    @mode.setter
-    def mode(self, new_mode):
+    def _set_mode(self, new_mode):
         if new_mode not in self._mode.keys():
             raise KeyError(
                 f"{new_mode} not found. Available modes: {', '.join(self._mode.keys())}"
@@ -215,7 +214,7 @@ class Tree:
     def allow_ragged(self, new_bool):
         if not isinstance(new_bool, bool):
             raise ValueError('allow_ragged must be a boolean')
-        self.mode = self._allow_ragged_to_mode(new_bool)
+        self._set_mode(self._allow_ragged_to_mode(new_bool))
 
     def _allow_ragged_to_mode(self, new_bool):
         if new_bool is None:
@@ -576,7 +575,6 @@ class Mode:
 class Neighbors(Tree):
     def __init__(self, ref_structure, tolerance=2):
         super().__init__(ref_structure=ref_structure)
-        self._shells = None
         self._tolerance = tolerance
         self._cluster_vecs = None
         self._cluster_dist = None
@@ -606,9 +604,7 @@ class Neighbors(Tree):
         """
             Returns the cell numbers of each atom according to the distances
         """
-        if self._shells is None:
-            self._shells = self.get_local_shells(mode='filled')
-        return self._reshape(self._shells)
+        return self.get_local_shells(mode=self.mode)
 
     def get_local_shells(self, mode=None, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
         """
