@@ -956,11 +956,6 @@ class TestAtoms(unittest.TestCase):
         )
         basis.plot3d(mode='plotly')
 
-    def test_group_points_by_symmetry(self):
-        basis = Atoms("FeFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3))
-        self.assertEqual(len(basis.group_points_by_symmetry([3 * [0.5], 3 * [1.5]])), 1)
-        self.assertEqual(len(basis.group_points_by_symmetry([3 * [0.5], 3 * [1.4]])), 2)
-
     def test_get_equivalent_voronoi_vertices(self):
         basis = Atoms("FeFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3), pbc=True)
         vert = basis.get_equivalent_voronoi_vertices()

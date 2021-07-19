@@ -1534,7 +1534,6 @@ class Atoms(ASEAtoms):
         return neighbors.get_bonds(radius=radius, max_shells=max_shells, prec=prec)
 
     # spglib calls
-    @deprecate_soon
     def get_symmetry(
         self, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
@@ -1596,7 +1595,7 @@ class Atoms(ASEAtoms):
         return np.einsum('ijk,ink->nj', self._symmetry_dataset['rotations'],
                          vectors[self._symmetry_dataset['indices']])/len(self._symmetry_dataset['rotations'])
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().get_arg_equivalent_sites() instead')
     def group_points_by_symmetry(
         self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
@@ -1617,19 +1616,12 @@ class Atoms(ASEAtoms):
         It is possible that the original points are not found in the returned list, as the
         positions outsie the box will be projected back to the box.
         """
-        struct_copy = self.copy()
-        points = np.array(points).reshape(-1, 3)
-        struct_copy += Atoms(elements=len(points) * ["Hs"], positions=points, cell=self.cell)
-        struct_copy.center_coordinates_in_unit_cell()
-        group_IDs = struct_copy.get_symmetry(
+        return self.get_symmetry(
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )["equivalent_atoms"][struct_copy.select_index("Hs")]
-        return [
-            points[group_IDs == ID] for ID in np.unique(group_IDs)
-        ]
+            angle_tolerance=angle_tolerance
+        ).get_arg_equivalent_sites(points)
 
     def _get_voronoi_vertices(self, minimum_dist=0.1):
         """
