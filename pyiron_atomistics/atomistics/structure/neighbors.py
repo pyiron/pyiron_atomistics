@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from scipy.sparse import coo_matrix
 from scipy.special import gamma
-from pyiron_base import Settings
+from pyiron_base import DataContainer
 from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique_labels
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
