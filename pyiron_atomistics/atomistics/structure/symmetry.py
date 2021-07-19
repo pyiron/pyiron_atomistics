@@ -47,13 +47,16 @@ class Symmetry(dict):
         self,
         points,
         return_unique=True,
-        epsilon=1.0e-8
+        decimals=5,
+        epsilon=1.0e-8,
     ):
         """
 
         Args:
             points (list/ndarray): 3d vector
             return_unique (bool): Return only points which appear once.
+            decimals (int): Number of decimal places to round to for the uniqueness of positions
+                (Not relevant if return_unique=False)
             epsilon (float): displacement to add to avoid wrapping of atoms at borders
 
         Returns:
@@ -73,13 +76,14 @@ class Symmetry(dict):
             ).reshape((len(R),)+np.asarray(points).shape)
         x = x.reshape(-1, 3)
         _, indices = np.unique(
-            np.round(x, decimals=int(-np.log10(symprec))), return_index=True, axis=0
+            np.round(x, decimals=decimals), return_index=True, axis=0
         )
         return np.einsum('ji,mj->mi', self._structure.cell, x[indices])
 
     def get_arg_equivalent_sites(
         self,
         points,
+        decimals=5,
         epsilon=1.0e-8
     ):
         """
@@ -87,6 +91,8 @@ class Symmetry(dict):
 
         Args:
             points (list/ndarray): 3d vector
+            decimals (int): Number of decimal places to round to for the uniqueness of positions
+                (Not relevant if return_unique=False)
             epsilon (float): displacement to add to avoid wrapping of atoms at borders
 
         Returns:
@@ -97,7 +103,6 @@ class Symmetry(dict):
             epsilon=epsilon,
             return_unique=False
         )
-        decimals = int(-np.log10(symprec))
         _, inverse = np.unique(
             np.round(all_points.reshape(-1, 3), decimals=decimals), axis=0, return_inverse=True
         )
@@ -108,12 +113,14 @@ class Symmetry(dict):
     def symmetrize_vectors(
         self,
         vectors,
+        epsilon=1.0e-8,
     ):
         """
         Symmetrization of natom x 3 vectors according to box symmetries
 
         Args:
             vectors (ndarray/list): natom x 3 array to symmetrize
+            epsilon (float): displacement to add to avoid wrapping of atoms at borders
 
         Returns:
             (np.ndarray) symmetrized vectors
@@ -130,7 +137,7 @@ class Symmetry(dict):
             self['rotations'],
             scaled_positions
         )+self['translations'][:,None,:]
-        positions -= np.floor(positions+symprec)
+        positions -= np.floor(positions+epsilon)
         indices = tree.query(positions)[1].argsort(axis=-1)
         return np.einsum(
             'ijk,ink->nj',
