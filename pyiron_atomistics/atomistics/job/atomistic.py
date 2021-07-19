@@ -7,7 +7,7 @@ import warnings
 import numpy as np
 from ase.io import write as ase_write
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTraj
+from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate, DataContainer
 
@@ -610,7 +610,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                              (eg. cutoff_radius, norm_order , etc.)
 
         Returns:
-            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTraj: `NeighborsTraj` instances
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
                                                                              containing the neighbor information.
         """
         return self.trajectory().get_neighbors_snapshots(snapshot_indices=snapshot_indices,
@@ -629,7 +629,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                              (eg. cutoff_radius, norm_order , etc.)
 
         Returns:
-            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTraj: `NeighborsTraj` instances
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
                                                                              containing the neighbor information.
         """
         return self.trajectory().get_neighbors(start=start, stop=stop, stride=stride,
@@ -804,13 +804,13 @@ class Trajectory(HasStructure):
                              (eg. cutoff_radius, norm_order , etc.)
 
         Returns:
-            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTraj: `NeighborsTraj` instances
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
                                                                              containing the neighbor information.
         """
         if snapshot_indices is None:
             snapshot_indices = np.arange(len(self), dtype=int)
 
-        n_obj = NeighborsTraj(self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
+        n_obj = NeighborsTrajectory(self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
         n_obj.compute_neighbors()
         return n_obj
 
@@ -827,7 +827,7 @@ class Trajectory(HasStructure):
                              (eg. cutoff_radius, norm_order , etc.)
 
         Returns:
-            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTraj: `NeighborsTraj` instances
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
                                                                              containing the neighbor information.
         """
         snapshot_indices = np.arange(len(self))[start:stop:stride]

@@ -410,23 +410,23 @@ class TestLammps(unittest.TestCase):
                                            snapshot_indices=snap_indices)._positions,
             orig_pos[snap_indices][:, atom_indices, :]))
         neigh_traj_obj = self.job_water_dump.get_neighbors()
-        self.assertTrue(np.allclose(np.linalg.norm(neigh_traj_obj.neighbor_vectors, axis=-1),
-                                    neigh_traj_obj.neighbor_distances))
+        self.assertTrue(np.allclose(np.linalg.norm(neigh_traj_obj.vecs, axis=-1),
+                                    neigh_traj_obj.distances))
         h_indices = self.job_water_dump.structure.select_index("H")
         o_indices = self.job_water_dump.structure.select_index("O")
-        self.assertLessEqual(neigh_traj_obj.neighbor_distances[:, o_indices, :2].max(), 1.2)
-        self.assertGreaterEqual(neigh_traj_obj.neighbor_distances[:, o_indices, :2].min(), 0.8)
+        self.assertLessEqual(neigh_traj_obj.distances[:, o_indices, :2].max(), 1.2)
+        self.assertGreaterEqual(neigh_traj_obj.distances[:, o_indices, :2].min(), 0.8)
         self.assertTrue(np.alltrue([np.in1d(np.unique(ind_mat.flatten()), h_indices) for ind_mat in
-                                    neigh_traj_obj.neighbor_indices[:, o_indices, :2]]))
+                                    neigh_traj_obj.indices[:, o_indices, :2]]))
         neigh_traj_obj_snaps = self.job_water_dump.get_neighbors_snapshots(snapshot_indices=[2, 3, 4])
-        self.assertTrue(np.allclose(neigh_traj_obj.neighbor_vectors[2:], neigh_traj_obj_snaps.neighbor_vectors))
+        self.assertTrue(np.allclose(neigh_traj_obj.vecs[2:], neigh_traj_obj_snaps.vecs))
         neigh_traj_obj.to_hdf(self.job_water_dump.project_hdf5)
         neigh_traj_obj_loaded = self.job_water_dump["neighbors_traj"].to_object()
         # self.assertEqual(neigh_traj_obj._init_structure, neigh_traj_obj_loaded._init_structure)
         self.assertEqual(neigh_traj_obj._num_neighbors, neigh_traj_obj_loaded._num_neighbors)
-        self.assertTrue(np.allclose(neigh_traj_obj.neighbor_indices, neigh_traj_obj_loaded.neighbor_indices))
-        self.assertTrue(np.allclose(neigh_traj_obj.neighbor_distances, neigh_traj_obj_loaded.neighbor_distances))
-        self.assertTrue(np.allclose(neigh_traj_obj.neighbor_vectors, neigh_traj_obj_loaded.neighbor_vectors))
+        self.assertTrue(np.allclose(neigh_traj_obj.indices, neigh_traj_obj_loaded.indices))
+        self.assertTrue(np.allclose(neigh_traj_obj.distances, neigh_traj_obj_loaded.distances))
+        self.assertTrue(np.allclose(neigh_traj_obj.vecs, neigh_traj_obj_loaded.vecs))
 
     def test_dump_parser(self):
         structure = Atoms(

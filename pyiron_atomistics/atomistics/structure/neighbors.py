@@ -1084,7 +1084,7 @@ def get_volume_of_n_sphere_in_p_norm(n=3, p=2):
     return (2*gamma(1+1/p))**n/gamma(1+n/p)
 
 
-class NeighborsTraj(DataContainer):
+class NeighborsTrajectory(DataContainer):
 
     """
     This class generates the neighbors for a given atomistic trajectory. The assumption here is that the trajectory is
@@ -1118,7 +1118,7 @@ class NeighborsTraj(DataContainer):
         self._get_neighbors_kwargs = kwargs
 
     @property
-    def neighbor_indices(self):
+    def indices(self):
         """
         Neighbour indices (excluding itself) of each atom computed using the get_neighbors_traj() method
 
@@ -1130,7 +1130,7 @@ class NeighborsTraj(DataContainer):
         return self._neighbor_indices
 
     @property
-    def neighbor_distances(self):
+    def distances(self):
         """
         Neighbour distances (excluding itself) of each atom computed using the get_neighbors_traj() method
 
@@ -1142,7 +1142,7 @@ class NeighborsTraj(DataContainer):
         return self._neighbor_distances
 
     @property
-    def neighbor_vectors(self):
+    def vecs(self):
         """
         Neighbour vectors (excluding itself) of each atom computed using the get_neighbors_traj() method
 
