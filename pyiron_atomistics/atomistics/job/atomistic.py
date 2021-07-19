@@ -9,7 +9,7 @@ from ase.io import write as ase_write
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
-from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate, DataContainer
+from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
 
 try:
     from pyiron_base import ProjectGUI
