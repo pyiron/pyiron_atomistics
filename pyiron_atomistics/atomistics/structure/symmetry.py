@@ -22,16 +22,18 @@ s = Settings()
 
 class Symmetry:
     """Class to analyse atom structure.  """
-    def __init__(self, structure):
+    def __init__(
+        self, structure, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
+    ):
         """
         Args:
             structure (:class:`pyiron.atomistics.structure.atoms.Atoms`): reference Atom structure.
         """
         self._structure = structure
-        self.use_magmoms = False
-        self.use_elements = True
-        self.symprec = 1e-5
-        self.angle_tolerance = -1.0
+        self.use_magmoms = use_magmoms
+        self.use_elements = use_elements
+        self.symprec = symprec
+        self.angle_tolerance = angle_tolerance
 
     def generate_equivalent_points(
         self,
