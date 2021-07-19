@@ -4,12 +4,10 @@
 
 import copy
 import warnings
-from functools import wraps
-
 import numpy as np
 from ase.io import write as ase_write
-
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
 
@@ -464,6 +462,8 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             snapshot_indices=None, overwrite_positions=None, overwrite_cells=None
     ):
         """
+        Returns a `Trajectory` instance containing the necessary information to describe the evolution of the atomic
+        structure during the atomistic simulation.
 
         Args:
             stride (int): The trajectories are generated with every 'stride' steps
@@ -477,7 +477,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                                                  have the same length of `overwrite_positions`
 
         Returns:
-            pyiron.atomistics.job.atomistic.Trajectory: Trajectory instance
+            pyiron_atomistics.atomistics.job.atomistic.Trajectory: Trajectory instance
 
         """
         cells = self.output.cells
@@ -598,6 +598,43 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             **kwargs
         )
 
+    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors only for the required snapshots from the trajectory
+
+        Args:
+            snapshot_indices (list/numpy.ndarray): Snapshots for which the the neighbors need to be computed
+                                                   (eg. [1, 5, 10,..., 100]
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        return self.trajectory().get_neighbors_snapshots(snapshot_indices=snapshot_indices,
+                                                         num_neighbors=num_neighbors, **kwargs)
+
+    def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors for a given section of the trajectory
+
+        Args:
+            start (int): Start point of the slice of the trajectory to be sampled
+            stop (int): End point of of the slice of the trajectory to be sampled
+            stride (int): Samples the snapshots evert `stride` steps
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        return self.trajectory().get_neighbors(start=start, stop=stop, stride=stride,
+                                               num_neighbors=num_neighbors, **kwargs)
+
     # Compatibility functions
     @deprecate("Use get_structure()")
     def get_final_structure(self):
@@ -716,7 +753,8 @@ class Trajectory(HasStructure):
                                 varies
     """
 
-    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None):
+    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None, table_name="trajectory"):
+
         if center_of_mass:
             pos = np.copy(positions)
             pos[:, :, 0] = (pos[:, :, 0].T - np.mean(pos[:, :, 0], axis=1)).T
@@ -730,16 +768,21 @@ class Trajectory(HasStructure):
         self._indices = indices
 
     def __getitem__(self, item):
-        new_structure = self._structure.copy()
-        if self._cells is not None:
-            new_structure.cell = self._cells[item]
-        if self._indices is not None:
-            new_structure.indices = self._indices[item]
-        new_structure.positions = self._positions[item]
-        # This step is necessary for using ase.io.write for trajectories
-        new_structure.arrays["positions"] = new_structure.positions
-        # new_structure.arrays['cells'] = new_structure.cell
-        return new_structure
+        if isinstance(item, (int, np.int_)):
+            new_structure = self._structure.copy()
+            if self._cells is not None:
+                new_structure.cell = self._cells[item]
+            if self._indices is not None:
+                new_structure.indices = self._indices[item]
+            new_structure.positions = self._positions[item]
+            # This step is necessary for using ase.io.write for trajectories
+            new_structure.arrays["positions"] = new_structure.positions
+            # new_structure.arrays['cells'] = new_structure.cell
+            return new_structure
+        elif isinstance(item, (list, np.ndarray, slice)):
+            snapshots = np.arange(len(self), dtype=int)[item]
+            return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
+                              structure=self[snapshots[0]], indices=self._indices[snapshots])
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
@@ -749,6 +792,46 @@ class Trajectory(HasStructure):
 
     _number_of_structures = __len__
 
+    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors only for the required snapshots from the trajectory
+
+        Args:
+            snapshot_indices (list/numpy.ndarray): Snapshots for which the the neighbors need to be computed
+                                                   (eg. [1, 5, 10,..., 100]
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        if snapshot_indices is None:
+            snapshot_indices = np.arange(len(self), dtype=int)
+
+        n_obj = NeighborsTrajectory(self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
+        n_obj.compute_neighbors()
+        return n_obj
+
+    def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors for a given section of the trajectory
+
+        Args:
+            start (int): Start point of the slice of the trajectory to be sampled
+            stop (int): End point of of the slice of the trajectory to be sampled
+            stride (int): Samples the snapshots evert `stride` steps
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        snapshot_indices = np.arange(len(self))[start:stop:stride]
+        return self.get_neighbors_snapshots(snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs)
 
 
 class GenericInput(GenericParameters):
@@ -895,3 +978,4 @@ class GenericOutput(object):
             return hdf5_path.list_nodes()
         else:
             return []
+
