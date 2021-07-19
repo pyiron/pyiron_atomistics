@@ -956,17 +956,6 @@ class TestAtoms(unittest.TestCase):
         )
         basis.plot3d(mode='plotly')
 
-    def test_get_equivalent_voronoi_vertices(self):
-        basis = Atoms("FeFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3), pbc=True)
-        vert = basis.get_equivalent_voronoi_vertices()
-        self.assertEqual(len(vert), 1)
-        self.assertGreater(
-            np.min(np.linalg.norm(vert[0] - basis.positions[0], axis=-1)), 0.5
-        )
-        self.assertGreater(
-            np.min(np.linalg.norm(vert[0] - basis.positions[1], axis=-1)), 0.5
-        )
-
     def test_find_mic(self):
         cell = 0.1*(np.random.random((3,3))-0.5)+np.eye(3)
         basis = Atoms("Fe", positions=[3*[0.5]], cell=cell, pbc=True)
@@ -1048,12 +1037,6 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(
             len(Al.get_symmetry()["translations"]), len(Al.get_symmetry()["rotations"])
         )
-
-    def test_get_voronoi_vertices(self):
-        cell = 2.2 * np.identity(3)
-        Al = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell, pbc=True)
-        pos, box = Al._get_voronoi_vertices()
-        self.assertEqual(len(pos), 14)
 
     def test_get_parent_symbols(self):
         self.assertTrue(np.array_equal(self.CO2.get_parent_symbols(), ["C", "O", "O"]))

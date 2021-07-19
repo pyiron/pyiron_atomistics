@@ -188,7 +188,6 @@ class Atoms(ASEAtoms):
 
         self.bonds = None
         self.units = {"length": "A", "mass": "u"}
-        self._symmetry_dataset = None
         self.set_initial_magnetic_moments(magmoms)
         self._high_symmetry_points = None
         self._high_symmetry_path = None
@@ -1558,16 +1557,15 @@ class Atoms(ASEAtoms):
             angle_tolerance=angle_tolerance
         )
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().symmetrize_vectors()')
     def symmetrize_vectors(
-        self, vectors, force_update=False, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
+        self, vectors, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
         """
         Symmetrization of natom x 3 vectors according to box symmetries
 
         Args:
             vectors (ndarray/list): natom x 3 array to symmetrize
-            force_update (bool): whether to update the symmetry info
             use_magmoms (bool): cf. get_symmetry
             use_elements (bool): cf. get_symmetry
             symprec (float): cf. get_symmetry
@@ -1576,24 +1574,12 @@ class Atoms(ASEAtoms):
         Returns:
             (np.ndarray) symmetrized vectors
         """
-        vectors = np.array(vectors).reshape(-1, 3)
-        if vectors.shape != self.positions.shape:
-            print(vectors.shape, self.positions.shape)
-            raise ValueError('Vector must be a natom x 3 array: {} != {}'.format(vectors.shape, self.positions.shape))
-        if self._symmetry_dataset is None or force_update:
-            symmetry = self.get_symmetry(use_magmoms=use_magmoms, use_elements=use_elements,
-                                         symprec=symprec, angle_tolerance=angle_tolerance)
-            scaled_positions = self.get_scaled_positions(wrap=False)
-            symmetry['indices'] = []
-            for rot,tra in zip(symmetry['rotations'], symmetry['translations']):
-                positions = np.einsum('ij,nj->ni', rot, scaled_positions)+tra
-                positions -= np.floor(positions+1.0e-2)
-                vec = np.where(np.linalg.norm(positions[np.newaxis, :, :]-scaled_positions[:, np.newaxis, :], axis=-1)<=1.0e-4)
-                symmetry['indices'].append(vec[1])
-            symmetry['indices'] = np.array(symmetry['indices'])
-            self._symmetry_dataset = symmetry
-        return np.einsum('ijk,ink->nj', self._symmetry_dataset['rotations'],
-                         vectors[self._symmetry_dataset['indices']])/len(self._symmetry_dataset['rotations'])
+        return self.get_symmetry(
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
+        ).symmetrize_vectors(vectors=vectors)
 
     @deprecate('Use structure.get_symmetry().get_arg_equivalent_sites() instead')
     def group_points_by_symmetry(
@@ -1622,97 +1608,6 @@ class Atoms(ASEAtoms):
             symprec=symprec,
             angle_tolerance=angle_tolerance
         ).get_arg_equivalent_sites(points)
-
-    def _get_voronoi_vertices(self, minimum_dist=0.1):
-        """
-            This function gives the positions of Voronoi vertices
-            This function does not work if there are Hs atoms in the box
-
-            Args:
-                minimum_dist: Minimum distance between two Voronoi vertices to be considered as one
-
-            Returns: Positions of Voronoi vertices, box
-
-        """
-        vor = Voronoi(
-            self.repeat(3 * [2]).positions
-        )  # Voronoi package does not have periodic boundary conditions
-        b_cell_inv = np.linalg.inv(self.cell)
-        voro_vert = vor.vertices
-        for ind, v in enumerate(voro_vert):
-            pos = np.mean(
-                voro_vert[(np.linalg.norm(voro_vert - v, axis=-1) < minimum_dist)],
-                axis=0,
-            )  # Find all points which are within minimum_dist
-            voro_vert[(np.linalg.norm(voro_vert - v, axis=-1) < 0.5)] = np.array(
-                3 * [-10]
-            )  # Mark atoms to be deleted afterwards
-            voro_vert[ind] = pos
-        voro_vert = voro_vert[np.min(voro_vert, axis=-1) > -5]
-
-        voro_vert = np.dot(b_cell_inv.T, voro_vert.T).T  # get scaled positions
-        voro_vert = voro_vert[
-            (np.min(voro_vert, axis=-1) > 0.499) & (np.max(voro_vert, axis=-1) < 1.501)
-        ]
-        voro_vert = np.dot(self.cell.T, voro_vert.T).T  # get true positions
-
-        box_copy = self.copy()
-        new_atoms = Atoms(cell=self.cell, symbols=["Hs"]).repeat([len(voro_vert), 1, 1])
-        box_copy += new_atoms
-
-        pos_total = np.append(self.positions, voro_vert)
-        pos_total = pos_total.reshape(-1, 3)
-        box_copy.positions = pos_total
-
-        box_copy.center_coordinates_in_unit_cell()
-
-        neigh = (
-            box_copy.get_neighbors()
-        )  # delete all atoms which lie within minimum_dist (including periodic boundary conditions)
-        while (
-            len(
-                np.array(neigh.indices).flatten()[
-                    np.array(neigh.distances).flatten() < minimum_dist
-                ]
-            )
-            != 0
-        ):
-            del box_copy[
-                np.array(neigh.indices).flatten()[
-                    np.array(neigh.distances).flatten() < minimum_dist
-                ][0]
-            ]
-            neigh = box_copy.get_neighbors()
-        return pos_total, box_copy
-
-    @deprecate_soon
-    def get_equivalent_voronoi_vertices(
-        self, return_box=False, minimum_dist=0.1, symprec=1e-5, angle_tolerance=-1.0
-    ):
-        """
-            This function gives the positions of spatially equivalent Voronoi vertices in lists, which
-            most likely represent interstitial points or vacancies (along with other high symmetry points)
-            Each list item contains an array of positions which are spacially equivalent.
-            This function does not work if there are Hs atoms in the box
-
-            Args:
-                return_box: True, if the box containing atoms on the positions of Voronoi vertices
-                            should be returned (which are represented by Hs atoms)
-                minimum_dist: Minimum distance between two Voronoi vertices to be considered as one
-
-            Returns: List of numpy array positions of spacially equivalent Voronoi vertices
-
-        """
-
-        _, box_copy = self._get_voronoi_vertices(minimum_dist=minimum_dist)
-        list_positions = []
-        sym = box_copy.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance)
-        for ind in set(sym["equivalent_atoms"][box_copy.select_index("Hs")]):
-            list_positions.append(box_copy.positions[sym["equivalent_atoms"] == ind])
-        if return_box:
-            return list_positions, box_copy
-        else:
-            return list_positions
 
     @deprecate_soon
     def get_equivalent_points(self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0):
