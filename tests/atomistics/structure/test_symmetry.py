@@ -16,7 +16,7 @@ class TestAtoms(unittest.TestCase):
         v_position = structure.positions[0]
         del structure[0]
         pairs = np.stack((
-            structure.analyse.get_arg_equivalent_sites(sites),
+            structure.symmetry.get_arg_equivalent_sites(sites),
             np.unique(np.round(structure.get_distances_array(v_position, sites), decimals=2), return_inverse=True)[1]
         ), axis=-1)
         unique_pairs = np.unique(pairs, axis=0)

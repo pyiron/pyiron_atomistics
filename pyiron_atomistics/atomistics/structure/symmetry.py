@@ -5,6 +5,7 @@
 import numpy as np
 from pyiron_base import Settings
 from scipy.spatial import cKDTree
+import spglib
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -57,9 +58,11 @@ class Symmetry:
             epsilon (float): displacement to add to avoid wrapping of atoms at borders
 
         Returns:
-            (ndarray): array of equivalent points with respect to box symmetries
+            (ndarray): array of equivalent points with respect to box symmetries, with a shape of
+                (n_symmetry, original_shape) if return_unique=False, otherwise (n, 3), where n is
+                the number of inequivalent vectors.
         """
-        symmetry_operations = self._structure.get_symmetry(
+        symmetry_operations = self.get_symmetry(
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
@@ -104,7 +107,7 @@ class Symmetry:
         Returns:
             (ndarray): array of ID's according to their groups
         """
-        all_points = self.get_equivalent_points(
+        all_points = self.generate_equivalent_points(
             points=points,
             use_magmoms=use_magmoms,
             use_elements=use_elements,
@@ -208,7 +211,7 @@ class Symmetry:
         )/len(symmetry['rotations'])
 
     def get_symmetry(
-        self, use_magmoms=None, use_elements=None, symprec=None, angle_tolerance=None
+        self, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
         """
 
@@ -223,16 +226,16 @@ class Symmetry:
 
 
         """
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
+        lattice = np.array(self._structure.get_cell().T, dtype="double", order="C")
         positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
+            self._structure.get_scaled_positions(wrap=False), dtype="double", order="C"
         )
         if use_elements:
-            numbers = np.array(self.get_atomic_numbers(), dtype="intc")
+            numbers = np.array(self._structure.get_atomic_numbers(), dtype="intc")
         else:
-            numbers = np.ones_like(self.get_atomic_numbers(), dtype="intc")
+            numbers = np.ones_like(self._structure.get_atomic_numbers(), dtype="intc")
         if use_magmoms:
-            magmoms = self.get_initial_magnetic_moments()
+            magmoms = self._structure.get_initial_magnetic_moments()
             return spglib.get_symmetry(
                 cell=(lattice, positions, numbers, magmoms),
                 symprec=symprec,

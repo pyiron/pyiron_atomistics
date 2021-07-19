@@ -2147,6 +2147,7 @@ class Atoms(ASEAtoms):
                 atoms_new.__dict__[key] = copy(val)
         atoms_new._visualize = Visualize(atoms_new)
         atoms_new._analyse = Analyse(atoms_new)
+        atoms_new._symmetry = Symmetry(atoms_new)
         return atoms_new
 
     def __delitem__(self, key):
