@@ -1250,12 +1250,13 @@ class Atoms(ASEAtoms):
             return v_repeated, indices
         return v_repeated
 
+    @deprecate("Use get_neighbors and call numbers_of_neighbors")
     def get_numbers_of_neighbors_in_sphere(
-            self,
-            cutoff_radius=10,
-            num_neighbors=None,
-            id_list=None,
-            width_buffer=1.2,
+        self,
+        cutoff_radius=10,
+        num_neighbors=None,
+        id_list=None,
+        width_buffer=1.2,
     ):
         """
         Function to compute the maximum number of neighbors in a sphere around each atom.
@@ -1269,105 +1270,37 @@ class Atoms(ASEAtoms):
             (np.ndarray) : for each atom the number of neighbors found in the sphere of radius
                            cutoff_radius (<= num_neighbors if specified)
         """
-        if num_neighbors is not None:
-            neigh = self._get_neighbors(
-                num_neighbors=num_neighbors,
-                t_vec=False,
-                id_list=id_list,
-                cutoff_radius=cutoff_radius,
-                width_buffer=width_buffer,
-            )
-            num_neighbors_per_atom = np.sum(neigh.distances < np.inf, axis=-1)
-        else:
-            volume_per_atom = self.get_volume(per_atom=True)
-            if id_list is not None:
-                volume_per_atom = self.get_volume() / len(id_list)
-            num_neighbors = int((1 + width_buffer) *
-                                4. / 3. * np.pi * cutoff_radius ** 3 / volume_per_atom)
-            num_neighbors_old = num_neighbors - 1
-            while num_neighbors_old < num_neighbors:
-                neigh = self._get_neighbors(
-                    num_neighbors=num_neighbors,
-                    t_vec=False,
-                    id_list=id_list,
-                    cutoff_radius=cutoff_radius,
-                    width_buffer=width_buffer,
-                )
-                num_neighbors_old = num_neighbors
-                num_neighbors_per_atom = np.sum(neigh.distances < np.inf, axis=-1)
-                num_neighbors = num_neighbors_per_atom.max()
-                if num_neighbors == num_neighbors_old:
-                    num_neighbors = 2 * num_neighbors
-        return num_neighbors_per_atom
-
-    def get_neighbors_by_distance(
-        self,
-        cutoff_radius=5,
-        num_neighbors=None,
-        t_vec=True,
-        tolerance=2,
-        id_list=None,
-        width_buffer=1.2,
-        allow_ragged=True,
-        norm_order=2,
-    ):
-        """
-
-        Args:
-            cutoff_radius (float): Upper bound of the distance to which the search must be done
-            num_neighbors (int/None): maximum number of neighbors found; if None this is estimated based on the density.
-            t_vec (bool): True: compute distance vectors
-                        (pbc are automatically taken into account)
-            tolerance (int): tolerance (round decimal points) used for computing neighbor shells
-            id_list (list): list of atoms the neighbors are to be looked for
-            width_buffer (float): width of the layer to be added to account for pbc.
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
-            norm_order (int): Norm to use for the neighborhood search and shell recognition. The
-                definition follows the conventional Lp norm (cf.
-                https://en.wikipedia.org/wiki/Lp_space). This is an feature and for anything
-                other than norm_order=2, there is no guarantee that this works flawlessly.
-
-        Returns:
-
-            pyiron.atomistics.structure.atoms.Neighbors: Neighbors instances with the neighbor
-                indices, distances and vectors
-
-        """
         return self.get_neighbors(
             cutoff_radius=cutoff_radius,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
-            tolerance=tolerance,
             id_list=id_list,
             width_buffer=width_buffer,
-            allow_ragged=allow_ragged,
-            norm_order=norm_order,
-        )
+        ).numbers_of_neighbors
 
+    @deprecate(allow_ragged="use `mode='ragged'` instead.")
     def get_neighbors(
         self,
         num_neighbors=12,
-        t_vec=True,
         tolerance=2,
         id_list=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
-        allow_ragged=False,
+        allow_ragged=None,
+        mode='filled',
         norm_order=2,
     ):
         """
 
         Args:
             num_neighbors (int): number of neighbors
-            t_vec (bool): True: compute distance vectors
-                        (pbc are automatically taken into account)
             tolerance (int): tolerance (round decimal points) used for computing neighbor shells
             id_list (list): list of atoms the neighbors are to be looked for
             cutoff_radius (float): Upper bound of the distance to which the search must be done
             width_buffer (float): width of the layer to be added to account for pbc.
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
+            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
+                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
+            mode (str): Representation of per-atom quantities (distances etc.). Choose from
+                'filled', 'ragged' and 'flattened'.
             norm_order (int): Norm to use for the neighborhood search and shell recognition. The
                 definition follows the conventional Lp norm (cf.
                 https://en.wikipedia.org/wiki/Lp_space). This is an feature and for anything
@@ -1381,20 +1314,45 @@ class Atoms(ASEAtoms):
         """
         neigh = self._get_neighbors(
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             tolerance=tolerance,
             id_list=id_list,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
             norm_order=norm_order,
         )
-        neigh.allow_ragged = allow_ragged
+        neigh._set_mode(mode)
+        if allow_ragged is not None:
+            neigh.allow_ragged = allow_ragged
         return neigh
+
+    @deprecate(allow_ragged="use `mode='ragged'` instead.")
+    @deprecate("Use get_neighbors", version="1.0.0")
+    def get_neighbors_by_distance(
+        self,
+        cutoff_radius=5,
+        num_neighbors=None,
+        tolerance=2,
+        id_list=None,
+        width_buffer=1.2,
+        allow_ragged=None,
+        mode='ragged',
+        norm_order=2,
+    ):
+        return self.get_neighbors(
+            cutoff_radius=cutoff_radius,
+            num_neighbors=num_neighbors,
+            tolerance=tolerance,
+            id_list=id_list,
+            width_buffer=width_buffer,
+            allow_ragged=allow_ragged,
+            mode=mode,
+            norm_order=norm_order,
+        )
+    get_neighbors_by_distance.__doc__ = get_neighbors.__doc__
 
     def _get_neighbors(
         self,
         num_neighbors=12,
-        t_vec=True,
         tolerance=2,
         id_list=None,
         cutoff_radius=np.inf,
@@ -1429,7 +1387,6 @@ class Atoms(ASEAtoms):
         neigh._get_neighborhood(
             positions=positions,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             cutoff_radius=cutoff_radius,
             exclude_self=True,
             width_buffer=width_buffer,
@@ -1443,7 +1400,6 @@ class Atoms(ASEAtoms):
         self,
         positions,
         num_neighbors=12,
-        t_vec=True,
         cutoff_radius=np.inf,
         width_buffer=1.2,
         norm_order=2,
@@ -1453,7 +1409,6 @@ class Atoms(ASEAtoms):
         Args:
             position: Position in a box whose neighborhood information is analysed
             num_neighbors (int): Number of nearest neighbors
-            t_vec (bool): True: compute distance vectors (pbc are taken into account)
             cutoff_radius (float): Upper bound of the distance to which the search is to be done
             width_buffer (float): Width of the layer to be added to account for pbc.
             norm_order (int): Norm to use for the neighborhood search and shell recognition. The
@@ -1472,14 +1427,12 @@ class Atoms(ASEAtoms):
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
-            t_vec=t_vec,
             get_tree=True,
             norm_order=norm_order,
         )
         return neigh._get_neighborhood(
             positions=positions,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             cutoff_radius=cutoff_radius,
         )
 
@@ -1556,7 +1509,7 @@ class Atoms(ASEAtoms):
                 radius = neigh.distances[0][indices]
                 radius = np.mean(radius)
                 # print "radius: ", radius
-            neighbors = self.get_neighbors_by_distance(cutoff_radius=radius, t_vec=False)
+            neighbors = self.get_neighbors_by_distance(cutoff_radius=radius)
         return neighbors.cluster_analysis(id_list=id_list, return_cluster_sizes=return_cluster_sizes)
 
     # TODO: combine with corresponding routine in plot3d

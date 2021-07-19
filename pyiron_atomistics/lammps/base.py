@@ -786,7 +786,18 @@ class LammpsBase(AtomisticGenericJob):
                 mu[el] = 0.
 
         self._generic_input["calc_mode"] = "vcsgc"
+        self._generic_input["mu"] = mu
+        if target_concentration is not None:
+            self._generic_input["target_concentration"] = target_concentration
+            self._generic_input["kappa"] = kappa
+        self._generic_input["mc_step_interval"] = mc_step_interval
+        self._generic_input["swap_fraction"] = swap_fraction
         self._generic_input["temperature"] = temperature
+        self._generic_input["temperature_mc"] = temperature_mc
+        if window_size is not None:
+            self._generic_input["window_size"] = window_size
+        if window_moves is not None:
+            self._generic_input["window_moves"] = window_moves
         self._generic_input["n_ionic_steps"] = n_ionic_steps
         self._generic_input["n_print"] = n_print
         self._generic_input.remove_keys(["max_iter"])
