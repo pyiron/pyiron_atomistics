@@ -31,17 +31,27 @@ class Symmetry(dict):
             structure (:class:`pyiron.atomistics.structure.atoms.Atoms`): reference Atom structure.
         """
         self._structure = structure
-        self.use_magmoms = use_magmoms
-        self.use_elements = use_elements
-        self.symprec = symprec
-        self.angle_tolerance = angle_tolerance
+        self._use_magmoms = use_magmoms
+        self._use_elements = use_elements
+        self._symprec = symprec
+        self._angle_tolerance = angle_tolerance
         for k,v in self._get_symmetry(
-            use_magmoms=use_magmoms,
-            use_elements=use_elements,
             symprec=symprec,
             angle_tolerance=angle_tolerance
         ).items():
             self[k] = v
+
+    @property
+    def arg_equivalent_atoms(self):
+        return self['equivalent_atoms']
+
+    @property
+    def rotations(self):
+        return self['rotations']
+
+    @property
+    def translations(self):
+        return self['translations']
 
     def generate_equivalent_points(
         self,
@@ -145,15 +155,27 @@ class Symmetry(dict):
             vectors[indices]
         )/len(self['rotations'])
 
+    @property
+    def _spglib_cell(self):
+        lattice = np.array(self._structure.get_cell().T, dtype="double", order="C")
+        positions = np.array(
+            self._structure.get_scaled_positions(wrap=False), dtype="double", order="C"
+        )
+        if self._use_elements:
+            numbers = np.array(self._structure.get_atomic_numbers(), dtype="intc")
+        else:
+            numbers = np.ones_like(self._structure.get_atomic_numbers(), dtype="intc")
+        if self._use_magmoms:
+            return lattice, positions, numbers, self._structure.get_initial_magnetic_moments()
+        else:
+            return lattice, positions, numbers
+
     def _get_symmetry(
-        self, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
+        self, symprec=1e-5, angle_tolerance=-1.0
     ):
         """
 
         Args:
-            use_magmoms (bool): Whether to consider magnetic moments (cf.
-            get_initial_magnetic_moments())
-            use_elements (bool): If False, chemical elements will be ignored
             symprec (float): Symmetry search precision
             angle_tolerance (float): Angle search tolerance
 
@@ -161,25 +183,23 @@ class Symmetry(dict):
 
 
         """
-        lattice = np.array(self._structure.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self._structure.get_scaled_positions(wrap=False), dtype="double", order="C"
+        return spglib.get_symmetry(
+            cell=self._spglib_cell,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance,
         )
-        if use_elements:
-            numbers = np.array(self._structure.get_atomic_numbers(), dtype="intc")
-        else:
-            numbers = np.ones_like(self._structure.get_atomic_numbers(), dtype="intc")
-        if use_magmoms:
-            magmoms = self._structure.get_initial_magnetic_moments()
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers, magmoms),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
-        else:
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
+
+    @property
+    def info(self):
+        """
+        Get symmetry info
+
+        https://atztogo.github.io/spglib/python-spglib.html
+        """
+        return spglib.get_symmetry_dataset(
+            cell=self._spglib_cell,
+            symprec=self._symprec,
+            angle_tolerance=self._angle_tolerance,
+        )
+
 
