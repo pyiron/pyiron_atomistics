@@ -21,7 +21,7 @@ __date__ = "Sep 1, 2017"
 s = Settings()
 
 
-class Symmetry:
+class Symmetry(dict):
     """Class to analyse atom structure.  """
     def __init__(
         self, structure, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
@@ -35,14 +35,17 @@ class Symmetry:
         self.use_elements = use_elements
         self.symprec = symprec
         self.angle_tolerance = angle_tolerance
+        for k,v in self._get_symmetry(
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
+        ).items():
+            self[k] = v
 
     def generate_equivalent_points(
         self,
         points,
-        use_magmoms=False,
-        use_elements=True,
-        symprec=1e-5,
-        angle_tolerance=-1.0,
         return_unique=True,
         epsilon=1.0e-8
     ):
@@ -50,10 +53,6 @@ class Symmetry:
 
         Args:
             points (list/ndarray): 3d vector
-            use_magmoms (bool): cf. get_symmetry()
-            use_elements (bool): cf. get_symmetry()
-            symprec (float): cf. get_symmetry()
-            angle_tolerance (float): cf. get_symmetry()
             return_unique (bool): Return only points which appear once.
             epsilon (float): displacement to add to avoid wrapping of atoms at borders
 
@@ -62,14 +61,8 @@ class Symmetry:
                 (n_symmetry, original_shape) if return_unique=False, otherwise (n, 3), where n is
                 the number of inequivalent vectors.
         """
-        symmetry_operations = self.get_symmetry(
-            use_magmoms=use_magmoms,
-            use_elements=use_elements,
-            symprec=symprec,
-            angle_tolerance=angle_tolerance
-        )
-        R = symmetry_operations['rotations']
-        t = symmetry_operations['translations']
+        R = self['rotations']
+        t = self['translations']
         x = np.einsum('jk,nj->nk', np.linalg.inv(self._structure.cell), np.atleast_2d(points))
         x = np.einsum('nxy,my->mnx', R, x)+t
         if any(self._structure.pbc):
@@ -87,10 +80,6 @@ class Symmetry:
     def get_arg_equivalent_sites(
         self,
         points,
-        use_magmoms=False,
-        use_elements=True,
-        symprec=1e-5,
-        angle_tolerance=-1.0,
         epsilon=1.0e-8
     ):
         """
@@ -98,10 +87,6 @@ class Symmetry:
 
         Args:
             points (list/ndarray): 3d vector
-            use_magmoms (bool): cf. get_symmetry()
-            use_elements (bool): cf. get_symmetry()
-            symprec (float): cf. get_symmetry()
-            angle_tolerance (float): cf. get_symmetry()
             epsilon (float): displacement to add to avoid wrapping of atoms at borders
 
         Returns:
@@ -109,10 +94,6 @@ class Symmetry:
         """
         all_points = self.generate_equivalent_points(
             points=points,
-            use_magmoms=use_magmoms,
-            use_elements=use_elements,
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
             epsilon=epsilon,
             return_unique=False
         )
@@ -124,62 +105,15 @@ class Symmetry:
         indices = np.min(inverse, axis=1)
         return np.unique(indices, return_inverse=True)[1]
 
-    def _get_symmetry(
-        self, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
-    ):
-        """
-
-        Args:
-            use_magmoms (bool): Whether to consider magnetic moments (cf.
-            get_initial_magnetic_moments())
-            use_elements (bool): If False, chemical elements will be ignored
-            symprec (float): Symmetry search precision
-            angle_tolerance (float): Angle search tolerance
-
-        Returns:
-
-
-        """
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
-        )
-        if use_elements:
-            numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        else:
-            numbers = np.ones_like(self.get_atomic_numbers(), dtype="intc")
-        if use_magmoms:
-            magmoms = self.get_initial_magnetic_moments()
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers, magmoms),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
-        else:
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
-
     def symmetrize_vectors(
         self,
         vectors,
-        use_magmoms=False,
-        use_elements=True,
-        symprec=1e-5,
-        angle_tolerance=-1.0
     ):
         """
         Symmetrization of natom x 3 vectors according to box symmetries
 
         Args:
             vectors (ndarray/list): natom x 3 array to symmetrize
-            force_update (bool): whether to update the symmetry info
-            use_magmoms (bool): cf. get_symmetry
-            use_elements (bool): cf. get_symmetry
-            symprec (float): cf. get_symmetry
-            angle_tolerance (float): cf. get_symmetry
 
         Returns:
             (np.ndarray) symmetrized vectors
@@ -189,28 +123,22 @@ class Symmetry:
             raise ValueError('Vector must be a natom x 3 array: {} != {}'.format(
                 vectors.shape, self.positions.shape
             ))
-        symmetry = self.get_symmetry(
-            use_magmoms=use_magmoms,
-            use_elements=use_elements,
-            symprec=symprec,
-            angle_tolerance=angle_tolerance
-        )
         scaled_positions = self.get_scaled_positions(wrap=False)
         tree = cKDTree(scaled_positions)
         positions = np.einsum(
             'nij,kj->nki',
-            symmetry['rotations'],
+            self['rotations'],
             scaled_positions
-        )+symmetry['translations'][:,None,:]
+        )+self['translations'][:,None,:]
         positions -= np.floor(positions+symprec)
         indices = tree.query(positions)[1].argsort(axis=-1)
         return np.einsum(
             'ijk,ink->nj',
-            symmetry['rotations'],
+            self['rotations'],
             vectors[indices]
-        )/len(symmetry['rotations'])
+        )/len(self['rotations'])
 
-    def get_symmetry(
+    def _get_symmetry(
         self, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
         """

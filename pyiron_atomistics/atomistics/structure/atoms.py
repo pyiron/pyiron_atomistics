@@ -199,7 +199,6 @@ class Atoms(ASEAtoms):
             self.dimension = 0
         self._visualize = Visualize(self)
         self._analyse = Analyse(self)
-        self._symmetry = Symmetry(self)
 
     @property
     def spins(self):
@@ -240,10 +239,6 @@ class Atoms(ASEAtoms):
     @property
     def analyse(self):
         return self._analyse
-
-    @property
-    def symmetry(self):
-        return self._symmetry
 
     @property
     def species(self):
@@ -1556,27 +1551,13 @@ class Atoms(ASEAtoms):
 
 
         """
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
+        return Symmetry(
+            self,
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
         )
-        if use_elements:
-            numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        else:
-            numbers = np.ones_like(self.get_atomic_numbers(), dtype="intc")
-        if use_magmoms:
-            magmoms = self.get_initial_magnetic_moments()
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers, magmoms),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
-        else:
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
 
     @deprecate_soon
     def symmetrize_vectors(
@@ -2147,7 +2128,6 @@ class Atoms(ASEAtoms):
                 atoms_new.__dict__[key] = copy(val)
         atoms_new._visualize = Visualize(atoms_new)
         atoms_new._analyse = Analyse(atoms_new)
-        atoms_new._symmetry = Symmetry(atoms_new)
         return atoms_new
 
     def __delitem__(self, key):
