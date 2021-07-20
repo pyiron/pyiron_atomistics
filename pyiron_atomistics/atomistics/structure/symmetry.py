@@ -23,13 +23,27 @@ s = Settings()
 
 
 class Symmetry(dict):
-    """Class to analyse atom structure.  """
+    """
+
+    Return a class for operations related to box symmetries. Main attributes:
+
+    - rotations: List of rotational matrices
+    - translations: List of translational vectors
+
+    All other functionalities depend on these two attributes.
+
+    """
     def __init__(
         self, structure, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
         """
         Args:
             structure (:class:`pyiron.atomistics.structure.atoms.Atoms`): reference Atom structure.
+            use_magmoms (bool): Whether to consider magnetic moments (cf.
+            get_initial_magnetic_moments())
+            use_elements (bool): If False, chemical elements will be ignored
+            symprec (float): Symmetry search precision
+            angle_tolerance (float): Angle search tolerance
         """
         self._structure = structure
         self._use_magmoms = use_magmoms
@@ -48,10 +62,24 @@ class Symmetry(dict):
 
     @property
     def rotations(self):
+        """
+        All rotational matrices. Two points x and y are equivalent with respect to the box
+        box symmetry, if there is a rotational matrix R and a translational vector t which
+        satisfy:
+
+            x = R@y + t
+        """
         return self['rotations']
 
     @property
     def translations(self):
+        """
+        All translational vectors. Two points x and y are equivalent with respect to the box
+        box symmetry, if there is a rotational matrix R and a translational vector t which
+        satisfy:
+
+            x = R@y + t
+        """
         return self['translations']
 
     def generate_equivalent_points(

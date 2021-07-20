@@ -1544,6 +1544,7 @@ class Atoms(ASEAtoms):
             angle_tolerance (float): Angle search tolerance
 
         Returns:
+            symmetry (:class:`pyiron.atomistics.structure.symmetry.Symmetry`): Symmetry class
 
 
         """
