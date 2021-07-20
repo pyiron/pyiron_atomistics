@@ -159,7 +159,7 @@ class Symmetry(dict):
         )/len(self['rotations'])
 
     def _get_spglib_cell(self, use_elements=None, use_magmoms=None):
-        lattice = np.array(self._structure.get_cell().T, dtype="double", order="C")
+        lattice = np.array(self._structure.get_cell(), dtype="double", order="C")
         positions = np.array(
             self._structure.get_scaled_positions(wrap=False), dtype="double", order="C"
         )
