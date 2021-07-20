@@ -232,7 +232,7 @@ class Symmetry(dict):
         }
 
     def refine_cell(self):
-        cell, coords, el = spglib.refine_cell(
+        cell, coords, _ = spglib.refine_cell(
             cell=self._get_spglib_cell(use_magmoms=False),
             symprec=self._symprec,
             angle_tolerance=self._angle_tolerance,
