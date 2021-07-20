@@ -112,7 +112,7 @@ class Symmetry(dict):
         if not return_unique:
             return np.einsum(
                 'ji,mnj->mni', self._structure.cell, x
-            ).reshape((len(R),)+np.asarray(points).shape)
+            ).reshape((len(R),)+np.shape(points))
         x = x.reshape(-1, 3)
         _, indices = np.unique(
             np.round(x, decimals=decimals), return_index=True, axis=0
@@ -137,7 +137,7 @@ class Symmetry(dict):
         Returns:
             (ndarray): array of ID's according to their groups
         """
-        if len(np.asarray(points).shape)!=2:
+        if len(np.shape(points))!=2:
             raise ValueError('points must be a (n, 3)-array')
         all_points = self.generate_equivalent_points(
             points=points,
