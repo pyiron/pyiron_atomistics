@@ -6,6 +6,7 @@ import numpy as np
 from pyiron_base import Settings
 from scipy.spatial import cKDTree
 import spglib
+import ast
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -108,6 +109,8 @@ class Symmetry(dict):
         Returns:
             (ndarray): array of ID's according to their groups
         """
+        if len(np.asarray(points).shape)!=2:
+            raise ValueError('points must be a (n, 3)-array')
         all_points = self.generate_equivalent_points(
             points=points,
             epsilon=epsilon,
@@ -136,11 +139,11 @@ class Symmetry(dict):
             (np.ndarray) symmetrized vectors
         """
         vectors = np.array(vectors).reshape(-1, 3)
-        if vectors.shape != self.positions.shape:
+        if vectors.shape != self._structure.positions.shape:
             raise ValueError('Vector must be a natom x 3 array: {} != {}'.format(
                 vectors.shape, self.positions.shape
             ))
-        scaled_positions = self.get_scaled_positions(wrap=False)
+        scaled_positions = self._structure.get_scaled_positions(wrap=False)
         tree = cKDTree(scaled_positions)
         positions = np.einsum(
             'nij,kj->nki',
@@ -155,20 +158,22 @@ class Symmetry(dict):
             vectors[indices]
         )/len(self['rotations'])
 
-    @property
-    def _spglib_cell(self):
+    def _get_spglib_cell(self, use_elements=None, use_magmoms=None):
         lattice = np.array(self._structure.get_cell().T, dtype="double", order="C")
         positions = np.array(
             self._structure.get_scaled_positions(wrap=False), dtype="double", order="C"
         )
-        if self._use_elements:
+        if use_elements is None:
+            use_elements = self._use_elements
+        if use_magmoms is None:
+            use_magmoms = self._use_magmoms
+        if use_elements:
             numbers = np.array(self._structure.get_atomic_numbers(), dtype="intc")
         else:
             numbers = np.ones_like(self._structure.get_atomic_numbers(), dtype="intc")
-        if self._use_magmoms:
+        if use_magmoms:
             return lattice, positions, numbers, self._structure.get_initial_magnetic_moments()
-        else:
-            return lattice, positions, numbers
+        return lattice, positions, numbers
 
     def _get_symmetry(
         self, symprec=1e-5, angle_tolerance=-1.0
@@ -184,7 +189,7 @@ class Symmetry(dict):
 
         """
         return spglib.get_symmetry(
-            cell=self._spglib_cell,
+            cell=self._get_spglib_cell(),
             symprec=symprec,
             angle_tolerance=angle_tolerance,
         )
@@ -197,9 +202,84 @@ class Symmetry(dict):
         https://atztogo.github.io/spglib/python-spglib.html
         """
         return spglib.get_symmetry_dataset(
-            cell=self._spglib_cell,
+            cell=self._get_spglib_cell(use_magmoms=False),
             symprec=self._symprec,
             angle_tolerance=self._angle_tolerance,
         )
 
+    @property
+    def spacegroup(self):
+        """
+
+        Args:
+            symprec:
+            angle_tolerance:
+
+        Returns:
+
+        https://atztogo.github.io/spglib/python-spglib.html
+        """
+        space_group = spglib.get_spacegroup(
+            cell=self._get_spglib_cell(use_magmoms=False),
+            symprec=self._symprec,
+            angle_tolerance=self._angle_tolerance,
+        ).split()
+        if len(space_group) == 1:
+            return {"Number": ast.literal_eval(space_group[0])}
+        return {
+            "InternationalTableSymbol": space_group[0],
+            "Number": ast.literal_eval(space_group[1]),
+        }
+
+    def refine_cell(self):
+        cell, coords, el = spglib.refine_cell(
+            cell=self._get_spglib_cell(use_magmoms=False),
+            symprec=self._symprec,
+            angle_tolerance=self._angle_tolerance,
+        )
+        new_structure = self._structure.copy()
+        new_structure.positions = coords
+        new_structure.cell = cell
+        return new_structure
+
+    @property
+    def primitive_cell(self):
+        el_dict = {}
+        for el in set(self._structure.get_chemical_elements()):
+            el_dict[el.AtomicNumber] = el
+        cell, coords, atomic_numbers = spglib.find_primitive(
+            cell=self._get_spglib_cell(use_magmoms=False),
+            symprec=self._symprec,
+            angle_tolerance=self._angle_tolerance,
+        )
+        # print atomic_numbers, type(atomic_numbers)
+        el_lst = [el_dict[i_a] for i_a in atomic_numbers]
+
+        # convert lattice vectors to standard (experimental feature!) TODO:
+        red_structure = self._structure.copy()
+        red_structure = red_structure[:len(coords)]
+        red_structure.set_scaled_positions(coords)
+        red_structure.set_species(el_lst)
+        red_structure.cell = cell
+        space_group = red_structure.get_symmetry(symprec=self._symprec).spacegroup["Number"]
+        # print "space group: ", space_group
+        if space_group == 225:  # fcc
+            alat = np.max(cell[0])
+            amat_fcc = alat * np.array([[1, 0, 1], [1, 1, 0], [0, 1, 1]])
+            red_structure.cell = amat_fcc
+        return red_structure
+
+    def get_ir_reciprocal_mesh(
+        self,
+        mesh,
+        is_shift=np.zeros(3, dtype="intc"),
+        is_time_reversal=True,
+    ):
+        return spglib.get_ir_reciprocal_mesh(
+            mesh=mesh,
+            cell=self._get_spglib_cell(),
+            is_shift=is_shift,
+            is_time_reversal=is_time_reversal,
+            symprec=self._symprec,
+        )
 
