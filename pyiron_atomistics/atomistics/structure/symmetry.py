@@ -23,6 +23,7 @@ s = Settings()
 
 
 class Symmetry(dict):
+
     """
 
     Return a class for operations related to box symmetries. Main attributes:
@@ -33,6 +34,7 @@ class Symmetry(dict):
     All other functionalities depend on these two attributes.
 
     """
+
     def __init__(
         self, structure, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
