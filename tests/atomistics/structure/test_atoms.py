@@ -956,22 +956,6 @@ class TestAtoms(unittest.TestCase):
         )
         basis.plot3d(mode='plotly')
 
-    def test_group_points_by_symmetry(self):
-        basis = Atoms("FeFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3))
-        self.assertEqual(len(basis.group_points_by_symmetry([3 * [0.5], 3 * [1.5]])), 1)
-        self.assertEqual(len(basis.group_points_by_symmetry([3 * [0.5], 3 * [1.4]])), 2)
-
-    def test_get_equivalent_voronoi_vertices(self):
-        basis = Atoms("FeFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3), pbc=True)
-        vert = basis.get_equivalent_voronoi_vertices()
-        self.assertEqual(len(vert), 1)
-        self.assertGreater(
-            np.min(np.linalg.norm(vert[0] - basis.positions[0], axis=-1)), 0.5
-        )
-        self.assertGreater(
-            np.min(np.linalg.norm(vert[0] - basis.positions[1], axis=-1)), 0.5
-        )
-
     def test_find_mic(self):
         cell = 0.1*(np.random.random((3,3))-0.5)+np.eye(3)
         basis = Atoms("Fe", positions=[3*[0.5]], cell=cell, pbc=True)
@@ -1012,11 +996,6 @@ class TestAtoms(unittest.TestCase):
             basis.get_extended_positions(-0.1)
         self.assertTrue(np.array_equal(basis.get_extended_positions(0), basis.positions))
 
-    def test_get_equivalent_points(self):
-        basis = Atoms("FeFe", positions=[[0.01, 0, 0], [0.5, 0.5, 0.5]], cell=np.identity(3))
-        arr = basis.get_equivalent_points([0, 0, 0.5])
-        self.assertAlmostEqual(np.linalg.norm(arr-np.array([0.51, 0.5, 0]), axis=-1).min(), 0)
-
     def test_cluster_analysis(self):
         basis = CrystalStructure("Al", bravais_basis="fcc", lattice_constants=4.2).repeat(10)
         key, counts = basis.cluster_analysis(id_list=[0,1], return_cluster_sizes=True)
@@ -1033,32 +1012,6 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(np.array_equal(np.sort(bonds[0]['Al'][0]),
                         np.sort(neigh.indices[0, neigh.shells[0]==1])))
 
-
-    def test_get_symmetr(self):
-        cell = 2.2 * np.identity(3)
-        Al = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell)
-        with self.assertRaises(ValueError):
-            Al.symmetrize_vectors(1)
-        v = np.random.rand(6).reshape(-1, 3)
-        self.assertAlmostEqual(np.linalg.norm(Al.symmetrize_vectors(v)), 0)
-        Al.positions[0,0] += 0.01
-        w = Al.symmetrize_vectors(v, force_update=True)
-        self.assertAlmostEqual(np.absolute(w[:,0]).sum(), np.linalg.norm(w, axis=-1).sum())
-
-    def test_get_symmetry(self):
-        cell = 2.2 * np.identity(3)
-        Al = Atoms("AlAl", positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell).repeat(2)
-        self.assertEqual(len(set(Al.get_symmetry()["equivalent_atoms"])), 1)
-        self.assertEqual(len(Al.get_symmetry()["translations"]), 96)
-        self.assertEqual(
-            len(Al.get_symmetry()["translations"]), len(Al.get_symmetry()["rotations"])
-        )
-
-    def test_get_voronoi_vertices(self):
-        cell = 2.2 * np.identity(3)
-        Al = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell, pbc=True)
-        pos, box = Al._get_voronoi_vertices()
-        self.assertEqual(len(pos), 14)
 
     def test_get_parent_symbols(self):
         self.assertTrue(np.array_equal(self.CO2.get_parent_symbols(), ["C", "O", "O"]))
@@ -1087,58 +1040,6 @@ class TestAtoms(unittest.TestCase):
         o_up = pse.element("O_up")
         basis = Atoms([o_up], scaled_positions=[[0.27, 0.27, 0.27]], cell=cell)
         self.assertTrue(np.array_equal(basis.get_chemical_symbols(), ["O_up"]))
-
-    def test_get_symmetry_dataset(self):
-        cell = 2.2 * np.identity(3)
-        Al_sc = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell)
-        Al_sc.set_repeat([2, 2, 2])
-        self.assertEqual(Al_sc.get_symmetry_dataset()["number"], 229)
-
-    def test_get_space_group(self):
-        cell = 2.2 * np.identity(3)
-        Al_sc = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell)
-        self.assertEqual(Al_sc.get_spacegroup()["InternationalTableSymbol"], "Im-3m")
-        self.assertEqual(Al_sc.get_spacegroup()["Number"], 229)
-        cell = 4.2 * (0.5 * np.ones((3, 3)) - 0.5 * np.eye(3))
-        Al_fcc = Atoms("Al", scaled_positions=[(0, 0, 0)], cell=cell)
-        self.assertEqual(Al_fcc.get_spacegroup()["InternationalTableSymbol"], "Fm-3m")
-        self.assertEqual(Al_fcc.get_spacegroup()["Number"], 225)
-        a = 3.18
-        c = 1.623 * a
-        cell = np.eye(3)
-        cell[0, 0] = a
-        cell[2, 2] = c
-        cell[1, 0] = -a / 2.0
-        cell[1, 1] = np.sqrt(3) * a / 2.0
-        pos = np.array([[0.0, 0.0, 0.0], [1.0 / 3.0, 2.0 / 3.0, 1.0 / 2.0]])
-        Mg_hcp = Atoms("Mg2", scaled_positions=pos, cell=cell)
-        self.assertEqual(Mg_hcp.get_spacegroup()["Number"], 194)
-        cell = np.eye(3)
-        cell[0, 0] = a
-        cell[2, 2] = c
-        cell[1, 1] = np.sqrt(3) * a
-        pos = np.array(
-            [
-                [0.0, 0.0, 0.0],
-                [0.5, 0.5, 0.0],
-                [0.5, 0.16666667, 0.5],
-                [0.0, 0.66666667, 0.5],
-            ]
-        )
-        Mg_hcp = Atoms("Mg4", scaled_positions=pos, cell=cell)
-        self.assertEqual(Mg_hcp.get_spacegroup()["Number"], 194)
-
-    def test_get_primitive_cell(self):
-        cell = 2.2 * np.identity(3)
-        Al_sc = Atoms("AlFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell)
-        Al_sc.set_repeat([2, 2, 2])
-        primitive_cell = Al_sc.get_primitive_cell()
-        self.assertEqual(primitive_cell.get_spacegroup()["Number"], 221)
-
-    def test_get_ir_reciprocal_mesh(self):
-        cell = 2.2 * np.identity(3)
-        Al_sc = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell)
-        self.assertEqual(len(Al_sc.get_ir_reciprocal_mesh([3, 3, 3])[0]), 27)
 
     def test_get_number_species_atoms(self):
         self.assertEqual(list(self.CO2.get_number_species_atoms().values()), [1, 2])

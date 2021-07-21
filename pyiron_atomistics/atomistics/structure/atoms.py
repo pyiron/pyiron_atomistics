@@ -16,6 +16,7 @@ from pyiron_atomistics.atomistics.structure.atom import Atom, ase_to_pyiron as a
 from pyiron_atomistics.atomistics.structure.neighbors import Neighbors, Tree
 from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
+from pyiron_atomistics.atomistics.structure.symmetry import Symmetry
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseArray, SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
@@ -26,7 +27,6 @@ from pyiron_atomistics.atomistics.structure.pyironase import publication
 from pymatgen.io.ase import AseAtomsAdaptor
 
 from scipy.spatial import cKDTree, Voronoi
-import spglib
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
 __copyright__ = (
@@ -187,7 +187,6 @@ class Atoms(ASEAtoms):
 
         self.bonds = None
         self.units = {"length": "A", "mass": "u"}
-        self._symmetry_dataset = None
         self.set_initial_magnetic_moments(magmoms)
         self._high_symmetry_points = None
         self._high_symmetry_path = None
@@ -1532,8 +1531,6 @@ class Atoms(ASEAtoms):
         )
         return neighbors.get_bonds(radius=radius, max_shells=max_shells, prec=prec)
 
-    # spglib calls
-    @deprecate_soon
     def get_symmetry(
         self, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
@@ -1547,41 +1544,27 @@ class Atoms(ASEAtoms):
             angle_tolerance (float): Angle search tolerance
 
         Returns:
+            symmetry (:class:`pyiron.atomistics.structure.symmetry.Symmetry`): Symmetry class
 
 
         """
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
+        return Symmetry(
+            self,
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
         )
-        if use_elements:
-            numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        else:
-            numbers = np.ones_like(self.get_atomic_numbers(), dtype="intc")
-        if use_magmoms:
-            magmoms = self.get_initial_magnetic_moments()
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers, magmoms),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
-        else:
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().symmetrize_vectors()')
     def symmetrize_vectors(
-        self, vectors, force_update=False, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
+        self, vectors, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
         """
         Symmetrization of natom x 3 vectors according to box symmetries
 
         Args:
             vectors (ndarray/list): natom x 3 array to symmetrize
-            force_update (bool): whether to update the symmetry info
             use_magmoms (bool): cf. get_symmetry
             use_elements (bool): cf. get_symmetry
             symprec (float): cf. get_symmetry
@@ -1590,26 +1573,14 @@ class Atoms(ASEAtoms):
         Returns:
             (np.ndarray) symmetrized vectors
         """
-        vectors = np.array(vectors).reshape(-1, 3)
-        if vectors.shape != self.positions.shape:
-            print(vectors.shape, self.positions.shape)
-            raise ValueError('Vector must be a natom x 3 array: {} != {}'.format(vectors.shape, self.positions.shape))
-        if self._symmetry_dataset is None or force_update:
-            symmetry = self.get_symmetry(use_magmoms=use_magmoms, use_elements=use_elements,
-                                         symprec=symprec, angle_tolerance=angle_tolerance)
-            scaled_positions = self.get_scaled_positions(wrap=False)
-            symmetry['indices'] = []
-            for rot,tra in zip(symmetry['rotations'], symmetry['translations']):
-                positions = np.einsum('ij,nj->ni', rot, scaled_positions)+tra
-                positions -= np.floor(positions+1.0e-2)
-                vec = np.where(np.linalg.norm(positions[np.newaxis, :, :]-scaled_positions[:, np.newaxis, :], axis=-1)<=1.0e-4)
-                symmetry['indices'].append(vec[1])
-            symmetry['indices'] = np.array(symmetry['indices'])
-            self._symmetry_dataset = symmetry
-        return np.einsum('ijk,ink->nj', self._symmetry_dataset['rotations'],
-                         vectors[self._symmetry_dataset['indices']])/len(self._symmetry_dataset['rotations'])
+        return self.get_symmetry(
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
+        ).symmetrize_vectors(vectors=vectors)
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().get_arg_equivalent_sites() instead')
     def group_points_by_symmetry(
         self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
@@ -1630,112 +1601,14 @@ class Atoms(ASEAtoms):
         It is possible that the original points are not found in the returned list, as the
         positions outsie the box will be projected back to the box.
         """
-        struct_copy = self.copy()
-        points = np.array(points).reshape(-1, 3)
-        struct_copy += Atoms(elements=len(points) * ["Hs"], positions=points, cell=self.cell)
-        struct_copy.center_coordinates_in_unit_cell()
-        group_IDs = struct_copy.get_symmetry(
+        return self.get_symmetry(
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )["equivalent_atoms"][struct_copy.select_index("Hs")]
-        return [
-            points[group_IDs == ID] for ID in np.unique(group_IDs)
-        ]
+            angle_tolerance=angle_tolerance
+        ).get_arg_equivalent_sites(points)
 
-    def _get_voronoi_vertices(self, minimum_dist=0.1):
-        """
-            This function gives the positions of Voronoi vertices
-            This function does not work if there are Hs atoms in the box
-
-            Args:
-                minimum_dist: Minimum distance between two Voronoi vertices to be considered as one
-
-            Returns: Positions of Voronoi vertices, box
-
-        """
-        vor = Voronoi(
-            self.repeat(3 * [2]).positions
-        )  # Voronoi package does not have periodic boundary conditions
-        b_cell_inv = np.linalg.inv(self.cell)
-        voro_vert = vor.vertices
-        for ind, v in enumerate(voro_vert):
-            pos = np.mean(
-                voro_vert[(np.linalg.norm(voro_vert - v, axis=-1) < minimum_dist)],
-                axis=0,
-            )  # Find all points which are within minimum_dist
-            voro_vert[(np.linalg.norm(voro_vert - v, axis=-1) < 0.5)] = np.array(
-                3 * [-10]
-            )  # Mark atoms to be deleted afterwards
-            voro_vert[ind] = pos
-        voro_vert = voro_vert[np.min(voro_vert, axis=-1) > -5]
-
-        voro_vert = np.dot(b_cell_inv.T, voro_vert.T).T  # get scaled positions
-        voro_vert = voro_vert[
-            (np.min(voro_vert, axis=-1) > 0.499) & (np.max(voro_vert, axis=-1) < 1.501)
-        ]
-        voro_vert = np.dot(self.cell.T, voro_vert.T).T  # get true positions
-
-        box_copy = self.copy()
-        new_atoms = Atoms(cell=self.cell, symbols=["Hs"]).repeat([len(voro_vert), 1, 1])
-        box_copy += new_atoms
-
-        pos_total = np.append(self.positions, voro_vert)
-        pos_total = pos_total.reshape(-1, 3)
-        box_copy.positions = pos_total
-
-        box_copy.center_coordinates_in_unit_cell()
-
-        neigh = (
-            box_copy.get_neighbors()
-        )  # delete all atoms which lie within minimum_dist (including periodic boundary conditions)
-        while (
-            len(
-                np.array(neigh.indices).flatten()[
-                    np.array(neigh.distances).flatten() < minimum_dist
-                ]
-            )
-            != 0
-        ):
-            del box_copy[
-                np.array(neigh.indices).flatten()[
-                    np.array(neigh.distances).flatten() < minimum_dist
-                ][0]
-            ]
-            neigh = box_copy.get_neighbors()
-        return pos_total, box_copy
-
-    @deprecate_soon
-    def get_equivalent_voronoi_vertices(
-        self, return_box=False, minimum_dist=0.1, symprec=1e-5, angle_tolerance=-1.0
-    ):
-        """
-            This function gives the positions of spatially equivalent Voronoi vertices in lists, which
-            most likely represent interstitial points or vacancies (along with other high symmetry points)
-            Each list item contains an array of positions which are spacially equivalent.
-            This function does not work if there are Hs atoms in the box
-
-            Args:
-                return_box: True, if the box containing atoms on the positions of Voronoi vertices
-                            should be returned (which are represented by Hs atoms)
-                minimum_dist: Minimum distance between two Voronoi vertices to be considered as one
-
-            Returns: List of numpy array positions of spacially equivalent Voronoi vertices
-
-        """
-
-        _, box_copy = self._get_voronoi_vertices(minimum_dist=minimum_dist)
-        list_positions = []
-        sym = box_copy.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance)
-        for ind in set(sym["equivalent_atoms"][box_copy.select_index("Hs")]):
-            list_positions.append(box_copy.positions[sym["equivalent_atoms"] == ind])
-        if return_box:
-            return list_positions, box_copy
-        else:
-            return list_positions
-
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().get_arg_equivalent_sites() instead')
     def get_equivalent_points(self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1749,22 +1622,14 @@ class Atoms(ASEAtoms):
         Returns:
             (ndarray): array of equivalent points with respect to box symmetries
         """
-        symmetry_operations = self.get_symmetry(use_magmoms=use_magmoms,
-                                                use_elements=use_elements,
-                                                symprec=symprec,
-                                                angle_tolerance=angle_tolerance)
-        R = symmetry_operations['rotations']
-        t = symmetry_operations['translations']
-        x = np.einsum('jk,j->k', np.linalg.inv(self.cell), points)
-        x = np.einsum('nxy,y->nx', R, x)+t
-        x -= np.floor(x)
-        dist = x[:,np.newaxis]-x[np.newaxis,:]
-        w, v = np.where(np.linalg.norm(dist-np.rint(dist), axis=-1)<symprec)
-        x = np.delete(x, w[v<w], axis=0)
-        x = np.einsum('ji,mj->mi', self.cell, x)
-        return x
+        return self.get_symmetry(
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
+        ).get_arg_equivalent_sites(points)
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().info instead')
     def get_symmetry_dataset(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1776,18 +1641,9 @@ class Atoms(ASEAtoms):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
-        )
-        numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        return spglib.get_symmetry_dataset(
-            cell=(lattice, positions, numbers),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )
+        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).info
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().spacegroup instead')
     def get_spacegroup(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1799,25 +1655,9 @@ class Atoms(ASEAtoms):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        lattice = np.array(self.get_cell(), dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
-        )
-        numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        space_group = spglib.get_spacegroup(
-            cell=(lattice, positions, numbers),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        ).split()
-        if len(space_group) == 1:
-            return {"Number": ast.literal_eval(space_group[0])}
-        else:
-            return {
-                "InternationalTableSymbol": space_group[0],
-                "Number": ast.literal_eval(space_group[1]),
-            }
+        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).spacegroup
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().refine_cell() instead')
     def refine_cell(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1829,22 +1669,9 @@ class Atoms(ASEAtoms):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
-        )
-        numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        cell, coords, el = spglib.refine_cell(
-            cell=(lattice, positions, numbers),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )
+        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).refine_cell()
 
-        return Atoms(
-            symbols=list(self.get_chemical_symbols()), positions=coords, cell=cell, pbc=self.pbc
-        )
-
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().primitive_cell instead')
     def get_primitive_cell(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1855,34 +1682,9 @@ class Atoms(ASEAtoms):
         Returns:
 
         """
-        el_dict = {}
-        for el in set(self.get_chemical_elements()):
-            el_dict[el.AtomicNumber] = el
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
-        )
-        numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        cell, coords, atomic_numbers = spglib.find_primitive(
-            cell=(lattice, positions, numbers),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )
-        # print atomic_numbers, type(atomic_numbers)
-        el_lst = [el_dict[i_a] for i_a in atomic_numbers]
+        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).primitive_cell
 
-        # convert lattice vectors to standard (experimental feature!) TODO:
-        red_structure = Atoms(elements=el_lst, scaled_positions=coords, cell=cell, pbc=self.pbc)
-        space_group = red_structure.get_spacegroup(symprec)["Number"]
-        # print "space group: ", space_group
-        if space_group == 225:  # fcc
-            alat = np.max(cell[0])
-            amat_fcc = alat * np.array([[1, 0, 1], [1, 1, 0], [0, 1, 1]])
-
-            red_structure.cell = amat_fcc
-        return red_structure
-
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().get_ir_reciprocal_mesh() instead')
     def get_ir_reciprocal_mesh(
         self,
         mesh,
@@ -1901,14 +1703,11 @@ class Atoms(ASEAtoms):
         Returns:
 
         """
-        mapping, mesh_points = spglib.get_ir_reciprocal_mesh(
+        return self.get_symmetry(symprec=symprec).get_ir_reciprocal_mesh(
             mesh=mesh,
-            cell=self,
             is_shift=is_shift,
             is_time_reversal=is_time_reversal,
-            symprec=symprec,
         )
-        return mapping, mesh_points
 
     def get_majority_species(self, return_count=False):
         """
