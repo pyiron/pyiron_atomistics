@@ -1401,6 +1401,7 @@ class Atoms(ASEAtoms):
         num_neighbors=12,
         cutoff_radius=np.inf,
         width_buffer=1.2,
+        mode='filled',
         norm_order=2,
     ):
         """
@@ -1410,6 +1411,8 @@ class Atoms(ASEAtoms):
             num_neighbors (int): Number of nearest neighbors
             cutoff_radius (float): Upper bound of the distance to which the search is to be done
             width_buffer (float): Width of the layer to be added to account for pbc.
+            mode (str): Representation of per-atom quantities (distances etc.). Choose from
+                'filled', 'ragged' and 'flattened'.
             norm_order (int): Norm to use for the neighborhood search and shell recognition. The
                 definition follows the conventional Lp norm (cf.
                 https://en.wikipedia.org/wiki/Lp_space). This is an feature and for anything
@@ -1429,6 +1432,7 @@ class Atoms(ASEAtoms):
             get_tree=True,
             norm_order=norm_order,
         )
+        neigh._set_mode(mode)
         return neigh._get_neighborhood(
             positions=positions,
             num_neighbors=num_neighbors,
