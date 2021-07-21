@@ -781,8 +781,12 @@ class Trajectory(HasStructure):
             return new_structure
         elif isinstance(item, (list, np.ndarray, slice)):
             snapshots = np.arange(len(self), dtype=int)[item]
+            if self._indices is not None:
+                select_indices = self._indices[snapshots]
+            else:
+                select_indices = self._indices
             return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
-                              structure=self[snapshots[0]], indices=self._indices[snapshots])
+                              structure=self[snapshots[0]], indices=select_indices)
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
