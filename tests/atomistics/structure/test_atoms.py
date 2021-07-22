@@ -1668,7 +1668,7 @@ class TestAtoms(unittest.TestCase):
         pos, cell = generate_fcc_lattice()
         expected_speedup_factor = 15
         n_timing_loop = 5
-        t1, t2, t3, t4, t5, t6, t7 = [np.array([0]*n_timing_loop) for _ in range(7)]
+        t1, t2, t3, t4, t5, t6, t7 = [np.array([0.0]*n_timing_loop) for _ in range(7)]
         for i in range(n_timing_loop):
             element.cache_clear()
             PeriodicTable._get_periodic_table_df.cache_clear()
