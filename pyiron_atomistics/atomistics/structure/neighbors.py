@@ -6,11 +6,13 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from scipy.sparse import coo_matrix
 from scipy.special import gamma
-from pyiron_base import Settings
+from pyiron_base import DataContainer
 from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique_labels
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
 import warnings
+from pyiron_base import Settings, deprecate
+import itertools
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -25,6 +27,7 @@ __date__ = "Sep 1, 2017"
 
 s = Settings()
 
+
 class Tree:
     """
     Class to get tree structure for the neighborhood information.
@@ -37,31 +40,29 @@ class Tree:
 
     Auxiliary attributes:
 
-    - allow_ragged (bool): Whether to allow a ragged list of numpy arrays or not. This is relevant
-        only if the cutoff length was specified, in which case the number of atoms for each
-        position could differ. `allow_ragged = False` is computationally more efficient in most of the
-        methods. When `allow_ragged = False`, the variables are filled as follows:
-        `np.inf` in `distances`, `numpy.array([np.inf, np.inf, np.inf])` in `vecs`, `n_atoms+1` (or
-        a larger value) in `indices` and -1 in `shells`
     - wrap_positions (bool): Whether to wrap back the positions entered by user in get_neighborhood
         etc. Since the information outside the original box is limited to a few layer,
         wrap_positions=False might miss some points without issuing an error.
 
+    Change representation mode via :attribute:`.Neighbors.mode`  (cf. its DocString)
+
     Furthermore, you can re-employ the original tree structure to get neighborhood information via
-    get_indices, get_vectors, get_distances and get_neighborhood. The information delivered by
-    get_neighborhood is the same as what can be obtained through the other three getters (except
-    for the fact that get_neighborhood returns a Tree instance, while the others return numpy
-    arrays), but since get_vectors anyway has to call get_distances and get_indices internally, the
-    computational cost of get_neighborhood and get_vectors is the same.
+    get_neighborhood.
 
     """
     def __init__(self, ref_structure):
-        self.distances = None
-        self.vecs = None
-        self.indices = None
+        """
+            Args:
+                ref_structure (pyiron_atomistics.atomistics.structure.atoms.Atoms): Reference
+                    structure.
+        """
+        self._distances = None
+        self._vectors = None
+        self._indices = None
+        self._mode = {'filled': True, 'ragged': False, 'flattened': False}
         self._extended_positions = None
+        self._positions = None
         self._wrapped_indices = None
-        self._allow_ragged = False
         self._extended_indices = None
         self._ref_structure = ref_structure.copy()
         self.wrap_positions = False
@@ -69,6 +70,35 @@ class Tree:
         self.num_neighbors = None
         self.cutoff_radius = np.inf
         self._norm_order = 2
+
+    @property
+    def mode(self):
+        """
+        Change the mode of representing attributes (vecs, distances, indices, shells). The shapes
+        of `filled` and `ragged` differ only if `cutoff_radius` is specified.
+
+        - 'filled': Fill variables for the missing entries are filled as follows: `np.inf` in
+            `distances`, `numpy.array([np.inf, np.inf, np.inf])` in `vecs`, `n_atoms+1` (or a
+            larger value) in `indices` and -1 in `shells`.
+
+        - 'ragged': Create lists of different lengths.
+
+        - 'flattened': Return flattened arrays for distances, vecs and shells. The indices
+            corresponding to the row numbers in 'filled' and 'ragged' are in `atom_numbers`
+
+        The variables are stored in the `filled` mode.
+        """
+        for k,v in self._mode.items():
+            if v:
+                return k
+
+    def _set_mode(self, new_mode):
+        if new_mode not in self._mode.keys():
+            raise KeyError(
+                f"{new_mode} not found. Available modes: {', '.join(self._mode.keys())}"
+            )
+        self._mode = {key: False for key in self._mode.keys()}
+        self._mode[new_mode] = True
 
     def __repr__(self):
         """
@@ -78,26 +108,68 @@ class Tree:
             "Main attributes:\n"
             + "- distances : Distances to the neighbors of given positions\n"
             + "- indices : Indices of the neighbors of given positions\n"
+            + "- vecs : Vectors to the neighbors of given positions\n"
         )
-        if self.vecs is not None:
-            to_return += "- vecs : Vectors to the neighbors of given positions\n"
         return to_return
 
     def copy(self):
         new_neigh = Tree(self._ref_structure)
-        new_neigh.distances = self.distances.copy()
-        new_neigh.vecs = self.vecs.copy()
-        new_neigh.indices = self.indices.copy()
+        new_neigh._distances = self._distances.copy()
+        new_neigh._indices = self._indices.copy()
         new_neigh._extended_positions = self._extended_positions
         new_neigh._wrapped_indices = self._wrapped_indices
-        new_neigh._allow_ragged = self._allow_ragged
         new_neigh._extended_indices = self._extended_indices
         new_neigh.wrap_positions = self.wrap_positions
         new_neigh._tree = self._tree
         new_neigh.num_neighbors = self.num_neighbors
         new_neigh.cutoff_radius = self.cutoff_radius
         new_neigh._norm_order = self._norm_order
+        new_neigh._positions = self._positions.copy()
         return new_neigh
+
+    def _reshape(self, value, key=None, ref_vector=None):
+        if value is None:
+            raise ValueError('Neighbors not initialized yet')
+        if key is None:
+            key = self.mode
+        if key == 'filled':
+            return value
+        elif key == 'ragged':
+            return self._contract(value, ref_vector=ref_vector)
+        elif key == 'flattened':
+            return value[self._distances < np.inf]
+
+    @property
+    def distances(self):
+        """Distances to neighboring atoms."""
+        return self._reshape(self._distances)
+
+    @property
+    def _vecs(self):
+        if self._vectors is None:
+            self._vectors = self._get_vectors(
+                positions=self._positions,
+                distances=self.filled.distances,
+                indices=self._extended_indices
+            )
+        return self._vectors
+
+    @property
+    def vecs(self):
+        """Vectors to neighboring atoms."""
+        return self._reshape(self._vecs)
+
+    @property
+    def indices(self):
+        """Indices of neighboring atoms."""
+        return self._reshape(self._indices)
+
+    @property
+    def atom_numbers(self):
+        """Indices of atoms."""
+        n = np.zeros_like(self.filled.indices)
+        n.T[:,:] = np.arange(len(n))
+        return self._reshape(n)
 
     @property
     def norm_order(self):
@@ -118,53 +190,40 @@ class Tree:
 
     def _get_max_length(self, ref_vector=None):
         if ref_vector is None:
-            ref_vector = self.distances
+            ref_vector = self.filled.distances
         if (ref_vector is None
             or len(ref_vector)==0
             or not hasattr(ref_vector[0], '__len__')):
             return None
         return max(len(dd[dd<np.inf]) for dd in ref_vector)
 
-    def _fill(self, value, filler=np.inf):
-        max_length = self._get_max_length()
-        if max_length is None:
-            return value
-        arr = np.zeros((len(value), max_length)+value[0].shape[1:], dtype=type(filler))
-        arr.fill(filler)
-        for ii, vv in enumerate(value):
-            arr[ii,:len(vv)] = vv
-        return arr
-
     def _contract(self, value, ref_vector=None):
         if self._get_max_length(ref_vector=ref_vector) is None:
             return value
-        return [vv[:np.sum(dist<np.inf)] for vv, dist in zip(value, self.distances)]
+        return [vv[:np.sum(dist<np.inf)] for vv, dist in zip(value, self.filled.distances)]
 
     @property
+    @deprecate("Use mode", version="1.0.0")
     def allow_ragged(self):
         """
         Whether to allow ragged list of distancs/vectors/indices or fill empty slots with numpy.inf
         to get rectangular arrays
         """
-        return self._allow_ragged
+        return self._mode['ragged']
 
     @allow_ragged.setter
+    @deprecate("Use `mode='ragged'`", version="1.0.0")
     def allow_ragged(self, new_bool):
         if not isinstance(new_bool, bool):
             raise ValueError('allow_ragged must be a boolean')
-        if self._allow_ragged == new_bool:
-            return
-        self._allow_ragged = new_bool
-        if new_bool:
-            self.distances = self._contract(self.distances)
-            if self.vecs is not None:
-                self.vecs = self._contract(self.vecs)
-            self.indices = self._contract(self.indices)
-        else:
-            self.distances = self._fill(self.distances)
-            self.indices = self._fill(self.indices, filler=len(self._ref_structure))
-            if self.vecs is not None:
-                self.vecs = self._fill(self.vecs)
+        self._set_mode(self._allow_ragged_to_mode(new_bool))
+
+    def _allow_ragged_to_mode(self, new_bool):
+        if new_bool is None:
+            return self.mode
+        elif new_bool:
+            return 'ragged'
+        return 'filled'
 
     def _get_extended_positions(self):
         if self._extended_positions is None:
@@ -182,26 +241,18 @@ class Tree:
         x = np.array(positions).copy()
         cell = self._ref_structure.cell
         x_scale = np.dot(x, np.linalg.inv(cell))+distance_buffer
-        x[...,self._ref_structure.pbc] -= np.dot(np.floor(x_scale),
-                                                 cell)[...,self._ref_structure.pbc]
+        x[...,self._ref_structure.pbc] -= np.dot(
+            np.floor(x_scale), cell
+        )[...,self._ref_structure.pbc]
         return x
 
     def _get_distances_and_indices(
         self,
-        positions=None,
-        allow_ragged=None,
+        positions,
         num_neighbors=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
     ):
-        if positions is None:
-            if allow_ragged is None:
-                return self.distances, self.indices
-            if allow_ragged:
-                return (self._contract(self.distances),
-                        self._contract(self.indices))
-            return (self._fill(self.distances),
-                    self._fill(self.indices, filler=len(self._ref_structure)))
         num_neighbors = self._estimate_num_neighbors(
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
@@ -230,161 +281,45 @@ class Tree:
             )
         self._extended_indices = indices.copy()
         indices[distances<np.inf] = self._get_wrapped_indices()[indices[distances<np.inf]]
-        if allow_ragged is None:
-            allow_ragged = self.allow_ragged
-        if allow_ragged:
-            return self._contract(distances, distances), self._contract(indices, distances)
-        return distances, indices
-
-    def get_indices(
-        self,
-        positions=None,
-        allow_ragged=None,
-        num_neighbors=None,
-        cutoff_radius=np.inf,
-        width_buffer=1.2,
-    ):
-        """
-        Get current indices or neighbor indices for given positions using the same Tree structure
-        used for the instantiation of the Neighbor class. This function should not be used if the
-        structure changed in the meantime. If `positions` is None and `allow_ragged` is None, this
-        function returns the same content as `indices`.
-
-        Args:
-            positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
-                are to be computed (None to get current vectors)
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
-            num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
-                Ignored if `positions` is None.
-            cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
-            width_buffer (float): Buffer length for the estimation of num_neighbors. Ignored if
-                `positions` is None.
-
-        Returns:
-            (list/numpy.ndarray) list (if allow_ragged=True) or numpy.ndarray (otherwise) of
-                neighbor indices
-
-        """
-        return self._get_distances_and_indices(
-            positions=positions,
-            allow_ragged=allow_ragged,
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
-        )[1]
-
-    def get_distances(
-        self,
-        positions=None,
-        allow_ragged=None,
-        num_neighbors=None,
-        cutoff_radius=np.inf,
-        width_buffer=1.2,
-    ):
-        """
-        Get current positions or neighbor positions for given positions using the same Tree
-        structure used for the instantiation of the Neighbor class. This function should not be
-        used if the structure changed in the meantime. If `positions` is None and `allow_ragged` is
-        None, this function returns the same content as `positions`.
-
-        Args:
-            positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
-                are to be computed (None to get current vectors)
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
-            num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
-                Ignored if `positions` is None.
-            cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
-            width_buffer (float): Buffer length for the estimation of num_neighbors. Ignored if
-                `positions` is None.
-
-        Returns:
-            (list/numpy.ndarray) list (if allow_ragged=True) or numpy.ndarray (otherwise) of
-                neighbor distances
-        """
-        return self._get_distances_and_indices(
-            positions=positions,
-            allow_ragged=allow_ragged,
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
-        )[0]
-
-    def get_vectors(
-        self,
-        positions=None,
-        allow_ragged=False,
-        num_neighbors=None,
-        cutoff_radius=np.inf,
-        width_buffer=1.2,
-    ):
-        """
-        Get current vectors or neighbor vectors for given positions using the same Tree structure
-        used for the instantiation of the Neighbor class. This function should not be used if the
-        structure changed in the meantime. If `positions` is None and `allow_ragged` is None, this
-        function returns the same content as `vecs`.
-
-        Args:
-            positions (list/numpy.ndarray/None): Positions around which neighborhood vectors
-                are to be computed (None to get current vectors)
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
-            num_neighbors (int/None): Number of neighboring atoms to calculate vectors for.
-                Ignored if `positions` is None.
-            cutoff_radius (float): cutoff radius. Ignored if `positions` is None.
-            width_buffer (float): Buffer length for the estimation of num_neighbors. Ignored if
-                `positions` is None.
-
-
-        Returns:
-            (list/numpy.ndarray) list (if allow_ragged=True) or numpy.ndarray (otherwise) of
-                neighbor vectors
-        """
-        return self._get_vectors(
-            positions=positions,
-            allow_ragged=allow_ragged,
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
+        indices[distances==np.inf] = np.iinfo(np.int32).max
+        return (
+            self._reshape(distances, ref_vector=distances),
+            self._reshape(indices, ref_vector=distances)
         )
+
+    @property
+    def numbers_of_neighbors(self):
+        """
+        Get number of neighbors for each atom. Same number is returned if `cutoff_radius` was not
+        given in the initialization.
+        """
+        return np.sum(self.filled.distances < np.inf, axis=-1)
 
     def _get_vectors(
         self,
-        positions=None,
-        allow_ragged=None,
+        positions,
         num_neighbors=None,
         cutoff_radius=np.inf,
         distances=None,
         indices=None,
         width_buffer=1.2,
     ):
-        if positions is not None:
-            if distances is None or indices is None:
-                distances, indices = self._get_distances_and_indices(
-                    positions=positions,
-                    allow_ragged=False,
-                    num_neighbors=num_neighbors,
-                    cutoff_radius=cutoff_radius,
-                    width_buffer=width_buffer,
-                )
-            vectors = np.zeros(distances.shape+(3,))
-            vectors -= self._get_wrapped_positions(positions).reshape(distances.shape[:-1]+(-1, 3))
-            vectors[distances<np.inf] += self._get_extended_positions()[
-                self._extended_indices[distances<np.inf]
-            ]
-            vectors[distances==np.inf] = np.array(3*[np.inf])
-        elif self.vecs is not None:
-            vectors = self.vecs
-        else:
-            raise AssertionError(
-                'vectors not created yet -> put positions or reinitialize with t_vec=True'
+        if distances is None or indices is None:
+            distances, indices = self._get_distances_and_indices(
+                positions=positions,
+                num_neighbors=num_neighbors,
+                cutoff_radius=cutoff_radius,
+                width_buffer=width_buffer,
             )
-        if allow_ragged==self.allow_ragged:
-            return vectors
-        if allow_ragged:
-            return self._contract(vectors, distances)
-        return self._fill(vectors)
+        vectors = np.zeros(distances.shape+(3,))
+        vectors -= self._get_wrapped_positions(
+            positions
+        ).reshape(distances.shape[:-1]+(-1, 3))
+        vectors[distances<np.inf] += self._get_extended_positions()[
+            self._extended_indices[distances<np.inf]
+        ]
+        vectors[distances==np.inf] = np.array(3*[np.inf])
+        return vectors
 
     def _estimate_num_neighbors(self, num_neighbors=None, cutoff_radius=np.inf, width_buffer=1.2):
         """
@@ -403,7 +338,7 @@ class Tree:
         elif num_neighbors is None and self.num_neighbors is None:
             volume = self._ref_structure.get_volume(per_atom=True)
             width_buffer = 1+width_buffer
-            width_buffer *= 8*gamma(1+1/self.norm_order)**3/gamma(1+3/self.norm_order)
+            width_buffer *= get_volume_of_n_sphere_in_p_norm(3, self.norm_order)
             num_neighbors = max(14, int(width_buffer*cutoff_radius**3/volume))
         elif num_neighbors is None:
             num_neighbors = self.num_neighbors
@@ -433,21 +368,16 @@ class Tree:
             return 0
         elif cutoff_radius!=np.inf:
             return cutoff_radius
-        pbc = self._ref_structure.pbc
-        n = sum(pbc)
-        prefactor = 2**n*gamma(1+1/self.norm_order)**2/gamma(1+n/self.norm_order)
-        width = np.prod((
-            np.linalg.norm(self._ref_structure.cell, axis=-1, ord=self.norm_order)-np.ones(3)
-        )*pbc+np.ones(3))
+        prefactor = get_volume_of_n_sphere_in_p_norm(3, self.norm_order)
+        width = np.prod(np.linalg.norm(self._ref_structure.cell, axis=-1, ord=self.norm_order))
         width *= prefactor*np.max([num_neighbors, 8])/len(self._ref_structure)
-        cutoff_radius = width_buffer*width**(1/np.sum(pbc))
+        cutoff_radius = width_buffer*width**(1/3)
         return cutoff_radius
 
     def get_neighborhood(
         self,
         positions,
         num_neighbors=None,
-        t_vec=True,
         cutoff_radius=np.inf,
         width_buffer=1.2,
     ):
@@ -460,7 +390,6 @@ class Tree:
         Args:
             position: Position in a box whose neighborhood information is analysed
             num_neighbors (int): Number of nearest neighbors
-            t_vec (bool): True: compute distance vectors (pbc are taken into account)
             cutoff_radius (float): Upper bound of the distance to which the search is to be done
             width_buffer (float): Width of the layer to be added to account for pbc.
 
@@ -474,7 +403,6 @@ class Tree:
         return new_neigh._get_neighborhood(
             positions=positions,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             cutoff_radius=cutoff_radius,
             exclude_self=False,
             width_buffer=width_buffer,
@@ -484,7 +412,6 @@ class Tree:
         self,
         positions,
         num_neighbors=12,
-        t_vec=True,
         cutoff_radius=np.inf,
         exclude_self=False,
         width_buffer=1.2,
@@ -503,19 +430,16 @@ class Tree:
         if num_neighbors is not None:
             self.num_neighbors -= 1
         max_column = np.sum(distances<np.inf, axis=-1).max()
-        self.distances = distances[...,start_column:max_column]
-        self.indices = indices[...,start_column:max_column]
+        self._distances = distances[...,start_column:max_column]
+        self._indices = indices[...,start_column:max_column]
         self._extended_indices = self._extended_indices[...,start_column:max_column]
-        if t_vec:
-            self.vecs = self._get_vectors(
-                positions=positions, distances=self.distances, indices=self._extended_indices
-            )
+        self._positions = positions
         return self
 
     def _check_width(self, width, pbc):
-        if any(pbc) and np.prod(self.distances.shape)>0 and self.vecs is not None:
+        if any(pbc) and np.prod(self.filled.distances.shape)>0:
             if np.linalg.norm(
-                self._fill(self._contract(self.vecs), filler=0.0)[...,pbc],
+                self.flattened.vecs[...,pbc],
                 axis=-1,
                 ord=self.norm_order
             ).max() > width:
@@ -545,14 +469,14 @@ class Tree:
         See more on: scipy.special.sph_harm
 
         """
-        vecs = self.vecs
+        vecs = self.filled.vecs
         if rotation is not None:
-            vecs = np.einsum('ij,nkj->nki', rotation, vecs)
-        within_cutoff = self.distances<cutoff_radius
+            vecs = np.einsum('ij,nmj->nmi', rotation, vecs)
+        within_cutoff = self.filled.distances<cutoff_radius
         if np.any(np.all(~within_cutoff, axis=-1)):
             raise ValueError('cutoff_radius too small - some atoms have no neighbors')
-        phi = np.zeros_like(self.distances)
-        theta = np.zeros_like(self.distances)
+        phi = np.zeros_like(self.filled.distances)
+        theta = np.zeros_like(self.filled.distances)
         theta[within_cutoff] = np.arctan2(vecs[within_cutoff,1], vecs[within_cutoff,0])
         phi[within_cutoff] = np.arctan2(
             np.linalg.norm(vecs[within_cutoff,:2], axis=-1), vecs[within_cutoff,2]
@@ -584,40 +508,76 @@ class Tree:
             for m in np.arange(-l, l+1)
         ], axis=0))
 
+    @staticmethod
+    def _get_all_possible_pairs(l):
+        if l%2!=0:
+            raise ValueError(
+                'Pairs cannot be formed for an uneven number of groups.'
+            )
+        all_arr = np.array(list(itertools.permutations(np.arange(l),l)))
+        all_arr = all_arr.reshape(len(all_arr), -1, 2)
+        all_arr.sort(axis=-1)
+        all_arr = all_arr[np.unique(all_arr.reshape(-1, l), axis=0, return_index=True)[1]]
+        indices = np.indices(all_arr.shape)
+        all_arr = all_arr[indices[0], all_arr[:,:,0].argsort(axis=-1)[:,:,np.newaxis], indices[2]]
+        return all_arr[np.unique(all_arr.reshape(-1, l), axis=0, return_index=True)[1]]
+
+    @property
+    def centrosymmetry(self):
+        """
+        Calculate centrosymmetry parameter for the given environment.
+
+        cf. https://doi.org/10.1103/PhysRevB.58.11085
+
+        NB: Currently very memory intensive for a large number of neighbors (works maybe up to 10)
+        """
+        all_arr = self._get_all_possible_pairs(self.distances.shape[-1])
+        indices = np.indices((len(self.vecs),)+all_arr.shape[:-1])
+        v = self.vecs[indices[0],all_arr[np.newaxis,:,:,0]]
+        v += self.vecs[indices[0],all_arr[np.newaxis,:,:,1]]
+        return np.sum(v**2, axis=-1).sum(axis=-1).min(axis=-1)
+
+    def __getattr__(self, name):
+        """Attributes for the mode. Same as setting `neigh.mode`."""
+        if name not in ['filled', 'ragged', 'flattened']:
+            raise AttributeError(self.__class__.__name__+" object has no attribute "+name)
+        return Mode(name, self)
+
+    def __dir__(self):
+        """Attributes for the mode."""
+        return ['filled', 'ragged', 'flattened']+super().__dir__()
+
+
+class Mode:
+    """Helper class for mode
+
+    Attributes: `distances`, `vecs`, `indices`, `shells`, `atom_numbers` and maybe more
+    """
+    def __init__(self, mode, ref_neigh):
+        """
+        Args:
+            mode (str): Mode (`filled`, `ragged` or `flattened`)
+            ref_neigh (Neighbors): Reference neighbor class
+        """
+        self.mode = mode
+        self.ref_neigh = ref_neigh
+
+    def __getattr__(self, name):
+        """Return values according to their filling mode."""
+        if '_'+name in self.ref_neigh.__dir__():
+            name = '_'+name
+        return self.ref_neigh._reshape(self.ref_neigh.__getattribute__(name), key=self.mode)
+
+    def __dir__(self):
+        """Show value names which are available for different filling modes."""
+        return list(set([
+            'distances', 'vecs', 'indices', 'shells', 'atom_numbers'
+        ]).intersection(self.ref_neigh.__dir__()))
+
 
 class Neighbors(Tree):
-    """
-    Class for storage of the neighbor information for a given atom based on the KDtree algorithm
-
-    Main attributes (do not modify them):
-
-    - distances (numpy.ndarray/list): Distances to the neighbors of all atoms
-    - indices (numpy.ndarray/list): Indices of the neighbors of all atoms
-    - vecs (numpy.ndarray/list): Vectors to the neighbors of all atoms
-
-    Auxiliary attributes:
-
-    - allow_ragged (bool): Whether to allow a ragged list of numpy arrays or not. This is relevant
-        only if the cutoff length was specified, in which case the number of neighbor atoms for each
-        atom could differ. `allow_ragged = False` is computationally more efficient in most of the
-        methods. When `allow_ragged = False`, the variables are filled as follows:
-        `np.inf` in `distances`, `numpy.array([np.inf, np.inf, np.inf])` in `vecs`, `n_atoms+1` (or
-        a larger value) in `indices` and -1 in `shells`
-    - wrap_positions (bool): Whether to wrap back the positions entered by user in get_neighborhood
-        etc. Since the information outside the original box is limited to a few layer,
-        wrap_positions=False might miss some points without issuing an error.
-
-    Furthermore, you can re-employ the original tree structure to get neighborhood information via
-    get_indices, get_vectors, get_distances and get_neighborhood. The information delivered by
-    get_neighborhood is the same as what can be obtained through the other three getters (except
-    for the fact that get_neighborhood returns a Tree instance, while the others return numpy
-    arrays), but since get_vectors anyway has to call get_distances and get_indices internally, the
-    computational cost of get_neighborhood and get_vectors is the same.
-    """
-
     def __init__(self, ref_structure, tolerance=2):
         super().__init__(ref_structure=ref_structure)
-        self._shells = None
         self._tolerance = tolerance
         self._cluster_vecs = None
         self._cluster_dist = None
@@ -637,9 +597,9 @@ class Neighbors(Tree):
         Undefined neighbors (i.e. if the neighbor distance is beyond the cutoff radius) are
         considered as vacancies and are marked by 'v'
         """
-        chemical_symbols = np.tile(['v'], self.indices.shape).astype('<U2')
-        cond = self.indices<len(self._ref_structure)
-        chemical_symbols[cond] = self._ref_structure.get_chemical_symbols()[self.indices[cond]]
+        chemical_symbols = np.tile(['v'], self.filled.indices.shape).astype('<U2')
+        cond = self.filled.indices<len(self._ref_structure)
+        chemical_symbols[cond] = self._ref_structure.get_chemical_symbols()[self.filled.indices[cond]]
         return chemical_symbols
 
     @property
@@ -647,13 +607,9 @@ class Neighbors(Tree):
         """
             Returns the cell numbers of each atom according to the distances
         """
-        if self._shells is None:
-            self._shells = self.get_local_shells()
-        if self.allow_ragged:
-            return self._contract(self._shells)
-        return self._shells
+        return self.get_local_shells(mode=self.mode)
 
-    def get_local_shells(self, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
+    def get_local_shells(self, mode=None, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
         """
         Set shell indices based on distances available to each atom. Clustering methods can be used
         at the same time, which will be useful at finite temperature results, but depending on how
@@ -662,6 +618,8 @@ class Neighbors(Tree):
         and does not execute the clustering method(-s) again.
 
         Args:
+            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
+                'flattened'.
             tolerance (int): decimals in np.round for rounding up distances
             cluster_by_distances (bool): If True, `cluster_by_distances` is called first and the distances obtained
                 from the clustered distances are used to calculate the shells. If cluster_by_vecs is True at the same
@@ -673,11 +631,10 @@ class Neighbors(Tree):
         Returns:
             shells (numpy.ndarray): shell indices
         """
-        allow_ragged = self.allow_ragged
-        if allow_ragged:
-            self.allow_ragged = False
         if tolerance is None:
             tolerance = self._tolerance
+        if mode is None:
+            mode = self.mode
         if cluster_by_distances:
             if self._cluster_dist is None:
                 self.cluster_by_distances(use_vecs=cluster_by_vecs)
@@ -685,7 +642,7 @@ class Neighbors(Tree):
                          for dist in self._cluster_dist.cluster_centers_[self._cluster_dist.labels_]
                      ])
             shells[self._cluster_dist.labels_<0] = -1
-            shells = shells.reshape(self.indices.shape)
+            shells = shells.reshape(self.filled.indices.shape)
         elif cluster_by_vecs:
             if self._cluster_vecs is None:
                 self.cluster_by_vecs()
@@ -697,18 +654,18 @@ class Neighbors(Tree):
                         )
                      ])
             shells[self._cluster_vecs.labels_<0] = -1
-            shells = shells.reshape(self.indices.shape)
+            shells = shells.reshape(self.filled.indices.shape)
         else:
-            shells = []
-            for dist in self.distances:
-                shells.append(np.unique(np.round(dist[dist<np.inf], decimals=tolerance), return_inverse=True)[1]+1)
-            shells = self._fill(shells, filler=-1)
-        self.allow_ragged = allow_ragged 
-        if allow_ragged:
-            return self._contract(shells)
-        return shells
+            distances = self.filled.distances.copy()
+            distances[distances==np.inf] = np.max(distances[distances<np.inf])+1
+            shells = np.array([
+                np.unique(np.round(dist, decimals=tolerance), return_inverse=True)[1]+1
+                for dist in distances
+            ])
+            shells[self.filled.distances==np.inf] = -1
+        return self._reshape(shells, key=mode)
 
-    def get_global_shells(self, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
+    def get_global_shells(self, mode=None, tolerance=None, cluster_by_distances=False, cluster_by_vecs=False):
         """
         Set shell indices based on all distances available in the system instead of
         setting them according to the local distances (in contrast to shells defined
@@ -719,6 +676,8 @@ class Neighbors(Tree):
         available and does not execute the clustering method(-s) again.
 
         Args:
+            mode (str): Representation of the variable. Choose from 'filled', 'ragged' and
+                'flattened'.
             tolerance (int): decimals in np.round for rounding up distances (default: 2)
             cluster_by_distances (bool): If True, `cluster_by_distances` is called first and the distances obtained
                 from the clustered distances are used to calculate the shells. If cluster_by_vecs is True at the same
@@ -730,20 +689,17 @@ class Neighbors(Tree):
         Returns:
             shells (numpy.ndarray): shell indices (cf. shells)
         """
-        allow_ragged = self.allow_ragged
-        if allow_ragged:
-            self.allow_ragged = False
         if tolerance is None:
             tolerance = self._tolerance
-        if self.distances is None:
-            raise ValueError('neighbors not set')
-        distances = self.distances
+        if mode is None:
+            mode = self.mode
+        distances = self.filled.distances
         if cluster_by_distances:
             if self._cluster_dist is None:
                 self.cluster_by_distances(use_vecs=cluster_by_vecs)
             distances = self._cluster_dist.cluster_centers_[
                 self._cluster_dist.labels_
-            ].reshape(self.distances.shape)
+            ].reshape(self.filled.distances.shape)
             distances[self._cluster_dist.labels_<0] = np.inf
         elif cluster_by_vecs:
             if self._cluster_vecs is None:
@@ -752,17 +708,14 @@ class Neighbors(Tree):
                 self._cluster_vecs.cluster_centers_[self._cluster_vecs.labels_],
                 axis=-1,
                 ord=self.norm_order,
-            ).reshape(self.distances.shape)
+            ).reshape(self.filled.distances.shape)
             distances[self._cluster_vecs.labels_<0] = np.inf
         dist_lst = np.unique(np.round(a=distances, decimals=tolerance))
-        shells = -np.ones_like(self.indices).astype(int)
+        shells = -np.ones_like(self.filled.indices).astype(int)
         shells[distances<np.inf] = np.absolute(
             distances[distances<np.inf, np.newaxis]-dist_lst[np.newaxis, dist_lst<np.inf]
         ).argmin(axis=-1)+1
-        self.allow_ragged = allow_ragged 
-        if allow_ragged:
-            return self._contract(shells)
-        return shells
+        return self._reshape(shells, key=mode)
 
     def get_shell_matrix(
         self, chemical_pair=None, cluster_by_distances=False, cluster_by_vecs=False
@@ -788,8 +741,8 @@ class Neighbors(Tree):
             print('Energy =', 0.5*J*magmoms.dot(shell_matrices[0].dot(matmoms)))
         """
 
-        pairs = np.stack((self.indices,
-            np.ones_like(self.indices)*np.arange(len(self.indices))[:,np.newaxis],
+        pairs = np.stack((self.filled.indices,
+            np.ones_like(self.filled.indices)*np.arange(len(self.filled.indices))[:,np.newaxis],
             self.get_global_shells(cluster_by_distances=cluster_by_distances, cluster_by_vecs=cluster_by_vecs)-1),
             axis=-1
         ).reshape(-1, 3)
@@ -828,9 +781,9 @@ class Neighbors(Tree):
         """
 
         z = np.zeros(len(self._ref_structure)*3).reshape(-1, 3)
-        v = np.append(z[:,np.newaxis,:], self.vecs, axis=1)
+        v = np.append(z[:,np.newaxis,:], self.filled.vecs, axis=1)
         dist = np.linalg.norm(v-np.array(vector), axis=-1, ord=self.norm_order)
-        indices = np.append(np.arange(len(self._ref_structure))[:,np.newaxis], self.indices, axis=1)
+        indices = np.append(np.arange(len(self._ref_structure))[:,np.newaxis], self.filled.indices, axis=1)
         if return_deviation:
             return indices[np.arange(len(dist)), np.argmin(dist, axis=-1)], np.min(dist, axis=-1)
         return indices[np.arange(len(dist)), np.argmin(dist, axis=-1)]
@@ -858,12 +811,9 @@ class Neighbors(Tree):
                 `euclidean` is accepted.
 
         """
-        allow_ragged = self.allow_ragged
-        if allow_ragged:
-            self.allow_ragged = False
         if distance_threshold is None and n_clusters is None:
-            distance_threshold = np.min(self.distances)
-        dr = self.vecs[self.distances<np.inf]
+            distance_threshold = np.min(self.filled.distances)
+        dr = self.flattened.vecs
         self._cluster_vecs = AgglomerativeClustering(
             distance_threshold=distance_threshold,
             n_clusters=n_clusters,
@@ -873,10 +823,9 @@ class Neighbors(Tree):
         self._cluster_vecs.cluster_centers_ = get_average_of_unique_labels(
             self._cluster_vecs.labels_, dr
         )
-        new_labels = -np.ones_like(self.indices).astype(int)
-        new_labels[self.distances<np.inf] = self._cluster_vecs.labels_
+        new_labels = -np.ones_like(self.filled.indices).astype(int)
+        new_labels[self.filled.distances<np.inf] = self._cluster_vecs.labels_
         self._cluster_vecs.labels_ = new_labels
-        self.allow_ragged = allow_ragged
 
     def cluster_by_distances(
         self,
@@ -909,12 +858,9 @@ class Neighbors(Tree):
                 obtained from the clustered vectors is used for the distance clustering. Otherwise
                 neigh.distances is used.
         """
-        allow_ragged = self.allow_ragged
-        if allow_ragged:
-            self.allow_ragged = False
         if distance_threshold is None:
-            distance_threshold = 0.1*np.min(self.distances)
-        dr = self.distances[self.distances<np.inf]
+            distance_threshold = 0.1*np.min(self.flattened.distances)
+        dr = self.flattened.distances
         if use_vecs:
             if self._cluster_vecs is None:
                 self.cluster_by_vecs()
@@ -933,10 +879,9 @@ class Neighbors(Tree):
         self._cluster_dist.cluster_centers_ = get_average_of_unique_labels(
             self._cluster_dist.labels_, dr
         )
-        new_labels = -np.ones_like(self.indices).astype(int)
-        new_labels[self.distances<np.inf] = self._cluster_dist.labels_
+        new_labels = -np.ones_like(self.filled.indices).astype(int)
+        new_labels[self.filled.distances<np.inf] = self._cluster_dist.labels_
         self._cluster_dist.labels_ = new_labels
-        self.allow_ragged = allow_ragged
 
     def reset_clusters(self, vecs=True, distances=True):
         """
@@ -968,7 +913,7 @@ class Neighbors(Tree):
         # element_list = self.get_atomic_numbers()
         for ia in id_list:
             # el0 = element_list[ia]
-            nbrs = self.indices[ia]
+            nbrs = self.ragged.indices[ia]
             # print ("nbrs: ", ia, nbrs)
             if self._cluster[ia] == 0:
                 self._cluster[ia] = c_count
@@ -1000,7 +945,7 @@ class Neighbors(Tree):
             if self._cluster[nbr_id] == 0:
                 if nbr_id in id_list:  # TODO: check also for ordered structures
                     self._cluster[nbr_id] = c_count
-                    nbrs = self.indices[nbr_id]
+                    nbrs = self.ragged.indices[nbr_id]
                     self.__probe_cluster(c_count, nbrs, id_list)
 
     # TODO: combine with corresponding routine in plot3d
@@ -1021,8 +966,8 @@ class Neighbors(Tree):
             ind_vec_cl = [np.sort(group) for group in np.split(ind_vec, ind_where)]
             return ind_vec_cl
 
-        dist = self.distances
-        ind = self.indices
+        dist = self.filled.distances
+        ind = self.ragged.indices
         el_list = self._ref_structure.get_chemical_symbols()
 
         ind_shell = []
@@ -1047,3 +992,118 @@ class Neighbors(Tree):
             ind_shell.append(ia_shells_dict)
         return ind_shell
 
+
+Neighbors.__doc__ = Tree.__doc__
+
+
+def get_volume_of_n_sphere_in_p_norm(n=3, p=2):
+    """
+    Volume of an n-sphere in p-norm. For more info:
+
+    https://en.wikipedia.org/wiki/Volume_of_an_n-ball#Balls_in_Lp_norms
+    """
+    return (2*gamma(1+1/p))**n/gamma(1+n/p)
+
+
+class NeighborsTrajectory(DataContainer):
+
+    """
+    This class generates the neighbors for a given atomistic trajectory. The assumption here is that the trajectory is
+    canonical (no change in the number and types of species throughout the trajectory). The resulting indices,
+    distances, and vectors are stored as numpy arrays.
+
+    """
+
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls, *args, **kwargs)
+        object.__setattr__(instance, "_has_structure", None)
+        return instance
+
+    def __init__(self, has_structure=None, num_neighbors=12, table_name="neighbors_traj", **kwargs):
+        """
+
+        Args:
+            has_structure (:class:`.HasStructure`): object containing the structures to compute the neighbors on
+            num_neighbors (int): The cutoff for the number of neighbors
+            table_name (str): Table name for the base `DataContainer` (stores this object as a group in a
+                              HDF5 file with this name)
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+        """
+        super().__init__(table_name=table_name)
+        self._has_structure = has_structure
+        self._neighbor_indices = None
+        self._neighbor_distances = None
+        self._neighbor_vectors = None
+        self._num_neighbors = num_neighbors
+        self._get_neighbors_kwargs = kwargs
+
+    @property
+    def indices(self):
+        """
+        Neighbour indices (excluding itself) of each atom computed using the get_neighbors_traj() method
+
+        Returns:
+
+            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
+
+        """
+        return self._neighbor_indices
+
+    @property
+    def distances(self):
+        """
+        Neighbour distances (excluding itself) of each atom computed using the get_neighbors_traj() method
+
+        Returns:
+
+            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
+
+        """
+        return self._neighbor_distances
+
+    @property
+    def vecs(self):
+        """
+        Neighbour vectors (excluding itself) of each atom computed using the get_neighbors_traj() method
+
+        Returns:
+
+            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors x 3
+
+        """
+        return self._neighbor_vectors
+
+    @property
+    def num_neighbors(self):
+        """
+        The maximum number of neighbors to be computed
+
+        Returns:
+
+            int: The max number of neighbors
+        """
+        return self._num_neighbors
+
+    def compute_neighbors(self):
+        """
+        Compute the neighbors across the trajectory
+        """
+        self._neighbor_indices, self._neighbor_distances, self._neighbor_vectors = \
+            _get_neighbors(self._has_structure,
+                           num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
+
+
+def _get_neighbors(has_structure, num_neighbors=20, **kwargs):
+    n_steps = has_structure.number_of_structures
+    n_atoms = len(has_structure.get_structure(frame=0))
+    indices = np.zeros((n_steps, n_atoms, num_neighbors), dtype=np.int64)
+    distances = np.zeros((n_steps, n_atoms, num_neighbors))
+    vecs = np.zeros((n_steps, n_atoms, num_neighbors, 3))
+    for t, struct in enumerate(has_structure.iter_structures()):
+        # Change the `allow_ragged` based on the changes in get_neighbors()
+        neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
+        indices[t, :, :] = neigh.indices
+        distances[t, :, :] = neigh.distances
+        vecs[t, :, :, :] = neigh.vecs
+    return indices, distances, vecs

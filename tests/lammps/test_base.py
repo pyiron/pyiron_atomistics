@@ -11,7 +11,7 @@ from pyiron_base import Project, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
-from pyiron_atomistics.lammps.control import LAMMPS_UNIT_CONVERSIONS
+from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 import ase.units as units
 
 
@@ -320,9 +320,19 @@ class TestLammps(unittest.TestCase):
                 self.job_water_dump["output/generic/unwrapped_positions"], positions
             )
         )
+        uc = UnitConverter(self.job_water_dump.input.control["units"])
         self.assertTrue(
-            np.allclose(self.job_water_dump["output/generic/forces"], forces)
+            np.allclose(self.job_water_dump["output/generic/forces"], uc.convert_array_to_pyiron_units(forces,
+                                                                                                       "forces"))
         )
+        self.assertEqual(self.job_water_dump["output/generic/energy_tot"][-1], -5906.46836142123 *
+                         uc.lammps_to_pyiron("energy"))
+        self.assertEqual(self.job_water_dump["output/generic/energy_pot"][-1], -5982.82004785158 *
+                         uc.lammps_to_pyiron("energy"))
+
+        self.assertAlmostEqual(self.job_water_dump["output/generic/pressures"][-2][0, 0], 515832.570508186 /
+                               uc.pyiron_to_lammps("pressure"), 2)
+
         self.job_water_dump.write_traj(filename="test.xyz",
                                        file_format="xyz")
         atom_indices = self.job_water_dump.structure.select_index("H")
@@ -394,11 +404,29 @@ class TestLammps(unittest.TestCase):
                                            snapshot_indices=snap_indices)._positions,
             orig_pos[snap_indices][:, atom_indices, :]))
         with self.job_water_dump.project_hdf5.open("output/generic") as h_out:
-            h_out["cells"] = np.array([np.zeros((3, 3))] * len(h_out["positions"]))
+            h_out["cells"] = np.repeat([np.array(water.cell)], len(h_out["positions"]), axis=0)
         self.assertTrue(np.array_equal(
             self.job_water_dump.trajectory(atom_indices=atom_indices,
                                            snapshot_indices=snap_indices)._positions,
             orig_pos[snap_indices][:, atom_indices, :]))
+        neigh_traj_obj = self.job_water_dump.get_neighbors()
+        self.assertTrue(np.allclose(np.linalg.norm(neigh_traj_obj.vecs, axis=-1),
+                                    neigh_traj_obj.distances))
+        h_indices = self.job_water_dump.structure.select_index("H")
+        o_indices = self.job_water_dump.structure.select_index("O")
+        self.assertLessEqual(neigh_traj_obj.distances[:, o_indices, :2].max(), 1.2)
+        self.assertGreaterEqual(neigh_traj_obj.distances[:, o_indices, :2].min(), 0.8)
+        self.assertTrue(np.alltrue([np.in1d(np.unique(ind_mat.flatten()), h_indices) for ind_mat in
+                                    neigh_traj_obj.indices[:, o_indices, :2]]))
+        neigh_traj_obj_snaps = self.job_water_dump.get_neighbors_snapshots(snapshot_indices=[2, 3, 4])
+        self.assertTrue(np.allclose(neigh_traj_obj.vecs[2:], neigh_traj_obj_snaps.vecs))
+        neigh_traj_obj.to_hdf(self.job_water_dump.project_hdf5)
+        neigh_traj_obj_loaded = self.job_water_dump["neighbors_traj"].to_object()
+        # self.assertEqual(neigh_traj_obj._init_structure, neigh_traj_obj_loaded._init_structure)
+        self.assertEqual(neigh_traj_obj._num_neighbors, neigh_traj_obj_loaded._num_neighbors)
+        self.assertTrue(np.allclose(neigh_traj_obj.indices, neigh_traj_obj_loaded.indices))
+        self.assertTrue(np.allclose(neigh_traj_obj.distances, neigh_traj_obj_loaded.distances))
+        self.assertTrue(np.allclose(neigh_traj_obj.vecs, neigh_traj_obj_loaded.vecs))
 
     def test_dump_parser(self):
         structure = Atoms(
@@ -496,7 +524,7 @@ class TestLammps(unittest.TestCase):
         self.job_vcsgc_input.calc_vcsgc(**args)
         self.assertEqual(self.job_vcsgc_input.input.control['fix___vcsgc'], input_string)
 
-        args['temperature_mc'] = 100.,
+        args['temperature_mc'] = 100.
         input_string = 'all sgcmc {0} {1} {2} {3} randseed {4}'.format(
             args['mc_step_interval'],
             args['swap_fraction'],
@@ -527,6 +555,17 @@ class TestLammps(unittest.TestCase):
         input_string += ' window_size {0}'.format(args['window_size'])
         self.job_vcsgc_input.calc_vcsgc(**args)
         self.assertEqual(self.job_vcsgc_input.input.control['fix___vcsgc'], input_string)
+
+        self.job_vcsgc_input.to_hdf()
+        for k, v in args.items():
+            if k not in ("mu", "target_concentration", "mc_step_interval", "swap_fraction", "temperature_mc"):
+                continue
+            self.assertEqual(self.job_vcsgc_input._generic_input[k], v,
+                             f"Wrong value stored in generic input for parameter {k}!")
+            # decode saved GenericParameters manually...
+            data = self.job_vcsgc_input["input/generic/data_dict"]
+            self.assertEqual(data["Value"][data["Parameter"].index(k)], str(v),
+                             f"Wrong value stored in HDF for parameter {k}!")
 
     def test_calc_minimize_input(self):
         # Ensure that defaults match control defaults
@@ -683,7 +722,6 @@ class TestLammps(unittest.TestCase):
 
         potential['Species'][0][0] = 'Al'
         self.job.potential = potential # shouldn't raise ValueError
-
 
 if __name__ == "__main__":
     unittest.main()

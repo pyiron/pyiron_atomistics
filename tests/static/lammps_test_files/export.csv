@@ -1,0 +1,3 @@
+,id,status,chemicalformula,job,subjob,project,timestart,timestop,totalcputime,computer,hamilton,hamversion,parentid,masterid
+1,0,finished,,inter,/inter,get_structure_test/lmp,2021-07-15 16:44:55.821677,2021-07-15 16:44:59.314685,3.0,zora@cmti001#1,StructureMasterInt,0.4,,
+0,1,finished,Fe2,inter_calculator,/inter_calculator,get_structure_test/lmp,2021-07-15 16:44:56.162464,2021-07-15 16:44:58.990165,2.0,zora@cmti001#1,Lammps,0.1,,

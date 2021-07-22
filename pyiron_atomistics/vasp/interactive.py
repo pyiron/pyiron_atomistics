@@ -277,6 +277,9 @@ class VaspInteractive(VaspBase, GenericInteractive):
     def _check_incar_parameter(self, parameter, value):
         if parameter not in self.input.incar._dataset["Parameter"]:
             self.input.incar[parameter] = value
+        if parameter == "NSW":
+            self._logger.debug("setting NSW to {}".format(value))
+            self.input.incar["NSW"] = value
 
     def _interactive_check_output(self):
         while self._interactive_library.poll() is None:
@@ -289,12 +292,31 @@ class VaspInteractive(VaspBase, GenericInteractive):
             self.server.run_mode.interactive
             or self.server.run_mode.interactive_non_modal
         ):
-            self._check_incar_parameter(parameter="INTERACTIVE", value=True)
-            self._check_incar_parameter(parameter="IBRION", value=-1)
-            self._check_incar_parameter(parameter="POTIM", value=0.0)
-            self._check_incar_parameter(parameter="NSW", value=1000)
-            self._check_incar_parameter(parameter="ISYM", value=0)
+            self.interactive_prepare()
         super(VaspInteractive, self)._run_if_new(debug=debug)
+
+    def interactive_prepare(self):
+        """
+        Modifies/adds tags in the INCAR file that make it possible to run VASP interactively
+        """
+        self._check_incar_parameter(parameter="INTERACTIVE", value=True)
+        self._check_incar_parameter(parameter="IBRION", value=-1)
+        self._check_incar_parameter(parameter="POTIM", value=0.0)
+        self._check_incar_parameter(parameter="NSW", value=np.iinfo(np.int32).max - 1)
+        self._check_incar_parameter(parameter="ISYM", value=0)
+
+    def convergence_check(self):
+        """
+        We don't care about convergence for interactive jobs! Always returns True
+
+        Returns:
+            bool: Always True
+
+        """
+        if self.server.run_mode.interactive:
+            return True
+        else:
+            return super().convergence_check()
 
 
 class Output(OutputBase):

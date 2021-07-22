@@ -19,6 +19,8 @@ from pyiron_base import Settings, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.units import UnitConverter
+
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -447,6 +449,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
+        uc = UnitConverter(self.input.control["units"])
         prism = UnfoldingPrism(self.structure.cell, digits=15)
         if np.matrix.trace(prism.R) != 3:
             raise RuntimeError("The Lammps output will not be mapped back to pyiron correctly.")
@@ -464,11 +467,11 @@ class LammpsBase(AtomisticGenericJob):
             ]
             indices = [indices_i.tolist() for indices_i in h5md["/particles/all/indices/value"]]
         with self.project_hdf5.open("output/generic") as h5_file:
-            h5_file["forces"] = np.array(forces)
-            h5_file["positions"] = np.array(positions)
-            h5_file["steps"] = np.array(steps)
-            h5_file["cells"] = cell
-            h5_file["indices"] = self.remap_indices(indices)
+            h5_file["forces"] = uc.convert_array_to_pyiron_units(np.array(forces), "forces")
+            h5_file["positions"] = uc.convert_array_to_pyiron_units(np.array(positions), "positions")
+            h5_file["steps"] = uc.convert_array_to_pyiron_units(np.array(steps), "steps")
+            h5_file["cells"] = uc.convert_array_to_pyiron_units(cell, "cells")
+            h5_file["indices"] = uc.convert_array_to_pyiron_units(self.remap_indices(indices), "indices")
 
     def remap_indices(self, lammps_indices):
         """
@@ -534,6 +537,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
+        uc = UnitConverter(self.input.control["units"])
         self.collect_errors(file_name=file_name, cwd=cwd)
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
         if os.path.exists(file_name):
@@ -566,13 +570,12 @@ class LammpsBase(AtomisticGenericJob):
                 h5_dict[key] = key.replace('f_', '')
 
             df = df.rename(index=str, columns=h5_dict)
+            pressure_dict = dict()
             if all([x in df.columns.values for x in ["Pxx", "Pxy", "Pxz", "Pxy", "Pyy", "Pyz", "Pxz", "Pyz", "Pzz"]]):
                 pressures = np.stack(
                     (df.Pxx, df.Pxy, df.Pxz, df.Pxy, df.Pyy, df.Pyz, df.Pxz, df.Pyz, df.Pzz),
                     axis=-1,
                 ).reshape(-1, 3, 3).astype('float64')
-                pressures *= 0.0001  # bar -> GPa
-
                 # Rotate pressures from Lammps frame to pyiron frame if necessary
                 rotation_matrix = self._prism.R.T
                 if np.matrix.trace(rotation_matrix) != 3:
@@ -583,7 +586,7 @@ class LammpsBase(AtomisticGenericJob):
                         ((df.columns.str.len() == 3) & df.columns.str.startswith("P"))
                     ]
                 )
-                df["pressures"] = pressures.tolist()
+                pressure_dict["pressures"] = pressures
             else:
                 warnings.warn("LAMMPS warning: log.lammps does not contain the required pressure values.")
             if 'mean_pressure[1]' in df.columns:
@@ -593,7 +596,6 @@ class LammpsBase(AtomisticGenericJob):
                      df['mean_pressure[5]'], df['mean_pressure[6]'], df['mean_pressure[3]']),
                     axis=-1,
                 ).reshape(-1, 3, 3).astype('float64')
-                pressures *= 0.0001  # bar -> GPa
                 if np.matrix.trace(rotation_matrix) != 3:
                     pressures = rotation_matrix.T @ pressures @ rotation_matrix
                 df = df.drop(
@@ -601,20 +603,22 @@ class LammpsBase(AtomisticGenericJob):
                         (df.columns.str.startswith("mean_pressure") & df.columns.str.endswith(']'))
                     ]
                 )
-                df["mean_pressures"] = pressures.tolist()
-
-            generic_keys_lst = list(h5_dict.values()) + ["pressures", "mean_pressures", ]
+                pressure_dict["mean_pressures"] = pressures
+            generic_keys_lst = list(h5_dict.values())
             with self.project_hdf5.open("output/generic") as hdf_output:
                 # This is a hack for backward comparability
                 for k, v in df.items():
                     if k in generic_keys_lst:
-                        hdf_output[k] = np.array(v)
+                        hdf_output[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+                # Store pressures as numpy arrays
+                for key, val in pressure_dict.items():
+                    hdf_output[key] = uc.convert_array_to_pyiron_units(val, label=key)
 
             with self.project_hdf5.open("output/lammps") as hdf_output:
                 # This is a hack for backward comparability
                 for k, v in df.items():
                     if k not in generic_keys_lst:
-                        hdf_output[k] = np.array(v)
+                        hdf_output[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
         else:
             warnings.warn("LAMMPS warning: No log.lammps output file found.")
 
@@ -782,7 +786,18 @@ class LammpsBase(AtomisticGenericJob):
                 mu[el] = 0.
 
         self._generic_input["calc_mode"] = "vcsgc"
+        self._generic_input["mu"] = mu
+        if target_concentration is not None:
+            self._generic_input["target_concentration"] = target_concentration
+            self._generic_input["kappa"] = kappa
+        self._generic_input["mc_step_interval"] = mc_step_interval
+        self._generic_input["swap_fraction"] = swap_fraction
         self._generic_input["temperature"] = temperature
+        self._generic_input["temperature_mc"] = temperature_mc
+        if window_size is not None:
+            self._generic_input["window_size"] = window_size
+        if window_moves is not None:
+            self._generic_input["window_moves"] = window_moves
         self._generic_input["n_ionic_steps"] = n_ionic_steps
         self._generic_input["n_print"] = n_print
         self._generic_input.remove_keys(["max_iter"])
@@ -890,6 +905,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
+        uc = UnitConverter(self.input.control["units"])
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
         if os.path.exists(file_name):
             output = {}
@@ -1002,10 +1018,9 @@ class LammpsBase(AtomisticGenericJob):
             keys = content[0].keys()
             for kk in keys[keys.str.startswith('c_')]:
                 output[kk.replace('c_', '')] = np.array([cc[kk] for cc in content], dtype=float)
-
             with self.project_hdf5.open("output/generic") as hdf_output:
                 for k, v in output.items():
-                    hdf_output[k] = v
+                    hdf_output[k] = uc.convert_array_to_pyiron_units(v, label=k)
         else:
             warnings.warn("LAMMPS warning: No dump.out output file found.")
 

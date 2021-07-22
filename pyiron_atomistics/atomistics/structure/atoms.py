@@ -16,6 +16,7 @@ from pyiron_atomistics.atomistics.structure.atom import Atom, ase_to_pyiron as a
 from pyiron_atomistics.atomistics.structure.neighbors import Neighbors, Tree
 from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
+from pyiron_atomistics.atomistics.structure.symmetry import Symmetry
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseArray, SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
@@ -26,7 +27,6 @@ from pyiron_atomistics.atomistics.structure.pyironase import publication
 from pymatgen.io.ase import AseAtomsAdaptor
 
 from scipy.spatial import cKDTree, Voronoi
-import spglib
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
 __copyright__ = (
@@ -171,6 +171,8 @@ class Atoms(ASEAtoms):
 
         elif indices is not None:
             el_index_lst = indices
+            if species is None:
+                raise ValueError("species must be given if indices is given, but is None.")
             self.set_species(species)
 
         self.indices = np.array(el_index_lst, dtype=int)
@@ -187,7 +189,6 @@ class Atoms(ASEAtoms):
 
         self.bonds = None
         self.units = {"length": "A", "mass": "u"}
-        self._symmetry_dataset = None
         self.set_initial_magnetic_moments(magmoms)
         self._high_symmetry_points = None
         self._high_symmetry_path = None
@@ -1185,7 +1186,27 @@ class Atoms(ASEAtoms):
         xyz = self.get_scaled_positions(wrap=False)
         return xyz[:, 0], xyz[:, 1], xyz[:, 2]
 
-    def get_extended_positions(self, width, return_indices=False, norm_order=2):
+    def get_vertical_length(self, norm_order=2):
+        """
+        Return the length of the cell in each direction projected on the vector vertical to the
+        plane.
+
+        Example:
+
+        For a cell `[[1, 1, 0], [0, 1, 0], [0, 0, 1]]`, this function returns
+        `[1., 0.70710678, 1.]` because the first cell vector is projected on the vector vertical
+        to the yz-plane (as well as the y component on the xz-plane).
+
+        Args:
+            norm_order (int): Norm order (cf. numpy.linalg.norm)
+        """
+        return np.linalg.det(self.cell)/np.linalg.norm(
+            np.cross(np.roll(self.cell, -1, axis=0), np.roll(self.cell, 1, axis=0)),
+            axis=-1,
+            ord=norm_order,
+        )
+
+    def get_extended_positions(self, width, return_indices=False, norm_order=2, positions=None):
         """
         Get all atoms in the boundary around the supercell which have a distance
         to the supercell boundary of less than dist
@@ -1196,6 +1217,8 @@ class Atoms(ASEAtoms):
             return_indices (bool): Whether or not return the original indices of the appended
                 atoms.
             norm_order (float): Order of Lp-norm.
+            positions (numpy.ndarray): Positions for which the extended positions are returned.
+                If None, the atom positions of the structure are used.
 
         Returns:
             numpy.ndarray: Positions of all atoms in the extended box, indices of atoms in
@@ -1204,39 +1227,37 @@ class Atoms(ASEAtoms):
         """
         if width<0:
             raise ValueError('Invalid width')
+        if positions is None:
+            positions = self.positions
         if width==0:
             if return_indices:
-                return self.positions, np.arange(len(self))
-            return self.positions
-        width /= np.linalg.det(self.cell)
-        width *= np.linalg.norm(
-            np.cross(np.roll(self.cell, -1, axis=0), np.roll(self.cell, 1, axis=0)),
-            axis=-1,
-            ord=norm_order,
-        )
+                return positions, np.arange(len(positions))
+            return positions
+        width /= self.get_vertical_length(norm_order=norm_order)
         rep = 2*np.ceil(width).astype(int)*self.pbc+1
         rep = [np.arange(r)-int(r/2) for r in rep]
         meshgrid = np.meshgrid(rep[0], rep[1], rep[2])
         meshgrid = np.stack(meshgrid, axis=-1).reshape(-1, 3)
         v_repeated = np.einsum('ni,ij->nj', meshgrid, self.cell)
-        v_repeated = v_repeated[:,np.newaxis,:]+self.positions[np.newaxis,:,:]
+        v_repeated = v_repeated[:,np.newaxis,:]+positions[np.newaxis,:,:]
         v_repeated = v_repeated.reshape(-1, 3)
-        indices = np.tile(np.arange(len(self)), len(meshgrid))
+        indices = np.tile(np.arange(len(positions)), len(meshgrid))
         dist = v_repeated-np.sum(self.cell*0.5, axis=0)
         dist = np.absolute(np.einsum('ni,ij->nj', dist+1e-8, np.linalg.inv(self.cell)))-0.5
         check_dist = np.all(dist-width<0, axis=-1)
-        indices = indices[check_dist]%len(self)
+        indices = indices[check_dist]%len(positions)
         v_repeated = v_repeated[check_dist]
         if return_indices:
             return v_repeated, indices
         return v_repeated
 
+    @deprecate("Use get_neighbors and call numbers_of_neighbors")
     def get_numbers_of_neighbors_in_sphere(
-            self,
-            cutoff_radius=10,
-            num_neighbors=None,
-            id_list=None,
-            width_buffer=1.2,
+        self,
+        cutoff_radius=10,
+        num_neighbors=None,
+        id_list=None,
+        width_buffer=1.2,
     ):
         """
         Function to compute the maximum number of neighbors in a sphere around each atom.
@@ -1250,105 +1271,37 @@ class Atoms(ASEAtoms):
             (np.ndarray) : for each atom the number of neighbors found in the sphere of radius
                            cutoff_radius (<= num_neighbors if specified)
         """
-        if num_neighbors is not None:
-            neigh = self._get_neighbors(
-                num_neighbors=num_neighbors,
-                t_vec=False,
-                id_list=id_list,
-                cutoff_radius=cutoff_radius,
-                width_buffer=width_buffer,
-            )
-            num_neighbors_per_atom = np.sum(neigh.distances < np.inf, axis=-1)
-        else:
-            volume_per_atom = self.get_volume(per_atom=True)
-            if id_list is not None:
-                volume_per_atom = self.get_volume() / len(id_list)
-            num_neighbors = int((1 + width_buffer) *
-                                4. / 3. * np.pi * cutoff_radius ** 3 / volume_per_atom)
-            num_neighbors_old = num_neighbors - 1
-            while num_neighbors_old < num_neighbors:
-                neigh = self._get_neighbors(
-                    num_neighbors=num_neighbors,
-                    t_vec=False,
-                    id_list=id_list,
-                    cutoff_radius=cutoff_radius,
-                    width_buffer=width_buffer,
-                )
-                num_neighbors_old = num_neighbors
-                num_neighbors_per_atom = np.sum(neigh.distances < np.inf, axis=-1)
-                num_neighbors = num_neighbors_per_atom.max()
-                if num_neighbors == num_neighbors_old:
-                    num_neighbors = 2 * num_neighbors
-        return num_neighbors_per_atom
-
-    def get_neighbors_by_distance(
-        self,
-        cutoff_radius=5,
-        num_neighbors=None,
-        t_vec=True,
-        tolerance=2,
-        id_list=None,
-        width_buffer=1.2,
-        allow_ragged=True,
-        norm_order=2,
-    ):
-        """
-
-        Args:
-            cutoff_radius (float): Upper bound of the distance to which the search must be done
-            num_neighbors (int/None): maximum number of neighbors found; if None this is estimated based on the density.
-            t_vec (bool): True: compute distance vectors
-                        (pbc are automatically taken into account)
-            tolerance (int): tolerance (round decimal points) used for computing neighbor shells
-            id_list (list): list of atoms the neighbors are to be looked for
-            width_buffer (float): width of the layer to be added to account for pbc.
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
-            norm_order (int): Norm to use for the neighborhood search and shell recognition. The
-                definition follows the conventional Lp norm (cf.
-                https://en.wikipedia.org/wiki/Lp_space). This is an feature and for anything
-                other than norm_order=2, there is no guarantee that this works flawlessly.
-
-        Returns:
-
-            pyiron.atomistics.structure.atoms.Neighbors: Neighbors instances with the neighbor
-                indices, distances and vectors
-
-        """
         return self.get_neighbors(
             cutoff_radius=cutoff_radius,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
-            tolerance=tolerance,
             id_list=id_list,
             width_buffer=width_buffer,
-            allow_ragged=allow_ragged,
-            norm_order=norm_order,
-        )
+        ).numbers_of_neighbors
 
+    @deprecate(allow_ragged="use `mode='ragged'` instead.")
     def get_neighbors(
         self,
         num_neighbors=12,
-        t_vec=True,
         tolerance=2,
         id_list=None,
         cutoff_radius=np.inf,
         width_buffer=1.2,
-        allow_ragged=False,
+        allow_ragged=None,
+        mode='filled',
         norm_order=2,
     ):
         """
 
         Args:
             num_neighbors (int): number of neighbors
-            t_vec (bool): True: compute distance vectors
-                        (pbc are automatically taken into account)
             tolerance (int): tolerance (round decimal points) used for computing neighbor shells
             id_list (list): list of atoms the neighbors are to be looked for
             cutoff_radius (float): Upper bound of the distance to which the search must be done
             width_buffer (float): width of the layer to be added to account for pbc.
-            allow_ragged (bool): Whether to allow ragged list of arrays or rectangular
-                numpy.ndarray filled with np.inf for values outside cutoff_radius
+            allow_ragged (bool): (Deprecated; use mode) Whether to allow ragged list of arrays or
+                rectangular numpy.ndarray filled with np.inf for values outside cutoff_radius
+            mode (str): Representation of per-atom quantities (distances etc.). Choose from
+                'filled', 'ragged' and 'flattened'.
             norm_order (int): Norm to use for the neighborhood search and shell recognition. The
                 definition follows the conventional Lp norm (cf.
                 https://en.wikipedia.org/wiki/Lp_space). This is an feature and for anything
@@ -1362,20 +1315,45 @@ class Atoms(ASEAtoms):
         """
         neigh = self._get_neighbors(
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             tolerance=tolerance,
             id_list=id_list,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
             norm_order=norm_order,
         )
-        neigh.allow_ragged = allow_ragged
+        neigh._set_mode(mode)
+        if allow_ragged is not None:
+            neigh.allow_ragged = allow_ragged
         return neigh
+
+    @deprecate(allow_ragged="use `mode='ragged'` instead.")
+    @deprecate("Use get_neighbors", version="1.0.0")
+    def get_neighbors_by_distance(
+        self,
+        cutoff_radius=5,
+        num_neighbors=None,
+        tolerance=2,
+        id_list=None,
+        width_buffer=1.2,
+        allow_ragged=None,
+        mode='ragged',
+        norm_order=2,
+    ):
+        return self.get_neighbors(
+            cutoff_radius=cutoff_radius,
+            num_neighbors=num_neighbors,
+            tolerance=tolerance,
+            id_list=id_list,
+            width_buffer=width_buffer,
+            allow_ragged=allow_ragged,
+            mode=mode,
+            norm_order=norm_order,
+        )
+    get_neighbors_by_distance.__doc__ = get_neighbors.__doc__
 
     def _get_neighbors(
         self,
         num_neighbors=12,
-        t_vec=True,
         tolerance=2,
         id_list=None,
         cutoff_radius=np.inf,
@@ -1410,7 +1388,6 @@ class Atoms(ASEAtoms):
         neigh._get_neighborhood(
             positions=positions,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             cutoff_radius=cutoff_radius,
             exclude_self=True,
             width_buffer=width_buffer,
@@ -1424,9 +1401,9 @@ class Atoms(ASEAtoms):
         self,
         positions,
         num_neighbors=12,
-        t_vec=True,
         cutoff_radius=np.inf,
         width_buffer=1.2,
+        mode='filled',
         norm_order=2,
     ):
         """
@@ -1434,9 +1411,10 @@ class Atoms(ASEAtoms):
         Args:
             position: Position in a box whose neighborhood information is analysed
             num_neighbors (int): Number of nearest neighbors
-            t_vec (bool): True: compute distance vectors (pbc are taken into account)
             cutoff_radius (float): Upper bound of the distance to which the search is to be done
             width_buffer (float): Width of the layer to be added to account for pbc.
+            mode (str): Representation of per-atom quantities (distances etc.). Choose from
+                'filled', 'ragged' and 'flattened'.
             norm_order (int): Norm to use for the neighborhood search and shell recognition. The
                 definition follows the conventional Lp norm (cf.
                 https://en.wikipedia.org/wiki/Lp_space). This is an feature and for anything
@@ -1453,14 +1431,13 @@ class Atoms(ASEAtoms):
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
-            t_vec=t_vec,
             get_tree=True,
             norm_order=norm_order,
         )
+        neigh._set_mode(mode)
         return neigh._get_neighborhood(
             positions=positions,
             num_neighbors=num_neighbors,
-            t_vec=t_vec,
             cutoff_radius=cutoff_radius,
         )
 
@@ -1537,7 +1514,7 @@ class Atoms(ASEAtoms):
                 radius = neigh.distances[0][indices]
                 radius = np.mean(radius)
                 # print "radius: ", radius
-            neighbors = self.get_neighbors_by_distance(cutoff_radius=radius, t_vec=False)
+            neighbors = self.get_neighbors_by_distance(cutoff_radius=radius)
         return neighbors.cluster_analysis(id_list=id_list, return_cluster_sizes=return_cluster_sizes)
 
     # TODO: combine with corresponding routine in plot3d
@@ -1560,8 +1537,6 @@ class Atoms(ASEAtoms):
         )
         return neighbors.get_bonds(radius=radius, max_shells=max_shells, prec=prec)
 
-    # spglib calls
-    @deprecate_soon
     def get_symmetry(
         self, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
@@ -1575,41 +1550,27 @@ class Atoms(ASEAtoms):
             angle_tolerance (float): Angle search tolerance
 
         Returns:
+            symmetry (:class:`pyiron.atomistics.structure.symmetry.Symmetry`): Symmetry class
 
 
         """
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
+        return Symmetry(
+            self,
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
         )
-        if use_elements:
-            numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        else:
-            numbers = np.ones_like(self.get_atomic_numbers(), dtype="intc")
-        if use_magmoms:
-            magmoms = self.get_initial_magnetic_moments()
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers, magmoms),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
-        else:
-            return spglib.get_symmetry(
-                cell=(lattice, positions, numbers),
-                symprec=symprec,
-                angle_tolerance=angle_tolerance,
-            )
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().symmetrize_vectors()')
     def symmetrize_vectors(
-        self, vectors, force_update=False, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
+        self, vectors, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
         """
         Symmetrization of natom x 3 vectors according to box symmetries
 
         Args:
             vectors (ndarray/list): natom x 3 array to symmetrize
-            force_update (bool): whether to update the symmetry info
             use_magmoms (bool): cf. get_symmetry
             use_elements (bool): cf. get_symmetry
             symprec (float): cf. get_symmetry
@@ -1618,26 +1579,14 @@ class Atoms(ASEAtoms):
         Returns:
             (np.ndarray) symmetrized vectors
         """
-        vectors = np.array(vectors).reshape(-1, 3)
-        if vectors.shape != self.positions.shape:
-            print(vectors.shape, self.positions.shape)
-            raise ValueError('Vector must be a natom x 3 array: {} != {}'.format(vectors.shape, self.positions.shape))
-        if self._symmetry_dataset is None or force_update:
-            symmetry = self.get_symmetry(use_magmoms=use_magmoms, use_elements=use_elements,
-                                         symprec=symprec, angle_tolerance=angle_tolerance)
-            scaled_positions = self.get_scaled_positions(wrap=False)
-            symmetry['indices'] = []
-            for rot,tra in zip(symmetry['rotations'], symmetry['translations']):
-                positions = np.einsum('ij,nj->ni', rot, scaled_positions)+tra
-                positions -= np.floor(positions+1.0e-2)
-                vec = np.where(np.linalg.norm(positions[np.newaxis, :, :]-scaled_positions[:, np.newaxis, :], axis=-1)<=1.0e-4)
-                symmetry['indices'].append(vec[1])
-            symmetry['indices'] = np.array(symmetry['indices'])
-            self._symmetry_dataset = symmetry
-        return np.einsum('ijk,ink->nj', self._symmetry_dataset['rotations'],
-                         vectors[self._symmetry_dataset['indices']])/len(self._symmetry_dataset['rotations'])
+        return self.get_symmetry(
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
+        ).symmetrize_vectors(vectors=vectors)
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().get_arg_equivalent_sites() instead')
     def group_points_by_symmetry(
         self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
     ):
@@ -1658,112 +1607,14 @@ class Atoms(ASEAtoms):
         It is possible that the original points are not found in the returned list, as the
         positions outsie the box will be projected back to the box.
         """
-        struct_copy = self.copy()
-        points = np.array(points).reshape(-1, 3)
-        struct_copy += Atoms(elements=len(points) * ["Hs"], positions=points, cell=self.cell)
-        struct_copy.center_coordinates_in_unit_cell()
-        group_IDs = struct_copy.get_symmetry(
+        return self.get_symmetry(
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )["equivalent_atoms"][struct_copy.select_index("Hs")]
-        return [
-            points[group_IDs == ID] for ID in np.unique(group_IDs)
-        ]
+            angle_tolerance=angle_tolerance
+        ).get_arg_equivalent_sites(points)
 
-    def _get_voronoi_vertices(self, minimum_dist=0.1):
-        """
-            This function gives the positions of Voronoi vertices
-            This function does not work if there are Hs atoms in the box
-
-            Args:
-                minimum_dist: Minimum distance between two Voronoi vertices to be considered as one
-
-            Returns: Positions of Voronoi vertices, box
-
-        """
-        vor = Voronoi(
-            self.repeat(3 * [2]).positions
-        )  # Voronoi package does not have periodic boundary conditions
-        b_cell_inv = np.linalg.inv(self.cell)
-        voro_vert = vor.vertices
-        for ind, v in enumerate(voro_vert):
-            pos = np.mean(
-                voro_vert[(np.linalg.norm(voro_vert - v, axis=-1) < minimum_dist)],
-                axis=0,
-            )  # Find all points which are within minimum_dist
-            voro_vert[(np.linalg.norm(voro_vert - v, axis=-1) < 0.5)] = np.array(
-                3 * [-10]
-            )  # Mark atoms to be deleted afterwards
-            voro_vert[ind] = pos
-        voro_vert = voro_vert[np.min(voro_vert, axis=-1) > -5]
-
-        voro_vert = np.dot(b_cell_inv.T, voro_vert.T).T  # get scaled positions
-        voro_vert = voro_vert[
-            (np.min(voro_vert, axis=-1) > 0.499) & (np.max(voro_vert, axis=-1) < 1.501)
-        ]
-        voro_vert = np.dot(self.cell.T, voro_vert.T).T  # get true positions
-
-        box_copy = self.copy()
-        new_atoms = Atoms(cell=self.cell, symbols=["Hs"]).repeat([len(voro_vert), 1, 1])
-        box_copy += new_atoms
-
-        pos_total = np.append(self.positions, voro_vert)
-        pos_total = pos_total.reshape(-1, 3)
-        box_copy.positions = pos_total
-
-        box_copy.center_coordinates_in_unit_cell()
-
-        neigh = (
-            box_copy.get_neighbors()
-        )  # delete all atoms which lie within minimum_dist (including periodic boundary conditions)
-        while (
-            len(
-                np.array(neigh.indices).flatten()[
-                    np.array(neigh.distances).flatten() < minimum_dist
-                ]
-            )
-            != 0
-        ):
-            del box_copy[
-                np.array(neigh.indices).flatten()[
-                    np.array(neigh.distances).flatten() < minimum_dist
-                ][0]
-            ]
-            neigh = box_copy.get_neighbors()
-        return pos_total, box_copy
-
-    @deprecate_soon
-    def get_equivalent_voronoi_vertices(
-        self, return_box=False, minimum_dist=0.1, symprec=1e-5, angle_tolerance=-1.0
-    ):
-        """
-            This function gives the positions of spatially equivalent Voronoi vertices in lists, which
-            most likely represent interstitial points or vacancies (along with other high symmetry points)
-            Each list item contains an array of positions which are spacially equivalent.
-            This function does not work if there are Hs atoms in the box
-
-            Args:
-                return_box: True, if the box containing atoms on the positions of Voronoi vertices
-                            should be returned (which are represented by Hs atoms)
-                minimum_dist: Minimum distance between two Voronoi vertices to be considered as one
-
-            Returns: List of numpy array positions of spacially equivalent Voronoi vertices
-
-        """
-
-        _, box_copy = self._get_voronoi_vertices(minimum_dist=minimum_dist)
-        list_positions = []
-        sym = box_copy.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance)
-        for ind in set(sym["equivalent_atoms"][box_copy.select_index("Hs")]):
-            list_positions.append(box_copy.positions[sym["equivalent_atoms"] == ind])
-        if return_box:
-            return list_positions, box_copy
-        else:
-            return list_positions
-
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().get_arg_equivalent_sites() instead')
     def get_equivalent_points(self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1777,22 +1628,14 @@ class Atoms(ASEAtoms):
         Returns:
             (ndarray): array of equivalent points with respect to box symmetries
         """
-        symmetry_operations = self.get_symmetry(use_magmoms=use_magmoms,
-                                                use_elements=use_elements,
-                                                symprec=symprec,
-                                                angle_tolerance=angle_tolerance)
-        R = symmetry_operations['rotations']
-        t = symmetry_operations['translations']
-        x = np.einsum('jk,j->k', np.linalg.inv(self.cell), points)
-        x = np.einsum('nxy,y->nx', R, x)+t
-        x -= np.floor(x)
-        dist = x[:,np.newaxis]-x[np.newaxis,:]
-        w, v = np.where(np.linalg.norm(dist-np.rint(dist), axis=-1)<symprec)
-        x = np.delete(x, w[v<w], axis=0)
-        x = np.einsum('ji,mj->mi', self.cell, x)
-        return x
+        return self.get_symmetry(
+            use_magmoms=use_magmoms,
+            use_elements=use_elements,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance
+        ).get_arg_equivalent_sites(points)
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().info instead')
     def get_symmetry_dataset(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1804,18 +1647,9 @@ class Atoms(ASEAtoms):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
-        )
-        numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        return spglib.get_symmetry_dataset(
-            cell=(lattice, positions, numbers),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )
+        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).info
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().spacegroup instead')
     def get_spacegroup(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1827,25 +1661,9 @@ class Atoms(ASEAtoms):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        lattice = np.array(self.get_cell(), dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
-        )
-        numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        space_group = spglib.get_spacegroup(
-            cell=(lattice, positions, numbers),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        ).split()
-        if len(space_group) == 1:
-            return {"Number": ast.literal_eval(space_group[0])}
-        else:
-            return {
-                "InternationalTableSymbol": space_group[0],
-                "Number": ast.literal_eval(space_group[1]),
-            }
+        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).spacegroup
 
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().refine_cell() instead')
     def refine_cell(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1857,22 +1675,9 @@ class Atoms(ASEAtoms):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
-        )
-        numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        cell, coords, el = spglib.refine_cell(
-            cell=(lattice, positions, numbers),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )
+        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).refine_cell()
 
-        return Atoms(
-            symbols=list(self.get_chemical_symbols()), positions=coords, cell=cell, pbc=self.pbc
-        )
-
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().primitive_cell instead')
     def get_primitive_cell(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1883,34 +1688,9 @@ class Atoms(ASEAtoms):
         Returns:
 
         """
-        el_dict = {}
-        for el in set(self.get_chemical_elements()):
-            el_dict[el.AtomicNumber] = el
-        lattice = np.array(self.get_cell().T, dtype="double", order="C")
-        positions = np.array(
-            self.get_scaled_positions(wrap=False), dtype="double", order="C"
-        )
-        numbers = np.array(self.get_atomic_numbers(), dtype="intc")
-        cell, coords, atomic_numbers = spglib.find_primitive(
-            cell=(lattice, positions, numbers),
-            symprec=symprec,
-            angle_tolerance=angle_tolerance,
-        )
-        # print atomic_numbers, type(atomic_numbers)
-        el_lst = [el_dict[i_a] for i_a in atomic_numbers]
+        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).primitive_cell
 
-        # convert lattice vectors to standard (experimental feature!) TODO:
-        red_structure = Atoms(elements=el_lst, scaled_positions=coords, cell=cell, pbc=self.pbc)
-        space_group = red_structure.get_spacegroup(symprec)["Number"]
-        # print "space group: ", space_group
-        if space_group == 225:  # fcc
-            alat = np.max(cell[0])
-            amat_fcc = alat * np.array([[1, 0, 1], [1, 1, 0], [0, 1, 1]])
-
-            red_structure.cell = amat_fcc
-        return red_structure
-
-    @deprecate_soon
+    @deprecate('Use structure.get_symmetry().get_ir_reciprocal_mesh() instead')
     def get_ir_reciprocal_mesh(
         self,
         mesh,
@@ -1929,14 +1709,11 @@ class Atoms(ASEAtoms):
         Returns:
 
         """
-        mapping, mesh_points = spglib.get_ir_reciprocal_mesh(
+        return self.get_symmetry(symprec=symprec).get_ir_reciprocal_mesh(
             mesh=mesh,
-            cell=self,
             is_shift=is_shift,
             is_time_reversal=is_time_reversal,
-            symprec=symprec,
         )
-        return mapping, mesh_points
 
     def get_majority_species(self, return_count=False):
         """

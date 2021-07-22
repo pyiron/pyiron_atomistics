@@ -4,12 +4,10 @@
 
 import copy
 import warnings
-from functools import wraps
-
 import numpy as np
 from ase.io import write as ase_write
-
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
 
@@ -159,22 +157,6 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         self._generic_input.read_only = True
 
-    @wraps(GenericJobCore.copy_to)
-    def copy_to(self, project=None, new_job_name=None, input_only=False, new_database_entry=True,
-                delete_existing_job=False):
-        new_generic_job = super(AtomisticGenericJob, self).copy_to(
-            project=project,
-            new_job_name=new_job_name,
-            input_only=input_only,
-            new_database_entry=new_database_entry,
-            delete_existing_job=delete_existing_job
-        )
-        if not new_generic_job._structure:
-            new_generic_job._structure = copy.copy(self._structure)
-        return new_generic_job
-    copy_to.__doc__ = copy_to.__doc__.split('Returns:')[0] + \
-                      f'Returns:\n            {__qualname__}: Object pointing to the new location.'
-
     def create_pipeline(self, step_lst, delete_existing_job=False):
         """
         Create a job pipeline
@@ -186,6 +168,10 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             FlexibleMaster:
         """
         return self.project.create_pipeline(job=self, step_lst=step_lst, delete_existing_job=delete_existing_job)
+
+    def _after_generic_copy_to(self, original, new_database_entry, reloaded):
+        if self._structure is None:
+            self._structure = copy.copy(original._structure)
 
     def calc_minimize(
         self, ionic_energy_tolerance=0, ionic_force_tolerance=1e-4, e_tol=None, f_tol=None, max_iter=1000, pressure=None, n_print=1
@@ -476,6 +462,8 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             snapshot_indices=None, overwrite_positions=None, overwrite_cells=None
     ):
         """
+        Returns a `Trajectory` instance containing the necessary information to describe the evolution of the atomic
+        structure during the atomistic simulation.
 
         Args:
             stride (int): The trajectories are generated with every 'stride' steps
@@ -489,7 +477,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                                                  have the same length of `overwrite_positions`
 
         Returns:
-            pyiron.atomistics.job.atomistic.Trajectory: Trajectory instance
+            pyiron_atomistics.atomistics.job.atomistic.Trajectory: Trajectory instance
 
         """
         cells = self.output.cells
@@ -610,6 +598,43 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             **kwargs
         )
 
+    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors only for the required snapshots from the trajectory
+
+        Args:
+            snapshot_indices (list/numpy.ndarray): Snapshots for which the the neighbors need to be computed
+                                                   (eg. [1, 5, 10,..., 100]
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        return self.trajectory().get_neighbors_snapshots(snapshot_indices=snapshot_indices,
+                                                         num_neighbors=num_neighbors, **kwargs)
+
+    def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors for a given section of the trajectory
+
+        Args:
+            start (int): Start point of the slice of the trajectory to be sampled
+            stop (int): End point of of the slice of the trajectory to be sampled
+            stride (int): Samples the snapshots evert `stride` steps
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        return self.trajectory().get_neighbors(start=start, stop=stop, stride=stride,
+                                               num_neighbors=num_neighbors, **kwargs)
+
     # Compatibility functions
     @deprecate("Use get_structure()")
     def get_final_structure(self):
@@ -624,19 +649,27 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
     def _get_structure(self, frame=-1, wrap_atoms=True):
         if self.structure is None:
             raise AssertionError('Structure not set')
-        snapshot = self.structure.copy()
         if self.output.cells is not None:
             try:
-                snapshot.cell = self.output.cells[frame]
+                cell = self.output.cells[frame]
             except IndexError:
                 if wrap_atoms:
                     raise IndexError('cell at step ', frame, ' not found') from None
-                snapshot.cell = None
+                cell = None
         if self.output.indices is not None:
             try:
-                snapshot.indices = self.output.indices[frame]
+                indices = self.output.indices[frame]
             except IndexError:
-                pass
+                indices = None
+        if indices is not None and len(indices) != len(self.structure):
+            snapshot = Atoms(species=self.structure.species, indices=indices,
+                             positions=np.zeros(indices.shape + (3,)), cell=cell, pbc=self.structure.pbc)
+        else:
+            snapshot = self.structure.copy()
+            if cell is not None:
+                snapshot.cell = cell
+            if indices is not None:
+                snapshot.indices = indices
         if self.output.positions is not None:
             if wrap_atoms:
                 snapshot.positions = self.output.positions[frame]
@@ -715,7 +748,7 @@ class MapFunctions(object):
         self.set_structure = set_structure
 
 
-class Trajectory(object):
+class Trajectory(HasStructure):
     """
     A trajectory instance compatible with the ase.io class
 
@@ -728,7 +761,8 @@ class Trajectory(object):
                                 varies
     """
 
-    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None):
+    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None, table_name="trajectory"):
+
         if center_of_mass:
             pos = np.copy(positions)
             pos[:, :, 0] = (pos[:, :, 0].T - np.mean(pos[:, :, 0], axis=1)).T
@@ -742,19 +776,70 @@ class Trajectory(object):
         self._indices = indices
 
     def __getitem__(self, item):
-        new_structure = self._structure.copy()
-        if self._cells is not None:
-            new_structure.cell = self._cells[item]
-        if self._indices is not None:
-            new_structure.indices = self._indices[item]
-        new_structure.positions = self._positions[item]
-        # This step is necessary for using ase.io.write for trajectories
-        new_structure.arrays["positions"] = new_structure.positions
-        # new_structure.arrays['cells'] = new_structure.cell
-        return new_structure
+        if isinstance(item, (int, np.int_)):
+            new_structure = self._structure.copy()
+            if self._cells is not None:
+                new_structure.cell = self._cells[item]
+            if self._indices is not None:
+                new_structure.indices = self._indices[item]
+            new_structure.positions = self._positions[item]
+            # This step is necessary for using ase.io.write for trajectories
+            new_structure.arrays["positions"] = new_structure.positions
+            # new_structure.arrays['cells'] = new_structure.cell
+            return new_structure
+        elif isinstance(item, (list, np.ndarray, slice)):
+            snapshots = np.arange(len(self), dtype=int)[item]
+            return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
+                              structure=self[snapshots[0]], indices=self._indices[snapshots])
+
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        return self[frame]
 
     def __len__(self):
         return len(self._positions)
+
+    _number_of_structures = __len__
+
+    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors only for the required snapshots from the trajectory
+
+        Args:
+            snapshot_indices (list/numpy.ndarray): Snapshots for which the the neighbors need to be computed
+                                                   (eg. [1, 5, 10,..., 100]
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        if snapshot_indices is None:
+            snapshot_indices = np.arange(len(self), dtype=int)
+
+        n_obj = NeighborsTrajectory(self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
+        n_obj.compute_neighbors()
+        return n_obj
+
+    def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
+        """
+        Get the neighbors for a given section of the trajectory
+
+        Args:
+            start (int): Start point of the slice of the trajectory to be sampled
+            stop (int): End point of of the slice of the trajectory to be sampled
+            stride (int): Samples the snapshots evert `stride` steps
+            num_neighbors (int): The cutoff for the number of neighbors
+            **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
+                             (eg. cutoff_radius, norm_order , etc.)
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
+                                                                             containing the neighbor information.
+        """
+        snapshot_indices = np.arange(len(self))[start:stop:stride]
+        return self.get_neighbors_snapshots(snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs)
 
 
 class GenericInput(GenericParameters):
@@ -901,3 +986,4 @@ class GenericOutput(object):
             return hdf5_path.list_nodes()
         else:
             return []
+
