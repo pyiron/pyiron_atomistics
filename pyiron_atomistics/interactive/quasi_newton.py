@@ -31,13 +31,6 @@ class QuasiNewton:
             self.hessian -= (starting_h+1)*np.einsum('i,j->ij', v, v)/np.linalg.norm(v)**2
             self.use_eigenvalues = True
 
-    def _get_mask(self, cutoff, structure):
-        neigh = structure.get_neighbors(num_neighbors=None, cutoff_radius=cutoff)
-        E = np.eye(len(structure))
-        E[neigh.flattened.atom_numbers, neigh.flattened.indices] = 1
-        E[neigh.flattened.indices, neigh.flattened.atom_numbers] = 1
-        return np.einsum('ij,kl->ikjl', E, np.ones((3, 3))).reshape(self.hessian.shape)
-
     @property
     def inv_hessian(self):
         if self.regularization > 0:
@@ -63,12 +56,7 @@ class QuasiNewton:
         self._hessian = v
 
     def _calc_eig(self):
-        if self.mask is not None:
-            self._eigenvalues, self._eigenvectors = sparse.linalg.eigsh(
-                sparse.csc_matrix(self.hessian), k=self.n_eigenvalues, which='SA'
-            )
-        else:
-            self._eigenvalues, self._eigenvectors = np.linalg.eigh(self.hessian)
+        self._eigenvalues, self._eigenvectors = np.linalg.eigh(self.hessian)
 
     @property
     def eigenvalues(self):
