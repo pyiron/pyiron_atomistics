@@ -2375,9 +2375,6 @@ class Atoms(ASEAtoms):
         if magmoms is not None:
             if len(magmoms) != len(self):
                 raise ValueError("magmons can be collinear or non-collinear.")
-            for ind, element in enumerate(self.get_chemical_elements()):
-                if "spin" in element.tags.keys():
-                    self[ind] = element.Parent
             if "spin" not in self._tag_list._lists.keys():
                 self.add_tag(spin=None)
             for ind, spin in enumerate(magmoms):

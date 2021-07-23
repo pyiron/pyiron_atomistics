@@ -6,9 +6,10 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 import os
 from pyiron_base import Settings
-from mendeleev import element
+import mendeleev
 import sys
 import pandas
+from functools import lru_cache
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Martin Boeckmann"
 __copyright__ = (
@@ -23,6 +24,11 @@ __date__ = "Sep 1, 2017"
 
 s = Settings()
 pandas.options.mode.chained_assignment = None
+
+
+@lru_cache(maxsize=118)
+def element(*args):
+    return mendeleev.element(*args)
 
 
 class ChemicalElement(object):
@@ -268,7 +274,6 @@ class PeriodicTable(object):
         Returns element (ChemicalElement): a element with all its properties (Abbreviation, AtomicMass, Weight, ...)
 
         """
-
         stringtypes = str
         if isinstance(arg, stringtypes):
             if arg in self.dataframe.index.values:
@@ -282,11 +287,10 @@ class PeriodicTable(object):
                 self.el = self.dataframe.iloc[index].name
         else:
             raise ValueError("type not defined: " + str(type(arg)))
-
-        if qwargs is not None and "tags" not in self.dataframe.columns.values:
-            self.dataframe["tags"] = None
+        if len(qwargs.values()) > 0:
+            if "tags" not in self.dataframe.columns.values:
+                self.dataframe["tags"] = None
             self.dataframe["tags"][self.el] = qwargs
-
         element = self.dataframe.loc[self.el]
         # element['CovalentRadius'] /= 100
         return ChemicalElement(element)
@@ -349,15 +353,12 @@ class PeriodicTable(object):
             self.dataframe = self.dataframe.append(parent_element_data_series)
         else:
             self.dataframe.loc[new_element] = parent_element_data_series
-        if len(qwargs) != 0:
-            if "tags" not in self.dataframe.columns.values:
-                self.dataframe["tags"] = None
-            self.dataframe["tags"][new_element] = qwargs
         if use_parent_potential:
             self._parent_element = parent_element
-        return self.element(new_element)
+        return self.element(new_element, **qwargs)
 
     @staticmethod
+    @lru_cache(maxsize=1)
     def _get_periodic_table_df(file_name):
         """
 
