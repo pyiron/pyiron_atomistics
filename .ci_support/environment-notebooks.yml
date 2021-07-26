@@ -1,14 +1,14 @@
 channels:
-  - conda-forge
+- conda-forge
 dependencies:
-  - gpaw >=20
-  - jupyter
-  - lammps >=2021.05.27
-  - nglview
-  - papermill
-  - seaborn
-  - sphinxdft >=2.7.0
-  - sphinxdft-data
-  - iprpy-data
-  - pyiron-data >=0.0.14
-  - sqsgenerator
+- gpaw >=20
+- jupyter
+ lammps >=2021.05.27
+- nglview
+- papermill
+- seaborn
+- sphinxdft >=2.7.0
+- sphinxdft-data
+- iprpy-data
+- pyiron-data >=0.0.14
+- sqsgenerator
