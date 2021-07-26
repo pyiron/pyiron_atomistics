@@ -11,18 +11,25 @@ class QuasiNewton:
         use_eigenvalues=True,
         diffusion_direction=None,
         regularization=1e-6,
-        cutoff=0,
-        n_eigenvalues=None
     ):
         self.use_eigenvalues = use_eigenvalues
-        if use_eigenvalues:
-            self.regularization = regularization**2
-        else:
-            self.regularization = regularization
         self._hessian = None
         self._eigenvalues = None
         self._eigenvectors = None
         self.g_old = None
+        self._initialize_hessian(
+            starting_h=starting_h,
+            diffusion_id=diffusion_id,
+            diffusion_direction=diffusion_direction
+        )
+        if self.use_eigenvalues:
+            self.regularization = regularization**2
+        else:
+            self.regularization = regularization
+        if self.use_eigenvalues and self.regularization==0:
+            raise ValueError('Regularization must be larger than 0 when eigenvalues are used')
+
+    def _initialize_hessian(self, starting_h=10, diffusion_id=None, diffusion_direction=None):
         self.hessian = starting_h*np.eye(np.prod(structure.positions.shape))
         if diffusion_id is not None and diffusion_direction is not None:
             v = np.zeros_like(structure.positions)
@@ -30,6 +37,8 @@ class QuasiNewton:
             v = v.flatten()
             self.hessian -= (starting_h+1)*np.einsum('i,j->ij', v, v)/np.linalg.norm(v)**2
             self.use_eigenvalues = True
+        elif diffusion_id is not None or diffusion_direction is not None:
+            raise ValueError('diffusion id or diffusion direction not specified')
 
     @property
     def inv_hessian(self):
