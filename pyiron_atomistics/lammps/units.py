@@ -222,9 +222,7 @@ class UnitsDecorator:
         self._units = None
         self._label = None
 
-    def __call__(self, label, units=None):
-        if units is not None:
-            self._units = units
+    def __call__(self, units, label):
         self._label = label
         return self.__decorate_to_pyiron
 
