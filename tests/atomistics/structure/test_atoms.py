@@ -2,22 +2,21 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import os
 import unittest
-import warnings
-
 import numpy as np
-from ase.atoms import Atoms as ASEAtoms
-from ase.build import molecule
-from ase.cell import Cell as ASECell
-
+import os
+import time
+import warnings
 from pyiron_atomistics import ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable, ChemicalElement
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseList
+from pyiron_atomistics.atomistics.structure.periodic_table import element, PeriodicTable, ChemicalElement
 from pyiron_base import FileHDFio, ProjectHDFio, Project
+from ase.cell import Cell as ASECell
+from ase.atoms import Atoms as ASEAtoms
+from ase.build import molecule
 
 
 class TestAtoms(unittest.TestCase):
