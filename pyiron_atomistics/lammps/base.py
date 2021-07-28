@@ -471,7 +471,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        uc = UnitConverter(self.input.control["units"])
+        uc = UnitConverter(self.units)
         prism = UnfoldingPrism(self.structure.cell, digits=15)
         if np.matrix.trace(prism.R) != 3:
             raise RuntimeError("The Lammps output will not be mapped back to pyiron correctly.")
@@ -559,7 +559,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        uc = UnitConverter(self.input.control["units"])
+        uc = UnitConverter(self.units)
         self.collect_errors(file_name=file_name, cwd=cwd)
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
         if os.path.exists(file_name):
@@ -927,7 +927,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        uc = UnitConverter(self.input.control["units"])
+        uc = UnitConverter(self.units)
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
         if os.path.exists(file_name):
             output = {}
