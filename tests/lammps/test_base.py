@@ -332,7 +332,6 @@ class TestLammps(unittest.TestCase):
 
         self.assertAlmostEqual(self.job_water_dump["output/generic/pressures"][-2][0, 0], 515832.570508186 /
                                uc.pyiron_to_lammps("pressure"), 2)
-
         self.job_water_dump.write_traj(filename="test.xyz",
                                        file_format="xyz")
         atom_indices = self.job_water_dump.structure.select_index("H")
@@ -722,6 +721,7 @@ class TestLammps(unittest.TestCase):
 
         potential['Species'][0][0] = 'Al'
         self.job.potential = potential # shouldn't raise ValueError
+
 
 if __name__ == "__main__":
     unittest.main()
