@@ -743,16 +743,20 @@ class MapFunctions(object):
 class Trajectory(HasStructure):
     """
     A trajectory instance compatible with the ase.io class
-
-    Args:
-        positions (ndarray): The array of the trajectory in cartesian coordinates
-        structure (pyiron.atomistics.structure.atoms.Atoms): The initial structure instance from which the species info
-                                                             is derived
-        center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
-        cells (ndarray): Optional argument of the cell shape at every time step (Nx3x3 array) when the volume varies
     """
 
     def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None):
+        """
+
+        Args:
+            positions (ndarray): The array of the trajectory in cartesian coordinates
+            structure (pyiron.atomistics.structure.atoms.Atoms): The initial structure instance from which the species
+                                                                 info is derived
+            center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
+            cells (None/ndarray): Optional argument of the cell shape at every time step (Nx3x3 array) when the volume
+                                  varies
+            indices (None/ndarray): Indices for the species in the structure
+        """
 
         if center_of_mass:
             pos = np.copy(positions)
