@@ -62,6 +62,28 @@ class LammpsBase(AtomisticGenericJob):
         s.publication_add(self.publication)
 
     @property
+    def units(self):
+        """
+        Type of LAMMPS units used in the calculations. Can be either of 'metal', 'real', 'si', 'cgs', and 'lj'
+
+        Returns:
+            str: Type of LAMMPS unit
+        """
+        if self.input.control["units"] is not None:
+            return self.input.control["units"]
+        else:
+            # Default to metal units
+            return "metal"
+
+    @units.setter
+    def units(self, val):
+        allowed_types = ['metal', 'real', 'si', 'cgs', 'lj']
+        if val in allowed_types:
+            self.input.control["units"] = val
+        else:
+            raise ValueError("'{}' is not a valid LAMMPS unit")
+
+    @property
     def bond_dict(self):
         """
         A dictionary which defines the nature of LAMMPS bonds that are to be drawn between atoms. To set the values, use
