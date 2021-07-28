@@ -20,6 +20,7 @@ try:  # mpi4py is only supported on Linux and Mac Os X
     from pylammpsmpi import LammpsLibrary
 except ImportError:
     pass
+from pyiron_atomistics.lammps.units import UnitConverter
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -56,12 +57,14 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_library.command(command)
 
     def interactive_positions_getter(self):
+        uc = UnitConverter(units=self.units)
         positions = np.reshape(
             np.array(self._interactive_library.gather_atoms("x", 1, 3)),
             (len(self.structure), 3),
         )
         if np.matrix.trace(self._prism.R) != 3:
             positions = np.matmul(positions, self._prism.R.T)
+        positions = uc.convert_array_to_pyiron_units(positions, label="positions")
         return positions.tolist()
 
     def interactive_positions_setter(self, positions):
@@ -78,6 +81,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_lib_command("change_box all remap")
 
     def interactive_cells_getter(self):
+        uc = UnitConverter(units=self.units)
         cc = np.array(
             [
                 [self._interactive_library.get_thermo("lx"), 0, 0],
@@ -93,7 +97,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 ],
             ]
         )
-        return self._prism.unfold_cell(cc)
+        return uc.convert_array_to_pyiron_units(self._prism.unfold_cell(cc), label="cells")
 
     def interactive_cells_setter(self, cell):
         self._prism = UnfoldingPrism(cell)
@@ -132,15 +136,18 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             )
 
     def interactive_volume_getter(self):
-        return self._interactive_library.get_thermo("vol")
+        uc = UnitConverter(units=self.units)
+        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("vol"), label="volume")
 
     def interactive_forces_getter(self):
+        uc = UnitConverter(units=self.units)
         ff = np.reshape(
             np.array(self._interactive_library.gather_atoms("f", 1, 3)),
             (len(self.structure), 3),
         )
         if np.matrix.trace(self._prism.R) != 3:
             ff = np.matmul(ff, self._prism.R.T)
+        ff = uc.convert_array_to_pyiron_units(ff, label="forces")
         return ff.tolist()
 
     def interactive_execute(self):
@@ -534,8 +541,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_lib_command(self.potential.Config[0][1])
 
     def interactive_indices_getter(self):
+        uc = UnitConverter(units=self.units)
         lammps_indices = np.array(self._interactive_library.gather_atoms("type", 0, 1))
-        indices = self.remap_indices(lammps_indices)
+        indices = uc.convert_array_to_pyiron_units(self.remap_indices(lammps_indices), label="indices")
         return indices.tolist()
 
     def interactive_indices_setter(self, indices):
@@ -559,16 +567,20 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._interactive_library.scatter_atoms("type", elem_all)
 
     def interactive_energy_pot_getter(self):
-        return self._interactive_library.get_thermo("pe")
+        uc = UnitConverter(units=self.units)
+        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("pe"), label="energy_pot")
 
     def interactive_energy_tot_getter(self):
-        return self._interactive_library.get_thermo("etotal")
+        uc = UnitConverter(units=self.units)
+        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("etotal"), label="energy_tot")
 
     def interactive_steps_getter(self):
-        return self._interactive_library.get_thermo("step")
+        uc = UnitConverter(units=self.units)
+        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("step"), label="steps")
 
     def interactive_temperatures_getter(self):
-        return self._interactive_library.get_thermo("temp")
+        uc = UnitConverter(units=self.units)
+        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("temp"), label="temperature")
 
     def interactive_stress_getter(self):
         """
@@ -595,6 +607,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         return ss
 
     def interactive_pressures_getter(self):
+        uc = UnitConverter(units=self.units)
         pp = np.array(
             [
                 [
@@ -617,7 +630,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         rotation_matrix = self._prism.R.T
         if np.matrix.trace(rotation_matrix) != 3:
             pp = rotation_matrix.T @ pp @ rotation_matrix
-        return pp / 10000  # bar -> GPa
+        return uc.convert_array_to_pyiron_units(pp, label="pressure")
 
     def interactive_close(self):
         if self.interactive_is_activated():
