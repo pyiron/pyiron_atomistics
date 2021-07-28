@@ -745,15 +745,14 @@ class Trajectory(HasStructure):
     A trajectory instance compatible with the ase.io class
 
     Args:
-        positions (numpy.ndarray): The array of the trajectory in cartesian coordinates
+        positions (ndarray): The array of the trajectory in cartesian coordinates
         structure (pyiron.atomistics.structure.atoms.Atoms): The initial structure instance from which the species info
                                                              is derived
         center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
-        cells (numpy.ndarray): Optional argument of the cell shape at every time step (Nx3x3 array) when the volume
-                                varies
+        cells (ndarray): Optional argument of the cell shape at every time step (Nx3x3 array) when the volume varies
     """
 
-    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None, table_name="trajectory"):
+    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None):
 
         if center_of_mass:
             pos = np.copy(positions)
@@ -781,12 +780,12 @@ class Trajectory(HasStructure):
             return new_structure
         elif isinstance(item, (list, np.ndarray, slice)):
             snapshots = np.arange(len(self), dtype=int)[item]
-            if self._indices is not None:
-                select_indices = self._indices[snapshots]
+            if self._cells is not None:
+                return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
+                                  structure=self[snapshots[0]], indices=self._indices[snapshots])
             else:
-                select_indices = self._indices
-            return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
-                              structure=self[snapshots[0]], indices=select_indices)
+                return Trajectory(positions=self._positions[snapshots], cells=self._cells,
+                                  structure=self[snapshots[0]], indices=self._indices[snapshots])
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
