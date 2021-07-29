@@ -214,21 +214,3 @@ class UnitConverter:
             warnings.warn(message="Warning: Couldn't determine the LAMMPS to pyiron unit conversion type of quantity "
                                   "{}. Returning un-normalized quantity".format(label))
             return array
-
-
-class UnitsDecorator:
-
-    def __init__(self):
-        self._units = None
-        self._label = None
-
-    def __call__(self, units, label):
-        self._label = label
-        return self.__decorate_to_pyiron
-
-    def __decorate_to_pyiron(self, function):
-        @functools.wraps(function)
-        def dec(*args, **kwargs):
-            return UnitConverter(self._units).convert_array_to_pyiron_units(function(*args, **kwargs),
-                                                                            label=self._label)
-        return dec
