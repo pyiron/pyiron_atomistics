@@ -426,6 +426,7 @@ class TestLammps(unittest.TestCase):
         self.assertTrue(np.allclose(neigh_traj_obj.indices, neigh_traj_obj_loaded.indices))
         self.assertTrue(np.allclose(neigh_traj_obj.distances, neigh_traj_obj_loaded.distances))
         self.assertTrue(np.allclose(neigh_traj_obj.vecs, neigh_traj_obj_loaded.vecs))
+        self.assertTrue(self.job_water_dump.units, "real")
 
     def test_dump_parser(self):
         structure = Atoms(
@@ -721,6 +722,15 @@ class TestLammps(unittest.TestCase):
 
         potential['Species'][0][0] = 'Al'
         self.job.potential = potential # shouldn't raise ValueError
+
+    def test_units(self):
+        self.assertTrue(self.job.units, "metal")
+        self.job.units = "real"
+        self.assertTrue(self.job.units, "real")
+
+        def setter(x):
+            self.job.units = x
+        self.assertRaises(ValueError, setter, "nonsense")
 
 
 if __name__ == "__main__":
