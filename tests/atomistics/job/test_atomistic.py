@@ -86,10 +86,10 @@ class TestAtomisticGenericJob(unittest.TestCase):
         os.chdir(cwd)
 
         for i, struct in enumerate(job.iter_structures()):
-            # breakpoint()
             self.assertTrue(np.allclose(job.output.positions[i], struct.positions))
             self.assertTrue(np.allclose(job.output.cells[i], struct.cell.array))
             self.assertTrue(np.allclose(job.output.indices[i], struct.indices))
 
+            
 if __name__ == "__main__":
     unittest.main()
