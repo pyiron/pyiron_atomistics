@@ -19,7 +19,7 @@ from pyiron_base import Settings, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
-from pyiron_atomistics.lammps.units import UnitConverter
+from pyiron_atomistics.lammps.units import UnitConverter, LAMMPS_UNIT_CONVERSIONS
 
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
@@ -77,7 +77,7 @@ class LammpsBase(AtomisticGenericJob):
 
     @units.setter
     def units(self, val):
-        allowed_types = ['metal', 'real', 'si', 'cgs', 'lj']
+        allowed_types = LAMMPS_UNIT_CONVERSIONS.keys()
         if val in allowed_types:
             self.input.control["units"] = val
         else:
