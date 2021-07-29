@@ -5,7 +5,6 @@
 import numpy as np
 import scipy.constants as spc
 import warnings
-import functools
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
