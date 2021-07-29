@@ -689,7 +689,7 @@ class TestOutcar(unittest.TestCase):
                 self.assertEqual(output_all.__str__(), output.__str__())
 
     def test_get_nelect(self):
-        n_elect_list = [40.0, 16.0, 16.0, 16.0, 16.0, 16.0, 224.0, 358.0, 8]
+        n_elect_list = [40.0, 16.0, 16.0, 16.0, 16.0, 16.0, 224.0, 358.0, 8, 1]
         for filename in self.file_list:
             i = int(filename.split("_")[-1]) - 1
             self.assertEqual(n_elect_list[i], self.outcar_parser.get_nelect(filename))
