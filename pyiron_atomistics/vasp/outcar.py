@@ -839,7 +839,7 @@ class Outcar(object):
                     if all(cbm_bool):
                         vbm_level_dict[spin].append(cbm_level_dict[spin][-1])
                     else:
-                        vbm_level_dict[spin].append(band_energy[np.abs(band_occ) >= 1e-6][-1])
+                        vbm_level_dict[spin].append(band_energy[~cbm_bool][-1])
         return np.array(fermi_level_list), np.array([val for val
                                                      in vbm_level_dict.values()]), np.array([val
                                                                                              for val in
