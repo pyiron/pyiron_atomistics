@@ -775,8 +775,6 @@ class Murnaghan(AtomisticParallelMaster):
             self._fit_eos_general(fittype=self.input["fit_type"])
 
     def plot(self, num_steps=100, plt_show=True):
-        if not self.status.finished:
-            raise ValueError("Job must be successfully run, before calling this method.")
         try:
             import matplotlib.pylab as plt
         except ImportError:
