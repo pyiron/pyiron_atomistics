@@ -1,6 +1,7 @@
 __version__ = "0.1"
 __all__ = []
 
+
 from pyiron_atomistics.project import Project
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron, pyiron_to_ase, Atoms
 from pyiron_base import Notebook, install_dialog, JOB_CLASS_DICT
