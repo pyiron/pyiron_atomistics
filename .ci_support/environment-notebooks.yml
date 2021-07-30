@@ -7,7 +7,7 @@ dependencies:
 - nglview
 - papermill
 - seaborn
-- sphinxdft >=2.7.0
+- sphinxdft >=2.7.0,<3.0
 - sphinxdft-data
 - iprpy-data
 - pyiron-data >=0.0.14
