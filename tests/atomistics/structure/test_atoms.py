@@ -1558,7 +1558,7 @@ class TestAtoms(unittest.TestCase):
         structure = ase_to_pyiron(molecule('H2COH'))
         structure.set_dihedral(4, 0, 1, 2, angle=90)
 
-    @unittest.skip('caches not reliable')
+    @unittest.skip('Caches not reliable')
     def test_cached_speed(self):
         """
         Creating atoms should be faster after the first time, due to caches in periodictable/mendeleev.
