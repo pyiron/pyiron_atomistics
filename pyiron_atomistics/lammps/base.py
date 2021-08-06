@@ -19,7 +19,7 @@ from pyiron_base import Settings, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
-from pyiron_atomistics.lammps.units import UnitConverter
+from pyiron_atomistics.lammps.units import UnitConverter, LAMMPS_UNIT_CONVERSIONS
 
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
@@ -60,6 +60,28 @@ class LammpsBase(AtomisticGenericJob):
         self._compress_by_default = True
         self._prism = None
         s.publication_add(self.publication)
+
+    @property
+    def units(self):
+        """
+        Type of LAMMPS units used in the calculations. Can be either of 'metal', 'real', 'si', 'cgs', and 'lj'
+
+        Returns:
+            str: Type of LAMMPS unit
+        """
+        if self.input.control["units"] is not None:
+            return self.input.control["units"]
+        else:
+            # Default to metal units
+            return "metal"
+
+    @units.setter
+    def units(self, val):
+        allowed_types = LAMMPS_UNIT_CONVERSIONS.keys()
+        if val in allowed_types:
+            self.input.control["units"] = val
+        else:
+            raise ValueError("'{}' is not a valid LAMMPS unit")
 
     @property
     def bond_dict(self):
@@ -449,7 +471,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        uc = UnitConverter(self.input.control["units"])
+        uc = UnitConverter(self.units)
         prism = UnfoldingPrism(self.structure.cell, digits=15)
         if np.matrix.trace(prism.R) != 3:
             raise RuntimeError("The Lammps output will not be mapped back to pyiron correctly.")
@@ -537,7 +559,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        uc = UnitConverter(self.input.control["units"])
+        uc = UnitConverter(self.units)
         self.collect_errors(file_name=file_name, cwd=cwd)
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
         if os.path.exists(file_name):
@@ -905,7 +927,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        uc = UnitConverter(self.input.control["units"])
+        uc = UnitConverter(self.units)
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
         if os.path.exists(file_name):
             output = {}

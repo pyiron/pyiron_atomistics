@@ -204,7 +204,7 @@ class UnitConverter:
             label (str): The label of the quantity (must be a key in the dictionary `quantity_dict`)
 
         Returns:
-            numpy.ndarray: The array after conversion
+            ndarray: The array after conversion
 
         """
         if label in quantity_dict.keys():
