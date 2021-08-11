@@ -95,7 +95,7 @@ class AtomskBuilder:
         Returns:
             :class:`.Atoms`: new structure
         """
-        self._options.append("- exyz") # output to stdout as exyz format
+        self._options.append("output.exyz") # output to stdout as exyz format
         with tempfile.TemporaryDirectory() as temp_dir:
             if self._structure is not None:
                 write(os.path.join(temp_dir, "input.exyz"), self._structure, format="extxyz")
@@ -105,7 +105,9 @@ class AtomskBuilder:
             for l in output.split("\n"):
                 if l.strip().startswith("X!X ERROR:"):
                     raise AtomskError(f"atomsk returned error: {output}")
-            return ase_to_pyiron(read(io.StringIO(output), format="extxyz"))
+            # for exyz format atomsk still uses the .xyz file ending...
+            with open(os.path.join(temp_dir, "output.xyz")) as f:
+                return ase_to_pyiron(read(f, format="extxyz"))
 
     def __getattr__(self, name):
         # magic method to map method calls of the form self.foo_bar to options like -foo-bar; arguments converted str
