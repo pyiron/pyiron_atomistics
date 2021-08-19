@@ -16,17 +16,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Merge Environments
+      shell: bash -l {0}
+      run: |
+        awk 'NR>3{ print $0 }' .ci_support/environment-notebooks.yml >> .ci_support/environment.yml
     - uses: conda-incubator/setup-miniconda@v2
       with:
-        auto-update-conda: true
         python-version: 3.9
+        mamba-version: "*"
+        channels: conda-forge
         channel-priority: strict
+        auto-update-conda: true  
         environment-file: .ci_support/environment.yml
     - name: Setup
       shell: bash -l {0}
       run: |
         python .ci_support/pyironconfig.py
-        conda env update --name test --file .ci_support/environment-notebooks.yml
     - name: Test
       shell: bash -l {0}
       run: ./.ci_support/test_backwards.sh

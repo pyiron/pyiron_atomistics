@@ -15,7 +15,6 @@ class TestOutcar(unittest.TestCase):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.file_list = list()
         cls.outcar_parser = Outcar()
-        # file_list = ["OUTCAR_1", "OUTCAR_2", "OUTCAR_3", "OUTCAR_4", "OUTCAR_5", "OUTCAR_6", "OUTCAR_7"]
         file_list = os.listdir(
             os.path.abspath(
                 os.path.join(
@@ -690,16 +689,20 @@ class TestOutcar(unittest.TestCase):
                 self.assertEqual(output_all.__str__(), output.__str__())
 
     def test_get_nelect(self):
-        n_elect_list = [40.0, 16.0, 16.0, 16.0, 16.0, 16.0, 224.0, 358.0, 8]
+        n_elect_list = [40.0, 16.0, 16.0, 16.0, 16.0, 16.0, 224.0, 358.0, 8, 1]
         for filename in self.file_list:
             i = int(filename.split("_")[-1]) - 1
             self.assertEqual(n_elect_list[i], self.outcar_parser.get_nelect(filename))
 
     def test_get_band_properties(self):
         fermi_level_list = [2.9738, 5.9788, 5.9613, 5.9613, 5.9614, 5.9614, 3.9092]
-        vbm_level_list = [[[3.076]], [[15.1392]], [[6.0004], [6.6175]], [[6.0004], [6.6175]], [[6.618]], [[6.618]]]
+        vbm_level_list = [[[3.076]], [[15.1392]], [[6.0004], [6.6175]],
+                          [[6.0004], [6.6175]], [[6.618]], [[6.618]]]
         cbm_level_list = [[[4.3112]], [[15.1392]], [[6.8568], [6.9402]], [[6.8568], [6.9402]], [[6.8569]], [[6.8569]]]
-        for i, filename in enumerate(self.file_list):
+
+        sorted_files = np.array(self.file_list)[np.argsort([int(file.split("_")[-1]) for file in self.file_list])]
+
+        for i, filename in enumerate(sorted_files):
             fermi_list, vbm_list, cbm_list = \
                 self.outcar_parser.get_band_properties(filename=filename)
             if i <= 5:
@@ -710,6 +713,10 @@ class TestOutcar(unittest.TestCase):
                 self.assertTrue(np.array_equal(fermi_list, [-7.3532, -5.7586]))
                 self.assertTrue(np.array_equal(vbm_list[0], [-9.7778, -7.9449]))
                 self.assertTrue(np.array_equal(cbm_list[0], [-1.8327, -3.5781]))
+            elif i == 9:
+                self.assertTrue(np.array_equal(fermi_list[-1], -5.3064))
+                self.assertTrue(np.allclose(np.array(vbm_list), np.array([[-7.6374], [0.0219]])))
+                self.assertTrue(np.allclose(np.array(cbm_list), np.array([[-0.1332], [0.0219]])))
 
 
 if __name__ == "__main__":

@@ -649,19 +649,27 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
     def _get_structure(self, frame=-1, wrap_atoms=True):
         if self.structure is None:
             raise AssertionError('Structure not set')
-        snapshot = self.structure.copy()
         if self.output.cells is not None:
             try:
-                snapshot.cell = self.output.cells[frame]
+                cell = self.output.cells[frame]
             except IndexError:
                 if wrap_atoms:
                     raise IndexError('cell at step ', frame, ' not found') from None
-                snapshot.cell = None
+                cell = None
         if self.output.indices is not None:
             try:
-                snapshot.indices = self.output.indices[frame]
+                indices = self.output.indices[frame]
             except IndexError:
-                pass
+                indices = None
+        if indices is not None and len(indices) != len(self.structure):
+            snapshot = Atoms(species=self.structure.species, indices=indices,
+                             positions=np.zeros(indices.shape + (3,)), cell=cell, pbc=self.structure.pbc)
+        else:
+            snapshot = self.structure.copy()
+            if cell is not None:
+                snapshot.cell = cell
+            if indices is not None:
+                snapshot.indices = indices
         if self.output.positions is not None:
             if wrap_atoms:
                 snapshot.positions = self.output.positions[frame]
@@ -743,17 +751,20 @@ class MapFunctions(object):
 class Trajectory(HasStructure):
     """
     A trajectory instance compatible with the ase.io class
-
-    Args:
-        positions (numpy.ndarray): The array of the trajectory in cartesian coordinates
-        structure (pyiron.atomistics.structure.atoms.Atoms): The initial structure instance from which the species info
-                                                             is derived
-        center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
-        cells (numpy.ndarray): Optional argument of the cell shape at every time step (Nx3x3 array) when the volume
-                                varies
     """
 
-    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None, table_name="trajectory"):
+    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None):
+        """
+
+        Args:
+            positions (ndarray): The array of the trajectory in cartesian coordinates
+            structure (pyiron.atomistics.structure.atoms.Atoms): The initial structure instance from which the species
+                                                                 info is derived
+            center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
+            cells (None/ndarray): Optional argument of the cell shape at every time step (Nx3x3 array) when the volume
+                                  varies
+            indices (None/ndarray): Indices for the species in the structure
+        """
 
         if center_of_mass:
             pos = np.copy(positions)
@@ -781,8 +792,12 @@ class Trajectory(HasStructure):
             return new_structure
         elif isinstance(item, (list, np.ndarray, slice)):
             snapshots = np.arange(len(self), dtype=int)[item]
-            return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
-                              structure=self[snapshots[0]], indices=self._indices[snapshots])
+            if self._cells is not None:
+                return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
+                                  structure=self[snapshots[0]], indices=self._indices[snapshots])
+            else:
+                return Trajectory(positions=self._positions[snapshots], cells=self._cells,
+                                  structure=self[snapshots[0]], indices=self._indices[snapshots])
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
