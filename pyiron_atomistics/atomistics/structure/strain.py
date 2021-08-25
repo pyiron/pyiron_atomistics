@@ -2,24 +2,24 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 class Strain:
-        """
-        Calculate local strain of each atom following the Lagrangian strain tensor:
+    """
+    Calculate local strain of each atom following the Lagrangian strain tensor:
 
-        strain = (F^T x F - 1)/2
+    strain = (F^T x F - 1)/2
 
-        where F is the atomic deformation gradient.
+    where F is the atomic deformation gradient.
 
-        Example:
+    Example:
 
-        ```
-        from pyiron_atomistics import Project
-        pr = Project('.')
-        bulk = pr.create.structure.bulk('Fe', cubic=True)
-        structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
-        print(Strain(structure, bulk).strain)
-        ```
+    ```
+    from pyiron_atomistics import Project
+    pr = Project('.')
+    bulk = pr.create.structure.bulk('Fe', cubic=True)
+    structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
+    print(Strain(structure, bulk).strain)
+    ```
 
-        """
+    """
     def __init__(self, structure, ref_structure, num_neighbors=None, only_bulk_type=False):
         """
 
