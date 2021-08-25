@@ -71,7 +71,7 @@ class Strain:
     @staticmethod
     def _get_safe_unit_vectors(vectors, minimum_value=1.0e-8):
         v = np.linalg.norm(vectors, axis=-1)
-        if len(v.shape) > 1:
+        if hasattr(v, '__len__'):
             v[v<minimum_value] = minimum_value
         return np.einsum('...i,...->...i', vectors, 1/v)
 
