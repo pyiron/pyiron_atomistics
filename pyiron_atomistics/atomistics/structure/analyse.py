@@ -12,7 +12,6 @@ from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_paramet
 from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
-from scipy.spatial.transform import Rotation
 deprecate = Deprecator()
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
@@ -599,11 +598,15 @@ class Analyse:
         pr = Project('.')
         bulk = pr.create.structure.bulk('Fe', cubic=True)
         structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
-        print(structure.analyse.get_strain(bulk)
+        print(structure.analyse.get_strain(bulk))
         ```
 
         Comment:
-        - This strain is not the same as the strain applied in `Atoms.apply_strain`.
+
+        - This strain is not the same as the strain applied in `Atoms.apply_strain`, which
+            multiplies the strain tensor (plus identity matrix) with the basis vectors, while
+            here it follows the definition given by the Lagrangian strain tensor. For small
+            strain values they give similar results (i.e. when strain**2 can be neglected).
 
         """
         return Strain(

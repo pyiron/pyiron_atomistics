@@ -2,7 +2,39 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 class Strain:
+        """
+        Calculate local strain of each atom following the Lagrangian strain tensor:
+
+        strain = (F^T x F - 1)/2
+
+        where F is the atomic deformation gradient.
+
+        Example:
+
+        ```
+        from pyiron_atomistics import Project
+        pr = Project('.')
+        bulk = pr.create.structure.bulk('Fe', cubic=True)
+        structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
+        print(Strain(structure, bulk).strain)
+        ```
+
+        """
     def __init__(self, structure, ref_structure, num_neighbors=None, only_bulk_type=False):
+        """
+
+        Args:
+            structure (pyiron_atomistics.atomistics.structure.Atoms): Structure to calculate the
+                strain values.
+            ref_structure (pyiron_atomistics.atomistics.structure.Atoms): Reference bulk structure
+                (against which the strain is calculated)
+            num_neighbors (int): Number of neighbors to take into account to calculate the local
+                frame. If not specified, it is estimated based on cna analysis (only available if
+                the bulk structure is bcc, fcc or hcp).
+            only_bulk_type (bool): Whether to calculate the strain of all atoms or only for those
+                which cna considers has the same crystal structure as the bulk. Those which have
+                a different crystal structure will get 0 strain.
+        """
         self.structure = structure
         self.ref_structure = ref_structure
         self._num_neighbors = num_neighbors
