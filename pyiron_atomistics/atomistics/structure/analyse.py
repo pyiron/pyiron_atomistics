@@ -573,7 +573,7 @@ class Analyse:
 
     def get_strain(self, ref_structure, num_neighbors=None, only_bulk_type=False):
         return Strain(
-            structure=structure,
+            structure=self._structure,
             ref_structure=ref_structure,
             num_neighbors=num_neighbors,
             only_bulk_type=only_bulk_type
