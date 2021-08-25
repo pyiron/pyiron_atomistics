@@ -572,6 +572,40 @@ class Analyse:
         return xx-epsilon
 
     def get_strain(self, ref_structure, num_neighbors=None, only_bulk_type=False):
+        """
+        Calculate local strain of each atom following the Lagrangian strain tensor:
+
+        strain = (F^T x F - 1)/2
+
+        where F is the atomic deformation gradient.
+
+        Args:
+            ref_structure (pyiron_atomistics.atomistics.structure.Atoms): Reference bulk structure
+                (against which the strain is calculated)
+            num_neighbors (int): Number of neighbors to take into account to calculate the local
+                frame. If not specified, it is estimated based on cna analysis (only available if
+                the bulk structure is bcc, fcc or hcp).
+            only_bulk_type (bool): Whether to calculate the strain of all atoms or only for those
+                which cna considers has the same crystal structure as the bulk. Those which have
+                a different crystal structure will get 0 strain.
+
+        Returns:
+            ((n_atoms, 3, 3)-array): Strain tensors
+
+        Example:
+
+        ```
+        from pyiron_atomistics import Project
+        pr = Project('.')
+        bulk = pr.create.structure.bulk('Fe', cubic=True)
+        structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
+        print(structure.analyse.get_strain(bulk)
+        ```
+
+        Comment:
+        - This strain is not the same as the strain applied in `Atoms.apply_strain`.
+
+        """
         return Strain(
             structure=self._structure,
             ref_structure=ref_structure,
