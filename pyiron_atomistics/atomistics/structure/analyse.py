@@ -9,6 +9,7 @@ from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
+from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
 from scipy.spatial.transform import Rotation
@@ -570,90 +571,11 @@ class Analyse:
         xx = xx[np.linalg.norm(xx-self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1) < epsilon]
         return xx-epsilon
 
-    def _get_perpendicular_unit_vectors(self, vec, vec_axis=None):
-        vec = np.array(vec).reshape(-1, 3)
-        if vec_axis is not None:
-            vec -= np.sum(vec*vec_axis, axis=-1)[:,None]*vec_axis
-        return self._get_safe_unit_vectors(vec)
-
-    @staticmethod
-    def _get_safe_unit_vectors(vectors, minimum_value=1.0e-8):
-        v = np.linalg.norm(vectors, axis=-1)
-        if len(v.shape) > 1:
-            v[v<minimum_value] = minimum_value
-        return np.einsum('...i,...->...', vectors, 1/v)
-
-    def _get_angle(self, v, w):
-        v = self._get_safe_unit_vectors(v)
-        w = self._get_safe_unit_vectors(w)
-        prod = np.sum(v*w, axis=-1)
-        prod[np.absolute(prod)>1] = np.sign(prod)[np.absolute(prod)>1]
-        return np.arccos(prod)
-
-    def _get_rotation_from_vectors(self, vec_before, vec_after, vec_axis=None):
-        if vec_axis is not None:
-            vec_axis = self._get_safe_unit_vectors(np.array(vec_axis).reshape(-1, 3))
-        v = self._get_perpendicular_unit_vectors(vec_before, vec_axis)
-        w = self._get_perpendicular_unit_vectors(vec_after, vec_axis)
-        if vec_axis is None:
-            vec_axis = self._get_safe_unit_vectors(np.cross(v, w))
-        sign = np.sign(np.sum(np.cross(v, w)*vec_axis, axis=-1))
-        vec_axis *= (sign*self._get_angle(v, w)/4)[:,None]
-        return Rotation.from_mrp(vec_axis).as_matrix().squeeze()
-
-    def _get_rotation_matrices(self, frames, ref_frame):
-        v = frames.copy()[:,0,:]
-        w_first = ref_frame[
-            np.linalg.norm(ref_frame[None,:,:]-v[:,None,:], axis=-1).argmin(axis=1)
-        ].copy()
-        first_rot = self._get_rotation_from_vectors(v, w_first)
-        all_vecs = np.einsum('nij,nkj->nki', first_rot, frames)
-        highest_angle_indices = np.absolute(np.sum(all_vecs*all_vecs[:,:1], axis=-1)).argmin(axis=-1)
-        v = all_vecs[np.arange(len(frames)),highest_angle_indices,:]
-        dv = ref_frame[None,:,:]-v[:,None,:]
-        dist = np.linalg.norm(dv, axis=-1)
-        dist += np.absolute(np.sum(dv*all_vecs[:,:1], axis=-1))
-        w_second = ref_frame[dist.argmin(axis=1)].copy()
-        second_rot = self._get_rotation_from_vectors(v, w_second, all_vecs[:,0])
-        return np.einsum('nij,njk->nik', second_rot, first_rot)
-
-    @staticmethod
-    def _get_best_match_indices(frames, ref_frame):
-        distances = np.linalg.norm(frames[:,:,None,:]-ref_frame[None,None,:,:], axis=-1)
-        return np.argmin(distances, axis=-1)
-
-    @staticmethod
-    def _get_majority_phase(structure):
-        cna = structure.analyse.pyscal_cna_adaptive()
-        return np.asarray([k for k in cna.keys()])[np.argmax([v for v in cna.values()])]
-
-    @staticmethod
-    def _get_number_of_neighbors(crystal_phase):
-        if crystal_phase=='bcc':
-            return 8
-        elif crystal_phase=='fcc' or crystal_phase=='hcp':
-            return 12
-        else:
-            raise ValueError('Crystal structure not recognized')
-
     def get_strain(self, ref_structure, num_neighbors=None, only_bulk_type=False):
-        crystal_phase = None
-        if num_neighbors is None:
-            crystal_phase = self._get_majority_phase(ref_structure)
-            num_neighbors = self._get_number_of_neighbors(crystal_phase)
-        select_indices = np.ones(len(self._structure))
-        if only_bulk_type:
-            if crystal_phase is None:
-                crystal_phase = self._get_majority_phase(ref_structure)
-            select_indices = (self._structure.analyse.pyscal_cna_adaptive(mode='str')==crystal_phase)*1
-        ref_frame = ref_structure.get_neighbors(num_neighbors=num_neighbors).vecs[0]
-        frames = self._structure.get_neighbors(num_neighbors=num_neighbors).vecs
-        rot_total = self._get_rotation_matrices(frames, ref_frame)
-        all_vecs = np.einsum('nij,nkj->nki', rot_total, frames)
-        indices = self._get_best_match_indices(all_vecs, ref_frame)
-        D = np.einsum('ij,ik->jk', ref_frame, ref_frame)
-        D = np.linalg.inv(D)
-        J = np.einsum('nil,nlj,nik->njk', ref_frame[indices], rot_total, frames)
-        J = np.einsum('ij,njk->nik', D, J)
-        return 0.5*(np.einsum('nij,nkj->nik', J, J)-np.eye(3))*select_indices[:,None,None]
+        return Strain(
+            structure=structure,
+            ref_structure=ref_structure,
+            num_neighbors=num_neighbors,
+            only_bulk_type=only_bulk_type
+        ).strain
 
