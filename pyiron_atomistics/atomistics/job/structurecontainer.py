@@ -126,6 +126,12 @@ class StructureContainer(AtomisticGenericJob):
     def collect_output(self):
         pass
 
+    def _number_of_structures(self):
+        return len(self._structure_lst)
+
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        return self._structure_lst[frame]
+
     def to_hdf(self, hdf = None, group_name = None):
         # skip any of the AtomisticGenericJob specific serialization, since we
         # handle the structures on our own and that method might just confuse
