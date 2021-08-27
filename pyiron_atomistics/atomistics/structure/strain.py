@@ -40,24 +40,26 @@ class Strain:
         self._num_neighbors = num_neighbors
         self.only_bulk_type = only_bulk_type
         self._crystal_phase = None
-        self._ref_frame = None
-        self._frames = None
+        self._ref_coord = None
+        self._coords = None
         self._rotations = None
 
     @property
     def num_neighbors(self):
+        """Number of neighbors to consider the local frame. Should be the coordination number"""
         if self._num_neighbors is None:
             self._num_neighbors = self._get_number_of_neighbors(self.crystal_phase)
         return self._num_neighbors
 
     @property
     def crystal_phase(self):
+        """Majority crystal phase calculated via common neighbor analysis"""
         if self._crystal_phase is None:
             self._crystal_phase = self._get_majority_phase(self.ref_structure)
         return self._crystal_phase
 
     @property
-    def nullify_non_bulk(self):
+    def _nullify_non_bulk(self):
         return np.array(
             self.structure.analyse.pyscal_cna_adaptive(mode='str')!=self.crystal_phase
         )
@@ -93,28 +95,29 @@ class Strain:
 
     @property
     def rotations(self):
+        """Rotation for each atom to find the correct pairs of coordinates"""
         if self._rotations is None:
-            v = self.frames.copy()[:,0,:]
-            w_first = self.ref_frame[
-                np.linalg.norm(self.ref_frame[None,:,:]-v[:,None,:], axis=-1).argmin(axis=1)
+            v = self.coords.copy()[:,0,:]
+            w_first = self.ref_coord[
+                np.linalg.norm(self.ref_coord[None,:,:]-v[:,None,:], axis=-1).argmin(axis=1)
             ].copy()
             first_rot = self._get_rotation_from_vectors(v, w_first)
-            all_vecs = np.einsum('nij,nkj->nki', first_rot, self.frames)
+            all_vecs = np.einsum('nij,nkj->nki', first_rot, self.coords)
             highest_angle_indices = np.absolute(
                 np.sum(all_vecs*all_vecs[:,:1], axis=-1)
             ).argmin(axis=-1)
-            v = all_vecs[np.arange(len(self.frames)),highest_angle_indices,:]
-            dv = self.ref_frame[None,:,:]-v[:,None,:]
+            v = all_vecs[np.arange(len(self.coords)),highest_angle_indices,:]
+            dv = self.ref_coord[None,:,:]-v[:,None,:]
             dist = np.linalg.norm(dv, axis=-1)
             dist += np.absolute(np.sum(dv*all_vecs[:,:1], axis=-1))
-            w_second = self.ref_frame[dist.argmin(axis=1)].copy()
+            w_second = self.ref_coord[dist.argmin(axis=1)].copy()
             second_rot = self._get_rotation_from_vectors(v, w_second, all_vecs[:,0])
             self._rotations = np.einsum('nij,njk->nik', second_rot, first_rot)
         return self._rotations
 
     @staticmethod
-    def _get_best_match_indices(frames, ref_frame):
-        distances = np.linalg.norm(frames[:,:,None,:]-ref_frame[None,None,:,:], axis=-1)
+    def _get_best_match_indices(coords, ref_coord):
+        distances = np.linalg.norm(coords[:,:,None,:]-ref_coord[None,None,:,:], axis=-1)
         return np.argmin(distances, axis=-1)
 
     @staticmethod
@@ -132,32 +135,35 @@ class Strain:
             raise ValueError('Crystal structure not recognized')
 
     @property
-    def ref_frame(self):
-        if self._ref_frame is None:
-            self._ref_frame = self.ref_structure.get_neighbors(
+    def ref_coord(self):
+        """Reference local coordinates"""
+        if self._ref_coord is None:
+            self._ref_coord = self.ref_structure.get_neighbors(
                 num_neighbors=self.num_neighbors
             ).vecs[0]
-        return self._ref_frame
+        return self._ref_coord
 
     @property
-    def frames(self):
-        if self._frames is None:
-            self._frames = self.structure.get_neighbors(num_neighbors=self.num_neighbors).vecs
-        return self._frames
+    def coords(self):
+        """Local coordinates of each atom"""
+        if self._coords is None:
+            self._coords = self.structure.get_neighbors(num_neighbors=self.num_neighbors).vecs
+        return self._coords
 
     @property
-    def indices(self):
-        all_vecs = np.einsum('nij,nkj->nki', self.rotations, self.frames)
-        return self._get_best_match_indices(all_vecs, self.ref_frame)
+    def _indices(self):
+        all_vecs = np.einsum('nij,nkj->nki', self.rotations, self.coords)
+        return self._get_best_match_indices(all_vecs, self.ref_coord)
 
     @property
     def strain(self):
-        D = np.einsum('ij,ik->jk', self.ref_frame, self.ref_frame)
+        """Strain value of each atom"""
+        D = np.einsum('ij,ik->jk', self.ref_coord, self.ref_coord)
         D = np.linalg.inv(D)
-        J = np.einsum('nij,nik->njk', self.ref_frame[self.indices], self.frames)
+        J = np.einsum('nij,nik->njk', self.ref_coord[self._indices], self.coords)
         J = np.einsum('ij,njk->nik', D, J)
         if self.only_bulk_type:
-            J[self.nullify_non_bulk] = np.eye(3)
+            J[self._nullify_non_bulk] = np.eye(3)
         return 0.5*(np.einsum('nij,nkj->nik', J, J)-np.eye(3))
 
 
