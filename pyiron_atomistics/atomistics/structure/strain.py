@@ -46,14 +46,14 @@ class Strain:
 
     @property
     def num_neighbors(self):
-        """Number of neighbors to consider the local frame. Should be the coordination number"""
+        """Number of neighbors to consider the local frame. Should be the coordination number."""
         if self._num_neighbors is None:
             self._num_neighbors = self._get_number_of_neighbors(self.crystal_phase)
         return self._num_neighbors
 
     @property
     def crystal_phase(self):
-        """Majority crystal phase calculated via common neighbor analysis"""
+        """Majority crystal phase calculated via common neighbor analysis."""
         if self._crystal_phase is None:
             self._crystal_phase = self._get_majority_phase(self.ref_structure)
         return self._crystal_phase
@@ -95,7 +95,7 @@ class Strain:
 
     @property
     def rotations(self):
-        """Rotation for each atom to find the correct pairs of coordinates"""
+        """Rotation for each atom to find the correct pairs of coordinates."""
         if self._rotations is None:
             v = self.coords.copy()[:,0,:]
             w_first = self.ref_coord[
@@ -136,7 +136,7 @@ class Strain:
 
     @property
     def ref_coord(self):
-        """Reference local coordinates"""
+        """Reference local coordinates."""
         if self._ref_coord is None:
             self._ref_coord = self.ref_structure.get_neighbors(
                 num_neighbors=self.num_neighbors
@@ -145,7 +145,7 @@ class Strain:
 
     @property
     def coords(self):
-        """Local coordinates of each atom"""
+        """Local coordinates of each atom."""
         if self._coords is None:
             self._coords = self.structure.get_neighbors(num_neighbors=self.num_neighbors).vecs
         return self._coords
