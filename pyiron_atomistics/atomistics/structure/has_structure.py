@@ -26,20 +26,20 @@ class HasStructure(ABC):
     """
     Mixin for classes that have one or more structures attached to them.
 
-    Necessary overrides are :abstractmethod:`._get_structure()` and
-    :abstractmethod:`._number_of_structures()`.
+    Necessary overrides are :meth:`._get_structure()` and
+    :meth:`._number_of_structures()`.
 
-    :method:`.get_structure()` checks that iteration_step is valid; implementations of
-    :abstractmethod:`._get_structure()` therefore don't have to check it.
+    :meth:`.get_structure()` checks that iteration_step is valid; implementations of
+    :meth:`._get_structure()` therefore don't have to check it.
 
-    :property:`.number_of_structures` may be zero, e.g. if there's no structure stored in the object yet or a
+    :attr:`.number_of_structures` may be zero, e.g. if there's no structure stored in the object yet or a
     job will compute this structure, but hasn't been run yet.
 
-    Sub classes that wish to document special behavior of their implementation of :method:`.get_structure` may do so by
+    Sub classes that wish to document special behavior of their implementation of :meth:`.get_structure` may do so by
     adding documention to it in the "Methods:" sub section of their class docstring.
 
-    Sub classes may support custom data types as indices for `frame` in :method:`.get_structure()` by overriding
-    :method:`._translate_frame()`.
+    Sub classes may support custom data types as indices for `frame` in :meth:`.get_structure()` by overriding
+    :meth:`._translate_frame()`.
 
     The example below shows how to implement this mixin and how to check whether an object derives from it
 
@@ -66,17 +66,23 @@ class HasStructure(ABC):
 
     >>> isinstance(f, HasStructure)
     True
+
+
+    .. document private functions
+    .. automethod:: _get_structure
+    .. automethod:: _number_of_structures
+    .. automethod:: _translate_frame
     """
 
     @deprecate(iteration_step="use frame instead")
     def get_structure(self, frame=-1, wrap_atoms=True, iteration_step=None):
         """
         Retrieve structure from object.  The number of available structures depends on the job and what kind of
-        calculation has been run on it, see :property:`.number_of_structures`.
+        calculation has been run on it, see :attr:`.number_of_structures`.
 
         Args:
             frame (int, object): index of the structure requested, if negative count from the back; if
-            :method:`_translate_frame()` is overridden, frame will pass through it
+            :meth:`_translate_frame()` is overridden, frame will pass through it
             iteration_step (int): deprecated alias for frame
             wrap_atoms (bool): True if the atoms are to be wrapped back into the unit cell
 
@@ -84,7 +90,7 @@ class HasStructure(ABC):
             :class:`pyiron_atomistics.atomistics.structure.atoms.Atoms`: the requested structure
 
         Raises:
-            IndexError: if not -:property:`.number_of_structures` <= iteration_step < :property:`.number_of_structures`
+            IndexError: if not -:attr:`.number_of_structures` <= iteration_step < :attr:`.number_of_structures`
         """
         if iteration_step is not None:
             frame = iteration_step
@@ -104,13 +110,13 @@ class HasStructure(ABC):
 
     def _translate_frame(self, frame):
         """
-        Translate frame to an integer for :method:`_get_structure()`.
+        Translate frame to an integer for :meth:`_get_structure()`.
 
         Args:
             frame (object): any object to translate into an integer id
 
         Returns:
-            int: valid integer to be passed to :method:`._get_structure()`
+            int: valid integer to be passed to :meth:`._get_structure()`
 
         Raises:
             KeyError: if given frame does not exist in this object
@@ -124,7 +130,7 @@ class HasStructure(ABC):
     @property
     def number_of_structures(self):
         """
-        `int`: maximum `iteration_step` + 1 that can be passed to :method:`.get_structure()`.
+        `int`: maximum `iteration_step` + 1 that can be passed to :meth:`.get_structure()`.
         """
         return self._number_of_structures()
 
@@ -138,7 +144,7 @@ class HasStructure(ABC):
 
         Args:
             wrap_atoms (bool): True if the atoms are to be wrapped back into the unit cell; passed to
-                               :method:`.get_structure()`
+                               :meth:`.get_structure()`
 
         Yields:
             :class:`pyiron_atomistics.atomistitcs.structure.atoms.Atoms`: every structure attached to the object
