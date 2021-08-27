@@ -49,7 +49,7 @@ class TestContainer(TestWithProject):
             if i == 0: continue
 
             self.assertTrue(np.allclose(self.cont.get_array("positions", i), structure.positions),
-                            f"set_array modified arrray for different structure than instructured.")
+                            "set_array modified arrray for different structure than instructed.")
 
     def test_get_structure(self):
         """Structure from get_structure should match thoes add with add_structure exactly."""
