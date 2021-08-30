@@ -134,7 +134,7 @@ class Strain:
         elif crystal_phase == 'fcc' or crystal_phase == 'hcp':
             return 12
         else:
-            raise ValueError('Crystal structure not recognized')
+            raise ValueError(f'Crystal structure "{crystal_phase}" not recognized')
 
     @property
     def ref_coord(self):
