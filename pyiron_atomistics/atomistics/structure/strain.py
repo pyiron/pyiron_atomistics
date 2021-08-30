@@ -1,7 +1,9 @@
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+
 class Strain:
+
     """
     Calculate local strain of each atom following the Lagrangian strain tensor:
 
@@ -61,7 +63,7 @@ class Strain:
     @property
     def _nullify_non_bulk(self):
         return np.array(
-            self.structure.analyse.pyscal_cna_adaptive(mode='str')!=self.crystal_phase
+            self.structure.analyse.pyscal_cna_adaptive(mode='str') != self.crystal_phase
         )
 
     def _get_perpendicular_unit_vectors(self, vec, vec_axis=None):
@@ -74,14 +76,14 @@ class Strain:
     def _get_safe_unit_vectors(vectors, minimum_value=1.0e-8):
         v = np.linalg.norm(vectors, axis=-1)
         if hasattr(v, '__len__'):
-            v[v<minimum_value] = minimum_value
+            v[v < minimum_value] = minimum_value
         return np.einsum('...i,...->...i', vectors, 1/v)
 
     def _get_angle(self, v, w):
         v = self._get_safe_unit_vectors(v)
         w = self._get_safe_unit_vectors(w)
         prod = np.sum(v*w, axis=-1)
-        prod[np.absolute(prod)>1] = np.sign(prod)[np.absolute(prod)>1]
+        prod[np.absolute(prod) > 1] = np.sign(prod)[np.absolute(prod) > 1]
         return np.arccos(prod)
 
     def _get_rotation_from_vectors(self, vec_before, vec_after, vec_axis=None):
@@ -90,34 +92,34 @@ class Strain:
         if vec_axis is None:
             vec_axis = self._get_safe_unit_vectors(np.cross(v, w))
         sign = np.sign(np.sum(np.cross(v, w)*vec_axis, axis=-1))
-        vec_axis *= (sign*self._get_angle(v, w)/4)[:,None]
+        vec_axis *= (sign*self._get_angle(v, w)/4)[:, None]
         return Rotation.from_mrp(vec_axis).as_matrix()
 
     @property
     def rotations(self):
         """Rotation for each atom to find the correct pairs of coordinates."""
         if self._rotations is None:
-            v = self.coords.copy()[:,0,:]
+            v = self.coords.copy()[:, 0, :]
             w_first = self.ref_coord[
-                np.linalg.norm(self.ref_coord[None,:,:]-v[:,None,:], axis=-1).argmin(axis=1)
+                np.linalg.norm(self.ref_coord[None, :, :]-v[:, None, :], axis=-1).argmin(axis=1)
             ].copy()
             first_rot = self._get_rotation_from_vectors(v, w_first)
             all_vecs = np.einsum('nij,nkj->nki', first_rot, self.coords)
             highest_angle_indices = np.absolute(
-                np.sum(all_vecs*all_vecs[:,:1], axis=-1)
+                np.sum(all_vecs*all_vecs[:, :1], axis=-1)
             ).argmin(axis=-1)
-            v = all_vecs[np.arange(len(self.coords)),highest_angle_indices,:]
-            dv = self.ref_coord[None,:,:]-v[:,None,:]
+            v = all_vecs[np.arange(len(self.coords)), highest_angle_indices, :]
+            dv = self.ref_coord[None, :, :]-v[:, None, :]
             dist = np.linalg.norm(dv, axis=-1)
-            dist += np.absolute(np.sum(dv*all_vecs[:,:1], axis=-1))
+            dist += np.absolute(np.sum(dv*all_vecs[:, :1], axis=-1))
             w_second = self.ref_coord[dist.argmin(axis=1)].copy()
-            second_rot = self._get_rotation_from_vectors(v, w_second, all_vecs[:,0])
+            second_rot = self._get_rotation_from_vectors(v, w_second, all_vecs[:, 0])
             self._rotations = np.einsum('nij,njk->nik', second_rot, first_rot)
         return self._rotations
 
     @staticmethod
     def _get_best_match_indices(coords, ref_coord):
-        distances = np.linalg.norm(coords[:,:,None,:]-ref_coord[None,None,:,:], axis=-1)
+        distances = np.linalg.norm(coords[:, :, None, :]-ref_coord[None, None, :, :], axis=-1)
         return np.argmin(distances, axis=-1)
 
     @staticmethod
@@ -127,9 +129,9 @@ class Strain:
 
     @staticmethod
     def _get_number_of_neighbors(crystal_phase):
-        if crystal_phase=='bcc':
+        if crystal_phase == 'bcc':
             return 8
-        elif crystal_phase=='fcc' or crystal_phase=='hcp':
+        elif crystal_phase == 'fcc' or crystal_phase == 'hcp':
             return 12
         else:
             raise ValueError('Crystal structure not recognized')
@@ -165,5 +167,3 @@ class Strain:
         if self.only_bulk_type:
             J[self._nullify_non_bulk] = np.eye(3)
         return 0.5*(np.einsum('nij,nkj->nik', J, J)-np.eye(3))
-
-
