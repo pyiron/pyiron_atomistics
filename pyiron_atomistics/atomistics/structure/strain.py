@@ -110,8 +110,7 @@ class Strain:
             ).argmin(axis=-1)
             v = all_vecs[np.arange(len(self.coords)), highest_angle_indices, :]
             dv = self.ref_coord[None, :, :]-v[:, None, :]
-            dist = np.linalg.norm(dv, axis=-1)
-            dist += np.absolute(np.sum(dv*all_vecs[:, :1], axis=-1))
+            dist = np.linalg.norm(dv, axis=-1)+np.absolute(np.sum(dv*all_vecs[:, :1], axis=-1))
             w_second = self.ref_coord[dist.argmin(axis=1)].copy()
             second_rot = self._get_rotation_from_vectors(v, w_second, all_vecs[:, 0])
             self._rotations = np.einsum('nij,njk->nik', second_rot, first_rot)
