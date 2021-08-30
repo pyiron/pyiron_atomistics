@@ -29,7 +29,7 @@ def _bcc_lattice_constant_from_nn_distance(element):
 
 
 class CompoundFactory:
-    """A collection of routines for constructing Laves phase structures."""
+    """A collection of routines for constructing Laves phases and other more complex structures."""
 
     @staticmethod
     def B2(element_a, element_b, a=None):
