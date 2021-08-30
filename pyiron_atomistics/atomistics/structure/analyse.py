@@ -593,13 +593,11 @@ class Analyse:
 
         Example:
 
-        ```
-        from pyiron_atomistics import Project
-        pr = Project('.')
-        bulk = pr.create.structure.bulk('Fe', cubic=True)
-        structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
-        print(structure.analyse.get_strain(bulk))
-        ```
+        >>> from pyiron_atomistics import Project
+        >>> pr = Project('.')
+        >>> bulk = pr.create.structure.bulk('Fe', cubic=True)
+        >>> structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
+        >>> structure.analyse.get_strain(bulk)
 
         Comment:
 
