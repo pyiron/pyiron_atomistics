@@ -36,7 +36,7 @@ class TestCompoundFactory(PyironTestCase):
 
     def test_C14(self):
         with self.assertRaises(NotImplementedError):
-            structure = self.compound.C14()
+            self.compound.C14()
 
     def test_C15(self):
         """
@@ -71,7 +71,7 @@ class TestCompoundFactory(PyironTestCase):
 
     def test_C36(self):
         with self.assertRaises(NotImplementedError):
-            structure = self.compound.C36()
+            self.compound.C36()
 
     def test_D03(self):
         element_a, element_b = 'Al', 'Fe'
@@ -91,4 +91,4 @@ class TestCompoundFactory(PyironTestCase):
 
     def test_Heusler(self):
         with self.assertRaises(NotImplementedError):
-            structure = self.compound.Heusler('Mg', 'Ca', 'Al')
+            self.compound.Heusler('Mg', 'Ca', 'Al')
