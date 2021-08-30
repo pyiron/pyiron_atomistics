@@ -2,18 +2,23 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from unittest import TestCase
+from pyiron_base._tests import PyironTestCase
+import pyiron_atomistics.atomistics.structure.factories.compound as compound_module
 from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 import numpy as np
 
 
-class TestCompoundFactory(TestCase):
+class TestCompoundFactory(PyironTestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.sf = StructureFactory()
         cls.compound = CompoundFactory()
+
+    @property
+    def docstring_module(self):
+        return compound_module
 
     def test_B2(self):
         structure = self.compound.B2('Fe', 'Al')
