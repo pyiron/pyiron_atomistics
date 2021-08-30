@@ -30,7 +30,8 @@ class TestCompoundFactory(TestCase):
         self.assertTrue(np.allclose(np.diag(structure.cell.array), 1), "Expected cubic cell with specified size.")
 
     def test_C14(self):
-        structure = self.compound.C14()
+        with self.assertRaises(NotImplementedError):
+            structure = self.compound.C14()
 
     def test_C15(self):
         """
@@ -64,7 +65,8 @@ class TestCompoundFactory(TestCase):
         self.assertEqual(6, np.sum(symbols[b_neighs] == b_type))
 
     def test_C36(self):
-        structure = self.compound.C36()
+        with self.assertRaises(NotImplementedError):
+            structure = self.compound.C36()
 
     def test_D03(self):
         element_a, element_b = 'Al', 'Fe'
@@ -83,4 +85,5 @@ class TestCompoundFactory(TestCase):
         self.assertEqual(8, counts[1], msg="Pure-B sub-lattice should be 1/2 of atoms.")
 
     def test_Heusler(self):
-        structure = self.compound.Heusler(None, None, None)
+        with self.assertRaises(NotImplementedError):
+            structure = self.compound.Heusler('Mg', 'Ca', 'Al')
