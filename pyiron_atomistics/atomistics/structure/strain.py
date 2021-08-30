@@ -83,7 +83,8 @@ class Strain:
         v = self._get_safe_unit_vectors(v)
         w = self._get_safe_unit_vectors(w)
         prod = np.sum(v*w, axis=-1)
-        prod[np.absolute(prod) > 1] = np.sign(prod)[np.absolute(prod) > 1]
+        if hasattr(prod, '__len__'):
+            prod[np.absolute(prod) > 1] = np.sign(prod)[np.absolute(prod) > 1]
         return np.arccos(prod)
 
     def _get_rotation_from_vectors(self, vec_before, vec_after, vec_axis=None):
@@ -92,7 +93,7 @@ class Strain:
         if vec_axis is None:
             vec_axis = self._get_safe_unit_vectors(np.cross(v, w))
         sign = np.sign(np.sum(np.cross(v, w)*vec_axis, axis=-1))
-        vec_axis *= (sign*self._get_angle(v, w)/4)[:, None]
+        vec_axis = np.einsum('...i,...->...i', vec_axis, (sign*self._get_angle(v, w)/4))
         return Rotation.from_mrp(vec_axis).as_matrix()
 
     @property
