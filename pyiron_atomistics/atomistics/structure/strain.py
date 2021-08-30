@@ -160,8 +160,8 @@ class Strain:
     @property
     def strain(self):
         """Strain value of each atom"""
-        D = np.einsum('ij,ik->jk', self.ref_coord, self.ref_coord)
-        D = np.linalg.inv(D)
+        Dinverse = np.einsum('ij,ik->jk', self.ref_coord, self.ref_coord)
+        D = np.linalg.inv(Dinverse)
         J = np.einsum('nij,nik->njk', self.ref_coord[self._indices], self.coords)
         J = np.einsum('ij,njk->nik', D, J)
         if self.only_bulk_type:
