@@ -599,9 +599,8 @@ class Analyse:
         >>> structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
         >>> structure.analyse.get_strain(bulk)
 
-        Comment:
-
-        - This strain is not the same as the strain applied in `Atoms.apply_strain`, which
+        .. attention:: Differs from :meth:`.Atoms.apply_strain`!
+            This strain is not the same as the strain applied in `Atoms.apply_strain`, which
             multiplies the strain tensor (plus identity matrix) with the basis vectors, while
             here it follows the definition given by the Lagrangian strain tensor. For small
             strain values they give similar results (i.e. when strain**2 can be neglected).
