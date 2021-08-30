@@ -102,7 +102,3 @@ class CompoundFactory:
             spacegroup=225,
             cell=(a, a, a)
         )
-
-    @staticmethod
-    def Heusler(element_a, element_b, element_c):
-        raise NotImplementedError

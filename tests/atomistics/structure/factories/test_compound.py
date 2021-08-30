@@ -88,7 +88,3 @@ class TestCompoundFactory(PyironTestCase):
         self.assertAlmostEqual(0.5, sorted_vals[1], msg="B-type sub-lattice has half A-type neighbors.")
         self.assertEqual(4, counts[0], msg="Shared sub-lattice should be only 1/4 of atoms.")
         self.assertEqual(8, counts[1], msg="Pure-B sub-lattice should be 1/2 of atoms.")
-
-    def test_Heusler(self):
-        with self.assertRaises(NotImplementedError):
-            self.compound.Heusler('Mg', 'Ca', 'Al')
