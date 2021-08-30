@@ -162,8 +162,7 @@ class Strain:
         """Strain value of each atom"""
         Dinverse = np.einsum('ij,ik->jk', self.ref_coord, self.ref_coord)
         D = np.linalg.inv(Dinverse)
-        J = np.einsum('nij,nik->njk', self.ref_coord[self._indices], self.coords)
-        J = np.einsum('ij,njk->nik', D, J)
+        J = np.einsum('ij,nlj,nlk->nik', D, self.ref_coord[self._indices], self.coords)
         if self.only_bulk_type:
             J[self._nullify_non_bulk] = np.eye(3)
         return 0.5*(np.einsum('nij,nkj->nik', J, J)-np.eye(3))
