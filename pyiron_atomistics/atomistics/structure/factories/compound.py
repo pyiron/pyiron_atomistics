@@ -49,8 +49,36 @@ class CompoundFactory:
         return _ase.crystal((element_a, element_b), [(0, 0, 0), (1/2, 1/2, 1/2)], spacegroup=221, cell=(a, a, a))
 
     @staticmethod
-    def C14():
-        raise NotImplementedError
+    def C14(element_a, element_b, a=None, a_over_c=1, x1=0.1, z1=0):
+        """
+        Builds a hexagonal $A B_2$ C14 Laves phase cell.
+
+        .. attention:: Change in Stochiometry possible!
+
+            If any of the fractional coordinates fall onto their high symmetry values the atoms may be placed on another
+            Wyckoff position, with less sites and therefor the cell composition may change.
+
+        Args:
+            element_a (str, ase.Atom): specificies A
+            element_b (str, ase.Atom): specificies B
+            a (float): length of a & b cell vectors
+            c_over_a (float): c/a ratio
+            x1 (float): fractional x coordinate of B atoms on Wyckoff 4e
+            z1 (float): fractional z coordinate of A atoms on Wyckoff 4e
+        """
+        a = 2 * _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
+        c = a / a_over_c
+
+        # https://www.atomic-scale-physics.de/lattice/struk/c14.html
+        return _ase.crystal(( element_a, element_a, element_b ),
+                            [ # wyckoff 2a -- Zn-I
+                              (  0,   0,   0),
+                              # wyckoff 6h -- Zn-II
+                              ( 1*x1,  2*x1, 1/4),
+                              # wyckoff 4f -- Mg
+                              ( 1/3, 2/3,       z1 ),
+                            ],
+                            spacegroup=194, cell=(a, a, c, 90, 90, 120))
 
     @staticmethod
     def C15(element_a, element_b, a=None):
@@ -77,8 +105,44 @@ class CompoundFactory:
         return _ase.crystal((element_a, element_b), [(0, 0, 0), (1/8, 5/8, 1/8)], spacegroup=227, cell=(a, a, a))
 
     @staticmethod
-    def C36():
-        raise NotImplementedError
+    def C36(element_a, element_b, a=None, c_over_a=1, x1=0.1, z1=0, z2=0, z3=0):
+        """
+        Create hexagonal $A B_2$ C36 Laves phase.
+
+        .. attention:: Change in Stochiometry possible!
+
+            If any of the fractional coordinates fall onto their high symmetry values the atoms may be placed on another
+            Wyckoff position, with less sites and therefor the cell composition may change.
+
+
+        Args:
+            element_a (str, ase.Atom): specificies A
+            element_b (str, ase.Atom): specificies B
+            a (float): length of a & b cell vectors
+            c_over_a (float): c/a ratio
+            x1 (float): fractional x coordinate of B atoms on Wyckoff 4e
+            z1 (float): fractional z coordinate of A atoms on Wyckoff 4e
+            z2 (float): fractional z coordinate of A atoms on Wyckoff 4f
+            z3 (float): fractional z coordinate of B atoms on Wyckoff 4f
+        """
+        a = 2 * _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
+        c = c_over_a * a
+
+        # See: https://www.atomic-scale-physics.de/lattice/struk/c36.html
+        return _ase.crystal( (element_a, element_a, element_b, element_b, element_b),
+                [ # Wyckoff 4e -- A-I
+                  (0, 0, z1),
+                  # 4f -- A-II
+                  (1/3, 2/3, z2),
+                  # 4f -- B-I
+                  (1/3, 2/3, z3),
+                  # 6g -- B-II
+                  (1/2, 0, 0),
+                  # 6h -- B-III
+                  (x1, 2*x1, 1/4)
+                 ], spacegroup=194, cell=(a, a, c, 90, 90, 120))
+
+
 
     @staticmethod
     def D03(element_a, element_b, a=None):
