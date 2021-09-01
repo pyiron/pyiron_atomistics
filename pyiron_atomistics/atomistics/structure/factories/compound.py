@@ -104,7 +104,13 @@ class CompoundFactory:
         """
         a = 2 * _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
 
-        return _ase.crystal((element_a, element_b), [(0, 0, 0), (1/8, 5/8, 1/8)], spacegroup=227, cell=(a, a, a))
+        # See: https://www.atomic-scale-physics.de/lattice/struk/c15.html
+        return _ase.crystal((element_a, element_b),
+                            [ # Wyckoff 8a
+                              (1/8, 1/8, 1/8),
+                              # Wyckoff 16d
+                              (1/2, 1/2, 1/2)
+                            ], spacegroup=227, cell=(a, a, a))
 
     @staticmethod
     def C36(element_a, element_b, a=None, c_over_a=1.626, x1=0.5, z1=0.33, z2=0.66, z3=0.4):
