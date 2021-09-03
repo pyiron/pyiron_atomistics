@@ -145,12 +145,13 @@ class TestAtoms(unittest.TestCase):
         )
 
     def test_strain(self):
-        bulk = StructureFactory().ase.bulk('Al', cubic=True)
-        epsilon = 0.1*(np.random.random((3,3))-0.5)
-        structure = bulk.apply_strain(epsilon, return_box=True)
-        D = structure.cell@np.linalg.inv(bulk.cell)
-        epsilon = structure.analyse.get_strain(bulk)
-        self.assertTrue(np.allclose((D@D.T-np.eye(3))*0.5, epsilon[0]))
+        for el in ['Fe', 'Al']:
+            bulk = StructureFactory().ase.bulk(el, cubic=True)
+            epsilon = 0.1*(np.random.random((3,3))-0.5)
+            structure = bulk.apply_strain(epsilon, return_box=True)
+            D = structure.cell@np.linalg.inv(bulk.cell)
+            epsilon = structure.analyse.get_strain(bulk)
+            self.assertTrue(np.allclose((D@D.T-np.eye(3))*0.5, epsilon[0]))
 
 
 if __name__ == "__main__":

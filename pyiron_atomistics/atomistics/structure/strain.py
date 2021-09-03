@@ -7,9 +7,9 @@ class Strain:
     """
     Calculate local strain of each atom following the Lagrangian strain tensor:
 
-    strain = (F^T x F - 1)/2
+    >>> strain = (F.T*F - 1)/2
 
-    where F is the atomic deformation gradient.
+    where `F` is the atomic deformation gradient.
 
     Example:
 
@@ -67,7 +67,7 @@ class Strain:
     def _get_perpendicular_unit_vectors(self, vec, vec_axis=None):
         if vec_axis is not None:
             vec_axis = self._get_safe_unit_vectors(vec_axis)
-            vec -= np.einsum('...i,...i,...j->...j', vec, vec_axis, vec_axis)
+            vec = np.array(vec-np.einsum('...i,...i,...j->...j', vec, vec_axis, vec_axis))
         return self._get_safe_unit_vectors(vec)
 
     @staticmethod
