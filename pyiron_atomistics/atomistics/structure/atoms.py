@@ -166,8 +166,7 @@ class Atoms(ASEAtoms):
                 el_object_list = [self.convert_element(el) for el in element_list]
 
             # Create a list from a set but always preserve order
-            _, ind = np.unique(el_object_list, return_index=True)
-            self.set_species(list([el_object_list[i] for i in sorted(ind)]))
+            self.set_species(list(dict.fromkeys(el_object_list)))
             el_index_lst = [self._species_to_index_dict[el] for el in el_object_list]
 
         elif indices is not None:
