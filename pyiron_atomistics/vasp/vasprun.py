@@ -644,6 +644,8 @@ class Vasprun(object):
             el_list = self.vasprun_dict["atominfo"]["species_list"]
             cell = self.vasprun_dict["init_structure"]["cell"]
             positions = self.vasprun_dict["init_structure"]["positions"]
+
+            # print("vasprun elements", el_list)
             if len(positions[positions > 1.01]) > 0:
                 basis = Atoms(el_list, positions=positions, cell=cell, pbc=True)
             else:
