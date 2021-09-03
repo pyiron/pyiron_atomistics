@@ -73,14 +73,14 @@ class Strain:
     @staticmethod
     def _get_safe_unit_vectors(vectors, minimum_value=1.0e-8):
         v = np.linalg.norm(vectors, axis=-1)
-        if hasattr(v, '__len__'):
-            v[v < minimum_value] = minimum_value
+        v += (v < minimum_value)*minimum_value
         return np.einsum('...i,...->...i', vectors, 1/v)
 
     def _get_angle(self, v, w):
         v = self._get_safe_unit_vectors(v)
         w = self._get_safe_unit_vectors(w)
         prod = np.sum(v*w, axis=-1)
+        # Safety measure - in principle not required.
         if hasattr(prod, '__len__'):
             prod[np.absolute(prod) > 1] = np.sign(prod)[np.absolute(prod) > 1]
         return np.arccos(prod)
@@ -89,9 +89,10 @@ class Strain:
         v = self._get_perpendicular_unit_vectors(vec_before, vec_axis)
         w = self._get_perpendicular_unit_vectors(vec_after, vec_axis)
         if vec_axis is None:
-            vec_axis = self._get_safe_unit_vectors(np.cross(v, w))
+            vec_axis = np.cross(v, w)
+        vec_axis = self._get_safe_unit_vectors(vec_axis)
         sign = np.sign(np.sum(np.cross(v, w)*vec_axis, axis=-1))
-        vec_axis = np.einsum('...i,...->...i', vec_axis, (sign*self._get_angle(v, w)/4))
+        vec_axis = np.einsum('...i,...->...i', vec_axis, np.tan(sign*self._get_angle(v, w)/4))
         return Rotation.from_mrp(vec_axis).as_matrix()
 
     @property
