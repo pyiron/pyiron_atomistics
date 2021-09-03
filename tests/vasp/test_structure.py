@@ -53,6 +53,12 @@ class TestVaspStructure(unittest.TestCase):
                             atoms = atoms_from_string(string=lines)
                             self.assertEqual(atoms.indices.tolist(), [0, 1, 2])
                             self.assertEqual(" ".join(atoms.get_chemical_symbols()), " ".join(["Ca", "Mg", "Al"]))
+                            self.assertTrue(np.allclose(atoms.positions[atoms.select_index("Ca")],
+                                                        np.array([6.2262054545, 8.8300000128e-06,  1.9039669849])))
+                            self.assertTrue(np.allclose(atoms.positions[atoms.select_index("Mg")],
+                                                        np.array([0.3113441054, 0.5391959194,  18.3309003343])))
+                            self.assertTrue(np.allclose(atoms.positions[atoms.select_index("Al")],
+                                                        np.array([3.1131124744, 5.3920363513,  12.0213927741])))
                     self.assertIsInstance(atoms, Atoms)
 
     def test_read_atoms(self):
