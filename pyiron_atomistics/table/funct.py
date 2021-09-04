@@ -146,10 +146,6 @@ def get_job_name(job):
     return {"job_name": job.job_name}
 
 
-def get_job_id(job):
-    return {"job_id": job.job_id}
-
-
 def get_energy_tot_per_atom(job):
     return {"energy_tot": job["output/generic/energy_tot"][-1] / get_total_number_of_atoms(job=job)["Number_of_atoms"]}
 

@@ -2,6 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import os
 from pyiron_base import TableJob as BaseTableJob, PyironTable
 from pyiron_atomistics.table.funct import (
     get_incar,
@@ -18,7 +19,6 @@ from pyiron_atomistics.table.funct import (
     get_number_of_final_electronic_steps,
     get_majority_species,
     get_job_name,
-    get_job_id,
     get_energy_tot,
     get_energy_pot,
     get_energy_free,
@@ -64,7 +64,7 @@ class TableJob(BaseTableJob):
     >>> from pyiron_atomistics import Project
     >>> pr = Project('my_project')
     >>> def db_filter_function(job_table):
-    >>>     # Returns a pandas Series of boolean values (True for entries that have status finished 
+    >>>     # Returns a pandas Series of boolean values (True for entries that have status finished
     >>>     # and hamilton type Murnaghan.)
     >>>     return (job_table.status == "finished") & (job_table.hamilton == "Murnaghan")
     >>> def get_lattice_parameter(job):
@@ -85,7 +85,7 @@ class TableJob(BaseTableJob):
     """
     def __init__(self, project, job_name):
         super(TableJob, self).__init__(project, job_name)
-        self._system_function_lst = [
+        self._system_function_lst += [
             get_incar,
             get_sigma,
             get_total_number_of_atoms,
@@ -100,7 +100,6 @@ class TableJob(BaseTableJob):
             get_number_of_final_electronic_steps,
             get_majority_species,
             get_job_name,
-            get_job_id,
             get_energy_tot,
             get_energy_pot,
             get_energy_free,
@@ -125,5 +124,6 @@ class TableJob(BaseTableJob):
         ]
         self._pyiron_table = PyironTable(
             project=None,
-            system_function_lst=self._system_function_lst
+            system_function_lst=self._system_function_lst,
+            csv_file_name=os.path.join(self.working_directory, "pyirontable.csv")
         )
