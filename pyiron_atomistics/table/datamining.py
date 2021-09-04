@@ -100,7 +100,6 @@ class TableJob(BaseTableJob):
             get_number_of_final_electronic_steps,
             get_majority_species,
             get_job_name,
-            get_job_id,
             get_energy_tot,
             get_energy_pot,
             get_energy_free,
