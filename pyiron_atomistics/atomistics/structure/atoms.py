@@ -9,7 +9,6 @@ import ast
 from copy import copy
 from collections import OrderedDict
 import numpy as np
-from six import string_types
 import warnings
 import seekpath
 from pyiron_atomistics.atomistics.structure.atom import Atom, ase_to_pyiron as ase_to_pyiron_atom
@@ -147,7 +146,7 @@ class Atoms(ASEAtoms):
                 else:
                     if isinstance(elements[0], (list, tuple, np.ndarray)):
                         elements = np.array(elements).flatten()
-                    if isinstance(elements[0], string_types):
+                    if isinstance(elements[0], str):
                         element_list = elements
                     elif isinstance(elements[0], ChemicalElement):
                         el_object_list = elements
@@ -677,7 +676,7 @@ class Atoms(ASEAtoms):
         if el in list(self._store_elements.keys()):
             return self._store_elements[el]
 
-        if isinstance(el, string_types):  # as symbol
+        if isinstance(el, str):  # as symbol
             element = Atom(el, pse=pse).element
         elif isinstance(el, Atom):
             element = el.element
@@ -3151,7 +3150,7 @@ def symbols2numbers(symbols):
         symbols = string2symbols(symbols)
     numbers = list()
     for sym in symbols:
-        if isinstance(sym, string_types):
+        if isinstance(sym, str):
             numbers.append(df[sym]["AtomicNumber"])
         else:
             numbers.append(sym)

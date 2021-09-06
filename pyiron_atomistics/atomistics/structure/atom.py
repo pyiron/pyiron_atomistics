@@ -5,7 +5,6 @@
 import numpy as np
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable, ChemicalElement
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseArrayElement
-from six import string_types
 from ase.atom import Atom as ASEAtom
 
 __author__ = "Sudarsan Surendralal"
@@ -67,10 +66,7 @@ class Atom(ASEAtom, SparseArrayElement):
                 el_symbol = pse.atomic_number_to_abbreviation(qwargs["Z"])
                 self._lists["element"] = pse.element(el_symbol)
         else:
-            if isinstance(element, string_types):
-                el_symbol = element
-                self._lists["element"] = pse.element(el_symbol)
-            elif isinstance(element, str):
+            if isinstance(element, str):
                 el_symbol = element
                 self._lists["element"] = pse.element(el_symbol)
             elif isinstance(element, ChemicalElement):
