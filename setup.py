@@ -41,7 +41,7 @@ setup(
         'pandas==1.3.2',
         'phonopy==2.11.0',
         'pyiron_base==0.3.2',
-        'pymatgen==2022.0.12',
+        'pymatgen==2022.0.13',
         'scipy==1.7.1',
         'seekpath==2.0.1',
         'six==1.16.0',
