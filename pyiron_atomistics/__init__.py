@@ -7,7 +7,7 @@ from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron, pyiron_t
 from pyiron_base import Notebook, install_dialog, JOB_CLASS_DICT
 
 from pyiron_base import Project as ProjectBase
-ProjectBase.register_creator('atomistics', AtomisticsTools)
+ProjectBase.register_tools('atomistics', AtomisticsTools)
 
 # To maintain backwards compatibility until we deprecate the old structure creation functions:
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory as _StructureFactory
