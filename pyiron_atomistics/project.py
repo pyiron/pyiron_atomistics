@@ -8,7 +8,10 @@ import posixpath
 # import warnings
 from string import punctuation
 from shutil import copyfile
-from pyiron_base import Settings, ProjectHDFio, JobType, JobTypeChoice, Project as ProjectCore, Creator as CreatorCore
+from pyiron_base import (
+    Settings, ProjectHDFio, JobType, JobTypeChoice, Project as ProjectCore, Creator as CreatorCore,
+    CreatorCore as CreatorParent
+)
 try:
     from pyiron_base import ProjectGUI
 except (ImportError, TypeError, AttributeError):
@@ -605,11 +608,12 @@ class Creator(CreatorCore):
         return self._structure
 
 
-class Atomistics:
-    def __init__(self, project):
-        self._project = project
+class AtomisticsCreator(CreatorCore):
+    def __init__(self, project: ProjectCore):
+        super().__init__(project)
         self._structure = StructureFactory()
+        # TODO attach a job factory
 
     @property
-    def structure(self):
+    def structure(self) -> StructureFactory:
         return self._structure

@@ -1,11 +1,12 @@
 __version__ = "0.1"
 __all__ = []
 
-from pyiron_atomistics.project import Project, Atomistics
+from pyiron_atomistics.project import Project, AtomisticsCreator
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron, pyiron_to_ase, Atoms
-from pyiron_base import Notebook, install_dialog, JOB_CLASS_DICT, Creator
+from pyiron_base import Notebook, install_dialog, JOB_CLASS_DICT
 
-Creator.register('atomistics', Atomistics)
+from pyiron_base import Project as ProjectBase
+ProjectBase.register_creator('atomistics', AtomisticsCreator)
 
 # To maintain backwards compatibility until we deprecate the old structure creation functions:
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory as _StructureFactory
