@@ -9,8 +9,7 @@ import posixpath
 from string import punctuation
 from shutil import copyfile
 from pyiron_base import (
-    Settings, ProjectHDFio, JobType, JobTypeChoice, Project as ProjectCore, Creator as CreatorCore,
-    CreatorCore as CreatorParent
+    Settings, ProjectHDFio, JobType, JobTypeChoice, Project as ProjectCore, Creator as CreatorCore
 )
 try:
     from pyiron_base import ProjectGUI
@@ -605,15 +604,4 @@ class Creator(CreatorCore):
 
     @property
     def structure(self):
-        return self._structure
-
-
-class AtomisticsCreator(CreatorCore):
-    def __init__(self, project: ProjectCore):
-        super().__init__(project)
-        self._structure = StructureFactory()
-        # TODO attach a job factory
-
-    @property
-    def structure(self) -> StructureFactory:
         return self._structure
