@@ -5,7 +5,7 @@ from pyiron_atomistics.project import Project, Atomistics
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron, pyiron_to_ase, Atoms
 from pyiron_base import Notebook, install_dialog, JOB_CLASS_DICT, Creator
 
-Creator.atomistics = property(lambda self: Atomistics(self._project))
+Creator.register('atomistics', Atomistics)
 
 # To maintain backwards compatibility until we deprecate the old structure creation functions:
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory as _StructureFactory
