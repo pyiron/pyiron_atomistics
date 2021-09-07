@@ -53,7 +53,7 @@ __date__ = "Sep 7, 2021"
 
 class JobFactory(JobFactoryCore):
     @property
-    def _job_class_dict(self):
+    def _job_class_dict(self) -> dict:
         return {
             "ART": ART,
             "AtomisticExampleJob": AtomisticExampleJob,
