@@ -603,3 +603,13 @@ class Creator(CreatorCore):
     @property
     def structure(self):
         return self._structure
+
+
+class Atomistics:
+    def __init__(self, project):
+        self._project = project
+        self._structure = StructureFactory()
+
+    @property
+    def structure(self):
+        return self._structure
