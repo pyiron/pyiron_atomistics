@@ -6,7 +6,7 @@ name: Notebooks for Integration Tests
 on:
   push:
       paths:
-        - 'notebooks/integration'
+        - './notebooks/integration'
 
 jobs:
   build:
