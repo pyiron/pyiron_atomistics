@@ -720,7 +720,7 @@ class Atoms(ASEAtoms):
             numpy.ndarray: A list of chemical indices
 
         """
-        return self.indices
+        return self.indices.copy()
 
     def get_atomic_numbers(self):
         """
