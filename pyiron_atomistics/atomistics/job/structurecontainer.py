@@ -117,7 +117,7 @@ class StructureContainer(GenericJob, HasStructure):
         return len(self._container)
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
-        return self._structure_lst._get_structure(frame=frame, wrap_atoms=wrap_atoms)
+        return self._container._get_structure(frame=frame, wrap_atoms=wrap_atoms)
 
     def to_hdf(self, hdf = None, group_name = None):
         super().to_hdf(hdf=hdf, group_name=group_name)
