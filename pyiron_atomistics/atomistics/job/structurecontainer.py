@@ -145,4 +145,4 @@ class StructureContainer(GenericJob):
                 self.append(Atoms().from_hdf(hdf=hdf, group_name=group))
         else:
             super().from_hdf(hdf=hdf, group_name=group_name)
-            self._container.from_hdf(hdf=hdf, group_name="structures")
+            self._container.from_hdf(hdf=self.project_hdf5, group_name="structures")
