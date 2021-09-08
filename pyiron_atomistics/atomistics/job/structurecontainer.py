@@ -16,10 +16,11 @@ __date__ = "Aug 12, 2020"
 from pyiron_base import DataContainer, GenericJob
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
 
 
-class StructureContainer(GenericJob):
+class StructureContainer(GenericJob, HasStructure):
     """
     Container to save a list of structures in HDF5 together with tags.
 
