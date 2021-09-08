@@ -5,6 +5,7 @@
 import subprocess
 import tempfile
 import os.path
+import shutil
 
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
@@ -21,6 +22,8 @@ __maintainer__ = "Marvin Poul"
 __email__ = "poul@mpie.de"
 __status__ = "production"
 __date__ = "Jun 30, 2021"
+
+_ATOMSK_EXISTS = shutil.which("atomsk") != None
 
 class AtomskError(Exception):
     pass

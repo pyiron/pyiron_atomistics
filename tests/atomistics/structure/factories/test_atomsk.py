@@ -2,12 +2,10 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import shutil
-
 from pyiron_atomistics._tests import TestWithProject
-from pyiron_atomistics.atomistics.structure.factories.atomsk import AtomskFactory, AtomskError
+from pyiron_atomistics.atomistics.structure.factories.atomsk import AtomskFactory, AtomskError, _ATOMSK_EXISTS
 
-if shutil.which("atomsk") is not None:
+if _ATOMSK_EXISTS is not None:
     class TestAtomskFactory(TestWithProject):
         @classmethod
         def setUpClass(cls):

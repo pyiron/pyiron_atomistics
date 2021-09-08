@@ -26,7 +26,7 @@ from ase.build import (
 )
 import numpy as np
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
-from pyiron_atomistics.atomistics.structure.factories.atomsk import AtomskFactory
+from pyiron_atomistics.atomistics.structure.factories.atomsk import AtomskFactory, _ATOMSK_EXISTS
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
 from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, Atoms, \
@@ -49,20 +49,21 @@ __date__ = "May 1, 2020"
 
 s = Settings()
 
-
 class StructureFactory(PyironFactory):
     def __init__(self):
         self._ase = AseFactory()
-        self._atomsk = AtomskFactory()
+        if _ATOMSK_EXISTS:
+            self._atomsk = AtomskFactory()
         self._aimsgb = AimsgbFactory()
 
     @property
     def ase(self):
         return self._ase
 
-    @property
-    def atomsk(self):
-        return self._atomsk
+    if _ATOMSK_EXISTS:
+        @property
+        def atomsk(self):
+            return self._atomsk
 
     @property
     def aimsgb(self):
