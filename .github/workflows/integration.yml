@@ -4,9 +4,12 @@
 name: Notebooks for Integration Tests
 
 on:
+  pull_request:
+      paths:
+        - './notebooks/integration/'
   push:
       paths:
-        - './notebooks/integration'
+        - './notebooks/integration/'
 
 jobs:
   build:
