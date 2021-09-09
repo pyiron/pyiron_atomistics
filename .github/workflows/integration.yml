@@ -5,9 +5,11 @@ name: Notebooks for Integration Tests
 
 on:
   pull_request:
+      branches: [ master ]
       paths:
         - './notebooks/integration/'
   push:
+      branches: [ master ]
       paths:
         - './notebooks/integration/'
 
