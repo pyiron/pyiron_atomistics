@@ -72,13 +72,13 @@ class CompoundFactory:
         c = a / a_over_c
 
         # https://www.atomic-scale-physics.de/lattice/struk/c14.html
-        s = _ase.crystal(( element_a, element_a, element_b ),
-                            [ # wyckoff 2a -- Zn-I
-                              (  0,   0,   0),
-                              # wyckoff 6h -- Zn-II
-                              ( 1*x1,  2*x1, 1/4),
-                              # wyckoff 4f -- Mg
-                              ( 1/3, 2/3,       z1 ),
+        s = _ase.crystal(( element_a, element_b, element_b ),
+                            [ # wyckoff 4f -- A
+                              ( 1/3,   2/3,  z1 ),
+                              # wyckoff 2a -- B-I
+                              (   0,     0,   0 ),
+                              # wyckoff 6h -- B-II
+                              ( 1*x1, 2*x1, 1/4 ),
                             ],
                             spacegroup=194, cell=(a, a, c, 90, 90, 120))
         if len(s) != 2 + 6 + 4:
