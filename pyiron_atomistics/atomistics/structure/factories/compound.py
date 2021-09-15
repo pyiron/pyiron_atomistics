@@ -93,7 +93,7 @@ class CompoundFactory:
         Example use:
 
         >>> structure = CompoundFactory().C15('Al', 'Ca')
-        >>> structure.repeat(2).plot3d(view_plane=([1, 1, 0], [0, 0, -1]))
+        >>> structure.repeat(2).plot3d(view_plane=([1, 1, 0], [0, 0, -1])) # doctest: +SKIP
         NGLWidget()
 
         Args:

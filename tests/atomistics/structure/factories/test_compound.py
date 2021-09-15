@@ -35,8 +35,11 @@ class TestCompoundFactory(PyironTestCase):
         self.assertTrue(np.allclose(np.diag(structure.cell.array), 1), "Expected cubic cell with specified size.")
 
     def test_C14(self):
-        with self.assertRaises(NotImplementedError):
-            self.compound.C14()
+        a_type = 'Mg'
+        b_type = 'Cu'
+        c14 = self.compound.C14(a_type, b_type)
+        self.assertEqual(len(c14), 12, "Wrong number of atoms in C14 structure.")
+        self.assertEqual(c14.get_chemical_formula(), "Mg4Cu8", "Wrong chemical formula.")
 
     def test_C15(self):
         """
@@ -46,6 +49,9 @@ class TestCompoundFactory(PyironTestCase):
         a_type = 'Mg'
         b_type = 'Cu'
         structure = self.compound.C15(a_type, b_type)
+
+        self.assertEqual(len(structure), 24, "Wrong number of atoms in C15 structure.")
+        self.assertEqual(structure.get_chemical_formula(), "Mg8Cu16", "Wrong chemical formula.")
 
         a_type_nn_distance = StructureFactory().bulk(a_type).get_neighbors(num_neighbors=1).distances[0, 0]
         self.assertAlmostEqual((4 / np.sqrt(3)) * a_type_nn_distance, structure.cell.array[0, 0],
