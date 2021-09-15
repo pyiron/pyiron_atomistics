@@ -5,7 +5,7 @@
 from pyiron_atomistics._tests import TestWithProject
 from pyiron_atomistics.atomistics.structure.factories.atomsk import AtomskFactory, AtomskError, _ATOMSK_EXISTS
 
-if _ATOMSK_EXISTS is not None:
+if _ATOMSK_EXISTS:
     class TestAtomskFactory(TestWithProject):
         @classmethod
         def setUpClass(cls):

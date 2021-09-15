@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import os.path
 import shutil
+import io
 
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
