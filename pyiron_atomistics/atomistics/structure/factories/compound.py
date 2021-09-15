@@ -72,7 +72,7 @@ class CompoundFactory:
         c = a / a_over_c
 
         # https://www.atomic-scale-physics.de/lattice/struk/c14.html
-        return _ase.crystal(( element_a, element_a, element_b ),
+        s = _ase.crystal(( element_a, element_a, element_b ),
                             [ # wyckoff 2a -- Zn-I
                               (  0,   0,   0),
                               # wyckoff 6h -- Zn-II
@@ -81,6 +81,9 @@ class CompoundFactory:
                               ( 1/3, 2/3,       z1 ),
                             ],
                             spacegroup=194, cell=(a, a, c, 90, 90, 120))
+        if len(s) != 2 + 6 + 4:
+            raise ValueError("Given internal coordinates reduced symmetry, check the docstring for degenerate values!")
+        return s
 
     @staticmethod
     def C15(element_a, element_b, a=None):
@@ -105,12 +108,15 @@ class CompoundFactory:
         a = 2 * _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
 
         # See: https://www.atomic-scale-physics.de/lattice/struk/c15.html
-        return _ase.crystal((element_a, element_b),
+        s = _ase.crystal((element_a, element_b),
                             [ # Wyckoff 8a
                               (1/8, 1/8, 1/8),
                               # Wyckoff 16d
                               (1/2, 1/2, 1/2)
                             ], spacegroup=227, cell=(a, a, a))
+        if len(s) != 8 + 16:
+            raise ValueError("Given internal coordinates reduced symmetry, check the docstring for degenerate values!")
+        return s
 
     @staticmethod
     def C36(element_a, element_b, a=None, c_over_a=1.626, x1=0.5, z1=0.33, z2=0.66, z3=0.4):
@@ -141,7 +147,7 @@ class CompoundFactory:
             raise ValueError("Relative position of A & B atoms may not be the same!")
 
         # See: https://www.atomic-scale-physics.de/lattice/struk/c36.html
-        return _ase.crystal( (element_a, element_a, element_b, element_b, element_b),
+        s = _ase.crystal( (element_a, element_a, element_b, element_b, element_b),
                 [ # Wyckoff 4e -- A-I
                   (0, 0, z1),
                   # 4f -- A-II
@@ -153,6 +159,9 @@ class CompoundFactory:
                   # 6h -- B-III
                   (x1, 2*x1, 1/4)
                  ], spacegroup=194, cell=(a, a, c, 90, 90, 120))
+        if len(s) != 4 + 4 + 4 + 6 + 6:
+            raise ValueError("Given internal coordinates reduced symmetry, check the docstring for degenerate values!")
+        return s
 
 
 
