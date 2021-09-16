@@ -49,7 +49,7 @@ class CompoundFactory:
         return _ase.crystal((element_a, element_b), [(0, 0, 0), (1/2, 1/2, 1/2)], spacegroup=221, cell=(a, a, a))
 
     @staticmethod
-    def C14(element_a, element_b, a=None, a_over_c=1.626, x1=0.5, z1=0.33):
+    def C14(element_a, element_b, a=None, c_over_a=1.626, x1=0.5, z1=0.33):
         """
         Builds a hexagonal $A B_2$ C14 Laves phase cell.
 
@@ -69,7 +69,7 @@ class CompoundFactory:
             z1 (float): fractional z coordinate of A atoms on Wyckoff 4f
         """
         a = 2 * _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
-        c = a / a_over_c
+        c = c_over_a * a
 
         # https://www.atomic-scale-physics.de/lattice/struk/c14.html
         s = _ase.crystal(( element_a, element_b, element_b ),
