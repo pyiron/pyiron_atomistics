@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-#    if: ${{ github.event.label.name == 'integration' }}
+    if: ${{ github.event.label.name == 'integration' }}
 
     runs-on: ubuntu-latest
 
