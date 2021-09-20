@@ -373,21 +373,14 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 "This job does not contain a valid structure: {}".format(self.job_name)
             )
 
-    def db_entry(self):
-        """
-        Generate the initial database entry
-
-        Returns:
-            (dict): db_dict
-        """
-        db_dict = super(AtomisticGenericJob, self).db_entry()
+    @property
+    def chemical_formula(self):
         if self.structure:
             if isinstance(self.structure, Atoms):
                 parent_structure = self.structure.get_parent_basis()
             else:
                 parent_structure = self.structure.copy()
-            db_dict["ChemicalFormula"] = parent_structure.get_chemical_formula()
-        return db_dict
+            return parent_structure.get_chemical_formula()
 
     def restart(self, job_name=None, job_type=None):
         """

@@ -265,7 +265,7 @@ class Project(ProjectCore):
             print("The job exists already - skipped!")
         else:
             ham = pr_import.create_job(job_type=job_type, job_name=pyiron_job_name)
-            ham._job_id = self.db.add_item_dict(ham.db_entry())
+            ham._job_id = self.db.add(ham, s, self.db.historical)
             ham.refresh_job_status()
             print("job was stored with the job ID ", str(ham._job_id))
             if not os.path.abspath(project_to_import_from):

@@ -50,21 +50,14 @@ class InteractiveWrapper(InteractiveWrapperBase):
         else:
             return None
 
-    def db_entry(self):
-        """
-        Generate the initial database entry
-
-        Returns:
-            (dict): db_dict
-        """
-        db_dict = super(InteractiveWrapper, self).db_entry()
+    @property
+    def chemical_formula(self):
         if self.structure:
             if isinstance(self.structure, PAtoms):
                 parent_structure = self.structure.get_parent_basis()
             else:
                 parent_structure = ase_to_pyiron(self.structure).get_parent_basis()
-            db_dict["ChemicalFormula"] = parent_structure.get_chemical_formula()
-        return db_dict
+            return parent_structure.get_chemical_formula()
 
 
 class ReferenceJobOutput(object):
