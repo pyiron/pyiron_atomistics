@@ -13,7 +13,7 @@ __email__ = "poul@mpie.de"
 __status__ = "development"
 __date__ = "Aug 12, 2020"
 
-from pyiron_base import DataContainer, GenericJob
+from pyiron_base import DataContainer, GenericJob, deprecate
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
@@ -112,6 +112,16 @@ class StructureContainer(GenericJob, HasStructure):
 
     def collect_output(self):
         pass
+
+    @property
+    @deprecate("use get_structure()")
+    def structure(self):
+        return self._get_structure(frame=0)
+
+    @structure.setter
+    @deprecate("use append()")
+    def structure(self, struct):
+        self.append(struct)
 
     def _number_of_structures(self):
         return len(self._container)
