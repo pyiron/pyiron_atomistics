@@ -311,9 +311,8 @@ class MurnaghanJobGenerator(JobGenerator):
             parameter_lst.append([np.round(strain, 7), basis])
         return parameter_lst
 
-    @staticmethod
-    def job_name(parameter):
-        return "strain_" + str(parameter[0]).replace(".", "_")
+    def job_name(self, parameter):
+        return "{}_{}".format(self._master.job_name, parameter[0]).replace(".", "_")
 
     def modify_job(self, job, parameter):
         job.structure = parameter[1]
@@ -605,7 +604,7 @@ class Murnaghan(AtomisticParallelMaster):
     The minimum energy volume and bulk modulus are stored in `ref_job['output/equilibrium_volume']`
     and `ref_job['output/equilibrium_bulk_modulus/']`.
     """
-    def __init__(self, project, job_name="murnaghan"):
+    def __init__(self, project, job_name):
         """
 
         Args:
