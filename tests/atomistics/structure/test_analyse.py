@@ -6,7 +6,10 @@ import unittest
 import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-
+from scipy.spatial import Voronoi
+from ase.lattice.cubic import BodyCenteredCubic
+from pyiron_mpie.elasticity.strain import get_strain
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 
 class TestAtoms(unittest.TestCase):
@@ -145,13 +148,29 @@ class TestAtoms(unittest.TestCase):
         )
 
     def test_strain(self):
-        for el in ['Fe', 'Al']:
-            bulk = StructureFactory().ase.bulk(el, cubic=True)
-            epsilon = 0.1*(np.random.random((3,3))-0.5)
-            structure = bulk.apply_strain(epsilon, return_box=True)
-            D = structure.cell@np.linalg.inv(bulk.cell)
-            epsilon = structure.analyse.get_strain(bulk)
-            self.assertTrue(np.allclose((D@D.T-np.eye(3))*0.5, epsilon[0]))
+        bulk = StructureFactory().ase.bulk('Fe', cubic=True)
+        a_0 = bulk.cell[0,0]
+        b = 0.5*np.sqrt(3)*a_0
+        structure = ase_to_pyiron(BodyCenteredCubic(
+            symbol='Fe', directions=[[-1, 0, 1], [1, -2, 1], [1, 1, 1]], latticeconstant=a_0
+        ))
+        L = 100
+        structure = structure.repeat((*np.rint(L/structure.cell.diagonal()[:2]).astype(int), 1))
+        voro = Voronoi(structure.positions[:,:2])
+        center = voro.vertices[np.linalg.norm(voro.vertices-structure.cell.diagonal()[:2]*0.5, axis=-1).argmin()]
+        structure.positions[:,2] += b/(2*np.pi)*np.arctan2(*(structure.positions[:,:2]-center).T[::-1])
+        structure.center_coordinates_in_unit_cell();
+        r_0 = 0.9*L/2
+        r = np.linalg.norm(structure.positions[:,:2]-center, axis=-1)
+        core_region = (r < r_0)*(r > 10)
+        strain = structure.analyse.get_strain(bulk, num_neighbors=8)
+        strain = strain[core_region]
+        positions = structure.positions[core_region, :2]
+        x = positions-center
+        eps_yz = b/(4*np.pi)*x[:,0]/np.linalg.norm(x, axis=-1)**2
+        eps_xz = -b/(4*np.pi)*x[:,1]/np.linalg.norm(x, axis=-1)**2
+        self.assertLess(np.absolute(eps_yz-strain[:,1,2]).max(), 0.01)
+        self.assertLess(np.absolute(eps_xz-strain[:,0,2]).max(), 0.01)
 
 
 if __name__ == "__main__":
