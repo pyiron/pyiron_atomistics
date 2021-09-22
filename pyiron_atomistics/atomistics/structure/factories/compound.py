@@ -49,7 +49,7 @@ class CompoundFactory:
         return _ase.crystal((element_a, element_b), [(0, 0, 0), (1/2, 1/2, 1/2)], spacegroup=221, cell=(a, a, a))
 
     @staticmethod
-    def C14(element_a, element_b, a=None, c_over_a=1.626, x1=0.5, z1=0.33):
+    def C14(element_a, element_b, a=None, c_over_a=1.626, x1=0.5, z1=0.5):
         """
         Builds a hexagonal $A B_2$ C14 Laves phase cell.
 
@@ -58,7 +58,7 @@ class CompoundFactory:
             If any of the fractional coordinates fall onto their high symmetry values the atoms may be placed on another
             Wyckoff position, with less sites and therefor the cell composition may change.
 
-            For `x1` avoid 0, 1/3, 2/3, for `z1` avoid 0, 1/4, 1/2, 3/4.
+            For `x1` avoid 0, 1/3, 2/3, for `z1` avoid 1/4, 3/4.
 
         Args:
             element_a (str, ase.Atom): specificies A
@@ -119,7 +119,7 @@ class CompoundFactory:
         return s
 
     @staticmethod
-    def C36(element_a, element_b, a=None, c_over_a=1.626, x1=0.5, z1=0.33, z2=0.66, z3=0.4):
+    def C36(element_a, element_b, a=None, c_over_a=1.626, x1=0.25, z1=0.1, z2=0.125, z3=0.875):
         """
         Create hexagonal $A B_2$ C36 Laves phase.
 
@@ -128,7 +128,7 @@ class CompoundFactory:
             If any of the fractional coordinates fall onto their high symmetry values the atoms may be placed on another
             Wyckoff position, with less sites and therefor the cell composition may change.
 
-            For `x1` avoid 0, 1/3, 2/3, for `zi` avoid 0, 1/4, 1/2, 3/4.
+            For `x1` avoid 0, 1/3, 2/3, for `z1` avoid 0, 1/4, 1/2, 3/4, for `z1`/`z2` avoid 1/4, 3/4.
 
         Args:
             element_a (str, ase.Atom): specificies A
