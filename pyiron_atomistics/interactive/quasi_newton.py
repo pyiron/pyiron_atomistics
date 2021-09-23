@@ -1,4 +1,3 @@
-from scipy import sparse
 import numpy as np
 from pyiron_base import DataContainer
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
@@ -32,7 +31,7 @@ class QuasiNewtonInteractive:
             self.regularization = regularization**2
         else:
             self.regularization = regularization
-        if self.use_eigenvalues and self.regularization==0:
+        if self.use_eigenvalues and self.regularization == 0:
             raise ValueError('Regularization must be larger than 0 when eigenvalues are used')
 
     def _initialize_hessian(
@@ -80,7 +79,7 @@ class QuasiNewtonInteractive:
         if self._eigenvalues is None:
             self._calc_eig()
         return self._eigenvalues
-        
+
     @property
     def eigenvectors(self):
         if self._eigenvectors is None:
@@ -91,7 +90,7 @@ class QuasiNewtonInteractive:
         self.update_hessian(g, threshold=threshold, mode=mode)
         self.dx = -np.einsum('ij,j->i', self.inv_hessian, g.flatten()).reshape(-1, 3)
         return self.dx
-    
+
     def update_hessian(self, g, threshold=1e-4, mode='PSB'):
         if self.g_old is None:
             self.g_old = g
@@ -99,21 +98,22 @@ class QuasiNewtonInteractive:
         dg = self.get_dg(g).flatten()
         dx = self.dx.flatten()
         H_tmp = dg-np.einsum('ij,j->i', self.hessian, dx)
-        if mode=='SR':
+        if mode == 'SR':
             denominator = np.dot(H_tmp, self.dx.flatten())
             if np.absolute(denominator) > threshold:
                 dH = np.outer(H_tmp, H_tmp)/denominator
                 self.hessian = dH+self.hessian
-        elif mode=='PSB':
+        elif mode == 'PSB':
             dxdx = np.einsum('i,i->', dx, dx)
             dH = np.einsum('i,j->ij', H_tmp, dx)
             dH = (dH+dH.T)/dxdx
             dH -= np.einsum('i,i,j,k->jk', dx, H_tmp, dx, dx, optimize='optimal')/dxdx**2
             self.hessian = dH+self.hessian
-        self.g_old = g            
+        self.g_old = g
 
     def get_dg(self, g):
         return g-self.g_old
+
 
 def run_qn(
     job,
@@ -145,6 +145,7 @@ def run_qn(
         job.structure.center_coordinates_in_unit_cell()
         job.run()
     return qn
+
 
 class QuasiNewton(InteractiveWrapper):
     def __init__(self, project, job_name):
@@ -207,6 +208,7 @@ class QuasiNewton(InteractiveWrapper):
     def collect_output(self):
         self.output._index_lst.append(len(self.ref_job.output.energy_pot))
 
+
 class Input(DataContainer):
     """
     Args:
@@ -226,6 +228,7 @@ class Input(DataContainer):
         self.use_eigenvalues = True
         self.diffusion_direction = None
         self.regularization = 1e-6
+
 
 class Output(ReferenceJobOutput):
     def __init__(self, job):
