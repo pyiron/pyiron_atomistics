@@ -1240,7 +1240,7 @@ class VaspBase(GenericDFTJob):
             self.input.incar["EDIFFG"] = abs(ionic_energy_tolerance)
         else:
             # Using default convergence criterion
-            self.input.incar["EDIFFG"] = -0.01
+            self.input.incar["EDIFFG"] = -0.01 if self.input.incar["ISIF"] not in (5, 6, 7) else 0.01
         if electronic_energy is not None:
             self.input.incar["EDIFF"] = electronic_energy
 

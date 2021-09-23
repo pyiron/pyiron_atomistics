@@ -9,6 +9,7 @@ from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
+from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
 deprecate = Deprecator()
@@ -331,7 +332,6 @@ class Interstitials:
         """
         return np.array([h.area for h in self.hull])
 
-
 class Analyse:
     """ Class to analyse atom structure.  """
     def __init__(self, structure):
@@ -569,3 +569,47 @@ class Analyse:
             xx = get_average_of_unique_labels(cluster.labels_, xx)
         xx = xx[np.linalg.norm(xx-self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1) < epsilon]
         return xx-epsilon
+
+    def get_strain(self, ref_structure, num_neighbors=None, only_bulk_type=False):
+        """
+        Calculate local strain of each atom following the Lagrangian strain tensor:
+
+        strain = (F^T x F - 1)/2
+
+        where F is the atomic deformation gradient.
+
+        Args:
+            ref_structure (pyiron_atomistics.atomistics.structure.Atoms): Reference bulk structure
+                (against which the strain is calculated)
+            num_neighbors (int): Number of neighbors to take into account to calculate the local
+                frame. If not specified, it is estimated based on cna analysis (only available if
+                the bulk structure is bcc, fcc or hcp).
+            only_bulk_type (bool): Whether to calculate the strain of all atoms or only for those
+                which cna considers has the same crystal structure as the bulk. Those which have
+                a different crystal structure will get 0 strain.
+
+        Returns:
+            ((n_atoms, 3, 3)-array): Strain tensors
+
+        Example:
+
+        >>> from pyiron_atomistics import Project
+        >>> pr = Project('.')
+        >>> bulk = pr.create.structure.bulk('Fe', cubic=True)
+        >>> structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
+        >>> structure.analyse.get_strain(bulk)
+
+        .. attention:: Differs from :meth:`.Atoms.apply_strain`!
+            This strain is not the same as the strain applied in `Atoms.apply_strain`, which
+            multiplies the strain tensor (plus identity matrix) with the basis vectors, while
+            here it follows the definition given by the Lagrangian strain tensor. For small
+            strain values they give similar results (i.e. when strain**2 can be neglected).
+
+        """
+        return Strain(
+            structure=self._structure,
+            ref_structure=ref_structure,
+            num_neighbors=num_neighbors,
+            only_bulk_type=only_bulk_type
+        ).strain
+
