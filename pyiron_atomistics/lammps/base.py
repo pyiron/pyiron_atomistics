@@ -983,7 +983,7 @@ class LammpsBase(AtomisticGenericJob):
                 pd.read_csv(
                     StringIO("\n".join(dump[llst:llen]).replace("ITEM: ATOMS ", "")),
                     delim_whitespace=True,
-                ).sort_values(by='id')
+                ).sort_values(by="id", ignore_index=True)
                 for llst, llen in zip(l_start, l_end)
             ]
 
