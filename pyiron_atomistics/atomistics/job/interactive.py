@@ -467,7 +467,7 @@ class GenericInteractiveOutput(GenericOutput):
         Returns:
             :class:`numpy.ndarray`: collected values from all previous steps
         """
-        cached = np.array(self._lst_from_cache(key), dtype=object)
+        cached = np.array(self._lst_from_cache(key))
         fetched = self._key_from_hdf(key)
         if fetched is None or len(fetched) == 0:
             return cached
