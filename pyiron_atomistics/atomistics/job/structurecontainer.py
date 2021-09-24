@@ -13,12 +13,14 @@ __email__ = "poul@mpie.de"
 __status__ = "development"
 __date__ = "Aug 12, 2020"
 
-from pyiron_base import DataContainer, GenericJob
+from pyiron_base import DataContainer, GenericJob, deprecate
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
 
 
-class StructureContainer(AtomisticGenericJob):
+class StructureContainer(GenericJob, HasStructure):
     """
     Container to save a list of structures in HDF5 together with tags.
 
@@ -29,8 +31,9 @@ class StructureContainer(AtomisticGenericJob):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self.__version__ = "0.2.0"
-        self.__hdf_version__ = "0.2.0"
+        self.__hdf_version__ = "0.3.0"
         self._structure_lst = DataContainer(table_name = "structures")
+        self._container = StructureStorage()
         self.server.run_mode.interactive = True
 
     @property
@@ -38,6 +41,8 @@ class StructureContainer(AtomisticGenericJob):
         """
         :class:`.DataContainer`: list of :class:`~.Atoms`
         """
+        if len(self._structure_lst) != len(self._container):
+            self._structure_lst = DataContainer(list(self._container.iter_structures()))
         return self._structure_lst
 
     @staticmethod
@@ -49,10 +54,10 @@ class StructureContainer(AtomisticGenericJob):
             structure_or_job (:class:`~.AtomisticGenericJob`, :class:`~.Atoms`):
                 if :class:`~.AtomisticGenericJob` try to get most recent structure,
         copy it and set the job_id in :attr:`~.Atoms.info`
-        
+
         Returns:
             :class:`~.Atoms`: structure from the job or given structure
-            
+
         Raises:
             ValueError: if given :class:`~.AtomisticGenericJob` has no structure set
             TypeError: if structure_or_job is of invalid type
@@ -74,25 +79,6 @@ class StructureContainer(AtomisticGenericJob):
                 "AtomisticGenericJob object."
             )
 
-    @property
-    def structure(self):
-        """
-        :class:`~.Atoms`: first (or only) structure set in the container
-
-        :setter:  :class:`~.Atoms`, :class:`~.AtomisticGenericJob`
-            if a job is given take the last structure and add the job id to its
-            :attr:`pyiron_atomistics.atomistics.structure.Atoms.info`
-        """
-        return self.structure_lst.get(0, None)
-
-    @structure.setter
-    def structure(self, structure_or_job):
-        item = self._to_structure(structure_or_job)
-        if len(self.structure_lst) >= 1:
-            self.structure_lst[0] = item
-        else:
-            self.structure_lst.append(item)
-
     def append(self, structure_or_job):
         """
         Add new structure to structure list.
@@ -110,8 +96,9 @@ class StructureContainer(AtomisticGenericJob):
         Returns:
             dict: item added to :attr:`~.structure_lst`
         """
-        self.structure_lst.append(self._to_structure(structure_or_job))
-        return self.structure_lst[0]
+        struct = self._to_structure(structure_or_job)
+        self._container.add_structure(struct)
+        return struct
 
     def run_static(self):
         self.status.finished = True
@@ -126,22 +113,25 @@ class StructureContainer(AtomisticGenericJob):
     def collect_output(self):
         pass
 
+    @property
+    @deprecate("use get_structure()")
+    def structure(self):
+        return self._get_structure(frame=0)
+
+    @structure.setter
+    @deprecate("use append()")
+    def structure(self, struct):
+        self.append(struct)
+
     def _number_of_structures(self):
-        return len(self._structure_lst)
+        return len(self._container)
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
-        return self._structure_lst[frame]
+        return self._container._get_structure(frame=frame, wrap_atoms=wrap_atoms)
 
     def to_hdf(self, hdf = None, group_name = None):
-        # skip any of the AtomisticGenericJob specific serialization, since we
-        # handle the structures on our own and that method might just confuse
-        # self.structure and self.structure_lst
-        GenericJob.to_hdf(self, hdf = hdf, group_name = group_name)
-
-        hdf = self.project_hdf5.create_group("structures")
-
-        for i, structure in enumerate(self.structure_lst.values()):
-            structure.to_hdf(hdf, group_name = "structure_{}".format(i))
+        super().to_hdf(hdf=hdf, group_name=group_name)
+        self._container.to_hdf(hdf=self.project_hdf5, group_name="structures")
 
     def from_hdf(self, hdf = None, group_name = None):
         # keep hdf structure for version peeking in separate variable, so that
@@ -157,14 +147,13 @@ class StructureContainer(AtomisticGenericJob):
         if hdf_version == "0.1.0":
             super().from_hdf(hdf=hdf, group_name=group_name)
             with self.project_hdf5.open("input") as hdf5_input:
-                self.structure = Atoms().from_hdf(hdf5_input)
-        else:
+                self.append(Atoms().from_hdf(hdf5_input))
+        elif hdf_version == "0.2.0":
             GenericJob.from_hdf(self, hdf = hdf, group_name = group_name)
-
-            self.structure_lst.clear()
 
             hdf = self.project_hdf5["structures"]
             for group in sorted(hdf.list_groups()):
-                structure = Atoms()
-                structure.from_hdf(hdf, group_name = group)
-                self.structure_lst.append(structure)
+                self.append(Atoms().from_hdf(hdf=hdf, group_name=group))
+        else:
+            super().from_hdf(hdf=hdf, group_name=group_name)
+            self._container.from_hdf(hdf=self.project_hdf5, group_name="structures")
