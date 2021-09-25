@@ -176,9 +176,14 @@ class QuasiNewton(InteractiveWrapper):
     def run_if_interactive(self):
         self._run()
 
-    def run_if_static(self):
+    def run_static(self):
+        self.status.running = True
+        self.ref_job_initialize()
         self._run()
-        self.interactive_close()
+        if self.ref_job.server.run_mode.interactive:
+            self.ref_job.interactive_close()
+        self.status.collect = True
+        self.run()
 
     def interactive_open(self):
         self.server.run_mode.interactive = True
