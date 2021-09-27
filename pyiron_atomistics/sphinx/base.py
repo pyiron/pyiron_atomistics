@@ -1773,7 +1773,10 @@ class InputWriter(object):
             spins_list = []
             s.logger.debug("Getting magnetic moments via \
                 get_initial_magnetic_moments")
-            if self._spin_enabled:
+            if any([
+                    m is not None
+                    for m in self.structure.get_initial_magnetic_moments().flatten()
+                    ]):
                 if any([
                     True
                     if isinstance(spin, list) or isinstance(spin, np.ndarray)
