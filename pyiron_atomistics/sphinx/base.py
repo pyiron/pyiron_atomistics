@@ -92,7 +92,7 @@ class SphinxBase(GenericDFTJob):
 
         # keeps both the generic parameters as well as the sphinx specific
         # input groups
-        self.input = Group(table_name = "parameters")
+        self.input = Group(table_name="parameters")
         self.load_default_input()
         self._save_memory = False
         self._output_parser = Output(self)
@@ -306,9 +306,9 @@ class SphinxBase(GenericDFTJob):
             keep_angstrom (bool): Store distances in Angstroms or Bohr
         """
         if keep_angstrom:
-            structure_group = Group( {"cell": np.array(self.structure.cell)} )
+            structure_group = Group({"cell": np.array(self.structure.cell)})
         else:
-            structure_group = Group( {
+            structure_group = Group({
                     "cell": np.array(self.structure.cell * 1 / BOHR_TO_ANGSTROM),
             })
         if "selective_dynamics" in self.structure._tag_list.keys():
@@ -353,10 +353,7 @@ class SphinxBase(GenericDFTJob):
                         if ss:
                             atom_group[-1]["movable" + xx] = True
         if not self.fix_symmetry:
-            structure_group.symmetry = Group({
-                "operator": {
-                    "S": "[[1,0,0],[0,1,0],[0,0,1]]"
-            }})
+            structure_group.symmetry = Group({"operator": {"S": "[[1,0,0],[0,1,0],[0,0,1]]"}})
         return structure_group
 
     def load_default_input(self):
@@ -449,9 +446,9 @@ class SphinxBase(GenericDFTJob):
         the self.input.
         """
 
-        if len(self.restart_file_list) != 0 \
-        and not self._generic_input["restart_for_band_structure"]:
-            self.input.sphinx.main.get("scfDiag", create = True).append(
+        if (len(self.restart_file_list) != 0 and
+                not self._generic_input["restart_for_band_structure"]):
+            self.input.sphinx.main.get("scfDiag", create=True).append(
                 self.get_scf_group(
                     maxSteps=10, keepRhoFixed=True, dEnergy=1.0e-4
                 )
@@ -460,7 +457,7 @@ class SphinxBase(GenericDFTJob):
             optimizer = 'linQN'
             if self.input.use_on_the_fly_cg_optimization:
                 optimizer = 'ricQN'
-            self.input.sphinx.main[optimizer] = Group(table_name = "input")
+            self.input.sphinx.main[optimizer] = Group(table_name="input")
             self.input.sphinx.main[optimizer]["maxSteps"] = str(self.input["Istep"])
             self.input.sphinx.main[optimizer]["maxStepLength"] = str(0.1/BOHR_TO_ANGSTROM)
             if "dE" in self.input and "dF" in self.input:
@@ -476,7 +473,7 @@ class SphinxBase(GenericDFTJob):
             self.input.sphinx.main[optimizer].create_group("bornOppenheimer")
             self.input.sphinx.main[optimizer]['bornOppenheimer']["scfDiag"] = self.get_scf_group()
         else:
-            scf = self.input.sphinx.main.get("scfDiag", create = True)
+            scf = self.input.sphinx.main.get("scfDiag", create=True)
             if self._generic_input["restart_for_band_structure"]:
                 scf.append(self.get_scf_group(keepRhoFixed=True))
             else:
@@ -581,7 +578,7 @@ class SphinxBase(GenericDFTJob):
                 raise ValueError("SPHInX only supports collinear spins.")
             else:
                 rho = self.input.sphinx.initialGuess.rho
-                rho.get("atomicSpin", create = True)
+                rho.get("atomicSpin", create=True)
                 if update_spins:
                     rho.atomicSpin.clear()
                 if len(rho.atomicSpin) == 0:
@@ -804,8 +801,8 @@ class SphinxBase(GenericDFTJob):
                 try:
                     self.collect_output()
                 except AssertionError:
-                    from_charge_density=False
-                    from_wave_functions=False
+                    from_charge_density = False
+                    from_wave_functions = False
                 if len(w) > 0:
                     self.status.not_converged = True
         new_job = super(SphinxBase, self).restart(
@@ -861,7 +858,7 @@ class SphinxBase(GenericDFTJob):
             from pyiron_base import GenericParameters
             super(SphinxBase, self).from_hdf(hdf=hdf, group_name=group_name)
             self._structure_from_hdf()
-            gp = GenericParameters(table_name = "input")
+            gp = GenericParameters(table_name="input")
             gp.from_hdf(self._hdf5)
             for k in gp.keys():
                 self.input[k] = gp[k]
@@ -871,7 +868,7 @@ class SphinxBase(GenericDFTJob):
             super(SphinxBase, self).from_hdf(hdf=hdf, group_name=group_name)
             self._structure_from_hdf()
             with self._hdf5.open("input") as hdf:
-                self.input.from_hdf(hdf, group_name = "parameters")
+                self.input.from_hdf(hdf, group_name="parameters")
             if self.status.finished:
                 self._output_parser.from_hdf(self._hdf5)
 
@@ -944,14 +941,14 @@ class SphinxBase(GenericDFTJob):
         if density_mixing_parameter is not None:
             if density_mixing_parameter > 1.0 or density_mixing_parameter < 0:
                 raise ValueError(
-                    "density_mixing_parameter has to be between 0 and 1 "+
+                    "density_mixing_parameter has to be between 0 and 1 " +
                     "(default value is 1)"
                 )
             self.input["rhoMixing"] = density_mixing_parameter
         if spin_mixing_parameter is not None:
             if spin_mixing_parameter > 1.0 or spin_mixing_parameter < 0:
                 raise ValueError(
-                    "spin_mixing_parameter has to be between 0 and 1 "+
+                    "spin_mixing_parameter has to be between 0 and 1 " +
                     "(default value is 1)"
                 )
             self.input["spinMixing"] = spin_mixing_parameter
@@ -1016,7 +1013,7 @@ class SphinxBase(GenericDFTJob):
         if ionic_forces is not None:
             ionic_force_tolerance = ionic_forces
         if ionic_energy is not None:
-            ionic_energy_tolerance =ionic_energy
+            ionic_energy_tolerance = ionic_energy
         assert (
             ionic_energy_tolerance is None or ionic_energy_tolerance > 0
         ), "ionic_energy_tolerance must be a positive float"
@@ -1100,8 +1097,9 @@ class SphinxBase(GenericDFTJob):
         if not isinstance(symmetry_reduction, bool):
             raise ValueError("symmetry_reduction has to be a boolean")
         if manual_kpoints is not None:
-            raise ValueError("manual_kpoints is not yet implemented in "
-                + "Pyiron for SPHInX")
+            raise ValueError(
+                "manual_kpoints is not yet implemented in pyiron for SPHInX"
+            )
         if weights is not None:
             raise ValueError(
                 "manual weights are not yet implmented in Pyiron for "
@@ -1206,8 +1204,8 @@ class SphinxBase(GenericDFTJob):
 
         if self.structure is None:
             raise AssertionError(
-                f"{self.job_name} has not been assigned " +\
-                "a structure. Please load one first (e.g. " +\
+                f"{self.job_name} has not been assigned " +
+                "a structure. Please load one first (e.g. " +
                 f"{self.job_name}.structure = ...)")
 
         if self.input["EmptyStates"] == "auto":
@@ -1323,7 +1321,9 @@ class SphinxBase(GenericDFTJob):
 
     @property
     def _spin_enabled(self):
-        if np.any(self.structure.get_initial_magnetic_moments().flatten() != None):
+        if np.any([
+            m is not None for m in self.structure.get_initial_magnetic_moments().flatten()
+        ]):
             return True
         return False
 
@@ -1419,7 +1419,7 @@ class SphinxBase(GenericDFTJob):
         positions = self.structure.get_scaled_positions()
         numbers = self.structure.get_atomic_numbers()
         magmoms = self.structure.get_initial_magnetic_moments()
-        if np.all(magmoms==None) or ignore_magmoms:
+        if np.all([m is None for m in magmoms]) or ignore_magmoms:
             magmoms = np.zeros(len(magmoms))
         mag_num = np.array(list(zip(magmoms, numbers)))
         satz = np.unique(mag_num, axis=0)
@@ -1454,7 +1454,7 @@ class SphinxBase(GenericDFTJob):
                 or round(self.input.sphinx.basis["eCut"]*RYDBERG_TO_EV, 0) == 340
             ):
                 warnings.warn(
-                    "Energy cut-off value wrong or not modified from default "+
+                    "Energy cut-off value wrong or not modified from default " +
                     "340 eV; change it via job.set_encut()"
                 )
             if not (
@@ -1470,15 +1470,15 @@ class SphinxBase(GenericDFTJob):
                 or round(self.input.sphinx.PAWHamiltonian["ekt"], 1) == 0.2
             ):
                 warnings.warn(
-                    "Fermi smearing value wrong or not modified from default "+
+                    "Fermi smearing value wrong or not modified from default " +
                     "0.2 eV; change it via job.set_occupancy_smearing()"
                 )
             if not (
                 isinstance(self.input.sphinx.basis["folding"], np.ndarray)
                 or len(self.input.sphinx.basis["folding"]) != 3
-            ) or self.input.sphinx.basis["folding"].tolist() == [4,4,4]:
+            ) or self.input.sphinx.basis["folding"].tolist() == [4, 4, 4]:
                 warnings.warn(
-                    "K point folding wrong or not modified from default "+
+                    "K point folding wrong or not modified from default " +
                     "[4,4,4]; change it via job.set_kpoints()"
                 )
             if self.get_n_ir_reciprocal_points() < self.server.cores:
@@ -1488,7 +1488,7 @@ class SphinxBase(GenericDFTJob):
                     + str(self.get_n_ir_reciprocal_points())
                 )
             if self.input["EmptyStates"] == "auto":
-                if any(self.structure.get_initial_magnetic_moments() != None):
+                if self._spin_enabled:
                     warnings.warn(
                         "Number of empty states was not specified. Default: "
                         + "3+NIONS*1.5 for magnetic systems. "
@@ -1568,16 +1568,14 @@ class SphinxBase(GenericDFTJob):
                     "job.set_empty_states()"
                 )
 
-            if (
-                "KpointCoords" in self.input
-                and np.array(self.input.KpointCoords).tolist()
-                    != np.array(self.input.sphinx.basis.kPoint.coords).tolist()
-                ) \
-            or (
-                "KpointFolding" in self.input
-                and np.array(self.input.KpointFolding).tolist()
+            if (("KpointCoords" in self.input
+                    and np.array(self.input.KpointCoords).tolist()
+                    != np.array(self.input.sphinx.basis.kPoint.coords).tolist())
+                    or (
+                    "KpointFolding" in self.input
+                    and np.array(self.input.KpointFolding).tolist()
                     != np.array(self.input.sphinx.basis.folding).tolist()
-                ):
+                    )):
 
                 warnings.warn(
                     "job.input.basis.kPoint was modified directly. "
@@ -1637,12 +1635,9 @@ class SphinxBase(GenericDFTJob):
 
     @staticmethod
     def check_vasp_potentials():
-        return any(
-            [os.path.exists(
-                os.path.join(p, 'vasp', 'potentials', 'potpaw', 'Fe', 'POTCAR')
-                )
-            for p in s.resource_paths]
-        )
+        return any([os.path.exists(os.path.join(
+            p, 'vasp', 'potentials', 'potpaw', 'Fe', 'POTCAR'
+        )) for p in s.resource_paths])
 
 
 class InputWriter(object):
@@ -1778,7 +1773,7 @@ class InputWriter(object):
             spins_list = []
             s.logger.debug("Getting magnetic moments via \
                 get_initial_magnetic_moments")
-            if any(self.structure.get_initial_magnetic_moments().flatten() != None):
+            if self._spin_enabled:
                 if any([
                     True
                     if isinstance(spin, list) or isinstance(spin, np.ndarray)
@@ -1923,7 +1918,7 @@ class Output(object):
         spl_loc = list(np.where(np.array(counter) == min(counter))[0])
         spl_loc.append(None)
         for ii, ll in enumerate(spl_loc[:-1]):
-            arr_new.append(np.array(arr[ll : spl_loc[ii + 1]]).tolist())
+            arr_new.append(np.array(arr[ll:spl_loc[ii + 1]]).tolist())
         return arr_new
 
     def collect_spins_dat(self, file_name="spins.dat", cwd=None):
@@ -2106,7 +2101,7 @@ class Output(object):
             log_main = log_file[main_start:]
 
             self._parse_dict["n_valence"] = {
-                log_file[ii-1].split()[1]:int(ll.split('=')[-1])
+                log_file[ii-1].split()[1]: int(ll.split('=')[-1])
                 for ii, ll in enumerate(log_file)
                 if ll.startswith('| Z=')
             }
@@ -2119,7 +2114,7 @@ class Output(object):
                 end_line = np.where(
                     [line == end_line for line in file_content[start_line:]]
                 )[0][0]
-                return file_content[start_line : start_line + end_line]
+                return file_content[start_line:start_line + end_line]
             k_points = get_partial_log(
                 log_file,
                 "| Symmetrized k-points:               "
@@ -2148,13 +2143,6 @@ class Output(object):
                 if line.startswith("eTot(") and not line.startswith(
                     "eTot(Val)")
             ]
-            energy_zero = 0.5 * (np.array(energy_free) + np.array(energy_int))
-            energy_band = [
-                float(line.split()[2]) * HARTREE_TO_EV
-                for line in log_main
-                if line.startswith("eBand")
-            ]
-
             forces = [
                 float(re.split("{|}", line)[1].split(",")[i])
                 * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
@@ -2189,9 +2177,7 @@ class Output(object):
 
             def eig_converter(
                 arr,
-                magnetic=np.any(
-                    self._job.structure.get_initial_magnetic_moments() != None
-                ),
+                magnetic=self._job._spin_enabled,
                 len_k_points=len(k_points),
             ):
                 if len(arr) == 0:
@@ -2216,8 +2202,6 @@ class Output(object):
             )
             energy_free_lst = self.splitter(energy_free, counter)
             energy_int_lst = self.splitter(energy_int, counter)
-            energy_zero_lst = self.splitter(energy_zero, counter)
-            energy_band_lst = self.splitter(energy_band, counter)
             if len(forces) != 0:
                 forces = np.array(forces).reshape(
                     -1, len(self._job.structure), 3)
@@ -2234,11 +2218,9 @@ class Output(object):
             convergence.append(False)
         self._parse_dict["scf_convergence"] = convergence
         self._parse_dict["volume"] = np.array(len(convergence) * [volume])
-        if len(self._parse_dict["scf_energy_int"]) == 0 and \
-            len(energy_int_lst) != 0:
+        if len(self._parse_dict["scf_energy_int"]) == 0 and len(energy_int_lst) != 0:
             self._parse_dict["scf_energy_int"] = energy_int_lst
-        if len(self._parse_dict["scf_energy_free"]) == 0 and \
-            len(energy_free_lst) != 0:
+        if len(self._parse_dict["scf_energy_free"]) == 0 and len(energy_free_lst) != 0:
             self._parse_dict["scf_energy_free"] = energy_free_lst
         if len(self._parse_dict["forces"]) == 0 and len(forces) != 0:
             self._parse_dict["forces"] = forces
@@ -2273,8 +2255,7 @@ class Output(object):
                 coords.reshape(-1, natoms, 3) * BOHR_TO_ANGSTROM
             )
             self._parse_dict["positions"] = np.array(
-                [ff[self._job.id_spx_to_pyi]
-                for ff in self._parse_dict["positions"]]
+                [ff[self._job.id_spx_to_pyi] for ff in self._parse_dict["positions"]]
             )
             force = np.array(
                 [
@@ -2288,14 +2269,13 @@ class Output(object):
                 HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
             )
             self._parse_dict["forces"] = np.array(
-                [ff[self._job.id_spx_to_pyi]
-                for ff in self._parse_dict["forces"]]
+                [ff[self._job.id_spx_to_pyi] for ff in self._parse_dict["forces"]]
             )
             self._parse_dict["cell"] = (
                 np.array(
                     [
                         json.loads(
-                            "".join(file_content[i_line : i_line + 3])
+                            "".join(file_content[i_line:i_line + 3])
                             .split("=")[1]
                             .split(";")[0]
                         )
@@ -2450,8 +2430,7 @@ class Output(object):
                         [tt[-1] for tt in
                          self._parse_dict["scf_computation_time"]]
                     )
-                if len([en[-1] for en in
-                    self._parse_dict["scf_energy_free"]]) > 0:
+                if len([en[-1] for en in self._parse_dict["scf_energy_free"]]) > 0:
                     hdf5_generic["energy_tot"] = np.array(
                         [en[-1] for en in self._parse_dict["scf_energy_free"]]
                     )
@@ -2459,8 +2438,7 @@ class Output(object):
                         [en[-1] for en in self._parse_dict["scf_energy_free"]]
                     )
                 hdf5_generic["volume"] = self._parse_dict["volume"]
-                if "positions" not in hdf5_generic.list_nodes() or \
-                    force_update:
+                if "positions" not in hdf5_generic.list_nodes() or force_update:
                     if len(self._parse_dict["positions"]) > 0:
                         hdf5_generic["positions"] = np.array(
                             self._parse_dict["positions"]
