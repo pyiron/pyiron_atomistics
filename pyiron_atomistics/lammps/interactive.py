@@ -40,6 +40,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._check_opened = False
         self._interactive_run_command = None
         self._interactive_grand_canonical = True
+        self._interactive_water_bonds = False
         if "stress" in self.interactive_output_functions.keys():
             del self.interactive_output_functions["stress"]
 
@@ -51,6 +52,16 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
     def structure(self, structure):
         self._prism = UnfoldingPrism(structure.cell)
         GenericInteractive.structure.fset(self, structure)
+
+    @property
+    def interactive_water_bonds(self):
+        return self._interactive_water_bonds
+
+    @interactive_water_bonds.setter
+    def interactive_water_bonds(self, reset):
+        if not isinstance(reset, bool):
+            raise AssertionError()
+        self._interactive_water_bonds = reset
 
     def _interactive_lib_command(self, command):
         self._logger.debug("Lammps library: " + command)
@@ -196,7 +207,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 self._interactive_lib_command(line.split("\n")[0])
             if len(potential_lst) == 0:
                 self._interactive_lib_command(line.split("\n")[0])
-        if style_full:
+        if style_full and self._interactive_water_bonds:
             # Currently supports only water molecules. Please feel free to expand this
             self._interactive_water_setter()
 
@@ -454,9 +465,6 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._interactive_library.scatter_atoms("x", positions)
             self._interactive_library.scatter_atoms("type", elem_all)
         self._interactive_lib_command("change_box all remap")
-        # if self.input.control['atom_style'] == "full":
-        # Do not scatter or manipulate when you have water/ use atom_style full in your system
-        # self._interactive_water_setter()
         self._interactive_lammps_input()
         self._interactive_set_potential()
 
@@ -492,6 +500,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_lib_command(group_h1)
         self._interactive_lib_command(group_h2)
         # A dummy pair style that does not have any Coulombic interactions needs to be initialized to create the bonds
+        self._interactive_lib_command("kspace_style none")
         self._interactive_lib_command("pair_style lj/cut 2.5")
         self._interactive_lib_command("pair_coeff * * 0.0 0.0")
         self._interactive_lib_command("create_bonds many Oatoms H1atoms 1 0.7 1.4")
