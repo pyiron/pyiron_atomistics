@@ -119,7 +119,7 @@ class CompoundFactory:
         return s
 
     @staticmethod
-    def C36(element_a, element_b, a=None, c_over_a=1.626, x1=0.25, z1=0.1, z2=0.125, z3=0.875):
+    def C36(element_a, element_b, a=None, c_over_a=3.252, x1=0.25, z1=0.1, z2=0.125, z3=0.875):
         """
         Create hexagonal $A B_2$ C36 Laves phase.
 

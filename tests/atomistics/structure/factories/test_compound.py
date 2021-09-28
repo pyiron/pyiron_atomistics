@@ -39,7 +39,7 @@ class TestCompoundFactory(PyironTestCase):
         b_type = 'Cu'
         c14 = self.compound.C14(a_type, b_type)
         self.assertEqual(len(c14), 12, "Wrong number of atoms in C14 structure.")
-        self.assertEqual(c14.get_chemical_formula(), "Mg4Cu8", "Wrong chemical formula.")
+        self.assertEqual(c14.get_chemical_formula(), "Cu8Mg4", "Wrong chemical formula.")
 
     def test_C15(self):
         """
@@ -76,8 +76,11 @@ class TestCompoundFactory(PyironTestCase):
         self.assertEqual(6, np.sum(symbols[b_neighs] == b_type))
 
     def test_C36(self):
-        with self.assertRaises(NotImplementedError):
-            self.compound.C36()
+        a_type = 'Mg'
+        b_type = 'Cu'
+        c36 = self.compound.C36(a_type, b_type)
+        self.assertEqual(len(c36), 24, "Wrong number of atoms in C36 structure.")
+        self.assertEqual(c36.get_chemical_formula(), "Cu16Mg8", "Wrong chemical formula.")
 
     def test_D03(self):
         element_a, element_b = 'Al', 'Fe'
