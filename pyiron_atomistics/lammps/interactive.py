@@ -500,6 +500,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_lib_command(group_h1)
         self._interactive_lib_command(group_h2)
         # A dummy pair style that does not have any Coulombic interactions needs to be initialized to create the bonds
+        self._interactive_lib_command("kspace_style none")
         self._interactive_lib_command("pair_style lj/cut 2.5")
         self._interactive_lib_command("pair_coeff * * 0.0 0.0")
         self._interactive_lib_command("create_bonds many Oatoms H1atoms 1 0.7 1.4")
