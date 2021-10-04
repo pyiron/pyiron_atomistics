@@ -28,6 +28,9 @@ jobs:
         channel-priority: strict
         auto-update-conda: true  
         environment-file: .ci_support/environment.yml
+    - name: Conda list
+      shell: bash -l {0}
+      run: conda list 
     - name: Setup
       shell: bash -l {0}
       run: |
