@@ -221,7 +221,7 @@ def get_equilibrium_parameters(job):
 
 
 def get_structure(job):
-    atoms = pyiron_to_ase(job.load_object().get_structure())
+    atoms = pyiron_to_ase(job.to_object().get_structure())
     atoms_dict = {
         "symbols": atoms.get_chemical_symbols(),
         "positions": atoms.get_positions().tolist(),
