@@ -1014,7 +1014,6 @@ class NeighborsTrajectory(DataContainer):
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls, *args, **kwargs)
         object.__setattr__(instance, "_has_structure", None)
-        object.__setattr__(instance, "_store", None)
         return instance
 
     def __init__(self, init=None, has_structure=None, num_neighbors=12, table_name="neighbors_traj", store=None, **kwargs):
