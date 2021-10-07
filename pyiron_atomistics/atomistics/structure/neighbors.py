@@ -1017,7 +1017,7 @@ class NeighborsTrajectory(DataContainer):
         object.__setattr__(instance, "_store", None)
         return instance
 
-    def __init__(self, has_structure=None, num_neighbors=12, table_name="neighbors_traj", store=None, **kwargs):
+    def __init__(self, init=None, has_structure=None, num_neighbors=12, table_name="neighbors_traj", store=None, **kwargs):
         """
 
         Args:
@@ -1031,7 +1031,7 @@ class NeighborsTrajectory(DataContainer):
             **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
                              (eg. cutoff_radius, norm_order , etc.)
         """
-        super().__init__(table_name=table_name)
+        super().__init__(init=init, table_name=table_name)
         self._has_structure = has_structure
         self._store = store if store is not None else FlattenedStorage()
         self._neighbor_indices = None
