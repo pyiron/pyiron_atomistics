@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from scipy.sparse import coo_matrix
 from scipy.special import gamma
-from pyiron_base import DataContainer
+from pyiron_base import DataContainer, FlattenedStorage
 from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique_labels
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
@@ -1006,32 +1006,34 @@ def get_volume_of_n_sphere_in_p_norm(n=3, p=2):
 
 
 class NeighborsTrajectory(DataContainer):
-
     """
-    This class generates the neighbors for a given atomistic trajectory. The assumption here is that the trajectory is
-    canonical (no change in the number and types of species throughout the trajectory). The resulting indices,
-    distances, and vectors are stored as numpy arrays.
-
+    This class generates the neighbors for a given atomistic trajectory. The resulting indices, distances, and vectors
+    are stored as numpy arrays.
     """
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls, *args, **kwargs)
         object.__setattr__(instance, "_has_structure", None)
+        object.__setattr__(instance, "_store", None)
         return instance
 
-    def __init__(self, has_structure=None, num_neighbors=12, table_name="neighbors_traj", **kwargs):
+    def __init__(self, has_structure=None, num_neighbors=12, table_name="neighbors_traj", store=None, **kwargs):
         """
 
         Args:
             has_structure (:class:`.HasStructure`): object containing the structures to compute the neighbors on
             num_neighbors (int): The cutoff for the number of neighbors
-            table_name (str): Table name for the base `DataContainer` (stores this object as a group in a
-                              HDF5 file with this name)
+            table_name (str): Table name for the base `DataContainer` (stores this object as a group in a HDF5 file with
+                              this name)
+            store (FlattenedStorage): internal storage that should be used to store the neighborhood information,
+                                      creates a new one if not provided; if provided and not empty it must be compatible
+                                      with the lengths of the structures in `has_structure`, but this is *not* checked
             **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
                              (eg. cutoff_radius, norm_order , etc.)
         """
         super().__init__(table_name=table_name)
         self._has_structure = has_structure
+        self._store = store if store is not None else FlattenedStorage()
         self._neighbor_indices = None
         self._neighbor_distances = None
         self._neighbor_vectors = None
@@ -1090,20 +1092,13 @@ class NeighborsTrajectory(DataContainer):
         Compute the neighbors across the trajectory
         """
         self._neighbor_indices, self._neighbor_distances, self._neighbor_vectors = \
-            _get_neighbors(self._has_structure,
+            _get_neighbors(self._store, self._has_structure,
                            num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
 
 
-def _get_neighbors(has_structure, num_neighbors=20, **kwargs):
-    n_steps = has_structure.number_of_structures
-    n_atoms = len(has_structure.get_structure(frame=0))
-    indices = np.zeros((n_steps, n_atoms, num_neighbors), dtype=np.int64)
-    distances = np.zeros((n_steps, n_atoms, num_neighbors))
-    vecs = np.zeros((n_steps, n_atoms, num_neighbors, 3))
+def _get_neighbors(store, has_structure, num_neighbors=20, **kwargs):
     for t, struct in enumerate(has_structure.iter_structures()):
         # Change the `allow_ragged` based on the changes in get_neighbors()
         neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
-        indices[t, :, :] = neigh.indices
-        distances[t, :, :] = neigh.distances
-        vecs[t, :, :, :] = neigh.vecs
-    return indices, distances, vecs
+        store.add_chunk(t, indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs)
+    return store.get_array('indices'), store.get_array('distances'), store.get_array('vecs')
