@@ -1032,7 +1032,7 @@ class NeighborsTrajectory(DataContainer):
         """
         super().__init__(init=init, table_name=table_name)
         self._has_structure = has_structure
-        self._store = store if store is not None else FlattenedStorage()
+        self._flat_store = store if store is not None else FlattenedStorage()
         self._neighbor_indices = None
         self._neighbor_distances = None
         self._neighbor_vectors = None
@@ -1091,7 +1091,7 @@ class NeighborsTrajectory(DataContainer):
         Compute the neighbors across the trajectory
         """
         self._neighbor_indices, self._neighbor_distances, self._neighbor_vectors = \
-            _get_neighbors(self._store, self._has_structure,
+            _get_neighbors(self._flat_store, self._has_structure,
                            num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
 
 
