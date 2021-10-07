@@ -205,22 +205,5 @@ class StructureStorage(FlattenedStorage, HasStructure):
         return len(self)
 
 
-    def to_hdf(self, hdf, group_name="structures"):
-        # just overwrite group_name default
-        super().to_hdf(hdf=hdf, group_name=group_name)
-
-    def from_hdf(self, hdf, group_name="structures"):
-        with hdf.open(group_name) as hdf_s_lst:
-            version = hdf_s_lst.get("HDF_VERSION", "0.0.0")
-            if version == "0.0.0":
-                self._per_element_arrays["symbols"] = hdf_s_lst["symbols"].astype(np.dtype("U2"))
-                self._per_element_arrays["positions"] = hdf_s_lst["positions"]
-
-                self._per_chunk_arrays["start_index"] = hdf_s_lst["start_indices"]
-                self._per_chunk_arrays["length"] = hdf_s_lst["len_current_struct"]
-                self._per_chunk_arrays["identifier"] = hdf_s_lst["identifiers"].astype(np.dtype("U20"))
-                self._per_chunk_arrays["cell"] = hdf_s_lst["cells"]
-
-                self._per_chunk_arrays["pbc"] = np.full((self.num_chunks, 3), True)
-            else:
-                super().from_hdf(hdf=hdf, group_name=group_name)
+    def _get_hdf_group_name(self):
+        return "structures"
