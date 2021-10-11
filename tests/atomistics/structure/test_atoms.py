@@ -1068,7 +1068,7 @@ class TestAtoms(unittest.TestCase):
         basis_Mg = basis_Mg.center_coordinates_in_unit_cell()
         self.assertTrue(
             np.allclose(
-                np.dot(np.linalg.inv(basis_Mg.cell).T, basis_Mg.positions.T).T,
+                np.dot(np.linalg.inv(basis_Mg.cell).T, basis_Mg.positions.T).T % 1,
                 basis_Mg.get_scaled_positions(),
             )
         )
