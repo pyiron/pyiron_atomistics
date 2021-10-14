@@ -178,7 +178,7 @@ class AtomskFactory:
             *species (list of str): chemical short symbols for the type of atoms to create, length depends on lattice
                                     type
             c (float, optional): third lattice parameter, only necessary for some lattice types
-            hkl (array of int, (3,3)): three hkl vectors giving the crystallographic axes that should point along the x,
+            hkl (array of int, (3,3) or (3,4)): three hkl vectors giving the crystallographic axes that should point along the x,
                                        y, z directions
 
         Returns:
