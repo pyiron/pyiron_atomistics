@@ -54,7 +54,7 @@ class AtomskBuilder:
         if hkl is not None:
             if np.asarray(hkl).shape not in ( (3, 3), (3, 4) ):
                 raise ValueError(f"hkl must have shape 3x3 or 3x4 if provided, not {hkl}!")
-            line += "  ".join(" ".join(a) for a in hkl)
+            line += "  ".join(" ".join(map(str, a)) for a in hkl)
         # TODO: check len(species) etc. with the document list of supported phases
         self._options.append(line)
         return self
