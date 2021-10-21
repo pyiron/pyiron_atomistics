@@ -1211,9 +1211,9 @@ class SphinxBase(GenericDFTJob):
         if self.input["EmptyStates"] == "auto":
             if self._spin_enabled:
                 self.input["EmptyStates"] = int(
-                    1.5 * len(self.structure) + 3)
+                    1.5 * len(self.structure) + 10)
             else:
-                self.input["EmptyStates"] = int(len(self.structure) + 3)
+                self.input["EmptyStates"] = int(len(self.structure) + 10)
 
         if not self.input.sphinx.basis.read_only:
             self.load_basis_group()
