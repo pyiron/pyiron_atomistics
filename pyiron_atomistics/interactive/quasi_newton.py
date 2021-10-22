@@ -1,5 +1,6 @@
 import numpy as np
 from pyiron_base import DataContainer
+import warnings
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
@@ -15,12 +16,16 @@ class QuasiNewtonInteractive:
         use_eigenvalues=True,
         diffusion_direction=None,
         regularization=1e-6,
+        symmetrize=True
     ):
         self.use_eigenvalues = use_eigenvalues
         self._hessian = None
         self._eigenvalues = None
         self._eigenvectors = None
         self.g_old = None
+        self.symmetry = None
+        if symmetrize:
+            self.symmetry = structure.get_symmetry()
         self._initialize_hessian(
             structure=structure,
             starting_h=starting_h,
@@ -37,7 +42,10 @@ class QuasiNewtonInteractive:
     def _initialize_hessian(
         self, structure, starting_h=10, diffusion_id=None, diffusion_direction=None
     ):
-        self.hessian = starting_h*np.eye(np.prod(structure.positions.shape))
+        if np.prod(np.array(starting_h).shape) == np.prod(structure.positions.shape)**2:
+            self.hessian = starting_h
+        else:
+            self.hessian = starting_h*np.eye(np.prod(structure.positions.shape))
         if diffusion_id is not None and diffusion_direction is not None:
             v = np.zeros_like(structure.positions)
             v[diffusion_id] = diffusion_direction
@@ -58,7 +66,7 @@ class QuasiNewtonInteractive:
                     self.eigenvectors
                 )
             else:
-                return np.linnalg.inv(self.hessian+np.eye(len(self.hessian))*self.regularization)
+                return np.linalg.inv(self.hessian+np.eye(len(self.hessian))*self.regularization)
         return np.linnalg.inv(self.hessian)
 
     @property
@@ -67,9 +75,11 @@ class QuasiNewtonInteractive:
 
     @hessian.setter
     def hessian(self, v):
+        self._hessian = np.array(v)
+        length = int(np.sqrt(np.prod(self._hessian.shape)))
+        self._hessian = self._hessian.reshape(length, length)
         self._eigenvalues = None
         self._eigenvectors = None
-        self._hessian = v
 
     def _calc_eig(self):
         self._eigenvalues, self._eigenvectors = np.linalg.eigh(self.hessian)
@@ -89,7 +99,24 @@ class QuasiNewtonInteractive:
     def get_dx(self, g, threshold=1e-4, mode='PSB'):
         self.update_hessian(g, threshold=threshold, mode=mode)
         self.dx = -np.einsum('ij,j->i', self.inv_hessian, g.flatten()).reshape(-1, 3)
+        if self.symmetry is not None:
+            self.dx = self.symmetry.symmetrize_vectors(self.dx)
         return self.dx
+
+    def _get_SR(self, dx, dg, H_tmp, threshold=1e-4):
+        denominator = np.dot(H_tmp, dx)
+        if np.absolute(denominator) < threshold:
+            denominator += threshold
+        return np.outer(H_tmp, H_tmp)/denominator
+
+    def _get_PSB(self, dx, dg, H_tmp):
+        dxdx = np.einsum('i,i->', dx, dx)
+        dH = np.einsum('i,j->ij', H_tmp, dx)
+        dH = (dH+dH.T)/dxdx
+        return dH - np.einsum('i,i,j,k->jk', dx, H_tmp, dx, dx, optimize='optimal')/dxdx**2
+
+    def _get_BFGS(self, dx, dg, H_tmp):
+        return np.outer(dg, dg)/dg.dot(dx) - np.outer(H_tmp, H_tmp)/dx.dot(H_tmp)
 
     def update_hessian(self, g, threshold=1e-4, mode='PSB'):
         if self.g_old is None:
@@ -99,16 +126,15 @@ class QuasiNewtonInteractive:
         dx = self.dx.flatten()
         H_tmp = dg-np.einsum('ij,j->i', self.hessian, dx)
         if mode == 'SR':
-            denominator = np.dot(H_tmp, self.dx.flatten())
-            if np.absolute(denominator) > threshold:
-                dH = np.outer(H_tmp, H_tmp)/denominator
-                self.hessian = dH+self.hessian
+            self.hessian = self._get_SR(dx, dg, H_tmp)+self.hessian
         elif mode == 'PSB':
-            dxdx = np.einsum('i,i->', dx, dx)
-            dH = np.einsum('i,j->ij', H_tmp, dx)
-            dH = (dH+dH.T)/dxdx
-            dH -= np.einsum('i,i,j,k->jk', dx, H_tmp, dx, dx, optimize='optimal')/dxdx**2
-            self.hessian = dH+self.hessian
+            self.hessian = self._get_PSB(dx, dg, H_tmp)+self.hessian
+        elif mode == 'BFGS':
+            self.hessian = self._get_BFGS(dx, dg, H_tmp)+self.hessian
+        else:
+            raise ValueError(
+                'Mode not recognized: {}. Choose from `SR`, `PSB` and `BFGS`'.format(mode)
+            )
         self.g_old = g
 
     def get_dg(self, g):
@@ -126,6 +152,8 @@ def run_qn(
     use_eigenvalues=True,
     diffusion_direction=None,
     regularization=1e-6,
+    symmetrize=True,
+    min_displacement = 1.0e-8,
 ):
     qn = QuasiNewtonInteractive(
         structure=job.structure,
@@ -141,6 +169,9 @@ def run_qn(
         if np.linalg.norm(f, axis=-1).max() < ionic_force_tolerance:
             break
         dx = qn.get_dx(-f, mode=mode)
+        if np.linalg.norm(dx, axis=-1).max() < min_displacement:
+            warnings.warn('line search alpha is zero')
+            break
         job.structure.positions += dx
         job.structure.center_coordinates_in_unit_cell()
         job.run()
@@ -169,7 +200,8 @@ class QuasiNewton(InteractiveWrapper):
             diffusion_id=self.input.diffusion_id,
             use_eigenvalues=self.input.use_eigenvalues,
             diffusion_direction=self.input.diffusion_direction,
-            regularization=self.input.regularization
+            regularization=self.input.regularization,
+            symmetrize=self.input.symmetrize
         )
         self.collect_output()
 
@@ -233,6 +265,7 @@ class Input(DataContainer):
         self.use_eigenvalues = True
         self.diffusion_direction = None
         self.regularization = 1e-6
+        self.symmetrize = True
 
 
 class Output(ReferenceJobOutput):
