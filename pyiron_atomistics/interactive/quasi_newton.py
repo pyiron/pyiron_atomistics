@@ -1,6 +1,7 @@
 import numpy as np
 from pyiron_base import DataContainer
 import warnings
+from scipy.spatial import cKDTree
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
@@ -153,7 +154,7 @@ def run_qn(
     diffusion_direction=None,
     regularization=1e-6,
     symmetrize=True,
-    min_displacement = 1.0e-8,
+    min_displacement=1.0e-8,
 ):
     qn = QuasiNewtonInteractive(
         structure=job.structure,
@@ -276,3 +277,93 @@ class Output(ReferenceJobOutput):
     @property
     def index_lst(self):
         return np.asarray(self._index_lst)
+
+
+class Hessian:
+    def __init__(self, structure, dx=0.01):
+        self.structure = structure.copy()
+        self._symmetry = None
+        self._indices = None
+        self.dx = dx
+        self._displacements = []
+        self._inequivalent_displacements = []
+        self._inequivalent_ids = []
+        self._inequivalent_forces = []
+
+    @property
+    def symmetry(self):
+        if self._symmetry is None:
+            self._symmetry = self.structure.get_symmetry()
+        return self._symmetry
+
+    @property
+    def indices(self):
+        if self._indices is None:
+            epsilon = 1.0e-8
+            x_scale = self.structure.get_scaled_positions()
+            x = np.einsum('nxy,my->mnx', self.symmetry.rotations, x_scale)+self.symmetry.translations
+            if any(self.structure.pbc):
+                x[:, :, self.structure.pbc] -= np.floor(x[:, :, self.structure.pbc]+epsilon)
+            x = np.einsum('nmx->mnx', x)
+            tree = cKDTree(x_scale)
+            self._indices = tree.query(x)[1]
+        return self._indices
+
+    def _get_equivalent_vector(self, v, indices=None):
+        result = np.zeros_like(v)
+        result = v[np.argsort(self.indices, axis=1)]
+        result = np.einsum('nxy,nmy->nmx', self.symmetry.rotations, result)
+        if indices is None:
+            indices = np.sort(np.unique(result, return_index=True, axis=0)[1])
+        return result[indices], indices
+
+    def set_forces(self, forces):
+        if np.array(forces).shape != self.displacements.shape:
+            raise AssertionError('Force shape does not match displacement shape')
+        for ff, ii in zip(forces, self._inequivalent_ids):
+            self._inequivalent_forces.extend(self._get_equivalent_vector(ff, ii)[0])
+        self._inequivalent_forces = np.array(
+            self._inequivalent_forces
+        ).reshape(len(self._inequivalent_forces), -1)
+
+    def _get_next_displacement(self, all_displacements):
+        ix, iy = np.where(np.isclose(all_displacements, 0))
+        displacements = np.zeros_like(all_displacements)
+        displacements[ix[0], iy[0]] = self.dx
+        return displacements
+
+    def _generate_displacements(self):
+        all_displacements = np.zeros_like(self.structure.positions)
+        for _ in range(np.prod(all_displacements.shape)):
+            if not np.any(np.isclose(all_displacements, 0)):
+                break
+            self._displacements.append(self._get_next_displacement(all_displacements))
+            inequi_displacements, indices = self._get_equivalent_vector(self._displacements[-1])
+            self._inequivalent_displacements.extend(inequi_displacements)
+            self._inequivalent_ids.append(indices)
+            all_displacements += np.absolute(inequi_displacements).sum(axis=0)
+        self._displacements = np.array(self._displacements)
+        self._inequivalent_displacements = np.array(
+            self._inequivalent_displacements
+        ).reshape(len(self._inequivalent_displacements), -1)
+
+    def get_hessian(self, forces=None):
+        if forces is None and len(self._inequivalent_forces) == 0:
+            raise AssertionError('Forces not set yet')
+        if forces is not None:
+            self.set_forces(forces)
+        X = np.einsum(
+            'ik,ij->kj',
+            self._inequivalent_displacements,
+            self._inequivalent_displacements, optimize=True
+        )
+        Y = np.einsum(
+            'in,ik->nk', self._inequivalent_forces, self._inequivalent_displacements
+        )
+        return -np.einsum('kj,nk->nj', np.linalg.inv(X), Y)
+
+    @property
+    def displacements(self):
+        if len(self._displacements) == 0:
+            self._generate_displacements()
+        return self._displacements
