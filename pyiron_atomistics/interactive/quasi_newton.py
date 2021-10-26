@@ -52,13 +52,21 @@ class QuasiNewtonInteractive:
         elif diffusion_id is not None or diffusion_direction is not None:
             raise ValueError('diffusion id or diffusion direction not specified')
 
-    def _set_regularization(self, g):
+    def _set_regularization(self, g, max_cycle=20, max_value=20, tol=1.0e-8):
         self.regularization = 1
-        H_inv = self.inv_hessian()
-        gH = H_inv.dot(g)
-        dH_inv = self._get_d_inv_hessian(H_inv, gH)
+        for _ in range(max_cycle):
+            H_inv = self.inv_hessian
+            gH = H_inv.dot(g)
+            dH_inv = self._get_d_inv_hessian(H_inv, gH, g)
+            value = np.absolute(gH).max()-self.max_displacement
+            if np.absolute(value) < tol:
+                break
+            self.regularization -= value/dH_inv
+            if np.absolute(self.regularization) > max_value:
+                self.regularization = max_value*np.sign(self.regularization)
 
-    def _get_d_inv_hessian(self, H_inv, gH):
+    def _get_d_inv_hessian(self, H_inv, gH, g):
+        s = np.sign(gH[np.absolute(gH).argmax()])
         if self.use_eigenvalues:
             return -np.einsum(
                 ',k,k,k,jk,j->',
@@ -68,14 +76,14 @@ class QuasiNewtonInteractive:
                 1/(self.eigenvalues**2+np.exp(self.regularization))**2,
                 self.eigenvectors, g,
                 optimize=True
-            )
+            )*s
         else:
             return -np.einsum(
-                ',j,jk,k->',
+                ',j,j->',
                 np.exp(self.regularization),
                 H_inv[np.absolute(gH).argmax()],
-                H_inv, g, optimize=True
-            )
+                gH, optimize=True
+            )*s
 
     @property
     def inv_hessian(self):
@@ -125,7 +133,9 @@ class QuasiNewtonInteractive:
         self.dx = -np.einsum('ij,j->i', self.inv_hessian, g.flatten()).reshape(-1, 3)
         if self.symmetry is not None:
             self.dx = self.symmetry.symmetrize_vectors(self.dx)
-        if np.linalg.norm(self.dx, axis=-1).max() > self.max_displacement:
+        if np.linalg.norm(
+            self.dx, axis=-1
+        ).max() > self.max_displacement and self.regularization is None:
             self._set_regularization(g=g.flatten())
             return self.get_dx(g=g, threshold=threshold, mode=mode, update_hessian=False)
         return self.dx
