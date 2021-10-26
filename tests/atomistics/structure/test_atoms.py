@@ -1064,11 +1064,11 @@ class TestAtoms(unittest.TestCase):
 
     def test_get_scaled_positions(self):
         basis_Mg = CrystalStructure("Mg", bravais_basis="fcc", lattice_constants=4.2)
-        basis_Mg.set_cell(basis_Mg.cell+0.1 * np.random.random((3, 3)))
+        basis_Mg.set_cell(basis_Mg.cell + 0.1 * np.random.random((3, 3)))
         basis_Mg = basis_Mg.center_coordinates_in_unit_cell()
         self.assertTrue(
             np.allclose(
-                np.dot(np.linalg.inv(basis_Mg.cell).T, basis_Mg.positions.T).T,
+                np.dot(np.linalg.inv(basis_Mg.cell).T, basis_Mg.positions.T).T % 1,
                 basis_Mg.get_scaled_positions(),
             )
         )
