@@ -16,8 +16,8 @@ class QuasiNewtonInteractive:
         diffusion_id=None,
         use_eigenvalues=True,
         diffusion_direction=None,
-        regularization=1e-6,
-        symmetrize=True
+        symmetrize=True,
+        max_displacement=0.1,
     ):
         self.use_eigenvalues = use_eigenvalues
         self._hessian = None
@@ -25,6 +25,8 @@ class QuasiNewtonInteractive:
         self._eigenvectors = None
         self.g_old = None
         self.symmetry = None
+        self.max_displacement = max_displacement
+        self.regularization = None
         if symmetrize:
             self.symmetry = structure.get_symmetry()
         self._initialize_hessian(
@@ -33,12 +35,6 @@ class QuasiNewtonInteractive:
             diffusion_id=diffusion_id,
             diffusion_direction=diffusion_direction
         )
-        if self.use_eigenvalues:
-            self.regularization = regularization**2
-        else:
-            self.regularization = regularization
-        if self.use_eigenvalues and self.regularization == 0:
-            raise ValueError('Regularization must be larger than 0 when eigenvalues are used')
 
     def _initialize_hessian(
         self, structure, starting_h=10, diffusion_id=None, diffusion_direction=None
@@ -56,19 +52,44 @@ class QuasiNewtonInteractive:
         elif diffusion_id is not None or diffusion_direction is not None:
             raise ValueError('diffusion id or diffusion direction not specified')
 
+    def _set_regularization(self, g):
+        self.regularization = 1
+        H_inv = self.inv_hessian()
+        gH = H_inv.dot(g)
+        dH_inv = self._get_d_inv_hessian(H_inv, gH)
+
+    def _get_d_inv_hessian(self, H_inv, gH):
+        if self.use_eigenvalues:
+            return -np.einsum(
+                ',k,k,k,jk,j->',
+                np.exp(self.regularization),
+                self.eigenvectors[np.absolute(gH).argmax()],
+                self.eigenvalues,
+                1/(self.eigenvalues**2+np.exp(self.regularization))**2,
+                self.eigenvectors, g,
+                optimize=True
+            )
+        else:
+            return -np.einsum(
+                ',j,jk,k->',
+                np.exp(self.regularization),
+                H_inv[np.absolute(gH).argmax()],
+                H_inv, g, optimize=True
+            )
+
     @property
     def inv_hessian(self):
-        if self.regularization > 0:
-            if self.use_eigenvalues:
-                return np.einsum(
-                    'ik,k,jk->ij',
-                    self.eigenvectors,
-                    self.eigenvalues/(self.eigenvalues**2+self.regularization),
-                    self.eigenvectors
-                )
-            else:
-                return np.linalg.inv(self.hessian+np.eye(len(self.hessian))*self.regularization)
-        return np.linnalg.inv(self.hessian)
+        if self.regularization is None:
+            return np.linalg.inv(self.hessian)
+        if self.use_eigenvalues:
+            return np.einsum(
+                'ik,k,jk->ij',
+                self.eigenvectors,
+                self.eigenvalues/(self.eigenvalues**2+np.exp(self.regularization)),
+                self.eigenvectors
+            )
+        else:
+            return np.linalg.inv(self.hessian+np.eye(len(self.hessian))*np.exp(self.regularization))
 
     @property
     def hessian(self):
@@ -81,6 +102,7 @@ class QuasiNewtonInteractive:
         self._hessian = self._hessian.reshape(length, length)
         self._eigenvalues = None
         self._eigenvectors = None
+        self.regularization = None
 
     def _calc_eig(self):
         self._eigenvalues, self._eigenvectors = np.linalg.eigh(self.hessian)
@@ -97,11 +119,15 @@ class QuasiNewtonInteractive:
             self._calc_eig()
         return self._eigenvectors
 
-    def get_dx(self, g, threshold=1e-4, mode='PSB'):
-        self.update_hessian(g, threshold=threshold, mode=mode)
+    def get_dx(self, g, threshold=1e-4, mode='PSB', update_hessian=True):
+        if update_hessian:
+            self.update_hessian(g, threshold=threshold, mode=mode)
         self.dx = -np.einsum('ij,j->i', self.inv_hessian, g.flatten()).reshape(-1, 3)
         if self.symmetry is not None:
             self.dx = self.symmetry.symmetrize_vectors(self.dx)
+        if np.linalg.norm(self.dx, axis=-1).max() > self.max_displacement:
+            self._set_regularization(g=g.flatten())
+            return self.get_dx(g=g, threshold=threshold, mode=mode, update_hessian=False)
         return self.dx
 
     def _get_SR(self, dx, dg, H_tmp, threshold=1e-4):
@@ -152,8 +178,8 @@ def run_qn(
     diffusion_id=None,
     use_eigenvalues=True,
     diffusion_direction=None,
-    regularization=1e-6,
     symmetrize=True,
+    max_displacement=0.1,
     min_displacement=1.0e-8,
 ):
     qn = QuasiNewtonInteractive(
@@ -162,7 +188,8 @@ def run_qn(
         diffusion_id=diffusion_id,
         use_eigenvalues=use_eigenvalues,
         diffusion_direction=diffusion_direction,
-        regularization=regularization,
+        max_displacement=max_displacement,
+        symmetrize=symmetrize,
     )
     job.run()
     for _ in range(ionic_steps):
@@ -201,7 +228,6 @@ class QuasiNewton(InteractiveWrapper):
             diffusion_id=self.input.diffusion_id,
             use_eigenvalues=self.input.use_eigenvalues,
             diffusion_direction=self.input.diffusion_direction,
-            regularization=self.input.regularization,
             symmetrize=self.input.symmetrize
         )
         self.collect_output()
@@ -265,7 +291,6 @@ class Input(DataContainer):
         self.diffusion_id = None
         self.use_eigenvalues = True
         self.diffusion_direction = None
-        self.regularization = 1e-6
         self.symmetrize = True
 
 
