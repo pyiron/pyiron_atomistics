@@ -318,12 +318,18 @@ class Hessian:
     def __init__(self, structure, dx=0.01):
         self.structure = structure.copy()
         self._symmetry = None
-        self._indices = None
+        self._permutations = None
         self.dx = dx
         self._displacements = []
-        self._inequivalent_displacements = []
-        self._inequivalent_ids = []
-        self._inequivalent_forces = []
+        self._all_displacements = None
+        self._forces = None
+        self._unique_atoms = None
+
+    @property
+    def unique_atoms(self):
+        if self._unique_atoms is None:
+            self._unique_atoms = np.unique(self.symmetry.arg_equivalent_atoms)
+        return self._unique_atoms
 
     @property
     def symmetry(self):
@@ -332,8 +338,8 @@ class Hessian:
         return self._symmetry
 
     @property
-    def indices(self):
-        if self._indices is None:
+    def permutations(self):
+        if self._permutations is None:
             epsilon = 1.0e-8
             x_scale = self.structure.get_scaled_positions()
             x = np.einsum('nxy,my->mnx', self.symmetry.rotations, x_scale)+self.symmetry.translations
@@ -341,59 +347,89 @@ class Hessian:
                 x[:, :, self.structure.pbc] -= np.floor(x[:, :, self.structure.pbc]+epsilon)
             x = np.einsum('nmx->mnx', x)
             tree = cKDTree(x_scale)
-            self._indices = tree.query(x)[1]
-        return self._indices
+            self._permutations = np.argsort(tree.query(x)[1], axis=-1)
+        return self._permutations
 
     def _get_equivalent_vector(self, v, indices=None):
-        result = np.zeros_like(v)
-        result = v[np.argsort(self.indices, axis=1)]
-        result = np.einsum('nxy,nmy->nmx', self.symmetry.rotations, result)
+        result = np.einsum('nxy,nmy->nmx', self.symmetry.rotations, v[self.permutations])
         if indices is None:
             indices = np.sort(np.unique(result, return_index=True, axis=0)[1])
         return result[indices], indices
 
-    def set_forces(self, forces):
-        if np.array(forces).shape != self.displacements.shape:
-            raise AssertionError('Force shape does not match displacement shape')
-        for ff, ii in zip(forces, self._inequivalent_ids):
-            self._inequivalent_forces.extend(self._get_equivalent_vector(ff, ii)[0])
-        self._inequivalent_forces = np.array(
-            self._inequivalent_forces
-        ).reshape(len(self._inequivalent_forces), -1)
+    @property
+    def forces(self):
+        return self._forces
 
-    def _get_next_displacement(self, all_displacements):
-        ix, iy = np.where(np.isclose(all_displacements, 0))
-        displacements = np.zeros_like(all_displacements)
-        displacements[ix[0], iy[0]] = self.dx
-        return displacements
+    @forces.setter
+    def forces(self, forces):
+        if np.array(forces).shape != self.displacements.shape:
+            raise AssertionError('Force shape does not match existing displacement shape')
+        self._forces = np.array(forces)
+
+    @property
+    def all_displacements(self):
+        if self._all_displacements is None:
+            self._all_displacements = np.einsum(
+                'nxy,lnmy->lnmx', self.symmetry.rotations, self.displacements[:, self.permutations]
+            ).reshape(-1, np.prod(self.structure.positions.shape))
+        return self._all_displacements
+
+    @property
+    def inequivalent_indices(self):
+        return np.unique(self.all_displacements, axis=0, return_index=True)[1]
+
+    @property
+    def inequivalent_displacements(self):
+        return self.all_displacements[self.inequivalent_indices]
+
+    @property
+    def inequivalent_forces(self):
+        forces = np.einsum(
+            'nxy,lnmy->lnmx', self.symmetry.rotations, self.forces[:, self.permutations]
+        ).reshape(-1, np.prod(self.structure.positions.shape))
+        return forces[self.inequivalent_indices]
+
+    @property
+    def _sum_displacements(self):
+        if len(self._displacements) == 0:
+            displacements = np.zeros((len(self.unique_atoms),)+self.structure.positions.shape)
+            displacements[np.arange(len(self.unique_atoms)), self.unique_atoms, 0] = self.dx
+            self.displacements = displacements
+        return np.absolute(self.inequivalent_displacements).sum(axis=0).reshape(
+            self.structure.positions.shape
+        )
+
+    @property
+    def _next_displacement(self):
+        ix = np.stack(np.where(self._sum_displacements == 0), axis=-1)
+        if len(ix) == 0:
+            return None
+        ix = ix[np.unique(ix[:, 0], return_index=True)[1]]
+        ix = ix[np.any(ix[:, 0, None] == self.unique_atoms, axis=1)]
+        displacements = np.zeros((len(ix), ) + self.structure.positions.shape)
+        displacements[np.arange(len(ix)), ix[:, 0], ix[:, 1]] = self.dx
+        return displacements.tolist()
 
     def _generate_displacements(self):
-        all_displacements = np.zeros_like(self.structure.positions)
-        for _ in range(np.prod(all_displacements.shape)):
-            if not np.any(np.isclose(all_displacements, 0)):
+        for _ in range(np.prod(self.structure.positions.shape)):
+            displacement = self._next_displacement
+            if displacement is None:
                 break
-            self._displacements.append(self._get_next_displacement(all_displacements))
-            inequi_displacements, indices = self._get_equivalent_vector(self._displacements[-1])
-            self._inequivalent_displacements.extend(inequi_displacements)
-            self._inequivalent_ids.append(indices)
-            all_displacements += np.absolute(inequi_displacements).sum(axis=0)
-        self._displacements = np.array(self._displacements)
-        self._inequivalent_displacements = np.array(
-            self._inequivalent_displacements
-        ).reshape(len(self._inequivalent_displacements), -1)
+            self._displacements.extend(displacement)
+            self._all_displacements = None
 
     def get_hessian(self, forces=None):
-        if forces is None and len(self._inequivalent_forces) == 0:
+        if forces is None and self.forces is None:
             raise AssertionError('Forces not set yet')
         if forces is not None:
-            self.set_forces(forces)
+            self.forces = forces
         X = np.einsum(
             'ik,ij->kj',
-            self._inequivalent_displacements,
-            self._inequivalent_displacements, optimize=True
+            self.inequivalent_displacements,
+            self.inequivalent_displacements, optimize=True
         )
         Y = np.einsum(
-            'in,ik->nk', self._inequivalent_forces, self._inequivalent_displacements
+            'in,ik->nk', self.inequivalent_forces, self.inequivalent_displacements
         )
         return -np.einsum('kj,nk->nj', np.linalg.inv(X), Y)
 
@@ -401,4 +437,9 @@ class Hessian:
     def displacements(self):
         if len(self._displacements) == 0:
             self._generate_displacements()
-        return self._displacements
+        return np.asarray(self._displacements)
+
+    @displacements.setter
+    def displacements(self, d):
+        self._displacements = np.asarray(d).tolist()
+        self._all_displacements = None
