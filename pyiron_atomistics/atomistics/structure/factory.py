@@ -409,36 +409,31 @@ class StructureFactory(PyironFactory):
         return ovito_to_pyiron(ovito_obj)
      
     @staticmethod
-    def get_high_ind_surf_sk(pr,element='Ni',Xstr='fcc',lattice_constant=3.526,terraceOrientation=[1,1,1],\
-              stepOrientation=[1,1,0],\
-              kinkOrientation=[1,0,1],stepDownVector=[1,1,0],\
-              lengthStep=3,lengthTerrace=3, lengthKink=1):
-                
-                
+    def get_high_ind_surf_sk(pr, element='Ni', Xstr='fcc', lattice_constant=3.526, terraceOrientation=[1,1,1],
+                             stepOrientation=[1,1,0], kinkOrientation=[1,0,1],stepDownVector=[1,1,0], lengthStep=3,
+                             lengthTerrace=3, lengthKink=1):
+        basis=pr.create_structure(element=element, bravais_basis=Xstr, lattice_constant=lattice_constant)
+        sym = basis.get_symmetry()
+        eqvdirS = np.unique(np.matmul(sym.rotations[:] , (np.array(stepOrientation))),axis=0)
+        eqvdirK = np.unique(np.matmul(sym.rotations[:] , (np.array(kinkOrientation))),axis=0)
+        eqvdirS_ind = np.where(np.dot(np.squeeze(eqvdirS),terraceOrientation)==0)[0]
+        eqvdirK_ind = np.where(np.dot(np.squeeze(eqvdirK),terraceOrientation)==0)[0]
 
-            basis=pr.create_structure(element=element, bravais_basis=Xstr, lattice_constant=lattice_constant)
-            sym = basis.get_symmetry()
-            eqvdirS = np.unique(np.matmul(sym.rotations[:] , (np.array(stepOrientation))),axis=0)
-            eqvdirK = np.unique(np.matmul(sym.rotations[:] , (np.array(kinkOrientation))),axis=0)
-            eqvdirS_ind = np.where(np.dot(np.squeeze(eqvdirS),terraceOrientation)==0)[0]
-            eqvdirK_ind = np.where(np.dot(np.squeeze(eqvdirK),terraceOrientation)==0)[0]
+        if len(eqvdirS_ind) == 0:
+            raise ValueError('Step orientation vector should lie in terrace.\
+            For the given choice I could not find any symmetrically equivalent vector that lies in the terrace.\
+            please change the stepOrientation and try again')
 
-            if len(eqvdirS_ind) == 0:
-                raise ValueError('Step orientation vector should lie in terrace.\
-                For the given choice I could not find any symmetrically equivalent vector that lies in the terrace.\
-                please change the stepOrientation and try again')
+        if len(eqvdirK_ind) == 0:
+            raise ValueError('Kink orientation vector should lie in terrace.\
+            For the given choice I could not find any symmetrically equivalent vector that lies in the terrace.\
+            please change the kinkOrientation and try again')
 
-            if len(eqvdirK_ind) == 0:
-                raise ValueError('Kink orientation vector should lie in terrace.\
-                For the given choice I could not find any symmetrically equivalent vector that lies in the terrace.\
-                please change the kinkOrientation and try again')
-
-            temp = (np.cross(np.squeeze(eqvdirK[eqvdirK_ind[0]]),np.squeeze(eqvdirS))).tolist().index(terraceOrientation)
-            fin_kinkOrientation = eqvdirK[eqvdirK_ind[0]]
-            fin_stepOrientation = eqvdirS[temp]
-            vec1 = (np.asanyarray(fin_stepOrientation).dot(lengthStep)) + (np.asanyarray(fin_kinkOrientation).dot(lengthKink))
-            vec2 = (np.asanyarray(fin_kinkOrientation).dot(lengthTerrace)) + stepDownVector
-            highIndexSurface = np.cross(np.asanyarray(vec1),np.asanyarray(vec2))
-            highIndexSurface = np.array(highIndexSurface/np.gcd.reduce(highIndexSurface),dtype=int)
-
-         return fin_kinkOrientation, fin_stepOrientation, highIndexSurface
+        temp = (np.cross(np.squeeze(eqvdirK[eqvdirK_ind[0]]), np.squeeze(eqvdirS))).tolist().index(terraceOrientation)
+        fin_kinkOrientation = eqvdirK[eqvdirK_ind[0]]
+        fin_stepOrientation = eqvdirS[temp]
+        vec1 = (np.asanyarray(fin_stepOrientation).dot(lengthStep)) + (np.asanyarray(fin_kinkOrientation).dot(lengthKink))
+        vec2 = (np.asanyarray(fin_kinkOrientation).dot(lengthTerrace)) + stepDownVector
+        highIndexSurface = np.cross(np.asanyarray(vec1),np.asanyarray(vec2))
+        highIndexSurface = np.array(highIndexSurface/np.gcd.reduce(highIndexSurface), dtype=int)
+        return fin_kinkOrientation, fin_stepOrientation, highIndexSurface
