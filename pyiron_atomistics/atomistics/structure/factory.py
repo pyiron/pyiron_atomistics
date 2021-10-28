@@ -441,4 +441,4 @@ class StructureFactory(PyironFactory):
             highIndexSurface = np.cross(np.asanyarray(vec1),np.asanyarray(vec2))
             highIndexSurface = np.array(highIndexSurface/np.gcd.reduce(highIndexSurface),dtype=int)
 
-        return fin_kinkOrientation, fin_stepOrientation, highIndexSurface
+         return fin_kinkOrientation, fin_stepOrientation, highIndexSurface
