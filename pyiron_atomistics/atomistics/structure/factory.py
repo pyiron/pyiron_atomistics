@@ -407,12 +407,11 @@ class StructureFactory(PyironFactory):
     @wraps(ovito_to_pyiron)
     def from_ovito(ovito_obj):
         return ovito_to_pyiron(ovito_obj)
-     
-    @staticmethod
-    def get_high_ind_surf_sk(pr, element='Ni', Xstr='fcc', lattice_constant=3.526, terraceOrientation=[1,1,1],
+
+    def get_high_ind_surf_sk(self, element='Ni', Xstr='fcc', lattice_constant=3.526, terraceOrientation=[1,1,1],
                              stepOrientation=[1,1,0], kinkOrientation=[1,0,1],stepDownVector=[1,1,0], lengthStep=3,
                              lengthTerrace=3, lengthKink=1):
-        basis=pr.create_structure(element=element, bravais_basis=Xstr, lattice_constant=lattice_constant)
+        basis = self.crystal(element=element, bravais_basis=Xstr, lattice_constant=lattice_constant)
         sym = basis.get_symmetry()
         eqvdirS = np.unique(np.matmul(sym.rotations[:] , (np.array(stepOrientation))),axis=0)
         eqvdirK = np.unique(np.matmul(sym.rotations[:] , (np.array(kinkOrientation))),axis=0)
