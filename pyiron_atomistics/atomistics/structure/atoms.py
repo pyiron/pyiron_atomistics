@@ -1776,14 +1776,13 @@ class Atoms(ASEAtoms):
 
         Returns: numpy.ndarray of the same shape as input with mic
         """
-        vecs = np.asarray(v).reshape(-1, 3)
         if any(self.pbc):
-            vecs = np.einsum('ji,nj->ni', np.linalg.inv(self.cell), vecs)
-            vecs[:,self.pbc] -= np.rint(vecs)[:,self.pbc]
-            vecs = np.einsum('ji,nj->ni', self.cell, vecs)
+            v = np.einsum('ji,...j->...i', np.linalg.inv(self.cell), v)
+            v[..., self.pbc] -= np.rint(v)[..., self.pbc]
+            v = np.einsum('ji,...j->...i', self.cell, v)
         if vectors:
-            return vecs.reshape(np.asarray(v).shape)
-        return np.linalg.norm(vecs, axis=-1).reshape(np.asarray(v).shape[:-1])
+            return np.asarray(v)
+        return np.linalg.norm(v, axis=-1)
 
     def get_distance(self, a0, a1, mic=True, vector=False):
         """
