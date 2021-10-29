@@ -1784,7 +1784,6 @@ class Atoms(ASEAtoms):
             return np.asarray(v)
         return np.linalg.norm(v, axis=-1)
 
-
     def get_distance(self, a0, a1, mic=True, vector=False):
         """
         Return distance between two atoms.
