@@ -428,10 +428,13 @@ class Hessian:
             self.inequivalent_displacements,
             self.inequivalent_displacements, optimize=True
         )
-        Y = np.einsum(
-            'in,ik->nk', self.inequivalent_forces, self.inequivalent_displacements
+        return -np.einsum(
+            'kj,in,ik->nj',
+            np.linalg.inv(X),
+            self.inequivalent_forces,
+            self.inequivalent_displacements,
+            optimize=True
         )
-        return -np.einsum('kj,nk->nj', np.linalg.inv(X), Y)
 
     @property
     def displacements(self):
