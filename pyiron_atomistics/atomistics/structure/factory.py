@@ -417,15 +417,14 @@ class StructureFactory(PyironFactory):
     def from_ovito(ovito_obj):
         return ovito_to_pyiron(ovito_obj)
 
-
     def get_high_index_surface(self, element='Ni', crystal_structure='fcc', lattice_constant=3.526,
-                               terrace_orientation=None,step_orientation=None, kink_orientation=None,
+                               terrace_orientation=None, step_orientation=None, kink_orientation=None,
                                step_down_vector=None, length_step=3, length_terrace=3, length_kink=1, layers=60,
                                vacuum=10):
         """
-        Gives the miller indices of high index surface required to create a stepped and kink surface, based on the
-        general orientation and length of terrace, step and kinks respectively. The microfacet notation used is based
-        on the work of Van Hove et al.,[1].
+        Gives the miller indices of high index surface required to create a stepped and kink surface, based
+        on the general orientation and length of terrace, step and kinks respectively. The microfacet notation used is
+        based on the work of Van Hove et al.,[1].
 
         Additionally also returns a bottom slab with the calculated high index surface
 
@@ -482,5 +481,3 @@ class StructureFactory(PyironFactory):
         slab.set_pbc = True
         slab.set_initial_magnetic_moments(np.repeat(1.0, len(slab)))
         return slab, high_index_surface, fin_kink_orientation, fin_step_orientation
-
-
