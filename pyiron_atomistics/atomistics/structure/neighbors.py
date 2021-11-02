@@ -1033,6 +1033,9 @@ class NeighborsTrajectory(DataContainer):
         super().__init__(init=init, table_name=table_name)
         self._has_structure = has_structure
         self._flat_store = store if store is not None else FlattenedStorage()
+        self._flat_store.add_array("indices", dtype=np.int64, shape=(num_neighbors,), per="element")
+        self._flat_store.add_array("distances", dtype=np.float64, shape=(num_neighbors,), per="element")
+        self._flat_store.add_array("vecs", dtype=np.float64, shape=(num_neighbors, 3), per="element")
         self._neighbor_indices = None
         self._neighbor_distances = None
         self._neighbor_vectors = None
