@@ -1099,8 +1099,13 @@ class NeighborsTrajectory(DataContainer):
 
 
 def _get_neighbors(store, has_structure, num_neighbors=20, **kwargs):
-    for t, struct in enumerate(has_structure.iter_structures()):
+    for i, struct in enumerate(has_structure.iter_structures()):
         # Change the `allow_ragged` based on the changes in get_neighbors()
         neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
-        store.add_chunk(len(struct), indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs)
+        if i >= len(store):
+            store.add_chunk(len(struct), indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs)
+        else:
+            store.set_array("indices", i, neigh.indices)
+            store.set_array("distances", i, neigh.distances)
+            store.set_array("vecs", i, neigh.vecs)
     return store.get_array_filled('indices'), store.get_array_filled('distances'), store.get_array_filled('vecs')
