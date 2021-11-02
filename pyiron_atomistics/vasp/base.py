@@ -1946,6 +1946,7 @@ class Output:
                 vasprun_working = True
         if outcar_working:
             log_dict["temperature"] = self.outcar.parse_dict["temperatures"]
+            log_dict["stresses"] = self.outcar.parse_dict["stresses"]
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
             log_dict["elastic_constants"] = self.outcar.parse_dict["elastic_constants"]
             self.generic_output.dft_log_dict["n_elect"] = self.outcar.parse_dict[
@@ -2017,6 +2018,7 @@ class Output:
                 raise VaspCollectError("Error in parsing OUTCAR")
             log_dict["energy_tot"] = self.outcar.parse_dict["energies"]
             log_dict["temperature"] = self.outcar.parse_dict["temperatures"]
+            log_dict["stresses"] = self.outcar.parse_dict["stresses"]
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
             log_dict["forces"] = self.outcar.parse_dict["forces"]
             log_dict["positions"] = self.outcar.parse_dict["positions"]
