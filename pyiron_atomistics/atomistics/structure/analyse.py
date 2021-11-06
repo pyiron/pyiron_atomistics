@@ -8,7 +8,7 @@ from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
-    analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
+    analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume, get_system, analyse_find_solids
 from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
@@ -532,9 +532,23 @@ class Analyse:
         """    Calculate the Voronoi volume of atoms        """
         return analyse_voronoi_volume(atoms=self._structure)
     
-    def pyscal_find_solids(self, neighbor_method="cutoff", cutoff=0, bonds=6, threshold=0.5, avgthreshold=0.6, cluster=False):
-        return analyse_find_solids()
+    def pyscal_find_solids(self, atoms, neighbor_method="cutoff",
+        cutoff=0, bonds=0.5,
+        threshold=0.5, avgthreshold=0.6,
+        cluster=False, q=6, right=True,
+        return_sys=False,
+        ):
+        return analyse_find_solids(atoms=atoms,
+            neighbor_method=neighbor_method,
+            cutoff=cutoff, bonds=bonds,
+            threshold=threshold,
+            avgthreshold=avgthreshold,
+            cluster=cluster, q=q,
+            right=right, return_sys=return_sys,
+        )
 
+    def pyscal_system(self):
+        return get_system(self)
 
     def get_voronoi_vertices(self, epsilon=2.5e-4, distance_threshold=0, width_buffer=10):
         """
