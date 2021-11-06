@@ -242,6 +242,9 @@ def analyse_voronoi_volume(atoms):
     return np.array([atom.volume for atom in atoms])
 
 
+def analyse_find_solids(atoms, neighbor_method="cutoff", cutoff=0, bonds=6, threshold=0.5, avgthreshold=0.6, cluster=False):
+    
+
 def publication():
     return {
         "pyscal": {
