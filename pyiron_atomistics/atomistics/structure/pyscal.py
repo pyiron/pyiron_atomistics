@@ -245,7 +245,7 @@ def analyse_find_solids(atoms, neighbor_method="cutoff",
     ):
     sys = get_system(atoms)
     sys.find_neighbors(method=neighbor_method, cutoff=cutoff)
-    sys.find_solids(bonds=bonds, threshold=threshold, avgthreshold=avgthreshold, q=q, cutoff=cutoff)
+    sys.find_solids(bonds=bonds, threshold=threshold, avgthreshold=avgthreshold, q=q, cutoff=cutoff, cluster=cluster)
     if return_sys:
         return sys
     atoms = sys.atoms
