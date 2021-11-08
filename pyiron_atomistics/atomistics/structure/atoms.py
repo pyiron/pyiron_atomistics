@@ -2275,29 +2275,45 @@ class Atoms(ASEAtoms):
                 else:
                     self.selective_dynamics[atom_ind] = [True, True, True]
 
-    def apply_strain(self, epsilon, return_box=False):
+    def apply_strain(self, epsilon, return_box=False, mode='linear'):
         """
-        Apply a given strain on the structure
+        Apply a given strain on the structure. It applies the matrix `F` in the manner:
+
+        ```
+            new_cell = F @ current_cell
+        ```
 
         Args:
-            epsilon (float/list/ndarray): epsilon matrix. If a single number is set, the same strain
-                                          is applied in each direction. If a 3-dim vector is set, it
-                                          will be multiplied by a unit matrix.
+            epsilon (float/list/ndarray): epsilon matrix. If a single number is set, the same
+                strain is applied in each direction. If a 3-dim vector is set, it will be
+                multiplied by a unit matrix.
             return_box (bool): whether to return a box. If set to True, only the returned box will
-                               have the desired strain and the original box will stay unchanged.
+                have the desired strain and the original box will stay unchanged.
+            mode (str): `linear` or `lagrangian`. If `linear`, `F` is equal to the epsilon value.
+                If `lagrangian`, epsilon is given by `(F^T * F - 1) / 2`. It raises an error if
+                the strain is not symmetric (if the shear components are given).
         """
+        if mode not in ['lagrangian', 'linear']:
+            raise ValueError('mode must be `linear` or `lagrangian`')
         epsilon = np.array([epsilon]).flatten()
         if len(epsilon) == 3 or len(epsilon) == 1:
             epsilon = epsilon*np.eye(3)
         epsilon = epsilon.reshape(3, 3)
         if epsilon.min() < -1.0:
             raise ValueError("Strain value too negative")
+        if mode == 'lagrangian' and not np.allclose(epsilon, epsilon.T):
+            raise ValueError("Strain must be symmetric if `mode = 'lagrangian'`")
         if return_box:
             structure_copy = self.copy()
         else:
             structure_copy = self
         cell = structure_copy.cell.copy()
-        cell = np.matmul(epsilon + np.eye(3), cell)
+        if mode == 'linear':
+            F = epsilon + np.eye(3)
+        else:
+            E, V = np.linalg.eigh(2*epsilon+np.eye(3))
+            F = np.einsum('ik,k,jk->ij', V, np.sqrt(E), V)
+        cell = np.matmul(F, cell)
         structure_copy.set_cell(cell, scale_atoms=True)
         if return_box:
             return structure_copy
