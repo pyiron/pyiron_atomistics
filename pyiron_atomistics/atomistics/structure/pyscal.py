@@ -229,6 +229,16 @@ def analyse_voronoi_volume(atoms):
     return np.array([atom.volume for atom in atoms])
 
 def get_system(atoms):
+    """
+    Converts atoms to ase atoms and than to a pyscal system.
+    Also adds the pyscal publication.
+
+    Args:
+        atoms (pyiron atoms): Structure to convert.
+
+    Returns:
+        Pyscal system: See the pyscal documentation.
+    """    
     s.publication_add(publication())
     sys = pc.System()
     sys.read_inputfile(
@@ -243,9 +253,28 @@ def analyse_find_solids(atoms, neighbor_method="cutoff",
     cluster=False, q=6, right=True,
     return_sys=False,
     ):
+    """
+        Get the number of solids or the corresponding pyscal system.
+        Calls necessary pyscal methods as described in https://pyscal.org/en/latest/methods/03_solidliquid.html.
+
+        Args:
+            neighbor_method (str, optional): Method used to get neighborlist. See pyscal documentation. Defaults to "cutoff".
+            cutoff (int, optional): Adaptive if 0. Defaults to 0.
+            bonds (float, optional): Number or fraction of bonds to consider atom as solid. Defaults to 0.5.
+            threshold (float, optional): See pyscal documentation. Defaults to 0.5.
+            avgthreshold (float, optional): See pyscal documentation. Defaults to 0.6.
+            cluster (bool, optional): See pyscal documentation. Defaults to False.
+            q (int, optional): Steinhard parameter to calculate. Defaults to 6.
+            right (bool, optional): See pyscal documentation. Defaults to True.
+            return_sys (bool, optional): Whether to return number of solid atoms or pyscal system. Defaults to False.
+
+        Returns:
+            int: number of solids,
+            pyscal system: pyscal system when return_sys=True
+    """ 
     sys = get_system(atoms)
     sys.find_neighbors(method=neighbor_method, cutoff=cutoff)
-    sys.find_solids(bonds=bonds, threshold=threshold, avgthreshold=avgthreshold, q=q, cutoff=cutoff, cluster=cluster)
+    sys.find_solids(bonds=bonds, threshold=threshold, avgthreshold=avgthreshold, q=q, cutoff=cutoff, cluster=cluster, right=right)
     if return_sys:
         return sys
     atoms = sys.atoms

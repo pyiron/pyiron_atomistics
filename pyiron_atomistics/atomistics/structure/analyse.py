@@ -538,6 +538,25 @@ class Analyse:
         cluster=False, q=6, right=True,
         return_sys=False,
         ):
+        """
+        Get the number of solids or the corresponding pyscal system.
+        Calls necessary pyscal methods as described in https://pyscal.org/en/latest/methods/03_solidliquid.html.
+
+        Args:
+            neighbor_method (str, optional): Method used to get neighborlist. See pyscal documentation. Defaults to "cutoff".
+            cutoff (int, optional): Adaptive if 0. Defaults to 0.
+            bonds (float, optional): Number or fraction of bonds to consider atom as solid. Defaults to 0.5.
+            threshold (float, optional): See pyscal documentation. Defaults to 0.5.
+            avgthreshold (float, optional): See pyscal documentation. Defaults to 0.6.
+            cluster (bool, optional): See pyscal documentation. Defaults to False.
+            q (int, optional): Steinhard parameter to calculate. Defaults to 6.
+            right (bool, optional): See pyscal documentation. Defaults to True.
+            return_sys (bool, optional): Whether to return number of solid atoms or pyscal system. Defaults to False.
+
+        Returns:
+            int: number of solids,
+            pyscal system: pyscal system when return_sys=True
+        """        
         return analyse_find_solids(atoms=self._structure,
             neighbor_method=neighbor_method,
             cutoff=cutoff, bonds=bonds,
@@ -548,6 +567,11 @@ class Analyse:
         )
 
     def pyscal_system(self):
+        """Returns a pyscal system constructed from the structure
+
+        Returns:
+            pyscal system: See pyscal documentation
+        """        
         return get_system(self._structure)
 
     def get_voronoi_vertices(self, epsilon=2.5e-4, distance_threshold=0, width_buffer=10):
