@@ -616,6 +616,17 @@ class Analyse:
             only_bulk_type=only_bulk_type
         ).strain
 
+    def _get_neighbors(self, position_interpreter, data_field, width_buffer=10):
+        positions, indices = self._structure.get_extended_positions(
+            width_buffer, return_indices=True
+        )
+        interpretation = position_interpreter(positions)
+        data = getattr(interpretation, data_field)
+        x = positions[data]
+        return indices[data[
+            np.isclose(self._structure.get_wrapped_coordinates(x), x).all(axis=-1).any(axis=-1)
+        ]]
+
     def get_voronoi_neighbors(self, width_buffer=10):
         """
         Get pairs of atom indices sharing the same Voronoi vertices/areas.
@@ -626,14 +637,7 @@ class Analyse:
         Returns:
             pairs (ndarray): Pair indices
         """
-        positions, indices = self._structure.get_extended_positions(
-            width_buffer, return_indices=True
-        )
-        voro = Voronoi(positions)
-        x = positions[voro.ridge_points]
-        return indices[voro.ridge_points[
-            np.isclose(self._structure.get_wrapped_coordinates(x), x).all(axis=-1).any(axis=-1)
-        ]]
+        return self._get_neighbors(Voronoi, "ridge_points", width_buffer=width_buffer)
 
     def get_delaunay_neighbors(self, width_buffer=10):
         """
@@ -647,11 +651,4 @@ class Analyse:
         Returns:
             pairs (ndarray): Delaunay neighbor indices
         """
-        positions, indices = self._structure.get_extended_positions(
-            width_buffer, return_indices=True
-        )
-        delaunay = Delaunay(positions)
-        x = positions[delaunay.simplices]
-        return indices[delaunay.simplices[
-            np.isclose(self._structure.get_wrapped_coordinates(x), x).all(axis=-1).any(axis=-1)
-        ]]
+        return self._get_neighbors(Delaunay, "simplices", width_buffer=width_buffer)
