@@ -50,7 +50,7 @@ def get_mean_positions(positions, cell, pbc, labels):
     all_positions = positions-mean_positions[labels]
     # Account for pbc
     all_positions = np.einsum('ji,nj->ni', np.linalg.inv(cell), all_positions)
-    all_positions[:,pbc] -= np.rint(all_positions)[:,pbc]
+    all_positions[:, pbc] -= np.rint(all_positions)[:, pbc]
     all_positions = np.einsum('ji,nj->ni', cell, all_positions)
     # Add average displacement vector of each label to the reference point
     np.add.at(mean_positions, labels, (all_positions.T/counts[labels]).T)
@@ -77,6 +77,7 @@ def get_average_of_unique_labels(labels, values):
     if np.prod(mean_values.shape).astype(int) == len(unique_labels):
         return mean_values.flatten()
     return mean_values
+
 
 class Interstitials:
     """
@@ -107,7 +108,8 @@ class Interstitials:
         - `get_volumes()`
         - `get_areas()`
     """
-    def __init__(self,
+    def __init__(
+        self,
         structure,
         num_neighbors,
         n_gridpoints_per_angstrom=5,
@@ -332,6 +334,7 @@ class Interstitials:
         """
         return np.array([h.area for h in self.hull])
 
+
 class Analyse:
     """ Class to analyse atom structure.  """
     def __init__(self, structure):
@@ -407,7 +410,7 @@ class Analyse:
         """
         if distance_threshold <= 0:
             raise ValueError('distance_threshold must be a positive float')
-        if id_list is not None and len(id_list)==0:
+        if id_list is not None and len(id_list) == 0:
             raise ValueError('id_list must contain at least one id')
         if wrap_atoms and planes is None:
             positions, indices = self._structure.get_extended_positions(
@@ -613,3 +616,19 @@ class Analyse:
             only_bulk_type=only_bulk_type
         ).strain
 
+    def get_voronoi_pairs(self, width_buffer=10):
+        """
+        Get pairs of atom indices sharing the same Voronoi vertices/areas.
+
+        Args:
+            width_buffer (float): Width of the layer to be added to account for pbc.
+
+        Returns:
+            pairs (ndarray): Pair indices
+        """
+        positions, indices = self._structure.get_extended_positions(
+            width_buffer, return_indices=True
+        )
+        voro = Voronoi(positions)
+        pairs = voro.ridge_points[np.any(voro.ridge_points < len(self._structure), axis=-1)]
+        return indices[pairs]
