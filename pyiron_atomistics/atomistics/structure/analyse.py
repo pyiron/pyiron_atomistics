@@ -7,11 +7,13 @@ from pyiron_base import Settings
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi, Delaunay
+from scipy.spatial.qhull import _QhullUser
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
 from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
+from typing import Type
 deprecate = Deprecator()
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
@@ -616,7 +618,9 @@ class Analyse:
             only_bulk_type=only_bulk_type
         ).strain
 
-    def _get_neighbors(self, position_interpreter, data_field, width_buffer=10):
+    def _get_neighbors(
+            self, position_interpreter: Type[_QhullUser], data_field: str, width_buffer: float = 10
+    ) -> np.ndarray:
         positions, indices = self._structure.get_extended_positions(
             width_buffer, return_indices=True
         )
@@ -627,7 +631,7 @@ class Analyse:
             np.isclose(self._structure.get_wrapped_coordinates(x), x).all(axis=-1).any(axis=-1)
         ]]
 
-    def get_voronoi_neighbors(self, width_buffer=10):
+    def get_voronoi_neighbors(self, width_buffer: float = 10) -> np.ndarray:
         """
         Get pairs of atom indices sharing the same Voronoi vertices/areas.
 
@@ -639,7 +643,7 @@ class Analyse:
         """
         return self._get_neighbors(Voronoi, "ridge_points", width_buffer=width_buffer)
 
-    def get_delaunay_neighbors(self, width_buffer=10):
+    def get_delaunay_neighbors(self, width_buffer: float = 10.) -> np.ndarray:
         """
         Get indices of atoms sharing the same Delaunay tetrahedrons (commonly known as Delaunay
         triangles), i.e. indices of neighboring atoms, which form a tetrahedron, in which no other
