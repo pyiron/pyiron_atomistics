@@ -238,7 +238,7 @@ def get_system(atoms):
 
     Returns:
         Pyscal system: See the pyscal documentation.
-    """    
+    """
     s.publication_add(publication())
     sys = pc.System()
     sys.read_inputfile(

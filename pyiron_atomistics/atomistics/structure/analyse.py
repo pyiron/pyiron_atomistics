@@ -531,7 +531,7 @@ class Analyse:
     def pyscal_voronoi_volume(self):
         """    Calculate the Voronoi volume of atoms        """
         return analyse_voronoi_volume(atoms=self._structure)
-    
+
     def pyscal_find_solids(self, neighbor_method="cutoff",
         cutoff=0, bonds=0.5,
         threshold=0.5, avgthreshold=0.6,
@@ -556,7 +556,7 @@ class Analyse:
         Returns:
             int: number of solids,
             pyscal system: pyscal system when return_sys=True
-        """        
+        """
         return analyse_find_solids(atoms=self._structure,
             neighbor_method=neighbor_method,
             cutoff=cutoff, bonds=bonds,
@@ -567,7 +567,8 @@ class Analyse:
         )
 
     def pyscal_system(self):
-        """Returns a pyscal system constructed from the structure
+        """
+        Creates pyscal system from the structure
 
         Returns:
             pyscal system: See pyscal documentation
