@@ -649,5 +649,5 @@ class Analyse:
             width_buffer, return_indices=True
         )
         delaunay = Delaunay(positions)
-        neighbors = delaunay.simplices[np.any(delaunay.simplices < len(structure), axis=-1)]
+        neighbors = delaunay.simplices[np.any(delaunay.simplices < len(self._structure), axis=-1)]
         neighbors = indices[neighbors]
