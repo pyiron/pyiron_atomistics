@@ -8,7 +8,7 @@ from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
-    analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume, get_system, analyse_find_solids
+    analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume, pyiron_to_pyscal_system, analyse_find_solids
 from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
@@ -565,15 +565,6 @@ class Analyse:
             cluster=cluster, q=q,
             right=right, return_sys=return_sys,
         )
-
-    def pyscal_system(self):
-        """
-        Creates pyscal system from the structure
-
-        Returns:
-            pyscal system: See pyscal documentation
-        """
-        return get_system(self._structure)
 
     def get_voronoi_vertices(self, epsilon=2.5e-4, distance_threshold=0, width_buffer=10):
         """

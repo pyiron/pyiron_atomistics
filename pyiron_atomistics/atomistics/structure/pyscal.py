@@ -43,7 +43,7 @@ def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0
         numpy.ndarray: (number of q's, number of atoms) shaped array of q parameters
         numpy.ndarray: If `clustering=True`, an additional per-atom array of cluster ids is also returned
     """
-    sys = get_system(atoms)
+    sys = pyiron_to_pyscal_system(atoms)
     q = (4, 6) if q is None else q
     if clustering == False:
         n_clusters = None
@@ -85,7 +85,7 @@ def analyse_centro_symmetry(atoms, num_neighbors=12):
     Returns:
         csm (list) : list of centrosymmetry parameter
     """
-    sys = get_system(atoms)
+    sys = pyiron_to_pyscal_system(atoms)
     return np.array(sys.calculate_centrosymmetry(nmax=num_neighbors))
 
 
@@ -106,7 +106,7 @@ def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
     Returns:
         (depends on `mode`)
     """
-    sys = get_system(atoms)
+    sys = pyiron_to_pyscal_system(atoms)
     diamond_dict = sys.identify_diamond()
 
     ovito_identifiers = [
@@ -177,7 +177,7 @@ def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
     Returns:
         (depends on `mode`)
     """
-    sys = get_system(atoms)
+    sys = pyiron_to_pyscal_system(atoms)
     if mode not in ["total", "numeric", "str"]:
         raise ValueError("Unsupported mode")
 
@@ -223,12 +223,12 @@ def analyse_voronoi_volume(atoms):
     Args:
         atoms : (pyiron_atomistics.structure.atoms.Atoms): The structure to analyze.
     """
-    sys = get_system(atoms)
+    sys = pyiron_to_pyscal_system(atoms)
     sys.find_neighbors(method="voronoi")
     atoms = sys.atoms
     return np.array([atom.volume for atom in atoms])
 
-def get_system(atoms):
+def pyiron_to_pyscal_system(atoms):
     """
     Converts atoms to ase atoms and than to a pyscal system.
     Also adds the pyscal publication.
@@ -272,7 +272,7 @@ def analyse_find_solids(atoms, neighbor_method="cutoff",
             int: number of solids,
             pyscal system: pyscal system when return_sys=True
     """
-    sys = get_system(atoms)
+    sys = pyiron_to_pyscal_system(atoms)
     sys.find_neighbors(method=neighbor_method, cutoff=cutoff)
     sys.find_solids(bonds=bonds, threshold=threshold, avgthreshold=avgthreshold, q=q, cutoff=cutoff, cluster=cluster, right=right)
     if return_sys:

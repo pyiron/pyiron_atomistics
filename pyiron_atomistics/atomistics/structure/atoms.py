@@ -12,6 +12,7 @@ import numpy as np
 import warnings
 import seekpath
 from pyiron_atomistics.atomistics.structure.atom import Atom, ase_to_pyiron as ase_to_pyiron_atom
+from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
 from pyiron_atomistics.atomistics.structure.neighbors import Neighbors, Tree
 from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
@@ -2435,6 +2436,8 @@ class Atoms(ASEAtoms):
     def to_ovito(self):
         return pyiron_to_ovito(self)
 
+    def to_pyscal_system(self):
+        return pyiron_to_pyscal_system(self)
 
 class _CrystalStructure(Atoms):
     """
