@@ -6,7 +6,7 @@ import numpy as np
 from pyiron_base import Settings
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
-from scipy.spatial import Voronoi
+from scipy.spatial import Voronoi, Delaunay
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume
 from pyiron_atomistics.atomistics.structure.strain import Strain
@@ -616,7 +616,7 @@ class Analyse:
             only_bulk_type=only_bulk_type
         ).strain
 
-    def get_voronoi_pairs(self, width_buffer=10):
+    def get_voronoi_neighbors(self, width_buffer=10):
         """
         Get pairs of atom indices sharing the same Voronoi vertices/areas.
 
@@ -632,3 +632,22 @@ class Analyse:
         voro = Voronoi(positions)
         pairs = voro.ridge_points[np.any(voro.ridge_points < len(self._structure), axis=-1)]
         return indices[pairs]
+
+    def get_delaunay_neighbors(self, width_buffer=10):
+        """
+        Get indices of atoms sharing the same Delaunay tetrahedrals (commonly known as Delaunay
+        triangles), i.e. indices of neighboring atoms, which form a tetrahedral, in which no other
+        atom exists.
+
+        Args:
+            width_buffer (float): Width of the layer to be added to account for pbc.
+
+        Returns:
+            pairs (ndarray): Delaunay neighbor indices
+        """
+        positions, indices = self._structure.get_extended_positions(
+            width_buffer, return_indices=True
+        )
+        delaunay = Delaunay(positions)
+        neighbors = delaunay.simplices[np.any(delaunay.simplices < len(structure), axis=-1)]
+        neighbors = indices[neighbors]
