@@ -572,7 +572,7 @@ class Analyse:
 
         Returns:
             pyscal system: See pyscal documentation
-        """        
+        """
         return get_system(self._structure)
 
     def get_voronoi_vertices(self, epsilon=2.5e-4, distance_threshold=0, width_buffer=10):

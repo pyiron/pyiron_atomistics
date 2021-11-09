@@ -271,7 +271,7 @@ def analyse_find_solids(atoms, neighbor_method="cutoff",
         Returns:
             int: number of solids,
             pyscal system: pyscal system when return_sys=True
-    """ 
+    """
     sys = get_system(atoms)
     sys.find_neighbors(method=neighbor_method, cutoff=cutoff)
     sys.find_solids(bonds=bonds, threshold=threshold, avgthreshold=avgthreshold, q=q, cutoff=cutoff, cluster=cluster, right=right)
