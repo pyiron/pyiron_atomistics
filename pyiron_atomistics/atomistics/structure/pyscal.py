@@ -43,15 +43,10 @@ def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0
         numpy.ndarray: (number of q's, number of atoms) shaped array of q parameters
         numpy.ndarray: If `clustering=True`, an additional per-atom array of cluster ids is also returned
     """
-    s.publication_add(publication())
+    sys = pyiron_to_pyscal_system(atoms)
     q = (4, 6) if q is None else q
     if clustering == False:
         n_clusters = None
-    sys = pc.System()
-    sys.read_inputfile(
-        pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(atoms),
-        format='ase'
-    )
 
     sys.find_neighbors(
         method=neighbor_method,
@@ -90,9 +85,7 @@ def analyse_centro_symmetry(atoms, num_neighbors=12):
     Returns:
         csm (list) : list of centrosymmetry parameter
     """
-    s.publication_add(publication())
-    sys = pc.System()
-    sys.read_inputfile(atoms, format="ase")
+    sys = pyiron_to_pyscal_system(atoms)
     return np.array(sys.calculate_centrosymmetry(nmax=num_neighbors))
 
 
@@ -113,9 +106,7 @@ def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
     Returns:
         (depends on `mode`)
     """
-    s.publication_add(publication())
-    sys = pc.System()
-    sys.read_inputfile(atoms, format="ase")
+    sys = pyiron_to_pyscal_system(atoms)
     diamond_dict = sys.identify_diamond()
 
     ovito_identifiers = [
@@ -186,7 +177,7 @@ def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
     Returns:
         (depends on `mode`)
     """
-    s.publication_add(publication())
+    sys = pyiron_to_pyscal_system(atoms)
     if mode not in ["total", "numeric", "str"]:
         raise ValueError("Unsupported mode")
 
@@ -199,8 +190,6 @@ def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
         'CommonNeighborAnalysis.counts.ICO'
     ]
 
-    sys = pc.System()
-    sys.read_inputfile(atoms, format="ase")
     cna = sys.calculate_cna()
 
     if mode == "total":
@@ -234,13 +223,63 @@ def analyse_voronoi_volume(atoms):
     Args:
         atoms : (pyiron_atomistics.structure.atoms.Atoms): The structure to analyze.
     """
-    s.publication_add(publication())
-    sys = pc.System()
-    sys.read_inputfile(atoms, format="ase")
+    sys = pyiron_to_pyscal_system(atoms)
     sys.find_neighbors(method="voronoi")
     atoms = sys.atoms
     return np.array([atom.volume for atom in atoms])
 
+def pyiron_to_pyscal_system(atoms):
+    """
+    Converts atoms to ase atoms and than to a pyscal system.
+    Also adds the pyscal publication.
+
+    Args:
+        atoms (pyiron atoms): Structure to convert.
+
+    Returns:
+        Pyscal system: See the pyscal documentation.
+    """
+    s.publication_add(publication())
+    sys = pc.System()
+    sys.read_inputfile(
+        pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(atoms),
+        format="ase",
+        )
+    return sys
+
+def analyse_find_solids(atoms, neighbor_method="cutoff",
+    cutoff=0, bonds=0.5,
+    threshold=0.5, avgthreshold=0.6,
+    cluster=False, q=6, right=True,
+    return_sys=False,
+    ):
+    """
+        Get the number of solids or the corresponding pyscal system.
+        Calls necessary pyscal methods as described in https://pyscal.org/en/latest/methods/03_solidliquid.html.
+
+        Args:
+            neighbor_method (str, optional): Method used to get neighborlist. See pyscal documentation. Defaults to "cutoff".
+            cutoff (int, optional): Adaptive if 0. Defaults to 0.
+            bonds (float, optional): Number or fraction of bonds to consider atom as solid. Defaults to 0.5.
+            threshold (float, optional): See pyscal documentation. Defaults to 0.5.
+            avgthreshold (float, optional): See pyscal documentation. Defaults to 0.6.
+            cluster (bool, optional): See pyscal documentation. Defaults to False.
+            q (int, optional): Steinhard parameter to calculate. Defaults to 6.
+            right (bool, optional): See pyscal documentation. Defaults to True.
+            return_sys (bool, optional): Whether to return number of solid atoms or pyscal system. Defaults to False.
+
+        Returns:
+            int: number of solids,
+            pyscal system: pyscal system when return_sys=True
+    """
+    sys = pyiron_to_pyscal_system(atoms)
+    sys.find_neighbors(method=neighbor_method, cutoff=cutoff)
+    sys.find_solids(bonds=bonds, threshold=threshold, avgthreshold=avgthreshold, q=q, cutoff=cutoff, cluster=cluster, right=right)
+    if return_sys:
+        return sys
+    atoms = sys.atoms
+    solids = [atom for atom in atoms if atom.solid]
+    return len(solids)
 
 def publication():
     return {
