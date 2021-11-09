@@ -417,16 +417,13 @@ class StructureFactory(PyironFactory):
     def from_ovito(ovito_obj):
         return ovito_to_pyiron(ovito_obj)
 
-    def high_index_surface(self, element='Ni', crystal_structure='fcc', lattice_constant=3.526,
-                           terrace_orientation=None, step_orientation=None, kink_orientation=None,
-                           step_down_vector=None, length_step=3, length_terrace=3, length_kink=1, layers=60,
-                           vacuum=10):
+    def high_index_surface_info(self, element='Ni', crystal_structure='fcc', lattice_constant=3.526,
+                                terrace_orientation=None, step_orientation=None, kink_orientation=None,
+                                step_down_vector=None, length_step=3, length_terrace=3, length_kink=1):
         """
         Gives the miller indices of high index surface required to create a stepped and kink surface, based
         on the general orientation and length of terrace, step and kinks respectively. The microfacet notation used is
         based on the work of Van Hove et al.,[1].
-
-        Additionally also returns a bottom slab with the calculated high index surface
 
         [1] Van Hove, M. A., and G. A. Somorjai. "A new microfacet notation for high-Miller-index surfaces of cubic
         materials with terrace, step and kink structures." Surface Science 92.2-3 (1980): 489-518.
@@ -442,15 +439,18 @@ class StructureFactory(PyironFactory):
             length_terrace (int): The length of the terrace along the kink direction in atoms eg., 3
             length_step (int): The length of the step along the step direction in atoms eg., 3
             length_kink (int): The length of the kink along the kink direction in atoms eg., 1
-            layers (int): Number of layers of the high_index_surface eg., 60
-            vacuum (float): Thickness of vacuum on the top of the slab
+
 
         Returns:
             high_index_surface: The high miller index surface which can be used to create slabs
             fin_kink_orientation: The kink orientation lying in the terrace
             fin_step_orientation: The step orientation lying in the terrace
-            slab: pyiron_atomistics.atomistics.structure.atoms.Atoms instance Required surface
         """
+        terrace_orientation = terrace_orientation if terrace_orientation is not None else [1, 1, 1]
+        step_orientation = step_orientation if step_orientation is not None else [1, 1, 0]
+        kink_orientation = kink_orientation if kink_orientation is not None else [1, 1, 1]
+        step_down_vector = step_down_vector if step_down_vector is not None else [1, 1, 0]
+
         basis = self.crystal(element=element, bravais_basis=crystal_structure, lattice_constant=lattice_constant)
         sym = basis.get_symmetry()
         eqvdirs = np.unique(np.matmul(sym.rotations[:], (np.array(step_orientation))), axis=0)
@@ -473,11 +473,48 @@ class StructureFactory(PyironFactory):
         vec2 = (np.asanyarray(fin_kink_orientation).dot(length_terrace)) + step_down_vector
         high_index_surface = np.cross(np.asanyarray(vec1), np.asanyarray(vec2))
         high_index_surface = np.array(high_index_surface / np.gcd.reduce(high_index_surface), dtype=int)
+
+        return high_index_surface, fin_kink_orientation, fin_step_orientation
+
+    def high_index_surface(self, element='Ni', crystal_structure='fcc', lattice_constant=3.526,
+                           terrace_orientation=None, step_orientation=None, kink_orientation=None,
+                           step_down_vector=None, length_step=3, length_terrace=3, length_kink=1, layers=60,
+                           vacuum=10):
+        """
+        Gives a slab positioned at the bottom with the high index surface computed by high_index_surface_info().
+        Args:
+            element (str): The parent element eq. "N", "O", "Mg" etc.
+            crystal_structure (str): The crystal structure of the lattice
+            lattice_constant (float): The lattice constant
+            terrace_orientation (list): The miller index of the terrace. default: [1,1,1]
+            step_orientation (list): The miller index of the step. default: [1,1,0]
+            kink_orientation (list): The miller index of the kink. default: [1,1,1]
+            step_down_vector (list): The direction for stepping down from the step to next terrace. default: [1,1,0]
+            length_terrace (int): The length of the terrace along the kink direction in atoms. default: 3
+            length_step (int): The length of the step along the step direction in atoms. default: 3
+            length_kink (int): The length of the kink along the kink direction in atoms. default: 1
+            layers (int): Number of layers of the high_index_surface. default: 60
+            vacuum (float): Thickness of vacuum on the top of the slab. default:10
+
+        Returns:
+            slab: pyiron_atomistics.atomistics.structure.atoms.Atoms instance Required surface
+        """
+        basis = self.crystal(element=element, bravais_basis=crystal_structure, lattice_constant=lattice_constant)
+        high_index_surface, \
+            fin_kink_orientation, \
+            fin_step_orientation = self.high_index_surface_info(element='Ni',
+                                                                crystal_structure='fcc', lattice_constant=3.526,
+                                                                terrace_orientation=terrace_orientation,
+                                                                step_orientation=step_orientation,
+                                                                kink_orientation=kink_orientation,
+                                                                step_down_vector=step_down_vector,
+                                                                length_step=length_step,
+                                                                length_terrace=length_terrace,
+                                                                length_kink=length_kink)
         surf = ase_surf(basis, high_index_surface, layers, vacuum)
         sga = SpacegroupAnalyzer(pyiron_to_pymatgen(ase_to_pyiron(surf)))
         pmg_refined = sga.get_refined_structure()
         slab = pymatgen_to_pyiron(pmg_refined)
         slab.positions[:, 2] = slab.positions[:, 2] - np.min(slab.positions[:, 2])
         slab.set_pbc = True
-        slab.set_initial_magnetic_moments(np.repeat(1.0, len(slab)))
-        return slab, high_index_surface, fin_kink_orientation, fin_step_orientation
+        return slab
