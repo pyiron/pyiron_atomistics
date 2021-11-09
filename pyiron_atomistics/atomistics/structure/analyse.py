@@ -635,8 +635,8 @@ class Analyse:
 
     def get_delaunay_neighbors(self, width_buffer=10):
         """
-        Get indices of atoms sharing the same Delaunay tetrahedrals (commonly known as Delaunay
-        triangles), i.e. indices of neighboring atoms, which form a tetrahedral, in which no other
+        Get indices of atoms sharing the same Delaunay tetrahedrons (commonly known as Delaunay
+        triangles), i.e. indices of neighboring atoms, which form a tetrahedron, in which no other
         atom exists.
 
         Args:
