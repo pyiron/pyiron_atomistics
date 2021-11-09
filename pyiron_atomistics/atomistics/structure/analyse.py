@@ -630,8 +630,10 @@ class Analyse:
             width_buffer, return_indices=True
         )
         voro = Voronoi(positions)
-        pairs = voro.ridge_points[np.any(voro.ridge_points < len(self._structure), axis=-1)]
-        return indices[pairs]
+        x = positions[voro.ridge_points]
+        return indices[voro.ridge_points[
+            np.isclose(self._structure.get_wrapped_coordinates(x), x).all(axis=-1).any(axis=-1)
+        ]]
 
     def get_delaunay_neighbors(self, width_buffer=10):
         """
@@ -649,5 +651,7 @@ class Analyse:
             width_buffer, return_indices=True
         )
         delaunay = Delaunay(positions)
-        neighbors = delaunay.simplices[np.any(delaunay.simplices < len(self._structure), axis=-1)]
-        neighbors = indices[neighbors]
+        x = positions[delaunay.simplices]
+        return indices[delaunay.simplices[
+            np.isclose(self._structure.get_wrapped_coordinates(x), x).all(axis=-1).any(axis=-1)
+        ]]

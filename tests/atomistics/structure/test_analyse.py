@@ -180,7 +180,7 @@ class TestAtoms(unittest.TestCase):
         structure = bulk.repeat(3)
         self.assertAlmostEqual(np.linalg.norm(structure.find_mic(np.diff(
             structure.positions[structure.analyse.get_delaunay_neighbors()], axis=-2
-        )), axis=-1).flatten().max(), a_0*np.sqrt(3)/2)
+        )), axis=-1).flatten().max(), a_0)
         self.assertAlmostEqual(np.linalg.norm(structure.find_mic(np.diff(
             structure.positions[structure.analyse.get_voronoi_neighbors()], axis=-2
         )), axis=-1).flatten().max(), a_0)
