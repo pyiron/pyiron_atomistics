@@ -373,6 +373,7 @@ class SphinxBase(GenericDFTJob):
         self.input.KpointCoords = [0.5, 0.5, 0.5]
         self.input.KpointFolding = [4, 4, 4]
         self.input.EmptyStates = "auto"
+        self.input.MethfesselPaxton = 1
         self.input.Sigma = 0.2
         self.input.Xcorr = "PBE"
         self.input.VaspPot = False
@@ -522,10 +523,14 @@ class SphinxBase(GenericDFTJob):
         """
         self.input.sphinx.PAWHamiltonian.setdefault(
             "nEmptyStates", self.input["EmptyStates"]
-            )
+        )
         self.input.sphinx.PAWHamiltonian.setdefault(
             "ekt", self.input["Sigma"]
-            )
+        )
+        for k in ['MethfesselPaxton', 'FermiDirac']:
+            if k in self.input.list_nodes():
+                self.input.sphinx.PAWHamiltonian.setdefault(k, self.input[k])
+                break
         self.input.sphinx.PAWHamiltonian.setdefault("xc", self.input["Xcorr"])
         self.input.sphinx.PAWHamiltonian["spinPolarized"] = self._spin_enabled
 
@@ -965,20 +970,27 @@ class SphinxBase(GenericDFTJob):
         + set_mixing_parameters.__doc__
     )
 
-    def set_occupancy_smearing(self, smearing=None, width=None):
+    def set_occupancy_smearing(self, smearing=None, width=None, order=1):
         """
         Set how the finite temperature smearing is applied in
         determining partial occupancies
 
         Args:
-            smearing (str): Type of smearing (only fermi is
-                            implemented anything else will be ignored)
+            smearing (str): Type of smearing, 'FermiDirac' or 'MethfesselPaxton'
             width (float): Smearing width (eV) (default: 0.2)
+            order (int): Smearing order
         """
-        if smearing is not None and not isinstance(smearing, str):
-            raise ValueError(
-                "Smearing must be a string"
-            )
+        if smearing is not None:
+            if not isinstance(smearing, str):
+                raise ValueError("Smearing must be a string")
+            if smearing.lower().startswith('meth'):
+                self.input.MethfesselPaxton = order 
+                if 'FermiDirac' in self.input.list_nodes():
+                    del self.input['FermiDirac']
+            elif smearing.lower().startswith('fermi'):
+                self.input.FermiDirac = order 
+                if 'MethfesselPaxton' in self.input.list_nodes():
+                    del self.input['MethfesselPaxton']
         if width is not None and width < 0:
             raise ValueError("Smearing value must be a float >= 0")
         if width is not None:
