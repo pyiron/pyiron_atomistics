@@ -984,11 +984,11 @@ class SphinxBase(GenericDFTJob):
             if not isinstance(smearing, str):
                 raise ValueError("Smearing must be a string")
             if smearing.lower().startswith('meth'):
-                self.input.MethfesselPaxton = order 
+                self.input.MethfesselPaxton = order
                 if 'FermiDirac' in self.input.list_nodes():
                     del self.input['FermiDirac']
             elif smearing.lower().startswith('fermi'):
-                self.input.FermiDirac = order 
+                self.input.FermiDirac = order
                 if 'MethfesselPaxton' in self.input.list_nodes():
                     del self.input['MethfesselPaxton']
         if width is not None and width < 0:
