@@ -652,11 +652,30 @@ class Analyse:
             only_bulk_type=only_bulk_type
         ).strain
 
-    def cluster_positions(self, positions=None, eps=0.1, return_labels=False):
+    def cluster_positions(self, positions=None, eps=1, buffer_width=None, return_labels=False):
+        """
+        Cluster positions according to the distances.
+
+        Args:
+            positions (numpy.ndarray): Positions to consider. Default: atom positions
+            eps (float): The maximum distance between two samples for one to be considered as in
+                the neighborhood of the other.
+            buffer_width (float): Buffer width to consider across the periodic boundary
+                conditions. If too small, it is possible that atoms that are meant to belong
+                together across PBC are missed. Default: Same as eps
+            return_labels (bool): Whether to return the labels given according to the grouping
+                together with the mean positions
+
+        Returns:
+            positions (numpy.ndarray): Mean positions
+            label (numpy.ndarray): Labels of the positions (returned when `return_labels = True`)
+        """
         if positions is None:
             positions = self._structure.positions
+        if buffer_width is None:
+            buffer_width = eps
         extended_positions, indices = self._structure.get_extended_positions(
-            eps, return_indices=True, positions=positions
+            buffer_width, return_indices=True, positions=positions
         )
         labels = DBSCAN(eps=eps, min_samples=1).fit_predict(extended_positions)
         coo = coo_matrix((labels, (np.arange(len(labels)), indices)))
