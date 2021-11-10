@@ -662,7 +662,7 @@ class Analyse:
         coo = coo_matrix((labels, (np.arange(len(labels)), indices)))
         labels = coo.max(axis=0).toarray().flatten()
         mean_positions = get_mean_positions(
-            self._structure.positions, self._structure.cell, self._structure.pbc, labels
+            positions, self._structure.cell, self._structure.pbc, labels
         )
         if return_labels:
             return mean_positions, labels
