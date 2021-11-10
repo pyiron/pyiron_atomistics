@@ -680,6 +680,8 @@ class Analyse:
         labels = DBSCAN(eps=eps, min_samples=1).fit_predict(extended_positions)
         coo = coo_matrix((labels, (np.arange(len(labels)), indices)))
         labels = coo.max(axis=0).toarray().flatten()
+        # make labels look nicer
+        labels = np.unique(labels, return_inverse=True)[1]
         mean_positions = get_mean_positions(
             positions, self._structure.cell, self._structure.pbc, labels
         )
