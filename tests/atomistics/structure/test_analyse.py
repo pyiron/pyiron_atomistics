@@ -179,6 +179,10 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(len(bulk.analyse.cluster_positions()), len(bulk))
         positions = np.append(bulk.positions, bulk.positions, axis=0)
         self.assertEqual(len(bulk.analyse.cluster_positions(positions)), len(bulk))
+        self.assertEqual(
+            bulk.analyse.cluster_positions(np.zeros((2, 3)), return_labels=True)[1].tolist(),
+            [0, 0]
+        )
 
 
 if __name__ == "__main__":
