@@ -1525,17 +1525,11 @@ class VaspBase(GenericDFTJob):
             new_ham (vasp.vasp.Vasp instance): New job
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
+        self.check_if_file_exists("CHGCAR")
         if new_ham.__name__ == self.__name__:
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "CHGCAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A CHGCAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
+            new_ham.restart_file_list.append(
+                posixpath.join(self.working_directory, "CHGCAR")
+            )
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
                 self_consistent_calc=self_consistent_calc,
@@ -1583,29 +1577,16 @@ class VaspBase(GenericDFTJob):
             new_ham (vasp.vasp.Vasp instance): New job
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
+        self.check_if_file_exists("WAVECAR")
+        self.check_if_file_exists("CHGCAR")
         if new_ham.__name__ == self.__name__:
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "CHGCAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A CHGCAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "WAVECAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A WAVECAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
+            new_ham.restart_file_list.append(
+                posixpath.join(self.working_directory, "CHGCAR")
+            )
+            new_ham.restart_file_list.append(
+                posixpath.join(self.working_directory, "WAVECAR")
+            )
             new_ham.input.incar["ISTART"] = istart
-
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
                 self_consistent_calc=self_consistent_calc,
@@ -1652,17 +1633,11 @@ class VaspBase(GenericDFTJob):
             new_ham (vasp.vasp.Vasp instance): New job
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
+        self.check_if_file_exists("WAVECAR")
         if new_ham.__name__ == self.__name__:
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "WAVECAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A WAVECAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
+            new_ham.restart_file_list.append(
+                posixpath.join(self.working_directory, "WAVECAR")
+            )
             new_ham.input.incar["ISTART"] = istart
         return new_ham
 
