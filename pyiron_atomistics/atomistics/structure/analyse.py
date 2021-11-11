@@ -654,7 +654,29 @@ class Analyse:
 
     def cluster_positions(self, positions=None, eps=1, buffer_width=None, return_labels=False):
         """
-        Cluster positions according to the distances.
+        Cluster positions according to the distances. Clustering algorithm uses DBSCAN:
+
+        https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
+
+        Example I:
+
+        ```
+        analyse = Analyze(some_pyiron_structure)
+        positions = analyse.cluster_points(eps=2)
+        ```
+
+        This example should return the atom positions, if no two atoms lie within a distance of 2.
+        If there are at least two atoms which lie within a distance of 2, their entries will be
+        replaced by their mean position.
+
+        Example II:
+
+        ```
+        analyse = Analyze(some_pyiron_structure)
+        print(analyse.cluster_positions([3*[0.], 3*[1.]], eps=3))
+        ```
+
+        This returns `[0.5, 0.5, 0.5]` (if the cell is large enough)
 
         Args:
             positions (numpy.ndarray): Positions to consider. Default: atom positions
@@ -672,6 +694,7 @@ class Analyse:
         """
         if positions is None:
             positions = self._structure.positions
+        positions = np.array(positions)
         if buffer_width is None:
             buffer_width = eps
         extended_positions, indices = self._structure.get_extended_positions(
