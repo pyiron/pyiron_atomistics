@@ -57,6 +57,7 @@ class TestVasp(unittest.TestCase):
         self.job.structure = None
 
     def test_list_potentials(self):
+        self.assertRaises(ValueError, self.job.list_potentials)
         self.assertEqual(sorted([
             'Fe', 'Fe_GW', 'Fe_pv', 'Fe_sv', 'Fe_sv_GW', 'Se', 'Se_GW',
             'O', 'O_GW', 'O_GW_new', 'O_h', 'O_s', 'O_s_GW'
@@ -276,9 +277,6 @@ class TestVasp(unittest.TestCase):
         self.job.structure = atoms
         self.assertEqual(self.job.structure, atoms)
 
-    def test_list_potenitals(self):
-        self.assertRaises(ValueError, self.job.list_potentials)
-
     def test_run_complete(self):
         self.job_complete.exchange_correlation_functional = "PBE"
         self.job_complete.set_occupancy_smearing(smearing="fermi", width=0.2)
@@ -296,6 +294,12 @@ class TestVasp(unittest.TestCase):
         )
         self.job_complete.restart_file_list.append(
             posixpath.join(file_directory, "OUTCAR")
+        )
+        self.job_complete.restart_file_list.append(
+            posixpath.join(file_directory, "CHGCAR")
+        )
+        self.job_complete.restart_file_list.append(
+            posixpath.join(file_directory, "WAVECAR")
         )
         self.job_complete.run(run_mode="manual")
         self.job_complete.status.collect = True
@@ -334,34 +338,20 @@ class TestVasp(unittest.TestCase):
         ) as h_dft:
             hdf_nodes = h_dft.list_nodes()
             self.assertTrue(all([node in hdf_nodes for node in nodes]))
-
         job_chg_den = self.job_complete.restart_from_charge_density(job_name="chg")
         self.assertEqual(job_chg_den.structure, self.job_complete.get_structure(-1))
         self.assertTrue(
             posixpath.join(self.job_complete.working_directory, "CHGCAR")
             in job_chg_den.restart_file_list
         )
-        with job_chg_den.project_hdf5.open("output") as h_out:
-            self.assertTrue(h_out.list_nodes() == [])
-            self.assertTrue(h_out.list_groups() == [])
 
-        with job_chg_den.project_hdf5.open("input") as h_in:
-            self.assertFalse(h_in.list_nodes() == [])
-            self.assertFalse(h_in.list_groups() == [])
+        def check_group_is_empty(example_job, group_name):
+            with example_job.project_hdf5.open(group_name) as h_gr:
+                self.assertTrue(h_gr.list_nodes() == [])
+                self.assertTrue(h_gr.list_groups() == [])
 
-        job_wave = self.job_complete.restart_from_wave_functions(job_name="wave")
-        self.assertEqual(job_wave.structure, self.job_complete.get_structure(-1))
-        self.assertTrue(
-            posixpath.join(self.job_complete.working_directory, "WAVECAR")
-            in job_wave.restart_file_list
-        )
-        with job_wave.project_hdf5.open("output") as h_out:
-            self.assertTrue(h_out.list_nodes() == [])
-            self.assertTrue(h_out.list_groups() == [])
-
-        with job_wave.project_hdf5.open("input") as h_in:
-            self.assertFalse(h_in.list_nodes() == [])
-            self.assertFalse(h_in.list_groups() == [])
+        check_group_is_empty(job_chg_den, "output")
+        check_group_is_empty(job_chg_den, "input")
 
         job_chg_wave = self.job_complete.restart_from_wave_and_charge(
             job_name="chg_wave"
@@ -377,13 +367,24 @@ class TestVasp(unittest.TestCase):
         )
         for key, val in job_chg_wave.restart_file_dict.items():
             self.assertTrue(key, val)
-        with job_chg_wave.project_hdf5.open("output") as h_out:
-            self.assertTrue(h_out.list_nodes() == [])
-            self.assertTrue(h_out.list_groups() == [])
 
-        with job_chg_wave.project_hdf5.open("input") as h_in:
-            self.assertFalse(h_in.list_nodes() == [])
-            self.assertFalse(h_in.list_groups() == [])
+        check_group_is_empty(job_chg_wave, "output")
+        check_group_is_empty(job_chg_wave, "input")
+
+        job = self.job_complete.restart()
+        job.restart_file_list.append(
+            posixpath.join(file_directory, "vasprun.xml")
+        )
+        job.restart_file_list.append(
+            posixpath.join(file_directory, "OUTCAR")
+        )
+        job.run(run_mode="manual")
+        job.status.collect = True
+        job.run()
+        # Check if error raised if the files don't exist
+        self.assertRaises(FileNotFoundError, job.restart_from_wave_functions, "wave_restart")
+        self.assertRaises(FileNotFoundError, job.restart_from_charge_density, "chg_restart")
+        self.assertRaises(FileNotFoundError, job.restart_from_wave_and_charge, "wave_chg_restart")
 
     def test_vasp_metadyn(self):
         self.job_metadyn.set_primitive_constraint("bond_1", "bond", atom_indices=[0, 2], increment=1e-4)
