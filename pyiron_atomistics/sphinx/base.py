@@ -805,9 +805,11 @@ class SphinxBase(GenericDFTJob):
             with warnings.catch_warnings(record=True) as w:
                 try:
                     self.collect_output()
-                except AssertionError:
-                    from_charge_density = False
-                    from_wave_functions = False
+                except AssertionError as orig_error:
+                    if from_charge_density or from_wave_functions:
+                        raise AssertionError(orig_error.message +
+                            '\nCowardly refusing to use density or wavefunctions for restart.\n' +
+                            'Solution: set from_charge_density and from_wave_functions to False.')
                 if len(w) > 0:
                     self.status.not_converged = True
         new_job = super(SphinxBase, self).restart(
@@ -819,13 +821,15 @@ class SphinxBase(GenericDFTJob):
         ):
             new_job.restart_file_list.append(posixpath.join(self.working_directory, "rho.sxb"))
         elif from_charge_density:
-            raise FileNotFoundError('Charge density file rho.sxb not found')
+            raise FileNotFoundError('Charge density file rho.sxb not found in '
+                                    + self.working_directory)
         if from_wave_functions and os.path.isfile(
             posixpath.join(self.working_directory, "waves.sxb")
         ):
             new_job.restart_file_list.append(posixpath.join(self.working_directory, "waves.sxb"))
         elif from_wave_functions:
-            raise FileNotFoundError('Wave function file waves.sxb not found')
+            raise FileNotFoundError('Wave function file waves.sxb not found in '
+                                    + self.working_directory)
         return new_job
 
     def to_hdf(self, hdf=None, group_name=None):
