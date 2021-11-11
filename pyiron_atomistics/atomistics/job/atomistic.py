@@ -415,10 +415,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         new_ham._generic_input['structure'] = 'atoms'
         return new_ham
 
-    def ensure_file_exists_and_return(self, filename: str) -> None:
+    def get_workdir_file(self, filename: str) -> None:
         """
-        Checks if a given file exists within the job directory and returns the absolute path of the file appended with
-         the working directory appended
+        Checks if a given file exists within the job's working directory and returns the absolute path to it.
 
         ToDo: Move this to pyiron_base since this is more generic.
 
