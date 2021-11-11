@@ -1090,11 +1090,11 @@ class LammpsBase(AtomisticGenericJob):
         )
         if new_ham.__name__ == self.__name__:
             new_ham.potential = self.potential
-            if os.path.isfile(os.path.join(self.working_directory, "restart.out")):
-                new_ham.read_restart_file(filename="restart.out")
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "restart.out")
-                )
+            self.check_if_file_exists("restart.out")
+            new_ham.read_restart_file(filename="restart.out")
+            new_ham.restart_file_list.append(
+                posixpath.join(self.working_directory, "restart.out")
+            )
         return new_ham
 
     def _get_lammps_structure(self, structure=None, cutoff_radius=None):
