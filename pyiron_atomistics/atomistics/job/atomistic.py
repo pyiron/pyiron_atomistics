@@ -415,20 +415,26 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         new_ham._generic_input['structure'] = 'atoms'
         return new_ham
 
-    def check_if_file_exists(self, filename) -> None:
+    def ensure_file_exists_and_return(self, filename: str) -> None:
         """
-        Checks if a given file exists within the job directory
+        Checks if a given file exists within the job directory and returns the absolute path of the file appended with
+         the working directory appended
 
         ToDo: Move this to pyiron_base since this is more generic.
 
         Args:
             filename (str): The name of the file
 
+        Returns:
+            str: The name absolute path of the file in the working directory
+
         Raises:
             FileNotFoundError: Raised if the given file does not exist.
         """
-        if not os.path.isfile(posixpath.join(self.working_directory, filename)):
+        appended_path = posixpath.join(self.working_directory, filename)
+        if not os.path.isfile(appended_path):
             raise FileNotFoundError(f"File {filename} not found in working directory: {self.working_directory}")
+        return appended_path
 
     # Required functions
     def continue_with_restart_files(self, job_type=None, job_name=None):

@@ -819,12 +819,10 @@ class SphinxBase(GenericDFTJob):
         new_job.input = self.input
 
         if from_charge_density:
-            self.check_if_file_exists("rho.sxb")
-            new_job.restart_file_list.append(posixpath.join(self.working_directory, "rho.sxb"))
+            new_job.restart_file_list.append(self.ensure_file_exists_and_return("restart.out"))
 
         if from_wave_functions:
-            self.check_if_file_exists("waves.sxb")
-            new_job.restart_file_list.append(posixpath.join(self.working_directory, "waves.sxb"))
+            new_job.restart_file_list.append(self.ensure_file_exists_and_return("restart.out"))
         return new_job
 
     def to_hdf(self, hdf=None, group_name=None):
