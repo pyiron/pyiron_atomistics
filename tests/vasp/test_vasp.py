@@ -349,9 +349,7 @@ class TestVasp(unittest.TestCase):
             with example_job.project_hdf5.open(group_name) as h_gr:
                 self.assertTrue(h_gr.list_nodes() == [])
                 self.assertTrue(h_gr.list_groups() == [])
-
         check_group_is_empty(job_chg_den, "output")
-        check_group_is_empty(job_chg_den, "input")
 
         job_chg_wave = self.job_complete.restart_from_wave_and_charge(
             job_name="chg_wave"
@@ -367,9 +365,7 @@ class TestVasp(unittest.TestCase):
         )
         for key, val in job_chg_wave.restart_file_dict.items():
             self.assertTrue(key, val)
-
         check_group_is_empty(job_chg_wave, "output")
-        check_group_is_empty(job_chg_wave, "input")
 
         job = self.job_complete.restart()
         job.restart_file_list.append(
