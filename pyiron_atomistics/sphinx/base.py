@@ -813,28 +813,19 @@ class SphinxBase(GenericDFTJob):
         new_job = super(SphinxBase, self).restart(
             job_name=job_name, job_type=job_type
         )
-
         new_job.input = self.input
-
         if from_charge_density and os.path.isfile(
             posixpath.join(self.working_directory, "rho.sxb")
         ):
             new_job.restart_file_list.append(posixpath.join(self.working_directory, "rho.sxb"))
-
         elif from_charge_density:
-            self._logger.warning(
-                msg=f"A charge density from job: {self.job_name} "
-                + "is not generated and therefore it can't be read."
-            )
+            raise FileNotFoundError('Charge density file rho.sxb not found')
         if from_wave_functions and os.path.isfile(
             posixpath.join(self.working_directory, "waves.sxb")
         ):
             new_job.restart_file_list.append(posixpath.join(self.working_directory, "waves.sxb"))
         elif from_wave_functions:
-            self._logger.warning(
-                msg="No wavefunction file (waves.sxb) was found for "
-                + f"job {self.job_name} in {self.working_directory}."
-            )
+            raise FileNotFoundError('Wave function file waves.sxb not found')
         return new_job
 
     def to_hdf(self, hdf=None, group_name=None):
