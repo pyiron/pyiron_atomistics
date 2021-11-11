@@ -428,7 +428,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             FileNotFoundError: Raised if the given file does not exist.
         """
         if not os.path.isfile(posixpath.join(self.working_directory, filename)):
-            raise FileNotFoundError(f"File {filename} not found")
+            raise FileNotFoundError(f"File {filename} not found in working directory: {self.working_directory}")
 
     # Required functions
     def continue_with_restart_files(self, job_type=None, job_name=None):
