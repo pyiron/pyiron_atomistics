@@ -502,8 +502,9 @@ class StructureFactory(PyironFactory):
         basis = self.crystal(element=element, bravais_basis=crystal_structure, lattice_constant=lattice_constant)
         high_index_surface, \
             fin_kink_orientation, \
-            fin_step_orientation = self.high_index_surface_info(element='Ni',
-                                                                crystal_structure='fcc', lattice_constant=3.526,
+            fin_step_orientation = self.high_index_surface_info(element=element,
+                                                                crystal_structure=crystal_structure,
+                                                                lattice_constant=lattice_constant,
                                                                 terrace_orientation=terrace_orientation,
                                                                 step_orientation=step_orientation,
                                                                 kink_orientation=kink_orientation,
