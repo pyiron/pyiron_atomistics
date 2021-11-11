@@ -49,9 +49,13 @@ class CompoundFactory:
         return _ase.crystal((element_a, element_b), [(0, 0, 0), (1/2, 1/2, 1/2)], spacegroup=221, cell=(a, a, a))
 
     @staticmethod
-    def C14(element_a, element_b, a=None, c_over_a=1.626, x1=0.5, z1=0.5):
+    def C14(element_a, element_b, a=None, c_over_a=1.626, x1=0.1697, z1=0.5629):
         """
         Builds a hexagonal $A B_2$ C14 Laves phase cell.
+
+        Default fractional coordinates are chosen to reproduce CaMg2 Laves phase from the Springer Materials Database
+
+        https://materials.springer.com/isp/crystallographic/docs/sd_1822295
 
         .. attention:: Change in Stochiometry possible!
 
