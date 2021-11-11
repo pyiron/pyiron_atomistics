@@ -5,7 +5,9 @@
 import copy
 import warnings
 import numpy as np
+import os
 from ase.io import write as ase_write
+import posixpath
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
@@ -412,6 +414,21 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             new_ham.structure = self.structure.copy()
         new_ham._generic_input['structure'] = 'atoms'
         return new_ham
+
+    def check_if_file_exists(self, filename) -> None:
+        """
+        Checks if a given file exists within the job directory
+
+        ToDo: Move this to pyiron_base since this is more generic.
+
+        Args:
+            filename (str): The name of the file
+
+        Raises:
+            FileNotFoundError: Raised if the given file does not exist.
+        """
+        if not os.path.isfile(posixpath.join(self.working_directory, filename)):
+            raise FileNotFoundError(f"File {filename} not found")
 
     # Required functions
     def continue_with_restart_files(self, job_type=None, job_name=None):
