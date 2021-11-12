@@ -66,7 +66,8 @@ def get_total_number_of_atoms(job):
 
 
 def get_average_waves(job):
-    _, weights, planewaves = job["output/outcar/irreducible_kpoints"]
+    weights = job["output/outcar/irreducible_kpoint_weights"]
+    planewaves = job["output/outcar/number_plane_waves"]
     return {"avg. plane waves": sum(weights * planewaves) / sum(weights)}
 
 

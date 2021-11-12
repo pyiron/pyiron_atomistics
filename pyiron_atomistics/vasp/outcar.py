@@ -67,11 +67,13 @@ class Outcar(object):
         e_fermi_list, vbm_list, cbm_list = self.get_band_properties(filename=filename, lines=lines)
         elastic_constants = self.get_elastic_constants(filename=filename, lines=lines)
         try:
-            irreducible_kpoints, _, _ = self.get_irreducible_kpoints(filename=filename,
+            irreducible_kpoints, ir_kpt_weights, plane_waves = self.get_irreducible_kpoints(filename=filename,
                                                                                             lines=lines)
         except ValueError:
             print("irreducible kpoints not parsed !")
             irreducible_kpoints = None
+            ir_kpt_weights = None
+            plane_waves = None
         magnetization, final_magmom_lst = self.get_magnetization(
             filename=filename, lines=lines
         )
@@ -92,6 +94,8 @@ class Outcar(object):
         self.parse_dict["kin_energy_error"] = kin_energy_error
         self.parse_dict["stresses"] = stresses * KBAR_TO_EVA
         self.parse_dict["irreducible_kpoints"] = irreducible_kpoints
+        self.parse_dict["irreducible_kpoint_weights"] = ir_kpt_weights
+        self.parse_dict["number_plane_waves"] = plane_waves
         self.parse_dict["magnetization"] = magnetization
         self.parse_dict["final_magmoms"] = final_magmom_lst
         self.parse_dict["broyden_mixing"] = broyden_mixing
@@ -132,6 +136,8 @@ class Outcar(object):
             "broyden_mixing",
             "stresses",
             "irreducible_kpoints",
+            "irreducible_kpoint_weights",
+            "number_plane_waves"
         ]
         with hdf.open(group_name) as hdf5_output:
             for key in self.parse_dict.keys():
