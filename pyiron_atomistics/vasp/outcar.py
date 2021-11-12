@@ -67,7 +67,7 @@ class Outcar(object):
         e_fermi_list, vbm_list, cbm_list = self.get_band_properties(filename=filename, lines=lines)
         elastic_constants = self.get_elastic_constants(filename=filename, lines=lines)
         try:
-            irreducible_kpoints, ir_kpt_weights, plane_waves = self.get_irreducible_kpoints(filename=filename,
+            irreducible_kpoints, _, _ = self.get_irreducible_kpoints(filename=filename,
                                                                                             lines=lines)
         except ValueError:
             print("irreducible kpoints not parsed !")
