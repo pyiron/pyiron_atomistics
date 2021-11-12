@@ -48,7 +48,7 @@ class TestOutcar(unittest.TestCase):
             type_dict["scf_dipole_moments"] = list
             type_dict["kin_energy_error"] = float
             type_dict["stresses"] = np.ndarray
-            type_dict["irreducible_kpoints"] = tuple
+            type_dict["irreducible_kpoints"] = np.ndarray
             type_dict["pressures"] = np.ndarray
             type_dict["energies_int"] = np.ndarray
             type_dict["energies_zero"] = np.ndarray
