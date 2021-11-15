@@ -126,7 +126,3 @@ class TestVaspPotential(_PotentialTester):
                 "Fe_sv_GW-gga-pbe",
             ],
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
