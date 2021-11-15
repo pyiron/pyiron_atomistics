@@ -1052,7 +1052,7 @@ class NeighborsTrajectory(DataContainer):
             numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
 
         """
-        return self._neighbor_indices
+        return self._flat_store.get_array_filled("indices")
 
     @property
     def distances(self):
@@ -1064,7 +1064,7 @@ class NeighborsTrajectory(DataContainer):
             numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
 
         """
-        return self._neighbor_distances
+        return self.flat_store.get_array_filled("distances")
 
     @property
     def vecs(self):
@@ -1076,7 +1076,7 @@ class NeighborsTrajectory(DataContainer):
             numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors x 3
 
         """
-        return self._neighbor_vectors
+        return self._flat_store.get_array_filled("vecs")
 
     @property
     def num_neighbors(self):
@@ -1093,9 +1093,8 @@ class NeighborsTrajectory(DataContainer):
         """
         Compute the neighbors across the trajectory
         """
-        self._neighbor_indices, self._neighbor_distances, self._neighbor_vectors = \
-            _get_neighbors(self._flat_store, self._has_structure,
-                           num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
+        _get_neighbors(self._flat_store, self._has_structure,
+                       num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
 
 
 def _get_neighbors(store, has_structure, num_neighbors=20, **kwargs):
