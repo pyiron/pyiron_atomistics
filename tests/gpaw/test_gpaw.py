@@ -4,7 +4,7 @@
 
 import os
 import numpy as np
-from pyiron_base import Project, ProjectHDFio
+from pyiron_base import ProjectHDFio
 from pyiron_atomistics.gpaw.gpaw import Gpaw
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_base._tests import TestWithProject
@@ -15,10 +15,9 @@ class TestGpaw(TestWithProject):
     def setUpClass(cls):
         super().setUpClass()
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
-        cls.project = Project(os.path.join(cls.execution_path, "gpaw"))
         atoms = Atoms("Fe1", positions=np.zeros((1, 3)), cell=np.eye(3))
         job = Gpaw(
-            project=ProjectHDFio(project=cls.project, file_name=cls.project.path),
+            project=ProjectHDFio(project=cls.project, file_name="gpaw"),
             job_name="gpaw",
         )
         job.structure = atoms
@@ -29,7 +28,7 @@ class TestGpaw(TestWithProject):
     def test_serialization(self):
         self.job.to_hdf()
         loaded = Gpaw(
-            project=ProjectHDFio(project=self.project, file_name=self.project.path),
+            project=ProjectHDFio(project=self.project, file_name="gpaw"),
             job_name="gpaw",
         )
         loaded.from_hdf()
