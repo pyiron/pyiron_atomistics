@@ -51,7 +51,7 @@ class TestCompoundFactory(PyironTestCase):
         structure = self.compound.C15(a_type, b_type)
 
         self.assertEqual(len(structure), 24, "Wrong number of atoms in C15 structure.")
-        self.assertEqual(structure.get_chemical_formula(), "Mg8Cu16", "Wrong chemical formula.")
+        self.assertEqual(structure.get_chemical_formula(), "Cu16Mg8", "Wrong chemical formula.")
 
         a_type_nn_distance = StructureFactory().bulk(a_type).get_neighbors(num_neighbors=1).distances[0, 0]
         self.assertAlmostEqual((4 / np.sqrt(3)) * a_type_nn_distance, structure.cell.array[0, 0],
