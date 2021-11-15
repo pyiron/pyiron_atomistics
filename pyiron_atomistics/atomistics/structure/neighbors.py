@@ -11,7 +11,7 @@ from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
 import warnings
-from pyiron_base import Settings, deprecate
+from pyiron_base import deprecate
 import itertools
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
@@ -24,8 +24,6 @@ __maintainer__ = "Sam Waseda"
 __email__ = "waseda@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class Tree:
