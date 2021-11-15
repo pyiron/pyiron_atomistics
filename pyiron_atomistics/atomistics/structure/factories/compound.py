@@ -112,7 +112,7 @@ class CompoundFactory:
         a = 2 * _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
 
         # See: https://www.atomic-scale-physics.de/lattice/struk/c15.html
-        s = _ase.crystal((element_a, element_b),
+        s = _ase.crystal((element_b, element_a),
                             [ # Wyckoff 8a
                               (1/8, 1/8, 1/8),
                               # Wyckoff 16d
