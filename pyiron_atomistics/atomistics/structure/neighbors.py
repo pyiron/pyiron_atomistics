@@ -1047,10 +1047,10 @@ class NeighborsTrajectory(DataContainer):
         """
         Neighbour indices (excluding itself) of each atom computed using the get_neighbors_traj() method
 
+        If the structures have different number of atoms, the array will have -1 on indices that are invalid.
+
         Returns:
-
-            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
-
+            numpy.ndarray: An int array of dimension N_steps / stride x N_atoms x N_neighbors
         """
         return self._flat_store.get_array_filled("indices")
 
@@ -1059,10 +1059,10 @@ class NeighborsTrajectory(DataContainer):
         """
         Neighbour distances (excluding itself) of each atom computed using the get_neighbors_traj() method
 
+        If the structures have different number of atoms, the array will have NaN on indices that are invalid.
+
         Returns:
-
-            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
-
+            numpy.ndarray: A float array of dimension N_steps / stride x N_atoms x N_neighbors
         """
         return self.flat_store.get_array_filled("distances")
 
@@ -1071,10 +1071,10 @@ class NeighborsTrajectory(DataContainer):
         """
         Neighbour vectors (excluding itself) of each atom computed using the get_neighbors_traj() method
 
+        If the structures have different number of atoms, the array will have NaN on indices that are invalid.
+
         Returns:
-
-            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors x 3
-
+            numpy.ndarray: A float array of dimension N_steps / stride x N_atoms x N_neighbors x 3
         """
         return self._flat_store.get_array_filled("vecs")
 
