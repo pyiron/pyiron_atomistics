@@ -7,19 +7,21 @@ import numpy as np
 import pandas as pd
 import os
 import re
-from pyiron_base import Project, ProjectHDFio
+from pyiron_base import state, Project, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 import ase.units as units
+from pyiron_base._tests import TestWithProject
 
 
-class TestLammps(unittest.TestCase):
+class TestLammps(TestWithProject):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
-        cls.project = Project(os.path.join(cls.execution_path, "lammps"))
+        state.update({'resource_paths': os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")})
         cls.job = Lammps(
             project=ProjectHDFio(project=cls.project, file_name="lammps"),
             job_name="lammps",
@@ -71,10 +73,8 @@ class TestLammps(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.execution_path = os.path.dirname(os.path.abspath(__file__))
-        project = Project(os.path.join(cls.execution_path, "lammps"))
-        project.remove_jobs_silently(recursive=True)
-        project.remove(enable=True)
+        super().tearDownClass()
+        state.update()
 
     def test_selective_dynamics(self):
         atoms = Atoms("Fe8", positions=np.zeros((8, 3)), cell=np.eye(3))
