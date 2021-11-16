@@ -652,7 +652,7 @@ class TestOutcar(unittest.TestCase):
                         ]
                     ),
                     np.array([8.0, 24.0, 24.0, 8.0]),
-                    np.array([452.0, 457.0, 451.0, 459.0]),
+                    np.array([452, 457, 451, 459]),
                 )
                 self.assertEqual(output_all.__str__(), output.__str__())
             if int(filename.split("/OUTCAR_")[-1]) in [2, 3, 4]:
@@ -666,7 +666,7 @@ class TestOutcar(unittest.TestCase):
                         ]
                     ),
                     np.array([8.0, 24.0, 24.0, 8.0]),
-                    np.array([196.0, 199.0, 196.0, 190.0]),
+                    np.array([196, 199, 196, 190]),
                 )
                 self.assertEqual(output_all.__str__(), output.__str__())
             if int(filename.split("/OUTCAR_")[-1]) in [5, 6]:
@@ -684,7 +684,7 @@ class TestOutcar(unittest.TestCase):
                         ]
                     ),
                     np.array([8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0]),
-                    np.array([392.0, 398.0, 398.0, 398.0, 392.0, 392.0, 392.0, 380.0]),
+                    np.array([392, 398, 398, 398, 392, 392, 392, 380]),
                 )
                 self.assertEqual(output_all.__str__(), output.__str__())
 

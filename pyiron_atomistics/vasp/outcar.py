@@ -344,7 +344,7 @@ class Outcar(object):
             ]:
                 line = line.strip()
                 line = _clean_line(line)
-                planewaves_lst.append(float(line.split()[-1]))
+                planewaves_lst.append(int(line.split()[-1]))
         if weight and planewaves:
             return np.array(kpoint_lst), np.array(weight_lst), np.array(planewaves_lst)
         elif weight:
