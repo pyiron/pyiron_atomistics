@@ -7,7 +7,7 @@ import os
 import posixpath
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_atomistics.vasp.base import Input, Output
-from pyiron_base import ProjectHDFio, Project
+from pyiron_base import state, ProjectHDFio, Project
 from pyiron_atomistics.vasp.potential import VaspPotentialSetter
 from pyiron_atomistics.vasp.vasp import Vasp
 from pyiron_atomistics.vasp.metadyn import VaspMetadyn
@@ -24,6 +24,7 @@ class TestVasp(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        state.update({'resource_paths': os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")})
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.execution_path, "test_vasp"))
         cls.job = cls.project.create_job("Vasp", "trial")
@@ -52,6 +53,7 @@ class TestVasp(unittest.TestCase):
         project = Project(os.path.join(cls.execution_path, "test_vasp"))
         project.remove_jobs_silently(recursive=True)
         project.remove(enable=True)
+        state.update()
 
     def setUp(self):
         self.job.structure = None
