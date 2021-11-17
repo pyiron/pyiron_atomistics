@@ -98,7 +98,6 @@ class TestSphinx(unittest.TestCase):
 
     def test_potential(self):
         self.assertEqual([], self.sphinx.list_potentials())
-        self.assertEqual(['Fe_GGA'], self.sphinx_2_5.list_potentials())
         self.sphinx_2_5.potential["Fe"] = 'Fe_GGA'
         self.assertEqual('Fe_GGA', list(self.sphinx_2_5.potential.to_dict().values())[0])
 
