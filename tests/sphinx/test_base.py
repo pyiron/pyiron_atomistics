@@ -13,7 +13,7 @@ from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.sphinx.base import Group
 
 BOHR_TO_ANGSTROM = (
-        scipy.constants.physical_constants["Bohr radius"][0] / scipy.constants.angstrom
+    scipy.constants.physical_constants["Bohr radius"][0] / scipy.constants.angstrom
 )
 HARTREE_TO_EV = scipy.constants.physical_constants["Hartree energy in eV"][0]
 HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM = HARTREE_TO_EV / BOHR_TO_ANGSTROM
@@ -45,7 +45,7 @@ class TestSphinx(unittest.TestCase):
             scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
             cell=2.83 * np.eye(3),
         )
-        cls.sphinx_2_5.structure.set_initial_magnetic_moments([2,2])
+        cls.sphinx_2_5.structure.set_initial_magnetic_moments([2, 2])
         cls.sphinx_aborted.structure = Atoms(
             elements=32 * ["Fe"],
             scaled_positions=np.arange(32 * 3).reshape(-1, 3) / (32 * 3),
@@ -197,7 +197,7 @@ class TestSphinx(unittest.TestCase):
             'spinConstraint {\n',
             '\tfile = "spins.in";\n',
             '}\n'
-            ]
+        ]
         file_name = os.path.join(
             self.file_location, "../static/sphinx/job_sphinx_hdf5/job_sphinx/input.sx"
         )
@@ -205,15 +205,12 @@ class TestSphinx(unittest.TestCase):
             lines = input_sx.readlines()
         self.assertEqual(file_content, lines)
 
-
     def test_plane_wave_cutoff(self):
         with self.assertRaises(ValueError):
             self.sphinx.plane_wave_cutoff = -1
-
         with warnings.catch_warnings(record=True) as w:
             self.sphinx.plane_wave_cutoff = 25
             self.assertEqual(len(w), 1)
-
         self.sphinx.plane_wave_cutoff = 340
         self.assertEqual(self.sphinx.plane_wave_cutoff, 340)
 
@@ -231,13 +228,13 @@ class TestSphinx(unittest.TestCase):
                 'label': '"GAMMA"'
             },
             'to': [
-                {'coords': np.array([0.5, -0.5,  0.5]),
+                {'coords': np.array([0.5, -0.5, 0.5]),
                  'nPoints': 20, 'label': '"H"'},
-                {'coords': np.array([0.0,  0.0,  0.5]),
+                {'coords': np.array([0.0, 0.0, 0.5]),
                  'nPoints': 20, 'label': '"N"'},
                 {'coords': np.array([0.25, 0.25, 0.25]),
                  'nPoints': 0, 'label': '"P"'},
-                {'coords': np.array([0.5, -0.5,  0.5]),
+                {'coords': np.array([0.5, -0.5, 0.5]),
                  'nPoints': 20, 'label': '"H"'},
             ]
         })
@@ -330,11 +327,11 @@ class TestSphinx(unittest.TestCase):
             'maxSteps': '100',
             'preconditioner': {'type': 0},
             'blockCCG': {
-            'maxStepsCCG': 0,
-            'blockSize': 0,
-            'nSloppy': 0},
+                'maxStepsCCG': 0,
+                'blockSize': 0,
+                'nSloppy': 0},
             'noWavesStorage': True
-            }
+        }
 
         self.sphinx_band_structure.input["nPulaySteps"] = 0
         self.sphinx_band_structure.input["preconditioner"] = 0
@@ -347,15 +344,12 @@ class TestSphinx(unittest.TestCase):
 
     def test_check_setup(self):
         self.assertFalse(self.sphinx.check_setup())
-
         self.sphinx_band_structure.load_default_groups()
         self.sphinx_band_structure.input.sphinx.basis.kPoint = {"coords": "0.5, 0.5, 0.5"}
         self.assertFalse(self.sphinx_band_structure.check_setup())
-
         self.sphinx_band_structure.load_default_groups()
         self.sphinx_band_structure.server.cores = 2000
         self.assertFalse(self.sphinx_band_structure.check_setup())
-
         self.sphinx_band_structure.input["EmptyStates"] = "auto"
         self.assertFalse(self.sphinx_band_structure.check_setup())
         self.sphinx_band_structure.structure.add_tag(spin=None)
@@ -379,7 +373,7 @@ class TestSphinx(unittest.TestCase):
         self.assertTrue('MethfesselPaxton' in self.sphinx_band_structure.input)
 
     def test_load_default_groups(self):
-        backup  = self.sphinx_band_structure.structure.copy()
+        backup = self.sphinx_band_structure.structure.copy()
         self.sphinx_band_structure.structure = None
         self.assertRaises(
             AssertionError, self.sphinx_band_structure.load_default_groups
@@ -387,56 +381,45 @@ class TestSphinx(unittest.TestCase):
         self.sphinx_band_structure.structure = backup
 
     def test_validate_ready_to_run(self):
-
         backup = self.sphinx_band_structure.structure.copy()
         self.sphinx_band_structure.structure = None
         self.assertRaises(AssertionError, self.sphinx_band_structure.validate_ready_to_run)
         self.sphinx_band_structure.structure = backup
-
         self.sphinx_band_structure.input["THREADS"] = 20
         self.sphinx_band_structure.server.cores = 10
         self.assertRaises(AssertionError, self.sphinx_band_structure.validate_ready_to_run)
-
         self.sphinx_band_structure.input.sphinx.main.clear()
         self.assertRaises(AssertionError, self.sphinx_band_structure.validate_ready_to_run)
-
         backup = self.sphinx.input.sphinx.basis.eCut
         self.sphinx.input.sphinx.basis.eCut = 400
         self.assertFalse(self.sphinx.validate_ready_to_run())
         self.sphinx.input.sphinx.basis.eCut = backup
-
         backup = self.sphinx.input.sphinx.basis.kPoint.copy()
         self.sphinx.input.sphinx.basis.kPoint.clear()
         self.sphinx.input.sphinx.basis.kPoint.coords = [0.5, 0.5, 0.25]
         self.sphinx.input.sphinx.basis.kPoint.weight = 1
         self.assertFalse(self.sphinx.validate_ready_to_run())
         self.sphinx.input.sphinx.basis.kPoint = backup
-
         backup = self.sphinx.input.sphinx.PAWHamiltonian.ekt
         self.sphinx.input.sphinx.PAWHamiltonian.ekt = 0.0001
         self.assertFalse(self.sphinx.validate_ready_to_run())
         self.sphinx.input.sphinx.PAWHamiltonian.ekt = backup
-
         backup = self.sphinx.input.sphinx.PAWHamiltonian.xc
         self.sphinx.input.sphinx.PAWHamiltonian.xc = "Wrong"
         self.assertFalse(self.sphinx.validate_ready_to_run())
         self.sphinx.input.sphinx.PAWHamiltonian.xc = backup
-
         backup = self.sphinx.input.sphinx.PAWHamiltonian.xc
         self.sphinx.input.sphinx.PAWHamiltonian.xc = "Wrong"
         self.assertFalse(self.sphinx.validate_ready_to_run())
         self.sphinx.input.sphinx.PAWHamiltonian.xc = backup
-
         backup = self.sphinx.input.sphinx.PAWHamiltonian.nEmptyStates
         self.sphinx.input.sphinx.PAWHamiltonian.nEmptyStates = 100
         self.assertFalse(self.sphinx.validate_ready_to_run())
         self.sphinx.input.sphinx.PAWHamiltonian.nEmptyStates = backup
-
         backup = self.sphinx.input.sphinx.structure.copy()
-        self.sphinx.input.sphinx.structure.cell = [[0,0,0],[0,0,0],[0,0,0]]
+        self.sphinx.input.sphinx.structure.cell = np.zeros((3, 3))
         self.assertFalse(self.sphinx.validate_ready_to_run())
         self.sphinx.input.sphinx.structure = backup
-
         self.assertTrue(self.sphinx.validate_ready_to_run())
 
     def test_set_mixing_parameters(self):
@@ -479,8 +462,6 @@ class TestSphinx(unittest.TestCase):
 
     def test_write_structure(self):
         cell = (self.sphinx.structure.cell / BOHR_TO_ANGSTROM).tolist()
-        pos_2 = (self.sphinx.structure.positions[1] / BOHR_TO_ANGSTROM).tolist()
-
         file_content = [
             f'cell = {cell};\n',
             'species {\n',
@@ -505,15 +486,7 @@ class TestSphinx(unittest.TestCase):
     def test_collect_2_5(self):
         output = self.sphinx_2_5._output_parser
         output.collect(directory=self.sphinx_2_5.working_directory)
-        self.assertTrue(
-            all(
-                (
-                        output._parse_dict["scf_computation_time"][0]
-                        - np.roll(output._parse_dict["scf_computation_time"][0], 1)
-                )[1:]
-                > 0
-            )
-        )
+        self.assertTrue(all((output._parse_dict["scf_computation_time"][0] - np.roll(output._parse_dict["scf_computation_time"][0], 1))[1:] > 0))
         self.assertTrue(
             all(
                 np.array(output._parse_dict["scf_energy_free"][0])
