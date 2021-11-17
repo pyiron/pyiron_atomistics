@@ -95,6 +95,11 @@ class TestSphinx(unittest.TestCase):
         self.assertEqual([], self.sphinx.list_potentials())
         self.sphinx_2_5.potential["Fe"] = 'Fe_GGA'
         self.assertEqual('Fe_GGA', list(self.sphinx_2_5.potential.to_dict().values())[0])
+        spx = self.project.create.job.Sphinx('test')
+        with self.assertRaises(ValueError):
+            spx.potential_view
+        spx.structure = self.basis
+        self.assertTrue('Name' in list(spx.potential_view.keys()))
 
     def test_write_input(self):
         self.sphinx.fix_spin_constraint = True
@@ -213,6 +218,7 @@ class TestSphinx(unittest.TestCase):
         self.assertEqual(self.sphinx.plane_wave_cutoff, 340)
 
     def test_set_kpoints(self):
+        self.assertEqual(self.sphinx.get_kpoints(), self.sphinx.input.KpointFolding)
         mesh = [2, 3, 4]
         center_shift = [0.1, 0.1, 0.1]
         trace = {"my_path": [("GAMMA", "H"), ("H", "N"), ("P", "H")]}
@@ -293,10 +299,15 @@ class TestSphinx(unittest.TestCase):
         )
 
     def test_calc_minimize(self):
+        with self.assertRaises(ValueError):
+            self.sphinx.calc_minimize(ionic_force_tolerance=-0.1)
+        with self.assertRaises(ValueError):
+            self.sphinx.calc_minimize(ionic_energy_tolerance=-0.1)
         self.sphinx.calc_minimize(electronic_steps=100, ionic_steps=50)
         self.assertEqual(self.sphinx.input["Estep"], 100)
         self.assertEqual(self.sphinx.input["Istep"], 50)
         self.assertEqual(self.sphinx.input.sphinx.main['ricQN']['maxSteps'], '50')
+        self.assertRaises(NotImplementedError, self.sphinx.calc_md)
 
     def test_get_scf_group(self):
         with warnings.catch_warnings(record=True) as w:
@@ -451,6 +462,12 @@ class TestSphinx(unittest.TestCase):
             self.assertIsInstance(w[-1].message, SyntaxWarning)
         self.sphinx.exchange_correlation_functional = "pbe"
         self.assertEqual(self.sphinx.exchange_correlation_functional, "PBE")
+
+    def test_selective_dynamics(self):
+        self.sphinx.structure.add_tag(selective_dynamics=[True, True, False])
+        self.sphinx.calc_static()
+        self.assertTrue('movableX' in self.sphinx.input.sphinx.structure.to_sphinx())
+        self.assertTrue(not 'movableZ' in self.sphinx.input.sphinx.structure.to_sphinx())
 
     def test_write_structure(self):
         self.sphinx.structure.add_tag(selective_dynamics=(True, True, True))
