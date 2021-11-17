@@ -517,5 +517,5 @@ class StructureFactory(PyironFactory):
         pmg_refined = sga.get_refined_structure()
         slab = pymatgen_to_pyiron(pmg_refined)
         slab.positions[:, 2] = slab.positions[:, 2] - np.min(slab.positions[:, 2])
-        slab.set_pbc = True
+        slab.set_pbc(True)
         return slab
