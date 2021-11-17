@@ -1,0 +1,11 @@
+format parallelHierarchy;
+level {
+   name = "top";
+   siblings = 1;
+   members  = 1;
+   level {
+      name = "waves-k";
+      siblings = 1;
+      members  = 1;
+   }
+}
