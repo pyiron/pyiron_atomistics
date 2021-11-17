@@ -52,6 +52,14 @@ class TestSphinx(unittest.TestCase):
         cls.current_dir = os.path.abspath(os.getcwd())
         cls.sphinx_2_5.decompress()
         cls.sphinx_2_5.collect_output()
+        cls.sphinx_latest = cls.project.create.job.Sphinx('latest')
+        cls.sphinx_latest.structure = cls.project.create.structure.bulk('Fe', cubic=True)
+        cls.sphinx_latest.structure[0] = 'Ni'
+        cls.sphinx_latest.structure.set_initial_magnetic_moments([2, 2])
+        cls.sphinx_latest.calc_minimize()
+        cls.sphinx_latest.decompress()
+        cls.sphinx_latest.collect_output()
+        cls.sphinx_latest.decompress()
 
     @classmethod
     def setUp(cls):

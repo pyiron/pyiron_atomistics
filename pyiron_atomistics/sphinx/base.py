@@ -1512,9 +1512,8 @@ class SphinxBase(GenericDFTJob):
                     )
 
             if len(w) > 0:
-                print("WARNING:")
                 for ww in w:
-                    print(ww.message)
+                    warnings.warn(ww.message)
                 return False
             else:
                 return True
@@ -1611,9 +1610,8 @@ class SphinxBase(GenericDFTJob):
                 )
 
             if len(w) > 0:
-                print("WARNING:")
                 for ww in w:
-                    print(ww.message)
+                    warnings.warn(ww.message)
                 return False
             else:
                 return True
@@ -2243,7 +2241,7 @@ class Output(object):
                 len(magnetic_forces) != 0:
             self._parse_dict["scf_magnetic_forces"] = magnetic_forces
 
-    def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=None):
+    def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=''):
         """
 
         Args:
@@ -2255,6 +2253,7 @@ class Output(object):
         """
         file_name = posixpath.join(cwd, file_name)
         if not os.path.isfile(file_name):
+            warnings.warn(f'{file_name} not found')
             return None
         with open(file_name, "r") as file_content:
             file_content = file_content.readlines()
@@ -2339,7 +2338,7 @@ class Output(object):
             es.generate_from_matrices()
         return es
 
-    def collect(self, directory=os.getcwd()):
+    def collect(self, directory):
         """
         The collect function, collects all the output from a SPHInX simulation.
 
