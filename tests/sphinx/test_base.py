@@ -34,18 +34,12 @@ class TestSphinx(unittest.TestCase):
         )
         cls.sphinx = cls.project.create_job("Sphinx", "job_sphinx")
         cls.sphinx_band_structure = cls.project.create_job("Sphinx", "sphinx_test_bs")
-        cls.sphinx_2_3 = cls.project.create_job("Sphinx", "sphinx_test_2_3")
         cls.sphinx_2_5 = cls.project.create_job("Sphinx", "sphinx_test_2_5")
         cls.sphinx_aborted = cls.project.create_job("Sphinx", "sphinx_test_aborted")
         cls.sphinx.structure = cls.basis
         cls.sphinx.fix_spin_constraint = True
         cls.sphinx_band_structure.structure = cls.project.create_structure("Fe", "bcc", 2.81)
         cls.sphinx_band_structure.structure = cls.sphinx_band_structure.structure.create_line_mode_structure()
-        cls.sphinx_2_3.structure = Atoms(
-            elements=["Fe", "Fe"],
-            scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
-            cell=2.6 * np.eye(3),
-        )
         cls.sphinx_2_5.structure = Atoms(
             elements=["Fe", "Ni"],
             scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
@@ -60,21 +54,17 @@ class TestSphinx(unittest.TestCase):
         cls.sphinx_aborted.status.aborted = True
         cls.current_dir = os.path.abspath(os.getcwd())
         cls.sphinx._create_working_directory()
-        cls.sphinx_2_3._create_working_directory()
         cls.sphinx.input["VaspPot"] = False
         cls.sphinx.structure.add_tag(selective_dynamics=(True, True, True))
         cls.sphinx.structure.selective_dynamics[1] = (False, False, False)
         cls.sphinx.load_default_groups()
         cls.sphinx.fix_symmetry = False
         cls.sphinx.write_input()
-        cls.sphinx_2_3.to_hdf()
-        cls.sphinx_2_3.decompress()
         cls.sphinx_2_5.decompress()
         cls.sphinx_2_5.collect_output()
 
     @classmethod
     def tearDownClass(cls):
-        cls.sphinx_2_3.decompress()
         cls.sphinx_2_5.decompress()
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         os.remove(
@@ -111,11 +101,8 @@ class TestSphinx(unittest.TestCase):
 
     def test_potential(self):
         self.assertEqual([], self.sphinx.list_potentials())
-        self.assertEqual(['Fe_GGA'], self.sphinx_2_3.list_potentials())
         self.assertEqual(['Fe_GGA'], self.sphinx_2_5.list_potentials())
-        self.sphinx_2_3.potential.Fe = 'Fe_GGA'
         self.sphinx_2_5.potential["Fe"] = 'Fe_GGA'
-        self.assertEqual('Fe_GGA', list(self.sphinx_2_3.potential.to_dict().values())[0])
         self.assertEqual('Fe_GGA', list(self.sphinx_2_5.potential.to_dict().values())[0])
 
     def test_write_input(self):
@@ -563,47 +550,6 @@ class TestSphinx(unittest.TestCase):
     def test_check_band_occupancy(self):
         self.assertTrue(self.sphinx_2_5.output.check_band_occupancy())
         self.assertTrue(self.sphinx_2_5.nbands_convergence_check())
-
-    def test_collect_2_3(self):
-        file_location = os.path.join(
-            self.file_location, "../static/sphinx/sphinx_test_2_3_hdf5/sphinx_test_2_3/"
-        )
-        residue_lst = np.loadtxt(file_location + "residue.dat")[:, 1].reshape(1, -1)
-        residue_lst = (residue_lst).tolist()
-        energy_int_lst = np.loadtxt(file_location + "energy.dat")[:, 2].reshape(1, -1)
-        energy_int_lst = (energy_int_lst * HARTREE_TO_EV).tolist()
-        with open(file_location + "sphinx.log") as ffile:
-            energy_free_lst = [[float(line.split('=')[-1]) * HARTREE_TO_EV for line in ffile if line.startswith('F(')]]
-        energy_zero_lst = [(0.5 * (np.array(ff) + np.array(uu))).tolist() for ff, uu in
-                           zip(energy_free_lst, energy_int_lst)]
-        eig_lst = [np.loadtxt(file_location + "eps.dat")[:, 1:].tolist()]
-        self.sphinx_2_3.collect_output()
-        self.assertEqual(
-            residue_lst, self.sphinx_2_3._output_parser._parse_dict["scf_residue"]
-        )
-        self.assertEqual(
-            energy_int_lst, self.sphinx_2_3._output_parser._parse_dict["scf_energy_int"]
-        )
-        self.assertEqual(
-            energy_zero_lst,
-            self.sphinx_2_3._output_parser._parse_dict["scf_energy_zero"],
-        )
-        self.assertEqual(
-            eig_lst,
-            self.sphinx_2_3._output_parser._parse_dict["bands_eigen_values"].tolist(),
-        )
-        self.assertEqual(
-            energy_free_lst,
-            self.sphinx_2_3._output_parser._parse_dict["scf_energy_free"],
-        )
-        self.assertEqual(
-            21.952 * BOHR_TO_ANGSTROM ** 3, self.sphinx_2_3._output_parser._parse_dict["volume"]
-        )
-
-    def test_structure_parsing(self):
-        self.sphinx_2_3._output_parser.collect_relaxed_hist(
-            file_name="relaxedHist_2.sx", cwd=self.sphinx_2_3.working_directory
-        )
 
     def test_density_of_states(self):
         dos = self.sphinx_2_5.get_density_of_states()
