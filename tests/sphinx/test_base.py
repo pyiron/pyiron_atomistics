@@ -70,7 +70,6 @@ class TestSphinx(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.sphinx_2_5.decompress()
-        directory_location = os.path.dirname(os.path.abspath(__file__))
         file_location = os.path.join(
             cls.file_location,
             "../static/sphinx/job_sphinx_hdf5/job_sphinx",
