@@ -105,7 +105,7 @@ class TestSphinx(unittest.TestCase):
         self.assertEqual('Fe_GGA', list(self.sphinx_2_5.potential.to_dict().values())[0])
         spx = self.project.create.job.Sphinx('test')
         with self.assertRaises(ValueError):
-            spx.potential_view
+            _ = spx.potential_view
         spx.structure = self.basis
         self.assertTrue('Name' in list(spx.potential_view.keys()))
 
