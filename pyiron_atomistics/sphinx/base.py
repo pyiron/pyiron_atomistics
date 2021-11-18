@@ -2099,8 +2099,9 @@ class Output(object):
             log_file = sphinx_log_file.readlines()
             if not np.any(["Enter Main Loop" in line for line in log_file]):
                 self._job.status.aborted = True
-                raise AssertionError("SPHInX did not enter the main loop; \
-                    output not collected")
+                raise AssertionError(
+                    "SPHInX stopped after initialization before main loop - output not collected"
+                )
             if not np.any(["Program exited normally." in line
                            for line in log_file]):
                 self._job.status.aborted = True
