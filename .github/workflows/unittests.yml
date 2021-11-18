@@ -23,7 +23,7 @@ jobs:
     - uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: ${{ matrix.python-version }}
-        mamba-version: "*"
+        mamba-version: "0.17.0"
         channels: conda-forge
         channel-priority: strict
         auto-update-conda: true  
