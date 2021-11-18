@@ -198,7 +198,7 @@ class SphinxBase(GenericDFTJob):
                     recommended: PBE or LDA)",
                 SyntaxWarning,
             )
-            self.input["Xcorr"] = val
+            self.input["Xcorr"] = val.upper()
         if "xc" in self.input.sphinx.PAWHamiltonian.keys():
             self.input.sphinx.PAWHamiltonian.xc = self.input["Xcorr"]
 
