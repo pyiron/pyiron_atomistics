@@ -64,30 +64,19 @@ class TestSphinx(unittest.TestCase):
     @classmethod
     def setUp(cls):
         cls.sphinx = cls.project.create_job("Sphinx", "job_sphinx")
-        cls.sphinx.structure = cls.basis
+        cls.sphinx.structure = cls.basis.copy()
 
     @classmethod
     def tearDownClass(cls):
         cls.sphinx_2_5.decompress()
-        cls.file_location = os.path.dirname(os.path.abspath(__file__))
-        os.remove(
-            os.path.join(
-                cls.file_location,
-                "../static/sphinx/job_sphinx_hdf5/job_sphinx/input.sx",
-            )
+        directory_location = os.path.dirname(os.path.abspath(__file__))
+        file_location = os.path.join(
+            cls.file_location,
+            "../static/sphinx/job_sphinx_hdf5/job_sphinx",
         )
-        os.remove(
-            os.path.join(
-                cls.file_location,
-                "../static/sphinx/job_sphinx_hdf5/job_sphinx/spins.in",
-            )
-        )
-        os.remove(
-            os.path.join(
-                cls.file_location,
-                "../static/sphinx/job_sphinx_hdf5/job_sphinx/Fe_GGA.atomicdata",
-            )
-        )
+        with os.scandir(file_location) as entries:
+            for entry in entries:
+                os.remove(entry.path)
         os.rmdir(
             os.path.join(
                 cls.file_location, "../static/sphinx/job_sphinx_hdf5/job_sphinx"
@@ -106,8 +95,12 @@ class TestSphinx(unittest.TestCase):
         spx = self.project.create.job.Sphinx('test')
         with self.assertRaises(ValueError):
             _ = spx.potential_view
-        spx.structure = self.basis
+        spx.structure = self.basis.copy()
         self.assertTrue('Name' in list(spx.potential_view.keys()))
+        spx.structure[:] = 'Al'
+        spx.structure[0] = 'Mg'
+        species = np.unique(list(spx.potential_view.Species))
+        self.assertTrue('Al' in species and 'Mg' in species)
 
     def test_write_input(self):
         self.sphinx.fix_spin_constraint = True
@@ -470,6 +463,9 @@ class TestSphinx(unittest.TestCase):
             self.assertIsInstance(w[-1].message, SyntaxWarning)
         self.sphinx.exchange_correlation_functional = "pbe"
         self.assertEqual(self.sphinx.exchange_correlation_functional, "PBE")
+        self.sphinx.calc_static()
+        self.sphinx.exchange_correlation_functional = "lda"
+        self.assertEqual(self.sphinx.exchange_correlation_functional, "LDA")
 
     def test_selective_dynamics(self):
         self.sphinx.structure.add_tag(selective_dynamics=[True, True, False])
