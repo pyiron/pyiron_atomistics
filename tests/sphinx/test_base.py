@@ -57,6 +57,7 @@ class TestSphinx(unittest.TestCase):
         cls.sphinx_latest.structure[0] = 'Ni'
         cls.sphinx_latest.structure.set_initial_magnetic_moments([2, 2])
         cls.sphinx_latest.calc_minimize()
+        cls.sphinx_latest.to_hdf()
         cls.sphinx_latest.decompress()
         cls.sphinx_latest.collect_output()
         cls.sphinx_latest.decompress()
@@ -309,6 +310,8 @@ class TestSphinx(unittest.TestCase):
         self.assertEqual(self.sphinx.input["Istep"], 50)
         self.assertEqual(self.sphinx.input.sphinx.main['ricQN']['maxSteps'], '50')
         self.assertRaises(NotImplementedError, self.sphinx.calc_md)
+        self.sphinx.calc_static()
+        self.assertFalse('Istep' in self.sphinx.input)
 
     def test_get_scf_group(self):
         with warnings.catch_warnings(record=True) as w:
@@ -543,6 +546,14 @@ class TestSphinx(unittest.TestCase):
     def test_density_of_states(self):
         dos = self.sphinx_2_5.get_density_of_states()
         self.assertLess(dos['grid'][dos['dos'][0].argmax()], 0)
+
+    def test_set_convergence_precision(self):
+        self.sphinx.set_convergence_precision(electronic_energy=1.0e-6)
+        self.assertEqual(self.sphinx.input['Ediff'], 1.0e-6)
+        self.sphinx.set_convergence_precision(ionic_energy_tolerance=1.0e-6)
+        self.assertTrue('Istep' in self.sphinx.input)
+
+    def test_convergence_check(self):
 
 
 if __name__ == "__main__":

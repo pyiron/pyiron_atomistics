@@ -1036,7 +1036,6 @@ class SphinxBase(GenericDFTJob):
             electronic_energy is None or electronic_energy > 0
         ), "electronic_energy must be a positive float"
         if ionic_energy_tolerance is not None or ionic_force_tolerance is not None:
-            print("Setting calc_minimize")
             self.calc_minimize(ionic_energy_tolerance=ionic_energy_tolerance,
                                ionic_force_tolerance=ionic_force_tolerance)
         if electronic_energy is not None:
