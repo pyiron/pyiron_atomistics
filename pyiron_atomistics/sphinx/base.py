@@ -1393,11 +1393,11 @@ class SphinxBase(GenericDFTJob):
             return False
         if (
             self._generic_input["calc_mode"] == "minimize"
-            and self._output_parser._parse_dict["scf_convergence"][-1]
+            and self['output/generic/dft/scf_convergence'][-1]
         ):
             return True
         elif self._generic_input["calc_mode"] == "static" and np.all(
-            self._output_parser._parse_dict["scf_convergence"]
+            self['output/generic/dft/scf_convergence']
         ):
             return True
         else:

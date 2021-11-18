@@ -554,6 +554,7 @@ class TestSphinx(unittest.TestCase):
         self.assertTrue('Istep' in self.sphinx.input)
 
     def test_convergence_check(self):
+        self.assertTrue(self.sphinx_latest.convergence_check())
 
 
 if __name__ == "__main__":
