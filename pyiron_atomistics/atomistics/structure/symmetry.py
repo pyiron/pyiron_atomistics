@@ -52,7 +52,7 @@ class Symmetry(dict):
         self._use_elements = use_elements
         self._symprec = symprec
         self._angle_tolerance = angle_tolerance
-        for k,v in self._get_symmetry(
+        for k, v in self._get_symmetry(
             symprec=symprec,
             angle_tolerance=angle_tolerance
         ).items():
@@ -108,13 +108,13 @@ class Symmetry(dict):
         R = self['rotations']
         t = self['translations']
         x = np.einsum('jk,nj->nk', np.linalg.inv(self._structure.cell), np.atleast_2d(points))
-        x = np.einsum('nxy,my->mnx', R, x)+t
+        x = np.einsum('nxy,my->mnx', R, x) + t
         if any(self._structure.pbc):
-            x[:,:,self._structure.pbc] -= np.floor(x[:,:,self._structure.pbc]+epsilon)
+            x[:, :, self._structure.pbc] -= np.floor(x[:, :, self._structure.pbc] + epsilon)
         if not return_unique:
             return np.einsum(
                 'ji,mnj->mni', self._structure.cell, x
-            ).reshape((len(R),)+np.shape(points))
+            ).reshape((len(R),) + np.shape(points))
         x = x.reshape(-1, 3)
         _, indices = np.unique(
             np.round(x, decimals=decimals), return_index=True, axis=0
@@ -139,7 +139,7 @@ class Symmetry(dict):
         Returns:
             (ndarray): array of ID's according to their groups
         """
-        if len(np.shape(points))!=2:
+        if len(np.shape(points)) != 2:
             raise ValueError('points must be a (n, 3)-array')
         all_points = self.generate_equivalent_points(
             points=points,
@@ -179,14 +179,14 @@ class Symmetry(dict):
             'nij,kj->nki',
             self['rotations'],
             scaled_positions
-        )+self['translations'][:,None,:]
-        positions -= np.floor(positions+epsilon)
+        ) + self['translations'][:, None, :]
+        positions -= np.floor(positions + epsilon)
         indices = tree.query(positions)[1].argsort(axis=-1)
         return np.einsum(
             'ijk,ink->nj',
             self['rotations'],
             vectors[indices]
-        )/len(self['rotations'])
+        ) / len(self['rotations'])
 
     def _get_spglib_cell(self, use_elements=None, use_magmoms=None):
         lattice = np.array(self._structure.get_cell(), dtype="double", order="C")
@@ -276,7 +276,7 @@ class Symmetry(dict):
             self._get_spglib_cell(use_elements=use_elements, use_magmoms=use_magmoms),
             to_primitive=not standardize
         )
-        positions = (cell.T@positions.T).T
+        positions = (cell.T @ positions.T).T
         new_structure = self._structure.copy()
         new_structure.cell = cell
         new_structure.indices[:len(indices)] = indices
@@ -306,4 +306,3 @@ class Symmetry(dict):
             is_time_reversal=is_time_reversal,
             symprec=self._symprec,
         )
-
