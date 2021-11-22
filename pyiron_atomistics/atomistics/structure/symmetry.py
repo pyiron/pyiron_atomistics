@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_base import Settings
+from pyiron_base import Settings, deprecate
 from scipy.spatial import cKDTree
 import spglib
 import ast
@@ -261,43 +261,37 @@ class Symmetry(dict):
             "Number": ast.literal_eval(space_group[1]),
         }
 
-    def refine_cell(self):
-        cell, coords, _ = spglib.refine_cell(
-            cell=self._get_spglib_cell(use_magmoms=False),
-            symprec=self._symprec,
-            angle_tolerance=self._angle_tolerance,
+    def get_primitive_cell(self, standardize=False, use_elements=None, use_magmoms=None):
+        """
+        Get primitive cell of a given structure.
+
+        Example (assume `basis` is a primitive cell):
+
+        >>> structure = basis.repeat(2)
+        >>> symmetry = Symmetry(structure)
+        >>> len(symmetry.get_primitive_cell()) == len(basis)
+        True
+        """
+        cell, positions, indices = spglib.standardize_cell(
+            self._get_spglib_cell(use_elements=use_elements, use_magmoms=use_magmoms),
+            to_primitive=not standardize
         )
+        positions = (cell.T@positions.T).T
         new_structure = self._structure.copy()
-        new_structure.positions = coords
         new_structure.cell = cell
+        new_structure.indices[:len(indices)] = indices
+        new_structure = primitive[:len(indices)]
+        new_structure.positions = positions
         return new_structure
 
+    @deprecate('Use `get_primitive_cell(standardize=True)` instead')
+    def refine_cell(self):
+        return self.get_primitive_cell(standardize=True)
+
+    @deprecate('Use `get_primitive_cell(standardize=False)` instead')
     @property
     def primitive_cell(self):
-        el_dict = {}
-        for el in set(self._structure.get_chemical_elements()):
-            el_dict[el.AtomicNumber] = el
-        cell, coords, atomic_numbers = spglib.find_primitive(
-            cell=self._get_spglib_cell(use_magmoms=False),
-            symprec=self._symprec,
-            angle_tolerance=self._angle_tolerance,
-        )
-        # print atomic_numbers, type(atomic_numbers)
-        el_lst = [el_dict[i_a] for i_a in atomic_numbers]
-
-        # convert lattice vectors to standard (experimental feature!) TODO:
-        red_structure = self._structure.copy()
-        red_structure = red_structure[:len(coords)]
-        red_structure.set_scaled_positions(coords)
-        red_structure.set_species(el_lst)
-        red_structure.cell = cell
-        space_group = red_structure.get_symmetry(symprec=self._symprec).spacegroup["Number"]
-        # print "space group: ", space_group
-        if space_group == 225:  # fcc
-            alat = np.max(cell[0])
-            amat_fcc = alat * np.array([[1, 0, 1], [1, 1, 0], [0, 1, 1]])
-            red_structure.cell = amat_fcc
-        return red_structure
+        return self.get_primitive_cell(standardize=False)
 
     def get_ir_reciprocal_mesh(
         self,
