@@ -36,6 +36,7 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
+        python .ci_support/pyironconfig.py
         pip install --no-deps .
     - name: Tests
       shell: bash -l {0}
