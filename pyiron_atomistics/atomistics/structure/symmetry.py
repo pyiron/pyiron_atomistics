@@ -198,9 +198,9 @@ class Symmetry(dict):
         if use_magmoms is None:
             use_magmoms = self._use_magmoms
         if use_elements:
-            numbers = np.array(self._structure.get_atomic_numbers(), dtype="intc")
+            numbers = np.array(self._structure.indices, dtype="intc")
         else:
-            numbers = np.ones_like(self._structure.get_atomic_numbers(), dtype="intc")
+            numbers = np.ones_like(self._structure.indices, dtype="intc")
         if use_magmoms:
             return lattice, positions, numbers, self._structure.get_initial_magnetic_moments()
         return lattice, positions, numbers
@@ -280,7 +280,7 @@ class Symmetry(dict):
         new_structure = self._structure.copy()
         new_structure.cell = cell
         new_structure.indices[:len(indices)] = indices
-        new_structure = primitive[:len(indices)]
+        new_structure = new_structure[:len(indices)]
         new_structure.positions = positions
         return new_structure
 
@@ -288,8 +288,8 @@ class Symmetry(dict):
     def refine_cell(self):
         return self.get_primitive_cell(standardize=True)
 
-    @deprecate('Use `get_primitive_cell(standardize=False)` instead')
     @property
+    @deprecate('Use `get_primitive_cell(standardize=False)` instead')
     def primitive_cell(self):
         return self.get_primitive_cell(standardize=False)
 
