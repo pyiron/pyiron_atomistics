@@ -265,6 +265,15 @@ class Symmetry(dict):
         """
         Get primitive cell of a given structure.
 
+        Args:
+            standardize (bool): Get orthogonal box
+            use_magmoms (bool): Whether to consider magnetic moments (cf.
+            get_initial_magnetic_moments())
+            use_elements (bool): If False, chemical elements will be ignored
+
+        Returns:
+            (pyiron_atomistics.atomistics.structure.atoms.Atoms): Primitive cell
+
         Example (assume `basis` is a primitive cell):
 
         >>> structure = basis.repeat(2)
