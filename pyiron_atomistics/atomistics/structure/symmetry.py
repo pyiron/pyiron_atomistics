@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_base import Settings
+from pyiron_base import Settings, deprecate
 from scipy.spatial import cKDTree
 import spglib
 import ast
@@ -52,7 +52,7 @@ class Symmetry(dict):
         self._use_elements = use_elements
         self._symprec = symprec
         self._angle_tolerance = angle_tolerance
-        for k,v in self._get_symmetry(
+        for k, v in self._get_symmetry(
             symprec=symprec,
             angle_tolerance=angle_tolerance
         ).items():
@@ -108,13 +108,13 @@ class Symmetry(dict):
         R = self['rotations']
         t = self['translations']
         x = np.einsum('jk,nj->nk', np.linalg.inv(self._structure.cell), np.atleast_2d(points))
-        x = np.einsum('nxy,my->mnx', R, x)+t
+        x = np.einsum('nxy,my->mnx', R, x) + t
         if any(self._structure.pbc):
-            x[:,:,self._structure.pbc] -= np.floor(x[:,:,self._structure.pbc]+epsilon)
+            x[:, :, self._structure.pbc] -= np.floor(x[:, :, self._structure.pbc] + epsilon)
         if not return_unique:
             return np.einsum(
                 'ji,mnj->mni', self._structure.cell, x
-            ).reshape((len(R),)+np.shape(points))
+            ).reshape((len(R),) + np.shape(points))
         x = x.reshape(-1, 3)
         _, indices = np.unique(
             np.round(x, decimals=decimals), return_index=True, axis=0
@@ -139,7 +139,7 @@ class Symmetry(dict):
         Returns:
             (ndarray): array of ID's according to their groups
         """
-        if len(np.shape(points))!=2:
+        if len(np.shape(points)) != 2:
             raise ValueError('points must be a (n, 3)-array')
         all_points = self.generate_equivalent_points(
             points=points,
@@ -179,14 +179,14 @@ class Symmetry(dict):
             'nij,kj->nki',
             self['rotations'],
             scaled_positions
-        )+self['translations'][:,None,:]
-        positions -= np.floor(positions+epsilon)
+        ) + self['translations'][:, None, :]
+        positions -= np.floor(positions + epsilon)
         indices = tree.query(positions)[1].argsort(axis=-1)
         return np.einsum(
             'ijk,ink->nj',
             self['rotations'],
             vectors[indices]
-        )/len(self['rotations'])
+        ) / len(self['rotations'])
 
     def _get_spglib_cell(self, use_elements=None, use_magmoms=None):
         lattice = np.array(self._structure.get_cell(), dtype="double", order="C")
@@ -198,9 +198,9 @@ class Symmetry(dict):
         if use_magmoms is None:
             use_magmoms = self._use_magmoms
         if use_elements:
-            numbers = np.array(self._structure.get_atomic_numbers(), dtype="intc")
+            numbers = np.array(self._structure.indices, dtype="intc")
         else:
-            numbers = np.ones_like(self._structure.get_atomic_numbers(), dtype="intc")
+            numbers = np.ones_like(self._structure.indices, dtype="intc")
         if use_magmoms:
             return lattice, positions, numbers, self._structure.get_initial_magnetic_moments()
         return lattice, positions, numbers
@@ -261,43 +261,46 @@ class Symmetry(dict):
             "Number": ast.literal_eval(space_group[1]),
         }
 
-    def refine_cell(self):
-        cell, coords, _ = spglib.refine_cell(
-            cell=self._get_spglib_cell(use_magmoms=False),
-            symprec=self._symprec,
-            angle_tolerance=self._angle_tolerance,
+    def get_primitive_cell(self, standardize=False, use_elements=None, use_magmoms=None):
+        """
+        Get primitive cell of a given structure.
+
+        Args:
+            standardize (bool): Get orthogonal box
+            use_magmoms (bool): Whether to consider magnetic moments (cf.
+            get_initial_magnetic_moments())
+            use_elements (bool): If False, chemical elements will be ignored
+
+        Returns:
+            (pyiron_atomistics.atomistics.structure.atoms.Atoms): Primitive cell
+
+        Example (assume `basis` is a primitive cell):
+
+        >>> structure = basis.repeat(2)
+        >>> symmetry = Symmetry(structure)
+        >>> len(symmetry.get_primitive_cell()) == len(basis)
+        True
+        """
+        cell, positions, indices = spglib.standardize_cell(
+            self._get_spglib_cell(use_elements=use_elements, use_magmoms=use_magmoms),
+            to_primitive=not standardize
         )
+        positions = (cell.T @ positions.T).T
         new_structure = self._structure.copy()
-        new_structure.positions = coords
         new_structure.cell = cell
+        new_structure.indices[:len(indices)] = indices
+        new_structure = new_structure[:len(indices)]
+        new_structure.positions = positions
         return new_structure
 
-    @property
-    def primitive_cell(self):
-        el_dict = {}
-        for el in set(self._structure.get_chemical_elements()):
-            el_dict[el.AtomicNumber] = el
-        cell, coords, atomic_numbers = spglib.find_primitive(
-            cell=self._get_spglib_cell(use_magmoms=False),
-            symprec=self._symprec,
-            angle_tolerance=self._angle_tolerance,
-        )
-        # print atomic_numbers, type(atomic_numbers)
-        el_lst = [el_dict[i_a] for i_a in atomic_numbers]
+    @deprecate('Use `get_primitive_cell(standardize=True)` instead')
+    def refine_cell(self):
+        return self.get_primitive_cell(standardize=True)
 
-        # convert lattice vectors to standard (experimental feature!) TODO:
-        red_structure = self._structure.copy()
-        red_structure = red_structure[:len(coords)]
-        red_structure.set_scaled_positions(coords)
-        red_structure.set_species(el_lst)
-        red_structure.cell = cell
-        space_group = red_structure.get_symmetry(symprec=self._symprec).spacegroup["Number"]
-        # print "space group: ", space_group
-        if space_group == 225:  # fcc
-            alat = np.max(cell[0])
-            amat_fcc = alat * np.array([[1, 0, 1], [1, 1, 0], [0, 1, 1]])
-            red_structure.cell = amat_fcc
-        return red_structure
+    @property
+    @deprecate('Use `get_primitive_cell(standardize=False)` instead')
+    def primitive_cell(self):
+        return self.get_primitive_cell(standardize=False)
 
     def get_ir_reciprocal_mesh(
         self,
@@ -312,4 +315,3 @@ class Symmetry(dict):
             is_time_reversal=is_time_reversal,
             symprec=self._symprec,
         )
-
