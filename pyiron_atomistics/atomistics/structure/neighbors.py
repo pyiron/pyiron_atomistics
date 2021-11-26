@@ -1064,7 +1064,7 @@ class NeighborsTrajectory(DataContainer):
         Returns:
             numpy.ndarray: A float array of dimension N_steps / stride x N_atoms x N_neighbors
         """
-        return self.flat_store.get_array_filled("distances")
+        return self._flat_store.get_array_filled("distances")
 
     @property
     def vecs(self):
