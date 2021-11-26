@@ -322,6 +322,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 "The animate() function requires the package nglview to be installed"
             )
 
+        if self.number_of_structures <= 1:
+            raise ValueError("job must have more than one structure to animate!")
+
         animation = nglview.show_asetraj(
             self.trajectory(stride=stride, center_of_mass=center_of_mass)
         )
