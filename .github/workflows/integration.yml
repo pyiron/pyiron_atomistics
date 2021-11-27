@@ -8,19 +8,22 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-    types: [labeled, opened, synchronize]
+    types: [labeled, opened, synchronize, reopened]
 
 jobs:
   build:
     if: |
-      ${{ github.event.type == 'PushEvent' ||
-          ( github.event.type == 'PullRequestEvent'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
-       }}
+      github.event_name == 'push' ||
+      ( github.event_name == 'pull_request'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
+    - name: Merge Environments
+      shell: bash -l {0}
+      run: |
+        awk 'NR>3{ print $0 }' .ci_support/environment-notebooks.yml >> .ci_support/environment.yml
     - uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: 3.9
@@ -33,7 +36,6 @@ jobs:
       shell: bash -l {0}
       run: |
         pip install --no-deps .
-        conda env update --name test --file .ci_support/environment-notebooks.yml
     - name: Tests
       shell: bash -l {0}
       run: ./.ci_support/build_integration_notebooks.sh

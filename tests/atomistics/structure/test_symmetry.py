@@ -62,10 +62,13 @@ class TestAtoms(unittest.TestCase):
 
     def test_get_primitive_cell(self):
         cell = 2.2 * np.identity(3)
-        Al_sc = Atoms("AlFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell)
-        Al_sc.set_repeat([2, 2, 2])
-        primitive_cell = Al_sc.get_symmetry().primitive_cell
-        self.assertEqual(primitive_cell.get_symmetry().spacegroup["Number"], 221)
+        basis = Atoms("AlFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell)
+        structure = basis.repeat([2, 2, 2])
+        sym = structure.get_symmetry()
+        self.assertEqual(len(basis), len(sym.get_primitive_cell(standardize=True)))
+        self.assertEqual(len(sym.primitive_cell), len(sym.get_primitive_cell(standardize=False)))
+        self.assertEqual(len(sym.refine_cell()), len(sym.get_primitive_cell(standardize=True)))
+        self.assertEqual(sym.get_primitive_cell().get_symmetry().spacegroup["Number"], 221)
 
     def test_get_equivalent_points(self):
         basis = Atoms("FeFe", positions=[[0.01, 0, 0], [0.5, 0.5, 0.5]], cell=np.identity(3))

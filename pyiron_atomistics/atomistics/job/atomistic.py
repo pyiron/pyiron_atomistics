@@ -324,6 +324,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 "The animate() function requires the package nglview to be installed"
             )
 
+        if self.number_of_structures <= 1:
+            raise ValueError("job must have more than one structure to animate!")
+
         animation = nglview.show_asetraj(
             self.trajectory(stride=stride, center_of_mass=center_of_mass)
         )
@@ -848,7 +851,7 @@ class Trajectory(HasStructure):
         if snapshot_indices is None:
             snapshot_indices = np.arange(len(self), dtype=int)
 
-        n_obj = NeighborsTrajectory(self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
+        n_obj = NeighborsTrajectory(has_structure=self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
         n_obj.compute_neighbors()
         return n_obj
 
