@@ -487,13 +487,11 @@ class LammpsBase(AtomisticGenericJob):
                 np.eye(3) * np.array(cell_i.tolist())
                 for cell_i in h5md["/particles/all/box/edges/value"]
             ]
-            indices = [indices_i.tolist() for indices_i in h5md["/particles/all/indices/value"]]
         with self.project_hdf5.open("output/generic") as h5_file:
             h5_file["forces"] = uc.convert_array_to_pyiron_units(np.array(forces), "forces")
             h5_file["positions"] = uc.convert_array_to_pyiron_units(np.array(positions), "positions")
             h5_file["steps"] = uc.convert_array_to_pyiron_units(np.array(steps), "steps")
-            h5_file["cells"] = uc.convert_array_to_pyiron_units(cell, "cells")
-            h5_file["indices"] = uc.convert_array_to_pyiron_units(self.remap_indices(indices), "indices")
+            h5_file["cells"] = uc.convert_array_to_pyiron_units(np.array(cell), "cells")
 
     def remap_indices(self, lammps_indices):
         """
