@@ -369,18 +369,14 @@ class PhonopyJob(AtomisticParallelMaster):
     @property
     def dos_total(self):
         """
-
-        Returns:
-
+        ndarray of float: Value of the DOS.
         """
         return self["output/dos_total"]
 
     @property
     def dos_energies(self):
         """
-
-        Returns:
-
+        ndarray of float: Energies at which the DOS is sampled.
         """
         return self["output/dos_energies"]
 
