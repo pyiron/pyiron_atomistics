@@ -16,7 +16,7 @@ from phonopy.file_IO import write_FORCE_CONSTANTS
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_atomistics.atomistics.structure.phonopy import publication as phonopy_publication
-from pyiron_base import JobGenerator, Settings, ImportAlarm
+from pyiron_base import JobGenerator, Settings, ImportAlarm, deprecate
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"
 __copyright__ = (
@@ -402,27 +402,32 @@ class PhonopyJob(AtomisticParallelMaster):
         """
         return np.real_if_close(self.phonopy.get_dynamical_matrix_at_q(q))
 
-    def plot_dos(self, ax=None, *args, **qwargs):
+    @deprecate(ax="Use axis instead")
+    def plot_dos(self, ax=None, *args, axis=None, **kwargs):
         """
+        Plot the DOS.
 
         Args:
-            *args:
-            ax:
-            **qwargs:
+            axis (optional): matplotlib axis to use, if None create a new one
+            ax: deprecated alias for axis
+            *args: passed to `axis.plot`
+            **kwargs: passed to `axis.plot`
 
         Returns:
-
+            matplotlib.axes._subplots.AxesSubplot: axis with the plot
         """
         try:
             import pylab as plt
         except ImportError:
             import matplotlib.pyplot as plt
-        if ax is None:
-            fig, ax = plt.subplots(1, 1)
-        ax.plot(self["output/dos_energies"], self["output/dos_total"], *args, **qwargs)
-        ax.set_xlabel("Frequency [THz]")
-        ax.set_ylabel("DOS")
-        ax.set_title("Phonon DOS vs Energy")
+        if ax is not None and axis is None:
+            axis = ax
+        if axis is None:
+            _, axis = plt.subplots(1, 1)
+        axis.plot(self["output/dos_energies"], self["output/dos_total"], *args, **kwargs)
+        axis.set_xlabel("Frequency [THz]")
+        axis.set_ylabel("DOS")
+        axis.set_title("Phonon DOS vs Energy")
         return ax
 
     def get_band_structure(self, npoints=101, with_eigenvectors=False, with_group_velocities=False):
