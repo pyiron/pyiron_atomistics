@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_base import Settings
+from pyiron_base import state
 import pyiron_atomistics.atomistics.structure.atoms
 import pyscal.core as pc
 from sklearn import cluster
@@ -20,8 +20,6 @@ __maintainer__ = "Sarath Menon"
 __email__ = "sarath.menon@rub.de"
 __status__ = "development"
 __date__ = "Nov 6, 2019"
-
-s = Settings()
 
 
 @deprecate(arguments={"clustering": "use n_clusters=None instead of clustering=False."})
@@ -239,7 +237,7 @@ def pyiron_to_pyscal_system(atoms):
     Returns:
         Pyscal system: See the pyscal documentation.
     """
-    s.publication_add(publication())
+    state.publications.add(publication())
     sys = pc.System()
     sys.read_inputfile(
         pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(atoms),

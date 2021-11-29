@@ -8,8 +8,7 @@ import posixpath
 import numpy as np
 import pandas
 import tables
-import warnings
-from pyiron_base import GenericParameters, Settings, deprecate
+from pyiron_base import state, GenericParameters, deprecate
 from pyiron_atomistics.atomistics.job.potentials import PotentialAbstract, find_potential_file_base
 
 __author__ = "Jan Janssen"
@@ -22,8 +21,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class VaspPotentialAbstract(PotentialAbstract):
@@ -123,7 +120,7 @@ class VaspPotentialAbstract(PotentialAbstract):
 
     @staticmethod
     def _return_potential_file(file_name):
-        for resource_path in s.resource_paths:
+        for resource_path in state.settings.resource_paths:
             resource_path_potcar = os.path.join(
                 resource_path, "vasp", "potentials", file_name
             )
@@ -268,7 +265,7 @@ class VaspPotentialSetter(object):
 def find_potential_file(path):
     return find_potential_file_base(
         path=path,
-        resource_path_lst=s.resource_paths,
+        resource_path_lst=state.settings.resource_paths,
         rel_path=os.path.join("vasp", "potentials")
     )
 
@@ -404,13 +401,13 @@ class Potcar(GenericParameters):
             self._structure.get_species_symbols()
         )  # .ElementList.getSpecies()
         object_list = self._structure.get_species_objects()
-        s.logger.debug("element list: {0}".format(element_list))
+        state.logger.debug("element list: {0}".format(element_list))
         self.el_path_lst = list()
         try:
             xc = self.get("xc")
         except tables.exceptions.NoSuchNodeError:
             xc = self.get("xc")
-        s.logger.debug("XC: {0}".format(xc))
+        state.logger.debug("XC: {0}".format(xc))
         vasp_potentials = VaspPotentialFile(xc=xc)
         for i, el_obj in enumerate(object_list):
             if isinstance(el_obj.Parent, str):

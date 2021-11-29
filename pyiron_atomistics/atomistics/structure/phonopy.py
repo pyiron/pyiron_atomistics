@@ -5,7 +5,7 @@
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 import spglib as spg
-from pyiron_base import Settings
+from pyiron_base import state
 
 __author__ = "Osamu Waseda"
 __copyright__ = (
@@ -17,8 +17,6 @@ __maintainer__ = "Osamu Waseda"
 __email__ = "waseda@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2018"
-
-s = Settings()
 
 
 def analyse_phonopy_equivalent_atoms(atoms, symprec=1e-5, angle_tolerance=-1.0):
@@ -32,7 +30,7 @@ def analyse_phonopy_equivalent_atoms(atoms, symprec=1e-5, angle_tolerance=-1.0):
                 is used to judge symmetry.
 
     """
-    s.publication_add(publication())
+    state.publications.add(publication())
     positions = atoms.get_scaled_positions()
     cell = atoms.cell
     types = atoms.get_chemical_symbols()

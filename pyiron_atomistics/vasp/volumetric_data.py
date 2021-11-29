@@ -6,7 +6,7 @@ import math
 
 import numpy as np
 import os
-from pyiron_base import Settings
+from pyiron_base import state
 from pyiron_atomistics.vasp.structure import atoms_from_string, get_species_list_from_potcar
 from pyiron_atomistics.atomistics.volumetric.generic import VolumetricData
 
@@ -76,8 +76,7 @@ class VaspVolumetricData(VolumetricData):
 
         """
         if os.stat(filename).st_size == 0:
-            s = Settings()
-            s.logger.warning("File:" + filename + "seems to be corrupted/empty")
+            state.logger.warning("File:" + filename + "seems to be corrupted/empty")
             return None, None
         poscar_read = False
         poscar_string = list()
@@ -137,8 +136,7 @@ class VaspVolumetricData(VolumetricData):
             if not normalize:
                 volume = 1.0
             if len(all_dataset) == 0:
-                s = Settings()
-                s.logger.warning("File:" + filename + "seems to be corrupted/empty")
+                state.logger.warning("File:" + filename + "seems to be corrupted/empty")
                 return None, None
             if len(all_dataset) == 2:
                 data = {
@@ -165,8 +163,7 @@ class VaspVolumetricData(VolumetricData):
 
         """
         if not os.path.getsize(filename) > 0:
-            s = Settings()
-            s.logger.warning("File:" + filename + "seems to be empty! ")
+            state.logger.warning("File:" + filename + "seems to be empty! ")
             return None, None
         with open(filename, "r") as f:
             struct_lines = list()
@@ -222,8 +219,7 @@ class VaspVolumetricData(VolumetricData):
                             total_data /= atoms.get_volume()
                         total_data_list.append(total_data)
             if len(total_data_list) == 0:
-                s = Settings()
-                s.logger.warning(
+                state.logger.warning(
                     "File:"
                     + filename
                     + "seems to be corrupted/empty even after parsing!"
