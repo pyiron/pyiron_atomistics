@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import os
 import re
-from pyiron_base import state, Project, ProjectHDFio
+from pyiron_base import state, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
