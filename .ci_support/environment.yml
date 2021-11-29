@@ -8,7 +8,7 @@ dependencies:
 - codacy-coverage
 - defusedxml =0.7.1
 - future =0.18.2
-- h5py =3.3.0
+- h5py =3.6.0
 - matplotlib-base =3.5.0
 - mendeleev =0.9.0
 - numpy =1.21.4
@@ -18,7 +18,7 @@ dependencies:
 - pymatgen =2022.0.16
 - pyscal =2.10.15
 - pytables =3.6.1
-- scipy =1.7.2
+- scipy =1.7.3
 - seekpath =2.0.1
 - scikit-learn =1.0.1
 - spglib =1.16.2
