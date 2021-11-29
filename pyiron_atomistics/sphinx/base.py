@@ -27,7 +27,7 @@ from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import find_potential_file \
     as find_potential_file_jth
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
-from pyiron_base import DataContainer, job_status_successful_lst, deprecate
+from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -1647,7 +1647,7 @@ class SphinxBase(GenericDFTJob):
     def check_vasp_potentials():
         return any([os.path.exists(os.path.join(
             p, 'vasp', 'potentials', 'potpaw', 'Fe', 'POTCAR'
-        )) for p in s.resource_paths])
+        )) for p in state.settings.resource_paths])
 
 
 class InputWriter(object):
@@ -1778,10 +1778,10 @@ class InputWriter(object):
             spins_list (list): the input to write, if no input is
                 given the default input will be written. (optional)
         """
-        s.logger.debug(f"Writing {file_name}")
+        state.logger.debug(f"Writing {file_name}")
         if spins_list is None or len(spins_list) == 0:
             spins_list = []
-            s.logger.debug("Getting magnetic moments via \
+            state.logger.debug("Getting magnetic moments via \
                 get_initial_magnetic_moments")
             if any([
                     m is not None
@@ -1814,7 +1814,7 @@ class InputWriter(object):
             with open(file_name, "w") as f:
                 f.write(spins_str)
         else:
-            s.logger.debug("No magnetic moments")
+            state.logger.debug("No magnetic moments")
 
 
 class Group(DataContainer):
