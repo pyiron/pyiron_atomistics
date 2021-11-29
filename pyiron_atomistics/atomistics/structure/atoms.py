@@ -2029,9 +2029,6 @@ class Atoms(ASEAtoms):
     #     return len(self.indices)
 
     def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
         if len(self) == 0:
             return "[]"
         out_str = ""
@@ -2049,6 +2046,9 @@ class Atoms(ASEAtoms):
             out_str += "cell: \n"
             out_str += str(self.cell) + "\n"
         return out_str
+
+    def __str__(self):
+        return self.get_chemical_formula()
 
     def __setitem__(self, key, value):
         if isinstance(key, (int, np.integer)):
