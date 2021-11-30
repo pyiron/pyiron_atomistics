@@ -74,7 +74,9 @@ class LammpsPotential(GenericParameters):
             resource_path_lst = state.settings.resource_paths
             for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
                 if conda_var in env.keys():  # support iprpy-data package
-                    resource_path_lst += [os.path.join(env[conda_var], "share", "iprpy")]
+                    path_to_add = os.path.join(env[conda_var], "share", "iprpy")
+                    if path_to_add not in resource_path_lst:
+                        resource_path_lst.append(path_to_add)
             for path in relative_file_paths:
                 absolute_file_paths.append(find_potential_file_base(
                     path=path,
