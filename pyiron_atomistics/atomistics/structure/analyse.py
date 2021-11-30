@@ -3,7 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_base import Settings
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi
@@ -24,8 +23,6 @@ __maintainer__ = "Sam Waseda"
 __email__ = "waseda@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 def get_mean_positions(positions, cell, pbc, labels):

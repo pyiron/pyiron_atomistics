@@ -8,7 +8,7 @@ import os
 import time
 import posixpath
 import warnings
-from pyiron_base import Settings, GenericParameters, Executable, deprecate
+from pyiron_base import state, GenericParameters, Executable, deprecate
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
@@ -26,9 +26,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2018"
-
-
-s = Settings()
 
 
 class SxExtOpt(InteractiveInterface):
@@ -63,7 +60,7 @@ class SxExtOpt(InteractiveInterface):
         self.working_directory = working_directory
         if executable is None:
             executable = Executable(
-                path_binary_codes=s.resource_paths,
+                path_binary_codes=state.settings.resource_paths,
                 codename="SxExtOptInteractive",
                 module=self.__module__.split(".")[1],
                 overwrite_nt_flag=False,

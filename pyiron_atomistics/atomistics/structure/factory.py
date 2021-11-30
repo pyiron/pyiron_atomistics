@@ -32,7 +32,7 @@ from pyiron_atomistics.atomistics.structure.pyironase import publication as publ
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, Atoms, \
     ase_to_pyiron, pymatgen_to_pyiron, ovito_to_pyiron
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_base import Settings, PyironFactory, deprecate
+from pyiron_base import state, PyironFactory, deprecate
 import types
 from functools import wraps
 
@@ -47,7 +47,6 @@ __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "May 1, 2020"
 
-s = Settings()
 
 class StructureFactory(PyironFactory):
     def __init__(self):
@@ -156,7 +155,7 @@ class StructureFactory(PyironFactory):
         # https://gitlab.com/ase/ase/blob/master/ase/lattice/surface.py
         if pbc is None:
             pbc = True
-        s.publication_add(publication_ase())
+        state.publications.add(publication_ase())
         for surface_class in [
             add_adsorbate,
             add_vacuum,
@@ -214,7 +213,7 @@ class StructureFactory(PyironFactory):
             pyiron_atomistics.atomistics.structure.atoms.Atoms instance: Required surface
         """
         # https://gitlab.com/ase/ase/blob/master/ase/lattice/surface.py
-        s.publication_add(publication_ase())
+        state.publications.add(publication_ase())
 
         surface = ase_surf(lattice, hkl, layers)
         z_max = np.max(surface.positions[:, 2])

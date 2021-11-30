@@ -15,7 +15,7 @@ from io import StringIO
 
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile, PotentialAvailable
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
-from pyiron_base import Settings, extract_data_from_file, deprecate
+from pyiron_base import state, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
@@ -32,9 +32,6 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-
-s = Settings()
 
 
 class LammpsBase(AtomisticGenericJob):
@@ -59,7 +56,7 @@ class LammpsBase(AtomisticGenericJob):
         self._is_continuation = None
         self._compress_by_default = True
         self._prism = None
-        s.publication_add(self.publication)
+        state.publications.add(self.publication)
 
     @property
     def units(self):
@@ -200,7 +197,7 @@ class LammpsBase(AtomisticGenericJob):
                 for p in ast.literal_eval(pub_lst):
                     for k in p.keys():
                         pot_pub_dict[k] = p[k]
-            s.publication_add({"lammps_potential": pot_pub_dict})
+            state.publications.add({"lammps_potential": pot_pub_dict})
         for val in ["units", "atom_style", "dimension"]:
             v = self.input.potential[val]
             if v is not None:
