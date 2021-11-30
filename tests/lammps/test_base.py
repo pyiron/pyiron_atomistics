@@ -409,38 +409,26 @@ class TestLammps(TestWithCleanProject):
         self.job.potential = self.job.list_potentials()[0]
         symbols = self.job.input.potential.get_element_lst()
 
-        bad_element = {s: 0. for s in symbols}
-        bad_element.update({'X': 1.})  # Non-existant chemical symbol
-        self.assertRaises(
-            ValueError, self.job.calc_vcsgc, mu=bad_element, temperature_mc=300.
-        )
+        with self.subTest("Fail when elements outside the periodic table are used"):
+            bad_element = {s: 0. for s in symbols}
+            bad_element.update({'X': 1.})  # Non-existant chemical symbol
+            self.assertRaises(ValueError, self.job.calc_vcsgc, mu=bad_element, temperature_mc=300.)
+            self.assertRaises(ValueError, self.job.calc_vcsgc, target_concentration=bad_element, temperature_mc=300.)
 
-        self.assertRaises(
-            ValueError, self.job.calc_vcsgc, target_concentration=bad_element, temperature_mc=300.
-        )
+        with self.subTest("Fail when concentrations don't add to 1"):
+            bad_conc = {s: 0. for s in symbols}
+            bad_conc['Al'] = 0.99
+            self.assertRaises(ValueError, self.job.calc_vcsgc, target_concentration=bad_conc, temperature_mc=300.)
 
-        bad_conc = {s: 0. for s in symbols}
-        bad_conc['Al'] = 0.99
-        self.assertRaises(
-            ValueError, self.job.calc_vcsgc, target_concentration=bad_conc, temperature_mc=300.
-        )
+        with self.subTest("Check window definitions"):
+            for bad_window in [-1, 1.1]:
+                self.assertRaises(ValueError, self.job.calc_vcsgc, window_moves=bad_window, temperature_mc=300.)
+            self.assertRaises(ValueError, self.job.calc_vcsgc, window_size=0.3, temperature_mc=300.)
 
-        self.assertRaises(
-            ValueError, self.job.calc_vcsgc, window_moves=-1, temperature_mc=300.
-        )
-        self.assertRaises(
-            ValueError, self.job.calc_vcsgc, window_moves=1.1, temperature_mc=300.
-        )
-
-        self.assertRaises(
-            ValueError, self.job.calc_vcsgc, window_size=0.3, temperature_mc=300.
-        )
-
-        mu = {s: 0. for s in symbols}
-        mu[symbols[0]] = 1.
-        self.assertRaises(
-            ValueError, self.job.calc_vcsgc, mu=mu, temperature_mc=None, temperature=None
-        )
+        with self.subTest("Temperature can't be None"):
+            mu = {s: 0. for s in symbols}
+            mu[symbols[0]] = 1.
+            self.assertRaises(ValueError, self.job.calc_vcsgc, mu=mu, temperature_mc=None, temperature=None)
 
         args = dict(
             mu=mu,
@@ -462,7 +450,10 @@ class TestLammps(TestWithCleanProject):
             args['seed']
         )
         self.job.calc_vcsgc(**args)
-        self.assertEqual(self.job.input.control['fix___vcsgc'], input_string)
+        self.assertEqual(
+            self.job.input.control['fix___vcsgc'], input_string,
+            msg="Parser did not reproduce expected lammps control syntax"
+        )
 
         args['temperature_mc'] = 100.
         input_string = 'all sgcmc {0} {1} {2} {3} randseed {4}'.format(
@@ -473,7 +464,10 @@ class TestLammps(TestWithCleanProject):
             args['seed']
         )
         self.job.calc_vcsgc(**args)
-        self.assertEqual(self.job.input.control['fix___vcsgc'], input_string)
+        self.assertEqual(
+            self.job.input.control['fix___vcsgc'], input_string,
+            msg="Parser did not reproduce expected lammps control syntax"
+        )
 
         conc = {s: 0. for s in symbols}
         conc[symbols[0]] = 0.5
@@ -484,28 +478,41 @@ class TestLammps(TestWithCleanProject):
             ' '.join([str(conc[symbol]) for symbol in symbols[1:]])
         )
         self.job.calc_vcsgc(**args)
-        self.assertEqual(self.job.input.control['fix___vcsgc'], input_string)
+        self.assertEqual(
+            self.job.input.control['fix___vcsgc'], input_string,
+            msg="Parser did not reproduce expected lammps control syntax"
+        )
 
         args['window_moves'] = 10
         input_string += ' window_moves {0}'.format(args['window_moves'])
         self.job.calc_vcsgc(**args)
-        self.assertEqual(self.job.input.control['fix___vcsgc'], input_string)
+        self.assertEqual(
+            self.job.input.control['fix___vcsgc'], input_string,
+            msg="Parser did not reproduce expected lammps control syntax"
+        )
 
         args['window_size'] = 0.75
         input_string += ' window_size {0}'.format(args['window_size'])
         self.job.calc_vcsgc(**args)
-        self.assertEqual(self.job.input.control['fix___vcsgc'], input_string)
+        self.assertEqual(
+            self.job.input.control['fix___vcsgc'], input_string,
+            msg="Parser did not reproduce expected lammps control syntax"
+        )
 
         self.job.to_hdf()
         for k, v in args.items():
             if k not in ("mu", "target_concentration", "mc_step_interval", "swap_fraction", "temperature_mc"):
                 continue
-            self.assertEqual(self.job._generic_input[k], v,
-                             f"Wrong value stored in generic input for parameter {k}!")
+            self.assertEqual(
+                self.job._generic_input[k], v,
+                msg=f"Wrong value stored in generic input for parameter {k}!"
+            )
             # decode saved GenericParameters manually...
             data = self.job["input/generic/data_dict"]
-            self.assertEqual(data["Value"][data["Parameter"].index(k)], str(v),
-                             f"Wrong value stored in HDF for parameter {k}!")
+            self.assertEqual(
+                data["Value"][data["Parameter"].index(k)], str(v),
+                msg=f"Wrong value stored in HDF for parameter {k}!"
+            )
 
     def test_calc_minimize_input(self):
         # Ensure that defaults match control defaults
