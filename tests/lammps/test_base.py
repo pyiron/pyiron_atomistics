@@ -165,7 +165,7 @@ class TestLammps(TestWithCleanProject):
         )
         self.assertTrue([2018, 3, 16] == self.job._get_executable_version_number())
 
-    def _build_water(self, y0_shift=0):
+    def _build_water(self, y0_shift=0.):
         density = 1.0e-24  # g/A^3
         n_mols = 27
         mol_mass_water = 18.015  # g/mol
@@ -457,7 +457,6 @@ class TestLammps(TestWithCleanProject):
         self.assertRaises(
             ValueError, self.job.calc_vcsgc, mu=mu, temperature_mc=None, temperature=None
         )
-
 
         args = dict(
             mu=mu,
