@@ -1087,7 +1087,7 @@ class NeighborsTrajectory(DataContainer):
         For trajectories with non constant amount of particles this array may contain -1 for invalid values, i.e. 
 
         Returns:
-            numpy.ndarray: An int array of dimension N_steps / stride x N_atoms x N_neighbors x 3
+            ndarray: An int array of dimension N_steps / stride x N_atoms x N_neighbors x 3
         """
         return self._flat_store.get_array_filled("shells")
 
