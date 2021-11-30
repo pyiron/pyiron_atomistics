@@ -166,7 +166,7 @@ class TestLammps(TestWithCleanProject):
         )
         self.assertTrue([2018, 3, 16] == self.job._get_executable_version_number())
 
-    def test_lammps_water(self):
+    def _build_water(self, y0_shift=0):
         density = 1.0e-24  # g/A^3
         n_mols = 27
         mol_mass_water = 18.015  # g/mol
@@ -181,10 +181,13 @@ class TestLammps(TestWithCleanProject):
         r_H1 = [dx, dx, 0]
         r_H2 = [-dx, dx, 0]
         unit_cell = (a / n) * np.eye(3)
-        water = Atoms(
-            elements=["H", "H", "O"], positions=[r_H1, r_H2, r_O], cell=unit_cell, pbc=True)
+        unit_cell[0][1] += y0_shift
+        water = Atoms(elements=["H", "H", "O"], positions=[r_H1, r_H2, r_O], cell=unit_cell, pbc=True)
         water.set_repeat([n, n, n])
-        self.job.structure = water
+        return water
+
+    def test_lammps_water(self):
+        self.job.structure = self._build_water()
         with self.assertWarns(UserWarning):
             self.job.potential = "H2O_tip3p"
         with self.assertRaises(ValueError):
@@ -213,7 +216,6 @@ class TestLammps(TestWithCleanProject):
         )
         self.job.run(run_mode="manual")
         self.job.status.collect = True
-        # self.job.save()
         self.job.run()
         nodes = [
             "positions",
@@ -242,24 +244,7 @@ class TestLammps(TestWithCleanProject):
         self.assertEqual(len(self.job["output/generic/steps"]), 6)
 
     def test_dump_parser_water(self):
-        density = 1.0e-24  # g/A^3
-        n_mols = 27
-        mol_mass_water = 18.015  # g/mol
-        # Determining the supercell size size
-        mass = mol_mass_water * n_mols / units.mol  # g
-        vol_h2o = mass / density  # in A^3
-        a = vol_h2o ** (1.0 / 3.0)  # A
-        # Constructing the unitcell
-        n = int(round(n_mols ** (1.0 / 3.0)))
-        dx = 0.7
-        r_O = [0, 0, 0]
-        r_H1 = [dx, dx, 0]
-        r_H2 = [-dx, dx, 0]
-        unit_cell = (a / n) * np.eye(3)
-        unit_cell[0][1] += 0.01
-        water = Atoms(
-            elements=["H", "H", "O"], positions=[r_H1, r_H2, r_O], cell=unit_cell, pbc=True)
-        water.set_repeat([n, n, n])
+        water = self._build_water(y0_shift=0.01)
         self.job.structure = water
         with self.assertWarns(UserWarning):
             self.job.potential = "H2O_tip3p"
