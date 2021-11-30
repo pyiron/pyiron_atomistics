@@ -1034,6 +1034,7 @@ class NeighborsTrajectory(DataContainer):
         self._flat_store.add_array("indices", dtype=np.int64, shape=(num_neighbors,), per="element")
         self._flat_store.add_array("distances", dtype=np.float64, shape=(num_neighbors,), per="element")
         self._flat_store.add_array("vecs", dtype=np.float64, shape=(num_neighbors, 3), per="element")
+        self._flat_store.add_array("shells", dtype=np.int64, shape=(num_neighbors,), per="element")
         self._neighbor_indices = None
         self._neighbor_distances = None
         self._neighbor_vectors = None
@@ -1077,6 +1078,18 @@ class NeighborsTrajectory(DataContainer):
         return self._flat_store.get_array_filled("vecs")
 
     @property
+    def shells(self):
+        """
+        Neighbor shell indices (excluding itself) of each atom computed using the get_neighbors_traj() method.
+
+        For trajectories with non constant amount of particles this array may contain -1 for invalid values, i.e. 
+
+        Returns:
+            ndarray: An int array of dimension N_steps / stride x N_atoms x N_neighbors x 3
+        """
+        return self._flat_store.get_array_filled("shells")
+
+    @property
     def num_neighbors(self):
         """
         The maximum number of neighbors to be computed
@@ -1100,9 +1113,11 @@ def _get_neighbors(store, has_structure, num_neighbors=20, **kwargs):
         # Change the `allow_ragged` based on the changes in get_neighbors()
         neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
         if i >= len(store):
-            store.add_chunk(len(struct), indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs)
+            store.add_chunk(len(struct),
+                            indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs, shells=neigh.shells)
         else:
             store.set_array("indices", i, neigh.indices)
             store.set_array("distances", i, neigh.distances)
             store.set_array("vecs", i, neigh.vecs)
+            store.set_array("shells", i, neigh.shells)
     return store.get_array_filled('indices'), store.get_array_filled('distances'), store.get_array_filled('vecs')
