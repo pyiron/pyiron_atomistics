@@ -1106,20 +1106,15 @@ class NeighborsTrajectory(DataContainer):
         """
         Compute the neighbors across the trajectory
         """
-        _get_neighbors(self._flat_store, self._has_structure,
-                       num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
-
-
-def _get_neighbors(store, has_structure, num_neighbors=20, **kwargs):
-    for i, struct in enumerate(has_structure.iter_structures()):
-        # Change the `allow_ragged` based on the changes in get_neighbors()
-        neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
-        if i >= len(store):
-            store.add_chunk(len(struct),
-                            indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs, shells=neigh.shells)
-        else:
-            store.set_array("indices", i, neigh.indices)
-            store.set_array("distances", i, neigh.distances)
-            store.set_array("vecs", i, neigh.vecs)
-            store.set_array("shells", i, neigh.shells)
-    return store.get_array_filled('indices'), store.get_array_filled('distances'), store.get_array_filled('vecs')
+        for i, struct in enumerate(self._has_structure.iter_structures()):
+            # Change the `allow_ragged` based on the changes in get_neighbors()
+            neigh = struct.get_neighbors(num_neighbors=self._num_neighbors, allow_ragged=False, **self._get_neighbors_kwargs)
+            if i >= len(store):
+                self._flat_store.add_chunk(len(struct),
+                                indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs, shells=neigh.shells)
+            else:
+                self._flat_store.set_array("indices", i, neigh.indices)
+                self._flat_store.set_array("distances", i, neigh.distances)
+                self._flat_store.set_array("vecs", i, neigh.vecs)
+                self._flat_store.set_array("shells", i, neigh.shells)
+        return self._flat_store.get_array_filled('indices'), self._flat_store.get_array_filled('distances'), self._flat_store.get_array_filled('vecs')
