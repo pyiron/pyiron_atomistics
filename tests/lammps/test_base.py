@@ -63,27 +63,11 @@ class TestLammps(TestWithCleanProject):
         atoms.selective_dynamics[7] = [False, False, False]
         self.job.structure = atoms
         self.job._set_selective_dynamics()
-        self.assertTrue(
-            "group___constraintx" in self.job.input.control._dataset["Parameter"]
-        )
-        self.assertTrue(
-            "group___constrainty" in self.job.input.control._dataset["Parameter"]
-        )
-        self.assertTrue(
-            "group___constraintz" in self.job.input.control._dataset["Parameter"]
-        )
-        self.assertTrue(
-            "group___constraintxy" in self.job.input.control._dataset["Parameter"]
-        )
-        self.assertTrue(
-            "group___constraintyz" in self.job.input.control._dataset["Parameter"]
-        )
-        self.assertTrue(
-            "group___constraintxz" in self.job.input.control._dataset["Parameter"]
-        )
-        self.assertTrue(
-            "group___constraintxyz" in self.job.input.control._dataset["Parameter"]
-        )
+        for constraint in ["x", "y", "z", "xy", "yz", "xz", "xyz"]:
+            self.assertTrue(
+                f"group___constraint{constraint}" in self.job.input.control._dataset["Parameter"],
+                msg=f"Failed to find group___constraint{constraint} in control"
+            )
 
     def test_structure_atomic(self):
         atoms = Atoms("Fe1", positions=np.zeros((1, 3)), cell=np.eye(3))
