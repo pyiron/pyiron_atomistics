@@ -2,7 +2,6 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import unittest
 import numpy as np
 import pandas as pd
 import os
@@ -689,7 +688,3 @@ class TestLammps(TestWithCleanProject):
         def setter(x):
             self.job.units = x
         self.assertRaises(ValueError, setter, "nonsense")
-
-
-if __name__ == "__main__":
-    unittest.main()
