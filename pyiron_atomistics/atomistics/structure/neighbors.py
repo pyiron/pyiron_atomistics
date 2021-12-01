@@ -1029,9 +1029,8 @@ class NeighborsTrajectory(DataContainer):
                              (eg. cutoff_radius, norm_order , etc.)
         """
         super().__init__(init=init, table_name=table_name)
-        self._has_structure = has_structure
         self._flat_store = store if store is not None else FlattenedStorage()
-        self._flat_store.add_array("indices", dtype=np.int64, shape=(num_neighbors,), per="element")
+        self._flat_store.add_array("indices", dtype=np.int64, shape=(num_neighbors,), per="element", fill=-1)
         self._flat_store.add_array("distances", dtype=np.float64, shape=(num_neighbors,), per="element")
         self._flat_store.add_array("vecs", dtype=np.float64, shape=(num_neighbors, 3), per="element")
         self._flat_store.add_array("shells", dtype=np.int64, shape=(num_neighbors,), per="element")
@@ -1040,6 +1039,17 @@ class NeighborsTrajectory(DataContainer):
         self._neighbor_vectors = None
         self._num_neighbors = num_neighbors
         self._get_neighbors_kwargs = kwargs
+        self.has_structure = has_structure
+
+    @property
+    def has_structure(self):
+        return self._has_structure
+
+    @has_structure.setter
+    def has_structure(self, value):
+        if value is not None:
+            self._has_structure = value
+            self._compute_neighbors()
 
     @property
     def indices(self):
@@ -1100,24 +1110,26 @@ class NeighborsTrajectory(DataContainer):
         """
         return self._num_neighbors
 
+    def _compute_neighbors(self):
+        for i, struct in enumerate(self._has_structure.iter_structures()):
+            if i < len(self._flat_store) and all(self._flat_store["indices", i] != -1):
+                # store already has valid entries for this structure, so skip it
+                continue
+            # Change the `allow_ragged` based on the changes in get_neighbors()
+            neigh = struct.get_neighbors(num_neighbors=self._num_neighbors, allow_ragged=False, **self._get_neighbors_kwargs)
+            if i >= len(self._flat_store):
+                self._flat_store.add_chunk(len(struct),
+                                indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs, shells=neigh.shells)
+            else:
+                self._flat_store.set_array("indices", i, neigh.indices)
+                self._flat_store.set_array("distances", i, neigh.distances)
+                self._flat_store.set_array("vecs", i, neigh.vecs)
+                self._flat_store.set_array("shells", i, neigh.shells)
+        return self._flat_store.get_array_filled('indices'), self._flat_store.get_array_filled('distances'), self._flat_store.get_array_filled('vecs')
+
+    @deprecate("This has no effect, neighbors are automatically called on instantiation.")
     def compute_neighbors(self):
         """
         Compute the neighbors across the trajectory
         """
-        _get_neighbors(self._flat_store, self._has_structure,
-                       num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
-
-
-def _get_neighbors(store, has_structure, num_neighbors=20, **kwargs):
-    for i, struct in enumerate(has_structure.iter_structures()):
-        # Change the `allow_ragged` based on the changes in get_neighbors()
-        neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
-        if i >= len(store):
-            store.add_chunk(len(struct),
-                            indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs, shells=neigh.shells)
-        else:
-            store.set_array("indices", i, neigh.indices)
-            store.set_array("distances", i, neigh.distances)
-            store.set_array("vecs", i, neigh.vecs)
-            store.set_array("shells", i, neigh.shells)
-    return store.get_array_filled('indices'), store.get_array_filled('distances'), store.get_array_filled('vecs')
+        pass
