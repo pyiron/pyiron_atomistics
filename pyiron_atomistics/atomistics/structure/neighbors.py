@@ -1107,7 +1107,7 @@ class NeighborsTrajectory(DataContainer):
         for i, struct in enumerate(self._has_structure.iter_structures()):
             # Change the `allow_ragged` based on the changes in get_neighbors()
             neigh = struct.get_neighbors(num_neighbors=self._num_neighbors, allow_ragged=False, **self._get_neighbors_kwargs)
-            if i >= len(store):
+            if i >= len(self._flat_store):
                 self._flat_store.add_chunk(len(struct),
                                 indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs, shells=neigh.shells)
             else:
@@ -1117,7 +1117,7 @@ class NeighborsTrajectory(DataContainer):
                 self._flat_store.set_array("shells", i, neigh.shells)
         return self._flat_store.get_array_filled('indices'), self._flat_store.get_array_filled('distances'), self._flat_store.get_array_filled('vecs')
 
-    @deprecate("This has no effect, neighbors are automatically called on instantiation.""")
+    @deprecate("This has no effect, neighbors are automatically called on instantiation.")
     def compute_neighbors(self):
         """
         Compute the neighbors across the trajectory
