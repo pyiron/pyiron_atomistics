@@ -1295,7 +1295,7 @@ class VaspBase(GenericDFTJob):
         """
         if ismear is not None:
             self.input.incar["ISMEAR"] = int(ismear)
-        if smearing.lower().startswith("meth") or smearing.lower().startswith("mp"):
+        elif smearing.lower().startswith("meth") or smearing.lower().startswith("mp"):
             self.input.incar["ISMEAR"] = int(order)
         elif smearing.lower().startswith("fermi"):
             self.input.incar["ISMEAR"] = -1
