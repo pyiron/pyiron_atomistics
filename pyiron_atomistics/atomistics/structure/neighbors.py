@@ -1031,7 +1031,6 @@ class NeighborsTrajectory(DataContainer):
                              (eg. cutoff_radius, norm_order , etc.)
         """
         super().__init__(init=init, table_name=table_name)
-        self._has_structure = has_structure
         self._flat_store = store if store is not None else FlattenedStorage()
         self._flat_store.add_array("indices", dtype=np.int64, shape=(num_neighbors,), per="element")
         self._flat_store.add_array("distances", dtype=np.float64, shape=(num_neighbors,), per="element")
@@ -1042,7 +1041,17 @@ class NeighborsTrajectory(DataContainer):
         self._neighbor_vectors = None
         self._num_neighbors = num_neighbors
         self._get_neighbors_kwargs = kwargs
-        self._compute_neighbors()
+        self.has_structure = has_structure
+
+    @property
+    def has_structure(self):
+        return self._has_structure
+
+    @has_structure.setter
+    def has_structure(self, value):
+        if value is not None:
+            self._has_structure = value
+            self._compute_neighbors()
 
     @property
     def indices(self):
