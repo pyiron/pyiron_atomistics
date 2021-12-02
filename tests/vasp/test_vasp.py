@@ -13,6 +13,7 @@ from pyiron_atomistics.vasp.vasp import Vasp
 from pyiron_atomistics.vasp.metadyn import VaspMetadyn
 from pyiron_atomistics.vasp.structure import read_atoms
 import numpy as np
+import warnings
 
 __author__ = "Sudarsan Surendralal"
 
@@ -254,6 +255,26 @@ class TestVasp(unittest.TestCase):
         self.job.structure = atoms.repeat([3, 1, 1])
         self.job.set_empty_states(n_empty_states=10)
         self.assertEqual(self.job.input.incar["NBANDS"], 25)
+
+    def test_set_occpuancy_smearing(self):
+        job_smear = self.project.create_job("Vasp", "smearing")
+        self.assertIsNone(job_smear.input.incar["ISMEAR"])
+        self.assertIsNone(job_smear.input.incar["SIGMA"])
+        job_smear.set_occupancy_smearing(smearing="methfessel_paxton")
+        self.assertEqual(job_smear.input.incar["ISMEAR"], 1)
+        job_smear.set_occupancy_smearing(smearing="methfessel_paxton", order=2)
+        self.assertEqual(job_smear.input.incar["ISMEAR"], 2)
+        job_smear.set_occupancy_smearing(smearing="Fermi", width=0.1)
+        self.assertEqual(job_smear.input.incar["ISMEAR"], -1)
+        self.assertEqual(job_smear.input.incar["SIGMA"], 0.1)
+        job_smear.set_occupancy_smearing(smearing="Gaussian", width=0.1)
+        self.assertEqual(job_smear.input.incar["ISMEAR"], 0)
+        self.assertEqual(job_smear.input.incar["SIGMA"], 0.1)
+        with warnings.catch_warnings(record=True) as w:
+            job_smear.set_occupancy_smearing(smearing="Gaussian", ismear=10)
+            self.assertEqual(job_smear.input.incar["ISMEAR"], 10)
+            self.assertEqual(len(w), 1)
+        self.assertRaises(ValueError, job_smear.set_occupancy_smearing, smearing="gibberish")
 
     def test_calc_static(self):
         self.job.calc_static(
