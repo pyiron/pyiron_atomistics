@@ -65,8 +65,8 @@ class TestCompoundFactory(PyironTestCase):
         unique_ids = [a_id, b_id]  # Now with guaranteed ordering
 
         csa = structure.analyse.pyscal_centro_symmetry()[unique_ids]
-        self.assertLess(1, csa[0], msg="Primary A site should be significantly non-symmetric.")
-        self.assertAlmostEqual(0, csa[1], msg="Secondary B1 site should be nearly symmetric.")
+        self.assertLess(1, csa[0], msg="A site for AB_2 C15 should be significantly non-centro-symmetric.")
+        self.assertAlmostEqual(0, csa[1], msg="B site for AB_2 C15 should be nearly centro-symmetric.")
 
         num_a_neighs = 16
         num_b_neighs = 12
