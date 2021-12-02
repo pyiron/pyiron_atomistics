@@ -12,6 +12,7 @@ import numpy as np
 import warnings
 import seekpath
 from pyiron_atomistics.atomistics.structure.atom import Atom, ase_to_pyiron as ase_to_pyiron_atom
+from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
 from pyiron_atomistics.atomistics.structure.neighbors import Neighbors, Tree
 from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
@@ -21,7 +22,7 @@ from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement
 )
-from pyiron_base import Settings, deprecate, deprecate_soon
+from pyiron_base import state, deprecate, deprecate_soon
 from pyiron_atomistics.atomistics.structure.pyironase import publication
 from pymatgen.io.ase import AseAtomsAdaptor
 
@@ -37,8 +38,6 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class Atoms(ASEAtoms):
@@ -104,7 +103,7 @@ class Atoms(ASEAtoms):
             or calculator is not None
             or info is not None
         ):
-            s.logger.debug("Not supported parameter used!")
+            state.logger.debug("Not supported parameter used!")
 
         self._store_elements = dict()
         self._species_to_index_dict = None
@@ -2030,9 +2029,6 @@ class Atoms(ASEAtoms):
     #     return len(self.indices)
 
     def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
         if len(self) == 0:
             return "[]"
         out_str = ""
@@ -2050,6 +2046,9 @@ class Atoms(ASEAtoms):
             out_str += "cell: \n"
             out_str += str(self.cell) + "\n"
         return out_str
+
+    def __str__(self):
+        return self.get_chemical_formula()
 
     def __setitem__(self, key, value):
         if isinstance(key, (int, np.integer)):
@@ -2435,6 +2434,8 @@ class Atoms(ASEAtoms):
     def to_ovito(self):
         return pyiron_to_ovito(self)
 
+    def to_pyscal_system(self):
+        return pyiron_to_pyscal_system(self)
 
 class _CrystalStructure(Atoms):
     """

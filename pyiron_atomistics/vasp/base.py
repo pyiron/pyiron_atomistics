@@ -12,7 +12,7 @@ from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.vasp.potential import VaspPotential, VaspPotentialFile, VaspPotentialSetter, Potcar, \
     strip_xc_from_potential_name
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_base import Settings, GenericParameters, deprecate
+from pyiron_base import state, GenericParameters, deprecate
 from pyiron_atomistics.vasp.outcar import Outcar
 from pyiron_atomistics.vasp.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
@@ -36,8 +36,6 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class VaspBase(GenericDFTJob):
@@ -83,7 +81,7 @@ class VaspBase(GenericDFTJob):
         self._potential = VaspPotentialSetter([])
         self._compress_by_default = True
         self.get_enmax_among_species = get_enmax_among_potentials
-        s.publication_add(self.publication)
+        state.publications.add(self.publication)
 
     @property
     def structure(self):
@@ -786,7 +784,7 @@ class VaspBase(GenericDFTJob):
                         ]
                     ]
                 )
-                s.logger.debug("Magnetic Moments are: {0}".format(final_cmd))
+                state.logger.debug("Magnetic Moments are: {0}".format(final_cmd))
                 if "MAGMOM" not in self.input.incar._dataset["Parameter"]:
                     self.input.incar["MAGMOM"] = final_cmd
                 if any(
@@ -825,11 +823,11 @@ class VaspBase(GenericDFTJob):
                         "Spin constraints are only avilable for non collinear calculations."
                     )
             else:
-                s.logger.debug(
+                state.logger.debug(
                     "Spin polarized calculation is switched off by the user. No magnetic moments are written."
                 )
         else:
-            s.logger.debug("No magnetic moments")
+            state.logger.debug("No magnetic moments")
 
     def set_eddrmm_handling(self, status="warn"):
         """
@@ -892,7 +890,7 @@ class VaspBase(GenericDFTJob):
             if ldau_print:
                 self.input.incar["LDAUPRINT"] = 2
         else:
-            s.logger.debug("No on site coulomb interactions")
+            state.logger.debug("No on site coulomb interactions")
 
     def set_algorithm(self, algorithm="Fast", ialgo=None):
         """
@@ -908,7 +906,7 @@ class VaspBase(GenericDFTJob):
         else:
             self.input.incar["ALGO"] = str(algorithm)
             if algorithm not in algorithm_list:
-                s.logger.warning(
+                state.logger.warning(
                     msg="Algorithm {} is unusual for VASP. "
                     "I hope you know what you are up to".format(algorithm)
                 )
@@ -1935,17 +1933,18 @@ class Output:
                     warnings.simplefilter("always")
                     self.vp_new.from_file(filename=posixpath.join(directory, "vasprun.xml"))
                     if any([isinstance(warn.category, VasprunWarning) for warn in w]):
-                        s.logger.warning("vasprun.xml parsed but with some inconsistencies. "
+                        state.logger.warning("vasprun.xml parsed but with some inconsistencies. "
                                          "Check vasp output to be sure")
                         warnings.warn("vasprun.xml parsed but with some inconsistencies. "
                                       "Check vasp output to be sure", VasprunWarning)
             except VasprunError:
-                s.logger.warning("Unable to parse the vasprun.xml file. Will attempt to get data from OUTCAR")
+                state.logger.warning("Unable to parse the vasprun.xml file. Will attempt to get data from OUTCAR")
             else:
                 # If parsing the vasprun file does not throw an error, then set to True
                 vasprun_working = True
         if outcar_working:
             log_dict["temperature"] = self.outcar.parse_dict["temperatures"]
+            log_dict["stresses"] = self.outcar.parse_dict["stresses"]
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
             log_dict["elastic_constants"] = self.outcar.parse_dict["elastic_constants"]
             self.generic_output.dft_log_dict["n_elect"] = self.outcar.parse_dict[
@@ -2017,6 +2016,7 @@ class Output:
                 raise VaspCollectError("Error in parsing OUTCAR")
             log_dict["energy_tot"] = self.outcar.parse_dict["energies"]
             log_dict["temperature"] = self.outcar.parse_dict["temperatures"]
+            log_dict["stresses"] = self.outcar.parse_dict["stresses"]
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
             log_dict["forces"] = self.outcar.parse_dict["forces"]
             log_dict["positions"] = self.outcar.parse_dict["positions"]
@@ -2181,7 +2181,7 @@ class Output:
                     hdf=hdf5_output, group_name="electronic_structure"
                 )
 
-            if self.outcar.parse_dict:
+            if len(self.outcar.parse_dict.keys()) > 0:
                 self.outcar.to_hdf_minimal(hdf=hdf5_output, group_name="outcar")
 
     def from_hdf(self, hdf):
@@ -2210,7 +2210,7 @@ class Output:
                 if "outcar" in hdf5_output.list_groups():
                     self.outcar.from_hdf(hdf=hdf5_output, group_name="outcar")
             except (TypeError, IOError, ValueError):
-                s.logger.warning("Routine from_hdf() not completely successful")
+                state.logger.warning("Routine from_hdf() not completely successful")
 
 
 class GenericOutput:

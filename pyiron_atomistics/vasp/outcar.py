@@ -67,12 +67,13 @@ class Outcar(object):
         e_fermi_list, vbm_list, cbm_list = self.get_band_properties(filename=filename, lines=lines)
         elastic_constants = self.get_elastic_constants(filename=filename, lines=lines)
         try:
-            irreducible_kpoints = self.get_irreducible_kpoints(
-                filename=filename, lines=lines
-            )
+            irreducible_kpoints, ir_kpt_weights, plane_waves = self.get_irreducible_kpoints(filename=filename,
+                                                                                            lines=lines)
         except ValueError:
             print("irreducible kpoints not parsed !")
             irreducible_kpoints = None
+            ir_kpt_weights = None
+            plane_waves = None
         magnetization, final_magmom_lst = self.get_magnetization(
             filename=filename, lines=lines
         )
@@ -91,8 +92,10 @@ class Outcar(object):
         self.parse_dict["fermi_level"] = fermi_level
         self.parse_dict["scf_dipole_moments"] = scf_moments
         self.parse_dict["kin_energy_error"] = kin_energy_error
-        self.parse_dict["stresses"] = stresses
+        self.parse_dict["stresses"] = stresses * KBAR_TO_EVA
         self.parse_dict["irreducible_kpoints"] = irreducible_kpoints
+        self.parse_dict["irreducible_kpoint_weights"] = ir_kpt_weights
+        self.parse_dict["number_plane_waves"] = plane_waves
         self.parse_dict["magnetization"] = magnetization
         self.parse_dict["final_magmoms"] = final_magmom_lst
         self.parse_dict["broyden_mixing"] = broyden_mixing
@@ -133,6 +136,8 @@ class Outcar(object):
             "broyden_mixing",
             "stresses",
             "irreducible_kpoints",
+            "irreducible_kpoint_weights",
+            "number_plane_waves"
         ]
         with hdf.open(group_name) as hdf5_output:
             for key in self.parse_dict.keys():
@@ -339,7 +344,7 @@ class Outcar(object):
             ]:
                 line = line.strip()
                 line = _clean_line(line)
-                planewaves_lst.append(float(line.split()[-1]))
+                planewaves_lst.append(int(line.split()[-1]))
         if weight and planewaves:
             return np.array(kpoint_lst), np.array(weight_lst), np.array(planewaves_lst)
         elif weight:
