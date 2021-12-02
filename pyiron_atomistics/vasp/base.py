@@ -1280,8 +1280,8 @@ class VaspBase(GenericDFTJob):
         if dipole_center is not None:
             self.input.incar["DIPOL"] = " ".join(str(val) for val in dipole_center)
 
-    @deprecate(arguments={"ismear": "Preferably use parameters `smearing` and `order` "
-                                    "to set the type of smearing you want"})
+    @deprecate(ismear="Preferably use parameters `smearing` and `order` "
+                      "to set the type of smearing you want")
     def set_occupancy_smearing(self, smearing: str = None, width: float = None,
                                order: int = 1, ismear: int = None) -> None:
         """
