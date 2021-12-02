@@ -59,6 +59,10 @@ class TestCompoundFactory(PyironTestCase):
 
         unique_ids = np.unique(structure.get_symmetry()['equivalent_atoms'])
         self.assertEqual(2, len(unique_ids), msg="Expected only A- and B1-type sites.")
+        symbols = structure.get_chemical_symbols()
+        a_id = unique_ids[np.argwhere(symbols[unique_ids] == a_type)[0, 0]]
+        b_id = unique_ids[np.argwhere(symbols[unique_ids] == b_type)[0, 0]]
+        unique_ids = [a_id, b_id]  # Now with guaranteed ordering
 
         csa = structure.analyse.pyscal_centro_symmetry()[unique_ids]
         self.assertLess(1, csa[0], msg="Primary A site should be significantly non-symmetric.")
