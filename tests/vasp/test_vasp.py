@@ -274,6 +274,7 @@ class TestVasp(unittest.TestCase):
             job_smear.set_occupancy_smearing(smearing="Gaussian", ismear=10)
             self.assertEqual(job_smear.input.incar["ISMEAR"], 10)
             self.assertEqual(len(w), 1)
+        self.assertRaises(ValueError, job_smear.set_occupancy_smearing, smearing="gibberish")
 
     def test_calc_static(self):
         self.job.calc_static(

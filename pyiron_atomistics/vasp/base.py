@@ -1288,7 +1288,7 @@ class VaspBase(GenericDFTJob):
         Set how the finite temperature smearing is applied in determining partial occupancies
 
         Args:
-            smearing (str): Type of smearing (fermi/gaussian etc.)
+            smearing (str): Type of smearing (Fermi, Gaussian, or Methfessel-Paxton)
             width (float): Smearing width (eV)
             order (int): order (int): Smearing order (only for Methfessel-Paxton)
             ismear (int): (Deprecated) Directly sets the ISMEAR tag. Overwrites the smearing tag
@@ -1301,6 +1301,9 @@ class VaspBase(GenericDFTJob):
             self.input.incar["ISMEAR"] = -1
         elif smearing.lower().startswith("gauss"):
             self.input.incar["ISMEAR"] = 0
+        else:
+            raise ValueError(f"Smearing scheme {smearing} is not available. Only types 'Fermi', 'Gaussian', "
+                             f"and 'Methfessel-Paxton'")
         if width is not None:
             self.input.incar["SIGMA"] = width
 
