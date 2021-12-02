@@ -2,6 +2,7 @@ import numpy as np
 from pyiron_base import DataContainer
 import warnings
 from scipy.spatial import cKDTree
+import pint
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
@@ -42,12 +43,12 @@ class QuasiNewtonInteractive:
         if np.prod(np.array(starting_h).shape) == np.prod(structure.positions.shape)**2:
             self.hessian = starting_h
         else:
-            self.hessian = starting_h*np.eye(np.prod(structure.positions.shape))
+            self.hessian = starting_h * np.eye(np.prod(structure.positions.shape))
         if diffusion_id is not None and diffusion_direction is not None:
             v = np.zeros_like(structure.positions)
             v[diffusion_id] = diffusion_direction
             v = v.flatten()
-            self.hessian -= (starting_h+1)*np.einsum('i,j->ij', v, v)/np.linalg.norm(v)**2
+            self.hessian -= (starting_h + 1) * np.einsum('i,j->ij', v, v) / np.linalg.norm(v)**2
             self.use_eigenvalues = True
         elif diffusion_id is not None or diffusion_direction is not None:
             raise ValueError('diffusion id or diffusion direction not specified')
@@ -58,12 +59,12 @@ class QuasiNewtonInteractive:
             H_inv = self.inv_hessian
             gH = H_inv.dot(g)
             dH_inv = self._get_d_inv_hessian(H_inv, gH, g)
-            value = np.absolute(gH).max()-self.max_displacement
+            value = np.absolute(gH).max() - self.max_displacement
             if np.absolute(value) < tol:
                 break
-            self.regularization -= value/dH_inv
+            self.regularization -= value / dH_inv
             if np.absolute(self.regularization) > max_value:
-                self.regularization = max_value*np.sign(self.regularization)
+                self.regularization = max_value * np.sign(self.regularization)
 
     def _get_d_inv_hessian(self, H_inv, gH, g):
         s = np.sign(gH[np.absolute(gH).argmax()])
@@ -73,17 +74,17 @@ class QuasiNewtonInteractive:
                 np.exp(self.regularization),
                 self.eigenvectors[np.absolute(gH).argmax()],
                 self.eigenvalues,
-                1/(self.eigenvalues**2+np.exp(self.regularization))**2,
+                1 / (self.eigenvalues**2 + np.exp(self.regularization))**2,
                 self.eigenvectors, g,
                 optimize=True
-            )*s
+            ) * s
         else:
             return -np.einsum(
                 ',j,j->',
                 np.exp(self.regularization),
                 H_inv[np.absolute(gH).argmax()],
                 gH, optimize=True
-            )*s
+            ) * s
 
     @property
     def inv_hessian(self):
@@ -93,11 +94,11 @@ class QuasiNewtonInteractive:
             return np.einsum(
                 'ik,k,jk->ij',
                 self.eigenvectors,
-                self.eigenvalues/(self.eigenvalues**2+np.exp(self.regularization)),
+                self.eigenvalues / (self.eigenvalues**2 + np.exp(self.regularization)),
                 self.eigenvectors
             )
         else:
-            return np.linalg.inv(self.hessian+np.eye(len(self.hessian))*np.exp(self.regularization))
+            return np.linalg.inv(self.hessian + np.eye(len(self.hessian)) * np.exp(self.regularization))
 
     @property
     def hessian(self):
@@ -144,16 +145,16 @@ class QuasiNewtonInteractive:
         denominator = np.dot(H_tmp, dx)
         if np.absolute(denominator) < threshold:
             denominator += threshold
-        return np.outer(H_tmp, H_tmp)/denominator
+        return np.outer(H_tmp, H_tmp) / denominator
 
     def _get_PSB(self, dx, dg, H_tmp):
         dxdx = np.einsum('i,i->', dx, dx)
         dH = np.einsum('i,j->ij', H_tmp, dx)
-        dH = (dH+dH.T)/dxdx
-        return dH - np.einsum('i,i,j,k->jk', dx, H_tmp, dx, dx, optimize='optimal')/dxdx**2
+        dH = (dH + dH.T) / dxdx
+        return dH - np.einsum('i,i,j,k->jk', dx, H_tmp, dx, dx, optimize='optimal') / dxdx**2
 
     def _get_BFGS(self, dx, dg, H_tmp):
-        return np.outer(dg, dg)/dg.dot(dx) - np.outer(H_tmp, H_tmp)/dx.dot(H_tmp)
+        return np.outer(dg, dg) / dg.dot(dx) - np.outer(H_tmp, H_tmp) / dx.dot(H_tmp)
 
     def update_hessian(self, g, threshold=1e-4, mode='PSB'):
         if self.g_old is None:
@@ -161,13 +162,13 @@ class QuasiNewtonInteractive:
             return
         dg = self.get_dg(g).flatten()
         dx = self.dx.flatten()
-        H_tmp = dg-np.einsum('ij,j->i', self.hessian, dx)
+        H_tmp = dg - np.einsum('ij,j->i', self.hessian, dx)
         if mode == 'SR':
-            self.hessian = self._get_SR(dx, dg, H_tmp)+self.hessian
+            self.hessian = self._get_SR(dx, dg, H_tmp) + self.hessian
         elif mode == 'PSB':
-            self.hessian = self._get_PSB(dx, dg, H_tmp)+self.hessian
+            self.hessian = self._get_PSB(dx, dg, H_tmp) + self.hessian
         elif mode == 'BFGS':
-            self.hessian = self._get_BFGS(dx, dg, H_tmp)+self.hessian
+            self.hessian = self._get_BFGS(dx, dg, H_tmp) + self.hessian
         else:
             raise ValueError(
                 'Mode not recognized: {}. Choose from `SR`, `PSB` and `BFGS`'.format(mode)
@@ -175,7 +176,7 @@ class QuasiNewtonInteractive:
         self.g_old = g
 
     def get_dg(self, g):
-        return g-self.g_old
+        return g - self.g_old
 
 
 def run_qn(
@@ -342,9 +343,11 @@ class Hessian:
         if self._permutations is None:
             epsilon = 1.0e-8
             x_scale = self.structure.get_scaled_positions()
-            x = np.einsum('nxy,my->mnx', self.symmetry.rotations, x_scale)+self.symmetry.translations
+            x = np.einsum(
+                'nxy,my->mnx', self.symmetry.rotations, x_scale
+            ) + self.symmetry.translations
             if any(self.structure.pbc):
-                x[:, :, self.structure.pbc] -= np.floor(x[:, :, self.structure.pbc]+epsilon)
+                x[:, :, self.structure.pbc] -= np.floor(x[:, :, self.structure.pbc] + epsilon)
             x = np.einsum('nmx->mnx', x)
             tree = cKDTree(x_scale)
             self._permutations = np.argsort(tree.query(x)[1], axis=-1)
@@ -392,7 +395,7 @@ class Hessian:
     @property
     def _sum_displacements(self):
         if len(self._displacements) == 0:
-            displacements = np.zeros((len(self.unique_atoms),)+self.structure.positions.shape)
+            displacements = np.zeros((len(self.unique_atoms),) + self.structure.positions.shape)
             displacements[np.arange(len(self.unique_atoms)), self.unique_atoms, 0] = self.dx
             self.displacements = displacements
         return np.absolute(self.inequivalent_displacements).sum(axis=0).reshape(
@@ -435,6 +438,21 @@ class Hessian:
             self.inequivalent_displacements,
             optimize=True
         )
+
+    @property
+    def _to_THz(self):
+        u = pint.UnitRegistry()
+        return np.sqrt((1 * (u.electron_volt / u.angstrom**2 / u.amu)).to('THz**2').magnitude)
+
+    @property
+    def _mass_tensor(self):
+        m = np.tile(self.structure.get_masses(), (3, 1)).T.flatten()
+        return np.sqrt(m * m[:, np.newaxis])
+
+    def get_vibrational_frequencies(self, forces=None):
+        H = self.get_hessian(forces=forces)
+        nu_square = np.linalg.eigh(H / self._mass_tensor)[0]
+        return np.sign(nu_square) * np.sqrt(np.absolute(nu_square)) / (2 * np.pi) * self._to_THz
 
     @property
     def displacements(self):
