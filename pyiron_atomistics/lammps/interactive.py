@@ -245,9 +245,47 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
     def set_callback(self, function, n_call=1, n_apply=1):
         """
+        **********************
         *** Expert feature ***
-        Set callback function that will be evaluated every `n_call` steps and applied every
-        `n_apply` steps to modify forces of atoms.
+        **********************
+
+        Set callback function that modifies forces.
+        
+        Args:
+            function (function): User-defined function that returns forces (see below)
+            n_call (int): Make callback every `n_call` steps
+            n_apply (int): Apply callback forces every `n_apply` steps
+
+        `function` must have the following form:
+
+        ```
+        def function(positions, ntimestep, nlocal):
+            your_evaluation
+            return forces
+        ```
+        where `positions` is the positions of all atoms on the local processor, `ntimestep` is the
+        current timestep and `nlocal` is the number of atoms on the current processor. `forces` 
+        must be of the shape `(n_atoms, 3)`. The total translational force will be eliminated
+        inside pyiron.
+
+        Example: Add random forces
+
+        ```
+        from pyiron import Project
+
+        def random_forces(x, *args):
+            return 0.1 * np.random.randn(*x.shape)
+
+        pr = Project('RANDOM')
+        lmp = pr.create.job.Lammps('random_forces')
+        lmp.structure = your_structure
+        lmp.potential = your_potential
+        lmp.server.run_mode.interactive = True
+        lmp.set_callback(random_forces)
+        lmp.calc_md()
+        lmp.run()
+        lmp.interactive_close()
+        ```
         """
         if not self.server.run_mode.interactive:
             raise AssertionError('Callback works only in interactive mode')
