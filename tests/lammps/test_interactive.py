@@ -140,6 +140,23 @@ class TestLammpsInteractive(unittest.TestCase):
         self.assertTrue(("fix ensemble all box/relax x 10000.0 y 20000.0 xy 0.0 xz 0.0 couple none" in
                          self.minimize_job._interactive_library._command))
 
+    def test_callback(self):
+        def f(x, nt, nl):
+            return np.linspace(0, 1, np.prod(x.shape)).reshape(-1, 3)
+        v = f(self.job.structure.positions, None, None)
+        v -= np.mean(v, axis=0)
+        self.job.server.run_mode.modal = True
+        self.assertRaises(AssertionError, self.job.set_callback, f)
+        self.job.server.run_mode.interactive = True
+        self.job.set_callback(f)
+        self.assertEqual(
+            self.job.input.control['fix___callback'], 'all external pf/callback 1 1'
+        )
+        fext = np.zeros_like(v)
+        self.job._callback(None, 0, 0, np.arange(len(v)), self.job.structure.positions, fext)
+        self.assertTrue(np.allclose(v, fext))
+        del self.job.input.control['fix___callback']
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -298,7 +298,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         tags = tag.flatten().argsort()
         fext.fill(0)
         fext[tags] += self._user_callback(x[tags], ntimestep, nlocal)
-        fext -= np.mean(fext, axis=0)[np.newaxis, :]
+        fext -= np.mean(fext, axis=0)
 
     def calc_minimize(
             self,
