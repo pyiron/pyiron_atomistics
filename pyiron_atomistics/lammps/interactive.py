@@ -250,7 +250,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         **********************
 
         Set callback function that modifies forces.
-        
+
         Args:
             function (function): User-defined function that returns forces (see below)
             n_call (int): Make callback every `n_call` steps
@@ -264,7 +264,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             return forces
         ```
         where `positions` is the positions of all atoms on the local processor, `ntimestep` is the
-        current timestep and `nlocal` is the number of atoms on the current processor. `forces` 
+        current timestep and `nlocal` is the number of atoms on the current processor. `forces`
         must be of the shape `(n_atoms, 3)`. The total translational force will be eliminated
         inside pyiron.
 
