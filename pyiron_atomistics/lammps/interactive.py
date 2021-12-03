@@ -41,6 +41,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_run_command = None
         self._interactive_grand_canonical = True
         self._interactive_water_bonds = False
+        self._user_callback = None
         if "stress" in self.interactive_output_functions.keys():
             del self.interactive_output_functions["stress"]
 
@@ -242,6 +243,25 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._reset_interactive_run_command()
         self.interactive_structure_setter(self.structure)
 
+    def set_callback(self, function, n_call=1, n_apply=1):
+        """
+        *** Expert feature ***
+        Set callback function that will be evaluated every `n_call` steps and applied every
+        `n_apply` steps to modify forces of atoms.
+        """
+        if not self.server.run_mode.interactive:
+            raise AssertionError('Callback works only in interactive mode')
+        self._user_callback = function
+        self.input.control['fix___callback'] = 'all external pf/callback {} {}'.format(
+            n_call, n_apply
+        )
+
+    def _callback(self, caller, ntimestep, nlocal, tag, x, fext):
+        tags = tag.flatten().argsort()
+        fext.fill(0)
+        fext[tags] += self._user_callback(x[tags], ntimestep, nlocal)
+        fext -= np.mean(fext, axis=0)[np.newaxis, :]
+
     def calc_minimize(
             self,
             ionic_energy_tolerance=0.0,
@@ -327,7 +347,8 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self.input.control["run"] = self._generic_input["n_print"]
             super(LammpsInteractive, self).run_if_interactive()
             self._reset_interactive_run_command()
-
+            if self._user_callback is not None:
+                self._interactive_library.set_fix_external_callback("callback", self._callback)
             counter = 0
             iteration_max = int(
                 self._generic_input["n_ionic_steps"] / self._generic_input["n_print"]
