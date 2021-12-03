@@ -431,13 +431,14 @@ class Hessian:
             self.inequivalent_displacements,
             self.inequivalent_displacements, optimize=True
         )
-        return -np.einsum(
+        H = -np.einsum(
             'kj,in,ik->nj',
             np.linalg.inv(X),
             self.inequivalent_forces,
             self.inequivalent_displacements,
             optimize=True
         )
+        return 0.5 * (H + H.T)
 
     @property
     def _to_THz(self):
