@@ -314,18 +314,12 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         """
         if not self.server.run_mode.interactive:
             raise AssertionError('Callback works only in interactive mode')
-        self._user_callback = function
+        self._user_callback = _CallBack(function)
         self.input.control['fix___callback'] = 'all external pf/callback {} {}'.format(
             n_call, n_apply
         )
         if overload_internal_callback:
-            self._callback = function
-
-    def _callback(self, caller, ntimestep, nlocal, tag, x, fext):
-        tags = tag.flatten().argsort()
-        fext.fill(0)
-        fext[tags] += self._user_callback(x[tags], ntimestep, nlocal)
-        fext -= np.mean(fext, axis=0)
+            self._user_callback.callback = function
 
     def calc_minimize(
             self,
@@ -413,7 +407,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             super(LammpsInteractive, self).run_if_interactive()
             self._reset_interactive_run_command()
             if self._user_callback is not None:
-                self._interactive_library.set_fix_external_callback("callback", self._callback)
+                self._interactive_library.set_fix_external_callback(
+                    "callback", self._user_callback.callback
+                )
             counter = 0
             iteration_max = int(
                 self._generic_input["n_ionic_steps"] / self._generic_input["n_print"]
@@ -735,3 +731,14 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 if "interactive" in h5.list_groups():
                     for key in h5["interactive"].list_nodes():
                         h5["generic/" + key] = h5["interactive/" + key]
+
+
+class _CallBack:
+    def __init__(self, function):
+        self.function = function
+
+    def callback(self, caller, ntimestep, nlocal, tag, x, fext):
+        tags = tag.flatten().argsort()
+        fext.fill(0)
+        fext[tags] += self.function(x[tags], ntimestep, nlocal)
+        fext -= np.mean(fext, axis=0)

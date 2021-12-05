@@ -73,7 +73,7 @@ class TestLammpsInteractive(unittest.TestCase):
         )
         self.job._structure_previous = atoms.copy()
         self.job._structure_current = atoms.copy()
-        self.job._structure_previous.cell[1,0] += 0.01
+        self.job._structure_previous.cell[1, 0] += 0.01
         self.job.interactive_cells_setter(self.job._structure_current.cell)
         self.assertEqual(
             self.job._interactive_library._command[-1],
@@ -81,7 +81,7 @@ class TestLammpsInteractive(unittest.TestCase):
         )
         self.job._structure_previous = atoms.copy()
         self.job._structure_current = atoms.copy()
-        self.job._structure_current.cell[1,0] += 0.01
+        self.job._structure_current.cell[1, 0] += 0.01
         self.job.interactive_cells_setter(self.job._structure_current.cell)
         self.assertEqual(
             self.job._interactive_library._command[-2],
@@ -153,7 +153,7 @@ class TestLammpsInteractive(unittest.TestCase):
             self.job.input.control['fix___callback'], 'all external pf/callback 1 1'
         )
         fext = np.zeros_like(v)
-        self.job._callback(None, 0, 0, np.arange(len(v)), self.job.structure.positions, fext)
+        self.job._user_callback.callback(None, 0, 0, np.arange(len(v)), self.job.structure.positions, fext)
         self.assertTrue(np.allclose(v, fext))
         del self.job.input.control['fix___callback']
 
