@@ -738,10 +738,29 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
 
 class _FixExternal:
+    """
+    Helper class to exploit `fix external`, which is one of the features of LAMMPS to modify
+    force of each atom. More info can be found on https://docs.lammps.org/fix_external.html
+
+    Inside pyiron, `fix_external()` is passed to LAMMPS, which is to be called during run. The
+    function arguments are given by LAMMPS -> DO NOT modify them.
+    """
     def __init__(self, function):
         self.function = function
 
-    def fix_external(self, caller, ntimestep, nlocal, tag, x, fext):
+    def fix_external(self, ptr, ntimestep, nlocal, tag, x, fext):
+        """
+        Args:
+            ptr: pointer provided by and simply passed back to external driver
+            timestep (int): current LAMMPS timestep
+            nlocal (numpy.ndarray): # of atoms on this processor
+            ids (numpy.ndarray): list of atom IDs on this processor
+            x (numpy.ndarray): coordinates of atoms on this processor
+            fexternal (numpy.ndarray): forces to add to atoms on this processor
+
+        `fexternal` points to the forces to be added in LAMMPS, i.e. its content can be modified
+        but not overwritten.
+        """
         tags = tag.flatten().argsort()
         fext.fill(0)
         fext[tags] += self.function(x[tags], ntimestep, nlocal)
