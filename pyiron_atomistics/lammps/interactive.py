@@ -253,13 +253,10 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
         Args:
             function (function): User-defined function that returns forces (see below)
-            n_call (int): Make `fix_external` every `n_call` steps
-            n_apply (int): Apply `fix_external` forces every `n_apply` steps
+            n_call (int): Make `fix_external` every `n_call` steps (default: 1)
+            n_apply (int): Apply `fix_external` forces every `n_apply` steps (default: 1)
             overload_internal_fix_external (bool): Whether to overload internal fix_external
-                (see below). Overloading the internal fix_external function will have the
-                advantage that the code will not need to do expensive copying, BUT it is
-                extremely error-prone. Make sure that the code works without overloading the
-                internal fix_external function first.
+                (see below).
 
         `function` must have the following form:
 
@@ -272,27 +269,6 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         current timestep and `nlocal` is the number of atoms on the current processor. `forces`
         must be of the shape `(n_atoms, 3)`. The total translational force will be eliminated
         inside pyiron.
-
-        If `overload_internal_fix_external` is set to `True`, then `function` must have the
-        following form:
-
-        ```
-        def function(ptr, timestep, nlocal, ids, x, fexternal):
-            your_evaluation
-        ```
-
-        with the following arguemnts:
-
-        - `ptr`: pointer provided by and simply passed back to external driver
-        - `timestep`: current LAMMPS timestep
-        - `nlocal`: # of atoms on this processor
-        - `ids`: list of atom IDs on this processor
-        - `x`: coordinates of atoms on this processor
-        - `fexternal`: forces to add to atoms on this processor
-
-        Note: Do NOT overwrite `fexternal`, because it points to the internal memory of LAMMPS and
-        therefore overwriting it will erase its functionality. E.g. DO `fexternal.fill(0)` and NOT
-        `fexternal = np.zeros_like(x)`.
 
         Example: Add random forces
 
@@ -312,6 +288,33 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         lmp.run()
         lmp.interactive_close()
         ```
+
+        *** Super-expert feature: `overload_internal_fix_external = True` ***
+
+        If `overload_internal_fix_external` is set to `True`, then `function` must have the
+        following form:
+
+        ```
+        def function(ptr, timestep, nlocal, ids, x, fexternal):
+            your_evaluation
+        ```
+
+        with the following arguemnts:
+
+        - `ptr`: pointer provided by and simply passed back to external driver
+        - `timestep`: current LAMMPS timestep
+        - `nlocal`: # of atoms on this processor
+        - `ids`: list of atom IDs on this processor
+        - `x`: coordinates of atoms on this processor
+        - `fexternal`: forces to add to atoms on this processor
+
+        Overloading the internal fix_external function will have the advantage that the code will
+        not need to do expensive copying, BUT it is extremely error-prone. Make sure that the
+        code works without overloading the internal fix_external function first.
+
+        Note: Do NOT overwrite `fexternal`, because it points to the internal memory of LAMMPS and
+        therefore overwriting it will erase its functionality. E.g. DO `fexternal.fill(0)` and NOT
+        `fexternal = np.zeros_like(x)`. 
         """
         if not self.server.run_mode.interactive:
             raise AssertionError('Callback works only in interactive mode')
