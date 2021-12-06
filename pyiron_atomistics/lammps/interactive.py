@@ -268,7 +268,10 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         where `positions` is the positions of all atoms on the local processor, `ntimestep` is the
         current timestep and `nlocal` is the number of atoms on the current processor. `forces`
         must be of the shape `(n_atoms, 3)`. The total translational force will be eliminated
-        inside pyiron.
+        inside pyiron. The fix then adds these forces to each atom in the box, once every
+        `n_apply` steps, similar to the way the fix addforce command works. Note that if
+        `n_call` > `n_apply`, the force values produced by one callback will persist, and be used
+        multiple times to update atom forces.
 
         Example: Add random forces
 
