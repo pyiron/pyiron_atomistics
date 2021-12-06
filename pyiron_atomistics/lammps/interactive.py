@@ -317,7 +317,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
         Note: Do NOT overwrite `fexternal`, because it points to the internal memory of LAMMPS and
         therefore overwriting it will erase its functionality. E.g. DO `fexternal.fill(0)` and NOT
-        `fexternal = np.zeros_like(x)`. 
+        `fexternal = np.zeros_like(x)`.
         """
         if not self.server.run_mode.interactive:
             raise AssertionError('Callback works only in interactive mode')
