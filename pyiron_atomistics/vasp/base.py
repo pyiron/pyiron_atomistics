@@ -1280,21 +1280,32 @@ class VaspBase(GenericDFTJob):
         if dipole_center is not None:
             self.input.incar["DIPOL"] = " ".join(str(val) for val in dipole_center)
 
-    def set_occupancy_smearing(self, smearing="fermi", width=0.2, ismear=None):
+    @deprecate(ismear="Preferably use parameters `smearing` and `order` "
+                      "to set the type of smearing you want")
+    def set_occupancy_smearing(self, smearing: str = None, width: float = None,
+                               order: int = 1, ismear: int = None) -> None:
         """
         Set how the finite temperature smearing is applied in determining partial occupancies
 
         Args:
-            smearing (str): Type of smearing (fermi/gaussian etc.)
+            smearing (str): Type of smearing (Fermi, Gaussian, or Methfessel-Paxton)
             width (float): Smearing width (eV)
-            ismear (int): Directly sets the ISMEAR tag. Overwrites the smearing tag
+            order (int): order (int): Smearing order (only for Methfessel-Paxton)
+            ismear (int): (Deprecated) Directly sets the ISMEAR tag. Overwrites the smearing tag
         """
-        ismear_dict = {"fermi": -1, "gaussian": 0, "MP": 1}
         if ismear is not None:
             self.input.incar["ISMEAR"] = int(ismear)
+        elif smearing.lower().startswith("meth") or smearing.lower().startswith("mp"):
+            self.input.incar["ISMEAR"] = int(order)
+        elif smearing.lower().startswith("fermi"):
+            self.input.incar["ISMEAR"] = -1
+        elif smearing.lower().startswith("gauss"):
+            self.input.incar["ISMEAR"] = 0
         else:
-            self.input.incar["ISMEAR"] = ismear_dict[smearing]
-        self.input.incar["SIGMA"] = width
+            raise ValueError(f"Smearing scheme {smearing} is not available. Only types 'Fermi', 'Gaussian', "
+                             f"and 'Methfessel-Paxton'")
+        if width is not None:
+            self.input.incar["SIGMA"] = width
 
     def set_fft_mesh(self, nx=None, ny=None, nz=None):
         """

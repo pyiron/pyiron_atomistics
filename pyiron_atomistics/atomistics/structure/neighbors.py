@@ -1034,9 +1034,6 @@ class NeighborsTrajectory(DataContainer):
         self._flat_store.add_array("distances", dtype=np.float64, shape=(num_neighbors,), per="element")
         self._flat_store.add_array("vecs", dtype=np.float64, shape=(num_neighbors, 3), per="element")
         self._flat_store.add_array("shells", dtype=np.int64, shape=(num_neighbors,), per="element")
-        self._neighbor_indices = None
-        self._neighbor_distances = None
-        self._neighbor_vectors = None
         self._num_neighbors = num_neighbors
         self._get_neighbors_kwargs = kwargs
         self.has_structure = has_structure
