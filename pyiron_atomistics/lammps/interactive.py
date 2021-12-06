@@ -41,7 +41,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_run_command = None
         self._interactive_grand_canonical = True
         self._interactive_water_bonds = False
-        self._user_callback = None
+        self._user_fix_external = None
         if "stress" in self.interactive_output_functions.keys():
             del self.interactive_output_functions["stress"]
 
@@ -243,22 +243,23 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._reset_interactive_run_command()
         self.interactive_structure_setter(self.structure)
 
-    def set_callback(self, function, n_call=1, n_apply=1, overload_internal_callback=False):
+    def set_fix_external(self, function, n_call=1, n_apply=1, overload_internal_fix_external=False):
         """
         **********************
         *** Expert feature ***
         **********************
 
-        Set callback function that modifies forces.
+        Set fix_external function that modifies forces.
 
         Args:
             function (function): User-defined function that returns forces (see below)
-            n_call (int): Make callback every `n_call` steps
-            n_apply (int): Apply callback forces every `n_apply` steps
-            overload_internal_callback (bool): Whether to overload internal callback (see below).
-                Overloading the internal callback function will have the advantage that the code
-                will not need to do expensive copying, BUT it is extremely error-prone. Make
-                sure that the code works without overloading the internal callback function first.
+            n_call (int): Make `fix_external` every `n_call` steps
+            n_apply (int): Apply `fix_external` forces every `n_apply` steps
+            overload_internal_fix_external (bool): Whether to overload internal fix_external
+                (see below). Overloading the internal fix_external function will have the
+                advantage that the code will not need to do expensive copying, BUT it is
+                extremely error-prone. Make sure that the code works without overloading the
+                internal fix_external function first.
 
         `function` must have the following form:
 
@@ -272,8 +273,8 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         must be of the shape `(n_atoms, 3)`. The total translational force will be eliminated
         inside pyiron.
 
-        If `overload_internal_callback` is set to `True`, then `function` must have the following
-        form:
+        If `overload_internal_fix_external` is set to `True`, then `function` must have the
+        following form:
 
         ```
         def function(ptr, timestep, nlocal, ids, x, fexternal):
@@ -306,7 +307,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         lmp.structure = your_structure
         lmp.potential = your_potential
         lmp.server.run_mode.interactive = True
-        lmp.set_callback(random_forces)
+        lmp.set_fix_external(random_forces)
         lmp.calc_md()
         lmp.run()
         lmp.interactive_close()
@@ -314,12 +315,12 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         """
         if not self.server.run_mode.interactive:
             raise AssertionError('Callback works only in interactive mode')
-        self._user_callback = _CallBack(function)
-        self.input.control['fix___callback'] = 'all external pf/callback {} {}'.format(
+        self._user_fix_external = _FixExternal(function)
+        self.input.control['fix___fix_external'] = 'all external pf/fix_external {} {}'.format(
             n_call, n_apply
         )
-        if overload_internal_callback:
-            self._user_callback.callback = function
+        if overload_internal_fix_external:
+            self._user_fix_external.fix_external = function
 
     def calc_minimize(
             self,
@@ -406,9 +407,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self.input.control["run"] = self._generic_input["n_print"]
             super(LammpsInteractive, self).run_if_interactive()
             self._reset_interactive_run_command()
-            if self._user_callback is not None:
-                self._interactive_library.set_fix_external_callback(
-                    "callback", self._user_callback.callback
+            if self._user_fix_external is not None:
+                self._interactive_library.set_fix_external_fix_external(
+                    "fix_external", self._user_fix_external.fix_external
                 )
             counter = 0
             iteration_max = int(
@@ -733,11 +734,11 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                         h5["generic/" + key] = h5["interactive/" + key]
 
 
-class _CallBack:
+class _FixExternal:
     def __init__(self, function):
         self.function = function
 
-    def callback(self, caller, ntimestep, nlocal, tag, x, fext):
+    def fix_external(self, caller, ntimestep, nlocal, tag, x, fext):
         tags = tag.flatten().argsort()
         fext.fill(0)
         fext[tags] += self.function(x[tags], ntimestep, nlocal)
