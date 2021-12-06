@@ -150,7 +150,7 @@ class TestLammpsInteractive(unittest.TestCase):
         self.job.server.run_mode.interactive = True
         self.job.set_fix_external(f)
         self.assertEqual(
-            self.job.input.control['fix___fix_external'], 'all external pf/fix external 1 1'
+            self.job.input.control['fix___fix_external'], 'all external pf/callback 1 1'
         )
         fext = np.zeros_like(v)
         self.job._user_fix_external.fix_external(None, 0, 0, np.arange(len(v)), self.job.structure.positions, fext)
