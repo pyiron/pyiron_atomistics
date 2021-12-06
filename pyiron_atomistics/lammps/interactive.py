@@ -269,7 +269,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         ```
         where `positions` is the positions of all atoms on the local processor, `ntimestep` is the
         current timestep and `nlocal` is the number of atoms on the current processor. `forces`
-        must be of the shape `(n_atoms, 3)`. The total translational force will be eliminated
+        must be of the shape `(n_atoms, 3)`. The net translational force will be eliminated
         inside pyiron.
 
         If `overload_internal_callback` is set to `True`, then `function` must have the following
