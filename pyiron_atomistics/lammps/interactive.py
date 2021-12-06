@@ -305,7 +305,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         lmp = pr.create.job.Lammps('random_forces')
         lmp.structure = your_structure
         lmp.potential = your_potential
-        lmp.server.run_mode.interactive = True
+        lmp.interactive_open()
         lmp.set_callback(random_forces)
         lmp.calc_md()
         lmp.run()
