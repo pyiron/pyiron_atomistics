@@ -1109,7 +1109,7 @@ class NeighborsTrajectory(DataContainer):
 
     def _compute_neighbors(self):
         for i, struct in enumerate(self._has_structure.iter_structures()):
-            if i < len(self._flat_store) and all(self._flat_store["indices", i] != -1):
+            if i < len(self._flat_store) and (self._flat_store["indices", i] != -1).all():
                 # store already has valid entries for this structure, so skip it
                 continue
             # Change the `allow_ragged` based on the changes in get_neighbors()
