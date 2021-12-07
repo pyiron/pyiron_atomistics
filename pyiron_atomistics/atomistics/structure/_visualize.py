@@ -5,7 +5,6 @@
 import numpy as np
 import warnings
 from matplotlib.colors import rgb2hex
-from pyiron_base import Settings
 from scipy.interpolate import interp1d
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
@@ -19,7 +18,6 @@ __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-s = Settings()
 
 class Visualize:
     def __init__(self, atoms):

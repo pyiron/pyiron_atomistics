@@ -4,7 +4,7 @@
 
 from multiprocessing import cpu_count
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
-from pyiron_base import DataContainer, GenericParameters, Settings, ImportAlarm
+from pyiron_base import state, DataContainer, GenericParameters, ImportAlarm
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron, pyiron_to_ase
 from pymatgen.io.ase import AseAtomsAdaptor
 import numpy as np
@@ -29,9 +29,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Aug 14, 2020"
-
-
-s = Settings()
 
 
 def pyiron_to_pymatgen(structure):
@@ -137,7 +134,7 @@ class SQSJob(AtomisticGenericJob):
         self._lst_of_struct = []
         self.__hdf_version__ = "0.2.0"
         self.__name__ = "SQSJob"
-        s.publication_add(self.publication)
+        state.publications.add(self.publication)
 
     @property
     def list_of_structures(self):

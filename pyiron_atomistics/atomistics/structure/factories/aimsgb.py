@@ -3,7 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from aimsgb import GrainBoundary, Grain, GBInformation
-from pyiron_base import Settings
 from pyiron_atomistics.atomistics.structure.atoms import pyiron_to_pymatgen, pymatgen_to_pyiron
 
 __author__ = "Ujjal Saikia"
@@ -16,8 +15,6 @@ __maintainer__ = "Liam Huber"
 __email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Feb 26, 2021"
-
-s = Settings()
 
 
 class AimsgbFactory:

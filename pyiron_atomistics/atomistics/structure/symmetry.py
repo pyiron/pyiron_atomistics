@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_base import Settings, deprecate
+from pyiron_base import deprecate
 from scipy.spatial import cKDTree
 import spglib
 import ast
@@ -18,8 +18,6 @@ __maintainer__ = "Sam Waseda"
 __email__ = "waseda@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class Symmetry(dict):
