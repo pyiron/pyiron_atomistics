@@ -41,6 +41,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_run_command = None
         self._interactive_grand_canonical = True
         self._interactive_water_bonds = False
+        self._user_fix_external = None
         if "stress" in self.interactive_output_functions.keys():
             del self.interactive_output_functions["stress"]
 
@@ -242,6 +243,91 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._reset_interactive_run_command()
         self.interactive_structure_setter(self.structure)
 
+    def set_fix_external(self, function, n_call=1, n_apply=1, overload_internal_fix_external=False):
+        """
+        **********************
+        *** Expert feature ***
+        **********************
+
+        Set fix_external function that modifies forces.
+
+        Args:
+            function (function): User-defined function that returns forces (see below)
+            n_call (int): Make `fix_external` every `n_call` steps (default: 1)
+            n_apply (int): Apply `fix_external` forces every `n_apply` steps (default: 1)
+            overload_internal_fix_external (bool): Whether to overload internal fix_external
+                (see below).
+
+        `function` must have the following form:
+
+        ```
+        def function(positions, ntimestep, nlocal):
+            your_evaluation
+            return forces
+        ```
+        where `positions` is the positions of all atoms on the local processor, `ntimestep` is the
+        current timestep and `nlocal` is the number of atoms on the current processor. `forces`
+        must be of the shape `(n_atoms, 3)`. The total translational force will be eliminated
+        inside pyiron. The fix then adds these forces to each atom in the box, once every
+        `n_apply` steps, similar to the way the fix addforce command works. Note that if
+        `n_call` > `n_apply`, the force values produced by one callback will persist, and be used
+        multiple times to update atom forces.
+
+        Example: Add random forces
+
+        ```
+        from pyiron import Project
+
+        def random_forces(x, *args):
+            return 0.1 * np.random.randn(*x.shape)
+
+        pr = Project('RANDOM')
+        lmp = pr.create.job.Lammps('random_forces')
+        lmp.structure = your_structure
+        lmp.potential = your_potential
+        lmp.interactive_open()
+        lmp.set_fix_external(random_forces)
+        lmp.calc_md()
+        lmp.run()
+        lmp.interactive_close()
+        ```
+
+        *** Super-expert feature: `overload_internal_fix_external = True` ***
+
+        If `overload_internal_fix_external` is set to `True`, then `function` must have the
+        following form:
+
+        ```
+        def function(ptr, timestep, nlocal, ids, x, fexternal):
+            your_evaluation
+        ```
+
+        with the following arguemnts:
+
+        - `ptr`: pointer provided by and simply passed back to external driver
+        - `timestep`: current LAMMPS timestep
+        - `nlocal`: # of atoms on this processor
+        - `ids`: list of atom IDs on this processor
+        - `x`: coordinates of atoms on this processor
+        - `fexternal`: forces to add to atoms on this processor
+
+        Overloading the internal fix_external function will have the advantage that the code will
+        not need to do expensive copying, BUT it is extremely error-prone. Make sure that the
+        code works without overloading the internal fix_external function first.
+
+        Note: Do NOT overwrite `fexternal`, because it points to the internal memory of LAMMPS and
+        therefore overwriting it will erase its functionality. E.g. DO `fexternal.fill(0)` and NOT
+        `fexternal = np.zeros_like(x)`.
+        """
+        if not self.server.run_mode.interactive:
+            raise AssertionError('Callback works only in interactive mode')
+        self._user_fix_external = _FixExternal(function)
+        self.input.control['fix___fix_external'] = 'all external pf/callback {} {}'.format(
+            n_call, n_apply
+        )
+        if overload_internal_fix_external:
+            self._user_fix_external.fix_external = function
+
     def calc_minimize(
             self,
             ionic_energy_tolerance=0.0,
@@ -327,7 +413,10 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self.input.control["run"] = self._generic_input["n_print"]
             super(LammpsInteractive, self).run_if_interactive()
             self._reset_interactive_run_command()
-
+            if self._user_fix_external is not None:
+                self._interactive_library.set_fix_external_callback(
+                    "fix_external", self._user_fix_external.fix_external
+                )
             counter = 0
             iteration_max = int(
                 self._generic_input["n_ionic_steps"] / self._generic_input["n_print"]
@@ -649,3 +738,33 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 if "interactive" in h5.list_groups():
                     for key in h5["interactive"].list_nodes():
                         h5["generic/" + key] = h5["interactive/" + key]
+
+
+class _FixExternal:
+    """
+    Helper class to exploit `fix external`, which is one of the features of LAMMPS to modify
+    force of each atom. More info can be found on https://docs.lammps.org/fix_external.html
+
+    Inside pyiron, `fix_external()` is passed to LAMMPS, which is to be called during run. The
+    function arguments are given by LAMMPS -> DO NOT modify them.
+    """
+    def __init__(self, function):
+        self.function = function
+
+    def fix_external(self, ptr, ntimestep, nlocal, tag, x, fext):
+        """
+        Args:
+            ptr: pointer provided by and simply passed back to external driver
+            timestep (int): current LAMMPS timestep
+            nlocal (numpy.ndarray): # of atoms on this processor
+            ids (numpy.ndarray): list of atom IDs on this processor
+            x (numpy.ndarray): coordinates of atoms on this processor
+            fexternal (numpy.ndarray): forces to add to atoms on this processor
+
+        `fexternal` points to the forces to be added in LAMMPS, i.e. its content can be modified
+        but not overwritten.
+        """
+        tags = tag.flatten().argsort()
+        fext.fill(0)
+        fext[tags] += self.function(x[tags], ntimestep, nlocal)
+        fext -= np.mean(fext, axis=0)
