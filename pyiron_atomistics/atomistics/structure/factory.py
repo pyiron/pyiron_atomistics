@@ -28,6 +28,7 @@ import numpy as np
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
 from pyiron_atomistics.atomistics.structure.factories.atomsk import AtomskFactory, _ATOMSK_EXISTS
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
+from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
 from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, Atoms, \
     ase_to_pyiron, pymatgen_to_pyiron, ovito_to_pyiron
@@ -54,6 +55,7 @@ class StructureFactory(PyironFactory):
         if _ATOMSK_EXISTS:
             self._atomsk = AtomskFactory()
         self._aimsgb = AimsgbFactory()
+        self._compound = CompoundFactory()
 
     @property
     def ase(self):
@@ -67,6 +69,10 @@ class StructureFactory(PyironFactory):
     @property
     def aimsgb(self):
         return self._aimsgb
+
+    @property
+    def compound(self):
+        return self._compound
 
     def cut(self, *args, **kwargs):
         return self.ase.cut(*args, **kwargs)
