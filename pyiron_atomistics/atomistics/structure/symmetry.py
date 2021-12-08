@@ -179,7 +179,10 @@ class Symmetry(dict):
                 self['rotations'],
                 scaled_positions
             ) + self['translations'][:, None, :]
-            positions -= np.floor(positions + self.epsilon)
+            if any(self._structure.pbc):
+                positions[..., self._structure.pbc] -= np.floor(
+                    positions[..., self._structure.pbc] + self.epsilon
+                )
             self._permutations = tree.query(positions)[1].argsort(axis=-1)
         return self._permutations
 
