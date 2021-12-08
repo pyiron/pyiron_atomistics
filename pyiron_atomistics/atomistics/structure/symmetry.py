@@ -179,11 +179,11 @@ class Symmetry(dict):
                 self['rotations'],
                 scaled_positions
             ) + self['translations'][:, None, :]
-            if any(self._structure.pbc):
-                positions[..., self._structure.pbc] -= np.floor(
-                    positions[..., self._structure.pbc] + self.epsilon
-                )
-            self._permutations = tree.query(positions)[1].argsort(axis=-1)
+            positions -= np.floor(positions + self.epsilon)
+            distances, self._permutations = tree.query(positions)[1]
+            if not np.allclose(distances, 0):
+                raise AssertionError('Neighbor search failed')
+            self._permutations = self._permutations.argsort(axis=-1)
         return self._permutations
 
     def symmetrize_vectors(
