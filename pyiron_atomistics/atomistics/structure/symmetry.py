@@ -166,7 +166,7 @@ class Symmetry(dict):
         Let `v` a `(n_atoms, n_dim)`-vector field (e.g. forces, displacements), then
         `permutations` gives the corredponding indices of the vectors for the given symmetry
         operation, i.e. `v` is equivalent to
-        
+
         >>> symmetry.rotations[n] @ v[symmetry.permutations[n]].T
 
         for any `n` with respect to the box symmetry (`n < n_symmetry`).
