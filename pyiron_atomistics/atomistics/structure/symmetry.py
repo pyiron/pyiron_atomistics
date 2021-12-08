@@ -172,7 +172,7 @@ class Symmetry(dict):
         for any `n` with respect to the box symmetry (`n < n_symmetry`).
         """
         if self._permutations is None:
-            scaled_positions = self._structure.get_scaled_positions(wrap=False)
+            scaled_positions = self._structure.get_scaled_positions()
             tree = cKDTree(scaled_positions)
             positions = np.einsum(
                 'nij,kj->nki',
@@ -180,7 +180,7 @@ class Symmetry(dict):
                 scaled_positions
             ) + self['translations'][:, None, :]
             positions -= np.floor(positions + self.epsilon)
-            distances, self._permutations = tree.query(positions)[1]
+            distances, self._permutations = tree.query(positions)
             if not np.allclose(distances, 0):
                 raise AssertionError('Neighbor search failed')
             self._permutations = self._permutations.argsort(axis=-1)
