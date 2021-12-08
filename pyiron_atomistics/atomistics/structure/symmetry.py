@@ -172,7 +172,10 @@ class Symmetry(dict):
         for any `n` with respect to the box symmetry (`n < n_symmetry`).
         """
         if self._permutations is None:
-            scaled_positions = self._structure.get_scaled_positions()
+            scaled_positions = self._structure.get_scaled_positions(wrap=False)
+            scaled_positions[..., self._structure.pbc] -= np.floor(
+                scaled_positions[..., self._structure.pbc] + self.epsilon
+            )
             tree = cKDTree(scaled_positions)
             positions = np.einsum(
                 'nij,kj->nki',
