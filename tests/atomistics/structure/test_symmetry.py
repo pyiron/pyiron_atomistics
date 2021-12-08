@@ -33,14 +33,14 @@ class TestAtoms(unittest.TestCase):
 
     def test_get_symmetry(self):
         cell = 2.2 * np.identity(3)
-        Al = Atoms("AlAl", positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell).repeat(2)
+        Al = Atoms("AlAl", positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell, pbc=True).repeat(2)
         self.assertEqual(len(set(Al.get_symmetry()["equivalent_atoms"])), 1)
         self.assertEqual(len(Al.get_symmetry()["translations"]), 96)
         self.assertEqual(
             len(Al.get_symmetry()["translations"]), len(Al.get_symmetry()["rotations"])
         )
         cell = 2.2 * np.identity(3)
-        Al = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell)
+        Al = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell, pbc=True)
         with self.assertRaises(ValueError):
             Al.get_symmetry().symmetrize_vectors(1)
         v = np.random.rand(6).reshape(-1, 3)
@@ -108,6 +108,20 @@ class TestAtoms(unittest.TestCase):
         )
         Mg_hcp = Atoms("Mg4", scaled_positions=pos, cell=cell)
         self.assertEqual(Mg_hcp.get_symmetry().spacegroup["Number"], 194)
+
+    def test_permutations(self):
+        structure = StructureFactory().ase.bulk('Al', cubic=True).repeat(2)
+        x_vacancy = structure.positions[0]
+        del structure[0]
+        neigh = structure.get_neighborhood(x_vacancy)
+        vec = np.zeros_like(structure.positions)
+        vec[neigh.indices[0]] = neigh.vecs[0]
+        sym = structure.get_symmetry()
+        all_vectors = np.einsum('ijk,ink->inj', sym.rotations, vec[sym.permutations])
+        for i, v in zip(neigh.indices, neigh.vecs):
+            vec = np.zeros_like(structure.positions)
+            vec[i] = v
+            self.assertAlmostEqual(np.linalg.norm(all_vectors - vec, axis=(-1, -2)).min(), 0,)
 
 if __name__ == "__main__":
     unittest.main()
