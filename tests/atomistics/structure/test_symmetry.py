@@ -123,5 +123,16 @@ class TestAtoms(unittest.TestCase):
             vec[i] = v
             self.assertAlmostEqual(np.linalg.norm(all_vectors - vec, axis=(-1, -2)).min(), 0,)
 
+    def test_arg_equivalent_vectors(self):
+        structure = StructureFactory().ase.bulk('Al', cubic=True).repeat(2)
+        self.assertEqual(np.unique(structure.get_symmetry().arg_equivalent_vectors).squeeze(), 0)
+        x_v = structure.positions[0]
+        del structure[0]
+        arg_v = structure.get_symmetry().arg_equivalent_vectors
+        dx = structure.get_distances_array(structure.positions, x_v, vectors=True)
+        dx_round = np.round(np.absolute(dx), decimals=3)
+        self.assertEqual(len(np.unique(dx_round + arg_v)), len(np.unique(arg_v)))
+
+
 if __name__ == "__main__":
     unittest.main()
