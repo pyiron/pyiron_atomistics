@@ -70,6 +70,22 @@ class Symmetry(dict):
         return self['equivalent_atoms']
 
     @property
+    def arg_equivalent_vectors(self):
+        """
+        Get 3d vector components which are equivalent under symmetry operation. For example, if
+        the `i`-direction (`i = x, y, z`) of the `n`-th atom is equivalent to the `j`-direction
+        of the `m`-th atom, then the returned array should have the same number in `(n, i)` and
+        `(m, j)`
+        """
+        random_vectors = np.random.random(self._structure.positions.shape)
+        all_vec = np.einsum('nij,nmj->min', self.rotations, random_vectors[self.permutations])
+        vec_abs_flat = np.absolute(all_vec).reshape(np.prod(self._structure.positions.shape), -1)
+        vec_round = np.round(vec_abs_flat, decimals=10)
+        vec_sorted = np.sort(vec_round, axis=-1)
+        enum = np.unique(vec_sorted, axis=0, return_inverse=True)[1]
+        return enum.reshape(-1, 3)
+
+    @property
     def rotations(self):
         """
         All rotational matrices. Two points x and y are equivalent with respect to the box
