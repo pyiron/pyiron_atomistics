@@ -5,9 +5,8 @@
 from __future__ import print_function, unicode_literals
 import numpy as np
 import os
-from pyiron_base import Settings
+from pyiron_base import state
 import mendeleev
-import sys
 import pandas
 from functools import lru_cache
 
@@ -22,7 +21,6 @@ __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-s = Settings()
 pandas.options.mode.chained_assignment = None
 
 
@@ -369,7 +367,7 @@ class PeriodicTable(object):
 
         """
         if not file_name:
-            for resource_path in s.resource_paths:
+            for resource_path in state.settings.resource_paths:
                 if os.path.exists(os.path.join(resource_path, "atomistics")):
                     resource_path = os.path.join(resource_path, "atomistics")
                 for path, folder_lst, file_lst in os.walk(resource_path):

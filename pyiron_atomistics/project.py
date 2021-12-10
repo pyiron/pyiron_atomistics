@@ -8,7 +8,7 @@ import posixpath
 # import warnings
 from string import punctuation
 from shutil import copyfile
-from pyiron_base import Settings, ProjectHDFio, JobType, JobTypeChoice, Project as ProjectCore, Creator as CreatorCore
+from pyiron_base import ProjectHDFio, JobType, JobTypeChoice, Project as ProjectCore, Creator as CreatorCore
 try:
     from pyiron_base import ProjectGUI
 except (ImportError, TypeError, AttributeError):
@@ -36,8 +36,6 @@ __date__ = "Sep 1, 2017"
 
 if not (isinstance(ase.__file__, str)):
     raise AssertionError()
-
-s = Settings()
 
 
 class Project(ProjectCore):

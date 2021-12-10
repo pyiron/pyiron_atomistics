@@ -322,6 +322,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 "The animate() function requires the package nglview to be installed"
             )
 
+        if self.number_of_structures <= 1:
+            raise ValueError("job must have more than one structure to animate!")
+
         animation = nglview.show_asetraj(
             self.trajectory(stride=stride, center_of_mass=center_of_mass)
         )
@@ -826,7 +829,7 @@ class Trajectory(HasStructure):
         if snapshot_indices is None:
             snapshot_indices = np.arange(len(self), dtype=int)
 
-        n_obj = NeighborsTrajectory(self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
+        n_obj = NeighborsTrajectory(has_structure=self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
         n_obj.compute_neighbors()
         return n_obj
 
@@ -924,7 +927,7 @@ class GenericOutput(object):
         if unwrapped_positions is not None:
             return unwrapped_positions
         else:
-            return self._job.structure.positions+self.total_displacements
+            return self._job.structure.positions + self.total_displacements
 
     @property
     def volume(self):
@@ -939,11 +942,16 @@ class GenericOutput(object):
         """
         Output for 3-d displacements between successive snapshots, with minimum image convention.
         For the total displacements from the initial configuration, use total_displacements
-        This algorithm collapses if:
-        - the ID's are not consistent (i.e. you can also not change the number of atoms)
-        - there are atoms which move by more than half a box length in any direction within two snapshots (due to
-        periodic boundary conditions)
+        This algorithm collapses if (if `unwrapped_positions` is not available in output):
+            - the ID's are not consistent (i.e. you can also not change the number of atoms)
+            - there are atoms which move by more than half a box length in any direction within
+                two snapshots (due to periodic boundary conditions)
         """
+        unwrapped_positions = self._job["output/generic/unwrapped_positions"]
+        if unwrapped_positions is not None:
+            return np.diff(
+                np.append([self._job.structure.positions], unwrapped_positions, axis=0), axis=0
+            )
         return self.get_displacements(self._job.structure, self.positions, self.cells)
 
     @staticmethod
@@ -981,11 +989,15 @@ class GenericOutput(object):
     def total_displacements(self):
         """
         Output for 3-d total displacements from the initial configuration, with minimum image convention.
-        For the diplacements for the successive snapshots, use displacements
-        This algorithm collapses if:
-        - the ID's are not consistent (i.e. you can also not change the number of atoms)
-        - there are atoms which move by more than half a box length in any direction within two snapshots (due to periodic boundary conditions)
+        For the displacements for the successive snapshots, use displacements
+        This algorithm collapses if (if `unwrapped_positions` is not available in the output):
+            - the ID's are not consistent (i.e. you can also not change the number of atoms)
+            - there are atoms which move by more than half a box length in any direction within
+                two snapshots (due to periodic boundary conditions)
         """
+        unwrapped_positions = self._job["output/generic/unwrapped_positions"]
+        if unwrapped_positions is not None:
+            return unwrapped_positions - self._job.structure.positions
         return np.cumsum(self.displacements, axis=0)
 
     def __dir__(self):

@@ -16,7 +16,7 @@ from phonopy.file_IO import write_FORCE_CONSTANTS
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_atomistics.atomistics.structure.phonopy import publication as phonopy_publication
-from pyiron_base import JobGenerator, Settings, ImportAlarm
+from pyiron_base import state, JobGenerator, ImportAlarm
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"
 __copyright__ = (
@@ -28,8 +28,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class Thermal:
@@ -171,7 +169,7 @@ class PhonopyJob(AtomisticParallelMaster):
         self.phonopy = None
         self._job_generator = PhonopyJobGenerator(self)
         self._disable_phonopy_pickle = False
-        s.publication_add(phonopy_publication())
+        state.publications.add(phonopy_publication())
 
     @property
     def phonopy_pickling_disabled(self):

@@ -27,7 +27,7 @@ from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import find_potential_file \
     as find_potential_file_jth
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
-from pyiron_base import Settings, DataContainer, job_status_successful_lst, deprecate
+from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -39,8 +39,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 BOHR_TO_ANGSTROM = (
     scipy.constants.physical_constants["Bohr radius"][0] /
@@ -373,6 +371,7 @@ class SphinxBase(GenericDFTJob):
         self.input.KpointCoords = [0.5, 0.5, 0.5]
         self.input.KpointFolding = [4, 4, 4]
         self.input.EmptyStates = "auto"
+        self.input.MethfesselPaxton = 1
         self.input.Sigma = 0.2
         self.input.Xcorr = "PBE"
         self.input.VaspPot = False
@@ -522,10 +521,14 @@ class SphinxBase(GenericDFTJob):
         """
         self.input.sphinx.PAWHamiltonian.setdefault(
             "nEmptyStates", self.input["EmptyStates"]
-            )
+        )
         self.input.sphinx.PAWHamiltonian.setdefault(
             "ekt", self.input["Sigma"]
-            )
+        )
+        for k in ['MethfesselPaxton', 'FermiDirac']:
+            if k in self.input.list_nodes():
+                self.input.sphinx.PAWHamiltonian.setdefault(k, self.input[k])
+                break
         self.input.sphinx.PAWHamiltonian.setdefault("xc", self.input["Xcorr"])
         self.input.sphinx.PAWHamiltonian["spinPolarized"] = self._spin_enabled
 
@@ -965,20 +968,27 @@ class SphinxBase(GenericDFTJob):
         + set_mixing_parameters.__doc__
     )
 
-    def set_occupancy_smearing(self, smearing=None, width=None):
+    def set_occupancy_smearing(self, smearing=None, width=None, order=1):
         """
         Set how the finite temperature smearing is applied in
         determining partial occupancies
 
         Args:
-            smearing (str): Type of smearing (only fermi is
-                            implemented anything else will be ignored)
+            smearing (str): Type of smearing, 'FermiDirac' or 'MethfesselPaxton'
             width (float): Smearing width (eV) (default: 0.2)
+            order (int): Smearing order
         """
-        if smearing is not None and not isinstance(smearing, str):
-            raise ValueError(
-                "Smearing must be a string"
-            )
+        if smearing is not None:
+            if not isinstance(smearing, str):
+                raise ValueError("Smearing must be a string")
+            if smearing.lower().startswith('meth'):
+                self.input.MethfesselPaxton = order
+                if 'FermiDirac' in self.input.list_nodes():
+                    del self.input['FermiDirac']
+            elif smearing.lower().startswith('fermi'):
+                self.input.FermiDirac = order
+                if 'MethfesselPaxton' in self.input.list_nodes():
+                    del self.input['MethfesselPaxton']
         if width is not None and width < 0:
             raise ValueError("Smearing value must be a float >= 0")
         if width is not None:
@@ -1637,7 +1647,7 @@ class SphinxBase(GenericDFTJob):
     def check_vasp_potentials():
         return any([os.path.exists(os.path.join(
             p, 'vasp', 'potentials', 'potpaw', 'Fe', 'POTCAR'
-        )) for p in s.resource_paths])
+        )) for p in state.settings.resource_paths])
 
 
 class InputWriter(object):
@@ -1768,10 +1778,10 @@ class InputWriter(object):
             spins_list (list): the input to write, if no input is
                 given the default input will be written. (optional)
         """
-        s.logger.debug(f"Writing {file_name}")
+        state.logger.debug(f"Writing {file_name}")
         if spins_list is None or len(spins_list) == 0:
             spins_list = []
-            s.logger.debug("Getting magnetic moments via \
+            state.logger.debug("Getting magnetic moments via \
                 get_initial_magnetic_moments")
             if any([
                     m is not None
@@ -1804,7 +1814,7 @@ class InputWriter(object):
             with open(file_name, "w") as f:
                 f.write(spins_str)
         else:
-            s.logger.debug("No magnetic moments")
+            state.logger.debug("No magnetic moments")
 
 
 class Group(DataContainer):
