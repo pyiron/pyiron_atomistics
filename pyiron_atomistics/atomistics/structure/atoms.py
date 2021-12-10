@@ -2288,7 +2288,7 @@ class Atoms(ASEAtoms):
                 multiplied by a unit matrix.
             return_box (bool): whether to return a box. If set to True, only the returned box will
                 have the desired strain and the original box will stay unchanged.
-            mode (str): `linear` or `lagrangian`. If `linear`, `F` is equal to the epsilon value.
+            mode (str): `linear` or `lagrangian`. If `linear`, `F` is equal to the epsilon - 1.
                 If `lagrangian`, epsilon is given by `(F^T * F - 1) / 2`. It raises an error if
                 the strain is not symmetric (if the shear components are given).
         """
