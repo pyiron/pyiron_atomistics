@@ -2292,8 +2292,6 @@ class Atoms(ASEAtoms):
                 If `lagrangian`, epsilon is given by `(F^T * F - 1) / 2`. It raises an error if
                 the strain is not symmetric (if the shear components are given).
         """
-        if mode not in ['lagrangian', 'linear']:
-            raise ValueError('mode must be `linear` or `lagrangian`')
         epsilon = np.array([epsilon]).flatten()
         if len(epsilon) == 3 or len(epsilon) == 1:
             epsilon = epsilon*np.eye(3)
