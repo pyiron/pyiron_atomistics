@@ -137,8 +137,8 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
                 raise ValueError("""
                     Current implementation of QHA does not perform a structure optimization,
                     meaning the displacement fields for strained structures (and therefore the
-                    resulting force constants) are only correct if the structure is perfectly
-                    symmetric. Currently we do not offer alternatives, other than setting
+                    resulting force constants) are only correct if the structure is a perfect
+                    crystal. Currently we do not offer alternatives, other than setting
                     `job.input['ignore_structure_optimization'] = True`, which will deliver
                     wrong results with no estimate of how far they are from the correct values.
                 """)
