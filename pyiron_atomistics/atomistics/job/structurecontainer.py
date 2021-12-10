@@ -74,10 +74,7 @@ class StructureContainer(GenericJob, HasStructure):
         elif isinstance(structure_or_job, Atoms):
             return structure_or_job
         else:
-            raise TypeError(
-                "You can only use a structure object or an "
-                "AtomisticGenericJob object."
-            )
+            raise TypeError(f"structure_or_job must be of type {Atoms} or {AtomisticGenericJob}, not {type(structure_or_job)}")
 
     def append(self, structure_or_job):
         """

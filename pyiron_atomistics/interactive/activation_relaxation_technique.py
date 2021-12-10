@@ -4,7 +4,7 @@
 
 import numpy as np
 from pyiron_atomistics.atomistics.job.interactivewrapper import InteractiveWrapper, ReferenceJobOutput
-from pyiron_base import DataContainer, Settings
+from pyiron_base import DataContainer
 
 __author__ = "Osamu Waseda"
 __copyright__ = "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH " \
@@ -14,8 +14,6 @@ __maintainer__ = "Osamu Waseda"
 __email__ = "waseda@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2018"
-
-s = Settings()
 
 
 class ARTInteractive(object):

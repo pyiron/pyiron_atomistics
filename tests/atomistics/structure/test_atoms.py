@@ -1567,6 +1567,14 @@ class TestAtoms(unittest.TestCase):
         structure = ase_to_pyiron(molecule('H2COH'))
         structure.set_dihedral(4, 0, 1, 2, angle=90)
 
+    def test_str_repr(self):
+        H2 = Atoms(positions=[3*[0], 3*[0.5]], cell=np.eye(3), elements=2*['H'], pbc=True)
+        self.assertEqual(
+            repr(H2),
+            'H: [0. 0. 0.]\nH: [0.5 0.5 0.5]\npbc: [ True  True  True]\ncell: \nCell([1.0, 1.0, 1.0])\n'
+        )
+        self.assertEqual(str(H2), 'H2')
+
     def test_cached_speed(self):
         """
         Creating atoms should be faster after the first time, due to caches in periodictable/mendeleev.

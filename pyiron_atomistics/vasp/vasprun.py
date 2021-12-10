@@ -9,7 +9,7 @@ import numpy as np
 from collections import OrderedDict
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_base import Settings
+from pyiron_base import state
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 import defusedxml.cElementTree as ETree
 from defusedxml.ElementTree import ParseError
@@ -656,10 +656,7 @@ class Vasprun(object):
                     basis[i].selective_dynamics = val
             return basis
         except KeyError:
-            s = Settings()
-            s.logger.warning(
-                "The initial structure could not be extracted from vasprun properly"
-            )
+            state.logger.warning("The initial structure could not be extracted from vasprun properly")
             return
 
     def get_final_structure(self):

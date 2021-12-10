@@ -168,6 +168,7 @@ class TestSphinx(unittest.TestCase):
             'PAWHamiltonian {\n',
             '\tnEmptyStates = 6;\n',
             '\tekt = 0.2;\n',
+            '\tMethfesselPaxton = 1;\n',
             '\txc = PBE;\n',
             '\tspinPolarized;\n',
             '}\n',
@@ -386,6 +387,9 @@ class TestSphinx(unittest.TestCase):
             ValueError, self.sphinx_band_structure.set_occupancy_smearing, "fermi", -0.1
         )
         self.sphinx_band_structure.set_occupancy_smearing("fermi", 0.1)
+        self.assertTrue('FermiDirac' in self.sphinx_band_structure.input)
+        self.sphinx_band_structure.set_occupancy_smearing("methfessel", 0.1)
+        self.assertTrue('MethfesselPaxton' in self.sphinx_band_structure.input)
 
     def test_load_default_groups(self):
         backup  = self.sphinx_band_structure.structure.copy()
