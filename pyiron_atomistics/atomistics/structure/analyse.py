@@ -730,9 +730,7 @@ class Analyse:
             positions (numpy.ndarray): Mean positions
             label (numpy.ndarray): Labels of the positions (returned when `return_labels = True`)
         """
-        if positions is None:
-            positions = self._structure.positions
-        positions = np.array(positions)
+        positions = self._structure.positions if positions is None else np.array(positions)
         if buffer_width is None:
             buffer_width = eps
         extended_positions, indices = self._structure.get_extended_positions(
@@ -749,3 +747,4 @@ class Analyse:
         if return_labels:
             return mean_positions, labels
         return mean_positions
+
