@@ -3,7 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_atomistics._tests import TestWithCleanProject
-import numpy as np
 import unittest
 
 
