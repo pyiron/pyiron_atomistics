@@ -2300,8 +2300,6 @@ class Atoms(ASEAtoms):
         epsilon = epsilon.reshape(3, 3)
         if epsilon.min() < -1.0:
             raise ValueError("Strain value too negative")
-        if mode == 'lagrangian' and not np.allclose(epsilon, epsilon.T):
-            raise ValueError("Strain must be symmetric if `mode = 'lagrangian'`")
         if return_box:
             structure_copy = self.copy()
         else:
