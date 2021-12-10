@@ -2309,9 +2309,13 @@ class Atoms(ASEAtoms):
         cell = structure_copy.cell.copy()
         if mode == 'linear':
             F = epsilon + np.eye(3)
-        else:
+        elif mode == 'lagrangian':
+            if not np.allclose(epsilon, epsilon.T):
+                raise ValueError("Strain must be symmetric if `mode = 'lagrangian'`")
             E, V = np.linalg.eigh(2*epsilon+np.eye(3))
             F = np.einsum('ik,k,jk->ij', V, np.sqrt(E), V)
+        else:
+            raise ValueError('mode must be `linear` or `lagrangian`')
         cell = np.matmul(F, cell)
         structure_copy.set_cell(cell, scale_atoms=True)
         if return_box:
