@@ -70,6 +70,21 @@ class Symmetry(dict):
         return self['equivalent_atoms']
 
     @property
+    def arg_equivalent_vectors(self):
+        """
+        Get 3d vector components which are equivalent under symmetry operation. For example, if
+        the `i`-direction (`i = x, y, z`) of the `n`-th atom is equivalent to the `j`-direction
+        of the `m`-th atom, then the returned array should have the same number in `(n, i)` and
+        `(m, j)`
+        """
+        ladder = np.arange(np.prod(self._structure.positions.shape)).reshape(-1, 3)
+        all_vec = np.einsum('nij,nmj->min', self.rotations, ladder[self.permutations])
+        vec_abs_flat = np.absolute(all_vec).reshape(np.prod(self._structure.positions.shape), -1)
+        vec_sorted = np.sort(vec_abs_flat, axis=-1)
+        enum = np.unique(vec_sorted, axis=0, return_inverse=True)[1]
+        return enum.reshape(-1, 3)
+
+    @property
     def rotations(self):
         """
         All rotational matrices. Two points x and y are equivalent with respect to the box
@@ -173,17 +188,20 @@ class Symmetry(dict):
         """
         if self._permutations is None:
             scaled_positions = self._structure.get_scaled_positions(wrap=False)
+            scaled_positions[..., self._structure.pbc] -= np.floor(
+                scaled_positions[..., self._structure.pbc] + self.epsilon
+            )
             tree = cKDTree(scaled_positions)
             positions = np.einsum(
                 'nij,kj->nki',
                 self['rotations'],
                 scaled_positions
             ) + self['translations'][:, None, :]
-            if any(self._structure.pbc):
-                positions[..., self._structure.pbc] -= np.floor(
-                    positions[..., self._structure.pbc] + self.epsilon
-                )
-            self._permutations = tree.query(positions)[1].argsort(axis=-1)
+            positions -= np.floor(positions + self.epsilon)
+            distances, self._permutations = tree.query(positions)
+            if not np.allclose(distances, 0):
+                raise AssertionError('Neighbor search failed')
+            self._permutations = self._permutations.argsort(axis=-1)
         return self._permutations
 
     def symmetrize_vectors(
