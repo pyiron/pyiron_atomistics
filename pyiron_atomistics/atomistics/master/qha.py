@@ -43,6 +43,7 @@ def generate_displacements(structure, symprec=1.0e-2):
 class Hessian:
     def __init__(self, structure, dx=0.01, symprec=1.0e-2, include_zero_displacement=True):
         """
+
         Args:
             structure (pyiron_atomistics.structure.atoms.Atoms): Structure
             dx (float): Displacement (in distance unit)
@@ -227,6 +228,7 @@ class QHAJobGenerator(JobGenerator):
 class QuasiHarmonicApproximation(AtomisticParallelMaster):
     def __init__(self, project, job_name):
         """
+
         Args:
             project: project
             job_name: job name
@@ -362,6 +364,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
 class Thermodynamics:
     def __init__(self, strain, nu, E):
         """
+
         Args:
             strain ((n_snapshots, n_atoms, 3)-np.ndarray): List of strain values
             nu ((n_snapshots, 3 * n_atoms)-np.ndarray): Vibrational frequencies
