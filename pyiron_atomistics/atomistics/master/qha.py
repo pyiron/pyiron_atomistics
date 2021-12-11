@@ -226,6 +226,34 @@ class QHAJobGenerator(JobGenerator):
 
 
 class QuasiHarmonicApproximation(AtomisticParallelMaster):
+    """
+    Launch Quasi Harmonic Approximation jobs to calculate free energies and derived thermodynamic
+    quantities.
+
+
+    Example:
+
+    >>> qha = pr.create.job.QuasiHarmonicApproximation('qha')
+    >>> qha.ref_job = your_job
+    >>> qha.run()
+    >>> qha.get_helmholtz_free_energy(temperature=300, strain=0)
+
+
+    Important differences to the existing `QuasiHarmonicJob`:
+
+    - It does not do an internal multiplication of the structure, i.e. the input structure
+        directly defines the interaction range. For this reason, you might be interested to make
+        sure that the structure is large enough.
+    - The minimum energy of each of the strained structures is estimated using the formula:
+        `U = U_0 + 0.5 * \sum_i forces_i * (dx_i - dX_i)`
+        where `dx_i` are the internally generated displacement field, `U` is the potential energy,
+        `forces_i` are the forces and `U_0` and `dX_i` are fitting parameters. The same formula
+        also estimates the correct force-free positions and therefore the correct displacement
+        field for the given strain.
+    - If you don't need a volume or pressure dependence, you can set
+        `self.input['num_points'] = 1`, in which case all values are returned for the given
+        volume of the reference structure.
+    """
     def __init__(self, project, job_name):
         """
 
@@ -270,7 +298,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
 
     def to_hdf(self, hdf=None, group_name=None):
         """
-        Store the QHAJob in an HDF5 file
+        Store the QHA in an HDF5 file
 
         Args:
             hdf (ProjectHDFio): HDF5 group object - optional
@@ -282,7 +310,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
 
     def from_hdf(self, hdf=None, group_name=None):
         """
-        Restore the PhonopyJob from an HDF5 file
+        Restore the QHA from an HDF5 file
 
         Args:
             hdf (ProjectHDFio): HDF5 group object - optional
