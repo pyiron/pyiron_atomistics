@@ -33,7 +33,7 @@ def get_potential_energy(frequencies, temperature, E_0=0):
 
 def generate_displacements(structure, symprec=1.0e-2):
     sym = structure.get_symmetry(symprec=symprec)
-    indices, comp = np.unique(sym.arg_equivalent_vectors, return_index=True)
+    _, comp = np.unique(sym.arg_equivalent_vectors, return_index=True)
     ind_x, ind_y = np.unravel_index(comp, structure.positions.shape)
     displacements = np.zeros((len(ind_x),) + structure.positions.shape)
     displacements[np.arange(len(ind_x)), ind_x, ind_y] = 1
@@ -41,7 +41,16 @@ def generate_displacements(structure, symprec=1.0e-2):
 
 
 class Hessian:
-    def __init__(self, structure, dx=0.01, symprec=1.0e-2, include_zero_strain=True):
+    def __init__(self, structure, dx=0.01, symprec=1.0e-2, include_zero_displacement=True):
+        """
+        Args:
+            structure (pyiron_atomistics.structure.atoms.Atoms): Structure
+            dx (float): Displacement (in distance unit)
+            symprec (float): Symmetry search precision
+            include_zero_displacement (bool): Whether to include zero displacement, which is not
+                required to get the force constants, but increases the precision, especially if
+                the initial positions are not the relaxed structure.
+        """
         self.structure = structure.copy()
         self._symmetry = None
         self._permutations = None
@@ -53,7 +62,7 @@ class Hessian:
         self._nu = None
         self._energy = None
         self._hessian = None
-        self.include_zero_strain = include_zero_strain
+        self.include_zero_displacement = include_zero_displacement
 
     @property
     def symmetry(self):
@@ -163,7 +172,7 @@ class Hessian:
     def displacements(self):
         if len(self._displacements) == 0:
             self.displacements = self.minimum_displacements
-            if self.include_zero_strain:
+            if self.include_zero_displacement:
                 self.displacements = np.concatenate(
                     ([np.zeros_like(self.structure.positions)], self.displacements), axis=0
                 )
@@ -208,7 +217,8 @@ class QHAJobGenerator(JobGenerator):
         cell, positions = self._master.get_supercells_with_displacements()
         return [[c, p] for c, p in zip(cell, positions)]
 
-    def modify_job(self, job, parameter):
+    @staticmethod
+    def modify_job(job, parameter):
         job.structure.set_cell(parameter[0], scale_atoms=True)
         job.structure.positions = parameter[1]
         return job
@@ -216,12 +226,17 @@ class QHAJobGenerator(JobGenerator):
 
 class QuasiHarmonicApproximation(AtomisticParallelMaster):
     def __init__(self, project, job_name):
+        """
+        Args:
+            project: project
+            job_name: job name
+        """
         super().__init__(project, job_name)
         self.__name__ = "QuasiHarmonicApproximation"
         self.__version__ = "0.0.1"
         self.input["displacement"] = (0.01, "Atom displacement magnitude")
         self.input['symprec'] = 1.0e-2
-        self.input['include_zero_strain'] = True
+        self.input['include_zero_displacement'] = True
         self.input["num_points"] = (11, "number of sample points")
         self.input["vol_range"] = (
             0.1,
@@ -346,6 +361,12 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
 
 class Thermodynamics:
     def __init__(self, strain, nu, E):
+        """
+        Args:
+            strain ((n_snapshots, n_atoms, 3)-np.ndarray): List of strain values
+            nu ((n_snapshots, 3 * n_atoms)-np.ndarray): Vibrational frequencies
+            E ((n_snapshots,)-np.ndarray): Force free energy values
+        """
         self.strain = strain
         self.nu = nu
         self.E = E
