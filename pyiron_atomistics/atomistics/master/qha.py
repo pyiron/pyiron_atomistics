@@ -388,6 +388,13 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
     def get_pressure(self, temperature, strain):
         return self._thermo.get_pressure(temperature=temperature, strain=strain)
 
+    def validate_ready_to_run(self):
+        if self.ref_job._generic_input["calc_mode"] != "static":
+            raise ValueError("Phonopy reference jobs should be static calculations, but got {}".format(
+                self.ref_job._generic_input["calc_mode"]
+            ))
+        super().validate_ready_to_run()
+
 
 class Thermodynamics:
     def __init__(self, strain, nu, E):
