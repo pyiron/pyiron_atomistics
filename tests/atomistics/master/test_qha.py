@@ -4,7 +4,7 @@
 
 from pyiron_atomistics._tests import TestWithCleanProject
 from pyiron_atomistics.atomistics.master.qha import Hessian
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
+from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 import unittest
 
 
@@ -17,10 +17,10 @@ class TestQuasi(TestWithCleanProject):
         lmp.calc_minimize()
         self.assertRaises(ValueError, qha.validate_ready_to_run)
 
-# class TestHessian(unittest.TestCase):
-#     def test_n_snapshots(self):
-#         hessian = Hessian(CrystalStructure('Al', 'bcc', 4.0))
-#         self.assertEqual(hessian.displacements.shape, ((2,) + hessian.structure.positions.shape))
+class TestHessian(unittest.TestCase):
+    def test_n_snapshots(self):
+        hessian = Hessian(StructureFactory().ase.bulk('Al', cubic=True))
+        self.assertEqual(hessian.displacements.shape, ((2,) + hessian.structure.positions.shape))
 
 
 if __name__ == "__main__":
