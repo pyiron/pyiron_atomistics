@@ -6,6 +6,7 @@ from pyiron_atomistics._tests import TestWithCleanProject
 from pyiron_atomistics.atomistics.master.qha import Hessian
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 import unittest
+import numpy as np
 
 
 class TestQuasi(TestWithCleanProject):
@@ -17,10 +18,18 @@ class TestQuasi(TestWithCleanProject):
         lmp.calc_minimize()
         self.assertRaises(ValueError, qha.validate_ready_to_run)
 
+
 class TestHessian(unittest.TestCase):
     def test_n_snapshots(self):
         hessian = Hessian(StructureFactory().ase.bulk('Al', cubic=True))
         self.assertEqual(hessian.displacements.shape, ((2,) + hessian.structure.positions.shape))
+        hessian = Hessian(StructureFactory().ase.bulk('Al', cubic=True))
+        hessian.include_zero_displacement = False
+        self.assertEqual(hessian.displacements.shape, ((1,) + hessian.structure.positions.shape))
+
+    def test_dimension(self):
+        hessian = Hessian(StructureFactory().ase.bulk('Al', cubic=True))
+        self.assertGreater(np.linalg.det(hessian._x_outer), 0)
 
 
 if __name__ == "__main__":
