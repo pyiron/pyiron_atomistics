@@ -221,7 +221,7 @@ class QHAJobGenerator(JobGenerator):
     @staticmethod
     def modify_job(job, parameter):
         job.structure.set_cell(parameter[0], scale_atoms=True)
-        job.structure.positions = parameter[1]
+        job.structure.set_scaled_positions(parameter[1])
         return job
 
 
@@ -289,12 +289,15 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
         return self._hessian
 
     def get_supercells_with_displacements(self):
-        cell_lst, positions_lst = [], []
-        for strain in self.strain_lst:
-            for d in self.hessian.displacements:
-                cell_lst.append(self.structure.cell * (1 + strain))
-                positions_lst.append(self.structure.positions + d)
-        return np.array(cell_lst), np.array(positions_lst)
+        dx = self.structure.positions + self.hessian.displacements
+        sc_dx = np.einsum('ij,...i->...j', np.linalg.inv(self.structure.cell), dx)
+        positions = np.concatenate((len(self.strain_lst)*[sc_dx]))
+        cell = np.repeat(
+            self.structure.cell * (1 + self.strain_lst[:, np.newaxis, np.newaxis]),
+            len(self.hessian.displacements),
+            axis=0
+        )
+        return cell, positions
 
     def to_hdf(self, hdf=None, group_name=None):
         """
