@@ -45,7 +45,7 @@ setup(
         'scipy==1.7.3',
         'seekpath==2.0.1',
         'scikit-learn==1.0.1',
-        'spglib==1.16.2',
+        'spglib==1.16.3',
         'tables==3.6.1'
     ],
     cmdclass=versioneer.get_cmdclass(),
