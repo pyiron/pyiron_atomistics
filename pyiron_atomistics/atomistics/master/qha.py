@@ -370,7 +370,8 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
             self._td = Thermodynamics(
                 self.strain_lst,
                 self['output/vibrational_frequencies'],
-                self['output/box_energy']
+                self['output/box_energy'],
+                self.hessian.volume
             )
         return self._td
 
@@ -400,7 +401,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
 
 
 class Thermodynamics:
-    def __init__(self, strain, nu, E):
+    def __init__(self, strain, nu, E, volume):
         """
 
         Args:
@@ -411,6 +412,7 @@ class Thermodynamics:
         self.strain = strain
         self.nu = nu
         self.E = E
+        self.volume = volume
         self._fit_mat = None
         self._temperature = None
         self._free_energy = None
@@ -427,6 +429,15 @@ class Thermodynamics:
                 for nu, E in zip(self.nu, self.E)
             ])
         return self._free_energy
+
+    @staticmethod
+    def _harmonize(T, V):
+        if T is None or V is None:
+            return T, V
+        V = np.atleast_1d(V)
+        T = np.atleast_1d(T) * np.ones_like(V)
+        V = V * np.ones_like(T)
+        return T, V
 
     @property
     def temperature(self):
@@ -446,34 +457,42 @@ class Thermodynamics:
         return self._fit_mat
 
     def _get_min_strain(self, pressure):
-        c = self.coeff
-        return (-c[:, 2] + np.sqrt(
-            c[:, 2]**2 - 3 * c[:, 3] * (c[:, 1] + np.array([pressure]).flatten()[..., np.newaxis])
-        )) / (3 * c[:, 3])
+        c = self.coeff.T
+        return (-c[2] + np.sqrt(c[2]**2 - 3 * c[3] * (c[1] + pressure.flatten()))) / (3 * c[3])
 
     def get_helmholtz_free_energy(self, temperature, strain=None):
+        temperature, strain = self._harmonize(temperature, strain)
         self.temperature = temperature
         if strain is None or len(self.strain) == 1:
             return self.free_energy.squeeze()
         return np.einsum(
-            'ik,...k->...i', self.coeff,
-            np.array([strain]).flatten[..., np.newaxis]**np.arange(4)
-        ).reshape(np.shape(strain) + np.shape(temperature))
+            'ik,ik->i', self.coeff, strain.flatten()[..., np.newaxis]**np.arange(4)
+        ).reshape(np.shape(temperature)).squeeze()
 
     def get_gibbs_free_energy(self, temperature, pressure):
+        temperature, pressure = self._harmonize(temperature, pressure)
+        pV = (
+            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom**3).to('eV')
+        ).magnitude
         self.temperature = temperature
-        strain = self._get_min_strain(pressure)
+        strain = self._get_min_strain(pV)
         return np.einsum(
-            'ik,...ik->...i', self.coeff, np.atleast_1d(strain)[..., np.newaxis]**np.arange(4)
-        ).reshape(np.shape(pressure) + np.shape(temperature))
+            'ik,ik->i', self.coeff, strain.flatten()[:, np.newaxis]**np.arange(4)
+        ).reshape(np.shape(temperature))
 
     def get_strain(self, temperature, pressure):
+        temperature, pressure = self._harmonize(temperature, pressure)
+        pV = (
+            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom**3).to('eV')
+        ).magnitude
         self.temperature = temperature
-        return self._get_min_strain(pressure).reshape(np.shape(pressure) + np.shape(temperature))
+        return self._get_min_strain(pV).reshape(np.shape(temperature))
 
     def get_pressure(self, temperature, strain):
+        temperature, strain = self._harmonize(temperature, strain)
         self.temperature = temperature
-        return -np.einsum(
-            'ik,...k->...i', (self.coeff * np.arange(4))[:, 1:],
-            np.array([strain]).flatten[..., np.newaxis]**np.arange(3)
-        ).reshape(np.shape(strain) + np.shape(temperature))
+        pressure = -np.einsum(
+            'ik,ik->i', (self.coeff * np.arange(4))[:, 1:],
+            np.array([strain]).flatten()[:, np.newaxis]**np.arange(3)
+        ).reshape(np.shape(strain)) / self.volume
+        return (pressure / 1.0e9 * unit.eV / unit.angstrom**3).to(unit.Pa).magnitude
