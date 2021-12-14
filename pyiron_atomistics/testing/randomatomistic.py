@@ -267,14 +267,17 @@ class ExampleInput(GenericParameters):
         Loading the default settings for the input file.
         """
         input_str = """\
-alat  3.2     # lattice constant (would be in a more realistic example in the structure file)
-alpha 0.1     # noise amplitude
-a_0   3       # equilibrium lattice constant
-a_1   0
-a_2   1.0     # 2nd order in energy (corresponds to bulk modulus)
-a_3   0.0     # 3rd order
-a_4   0.0     # 4th order
-count 10      # number of calls (dummy)
+alat    3.2     # lattice constant (would be in a more realistic example in the structure file)
+alpha   0.1     # noise amplitude
+a_0     3       # equilibrium lattice constant
+a_1     0
+a_2     1.0     # 2nd order in energy (corresponds to bulk modulus)
+a_3     0.0     # 3rd order
+a_4     0.0     # 4th order
+count   10      # number of calls (dummy)
+epsilon 1.0     # energy prefactor of lennard jones
+sigma   2.0     # distance unit of lennard jones
+cutoff  3.0     # cutoff length (relative to sigma)
 write_restart True
 read_restart False
 """
