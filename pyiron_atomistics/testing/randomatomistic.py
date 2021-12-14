@@ -496,7 +496,14 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         return self._structure.positions
 
     def interactive_pressures_getter(self):
-        return np.random.random((3, 3))
+        pot_part = self.input['epsilon'] * np.einsum(
+            'ni,nj,n,n->ij',
+            self.neigh.flattened.vecs,
+            self.neigh.flattened.vecs,
+            1/self.neigh.flattened.distances**2,
+            12 * self._s_r**12 - 6 * self._s_r**6
+        ) / self.structure.get_volume()
+        return (pot_part * unit.electron_volt / unit.angstrom**3).to(unit.pascal).magnitude / 1e9
 
     def interactive_stress_getter(self):
         return np.random.random((len(self._structure), 3, 3))
