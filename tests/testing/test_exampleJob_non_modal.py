@@ -47,7 +47,7 @@ class TestExampleJob(unittest.TestCase):
             "a_2 1.0 #2nd order in energy (corresponds to bulk modulus)\n",
             "a_3 0.0 #3rd order\n",
             "a_4 0.0 #4th order\n",
-            "count 10 #number of calls (dummy)\n",
+            "count " + str(self.count) + " #number of calls (dummy)\n",
             "epsilon 0.2 #energy prefactor of lennard jones\n",
             "sigma 2.4 #distance unit of lennard jones\n",
             "cutoff 4.0 #cutoff length (relative to sigma)\n",
