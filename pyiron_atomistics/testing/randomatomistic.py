@@ -12,9 +12,6 @@ from collections import defaultdict
 import pint
 
 
-unit = pint.UnitRegistry()
-
-
 """
 Example Job class for testing the pyiron classes
 """
@@ -388,6 +385,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         self.interactive_cache = defaultdict(list)
         self._velocity = None
         self._neigh = None
+        self._unit = pint.UnitRegistry()
 
     @property
     def neigh(self):
@@ -479,7 +477,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         v = np.einsum(
             'ni,n->', self._velocity**2, self.structure.get_masses()
         ) / 2
-        return (v * unit.angstrom**2 / unit.second**2 / 1e-30 * unit.amu).to('eV').magnitude
+        return (v * self._unit.angstrom**2 / self._unit.second**2 / 1e-30 * self._unit.amu).to('eV').magnitude
 
     def interactive_forces_getter(self):
         all_values = self.input['epsilon'] * np.einsum(
@@ -502,8 +500,13 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
             self.neigh.flattened.vecs,
             1/self.neigh.flattened.distances**2,
             12 * self._s_r**12 - 6 * self._s_r**6
-        ) / self.structure.get_volume()
-        return (pot_part * unit.electron_volt / unit.angstrom**3).to(unit.pascal).magnitude / 1e9
+        ) * self._unit.electron_volt
+        kin_part = np.einsum(
+            'ni,nj,n->ij', self._velocity, self.structure.get_masses()
+        ) * self._unit.angstrom**2 / self._unit.second**2 / 1e-30 * self._unit.amu
+        return (
+            (pot_part + kin_part) / self.structure.get_volume() / self._unit.angstrom**3
+        ).to(self._unit.pascal).magnitude / 1e9
 
     def interactive_stress_getter(self):
         return np.random.random((len(self._structure), 3, 3))
@@ -514,7 +517,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
     def interactive_temperatures_getter(self):
         value = self.interadtive_energy_kin_getter() / len(self.structure)
         return (
-            value / unit.boltzmann_constant * unit.electron_volt
+            value / self._unit.boltzmann_constant * self._unit.electron_volt
         ).to('kelvin').magnitude
 
     def interactive_indices_getter(self):
@@ -540,6 +543,9 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
             int: job ID
         """
         self._neigh = None
-        self._velocity = np.random.randn(len(self._structure), 3) / 1000
+        if self._generic_input['calc_mode'] == 'md':
+            self._velocity = np.random.randn(len(self._structure), 3) / 1000
+        elif self._velocity is None:
+            self._velocity = np.zeros((len(self._structure), 3))
         GenericInteractive.run_if_interactive(self)
         self.interactive_collect()
