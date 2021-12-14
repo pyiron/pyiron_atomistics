@@ -90,7 +90,6 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         self.input["temperature_end"] = 500
         self.input["temperature_steps"] = 10
         self.input["polynomial_degree"] = 3
-        self.input['ignore_structure_optimization'] = False
         self._job_generator = MurnaghanJobGenerator(self)
 
     def collect_output(self):
@@ -127,21 +126,6 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         with self.project_hdf5.open("output") as hdf5_out:
             for key, val in self._output.items():
                 hdf5_out[key] = val
-
-    def validate_ready_to_run(self):
-        super().validate_ready_to_run()
-        if not self.input['ignore_structure_optimization']:
-            random_vector = np.random.random(self.structure.positions.shape)
-            sym_vector = self.structure.get_symmetry().symmetrize_vectors(random_vector)
-            if not np.allclose(sym_vector, 0):
-                raise ValueError("""
-                    Current implementation of QHA does not perform a structure optimization,
-                    meaning the displacement fields for strained structures (and therefore the
-                    resulting force constants) are only correct if the structure is a perfect
-                    crystal. Currently we do not offer alternatives, other than setting
-                    `job.input['ignore_structure_optimization'] = True`, which will deliver
-                    wrong results with no estimate of how far they are from the correct values.
-                """)
 
     def optimise_volume(self, bulk_eng):
         """
