@@ -40,17 +40,17 @@ class TestExampleJob(unittest.TestCase):
 
         lines = self.project["job_non_modal/input.inp"]
         input_lst = [
-            "alat 3.2 # lattice constant (would be in a more realistic example in the structure file)\n",
-            "alpha 0.1 # noise amplitude\n",
-            "a_0 3 # equilibrium lattice constant\n",
+            "alat 3.2 #lattice constant (would be in a more realistic example in the structure file)\n",
+            "alpha 0.1 #noise amplitude\n",
+            "a_0 3 #equilibrium lattice constant\n",
             "a_1 0\n",
-            "a_2 1.0 # 2nd order in energy (corresponds to bulk modulus)\n",
-            "a_3 0.0 # 3rd order\n",
-            "a_4 0.0 # 4th order\n",
-            "count 10 # number of calls (dummy)\n",
-            "epsilon 0.2 # energy prefactor of lennard jones\n",
-            "sigma 2.4 # distance unit of lennard jones\n",
-            "cutoff 4.0 # cutoff length (relative to sigma)\n",
+            "a_2 1.0 #2nd order in energy (corresponds to bulk modulus)\n",
+            "a_3 0.0 #3rd order\n",
+            "a_4 0.0 #4th order\n",
+            "count 10 #number of calls (dummy)\n",
+            "epsilon 0.2 #energy prefactor of lennard jones\n",
+            "sigma 2.4 #distance unit of lennard jones\n",
+            "cutoff 4.0 #cutoff length (relative to sigma)\n",
             "write_restart True\n",
             "read_restart False\n"
         ]
