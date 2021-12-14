@@ -280,9 +280,9 @@ a_2     1.0     # 2nd order in energy (corresponds to bulk modulus)
 a_3     0.0     # 3rd order
 a_4     0.0     # 4th order
 count   10      # number of calls (dummy)
-epsilon 1.0     # energy prefactor of lennard jones
-sigma   2.0     # distance unit of lennard jones
-cutoff  3.0     # cutoff length (relative to sigma)
+epsilon 0.2     # energy prefactor of lennard jones
+sigma   2.4     # distance unit of lennard jones
+cutoff  4.0     # cutoff length (relative to sigma)
 write_restart True
 read_restart False
 """
