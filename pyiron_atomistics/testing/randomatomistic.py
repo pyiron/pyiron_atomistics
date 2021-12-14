@@ -502,7 +502,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
             12 * self._s_r**12 - 6 * self._s_r**6
         ) * self._unit.electron_volt
         kin_part = np.einsum(
-            'ni,nj,n->ij', self._velocity, self.structure.get_masses()
+            'ni,nj,n->ij', self._velocity, self._velocity, self.structure.get_masses()
         ) * self._unit.angstrom**2 / self._unit.second**2 / 1e-30 * self._unit.amu
         return (
             (pot_part + kin_part) / self.structure.get_volume() / self._unit.angstrom**3
