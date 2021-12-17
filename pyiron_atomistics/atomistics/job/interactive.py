@@ -266,7 +266,7 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
         return self.initial_structure.get_volume()
 
     def _update_previous_structure(self):
-        """Update the previous structure to the last step configuration"""
+        """Update the previous structure to the last step configuration."""
         self._structure_previous = self.structure.copy()
 
     @staticmethod
