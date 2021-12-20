@@ -156,7 +156,7 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
             self.interactive_indices_setter(self._structure_current.indices)
 
     def interactive_cell_organizer(self):
-        if not np.allclose(
+        if self._generic_input["calc_mode"] != 'static' or not np.allclose(
             self._structure_current.cell,
             self._structure_previous.cell,
             rtol=1e-15, atol=1e-15,
@@ -168,7 +168,7 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
                 del self.interactive_input_functions['cell']
 
     def interactive_positions_organizer(self):
-        if not np.allclose(
+        if self._generic_input["calc_mode"] != 'static' or not np.allclose(
             self._structure_current.positions,
             self._structure_previous.positions,
             rtol=1e-15,
