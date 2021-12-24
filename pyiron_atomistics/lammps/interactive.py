@@ -42,6 +42,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_grand_canonical = True
         self._interactive_water_bonds = False
         self._user_fix_external = None
+        self._log_file = None
         if "stress" in self.interactive_output_functions.keys():
             del self.interactive_output_functions["stress"]
 
@@ -229,8 +230,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._create_working_directory()
         if self.server.run_mode.interactive and self.server.cores == 1:
             lammps = getattr(importlib.import_module("lammps"), "lammps")
-            log_file = os.path.join(self.working_directory, "log.lammps")
-            self._interactive_library = lammps(cmdargs=["-screen", "none", "-log", log_file])
+            if self._log_file is None:
+                self._log_file = os.path.join(self.working_directory, "log.lammps")
+            self._interactive_library = lammps(cmdargs=["-screen", "none", "-log", self._log_file])
         else:
             self._interactive_library = LammpsLibrary(
                 cores=self.server.cores,
