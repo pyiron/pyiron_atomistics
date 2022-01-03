@@ -7,7 +7,6 @@ import os
 import posixpath
 import subprocess
 import numpy as np
-
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.vasp.potential import VaspPotential, VaspPotentialFile, VaspPotentialSetter, Potcar, \
     strip_xc_from_potential_name
@@ -81,6 +80,7 @@ class VaspBase(GenericDFTJob):
         self._potential = VaspPotentialSetter([])
         self._compress_by_default = True
         self.get_enmax_among_species = get_enmax_among_potentials
+        self._write_in_direct_coordinates = False
         state.publications.add(self.publication)
 
     @property
@@ -204,6 +204,20 @@ class VaspBase(GenericDFTJob):
                 "write_resolved_dos, can either be True, False or 0, 1, 2, 5, 10, 11, 12."
             )
         self.input.incar["LORBIT"] = resolved_dos
+
+    @property
+    def write_in_direct_coordinates(self) -> bool:
+        """
+        True if the POSCAR file input is to be written in direct coordinates (as opposed to cartesian coordinates)
+
+        Returns:
+            bool
+        """
+        return self.input.write_in_direct_coordinates
+
+    @write_in_direct_coordinates.setter
+    def write_in_direct_coordinates(self, val: bool):
+        self.input.write_in_direct_coordinates = val
 
     @property
     def sorted_indices(self):
@@ -1805,8 +1819,22 @@ class Input:
         self.incar = Incar(table_name="incar")
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
-
         self._eddrmm = "warn"
+        self._write_in_direct_coordinates = False
+
+    @property
+    def write_in_direct_coordinates(self):
+        """
+        True if the POSCAR file input is to be written in direct coordinates (as opposed to cartesian coordinates)
+
+        Returns:
+            bool
+        """
+        return self._write_in_direct_coordinates
+
+    @write_in_direct_coordinates.setter
+    def write_in_direct_coordinates(self, val: bool):
+        self._write_in_direct_coordinates = val
 
     def write(self, structure, modified_elements, directory=None):
         """
@@ -1829,6 +1857,7 @@ class Input:
             structure,
             filename=posixpath.join(directory, "POSCAR"),
             write_species=not do_not_write_species,
+            cartesian=not self.write_in_direct_coordinates
         )
 
     def to_hdf(self, hdf):
