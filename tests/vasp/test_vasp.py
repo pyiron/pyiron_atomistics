@@ -320,7 +320,7 @@ class TestVasp(unittest.TestCase):
         self.job_complete.restart_file_list.append(
             posixpath.join(file_directory, "OUTCAR")
         )
-        self.job_complete.run(run_mode="manual")
+        self.job_complete.run(run_mode="manual", delete_existing_job=True)
         self.job_complete.status.collect = True
         self.job_complete.run()
         nodes = [
@@ -407,6 +407,18 @@ class TestVasp(unittest.TestCase):
         with job_chg_wave.project_hdf5.open("input") as h_in:
             self.assertFalse(h_in.list_nodes() == [])
             self.assertFalse(h_in.list_groups() == [])
+
+    def test_control_poscar(self):
+        self.job_complete.calc_static()
+        self.assertFalse(self.job_complete.write_in_direct_coordinates)
+        self.job_complete.run(run_mode="manual")
+        self.assertIn("cartesian", self.job_complete["POSCAR"][7].lower())
+        cartesian_struct = read_atoms(os.path.join(self.job_complete.working_directory, "POSCAR"))
+        self.job_complete.write_in_direct_coordinates = True
+        self.job_complete.run(run_mode="manual", delete_existing_job=True)
+        self.assertIn("direct", self.job_complete["POSCAR"][7].lower())
+        direct_struct = read_atoms(os.path.join(self.job_complete.working_directory, "POSCAR"))
+        self.assertEqual(cartesian_struct, direct_struct)
 
     def test_vasp_metadyn(self):
         self.job_metadyn.set_primitive_constraint("bond_1", "bond", atom_indices=[0, 2], increment=1e-4)
