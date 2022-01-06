@@ -118,7 +118,6 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
             self.interactive_initialize_interface()
         if self._structure_previous is None:
             self._structure_previous = self.structure.copy()
-        self._update_previous_structure()
         if self._structure_current is not None:
             if (
                 len(self._structure_current) != len(self._structure_previous)
@@ -134,6 +133,7 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
             else:
                 self._logger.debug("Generic library: structure changed!")
                 self.interactive_structure_setter(self._structure_current)
+        self._update_previous_structure()
 
     def interactive_index_organizer(self):
         index_merge_lst = self._interactive_species_lst.tolist() + list(
@@ -156,7 +156,7 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
             self.interactive_indices_setter(self._structure_current.indices)
 
     def interactive_cell_organizer(self):
-        if not np.allclose(
+        if self._generic_input["calc_mode"] != 'static' or not np.allclose(
             self._structure_current.cell,
             self._structure_previous.cell,
             rtol=1e-15, atol=1e-15,
@@ -168,7 +168,7 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
                 del self.interactive_input_functions['cell']
 
     def interactive_positions_organizer(self):
-        if not np.allclose(
+        if self._generic_input["calc_mode"] != 'static' or not np.allclose(
             self._structure_current.positions,
             self._structure_previous.positions,
             rtol=1e-15,
@@ -266,27 +266,8 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
         return self.initial_structure.get_volume()
 
     def _update_previous_structure(self):
-        """
-        Update the previous structure to the last step configuration
-        Args:
-            wrap_atoms (bool):
-        """
-        try:
-            indices = self.output.indices[-1]
-            positions = self.output.positions[-1]
-            cell = self.output.cells[-1]
-        except IndexError:
-            return
-        if len(self._interactive_species_lst) == 0:
-            el_lst = [el.Abbreviation for el in self.structure.species]
-        else:
-            el_lst = self._interactive_species_lst.tolist()
-        self._structure_previous = self._structure_previous.__class__(
-            positions=positions,
-            cell=cell,
-            indices=indices,
-            species=[self._periodic_table.element(el) for el in el_lst],
-        )
+        """Update the previous structure to the last step configuration."""
+        self._structure_previous = self.structure.copy()
 
     @staticmethod
     def _extend_species_elements(struct_species, species_array):
