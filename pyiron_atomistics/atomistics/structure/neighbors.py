@@ -1089,7 +1089,7 @@ class NeighborsTrajectory(DataContainer):
         """
         Neighbor shell indices (excluding itself) of each atom computed using the get_neighbors_traj() method.
 
-        For trajectories with non constant amount of particles this array may contain -1 for invalid values, i.e. 
+        For trajectories with non constant amount of particles this array may contain -1 for invalid values, i.e.
 
         Returns:
             ndarray: An int array of dimension N_steps / stride x N_atoms x N_neighbors x 3
