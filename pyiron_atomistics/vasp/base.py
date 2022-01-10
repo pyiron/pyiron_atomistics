@@ -925,6 +925,7 @@ class VaspBase(GenericDFTJob):
         ionic_energy_tolerance=None,
         ionic_force_tolerance=None,
         volume_only=False,
+        cell_only=False,
     ):
         """
         Function to setup the hamiltonian to perform ionic relaxations using DFT. The ISIF tag has to be supplied
@@ -942,7 +943,8 @@ class VaspBase(GenericDFTJob):
             ionic_force_tolerance (float): Ionic forces convergence criteria (overwrites ionic energy) (ev/A)
             ionic_energy (float): Same as ionic_energy_tolerance (deprecated)
             ionic_forces (float): Same as ionic_force_tolerance (deprecated)
-            volume_only (bool): Option to relax only the volume (keeping the relative coordinates fixed
+            volume_only (bool): Option to relax only the volume (keeping the relative coordinates fixed)
+            cell_only (bool): Option to relax only the cell parameters (keeping the relative coordinates fixed)
         """
         super(VaspBase, self).calc_minimize(
             electronic_steps=electronic_steps,
@@ -958,6 +960,8 @@ class VaspBase(GenericDFTJob):
         )
         if volume_only:
             self.input.incar["ISIF"] = 7
+        elif cell_only:
+            self.input.incar["ISIF"] = 6
         else:
             if pressure == 0.0:
                 self.input.incar["ISIF"] = 3
