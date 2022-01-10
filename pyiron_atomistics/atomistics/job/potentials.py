@@ -69,10 +69,11 @@ class PotentialAbstract(object):
         ]
 
     def find_by_name(self, potential_name):
-        mask = (self._potential_df["Name"] == potential_name)
+        mask = self._potential_df["Name"] == potential_name
         if not mask.any():
-            raise ValueError("Potential '{}' not found in database.".format(
-                             potential_name))
+            raise ValueError(
+                "Potential '{}' not found in database.".format(potential_name)
+            )
         return self._potential_df[mask]
 
     def list(self):
@@ -129,22 +130,24 @@ class PotentialAbstract(object):
                             periodic_table_file_name in file_lst
                             and periodic_table_file_name.endswith(".csv")
                         ):
-                            df_lst.append(pandas.read_csv(
-                                os.path.join(path, periodic_table_file_name),
-                                index_col=0,
-                                converters={
-                                    "Species": lambda x: x.replace("'", "")
-                                    .strip("[]")
-                                    .split(", "),
-                                    "Config": lambda x: x.replace("'", "")
-                                    .replace("\\n", "\n")
-                                    .strip("[]")
-                                    .split(", "),
-                                    "Filename": lambda x: x.replace("'", "")
-                                    .strip("[]")
-                                    .split(", "),
-                                },
-                            ))
+                            df_lst.append(
+                                pandas.read_csv(
+                                    os.path.join(path, periodic_table_file_name),
+                                    index_col=0,
+                                    converters={
+                                        "Species": lambda x: x.replace("'", "")
+                                        .strip("[]")
+                                        .split(", "),
+                                        "Config": lambda x: x.replace("'", "")
+                                        .replace("\\n", "\n")
+                                        .strip("[]")
+                                        .split(", "),
+                                        "Filename": lambda x: x.replace("'", "")
+                                        .strip("[]")
+                                        .split(", "),
+                                    },
+                                )
+                            )
         if len(df_lst) > 0:
             return pandas.concat(df_lst)
         else:
@@ -200,5 +203,8 @@ def find_potential_file_base(path, resource_path_lst, rel_path):
                 return path_direct
             elif os.path.exists(path_indirect):
                 return path_indirect
-    raise ValueError("Either the filename or the functional has to be defined.",
-                     path, resource_path_lst)
+    raise ValueError(
+        "Either the filename or the functional has to be defined.",
+        path,
+        resource_path_lst,
+    )

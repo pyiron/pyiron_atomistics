@@ -9,7 +9,12 @@ from ase.io import write as ase_write
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
-from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
+from pyiron_base import (
+    GenericParameters,
+    GenericMaster,
+    GenericJob as GenericJobCore,
+    deprecate,
+)
 
 try:
     from pyiron_base import ProjectGUI
@@ -167,14 +172,23 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         Returns:
             FlexibleMaster:
         """
-        return self.project.create_pipeline(job=self, step_lst=step_lst, delete_existing_job=delete_existing_job)
+        return self.project.create_pipeline(
+            job=self, step_lst=step_lst, delete_existing_job=delete_existing_job
+        )
 
     def _after_generic_copy_to(self, original, new_database_entry, reloaded):
         if self._structure is None:
             self._structure = copy.copy(original._structure)
 
     def calc_minimize(
-        self, ionic_energy_tolerance=0, ionic_force_tolerance=1e-4, e_tol=None, f_tol=None, max_iter=1000, pressure=None, n_print=1
+        self,
+        ionic_energy_tolerance=0,
+        ionic_force_tolerance=1e-4,
+        e_tol=None,
+        f_tol=None,
+        max_iter=1000,
+        pressure=None,
+        n_print=1,
     ):
         """
 
@@ -413,7 +427,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             new_ham.structure = self.get_structure(frame=-1)
         else:
             new_ham.structure = self.structure.copy()
-        new_ham._generic_input['structure'] = 'atoms'
+        new_ham._generic_input["structure"] = "atoms"
         return new_ham
 
     # Required functions
@@ -462,8 +476,13 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         return new_ham
 
     def trajectory(
-        self, stride=1, center_of_mass=False, atom_indices=None,
-            snapshot_indices=None, overwrite_positions=None, overwrite_cells=None
+        self,
+        stride=1,
+        center_of_mass=False,
+        atom_indices=None,
+        snapshot_indices=None,
+        overwrite_positions=None,
+        overwrite_cells=None,
     ):
         """
         Returns a `Trajectory` instance containing the necessary information to describe the evolution of the atomic
@@ -488,14 +507,18 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         if len(self.output.indices) != 0:
             indices = self.output.indices
         else:
-            indices = [self.structure.indices] * len(cells)  # Use the same indices throughout
+            indices = [self.structure.indices] * len(
+                cells
+            )  # Use the same indices throughout
         if overwrite_positions is not None:
             positions = np.array(overwrite_positions).copy()
             if overwrite_cells is not None:
                 if overwrite_cells.shape == (len(positions), 3, 3):
                     cells = np.array(overwrite_cells).copy()
                 else:
-                    raise ValueError("overwrite_cells must be compatible with the positions!")
+                    raise ValueError(
+                        "overwrite_cells must be compatible with the positions!"
+                    )
         else:
             positions = self.output.positions.copy()
         conditions = list()
@@ -523,17 +546,25 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 self.structure.get_parent_basis(),
                 center_of_mass=center_of_mass,
                 cells=cells[::stride],
-                indices=indices[::stride]
+                indices=indices[::stride],
             )
         else:
             sub_struct = self.structure.get_parent_basis()[atom_indices]
             if len(sub_struct.species) < len(self.structure.species):
                 # Then `sub_struct` has had its indices remapped so they run from 0 to the number of species - 1
                 # But the `indices` array is unaware of this and needs to be remapped to this new space
-                original_symbols = np.array([el.Abbreviation for el in self.structure.species])
+                original_symbols = np.array(
+                    [el.Abbreviation for el in self.structure.species]
+                )
                 sub_symbols = np.array([el.Abbreviation for el in sub_struct.species])
 
-                map_ = np.array([np.argwhere(original_symbols == symbol)[0, 0] for symbol in sub_symbols], dtype=int)
+                map_ = np.array(
+                    [
+                        np.argwhere(original_symbols == symbol)[0, 0]
+                        for symbol in sub_symbols
+                    ],
+                    dtype=int,
+                )
 
                 remapped_indices = np.array(indices)
                 for i_sub, i_original in enumerate(map_):
@@ -546,7 +577,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 sub_struct,
                 center_of_mass=center_of_mass,
                 cells=cells[::stride],
-                indices=remapped_indices[::stride, atom_indices]
+                indices=remapped_indices[::stride, atom_indices],
             )
 
     def write_traj(
@@ -590,7 +621,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             atom_indices=atom_indices,
             snapshot_indices=snapshot_indices,
             overwrite_positions=overwrite_positions,
-            overwrite_cells=overwrite_cells
+            overwrite_cells=overwrite_cells,
         )
         # Using thr ASE output writer
         ase_write(
@@ -602,7 +633,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             **kwargs
         )
 
-    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+    def get_neighbors_snapshots(
+        self, snapshot_indices=None, num_neighbors=12, **kwargs
+    ):
         """
         Get the neighbors only for the required snapshots from the trajectory
 
@@ -617,8 +650,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
                                                                              containing the neighbor information.
         """
-        return self.trajectory().get_neighbors_snapshots(snapshot_indices=snapshot_indices,
-                                                         num_neighbors=num_neighbors, **kwargs)
+        return self.trajectory().get_neighbors_snapshots(
+            snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs
+        )
 
     def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
         """
@@ -636,8 +670,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
                                                                              containing the neighbor information.
         """
-        return self.trajectory().get_neighbors(start=start, stop=stop, stride=stride,
-                                               num_neighbors=num_neighbors, **kwargs)
+        return self.trajectory().get_neighbors(
+            start=start, stop=stop, stride=stride, num_neighbors=num_neighbors, **kwargs
+        )
 
     # Compatibility functions
     @deprecate("Use get_structure()")
@@ -652,13 +687,13 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         if self.structure is None:
-            raise AssertionError('Structure not set')
+            raise AssertionError("Structure not set")
         if self.output.cells is not None:
             try:
                 cell = self.output.cells[frame]
             except IndexError:
                 if wrap_atoms:
-                    raise IndexError('cell at step ', frame, ' not found') from None
+                    raise IndexError("cell at step ", frame, " not found") from None
                 cell = None
         if self.output.indices is not None:
             try:
@@ -666,8 +701,13 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             except IndexError:
                 indices = None
         if indices is not None and len(indices) != len(self.structure):
-            snapshot = Atoms(species=self.structure.species, indices=indices,
-                             positions=np.zeros(indices.shape + (3,)), cell=cell, pbc=self.structure.pbc)
+            snapshot = Atoms(
+                species=self.structure.species,
+                indices=indices,
+                positions=np.zeros(indices.shape + (3,)),
+                cell=cell,
+                pbc=self.structure.pbc,
+            )
         else:
             snapshot = self.structure.copy()
             if cell is not None:
@@ -757,7 +797,9 @@ class Trajectory(HasStructure):
     A trajectory instance compatible with the ase.io class
     """
 
-    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None):
+    def __init__(
+        self, positions, structure, center_of_mass=False, cells=None, indices=None
+    ):
         """
 
         Args:
@@ -797,11 +839,19 @@ class Trajectory(HasStructure):
         elif isinstance(item, (list, np.ndarray, slice)):
             snapshots = np.arange(len(self), dtype=int)[item]
             if self._cells is not None:
-                return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
-                                  structure=self[snapshots[0]], indices=self._indices[snapshots])
+                return Trajectory(
+                    positions=self._positions[snapshots],
+                    cells=self._cells[snapshots],
+                    structure=self[snapshots[0]],
+                    indices=self._indices[snapshots],
+                )
             else:
-                return Trajectory(positions=self._positions[snapshots], cells=self._cells,
-                                  structure=self[snapshots[0]], indices=self._indices[snapshots])
+                return Trajectory(
+                    positions=self._positions[snapshots],
+                    cells=self._cells,
+                    structure=self[snapshots[0]],
+                    indices=self._indices[snapshots],
+                )
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
@@ -811,7 +861,9 @@ class Trajectory(HasStructure):
 
     _number_of_structures = __len__
 
-    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+    def get_neighbors_snapshots(
+        self, snapshot_indices=None, num_neighbors=12, **kwargs
+    ):
         """
         Get the neighbors only for the required snapshots from the trajectory
 
@@ -829,7 +881,9 @@ class Trajectory(HasStructure):
         if snapshot_indices is None:
             snapshot_indices = np.arange(len(self), dtype=int)
 
-        n_obj = NeighborsTrajectory(has_structure=self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
+        n_obj = NeighborsTrajectory(
+            has_structure=self[snapshot_indices], num_neighbors=num_neighbors, **kwargs
+        )
         n_obj.compute_neighbors()
         return n_obj
 
@@ -850,7 +904,9 @@ class Trajectory(HasStructure):
                                                                              containing the neighbor information.
         """
         snapshot_indices = np.arange(len(self))[start:stop:stride]
-        return self.get_neighbors_snapshots(snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs)
+        return self.get_neighbors_snapshots(
+            snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs
+        )
 
 
 class GenericInput(GenericParameters):
@@ -896,8 +952,8 @@ class GenericOutput(object):
     @property
     def force_max(self):
         """
-            maximum force magnitude of each step which is used for
-            convergence criterion of structure optimizations
+        maximum force magnitude of each step which is used for
+        convergence criterion of structure optimizations
         """
         return np.linalg.norm(self.forces, axis=-1).max(axis=-1)
 
@@ -950,7 +1006,8 @@ class GenericOutput(object):
         unwrapped_positions = self._job["output/generic/unwrapped_positions"]
         if unwrapped_positions is not None:
             return np.diff(
-                np.append([self._job.structure.positions], unwrapped_positions, axis=0), axis=0
+                np.append([self._job.structure.positions], unwrapped_positions, axis=0),
+                axis=0,
             )
         return self.get_displacements(self._job.structure, self.positions, self.cells)
 
@@ -975,14 +1032,16 @@ class GenericOutput(object):
         """
         # Check if the cell changes in any snapshot
         c = cells.reshape(-1, 9)
-        if np.max(c.max(axis=0)-c.min(axis=0)) > 1e-5:
-            warnings.warn("You are computing displacements in a simulation with periodic boundary conditions \n"
-                          "and a varying cell shape.")
-        displacement = np.einsum('nki,nij->nkj', positions, np.linalg.inv(cells))
+        if np.max(c.max(axis=0) - c.min(axis=0)) > 1e-5:
+            warnings.warn(
+                "You are computing displacements in a simulation with periodic boundary conditions \n"
+                "and a varying cell shape."
+            )
+        displacement = np.einsum("nki,nij->nkj", positions, np.linalg.inv(cells))
         displacement[1:] -= displacement[:-1]
         displacement[0] -= structure.get_scaled_positions()
-        displacement[:,:,structure.pbc] -= np.rint(displacement)[:,:,structure.pbc]
-        displacement = np.einsum('nki,nij->nkj', displacement, cells)
+        displacement[:, :, structure.pbc] -= np.rint(displacement)[:, :, structure.pbc]
+        displacement = np.einsum("nki,nij->nkj", displacement, cells)
         return displacement
 
     @property
@@ -1006,4 +1065,3 @@ class GenericOutput(object):
             return hdf5_path.list_nodes()
         else:
             return []
-

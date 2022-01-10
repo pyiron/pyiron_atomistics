@@ -3,35 +3,45 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from ase.build import (
-        add_adsorbate,
-        add_vacuum,
-        bcc100,
-        bcc110,
-        bcc111,
-        diamond100,
-        diamond111,
-        fcc100,
-        fcc110,
-        fcc111,
-        fcc211,
-        hcp0001,
-        hcp10m10,
-        mx2,
-        hcp0001_root,
-        fcc111_root,
-        bcc111_root,
-        root_surface,
-        root_surface_analysis,
-        surface as ase_surf
+    add_adsorbate,
+    add_vacuum,
+    bcc100,
+    bcc110,
+    bcc111,
+    diamond100,
+    diamond111,
+    fcc100,
+    fcc110,
+    fcc111,
+    fcc211,
+    hcp0001,
+    hcp10m10,
+    mx2,
+    hcp0001_root,
+    fcc111_root,
+    bcc111_root,
+    root_surface,
+    root_surface_analysis,
+    surface as ase_surf,
 )
 import numpy as np
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
-from pyiron_atomistics.atomistics.structure.factories.atomsk import AtomskFactory, _ATOMSK_EXISTS
+from pyiron_atomistics.atomistics.structure.factories.atomsk import (
+    AtomskFactory,
+    _ATOMSK_EXISTS,
+)
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
 from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
-from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, Atoms, \
-    ase_to_pyiron, pymatgen_to_pyiron, ovito_to_pyiron
+from pyiron_atomistics.atomistics.structure.pyironase import (
+    publication as publication_ase,
+)
+from pyiron_atomistics.atomistics.structure.atoms import (
+    CrystalStructure,
+    Atoms,
+    ase_to_pyiron,
+    pymatgen_to_pyiron,
+    ovito_to_pyiron,
+)
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import state, PyironFactory, deprecate
 import types
@@ -62,6 +72,7 @@ class StructureFactory(PyironFactory):
         return self._ase
 
     if _ATOMSK_EXISTS:
+
         @property
         def atomsk(self):
             return self._atomsk
@@ -76,36 +87,41 @@ class StructureFactory(PyironFactory):
 
     def cut(self, *args, **kwargs):
         return self.ase.cut(*args, **kwargs)
+
     cut.__doc__ = AseFactory.cut.__doc__
 
     def stack(self, *args, **kwargs):
         return self.ase.stack(*args, **kwargs)
+
     stack.__doc__ = AseFactory.stack.__doc__
 
     def read(self, *args, **kwargs):
         return self.ase.read(*args, **kwargs)
+
     read.__doc__ = AseFactory.read.__doc__
 
     @deprecate(message="Please use .read or .ase.read", version="0.2.2")
     def ase_read(self, *args, **kwargs):
         return self.ase.read(*args, **kwargs)
+
     ase_read.__doc__ = AseFactory.read.__doc__
 
     @deprecate(message="Please use .bulk or .ase.bulk", version="0.2.2")
     def ase_bulk(self, *args, **kwargs):
         return self.ase.bulk(*args, **kwargs)
+
     ase_bulk.__doc__ = AseFactory.bulk.__doc__
 
     def bulk(
-            self,
-            name,
-            crystalstructure=None,
-            a=None,
-            c=None,
-            covera=None,
-            u=None,
-            orthorhombic=False,
-            cubic=False,
+        self,
+        name,
+        crystalstructure=None,
+        a=None,
+        c=None,
+        covera=None,
+        u=None,
+        orthorhombic=False,
+        cubic=False,
     ):
         """
         Creating bulk systems (using ASE bulk module). Crystal structure and lattice constant(s) will be guessed if not
@@ -137,7 +153,13 @@ class StructureFactory(PyironFactory):
 
     @staticmethod
     def surface(
-        element, surface_type, size=(1, 1, 1), vacuum=1.0, center=False, pbc=True, **kwargs
+        element,
+        surface_type,
+        size=(1, 1, 1),
+        vacuum=1.0,
+        center=False,
+        pbc=True,
+        **kwargs,
     ):
         """
         Generate a surface based on the ase.build.surface module.
@@ -225,7 +247,7 @@ class StructureFactory(PyironFactory):
         z_max = np.max(surface.positions[:, 2])
         surface.cell[2, 2] = z_max + vacuum
         if center:
-            surface.positions += 0.5 * surface.cell[2] - [0, 0, z_max/2]
+            surface.positions += 0.5 * surface.cell[2] - [0, 0, z_max / 2]
         surface.pbc = pbc
         return ase_to_pyiron(surface)
 
@@ -250,26 +272,26 @@ class StructureFactory(PyironFactory):
 
     @staticmethod
     def atoms(
-            symbols=None,
-            positions=None,
-            numbers=None,
-            tags=None,
-            momenta=None,
-            masses=None,
-            magmoms=None,
-            charges=None,
-            scaled_positions=None,
-            cell=None,
-            pbc=None,
-            celldisp=None,
-            constraint=None,
-            calculator=None,
-            info=None,
-            indices=None,
-            elements=None,
-            dimension=None,
-            species=None,
-            **qwargs
+        symbols=None,
+        positions=None,
+        numbers=None,
+        tags=None,
+        momenta=None,
+        masses=None,
+        magmoms=None,
+        charges=None,
+        scaled_positions=None,
+        cell=None,
+        pbc=None,
+        celldisp=None,
+        constraint=None,
+        calculator=None,
+        info=None,
+        indices=None,
+        elements=None,
+        dimension=None,
+        species=None,
+        **qwargs,
     ):
         """
         Creates a atomistics.structure.atoms.Atoms instance.
@@ -321,7 +343,7 @@ class StructureFactory(PyironFactory):
             elements=elements,
             dimension=dimension,
             species=species,
-            **qwargs
+            **qwargs,
         )
 
     @staticmethod
@@ -341,7 +363,7 @@ class StructureFactory(PyironFactory):
         if new_element_name is None:
             if spin is not None:
                 new_element_name = (
-                        parent_element + "_spin_" + str(spin).replace(".", "_")
+                    parent_element + "_spin_" + str(spin).replace(".", "_")
                 )
             else:
                 new_element_name = parent_element + "_1"
@@ -374,18 +396,19 @@ class StructureFactory(PyironFactory):
     @deprecate(message="Use .aimsgb.info", version="0.2.2")
     def aimsgb_info(self, axis, max_sigma):
         return self.aimsgb.info(axis=axis, max_sigma=max_sigma)
+
     aimsgb_info.__doc__ = AimsgbFactory.info.__doc__
 
     @deprecate(message="Use .aimsgb.build", version="0.2.2")
     def aimsgb_build(
-            self,
-            axis,
-            sigma,
-            plane,
-            initial_struct,
-            to_primitive=False,
-            delete_layer='0b0t0b0t',
-            add_if_dist=0.0
+        self,
+        axis,
+        sigma,
+        plane,
+        initial_struct,
+        to_primitive=False,
+        delete_layer="0b0t0b0t",
+        add_if_dist=0.0,
     ):
         return self.aimsgb.build(
             axis=axis,
@@ -394,8 +417,9 @@ class StructureFactory(PyironFactory):
             initial_struct=initial_struct,
             to_primitive=to_primitive,
             delete_layer=delete_layer,
-            add_if_dist=add_if_dist
+            add_if_dist=add_if_dist,
         )
+
     aimsgb_build.__doc__ = AimsgbFactory.build.__doc__
 
     @staticmethod

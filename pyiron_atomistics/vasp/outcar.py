@@ -64,11 +64,16 @@ class Outcar(object):
         kin_energy_error = self.get_kinetic_energy_error(filename=filename, lines=lines)
         stresses = self.get_stresses(filename=filename, si_unit=False, lines=lines)
         n_elect = self.get_nelect(filename=filename, lines=lines)
-        e_fermi_list, vbm_list, cbm_list = self.get_band_properties(filename=filename, lines=lines)
+        e_fermi_list, vbm_list, cbm_list = self.get_band_properties(
+            filename=filename, lines=lines
+        )
         elastic_constants = self.get_elastic_constants(filename=filename, lines=lines)
         try:
-            irreducible_kpoints, ir_kpt_weights, plane_waves = self.get_irreducible_kpoints(filename=filename,
-                                                                                            lines=lines)
+            (
+                irreducible_kpoints,
+                ir_kpt_weights,
+                plane_waves,
+            ) = self.get_irreducible_kpoints(filename=filename, lines=lines)
         except ValueError:
             print("irreducible kpoints not parsed !")
             irreducible_kpoints = None
@@ -137,7 +142,7 @@ class Outcar(object):
             "stresses",
             "irreducible_kpoints",
             "irreducible_kpoint_weights",
-            "number_plane_waves"
+            "number_plane_waves",
         ]
         with hdf.open(group_name) as hdf5_output:
             for key in self.parse_dict.keys():
@@ -805,20 +810,24 @@ class Outcar(object):
                 )
             else:
                 trigger_indices, lines_new = _get_trigger(
-                    lines=lines[ind:fermi_trigger_indices[n+1]], filename=filename, trigger=band_trigger
+                    lines=lines[ind : fermi_trigger_indices[n + 1]],
+                    filename=filename,
+                    trigger=band_trigger,
                 )
             band_data = list()
             for ind in trigger_indices:
-                if "spin component" in lines_new[ind-3]:
+                if "spin component" in lines_new[ind - 3]:
                     is_spin_polarized = True
-                for line in lines_new[ind+1:]:
+                for line in lines_new[ind + 1 :]:
                     data = line.strip().split()
                     if len(data) != 3:
                         break
                     band_data.append([float(d) for d in data[1:]])
             if is_spin_polarized:
-                band_data_per_spin = [np.array(band_data[0:int(len(band_data)/2)]).tolist(),
-                                      np.array(band_data[int(len(band_data)/2):]).tolist()]
+                band_data_per_spin = [
+                    np.array(band_data[0 : int(len(band_data) / 2)]).tolist(),
+                    np.array(band_data[int(len(band_data) / 2) :]).tolist(),
+                ]
             else:
                 band_data_per_spin = [band_data]
             for spin, band_data in enumerate(band_data_per_spin):
@@ -831,13 +840,17 @@ class Outcar(object):
                 else:
                     vbm_level_dict[spin] = list()
                 if len(band_data) > 0:
-                    band_energy, band_occ = [np.array(band_data)[:, i] for i in range(2)]
+                    band_energy, band_occ = [
+                        np.array(band_data)[:, i] for i in range(2)
+                    ]
                     args = np.argsort(band_energy)
                     band_occ = band_occ[args]
                     band_energy = band_energy[args]
                     cbm_bool = np.abs(band_occ) < 1e-6
                     if any(cbm_bool):
-                        cbm_level_dict[spin].append(band_energy[np.abs(band_occ) < 1e-6][0])
+                        cbm_level_dict[spin].append(
+                            band_energy[np.abs(band_occ) < 1e-6][0]
+                        )
                     else:
                         cbm_level_dict[spin].append(band_energy[-1])
                     # If spin channel is completely empty, setting vbm=cbm
@@ -845,15 +858,21 @@ class Outcar(object):
                         vbm_level_dict[spin].append(cbm_level_dict[spin][-1])
                     else:
                         vbm_level_dict[spin].append(band_energy[~cbm_bool][-1])
-        return np.array(fermi_level_list), np.array([val for val
-                                                     in vbm_level_dict.values()]), np.array([val
-                                                                                             for val in
-                                                                                             cbm_level_dict.values()])
+        return (
+            np.array(fermi_level_list),
+            np.array([val for val in vbm_level_dict.values()]),
+            np.array([val for val in cbm_level_dict.values()]),
+        )
 
     @staticmethod
     def get_elastic_constants(filename="OUTCAR", lines=None):
         lines = _get_lines_from_file(filename=filename, lines=lines)
-        trigger_indices = _get_trigger(lines=lines, filename=filename, trigger="TOTAL ELASTIC MODULI (kBar)", return_lines=False)
+        trigger_indices = _get_trigger(
+            lines=lines,
+            filename=filename,
+            trigger="TOTAL ELASTIC MODULI (kBar)",
+            return_lines=False,
+        )
         if len(trigger_indices) != 1:
             return None
         else:
@@ -928,7 +947,7 @@ class Outcar(object):
         try:
             for j in trigger_indices:
                 cell = []
-                for line in lines[j + 5: j + 8]:
+                for line in lines[j + 5 : j + 8]:
                     line = line.strip()
                     line = _clean_line(line)
                     cell.append([float(l) for l in line.split()[0:3]])

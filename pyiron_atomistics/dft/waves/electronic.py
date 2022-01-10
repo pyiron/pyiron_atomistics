@@ -672,7 +672,13 @@ class ElectronicStructure(object):
             import matplotlib.pyplot as plt
         for spin, eigenvalues in enumerate(self.eigenvalues):
             arg = np.argsort(eigenvalues)
-            plt.plot(eigenvalues[arg], self.occupancies[spin][arg], "-o", label="spin:{}".format(spin), linewidth=2)
+            plt.plot(
+                eigenvalues[arg],
+                self.occupancies[spin][arg],
+                "-o",
+                label="spin:{}".format(spin),
+                linewidth=2,
+            )
         plt.legend()
         plt.axvline(self.efermi, linewidth=2.0, linestyle="dashed", color="black")
         plt.xlabel("Eigen value (eV)")
@@ -698,17 +704,25 @@ class ElectronicStructure(object):
         output_string = list()
         output_string.append("ElectronicStructure Instance")
         output_string.append("----------------------------")
-        output_string.append("Number of spin channels: {}".format(len(self.eigenvalue_matrix)))
+        output_string.append(
+            "Number of spin channels: {}".format(len(self.eigenvalue_matrix))
+        )
         output_string.append("Number of k-points: {}".format(len(self.kpoints)))
-        output_string.append("Number of bands: {}".format(len(self.kpoints[0].bands[0])))
+        output_string.append(
+            "Number of bands: {}".format(len(self.kpoints[0].bands[0]))
+        )
         try:
             for spin, is_metal in enumerate(self.is_metal):
                 if is_metal:
-                    output_string.append("spin {}:".format(spin) + " Is a metal: {}".format(is_metal))
+                    output_string.append(
+                        "spin {}:".format(spin) + " Is a metal: {}".format(is_metal)
+                    )
                 else:
-                    output_string.append("spin {}:".format(spin) + " Is a metal: "
-                                                                   "{}".format(is_metal) + " Band gap (ev) "
-                                                                                           "{}".format(self.eg[spin]))
+                    output_string.append(
+                        "spin {}:".format(spin) + " Is a metal: "
+                        "{}".format(is_metal) + " Band gap (ev) "
+                        "{}".format(self.eg[spin])
+                    )
         except ValueError:
             pass
         return "\n".join(output_string)

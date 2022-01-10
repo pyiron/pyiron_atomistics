@@ -40,7 +40,7 @@ class Symmetry(dict):
         use_elements=True,
         symprec=1e-5,
         angle_tolerance=-1.0,
-        epsilon=1.0e-8
+        epsilon=1.0e-8,
     ):
         """
         Args:
@@ -60,14 +60,13 @@ class Symmetry(dict):
         self.epsilon = epsilon
         self._permutations = None
         for k, v in self._get_symmetry(
-            symprec=symprec,
-            angle_tolerance=angle_tolerance
+            symprec=symprec, angle_tolerance=angle_tolerance
         ).items():
             self[k] = v
 
     @property
     def arg_equivalent_atoms(self):
-        return self['equivalent_atoms']
+        return self["equivalent_atoms"]
 
     @property
     def arg_equivalent_vectors(self):
@@ -78,8 +77,10 @@ class Symmetry(dict):
         `(m, j)`
         """
         ladder = np.arange(np.prod(self._structure.positions.shape)).reshape(-1, 3)
-        all_vec = np.einsum('nij,nmj->min', self.rotations, ladder[self.permutations])
-        vec_abs_flat = np.absolute(all_vec).reshape(np.prod(self._structure.positions.shape), -1)
+        all_vec = np.einsum("nij,nmj->min", self.rotations, ladder[self.permutations])
+        vec_abs_flat = np.absolute(all_vec).reshape(
+            np.prod(self._structure.positions.shape), -1
+        )
         vec_sorted = np.sort(vec_abs_flat, axis=-1)
         enum = np.unique(vec_sorted, axis=0, return_inverse=True)[1]
         return enum.reshape(-1, 3)
@@ -93,7 +94,7 @@ class Symmetry(dict):
 
             x = R@y + t
         """
-        return self['rotations']
+        return self["rotations"]
 
     @property
     def translations(self):
@@ -104,7 +105,7 @@ class Symmetry(dict):
 
             x = R@y + t
         """
-        return self['translations']
+        return self["translations"]
 
     def generate_equivalent_points(
         self,
@@ -125,21 +126,25 @@ class Symmetry(dict):
                 (n_symmetry, original_shape) if return_unique=False, otherwise (n, 3), where n is
                 the number of inequivalent vectors.
         """
-        R = self['rotations']
-        t = self['translations']
-        x = np.einsum('jk,nj->nk', np.linalg.inv(self._structure.cell), np.atleast_2d(points))
-        x = np.einsum('nxy,my->mnx', R, x) + t
+        R = self["rotations"]
+        t = self["translations"]
+        x = np.einsum(
+            "jk,nj->nk", np.linalg.inv(self._structure.cell), np.atleast_2d(points)
+        )
+        x = np.einsum("nxy,my->mnx", R, x) + t
         if any(self._structure.pbc):
-            x[:, :, self._structure.pbc] -= np.floor(x[:, :, self._structure.pbc] + self.epsilon)
+            x[:, :, self._structure.pbc] -= np.floor(
+                x[:, :, self._structure.pbc] + self.epsilon
+            )
         if not return_unique:
-            return np.einsum(
-                'ji,mnj->mni', self._structure.cell, x
-            ).reshape((len(R),) + np.shape(points))
+            return np.einsum("ji,mnj->mni", self._structure.cell, x).reshape(
+                (len(R),) + np.shape(points)
+            )
         x = x.reshape(-1, 3)
         _, indices = np.unique(
             np.round(x, decimals=decimals), return_index=True, axis=0
         )
-        return np.einsum('ji,mj->mi', self._structure.cell, x[indices])
+        return np.einsum("ji,mj->mi", self._structure.cell, x[indices])
 
     def get_arg_equivalent_sites(
         self,
@@ -158,13 +163,12 @@ class Symmetry(dict):
             (ndarray): array of ID's according to their groups
         """
         if len(np.shape(points)) != 2:
-            raise ValueError('points must be a (n, 3)-array')
-        all_points = self.generate_equivalent_points(
-            points=points,
-            return_unique=False
-        )
+            raise ValueError("points must be a (n, 3)-array")
+        all_points = self.generate_equivalent_points(points=points, return_unique=False)
         _, inverse = np.unique(
-            np.round(all_points.reshape(-1, 3), decimals=decimals), axis=0, return_inverse=True
+            np.round(all_points.reshape(-1, 3), decimals=decimals),
+            axis=0,
+            return_inverse=True,
         )
         inverse = inverse.reshape(all_points.shape[:-1][::-1])
         indices = np.min(inverse, axis=1)
@@ -192,15 +196,14 @@ class Symmetry(dict):
                 scaled_positions[..., self._structure.pbc] + self.epsilon
             )
             tree = cKDTree(scaled_positions)
-            positions = np.einsum(
-                'nij,kj->nki',
-                self['rotations'],
-                scaled_positions
-            ) + self['translations'][:, None, :]
+            positions = (
+                np.einsum("nij,kj->nki", self["rotations"], scaled_positions)
+                + self["translations"][:, None, :]
+            )
             positions -= np.floor(positions + self.epsilon)
             distances, self._permutations = tree.query(positions)
             if not np.allclose(distances, 0):
-                raise AssertionError('Neighbor search failed')
+                raise AssertionError("Neighbor search failed")
             self._permutations = self._permutations.argsort(axis=-1)
         return self._permutations
 
@@ -219,14 +222,14 @@ class Symmetry(dict):
         """
         vectors = np.array(vectors).reshape(-1, 3)
         if vectors.shape != self._structure.positions.shape:
-            raise ValueError('Vector must be a natom x 3 array: {} != {}'.format(
-                vectors.shape, self.positions.shape
-            ))
+            raise ValueError(
+                "Vector must be a natom x 3 array: {} != {}".format(
+                    vectors.shape, self.positions.shape
+                )
+            )
         return np.einsum(
-            'ijk,ink->nj',
-            self['rotations'],
-            vectors[self.permutations]
-        ) / len(self['rotations'])
+            "ijk,ink->nj", self["rotations"], vectors[self.permutations]
+        ) / len(self["rotations"])
 
     def _get_spglib_cell(self, use_elements=None, use_magmoms=None):
         lattice = np.array(self._structure.get_cell(), dtype="double", order="C")
@@ -242,12 +245,15 @@ class Symmetry(dict):
         else:
             numbers = np.ones_like(self._structure.indices, dtype="intc")
         if use_magmoms:
-            return lattice, positions, numbers, self._structure.get_initial_magnetic_moments()
+            return (
+                lattice,
+                positions,
+                numbers,
+                self._structure.get_initial_magnetic_moments(),
+            )
         return lattice, positions, numbers
 
-    def _get_symmetry(
-        self, symprec=1e-5, angle_tolerance=-1.0
-    ):
+    def _get_symmetry(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
         Args:
@@ -301,7 +307,9 @@ class Symmetry(dict):
             "Number": ast.literal_eval(space_group[1]),
         }
 
-    def get_primitive_cell(self, standardize=False, use_elements=None, use_magmoms=None):
+    def get_primitive_cell(
+        self, standardize=False, use_elements=None, use_magmoms=None
+    ):
         """
         Get primitive cell of a given structure.
 
@@ -323,22 +331,22 @@ class Symmetry(dict):
         """
         cell, positions, indices = spglib.standardize_cell(
             self._get_spglib_cell(use_elements=use_elements, use_magmoms=use_magmoms),
-            to_primitive=not standardize
+            to_primitive=not standardize,
         )
         positions = (cell.T @ positions.T).T
         new_structure = self._structure.copy()
         new_structure.cell = cell
-        new_structure.indices[:len(indices)] = indices
-        new_structure = new_structure[:len(indices)]
+        new_structure.indices[: len(indices)] = indices
+        new_structure = new_structure[: len(indices)]
         new_structure.positions = positions
         return new_structure
 
-    @deprecate('Use `get_primitive_cell(standardize=True)` instead')
+    @deprecate("Use `get_primitive_cell(standardize=True)` instead")
     def refine_cell(self):
         return self.get_primitive_cell(standardize=True)
 
     @property
-    @deprecate('Use `get_primitive_cell(standardize=False)` instead')
+    @deprecate("Use `get_primitive_cell(standardize=False)` instead")
     def primitive_cell(self):
         return self.get_primitive_cell(standardize=False)
 

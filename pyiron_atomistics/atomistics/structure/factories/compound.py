@@ -25,7 +25,9 @@ def _bcc_lattice_constant_from_nn_distance(element):
 
     Works because the NN distance doesn't even care what crystal structure the regular unit cell is.
     """
-    return AseFactory().bulk(name=element).get_neighbors(num_neighbors=1).distances[0, 0] * (2 / np.sqrt(3))
+    return AseFactory().bulk(name=element).get_neighbors(num_neighbors=1).distances[
+        0, 0
+    ] * (2 / np.sqrt(3))
 
 
 class CompoundFactory:
@@ -46,7 +48,12 @@ class CompoundFactory:
         """
         a = _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
 
-        return _ase.crystal((element_a, element_b), [(0, 0, 0), (1/2, 1/2, 1/2)], spacegroup=221, cell=(a, a, a))
+        return _ase.crystal(
+            (element_a, element_b),
+            [(0, 0, 0), (1 / 2, 1 / 2, 1 / 2)],
+            spacegroup=221,
+            cell=(a, a, a),
+        )
 
     @staticmethod
     def C14(element_a, element_b, a=None, c_over_a=1.626, x1=0.1697, z1=0.5629):
@@ -76,17 +83,22 @@ class CompoundFactory:
         c = c_over_a * a
 
         # https://www.atomic-scale-physics.de/lattice/struk/c14.html
-        s = _ase.crystal(( element_a, element_b, element_b ),
-                            [ # wyckoff 4f -- A
-                              ( 1/3,   2/3,  z1 ),
-                              # wyckoff 2a -- B-I
-                              (   0,     0,   0 ),
-                              # wyckoff 6h -- B-II
-                              ( 1*x1, 2*x1, 1/4 ),
-                            ],
-                            spacegroup=194, cell=(a, a, c, 90, 90, 120))
+        s = _ase.crystal(
+            (element_a, element_b, element_b),
+            [  # wyckoff 4f -- A
+                (1 / 3, 2 / 3, z1),
+                # wyckoff 2a -- B-I
+                (0, 0, 0),
+                # wyckoff 6h -- B-II
+                (1 * x1, 2 * x1, 1 / 4),
+            ],
+            spacegroup=194,
+            cell=(a, a, c, 90, 90, 120),
+        )
         if len(s) != 2 + 6 + 4:
-            raise ValueError("Given internal coordinates reduced symmetry, check the docstring for degenerate values!")
+            raise ValueError(
+                "Given internal coordinates reduced symmetry, check the docstring for degenerate values!"
+            )
         return s
 
     @staticmethod
@@ -112,18 +124,33 @@ class CompoundFactory:
         a = 2 * _bcc_lattice_constant_from_nn_distance(element_a) if a is None else a
 
         # See: https://www.atomic-scale-physics.de/lattice/struk/c15.html
-        s = _ase.crystal((element_b, element_a),
-                            [ # Wyckoff 8a
-                              (1/8, 1/8, 1/8),
-                              # Wyckoff 16d
-                              (1/2, 1/2, 1/2)
-                            ], spacegroup=227, cell=(a, a, a))
+        s = _ase.crystal(
+            (element_b, element_a),
+            [  # Wyckoff 8a
+                (1 / 8, 1 / 8, 1 / 8),
+                # Wyckoff 16d
+                (1 / 2, 1 / 2, 1 / 2),
+            ],
+            spacegroup=227,
+            cell=(a, a, a),
+        )
         if len(s) != 8 + 16:
-            raise ValueError("Given internal coordinates reduced symmetry, check the docstring for degenerate values!")
+            raise ValueError(
+                "Given internal coordinates reduced symmetry, check the docstring for degenerate values!"
+            )
         return s
 
     @staticmethod
-    def C36(element_a, element_b, a=None, c_over_a=3.252, x1=0.16429, z1=0.09400, z2=0.65583, z3=0.12514):
+    def C36(
+        element_a,
+        element_b,
+        a=None,
+        c_over_a=3.252,
+        x1=0.16429,
+        z1=0.09400,
+        z2=0.65583,
+        z3=0.12514,
+    ):
         """
         Create hexagonal $A B_2$ C36 Laves phase.
 
@@ -155,23 +182,27 @@ class CompoundFactory:
             raise ValueError("Relative position of A & B atoms may not be the same!")
 
         # See: https://www.atomic-scale-physics.de/lattice/struk/c36.html
-        s = _ase.crystal( (element_a, element_a, element_b, element_b, element_b),
-                [ # Wyckoff 4e -- A-I
-                  (0, 0, z1),
-                  # 4f -- A-II
-                  (1/3, 2/3, z2),
-                  # 4f -- B-I
-                  (1/3, 2/3, z3),
-                  # 6g -- B-II
-                  (1/2, 0, 0),
-                  # 6h -- B-III
-                  (x1, 2*x1, 1/4)
-                 ], spacegroup=194, cell=(a, a, c, 90, 90, 120))
+        s = _ase.crystal(
+            (element_a, element_a, element_b, element_b, element_b),
+            [  # Wyckoff 4e -- A-I
+                (0, 0, z1),
+                # 4f -- A-II
+                (1 / 3, 2 / 3, z2),
+                # 4f -- B-I
+                (1 / 3, 2 / 3, z3),
+                # 6g -- B-II
+                (1 / 2, 0, 0),
+                # 6h -- B-III
+                (x1, 2 * x1, 1 / 4),
+            ],
+            spacegroup=194,
+            cell=(a, a, c, 90, 90, 120),
+        )
         if len(s) != 4 + 4 + 4 + 6 + 6:
-            raise ValueError("Given internal coordinates reduced symmetry, check the docstring for degenerate values!")
+            raise ValueError(
+                "Given internal coordinates reduced symmetry, check the docstring for degenerate values!"
+            )
         return s
-
-
 
     @staticmethod
     def D03(element_a, element_b, a=None):
@@ -193,5 +224,5 @@ class CompoundFactory:
             (element_b, element_a, element_b),
             [(0, 0, 0), (1 / 2, 1 / 2, 1 / 2), (1 / 4, 1 / 4, 1 / 4)],
             spacegroup=225,
-            cell=(a, a, a)
+            cell=(a, a, a),
         )

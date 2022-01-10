@@ -67,6 +67,7 @@ class ScipyMinimizer(InteractiveWrapper):
     In order to perform volume optimization, the child job must have
     3x3-pressure output.
     """
+
     def __init__(self, project, job_name):
         super(ScipyMinimizer, self).__init__(project, job_name)
         self.__name__ = "ScipyMinimizer"
@@ -100,9 +101,11 @@ class ScipyMinimizer(InteractiveWrapper):
         self.ref_job.run(delete_existing_job=self._delete_existing_job)
         self.status.running = True
         if self.input.pressure is not None:
-            x0 = np.zeros(sum(self.input.pressure!=None))
+            x0 = np.zeros(sum(self.input.pressure != None))
             if not self.input.volume_only:
-                x0 = np.append(x0, self.ref_job.structure.get_scaled_positions().flatten())
+                x0 = np.append(
+                    x0, self.ref_job.structure.get_scaled_positions().flatten()
+                )
         else:
             x0 = self.ref_job.structure.positions.flatten()
         self.output._result = minimize(
@@ -111,8 +114,7 @@ class ScipyMinimizer(InteractiveWrapper):
             x0=x0,
             jac=self._get_gradient,
             tol=1.0e-20,
-            options={'maxiter': self.input.ionic_steps,
-                     'return_all': True }
+            options={"maxiter": self.input.ionic_steps, "return_all": True},
         )
         self.status.collect = True
         self.collect_output()
@@ -125,7 +127,7 @@ class ScipyMinimizer(InteractiveWrapper):
 
     @staticmethod
     def _tensor_to_voigt(s, strain=False):
-        ss = 0.5*(s+s.T)
+        ss = 0.5 * (s + s.T)
         ss = ss.flatten()[[0, 4, 8, 5, 2, 1]]
         if strain:
             ss[3:] *= 2
@@ -143,22 +145,27 @@ class ScipyMinimizer(InteractiveWrapper):
     def _update(self, x):
         rerun = False
         if self.input.pressure is not None:
-            if not np.allclose(x[:len(self.input.pressure)], self._current_strain):
-                if len(self.input.pressure)==1:
+            if not np.allclose(x[: len(self.input.pressure)], self._current_strain):
+                if len(self.input.pressure) == 1:
                     self._current_strain[:3] = x[0]
                 else:
-                    self._current_strain[self.input.pressure!=None] = x[:len(self.input.pressure)]
+                    self._current_strain[self.input.pressure != None] = x[
+                        : len(self.input.pressure)
+                    ]
                 cell = np.matmul(
-                    self._voigt_to_tensor(self._current_strain, strain=True)+np.eye(3),
-                    self._original_cell
+                    self._voigt_to_tensor(self._current_strain, strain=True)
+                    + np.eye(3),
+                    self._original_cell,
                 )
                 self.ref_job.structure.set_cell(cell, scale_atoms=True)
                 rerun = True
-            if (not self.input.volume_only
-                and not np.allclose(
-                    x[len(self.input.pressure):], self.ref_job.structure.get_scaled_positions().flatten()
-                )):
-                self.ref_job.structure.set_scaled_positions(x[len(self.input.pressure):].reshape(-1, 3))
+            if not self.input.volume_only and not np.allclose(
+                x[len(self.input.pressure) :],
+                self.ref_job.structure.get_scaled_positions().flatten(),
+            ):
+                self.ref_job.structure.set_scaled_positions(
+                    x[len(self.input.pressure) :].reshape(-1, 3)
+                )
                 rerun = True
         elif not np.allclose(x, self.ref_job.structure.positions.flatten()):
             self.ref_job.structure.positions = x.reshape(-1, 3)
@@ -170,29 +177,40 @@ class ScipyMinimizer(InteractiveWrapper):
         if self.input.ionic_energy_tolerance > 0:
             if len(self.ref_job.output.energy_pot) < 2:
                 return False
-            elif np.absolute(np.diff(self.ref_job.output.energy_pot)[-1]) > self.input.ionic_energy_tolerance:
+            elif (
+                np.absolute(np.diff(self.ref_job.output.energy_pot)[-1])
+                > self.input.ionic_energy_tolerance
+            ):
                 return False
-            if self.input.ionic_force_tolerance==0:
+            if self.input.ionic_force_tolerance == 0:
                 return True
         max_force = np.linalg.norm(self.ref_job.output.forces[-1], axis=-1).max()
         if self.input.pressure is None:
             if max_force > self.input.ionic_force_tolerance:
                 return False
         elif self.input.volume_only:
-            if np.absolute(self._get_pressure()-self.input.pressure).max() > self.input.pressure_tolerance:
+            if (
+                np.absolute(self._get_pressure() - self.input.pressure).max()
+                > self.input.pressure_tolerance
+            ):
                 return False
         else:
             if max_force > self.input.ionic_force_tolerance:
                 return False
-            if np.absolute(self._get_pressure()-self.input.pressure).max() > self.input.pressure_tolerance:
+            if (
+                np.absolute(self._get_pressure() - self.input.pressure).max()
+                > self.input.pressure_tolerance
+            ):
                 return False
         return True
 
     def _get_pressure(self):
-        if len(self.input.pressure)==1:
+        if len(self.input.pressure) == 1:
             return [np.mean(np.diagonal(self.ref_job.output.pressures[-1]))]
         else:
-            return self._tensor_to_voigt(self.ref_job.output.pressures[-1])[self.input.pressure!=None]
+            return self._tensor_to_voigt(self.ref_job.output.pressures[-1])[
+                self.input.pressure != None
+            ]
 
     def _get_gradient(self, x):
         self._update(x)
@@ -200,22 +218,23 @@ class ScipyMinimizer(InteractiveWrapper):
         if self.check_convergence():
             prefactor = 0
         if self.input.pressure is not None:
-            pressure = -(
-                self._get_pressure()-self.input.pressure
-            )
+            pressure = -(self._get_pressure() - self.input.pressure)
             if self.input.volume_only:
-                return pressure*prefactor
+                return pressure * prefactor
             else:
-                return np.append(
-                    pressure,
-                    -np.einsum(
-                        'ij,ni->nj',
-                        np.linalg.inv(self.ref_job.structure.cell),
-                        self.ref_job.output.forces[-1]
+                return (
+                    np.append(
+                        pressure,
+                        -np.einsum(
+                            "ij,ni->nj",
+                            np.linalg.inv(self.ref_job.structure.cell),
+                            self.ref_job.output.forces[-1],
+                        ).flatten(),
                     ).flatten()
-                ).flatten()*prefactor
+                    * prefactor
+                )
         else:
-            return -self.ref_job.output.forces[-1].flatten()*prefactor
+            return -self.ref_job.output.forces[-1].flatten() * prefactor
 
     def _get_value(self, x):
         self._update(x)
@@ -232,7 +251,7 @@ class ScipyMinimizer(InteractiveWrapper):
         self,
         max_iter=100,
         pressure=None,
-        algorithm='CG',
+        algorithm="CG",
         ionic_energy_tolerance=0,
         ionic_force_tolerance=1.0e-2,
         pressure_tolerance=1.0e-3,
@@ -250,19 +269,19 @@ class ScipyMinimizer(InteractiveWrapper):
             volume_only (bool): Only pressure minimization
         """
         if pressure is None and volume_only:
-            raise ValueError('pressure must be specified if volume_only')
+            raise ValueError("pressure must be specified if volume_only")
         if pressure is not None and not volume_only:
             warnings.warn(
-                'Simultaneous optimization of pressures and positions is a'
-                + ' mathematically ill posed problem - there is no guarantee'
-                + ' that it converges to the desired structure'
+                "Simultaneous optimization of pressures and positions is a"
+                + " mathematically ill posed problem - there is no guarantee"
+                + " that it converges to the desired structure"
             )
         if pressure is not None:
             pressure = np.array([pressure]).flatten()
-            if len(pressure)==9:
-                pressure = self._tensor_to_voigt(pressure.reshape(3,3))
-            if len(pressure)==3:
-                pressure = np.append(pressure, 3*[None])
+            if len(pressure) == 9:
+                pressure = self._tensor_to_voigt(pressure.reshape(3, 3))
+            if len(pressure) == 3:
+                pressure = np.append(pressure, 3 * [None])
         self.input.minimizer = algorithm
         self.input.ionic_steps = max_iter
         self.input.pressure = pressure
@@ -282,7 +301,7 @@ class Input(DataContainer):
     """
 
     def __init__(self, input_file_name=None, table_name="input"):
-        self.minimizer = 'CG'
+        self.minimizer = "CG"
         self.ionic_steps = 100
         self.ionic_force_tolerance = 1.0e-2
         self.pressure = None
@@ -300,7 +319,6 @@ class ScipyMinimizerOutput(GenericInteractiveOutput):
         if self._result is None:
             return
         with hdf.open(group_name) as hdf_output:
-            hdf_output["convergence"] = self._result['success']
-            if 'hess_inv' in self._result.keys():
-                hdf_output["hessian"] = self._result['hess_inv']
-
+            hdf_output["convergence"] = self._result["success"]
+            if "hess_inv" in self._result.keys():
+                hdf_output["hessian"] = self._result["hess_inv"]
