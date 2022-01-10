@@ -277,23 +277,23 @@ class Outcar(object):
             filename=filename,
             trigger="FORCE on cell =-STRESS in cart. coord.  units (eV):",
         )
-        pullay_stress_lst = []
+        stress_lst = []
         for j in trigger_indices:
             try:
                 if si_unit:
-                    pullay_stress_lst.append(
-                        [float(l) for l in lines[j + 13].split()[1:7]]
-                    )
+                    stress = [float(l) for l in lines[j + 13].split()[1:7]]
                 else:
-                    pullay_stress_lst.append(
-                        [float(l) for l in lines[j + 14].split()[2:8]]
-                    )
+                    stress = [float(l) for l in lines[j + 14].split()[2:8]]
             except ValueError:
-                if si_unit:
-                    pullay_stress_lst.append([float("NaN")] * 6)
-                else:
-                    pullay_stress_lst.append([float("NaN")] * 6)
-        return np.array(pullay_stress_lst)
+                stress = [float("NaN")] * 6
+            # VASP outputs the stresses in XX, YY, ZZ, XY, YZ, ZX order
+            #                               0,  1,  2,  3,  4,  5
+            stressm = np.diag(stress[:3])
+            stressm[0, 1] = stressm[1, 0] = stress[3]
+            stressm[1, 2] = stressm[2, 1] = stress[4]
+            stressm[0, 2] = stressm[2, 0] = stress[5]
+            stress_lst.append(stressm)
+        return np.array(stress_lst)
 
     @staticmethod
     def get_irreducible_kpoints(
