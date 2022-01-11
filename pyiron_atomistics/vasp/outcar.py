@@ -279,11 +279,21 @@ class Outcar(object):
         )
         stress_lst = []
         for j in trigger_indices:
+            # search for '------...' delimiters of the stress table
+            # setting a constant offset into `lines` does not work, because the number of stress contributions may vary
+            # depending on the VASP configuration (e.g. with or without van der Waals interactions)
+            jj = j
+            while set(lines[jj].strip()) != {'-'}:
+                jj += 1
+            jj += 1
+            # there's two delimiters, so search again
+            while set(lines[jj].strip()) != {'-'}:
+                jj += 1
             try:
                 if si_unit:
-                    stress = [float(l) for l in lines[j + 13].split()[1:7]]
+                    stress = [float(l) for l in lines[jj + 1].split()[1:7]]
                 else:
-                    stress = [float(l) for l in lines[j + 14].split()[2:8]]
+                    stress = [float(l) for l in lines[jj + 2].split()[2:8]]
             except ValueError:
                 stress = [float("NaN")] * 6
             # VASP outputs the stresses in XX, YY, ZZ, XY, YZ, ZX order
