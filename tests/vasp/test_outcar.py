@@ -562,30 +562,71 @@ class TestOutcar(unittest.TestCase):
                 self.assertEqual(len(output[-1][-1]), 3)
 
     def test_get_stresses(self):
+        def from_vasp_voigt(stress):
+            sigma = np.diag(stress[:3])
+            sigma[1, 2] = sigma[2, 1] = stress[4]
+            sigma[0, 2] = sigma[2, 0] = stress[5]
+            sigma[0, 1] = sigma[1, 0] = stress[3]
+            return sigma.reshape(1, 3, 3)
+
+        test_data = {
+                'OUTCAR_1': (
+                    from_vasp_voigt([-14.41433, -14.41433, -14.41433, 0.00000, 0.00000, 0.00000]),
+                    from_vasp_voigt([-455.93181, -455.93181, -455.93181, 0.00000, 0.00000, 0.00000])
+                ),
+                'OUTCAR_2': (
+                    from_vasp_voigt([-5.38507, -5.38507, -5.38507, -0.00000, 0.00000, -0.00000]),
+                    from_vasp_voigt([-393.03200, -393.03200, -393.03200, -0.00000, 0.00000, -0.00000])
+                ),
+                'OUTCAR_3': (
+                    from_vasp_voigt([-3.29441, -3.29441, -3.29441, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-240.44384, -240.44384, -240.44384, 0.00000, -0.00000, 0.00000])
+                ),
+                'OUTCAR_4': (
+                    from_vasp_voigt([-3.29441, -3.29441, -3.29441, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-240.44384, -240.44384, -240.44384, 0.00000, -0.00000, 0.00000])
+                ),
+                'OUTCAR_5': (
+                    from_vasp_voigt([-3.30660, -3.30660, -3.30660, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-241.33405, -241.33409, -241.33405, 0.00000, -0.00000, 0.00000])
+                ),
+                'OUTCAR_6': (
+                    from_vasp_voigt([-3.30660, -3.30660, -3.30660, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-241.33405, -241.33409, -241.33405, 0.00000, -0.00000, 0.00000])
+                ),
+                'OUTCAR_7': (
+                    from_vasp_voigt([-11.88272, -11.88272, 1.40676, 0.10858, -1.27251, 1.27251]),
+                    from_vasp_voigt([-30.25634, -30.25634, 3.58195, 0.27646, -3.24012, 3.24012])
+                ),
+                'OUTCAR_8': (
+                    from_vasp_voigt([26.40677, 26.40677, 26.40677, 0.00000, 0.00000, 0.00000]),
+                    from_vasp_voigt([77.52482, 77.52482, 77.52482, 0.00000, 0.00000, 0.00000])
+                ),
+                'OUTCAR_9': (
+                    np.concatenate([from_vasp_voigt([-8.22615, -16.37087, -24.79610,
+                                                      0.00000, 0.00000, 0.00000]),
+                                    from_vasp_voigt([-0.51498, -5.95380, 3.02638,
+                                                      0.00000, 0.00000, 0.00000])]),
+                    np.concatenate([from_vasp_voigt([-13.17976, -26.22903, -39.72774,
+                                                       0.00000, 0.00000, 0.00000]),
+                                    from_vasp_voigt([-0.82508, -9.53905, 4.84880,
+                                                      0.00000, 0.00000, 0.00000])])
+                ),
+                'OUTCAR_10': (
+                    from_vasp_voigt([-0.01303, -0.01303, -0.01300, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-0.00619, -0.00619, -0.00617, 0.00000, -0.00000, 0.00000])
+                ),
+        }
         for filename in self.file_list:
             output_si = self.outcar_parser.get_stresses(filename, si_unit=True)
             output_kb = self.outcar_parser.get_stresses(filename, si_unit=False)
             self.assertIsInstance(output_si, np.ndarray)
             self.assertIsInstance(output_kb, np.ndarray)
-            if int(filename.split("/OUTCAR_")[-1]) == 1:
-                pullay_si = -14.41433 * np.eye(3)
-                pullay_kb = -455.93181 * np.eye(3)
-            if int(filename.split("/OUTCAR_")[-1]) == 2:
-                pullay_si = -5.38507 * np.eye(3)
-                pullay_kb = -393.032 * np.eye(3)
-            if int(filename.split("/OUTCAR_")[-1]) == 3:
-                pullay_si = -3.29441 * np.eye(3)
-                pullay_kb = -240.44384 * np.eye(3)
-            if int(filename.split("/OUTCAR_")[-1]) == 4:
-                pullay_si = -3.29441 * np.eye(3)
-                pullay_kb = -240.44384 * np.eye(3)
-            if int(filename.split("/OUTCAR_")[-1]) in [5, 6]:
-                pullay_si = -3.3066 * np.eye(3)
-                pullay_kb = -241.33405 * np.eye(3)
-            self.assertEqual(output_si, pullay_si,
-                            "Wrong pressures parse (SI units)")
-            self.assertEqual(output_kb, pullay_kb,
-                            "Wrong pressures parse (kb units)")
+            test_si, test_kb = test_data[filename.split('/')[-1]]
+            self.assertEqual(output_si, test_si,
+                            "Wrong pressures parsed (SI units)")
+            self.assertEqual(output_kb, test_kb,
+                            "Wrong pressures parsed (kb units)")
 
     def test_get_kinetic_energy_error(self):
         for filename in self.file_list:
