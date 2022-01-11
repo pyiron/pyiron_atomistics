@@ -32,6 +32,10 @@ class TestOutcar(unittest.TestCase):
             filename = posixpath.join(direc, f)
             cls.file_list.append(filename)
 
+    def setUp(self):
+        self.addTypeEqualityFunc(np.ndarray, lambda a, b, msg=None: \
+                np.testing.assert_array_equal(a, b, err_msg=msg))
+
     def test_from_file(self):
         for filename in self.file_list:
             self.outcar_parser.from_file(filename=filename)
@@ -564,38 +568,24 @@ class TestOutcar(unittest.TestCase):
             self.assertIsInstance(output_si, np.ndarray)
             self.assertIsInstance(output_kb, np.ndarray)
             if int(filename.split("/OUTCAR_")[-1]) == 1:
-                pullay_si = np.array([[-14.41433, -14.41433, -14.41433, 0.0, 0.0, 0.0]])
-                pullay_kb = np.array(
-                    [[-455.93181, -455.93181, -455.93181, 0.0, 0.0, 0.0]]
-                )
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
+                pullay_si = -14.41433 * np.eye(3)
+                pullay_kb = -455.93181 * np.eye(3)
             if int(filename.split("/OUTCAR_")[-1]) == 2:
-                pullay_si = np.array([[-5.38507, -5.38507, -5.38507, -0.0, 0.0, -0.0]])
-                pullay_kb = np.array([[-393.032, -393.032, -393.032, -0.0, 0.0, -0.0]])
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
+                pullay_si = -5.38507 * np.eye(3)
+                pullay_kb = -393.032 * np.eye(3)
             if int(filename.split("/OUTCAR_")[-1]) == 3:
-                pullay_si = np.array([[-3.29441, -3.29441, -3.29441, 0.0, -0.0, 0.0]])
-                pullay_kb = np.array(
-                    [[-240.44384, -240.44384, -240.44384, 0.0, -0.0, 0.0]]
-                )
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
+                pullay_si = -3.29441 * np.eye(3)
+                pullay_kb = -240.44384 * np.eye(3)
             if int(filename.split("/OUTCAR_")[-1]) == 4:
-                pullay_si = np.array([[-3.29441, -3.29441, -3.29441, -0.0, -0.0, -0.0]])
-                pullay_kb = np.array(
-                    [[-240.44384, -240.44384, -240.44384, -0.0, -0.0, -0.0]]
-                )
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
+                pullay_si = -3.29441 * np.eye(3)
+                pullay_kb = -240.44384 * np.eye(3)
             if int(filename.split("/OUTCAR_")[-1]) in [5, 6]:
-                pullay_si = np.array([[-3.3066, -3.3066, -3.3066, 0.0, -0.0, 0.0]])
-                pullay_kb = np.array(
-                    [[-241.33405, -241.33409, -241.33405, 0.0, -0.0, 0.0]]
-                )
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
+                pullay_si = -3.3066 * np.eye(3)
+                pullay_kb = -241.33405 * np.eye(3)
+            self.assertEqual(output_si, pullay_si,
+                            "Wrong pressures parse (SI units)")
+            self.assertEqual(output_kb, pullay_kb,
+                            "Wrong pressures parse (kb units)")
 
     def test_get_kinetic_energy_error(self):
         for filename in self.file_list:
