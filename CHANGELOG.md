@@ -1,6 +1,16 @@
 # Unreleased
 
 # pyiron_atomistics-0.2.34
+Since pyiron_atomistics-0.2.29 stresses are by default calculated and stored for VASP calculations. However, the stored values were stored in an undocumented order and had the wrong sign. #497 provides a fix by storing the stress as an unambiguous matrix. 
+
+- Update to pyiron_base-0.5.0 and add changelog (#501)
+- Save VASP stresses as matrix (#497)
+- Drop python3.7 support (#500)
+- Add cell_only to Vasp.calc_minimize  (#498)
+- Use current structure instead of output to update previous structure (#483)
+- give possibility of setting log_file in LAMMPS (#488)
+- Replace Random Atomistics by Lennard Jones in testing (#478)
+- Dependency updates: #485, #496, #493, #489
 
 # pyiron_atomistics-0.2.33
 - Some test modernization (#425)
