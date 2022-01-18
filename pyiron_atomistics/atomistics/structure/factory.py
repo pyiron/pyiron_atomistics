@@ -500,9 +500,7 @@ class StructureFactory(PyironFactory):
             slab: pyiron_atomistics.atomistics.structure.atoms.Atoms instance Required surface
         """
         basis = self.crystal(element=element, bravais_basis=crystal_structure, lattice_constant=lattice_constant)
-        high_index_surface, \
-            fin_kink_orientation, \
-            fin_step_orientation = self.high_index_surface_info(element=element,
+        high_index_surface, _, _ = self.high_index_surface_info(element=element,
                                                                 crystal_structure=crystal_structure,
                                                                 lattice_constant=lattice_constant,
                                                                 terrace_orientation=terrace_orientation,
