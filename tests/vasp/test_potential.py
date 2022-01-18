@@ -5,13 +5,18 @@
 import unittest
 import os
 from pyiron_atomistics.vasp.potential import get_enmax_among_potentials, strip_xc_from_potential_name
+from pyiron_base import state
 
 
 class TestPotential(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.file_location = os.path.dirname(os.path.abspath(__file__))
+        state.update({'resource_paths': os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")})
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        state.update()
 
     def test_get_enmax_among_potentials(self):
         float_out = get_enmax_among_potentials('Fe', return_list=False)
@@ -25,7 +30,3 @@ class TestPotential(unittest.TestCase):
 
     def test_strip_xc_from_potential_name(self):
         self.assertEqual(strip_xc_from_potential_name('X_pv-gga-pbe'), 'X_pv')
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -6,12 +6,12 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from scipy.sparse import coo_matrix
 from scipy.special import gamma
-from pyiron_base import DataContainer
+from pyiron_base import DataContainer, FlattenedStorage
 from pyiron_atomistics.atomistics.structure.analyse import get_average_of_unique_labels
 from scipy.spatial.transform import Rotation
 from scipy.special import sph_harm
 import warnings
-from pyiron_base import Settings, deprecate
+from pyiron_base import deprecate
 import itertools
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
@@ -24,8 +24,6 @@ __maintainer__ = "Sam Waseda"
 __email__ = "waseda@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class Tree:
@@ -1006,12 +1004,9 @@ def get_volume_of_n_sphere_in_p_norm(n=3, p=2):
 
 
 class NeighborsTrajectory(DataContainer):
-
     """
-    This class generates the neighbors for a given atomistic trajectory. The assumption here is that the trajectory is
-    canonical (no change in the number and types of species throughout the trajectory). The resulting indices,
-    distances, and vectors are stored as numpy arrays.
-
+    This class generates the neighbors for a given atomistic trajectory. The resulting indices, distances, and vectors
+    are stored as numpy arrays.
     """
 
     def __new__(cls, *args, **kwargs):
@@ -1019,60 +1014,87 @@ class NeighborsTrajectory(DataContainer):
         object.__setattr__(instance, "_has_structure", None)
         return instance
 
-    def __init__(self, has_structure=None, num_neighbors=12, table_name="neighbors_traj", **kwargs):
+    def __init__(self, init=None, has_structure=None, num_neighbors=12, table_name="neighbors_traj", store=None, **kwargs):
         """
 
         Args:
             has_structure (:class:`.HasStructure`): object containing the structures to compute the neighbors on
             num_neighbors (int): The cutoff for the number of neighbors
-            table_name (str): Table name for the base `DataContainer` (stores this object as a group in a
-                              HDF5 file with this name)
+            table_name (str): Table name for the base `DataContainer` (stores this object as a group in a HDF5 file with
+                              this name)
+            store (FlattenedStorage): internal storage that should be used to store the neighborhood information,
+                                      creates a new one if not provided; if provided and not empty it must be compatible
+                                      with the lengths of the structures in `has_structure`, but this is *not* checked
             **kwargs (dict): Additional arguments to be passed to the `get_neighbors()` routine
                              (eg. cutoff_radius, norm_order , etc.)
         """
-        super().__init__(table_name=table_name)
-        self._has_structure = has_structure
-        self._neighbor_indices = None
-        self._neighbor_distances = None
-        self._neighbor_vectors = None
+        super().__init__(init=init, table_name=table_name)
+        self._flat_store = store if store is not None else FlattenedStorage()
+        self._flat_store.add_array("indices", dtype=np.int64, shape=(num_neighbors,), per="element", fill=-1)
+        self._flat_store.add_array("distances", dtype=np.float64, shape=(num_neighbors,), per="element")
+        self._flat_store.add_array("vecs", dtype=np.float64, shape=(num_neighbors, 3), per="element")
+        self._flat_store.add_array("shells", dtype=np.int64, shape=(num_neighbors,), per="element")
         self._num_neighbors = num_neighbors
         self._get_neighbors_kwargs = kwargs
+        self.has_structure = has_structure
+
+    @property
+    def has_structure(self):
+        return self._has_structure
+
+    @has_structure.setter
+    def has_structure(self, value):
+        if value is not None:
+            self._has_structure = value
+            self._compute_neighbors()
 
     @property
     def indices(self):
         """
         Neighbour indices (excluding itself) of each atom computed using the get_neighbors_traj() method
 
+        If the structures have different number of atoms, the array will have -1 on indices that are invalid.
+
         Returns:
-
-            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
-
+            numpy.ndarray: An int array of dimension N_steps / stride x N_atoms x N_neighbors
         """
-        return self._neighbor_indices
+        return self._flat_store.get_array_filled("indices")
 
     @property
     def distances(self):
         """
         Neighbour distances (excluding itself) of each atom computed using the get_neighbors_traj() method
 
+        If the structures have different number of atoms, the array will have NaN on indices that are invalid.
+
         Returns:
-
-            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors
-
+            numpy.ndarray: A float array of dimension N_steps / stride x N_atoms x N_neighbors
         """
-        return self._neighbor_distances
+        return self._flat_store.get_array_filled("distances")
 
     @property
     def vecs(self):
         """
         Neighbour vectors (excluding itself) of each atom computed using the get_neighbors_traj() method
 
+        If the structures have different number of atoms, the array will have NaN on indices that are invalid.
+
         Returns:
-
-            numpy.ndarray/list: An array of dimension N_steps / stride x N_atoms x N_neighbors x 3
-
+            numpy.ndarray: A float array of dimension N_steps / stride x N_atoms x N_neighbors x 3
         """
-        return self._neighbor_vectors
+        return self._flat_store.get_array_filled("vecs")
+
+    @property
+    def shells(self):
+        """
+        Neighbor shell indices (excluding itself) of each atom computed using the get_neighbors_traj() method.
+
+        For trajectories with non constant amount of particles this array may contain -1 for invalid values, i.e.
+
+        Returns:
+            ndarray: An int array of dimension N_steps / stride x N_atoms x N_neighbors x 3
+        """
+        return self._flat_store.get_array_filled("shells")
 
     @property
     def num_neighbors(self):
@@ -1085,25 +1107,26 @@ class NeighborsTrajectory(DataContainer):
         """
         return self._num_neighbors
 
+    def _compute_neighbors(self):
+        for i, struct in enumerate(self._has_structure.iter_structures()):
+            if i < len(self._flat_store) and (self._flat_store["indices", i] != -1).all():
+                # store already has valid entries for this structure, so skip it
+                continue
+            # Change the `allow_ragged` based on the changes in get_neighbors()
+            neigh = struct.get_neighbors(num_neighbors=self._num_neighbors, allow_ragged=False, **self._get_neighbors_kwargs)
+            if i >= len(self._flat_store):
+                self._flat_store.add_chunk(len(struct),
+                                indices=neigh.indices, distances=neigh.distances, vecs=neigh.vecs, shells=neigh.shells)
+            else:
+                self._flat_store.set_array("indices", i, neigh.indices)
+                self._flat_store.set_array("distances", i, neigh.distances)
+                self._flat_store.set_array("vecs", i, neigh.vecs)
+                self._flat_store.set_array("shells", i, neigh.shells)
+        return self._flat_store.get_array_filled('indices'), self._flat_store.get_array_filled('distances'), self._flat_store.get_array_filled('vecs')
+
+    @deprecate("This has no effect, neighbors are automatically called on instantiation.")
     def compute_neighbors(self):
         """
         Compute the neighbors across the trajectory
         """
-        self._neighbor_indices, self._neighbor_distances, self._neighbor_vectors = \
-            _get_neighbors(self._has_structure,
-                           num_neighbors=self._num_neighbors, **self._get_neighbors_kwargs)
-
-
-def _get_neighbors(has_structure, num_neighbors=20, **kwargs):
-    n_steps = has_structure.number_of_structures
-    n_atoms = len(has_structure.get_structure(frame=0))
-    indices = np.zeros((n_steps, n_atoms, num_neighbors), dtype=np.int64)
-    distances = np.zeros((n_steps, n_atoms, num_neighbors))
-    vecs = np.zeros((n_steps, n_atoms, num_neighbors, 3))
-    for t, struct in enumerate(has_structure.iter_structures()):
-        # Change the `allow_ragged` based on the changes in get_neighbors()
-        neigh = struct.get_neighbors(num_neighbors=num_neighbors, allow_ragged=False, **kwargs)
-        indices[t, :, :] = neigh.indices
-        distances[t, :, :] = neigh.distances
-        vecs[t, :, :, :] = neigh.vecs
-    return indices, distances, vecs
+        pass

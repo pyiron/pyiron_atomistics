@@ -9,7 +9,7 @@ from ase.io import read as ase_read
 from ase.spacegroup import crystal as ase_crystal
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
-from pyiron_base import Settings
+from pyiron_base import state
 
 __author__ = "Ali Zendegani"
 __copyright__ = (
@@ -21,8 +21,6 @@ __maintainer__ = "Liam Huber"
 __email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Feb 26, 2021"
-
-s = Settings()
 
 
 def _ase_header(ase_func):
@@ -40,7 +38,7 @@ def _ase_wraps(ase_func):
     def decorator(func):
         @wraps(ase_func)
         def wrapper(*args, **kwargs):
-            s.publication_add(publication_ase())
+            state.publications.add(publication_ase())
             return func(*args, **kwargs)
         wrapper.__doc__ = _ase_header(ase_func) + wrapper.__doc__
         return wrapper

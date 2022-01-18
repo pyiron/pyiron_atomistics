@@ -3,12 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from ast import literal_eval
-import numpy as np
 import pandas as pd
 import shutil
 import os
-from pyiron_base import Settings, GenericParameters
+from pyiron_base import state, GenericParameters
 from pyiron_atomistics.atomistics.job.potentials import PotentialAbstract, find_potential_file_base
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
@@ -21,8 +19,6 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class LammpsPotential(GenericParameters):
@@ -75,10 +71,12 @@ class LammpsPotential(GenericParameters):
                 if not os.path.isabs(files)
             ]
             env = os.environ
-            resource_path_lst = s.resource_paths
+            resource_path_lst = state.settings.resource_paths
             for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
                 if conda_var in env.keys():  # support iprpy-data package
-                    resource_path_lst += [os.path.join(env[conda_var], "share", "iprpy")]
+                    path_to_add = state.settings.convert_path_to_abs_posix(os.path.join(env[conda_var], "share", "iprpy"))
+                    if path_to_add not in resource_path_lst:
+                        resource_path_lst.append(path_to_add)
             for path in relative_file_paths:
                 absolute_file_paths.append(find_potential_file_base(
                     path=path,

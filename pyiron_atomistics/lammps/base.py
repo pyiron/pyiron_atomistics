@@ -15,7 +15,7 @@ from io import StringIO
 
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile, PotentialAvailable
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
-from pyiron_base import Settings, extract_data_from_file, deprecate
+from pyiron_base import state, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
@@ -32,9 +32,6 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-
-s = Settings()
 
 
 class LammpsBase(AtomisticGenericJob):
@@ -59,7 +56,7 @@ class LammpsBase(AtomisticGenericJob):
         self._is_continuation = None
         self._compress_by_default = True
         self._prism = None
-        s.publication_add(self.publication)
+        state.publications.add(self.publication)
 
     @property
     def units(self):
@@ -200,7 +197,7 @@ class LammpsBase(AtomisticGenericJob):
                 for p in ast.literal_eval(pub_lst):
                     for k in p.keys():
                         pot_pub_dict[k] = p[k]
-            s.publication_add({"lammps_potential": pot_pub_dict})
+            state.publications.add({"lammps_potential": pot_pub_dict})
         for val in ["units", "atom_style", "dimension"]:
             v = self.input.potential[val]
             if v is not None:
@@ -487,13 +484,11 @@ class LammpsBase(AtomisticGenericJob):
                 np.eye(3) * np.array(cell_i.tolist())
                 for cell_i in h5md["/particles/all/box/edges/value"]
             ]
-            indices = [indices_i.tolist() for indices_i in h5md["/particles/all/indices/value"]]
         with self.project_hdf5.open("output/generic") as h5_file:
             h5_file["forces"] = uc.convert_array_to_pyiron_units(np.array(forces), "forces")
             h5_file["positions"] = uc.convert_array_to_pyiron_units(np.array(positions), "positions")
             h5_file["steps"] = uc.convert_array_to_pyiron_units(np.array(steps), "steps")
-            h5_file["cells"] = uc.convert_array_to_pyiron_units(cell, "cells")
-            h5_file["indices"] = uc.convert_array_to_pyiron_units(self.remap_indices(indices), "indices")
+            h5_file["cells"] = uc.convert_array_to_pyiron_units(np.array(cell), "cells")
 
     def remap_indices(self, lammps_indices):
         """

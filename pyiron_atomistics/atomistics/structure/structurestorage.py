@@ -9,6 +9,7 @@ Alternative structure container that stores them in flattened arrays.
 import numpy as np
 
 from pyiron_base import FlattenedStorage
+from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 
@@ -190,12 +191,16 @@ class StructureStorage(FlattenedStorage, HasStructure):
             raise KeyError(f"No structure named {frame}.") from None
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
+        elements = self.get_elements()
+        index_map = {e: i for i, e in enumerate(elements)}
         try:
             magmoms = self.get_array("spins", frame)
         except KeyError:
             # not all structures have spins saved on them
             magmoms = None
-        return Atoms(symbols=self.get_array("symbols", frame),
+        symbols = self.get_array("symbols", frame)
+        return Atoms(species=[Atom(e).element for e in elements],
+                     indices=[index_map[e] for e in symbols],
                      positions=self.get_array("positions", frame),
                      cell=self.get_array("cell", frame),
                      pbc=self.get_array("pbc", frame),

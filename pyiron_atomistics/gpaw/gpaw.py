@@ -4,7 +4,7 @@
 
 from pyiron_atomistics.gpaw.pyiron_ase import AseJob
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
-from pyiron_base import GenericParameters, Settings, ImportAlarm
+from pyiron_base import GenericParameters, ImportAlarm
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -16,8 +16,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2018"
-
-s = Settings()
 
 try:
     from gpaw import GPAW as GPAWcode, PW, MethfesselPaxton
