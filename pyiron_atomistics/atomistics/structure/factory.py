@@ -50,7 +50,6 @@ __status__ = "production"
 __date__ = "May 1, 2020"
 
 
-
 class StructureFactory(PyironFactory):
     def __init__(self):
         self._ase = AseFactory()
@@ -422,7 +421,7 @@ class StructureFactory(PyironFactory):
     def from_ovito(ovito_obj):
         return ovito_to_pyiron(ovito_obj)
 
-    def high_index_surface_info(self, element='Ni', crystal_structure='fcc', lattice_constant=3.526,
+    def high_index_surface_info(self, element, crystal_structure, lattice_constant,
                                 terrace_orientation=None, step_orientation=None, kink_orientation=None,
                                 step_down_vector=None, length_step=3, length_terrace=3, length_kink=1):
         """
@@ -481,7 +480,7 @@ class StructureFactory(PyironFactory):
 
         return high_index_surface, fin_kink_orientation, fin_step_orientation
 
-    def high_index_surface(self, element='Ni', crystal_structure='fcc', lattice_constant=3.526,
+    def high_index_surface(self, element, crystal_structure, lattice_constant,
                            terrace_orientation=None, step_orientation=None, kink_orientation=None,
                            step_down_vector=None, length_step=3, length_terrace=3, length_kink=1, layers=60,
                            vacuum=10):
