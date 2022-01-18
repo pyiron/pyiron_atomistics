@@ -3,15 +3,16 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_base import Settings
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
-from scipy.spatial import Voronoi
+from scipy.spatial import Voronoi, Delaunay
+from scipy.spatial.qhull import _QhullUser
 from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
     analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume, analyse_find_solids
 from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
+from typing import Type
 deprecate = Deprecator()
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
@@ -24,8 +25,6 @@ __maintainer__ = "Sam Waseda"
 __email__ = "waseda@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 def get_mean_positions(positions, cell, pbc, labels):
@@ -652,6 +651,45 @@ class Analyse:
             only_bulk_type=only_bulk_type
         ).strain
 
+    def _get_neighbors(
+            self, position_interpreter: Type[_QhullUser], data_field: str, width_buffer: float = 10
+    ) -> np.ndarray:
+        positions, indices = self._structure.get_extended_positions(
+            width_buffer, return_indices=True
+        )
+        interpretation = position_interpreter(positions)
+        data = getattr(interpretation, data_field)
+        x = positions[data]
+        return indices[data[
+            np.isclose(self._structure.get_wrapped_coordinates(x), x).all(axis=-1).any(axis=-1)
+        ]]
+
+    def get_voronoi_neighbors(self, width_buffer: float = 10) -> np.ndarray:
+        """
+        Get pairs of atom indices sharing the same Voronoi vertices/areas.
+
+        Args:
+            width_buffer (float): Width of the layer to be added to account for pbc.
+
+        Returns:
+            pairs (ndarray): Pair indices
+        """
+        return self._get_neighbors(Voronoi, "ridge_points", width_buffer=width_buffer)
+
+    def get_delaunay_neighbors(self, width_buffer: float = 10.) -> np.ndarray:
+        """
+        Get indices of atoms sharing the same Delaunay tetrahedrons (commonly known as Delaunay
+        triangles), i.e. indices of neighboring atoms, which form a tetrahedron, in which no other
+        atom exists.
+
+        Args:
+            width_buffer (float): Width of the layer to be added to account for pbc.
+
+        Returns:
+            pairs (ndarray): Delaunay neighbor indices
+        """
+        return self._get_neighbors(Delaunay, "simplices", width_buffer=width_buffer)
+
     def cluster_positions(self, positions=None, eps=1, buffer_width=None, return_labels=False):
         """
         Cluster positions according to the distances. Clustering algorithm uses DBSCAN:
@@ -692,9 +730,7 @@ class Analyse:
             positions (numpy.ndarray): Mean positions
             label (numpy.ndarray): Labels of the positions (returned when `return_labels = True`)
         """
-        if positions is None:
-            positions = self._structure.positions
-        positions = np.array(positions)
+        positions = self._structure.positions if positions is None else np.array(positions)
         if buffer_width is None:
             buffer_width = eps
         extended_positions, indices = self._structure.get_extended_positions(
@@ -711,3 +747,4 @@ class Analyse:
         if return_labels:
             return mean_positions, labels
         return mean_positions
+

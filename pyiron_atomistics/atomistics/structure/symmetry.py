@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_base import Settings, deprecate
+from pyiron_base import deprecate
 from scipy.spatial import cKDTree
 import spglib
 import ast
@@ -18,8 +18,6 @@ __maintainer__ = "Sam Waseda"
 __email__ = "waseda@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class Symmetry(dict):
@@ -36,7 +34,13 @@ class Symmetry(dict):
     """
 
     def __init__(
-        self, structure, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
+        self,
+        structure,
+        use_magmoms=False,
+        use_elements=True,
+        symprec=1e-5,
+        angle_tolerance=-1.0,
+        epsilon=1.0e-8
     ):
         """
         Args:
@@ -46,12 +50,15 @@ class Symmetry(dict):
             use_elements (bool): If False, chemical elements will be ignored
             symprec (float): Symmetry search precision
             angle_tolerance (float): Angle search tolerance
+            epsilon (float): displacement to add to avoid wrapping of atoms at borders
         """
         self._structure = structure
         self._use_magmoms = use_magmoms
         self._use_elements = use_elements
         self._symprec = symprec
         self._angle_tolerance = angle_tolerance
+        self.epsilon = epsilon
+        self._permutations = None
         for k, v in self._get_symmetry(
             symprec=symprec,
             angle_tolerance=angle_tolerance
@@ -61,6 +68,21 @@ class Symmetry(dict):
     @property
     def arg_equivalent_atoms(self):
         return self['equivalent_atoms']
+
+    @property
+    def arg_equivalent_vectors(self):
+        """
+        Get 3d vector components which are equivalent under symmetry operation. For example, if
+        the `i`-direction (`i = x, y, z`) of the `n`-th atom is equivalent to the `j`-direction
+        of the `m`-th atom, then the returned array should have the same number in `(n, i)` and
+        `(m, j)`
+        """
+        ladder = np.arange(np.prod(self._structure.positions.shape)).reshape(-1, 3)
+        all_vec = np.einsum('nij,nmj->min', self.rotations, ladder[self.permutations])
+        vec_abs_flat = np.absolute(all_vec).reshape(np.prod(self._structure.positions.shape), -1)
+        vec_sorted = np.sort(vec_abs_flat, axis=-1)
+        enum = np.unique(vec_sorted, axis=0, return_inverse=True)[1]
+        return enum.reshape(-1, 3)
 
     @property
     def rotations(self):
@@ -89,7 +111,6 @@ class Symmetry(dict):
         points,
         return_unique=True,
         decimals=5,
-        epsilon=1.0e-8,
     ):
         """
 
@@ -98,7 +119,6 @@ class Symmetry(dict):
             return_unique (bool): Return only points which appear once.
             decimals (int): Number of decimal places to round to for the uniqueness of positions
                 (Not relevant if return_unique=False)
-            epsilon (float): displacement to add to avoid wrapping of atoms at borders
 
         Returns:
             (ndarray): array of equivalent points with respect to box symmetries, with a shape of
@@ -110,7 +130,7 @@ class Symmetry(dict):
         x = np.einsum('jk,nj->nk', np.linalg.inv(self._structure.cell), np.atleast_2d(points))
         x = np.einsum('nxy,my->mnx', R, x) + t
         if any(self._structure.pbc):
-            x[:, :, self._structure.pbc] -= np.floor(x[:, :, self._structure.pbc] + epsilon)
+            x[:, :, self._structure.pbc] -= np.floor(x[:, :, self._structure.pbc] + self.epsilon)
         if not return_unique:
             return np.einsum(
                 'ji,mnj->mni', self._structure.cell, x
@@ -125,7 +145,6 @@ class Symmetry(dict):
         self,
         points,
         decimals=5,
-        epsilon=1.0e-8
     ):
         """
         Group points according to the box symmetries
@@ -134,7 +153,6 @@ class Symmetry(dict):
             points (list/ndarray): 3d vector
             decimals (int): Number of decimal places to round to for the uniqueness of positions
                 (Not relevant if return_unique=False)
-            epsilon (float): displacement to add to avoid wrapping of atoms at borders
 
         Returns:
             (ndarray): array of ID's according to their groups
@@ -143,7 +161,6 @@ class Symmetry(dict):
             raise ValueError('points must be a (n, 3)-array')
         all_points = self.generate_equivalent_points(
             points=points,
-            epsilon=epsilon,
             return_unique=False
         )
         _, inverse = np.unique(
@@ -153,17 +170,49 @@ class Symmetry(dict):
         indices = np.min(inverse, axis=1)
         return np.unique(indices, return_inverse=True)[1]
 
+    @property
+    def permutations(self):
+        """
+        Permutations for the corresponding symmetry operations.
+
+        Returns:
+            ((n_symmetry, n_atoms, n_dim)-array): Permutation indices
+
+        Let `v` a `(n_atoms, n_dim)`-vector field (e.g. forces, displacements), then
+        `permutations` gives the corredponding indices of the vectors for the given symmetry
+        operation, i.e. `v` is equivalent to
+
+        >>> symmetry.rotations[n] @ v[symmetry.permutations[n]].T
+
+        for any `n` with respect to the box symmetry (`n < n_symmetry`).
+        """
+        if self._permutations is None:
+            scaled_positions = self._structure.get_scaled_positions(wrap=False)
+            scaled_positions[..., self._structure.pbc] -= np.floor(
+                scaled_positions[..., self._structure.pbc] + self.epsilon
+            )
+            tree = cKDTree(scaled_positions)
+            positions = np.einsum(
+                'nij,kj->nki',
+                self['rotations'],
+                scaled_positions
+            ) + self['translations'][:, None, :]
+            positions -= np.floor(positions + self.epsilon)
+            distances, self._permutations = tree.query(positions)
+            if not np.allclose(distances, 0):
+                raise AssertionError('Neighbor search failed')
+            self._permutations = self._permutations.argsort(axis=-1)
+        return self._permutations
+
     def symmetrize_vectors(
         self,
         vectors,
-        epsilon=1.0e-8,
     ):
         """
         Symmetrization of natom x 3 vectors according to box symmetries
 
         Args:
             vectors (ndarray/list): natom x 3 array to symmetrize
-            epsilon (float): displacement to add to avoid wrapping of atoms at borders
 
         Returns:
             (np.ndarray) symmetrized vectors
@@ -173,19 +222,10 @@ class Symmetry(dict):
             raise ValueError('Vector must be a natom x 3 array: {} != {}'.format(
                 vectors.shape, self.positions.shape
             ))
-        scaled_positions = self._structure.get_scaled_positions(wrap=False)
-        tree = cKDTree(scaled_positions)
-        positions = np.einsum(
-            'nij,kj->nki',
-            self['rotations'],
-            scaled_positions
-        ) + self['translations'][:, None, :]
-        positions -= np.floor(positions + epsilon)
-        indices = tree.query(positions)[1].argsort(axis=-1)
         return np.einsum(
             'ijk,ink->nj',
             self['rotations'],
-            vectors[indices]
+            vectors[self.permutations]
         ) / len(self['rotations'])
 
     def _get_spglib_cell(self, use_elements=None, use_magmoms=None):

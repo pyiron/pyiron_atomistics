@@ -7,12 +7,13 @@ import os
 import posixpath
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_atomistics.vasp.base import Input, Output
-from pyiron_base import ProjectHDFio, Project
+from pyiron_base import state, ProjectHDFio, Project
 from pyiron_atomistics.vasp.potential import VaspPotentialSetter
 from pyiron_atomistics.vasp.vasp import Vasp
 from pyiron_atomistics.vasp.metadyn import VaspMetadyn
 from pyiron_atomistics.vasp.structure import read_atoms
 import numpy as np
+import warnings
 
 __author__ = "Sudarsan Surendralal"
 
@@ -24,6 +25,7 @@ class TestVasp(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        state.update({'resource_paths': os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")})
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.execution_path, "test_vasp"))
         cls.job = cls.project.create_job("Vasp", "trial")
@@ -52,6 +54,7 @@ class TestVasp(unittest.TestCase):
         project = Project(os.path.join(cls.execution_path, "test_vasp"))
         project.remove_jobs_silently(recursive=True)
         project.remove(enable=True)
+        state.update()
 
     def setUp(self):
         self.job.structure = None
@@ -255,6 +258,26 @@ class TestVasp(unittest.TestCase):
         self.job.structure = atoms.repeat([3, 1, 1])
         self.job.set_empty_states(n_empty_states=10)
         self.assertEqual(self.job.input.incar["NBANDS"], 25)
+
+    def test_set_occpuancy_smearing(self):
+        job_smear = self.project.create_job("Vasp", "smearing")
+        self.assertIsNone(job_smear.input.incar["ISMEAR"])
+        self.assertIsNone(job_smear.input.incar["SIGMA"])
+        job_smear.set_occupancy_smearing(smearing="methfessel_paxton")
+        self.assertEqual(job_smear.input.incar["ISMEAR"], 1)
+        job_smear.set_occupancy_smearing(smearing="methfessel_paxton", order=2)
+        self.assertEqual(job_smear.input.incar["ISMEAR"], 2)
+        job_smear.set_occupancy_smearing(smearing="Fermi", width=0.1)
+        self.assertEqual(job_smear.input.incar["ISMEAR"], -1)
+        self.assertEqual(job_smear.input.incar["SIGMA"], 0.1)
+        job_smear.set_occupancy_smearing(smearing="Gaussian", width=0.1)
+        self.assertEqual(job_smear.input.incar["ISMEAR"], 0)
+        self.assertEqual(job_smear.input.incar["SIGMA"], 0.1)
+        with warnings.catch_warnings(record=True) as w:
+            job_smear.set_occupancy_smearing(smearing="Gaussian", ismear=10)
+            self.assertEqual(job_smear.input.incar["ISMEAR"], 10)
+            self.assertEqual(len(w), 1)
+        self.assertRaises(ValueError, job_smear.set_occupancy_smearing, smearing="gibberish")
 
     def test_calc_static(self):
         self.job.calc_static(

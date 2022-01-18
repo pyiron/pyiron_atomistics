@@ -6,7 +6,7 @@ import numpy as np
 import scipy
 from scipy.io.netcdf import netcdf_file
 import os
-from pyiron_base import Settings
+from pyiron_base import state
 from pyiron_atomistics.atomistics.volumetric.generic import VolumetricData
 
 __author__ = "Sudarsan Surendralal"
@@ -83,8 +83,7 @@ class SphinxVolumetricData(VolumetricData):
 
         """
         if not os.path.getsize(filename) > 0:
-            s = Settings()
-            s.logger.warning("File:" + filename + "seems to be empty! ")
+            state.logger.warning("File:" + filename + "seems to be empty! ")
             return None, None
 
         with netcdf_file(filename, mmap=False) as f:
@@ -111,8 +110,7 @@ class SphinxVolumetricData(VolumetricData):
                 )
 
         if len(total_data_list) == 0:
-            s = Settings()
-            s.logger.warning(
+            state.logger.warning(
                 "File:"
                 + filename
                 + "seems to be corrupted/empty even after parsing!"

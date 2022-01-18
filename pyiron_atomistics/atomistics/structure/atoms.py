@@ -22,7 +22,7 @@ from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement
 )
-from pyiron_base import Settings, deprecate, deprecate_soon
+from pyiron_base import state, deprecate, deprecate_soon
 from pyiron_atomistics.atomistics.structure.pyironase import publication
 from pymatgen.io.ase import AseAtomsAdaptor
 
@@ -38,8 +38,6 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class Atoms(ASEAtoms):
@@ -105,7 +103,7 @@ class Atoms(ASEAtoms):
             or calculator is not None
             or info is not None
         ):
-            s.logger.debug("Not supported parameter used!")
+            state.logger.debug("Not supported parameter used!")
 
         self._store_elements = dict()
         self._species_to_index_dict = None
@@ -2031,9 +2029,6 @@ class Atoms(ASEAtoms):
     #     return len(self.indices)
 
     def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
         if len(self) == 0:
             return "[]"
         out_str = ""
@@ -2051,6 +2046,9 @@ class Atoms(ASEAtoms):
             out_str += "cell: \n"
             out_str += str(self.cell) + "\n"
         return out_str
+
+    def __str__(self):
+        return self.get_chemical_formula()
 
     def __setitem__(self, key, value):
         if isinstance(key, (int, np.integer)):
@@ -2276,16 +2274,23 @@ class Atoms(ASEAtoms):
                 else:
                     self.selective_dynamics[atom_ind] = [True, True, True]
 
-    def apply_strain(self, epsilon, return_box=False):
+    def apply_strain(self, epsilon, return_box=False, mode='linear'):
         """
-        Apply a given strain on the structure
+        Apply a given strain on the structure. It applies the matrix `F` in the manner:
+
+        ```
+            new_cell = F @ current_cell
+        ```
 
         Args:
-            epsilon (float/list/ndarray): epsilon matrix. If a single number is set, the same strain
-                                          is applied in each direction. If a 3-dim vector is set, it
-                                          will be multiplied by a unit matrix.
+            epsilon (float/list/ndarray): epsilon matrix. If a single number is set, the same
+                strain is applied in each direction. If a 3-dim vector is set, it will be
+                multiplied by a unit matrix.
             return_box (bool): whether to return a box. If set to True, only the returned box will
-                               have the desired strain and the original box will stay unchanged.
+                have the desired strain and the original box will stay unchanged.
+            mode (str): `linear` or `lagrangian`. If `linear`, `F` is equal to the epsilon - 1.
+                If `lagrangian`, epsilon is given by `(F^T * F - 1) / 2`. It raises an error if
+                the strain is not symmetric (if the shear components are given).
         """
         epsilon = np.array([epsilon]).flatten()
         if len(epsilon) == 3 or len(epsilon) == 1:
@@ -2298,7 +2303,16 @@ class Atoms(ASEAtoms):
         else:
             structure_copy = self
         cell = structure_copy.cell.copy()
-        cell = np.matmul(epsilon + np.eye(3), cell)
+        if mode == 'linear':
+            F = epsilon + np.eye(3)
+        elif mode == 'lagrangian':
+            if not np.allclose(epsilon, epsilon.T):
+                raise ValueError("Strain must be symmetric if `mode = 'lagrangian'`")
+            E, V = np.linalg.eigh(2*epsilon+np.eye(3))
+            F = np.einsum('ik,k,jk->ij', V, np.sqrt(E), V)
+        else:
+            raise ValueError('mode must be `linear` or `lagrangian`')
+        cell = np.matmul(F, cell)
         structure_copy.set_cell(cell, scale_atoms=True)
         if return_box:
             return structure_copy
