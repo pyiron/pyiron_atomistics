@@ -1,5 +1,10 @@
 # Unreleased
 
+# pyiron_atomistics-0.2.35
+- High index surfaces  ([#400](https://github.com/pyiron/pyiron_atomistics/pull/400))
+- Consistent indices for StructureStorage.get_structures ([#482](https://github.com/pyiron/pyiron_atomistics/pull/482))
+- Dependency updates: [#504](https://github.com/pyiron/pyiron_atomistics/pull/504)
+
 # pyiron_atomistics-0.2.34
 Since pyiron_atomistics-0.2.29 stresses are by default calculated and stored for VASP calculations. However, the stored values were stored in an undocumented order and had the wrong sign. [#497](https://github.com/pyiron/pyiron_atomistics/pull/497) provides a fix by storing the stress as an unambiguous matrix. 
 
