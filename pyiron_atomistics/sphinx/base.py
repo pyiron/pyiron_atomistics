@@ -2077,9 +2077,7 @@ class Output(object):
     def _check_enter_scf(self, log_file):
         if len(re.findall("Enter Main Loop", log_file, re.MULTILINE)) == 0:
             self._job.status.aborted = True
-            warnings.warn("Log file created but first scf loop not reached")
-            return False
-        return True
+            raise AssertionError("Log file created but first scf loop not reached")
 
     def _check_finished(self, log_file):
         if len(re.findall("Program exited normally.", log_file, re.MULTILINE)) == 0:
@@ -2164,8 +2162,7 @@ class Output(object):
 
         with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
             log_file = ''.join(sphinx_log_file.readlines())
-        if not self._check_enter_scf(log_file):
-            return None
+        self._check_enter_scf(log_file)
         self._check_finished(log_file)
         self._parse_dict["n_valence"] = self._get_n_valence(log_file)
         k_points = self._get_k_points(log_file)
