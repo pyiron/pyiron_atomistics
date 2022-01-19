@@ -2071,6 +2071,57 @@ class Output(object):
                     energy_free_lst.append(float(line[1]) * HARTREE_TO_EV)
         self._energy_free_struct_lst = energy_free_lst
 
+    def _get_number_of_steps(self, file_content):
+        return len(re.findall("\| SCF calculation", file_content, re.MULTILINE))
+
+    def _check_enter_scf(self, log_file):
+        if len(re.findall("Enter Main Loop", log_file, re.MULTILINE)) == 0:
+            self._job.status.aborted = True
+            warnings.warn("Log file created but first scf loop not reached")
+            return False
+        return True
+
+    def _check_finished(self, log_file):
+        if len(re.findall("Program exited normally.", log_file, re.MULTILINE)) == 0:
+            warnings.warn("Log file created but first scf loop not reached")
+            self._job.status.aborted = True
+
+    def _truncate_log(self, log_file):
+        match = re.search("Enter Main Loop", log_file)
+        return log_file[match.end() + 1: None]
+
+    @staticmethod
+    def _get_n_valence(log_file):
+        log = log_file.split('\n')
+        return {
+            log[ii-1].split()[1]: int(ll.split('=')[-1])
+            for ii, ll in enumerate(log)
+            if ll.startswith('| Z=')
+        }
+
+    def _get_k_points(self, log_file):
+        start_match = re.search(
+            "-ik-     -x-      -y-       -z-    \|  -weight-    -nG-    -label-", log_file
+        )
+        log_part = log_file[start_match.end() + 1:]
+        log_part = log_part[:re.search('^\n', log_part, re.MULTILINE).start()]
+        k_points = log_part.split('\n')[:-2]
+        self._parse_dict["bands_k_weights"] = np.array([float(kk.split()[6]) for kk in k_points])
+        k_points = np.array([[float(kk.split()[i]) for i in range(2, 5)] for kk in k_points])
+        rec_cell = np.linalg.inv(self._job.structure.cell.T / BOHR_TO_ANGSTROM) * 2 * np.pi
+        self._parse_dict["kpoints_cartesian"] = np.einsum('ni,ij->nj', k_points, rec_cell)
+        return k_points
+
+    @staticmethod
+    def _get_convergence(self, log_file):
+        conv_dict = {
+            'WARNING: Maximum number of steps exceeded': False,
+            'Convergence reached': True
+        }
+        key = '|'.join(list(conv_dict.keys()))
+        items = re.findall(key, log_main, re.MULTILINE)
+        return [conv_dict[k] for k in items]
+
     def collect_sphinx_log(
         self, file_name="sphinx.log", cwd=None, check_consistency=True
     ):
@@ -2097,97 +2148,54 @@ class Output(object):
                 return None
 
         with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
-            log_file = sphinx_log_file.readlines()
-            if not np.any(["Enter Main Loop" in line for line in log_file]):
-                self._job.status.aborted = True
-                raise AssertionError("SPHInX did not enter the main loop; \
-                    output not collected")
-            if not np.any(["Program exited normally." in line
-                           for line in log_file]):
-                self._job.status.aborted = True
-                warnings.warn("SPHInX parsing failed; most likely \
-                    SPHInX crashed.")
-            main_start = np.where([
-                "Enter Main Loop" in line
-                for line in log_file]
-            )[0][0]
-            log_main = log_file[main_start:]
-
-            self._parse_dict["n_valence"] = {
-                log_file[ii-1].split()[1]: int(ll.split('=')[-1])
-                for ii, ll in enumerate(log_file)
-                if ll.startswith('| Z=')
-            }
-
-            def get_partial_log(file_content, start_line, end_line):
-                start_line = np.where([
-                    line == start_line
-                    for line in file_content]
-                )[0][0]
-                end_line = np.where(
-                    [line == end_line for line in file_content[start_line:]]
-                )[0][0]
-                return file_content[start_line:start_line + end_line]
-            k_points = get_partial_log(
-                log_file,
-                "| Symmetrized k-points:               "
-                + "in cartesian coordinates\n",
-                "\n",
-            )[2:-1]
-            self._parse_dict["bands_k_weights"] = np.array([float(kk.split()[6]) for kk in k_points])
-            k_points = np.array([[float(kk.split()[i]) for i in range(2, 5)] for kk in k_points])
-            rec_cell = np.linalg.inv(self._job.structure.cell.T / BOHR_TO_ANGSTROM) * 2 * np.pi
-            self._parse_dict["kpoints_cartesian"] = np.einsum('ni,ij->nj', k_points, np.linalg.inv(rec_cell))
+            log_file = ''.join(sphinx_log_file.readlines())
+            if not self._check_enter_scf(log_file):
+                return None
+            self._check_finished(log_file)
+            self._parse_dict["n_valence"] = self._get_n_valence(log_file)
+            k_points = self._get_k_points(self, log_file)
+            volume = re.findall('Omega:.*$', log_file, re.MULTILINE)
+            if len(volume) > 0:
+                volume = float(volume[0].split()[1])
+                volume *= BOHR_TO_ANGSTROM ** 3
+            else:
+                volume = 0
+            log_main = self._truncate_log(log_file)
             counter = [
-                int(line.replace("F(", "").replace(")", " ").split()[0])
-                for line in log_main
-                if line.startswith("F(")
+                int(re.sub('[^0-9]', '', line.split('=')[0]))
+                for line in re.findall("F\(.*$", log_main, re.MULTILINE)
             ]
             energy_free = [
-                float(line.replace("=", " ").replace(",", " ").split()[1])
-                * HARTREE_TO_EV
-                for line in log_main
-                if line.startswith("F(")
+                float(line.split('=')[1]) * HARTREE_TO_EV
+                for line in re.findall("F\(.*$", log_main, re.MULTILINE)
             ]
             energy_int = [
-                float(line.replace("=", " ").replace(",", " ").split()[1])
-                * HARTREE_TO_EV
-                for line in log_main
-                if line.startswith("eTot(") and not line.startswith(
-                    "eTot(Val)")
+                float(line.replace("=", " ").replace(",", " ").split()[1]) * HARTREE_TO_EV
+                for line in re.findall("^eTot\([0-9].*$", log_main, re.MULTILINE)
             ]
             forces = [
                 float(re.split("{|}", line)[1].split(",")[i])
                 * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-                for line in log_main
+                for line in re.findall("^Species.*$", log_main, re.MULTILINE)
                 for i in range(3)
-                if line.startswith("Species: ")
             ]
             magnetic_forces = [
                 HARTREE_TO_EV * float(line.split()[-1])
-                for line in log_main
-                if line.startswith("nu(")
+                for line in re.findall("^nu\(.*$", log_main, re.MULTILINE)
             ]
-            convergence = [
-                check_conv(line) for line in log_main
-                if check_conv(line) is not None
-            ]
-            self._parse_dict["bands_e_fermi"] = np.array([float(line.split()[3])
-                                                          for line in log_main if line.startswith("| Fermi energy:")])
-            line_vol = np.where(["Omega:" in line for line in log_file])[0][0]
-            volume = float(log_file[line_vol].split()[2]) \
-                * BOHR_TO_ANGSTROM ** 3
+            convergence = self._get_convergence(log_main)
+            self._parse_dict["bands_e_fermi"] = np.array([
+                float(line.split()[3])
+                for line in re.findall('Fermi energy:.*$', log_main, re.MULTILINE)
+            ])
             self._parse_dict["bands_occ"] = [
                 line.split()[3:]
-                for line in log_main
-                if line.startswith("| final focc:")
+                for line in re.findall('focc:.*$', log_main, re.MULTILINE)
             ]
             self._parse_dict["bands_eigen_values"] = [
                 line.split()[4:]
-                for line in log_main
-                if line.startswith("| final eig [eV]:")
+                for line in re.findall('final eig \[eV\].*$', log_main, re.MULTILINE)
             ]
-
             def eig_converter(
                 arr,
                 magnetic=self._job._spin_enabled,
