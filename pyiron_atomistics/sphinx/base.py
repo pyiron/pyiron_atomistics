@@ -2113,14 +2113,29 @@ class Output(object):
         return k_points
 
     @staticmethod
-    def _get_convergence(self, log_file):
+    def _get_convergence(log_file):
         conv_dict = {
             'WARNING: Maximum number of steps exceeded': False,
             'Convergence reached': True
         }
         key = '|'.join(list(conv_dict.keys()))
-        items = re.findall(key, log_main, re.MULTILINE)
+        items = re.findall(key, log_file, re.MULTILINE)
         return [conv_dict[k] for k in items]
+
+    def _parse_band(self, log_main, len_k_points):
+        for k,v in {
+            "bands_occ": 'final focc:.*$', "bands_eigen_values": 'final eig \[eV\].*$'
+        }.items():
+            fa = re.findall(v, log_main, re.MULTILINE)
+            arr = np.array(re.sub(
+                '[^0-9\. ]', '', ''.join(fa)
+            ).split()).astype(float).reshape(len(fa), -1)
+            self._parse_dict[k] = arr
+        shape = (-1, len_k_points, arr.shape[-1])
+        if self._job._spin_enabled:
+            shape = (-1, 2, len_k_points, shape[-1])
+        for k in ["bands_occ", "bands_eigen_values"]:
+            self._parse_dict[k] = self._parse_dict[k].reshape(shape)
 
     def collect_sphinx_log(
         self, file_name="sphinx.log", cwd=None, check_consistency=True
@@ -2149,92 +2164,60 @@ class Output(object):
 
         with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
             log_file = ''.join(sphinx_log_file.readlines())
-            if not self._check_enter_scf(log_file):
-                return None
-            self._check_finished(log_file)
-            self._parse_dict["n_valence"] = self._get_n_valence(log_file)
-            k_points = self._get_k_points(self, log_file)
-            volume = re.findall('Omega:.*$', log_file, re.MULTILINE)
-            if len(volume) > 0:
-                volume = float(volume[0].split()[1])
-                volume *= BOHR_TO_ANGSTROM ** 3
-            else:
-                volume = 0
-            log_main = self._truncate_log(log_file)
-            counter = [
-                int(re.sub('[^0-9]', '', line.split('=')[0]))
-                for line in re.findall("F\(.*$", log_main, re.MULTILINE)
-            ]
-            energy_free = [
-                float(line.split('=')[1]) * HARTREE_TO_EV
-                for line in re.findall("F\(.*$", log_main, re.MULTILINE)
-            ]
-            energy_int = [
-                float(line.replace("=", " ").replace(",", " ").split()[1]) * HARTREE_TO_EV
-                for line in re.findall("^eTot\([0-9].*$", log_main, re.MULTILINE)
-            ]
-            forces = [
-                float(re.split("{|}", line)[1].split(",")[i])
-                * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-                for line in re.findall("^Species.*$", log_main, re.MULTILINE)
-                for i in range(3)
-            ]
-            magnetic_forces = [
-                HARTREE_TO_EV * float(line.split()[-1])
-                for line in re.findall("^nu\(.*$", log_main, re.MULTILINE)
-            ]
-            convergence = self._get_convergence(log_main)
-            self._parse_dict["bands_e_fermi"] = np.array([
-                float(line.split()[3])
-                for line in re.findall('Fermi energy:.*$', log_main, re.MULTILINE)
-            ])
-            self._parse_dict["bands_occ"] = [
-                line.split()[3:]
-                for line in re.findall('focc:.*$', log_main, re.MULTILINE)
-            ]
-            self._parse_dict["bands_eigen_values"] = [
-                line.split()[4:]
-                for line in re.findall('final eig \[eV\].*$', log_main, re.MULTILINE)
-            ]
-            def eig_converter(
-                arr,
-                magnetic=self._job._spin_enabled,
-                len_k_points=len(k_points),
-            ):
-                if len(arr) == 0:
-                    return np.array([])
-                elif magnetic:
-                    return np.array(
-                        [float(ff) for f in arr for ff in f]
-                    ).reshape(
-                        -1, 2, len_k_points, len(arr[0])
-                    )
-                else:
-                    return np.array(
-                        [float(ff) for f in arr for ff in f]
-                    ).reshape(
-                        -1, len_k_points, len(arr[0])
-                    )
-
-            self._parse_dict["bands_occ"] = eig_converter(
-                self._parse_dict["bands_occ"])
-            self._parse_dict["bands_eigen_values"] = eig_converter(
-                self._parse_dict["bands_eigen_values"]
+        if not self._check_enter_scf(log_file):
+            return None
+        self._check_finished(log_file)
+        self._parse_dict["n_valence"] = self._get_n_valence(log_file)
+        k_points = self._get_k_points(log_file)
+        volume = re.findall('Omega:.*$', log_file, re.MULTILINE)
+        if len(volume) > 0:
+            volume = float(volume[0].split()[1])
+            volume *= BOHR_TO_ANGSTROM ** 3
+        else:
+            volume = 0
+        log_main = self._truncate_log(log_file)
+        counter = [
+            int(re.sub('[^0-9]', '', line.split('=')[0]))
+            for line in re.findall("F\(.*$", log_main, re.MULTILINE)
+        ]
+        energy_free = [
+            float(line.split('=')[1]) * HARTREE_TO_EV
+            for line in re.findall("F\(.*$", log_main, re.MULTILINE)
+        ]
+        energy_int = [
+            float(line.replace("=", " ").replace(",", " ").split()[1]) * HARTREE_TO_EV
+            for line in re.findall("^eTot\([0-9].*$", log_main, re.MULTILINE)
+        ]
+        forces = [
+            float(re.split("{|}", line)[1].split(",")[i])
+            * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+            for line in re.findall("^Species.*$", log_main, re.MULTILINE)
+            for i in range(3)
+        ]
+        magnetic_forces = [
+            HARTREE_TO_EV * float(line.split()[-1])
+            for line in re.findall("^nu\(.*$", log_main, re.MULTILINE)
+        ]
+        convergence = self._get_convergence(log_main)
+        self._parse_dict["bands_e_fermi"] = np.array([
+            float(line.split()[2])
+            for line in re.findall('Fermi energy:.*$', log_main, re.MULTILINE)
+        ])
+        self._parse_band(log_main, len(k_points))
+        energy_free_lst = self.splitter(energy_free, counter)
+        energy_int_lst = self.splitter(energy_int, counter)
+        if len(forces) != 0:
+            forces = np.array(forces).reshape(
+                -1, len(self._job.structure), 3)
+            for ii, ff in enumerate(forces):
+                forces[ii] = ff[self._job.id_spx_to_pyi]
+        if len(magnetic_forces) != 0:
+            magnetic_forces = np.array(magnetic_forces).reshape(
+                -1, len(self._job.structure)
             )
-            energy_free_lst = self.splitter(energy_free, counter)
-            energy_int_lst = self.splitter(energy_int, counter)
-            if len(forces) != 0:
-                forces = np.array(forces).reshape(
-                    -1, len(self._job.structure), 3)
-                for ii, ff in enumerate(forces):
-                    forces[ii] = ff[self._job.id_spx_to_pyi]
-            if len(magnetic_forces) != 0:
-                magnetic_forces = np.array(magnetic_forces).reshape(
-                    -1, len(self._job.structure)
-                )
-                for ii, mm in enumerate(magnetic_forces):
-                    magnetic_forces[ii] = mm[self._job.id_spx_to_pyi]
-                magnetic_forces = self.splitter(magnetic_forces, counter)
+            for ii, mm in enumerate(magnetic_forces):
+                magnetic_forces[ii] = mm[self._job.id_spx_to_pyi]
+            magnetic_forces = self.splitter(magnetic_forces, counter)
         if len(convergence) == len(energy_free_lst) - 1:
             convergence.append(False)
         self._parse_dict["scf_convergence"] = convergence
