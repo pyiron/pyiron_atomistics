@@ -1392,11 +1392,11 @@ class SphinxBase(GenericDFTJob):
             return False
         if (
             self._generic_input["calc_mode"] == "minimize"
-            and self._output_parser._parse_dict["scf_convergence"][-1]
+            and self._output_parser.generic.dft.scf_convergence[-1]
         ):
             return True
         elif self._generic_input["calc_mode"] == "static" and np.all(
-            self._output_parser._parse_dict["scf_convergence"]
+            self._output_parser.generic.dft.scf_convergence
         ):
             return True
         else:
@@ -1925,7 +1925,6 @@ def splitter(arr, counter):
 
 class _SphinxLogParser:
     def __init__(self, log_file):
-        self.job_finished = True
         self.log_file = log_file
         self._check_enter_scf()
         self._k_points = None
@@ -1942,10 +1941,12 @@ class _SphinxLogParser:
             self._log_main = self.log_file[match.end() + 1:]
         return self._log_main
 
-    def _check_finished(self):
+    @property
+    def job_finished(self):
         if len(re.findall("Program exited normally.", self.log_file, re.MULTILINE)) == 0:
             warnings.warn("Log file created but first scf loop not reached")
-            self.job_finished = False
+            return False
+        return True
 
     def _check_enter_scf(self):
         if len(re.findall("Enter Main Loop", self.log_file, re.MULTILINE)) == 0:
@@ -2097,16 +2098,17 @@ class _SphinxLogParser:
         ])
 
 
-class Output(object):
+class Output:
     """
     Handles the output from a SPHInX simulation.
     """
 
     def __init__(self, job):
+        self.generic = DataContainer(table_name='output/generic')
         self._job = job
-        self._parse_dict = defaultdict(list)
         self.charge_density = SphinxVolumetricData()
         self.electrostatic_potential = SphinxVolumetricData()
+        self.generic.create_group('dft')
 
     def collect_spins_dat(self, file_name="spins.dat", cwd=None):
         """
@@ -2121,7 +2123,7 @@ class Output(object):
         if not os.path.isfile(posixpath.join(cwd, file_name)):
             return None
         spins = np.loadtxt(posixpath.join(cwd, file_name))
-        self._parse_dict["atom_scf_spins"] = splitter(
+        self.generic.dft.atom_scf_spins = splitter(
             np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]),
             spins[:, 0]
         )
@@ -2139,27 +2141,27 @@ class Output(object):
         if not os.path.isfile(posixpath.join(cwd, file_name)):
             return None
         energies = np.loadtxt(posixpath.join(cwd, file_name))
-        self._parse_dict["scf_computation_time"] = splitter(
+        self.generic.dft.scf_computation_time = splitter(
             energies[:, 1], energies[:, 0]
         )
-        self._parse_dict["scf_energy_int"] = splitter(
+        self.generic.dft.scf_energy_int = splitter(
             energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
         )
         if len(energies[0]) == 7:
-            self._parse_dict["scf_energy_free"] = splitter(
+            self.generic.dft.scf_energy_free = splitter(
                 energies[:, 3] * HARTREE_TO_EV, energies[:, 0]
             )
-            self._parse_dict["scf_energy_zero"] = splitter(
+            self.generic.dft.scf_energy_zero = splitter(
                 energies[:, 4] * HARTREE_TO_EV, energies[:, 0]
             )
-            self._parse_dict["scf_energy_band"] = splitter(
+            self.generic.dft.scf_energy_band = splitter(
                 energies[:, 5] * HARTREE_TO_EV, energies[:, 0]
             )
-            self._parse_dict["scf_electronic_entropy"] = splitter(
+            self.generic.dft.scf_electronic_entropy = splitter(
                 energies[:, 6] * HARTREE_TO_EV, energies[:, 0]
             )
         else:
-            self._parse_dict["scf_energy_band"] = splitter(
+            self.generic.dft.scf_energy_band = splitter(
                 energies[:, 3] * HARTREE_TO_EV, energies[:, 0]
             )
 
@@ -2179,13 +2181,9 @@ class Output(object):
         if len(residue) == 0:
             return None
         if len(residue[0]) == 2:
-            self._parse_dict["scf_residue"] = splitter(
-                residue[:, 1], residue[:, 0]
-            )
+            self.generic.dft.scf_residue = splitter(residue[:, 1], residue[:, 0])
         else:
-            self._parse_dict["scf_residue"] = splitter(
-                residue[:, 1:], residue[:, 0]
-            )
+            self.generic.dft.scf_residue = splitter(residue[:, 1:], residue[:, 0])
 
     def collect_eps_dat(self, file_name="eps.dat", cwd=None):
         """
@@ -2218,11 +2216,11 @@ class Output(object):
             value = np.vstack((eps_up, eps_down)).reshape((2,)+eps_up.shape)
         else:
             return
-        shape = np.asarray(self._parse_dict["bands_eigen_values"]).shape
+        shape = np.asarray(self.generic.dft.bands_eigen_values).shape
         if shape[1:] == value.shape:
-            self._parse_dict["bands_eigen_values"][-1] = value
+            self.generic.dft.bands_eigen_values[-1] = value
         else:
-            self._parse_dict["bands_eigen_values"] = value.reshape((-1,)+value.shape)
+            self.generic.dft.bands_eigen_values = value.reshape((-1,)+value.shape)
         return None
 
     def collect_energy_struct(self, file_name="energy-structOpt.dat",
@@ -2243,7 +2241,7 @@ class Output(object):
                 for line in f.readlines():
                     line = line.split()
                     energy_free_lst.append(float(line[1]) * HARTREE_TO_EV)
-        self._energy_free_struct_lst = energy_free_lst
+        self.generic.dft.energy_free = energy_free_lst
 
     def collect_sphinx_log(
         self, file_name="sphinx.log", cwd=None, check_consistency=True
@@ -2271,25 +2269,25 @@ class Output(object):
             raise AssertionError(e)
         if not self._spx_log_parser.job_finished:
             self._job.status.aborted = True
-        self._parse_dict["n_valence"] = self._spx_log_parser.get_n_valence()
-        self._parse_dict["bands_k_weights"] = self._spx_log_parser.get_bands_k_weights()
-        self._parse_dict["kpoints_cartesian"] = self._spx_log_parser.get_kpoints_cartesian()
-        self._parse_dict["volume"] = self._spx_log_parser.get_volume()
-        self._parse_dict["bands_e_fermi"] = self._spx_log_parser.get_fermi()
+        self.generic.dft.n_valence = self._spx_log_parser.get_n_valence()
+        self.generic.dft.bands_k_weights = self._spx_log_parser.get_bands_k_weights()
+        self.generic.dft.kpoints_cartesian = self._spx_log_parser.get_kpoints_cartesian()
+        self.generic.volume = self._spx_log_parser.get_volume()
+        self.generic.dft.bands_e_fermi = self._spx_log_parser.get_fermi()
         band = self._spx_log_parser.get_parse_band(self._job._spin_enabled)
         for k, v in band.items():
-            self._parse_dict[k] = v
-        self._parse_dict["scf_convergence"] = self._spx_log_parser.get_convergence()
-        if len(self._parse_dict["scf_energy_int"]) == 0:
-            self._parse_dict["scf_energy_int"] = self._spx_log_parser.get_energy_int()
-        if len(self._parse_dict["scf_energy_free"]) == 0:
-            self._parse_dict["scf_energy_free"] = self._spx_log_parser.get_energy_free()
-        if len(self._parse_dict["forces"]) == 0:
-            self._parse_dict["forces"] = self._spx_log_parser.get_forces(
+            self.generic.dft[k] = v
+        self.generic.dft.scf_convergence = self._spx_log_parser.get_convergence()
+        if not 'scf_energy_int' in self.generic.dft.list_nodes():
+            self.generic.dft.scf_energy_int = self._spx_log_parser.get_energy_int()
+        if not 'scf_energy_free' in self.generic.dft.list_nodes():
+            self.generic.dft.scf_energy_free = self._spx_log_parser.get_energy_free()
+        if not 'forces' in self.generic.list_nodes():
+            self.generic.forces = self._spx_log_parser.get_forces(
                 self._job.id_spx_to_pyi
             )
-        if len(self._parse_dict["scf_magnetic_forces"]) == 0:
-            self._parse_dict["scf_magnetic_forces"] = self._spx_log_parser.get_magnetic_forces(
+        if not 'scf_magnetic_forces' in self.generic.dft.list_nodes():
+            self.generic.dft.scf_magnetic_forces = self._spx_log_parser.get_magnetic_forces(
                 self._job.id_spx_to_pyi
             )
 
@@ -2316,11 +2314,11 @@ class Output(object):
                     if "coords" in line
                 ]
             )
-            self._parse_dict["positions"] = (
+            self.generic.positions = (
                 coords.reshape(-1, natoms, 3) * BOHR_TO_ANGSTROM
             )
-            self._parse_dict["positions"] = np.array(
-                [ff[self._job.id_spx_to_pyi] for ff in self._parse_dict["positions"]]
+            self.generic.positions = np.array(
+                [ff[self._job.id_spx_to_pyi] for ff in self.generic.positions]
             )
             force = np.array(
                 [
@@ -2329,14 +2327,14 @@ class Output(object):
                     if "force" in line
                 ]
             )
-            self._parse_dict["forces"] = (
+            self.generic.forces = (
                 force.reshape(-1, natoms, 3) *
                 HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
             )
-            self._parse_dict["forces"] = np.array(
-                [ff[self._job.id_spx_to_pyi] for ff in self._parse_dict["forces"]]
+            self.generic.forces = np.array(
+                [ff[self._job.id_spx_to_pyi] for ff in self.generic.forces]
             )
-            self._parse_dict["cell"] = (
+            self.generic.cell = (
                 np.array(
                     [
                         json.loads(
@@ -2373,19 +2371,19 @@ class Output(object):
 
     def _get_electronic_structure_object(self):
         es = ElectronicStructure()
-        if len(self._parse_dict["bands_eigen_values"]) > 0:
-            eig_mat = self._parse_dict["bands_eigen_values"][-1]
-            occ_mat = self._parse_dict["bands_occ"][-1]
+        if "bands_eigen_values" in self.generic.dft.list_nodes():
+            eig_mat = self.generic.dft.bands_eigen_values[-1]
+            occ_mat = self.generic.dft.bands_occ[-1]
             if len(eig_mat.shape) == 3:
                 es.eigenvalue_matrix = eig_mat
                 es.occupancy_matrix = occ_mat
             else:
                 es.eigenvalue_matrix = np.array([eig_mat])
                 es.occupancy_matrix = np.array([occ_mat])
-            es.efermi = self._parse_dict["bands_e_fermi"][-1]
+            es.efermi = self.generic.dft.bands_e_fermi[-1]
             es.n_spins = len(es.occupancy_matrix)
-            es.kpoint_list = self._parse_dict["kpoints_cartesian"]
-            es.kpoint_weights = self._parse_dict["bands_k_weights"]
+            es.kpoint_list = self.generic.dft.kpoints_cartesian
+            es.kpoint_weights = self.generic.dft.bands_k_weights
             es.generate_from_matrices()
         return es
 
@@ -2401,13 +2399,10 @@ class Output(object):
         self.collect_residue_dat(file_name="residue.dat", cwd=directory)
         self.collect_eps_dat(file_name="eps.dat", cwd=directory)
         self.collect_spins_dat(file_name="spins.dat", cwd=directory)
-        self.collect_energy_struct(file_name="energy-structOpt.dat",
-                                   cwd=directory)
+        self.collect_energy_struct(file_name="energy-structOpt.dat", cwd=directory)
         self.collect_relaxed_hist(file_name="relaxHist.sx", cwd=directory)
-        self.collect_electrostatic_potential(file_name="vElStat-eV.sxb",
-                                             cwd=directory)
-        self.collect_charge_density(file_name="rho.sxb",
-                                    cwd=directory)
+        self.collect_electrostatic_potential(file_name="vElStat-eV.sxb", cwd=directory)
+        self.collect_charge_density(file_name="rho.sxb", cwd=directory)
 
     def to_hdf(self, hdf, force_update=False):
         """
@@ -2417,28 +2412,20 @@ class Output(object):
             hdf: HDF5 group
             force_update(bool):
         """
+        def get_last(arr):
+            return np.array([vv[-1] for vv in arr])
 
-        if len(self._parse_dict["scf_energy_zero"]) == 0:
-            self._parse_dict["scf_energy_zero"] = [
-                (0.5 * (np.array(fr) + np.array(en))).tolist()
-                for fr, en in zip(
-                    self._parse_dict["scf_energy_free"],
-                    self._parse_dict["scf_energy_int"],
-                )
-            ]
-        with hdf.open("input") as hdf5_input:
-            with hdf5_input.open("generic") as hdf5_generic:
-                if "dft" not in hdf5_generic.list_groups():
-                    hdf5_generic.create_group("dft")
-                with hdf5_generic.open("dft") as hdf5_dft:
-                    if (
-                        len(self._parse_dict["atom_spin_constrains"]) > 0
-                        and "atom_spin_constraints" not in
-                        hdf5_dft.list_nodes()
-                    ):
-                        hdf5_dft["atom_spin_constraints"] = [
-                            self._parse_dict["atom_spin_constrains"]
-                        ]
+        for k in self.generic.dft.list_nodes():
+            if k.startswith('scf_') and k != 'scf_convergence':
+                self.generic.dft[k.replace("scf_", "")] = get_last(self.generic.dft[k])
+        if 'energy_free' in self.generic.dft.list_nodes():
+            self.generic.energy_tot = self.generic.dft.energy_free
+            self.generic.energy_pot = self.generic.dft.energy_free
+        if 'positions' not in self.generic.list_nodes():
+            self.generic.positions = [self._job.structure.positions]
+        if 'cells' not in self.generic.list_nodes():
+            self.generic.positions = [self._job.structure.cell.tolist()]
+        self.generic.to_hdf(hdf=hdf)
 
         with hdf.open("output") as hdf5_output:
             if self.electrostatic_potential.total_data is not None:
@@ -2446,10 +2433,8 @@ class Output(object):
                     hdf5_output, group_name="electrostatic_potential"
                 )
             if self.charge_density.total_data is not None:
-                self.charge_density.to_hdf(
-                    hdf5_output, group_name="charge_density"
-                )
-            if "bands_eigen_values" in self._parse_dict.keys():
+                self.charge_density.to_hdf(hdf5_output, group_name="charge_density")
+            if "bands_eigen_values" in self.generic.dft.list_nodes():
                 es = self._get_electronic_structure_object()
                 if len(es.kpoint_list) > 0:
                     es.to_hdf(hdf5_output)
@@ -2462,72 +2447,9 @@ class Output(object):
                     )
                     for k in ['energies', 'int_densities', 'tot_densities']:
                         hdf5_dos[k] = k+warning_message
-            with hdf5_output.open("generic") as hdf5_generic:
-                if "dft" not in hdf5_generic.list_groups():
-                    hdf5_generic.create_group("dft")
-                with hdf5_generic.open("dft") as hdf5_dft:
-                    hdf5_dft["scf_convergence"] = \
-                        self._parse_dict["scf_convergence"]
-                    for k in [
-                        "scf_residue",
-                        "scf_energy_free",
-                        "scf_energy_zero",
-                        "scf_energy_int",
-                        "scf_electronic_entropy",
-                        "scf_energy_band",
-                        "scf_magnetic_forces",
-                        "scf_computation_time",
-                        "bands_occ",
-                        "bands_e_fermi",
-                        "bands_k_weights",
-                        "bands_eigen_values",
-                        "atom_scf_spins",
-                        "n_valence",
-                    ]:
-                        if len(self._parse_dict[k]) > 0:
-                            hdf5_dft[k] = self._parse_dict[k]
-                            if "scf_" in k:
-                                hdf5_dft[k.replace("scf_", "")] = np.array(
-                                    [vv[-1] for vv in self._parse_dict[k]]
-                                )
-                if len(self._parse_dict["scf_computation_time"]) > 0:
-                    hdf5_generic["computation_time"] = np.array(
-                        [tt[-1] for tt in
-                         self._parse_dict["scf_computation_time"]]
-                    )
-                if len([en[-1] for en in self._parse_dict["scf_energy_free"]]) > 0:
-                    hdf5_generic["energy_tot"] = np.array(
-                        [en[-1] for en in self._parse_dict["scf_energy_free"]]
-                    )
-                    hdf5_generic["energy_pot"] = np.array(
-                        [en[-1] for en in self._parse_dict["scf_energy_free"]]
-                    )
-                hdf5_generic["volume"] = self._parse_dict["volume"]
-                if "positions" not in hdf5_generic.list_nodes() or force_update:
-                    if len(self._parse_dict["positions"]) > 0:
-                        hdf5_generic["positions"] = np.array(
-                            self._parse_dict["positions"]
-                        )
-                    elif len(self._parse_dict["scf_convergence"]) == 1:
-                        hdf5_generic["positions"] = np.array(
-                            [self._job.structure.positions]
-                        )
-                if ("forces" not in hdf5_generic.list_nodes() or force_update)\
-                    and len(
-                    self._parse_dict["forces"]
-                ) > 0:
-                    hdf5_generic["forces"] = \
-                        np.array(self._parse_dict["forces"])
-                if "cells" not in hdf5_generic.list_nodes() or force_update:
-                    if len(self._parse_dict["cell"]) > 0:
-                        hdf5_generic["cells"] = np.array(
-                            self._parse_dict["cell"])
-                    elif len(self._parse_dict["scf_convergence"]) == 1:
-                        hdf5_generic["cells"] = np.array(
-                            [self._job.structure.cell])
 
     def from_hdf(self, hdf):
         """
         Load output from an HDF5 file
         """
-        pass
+        self.generic.from_hdf(hdf=hdf)
