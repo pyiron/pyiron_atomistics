@@ -11,7 +11,10 @@ from collections import OrderedDict
 import numpy as np
 import warnings
 import seekpath
-from pyiron_atomistics.atomistics.structure.atom import Atom, ase_to_pyiron as ase_to_pyiron_atom
+from pyiron_atomistics.atomistics.structure.atom import (
+    Atom,
+    ase_to_pyiron as ase_to_pyiron_atom,
+)
 from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
 from pyiron_atomistics.atomistics.structure.neighbors import Neighbors, Tree
 from pyiron_atomistics.atomistics.structure._visualize import Visualize
@@ -20,7 +23,7 @@ from pyiron_atomistics.atomistics.structure.symmetry import Symmetry
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseArray, SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
-    ChemicalElement
+    ChemicalElement,
 )
 from pyiron_base import state, deprecate, deprecate_soon
 from pyiron_atomistics.atomistics.structure.pyironase import publication
@@ -170,20 +173,35 @@ class Atoms(ASEAtoms):
         elif indices is not None:
             el_index_lst = indices
             if species is None:
-                raise ValueError("species must be given if indices is given, but is None.")
+                raise ValueError(
+                    "species must be given if indices is given, but is None."
+                )
             self.set_species(species)
 
         self.indices = np.array(el_index_lst, dtype=int)
 
-        el_lst = [el.Abbreviation if el.Parent is None else el.Parent for el in self.species]
+        el_lst = [
+            el.Abbreviation if el.Parent is None else el.Parent for el in self.species
+        ]
         symbols = np.array([el_lst[el] for el in self.indices])
         self._tag_list._length = len(symbols)
-        super(Atoms, self).__init__(symbols=symbols, positions=positions, numbers=None,
-                                    tags=tags, momenta=momenta, masses=masses,
-                                    magmoms=magmoms, charges=charges,
-                                    scaled_positions=scaled_positions, cell=cell,
-                                    pbc=pbc, celldisp=celldisp, constraint=constraint,
-                                    calculator=calculator, info=info)
+        super(Atoms, self).__init__(
+            symbols=symbols,
+            positions=positions,
+            numbers=None,
+            tags=tags,
+            momenta=momenta,
+            masses=masses,
+            magmoms=magmoms,
+            charges=charges,
+            scaled_positions=scaled_positions,
+            cell=cell,
+            pbc=pbc,
+            celldisp=celldisp,
+            constraint=constraint,
+            calculator=calculator,
+            info=info,
+        )
 
         self.bonds = None
         self.units = {"length": "A", "mass": "u"}
@@ -221,14 +239,14 @@ class Atoms(ASEAtoms):
                     self.arrays["initial_magmoms"][:] = val
                 except ValueError as err:
                     if len(self.arrays["initial_magmoms"]) == len(val):
-                        self.set_array('initial_magmoms', None)
+                        self.set_array("initial_magmoms", None)
                         self.arrays["initial_magmoms"] = val
                     else:
                         raise err
             else:
                 self.new_array("initial_magmoms", val)
         else:
-            self.set_array('initial_magmoms', None)
+            self.set_array("initial_magmoms", None)
 
     @property
     def visualize(self):
@@ -316,7 +334,9 @@ class Atoms(ASEAtoms):
             new_points (dict): Points to add
         """
         if self.get_high_symmetry_points() is None:
-            raise AssertionError("Construct high symmetry points first. Use self.create_line_mode_structure().")
+            raise AssertionError(
+                "Construct high symmetry points first. Use self.create_line_mode_structure()."
+            )
         else:
             self._high_symmetry_points.update(new_points)
 
@@ -349,17 +369,23 @@ class Atoms(ASEAtoms):
                 E.G. {"my_path": [('Gamma', 'X'), ('X', 'Y')]}
         """
         if self.get_high_symmetry_path() is None:
-            raise AssertionError("Construct high symmetry path first. Use self.create_line_mode_structure().")
+            raise AssertionError(
+                "Construct high symmetry path first. Use self.create_line_mode_structure()."
+            )
 
         for values_all in path.values():
             for values in values_all:
                 if not len(values) == 2:
                     raise ValueError(
                         "'{}' is not a propper trace! It has to contain exactly 2 values! (start and end point)".format(
-                            values))
+                            values
+                        )
+                    )
                 for v in values:
                     if v not in self.get_high_symmetry_points().keys():
-                        raise ValueError("'{}' is not a valid high symmetry point".format(v))
+                        raise ValueError(
+                            "'{}' is not a valid high symmetry point".format(v)
+                        )
 
         self._high_symmetry_path.update(path)
 
@@ -501,11 +527,11 @@ class Atoms(ASEAtoms):
                     if not tr_dict[hdf_atoms["is_absolute"]]:
                         self.set_scaled_positions(hdf_atoms[position_tag])
                     else:
-                        self.arrays['positions'] = hdf_atoms[position_tag]
+                        self.arrays["positions"] = hdf_atoms[position_tag]
                 else:
-                    self.arrays['positions'] = hdf_atoms[position_tag]
+                    self.arrays["positions"] = hdf_atoms[position_tag]
 
-                self.arrays['numbers'] = self.get_atomic_numbers()
+                self.arrays["numbers"] = self.get_atomic_numbers()
 
                 if "explicit_bonds" in hdf_atoms.list_nodes():
                     # print "bonds: "
@@ -941,11 +967,13 @@ class Atoms(ASEAtoms):
 
         """
         scaled_positions = np.einsum(
-            'ji,nj->ni', np.linalg.inv(self.cell), np.asarray(positions).reshape(-1, 3)
+            "ji,nj->ni", np.linalg.inv(self.cell), np.asarray(positions).reshape(-1, 3)
         )
         if any(self.pbc):
-            scaled_positions[:, self.pbc] -= np.floor(scaled_positions[:, self.pbc]+epsilon)
-        new_positions = np.einsum('ji,nj->ni', self.cell, scaled_positions)
+            scaled_positions[:, self.pbc] -= np.floor(
+                scaled_positions[:, self.pbc] + epsilon
+            )
+        new_positions = np.einsum("ji,nj->ni", self.cell, scaled_positions)
         return new_positions.reshape(np.asarray(positions).shape)
 
     def center_coordinates_in_unit_cell(self, origin=0, eps=1e-4):
@@ -967,13 +995,14 @@ class Atoms(ASEAtoms):
             )
         return self
 
-    def create_line_mode_structure(self,
-                                   with_time_reversal=True,
-                                   recipe='hpkot',
-                                   threshold=1e-07,
-                                   symprec=1e-05,
-                                   angle_tolerance=-1.0,
-                                   ):
+    def create_line_mode_structure(
+        self,
+        with_time_reversal=True,
+        recipe="hpkot",
+        threshold=1e-07,
+        symprec=1e-05,
+        angle_tolerance=-1.0,
+    ):
         """
         Uses 'seekpath' to create a new structure with high symmetry points and path for band structure calculations.
 
@@ -993,13 +1022,14 @@ class Atoms(ASEAtoms):
             pyiron.atomistics.structure.atoms.Atoms: new structure
         """
         input_structure = (self.cell, self.get_scaled_positions(), self.indices)
-        sp_dict = seekpath.get_path(structure=input_structure,
-                                    with_time_reversal=with_time_reversal,
-                                    recipe=recipe,
-                                    threshold=threshold,
-                                    symprec=symprec,
-                                    angle_tolerance=angle_tolerance,
-                                    )
+        sp_dict = seekpath.get_path(
+            structure=input_structure,
+            with_time_reversal=with_time_reversal,
+            recipe=recipe,
+            threshold=threshold,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance,
+        )
 
         original_element_list = [el.Abbreviation for el in self.species]
         element_list = [original_element_list[l] for l in sp_dict["primitive_types"]]
@@ -1007,7 +1037,9 @@ class Atoms(ASEAtoms):
         pbc = self.pbc
         cell = sp_dict["primitive_lattice"]
 
-        struc_new = Atoms(elements=element_list, scaled_positions=positions, pbc=pbc, cell=cell)
+        struc_new = Atoms(
+            elements=element_list, scaled_positions=positions, pbc=pbc, cell=cell
+        )
 
         struc_new._set_high_symmetry_points(sp_dict["point_coords"])
         struc_new._set_high_symmetry_path({"full": sp_dict["path"]})
@@ -1044,82 +1076,116 @@ class Atoms(ASEAtoms):
             (np.ndarray) repeated points
         """
         n = np.array([rep]).flatten()
-        if len(n)==1:
+        if len(n) == 1:
             n = np.tile(n, 3)
-        if len(n)!=3:
-            raise ValueError('rep must be an integer or a list of 3 integers')
+        if len(n) != 3:
+            raise ValueError("rep must be an integer or a list of 3 integers")
         vector = np.array(points)
-        if vector.shape[-1]!=3:
-            raise ValueError('points must be an xyz vector or a list/array of xyz vectors')
-        if centered and np.mod(n, 2).sum()!=3:
-            warnings.warn('When centered, only odd number of repetition should be used')
+        if vector.shape[-1] != 3:
+            raise ValueError(
+                "points must be an xyz vector or a list/array of xyz vectors"
+            )
+        if centered and np.mod(n, 2).sum() != 3:
+            warnings.warn("When centered, only odd number of repetition should be used")
         v = vector.reshape(-1, 3)
         n_lst = []
         for nn in n:
             if centered:
-                n_lst.append(np.arange(nn)-int(nn/2))
+                n_lst.append(np.arange(nn) - int(nn / 2))
             else:
                 n_lst.append(np.arange(nn))
         meshgrid = np.meshgrid(n_lst[0], n_lst[1], n_lst[2])
-        v_repeated = np.einsum('ni,ij->nj', np.stack(meshgrid, axis=-1).reshape(-1, 3), self.cell)
-        v_repeated = v_repeated[:, np.newaxis, :]+v[np.newaxis, :, :]
-        return v_repeated.reshape((-1,)+vector.shape)
+        v_repeated = np.einsum(
+            "ni,ij->nj", np.stack(meshgrid, axis=-1).reshape(-1, 3), self.cell
+        )
+        v_repeated = v_repeated[:, np.newaxis, :] + v[np.newaxis, :, :]
+        return v_repeated.reshape((-1,) + vector.shape)
 
     def reset_absolute(self, is_absolute):
         raise NotImplementedError("This function was removed!")
 
-    @deprecate("Use Atoms.analyse.pyscal_cna_adaptive() with ovito_compatibility=True instead")
+    @deprecate(
+        "Use Atoms.analyse.pyscal_cna_adaptive() with ovito_compatibility=True instead"
+    )
     def analyse_ovito_cna_adaptive(self, mode="total"):
         return self._analyse.pyscal_cna_adaptive(mode=mode, ovito_compatibility=True)
+
     analyse_ovito_cna_adaptive.__doc__ = Analyse.pyscal_cna_adaptive.__doc__
 
-    @deprecate('Use Atoms.analyse.pyscal_centro_symmetry() instead')
+    @deprecate("Use Atoms.analyse.pyscal_centro_symmetry() instead")
     def analyse_ovito_centro_symmetry(self, num_neighbors=12):
         return self._analyse.pyscal_centro_symmetry(num_neighbors=num_neighbors)
+
     analyse_ovito_centro_symmetry.__doc__ = Analyse.pyscal_centro_symmetry.__doc__
 
     @deprecate("Use Atoms.analyse.pyscal_voronoi_volume() instead")
     def analyse_ovito_voronoi_volume(self):
         return self._analyse.pyscal_voronoi_volume()
+
     analyse_ovito_voronoi_volume.__doc__ = Analyse.pyscal_voronoi_volume.__doc__
 
     @deprecate("Use Atoms.analyse.pyscal_steinhardt_parameter() instead")
-    def analyse_pyscal_steinhardt_parameter(self, neighbor_method="cutoff", cutoff=0, n_clusters=2,
-                                            q=(4, 6), averaged=False, clustering=True):
+    def analyse_pyscal_steinhardt_parameter(
+        self,
+        neighbor_method="cutoff",
+        cutoff=0,
+        n_clusters=2,
+        q=(4, 6),
+        averaged=False,
+        clustering=True,
+    ):
         return self._analyse.pyscal_steinhardt_parameter(
-            neighbor_method=neighbor_method, cutoff=cutoff, n_clusters=n_clusters,
-            q=q, averaged=averaged, clustering=clustering
+            neighbor_method=neighbor_method,
+            cutoff=cutoff,
+            n_clusters=n_clusters,
+            q=q,
+            averaged=averaged,
+            clustering=clustering,
         )
-    analyse_pyscal_steinhardt_parameter.__doc__ = Analyse.pyscal_steinhardt_parameter.__doc__
+
+    analyse_pyscal_steinhardt_parameter.__doc__ = (
+        Analyse.pyscal_steinhardt_parameter.__doc__
+    )
 
     @deprecate("Use Atoms.analyse.pyscal_cna_adaptive() instead")
     def analyse_pyscal_cna_adaptive(self, mode="total", ovito_compatibility=False):
-        return self._analyse.pyscal_cna_adaptive(mode=mode, ovito_compatibility=ovito_compatibility)
+        return self._analyse.pyscal_cna_adaptive(
+            mode=mode, ovito_compatibility=ovito_compatibility
+        )
+
     analyse_pyscal_cna_adaptive.__doc__ = Analyse.pyscal_cna_adaptive.__doc__
 
     @deprecate("Use Atoms.analyse.pyscal_centro_symmetry() instead")
     def analyse_pyscal_centro_symmetry(self, num_neighbors=12):
         return self._analyse.pyscal_centro_symmetry(num_neighbors=num_neighbors)
+
     analyse_pyscal_centro_symmetry.__doc__ = Analyse.pyscal_centro_symmetry.__doc__
 
     @deprecate("Use Atoms.analyse.pyscal_diamond_structure() instead")
     def analyse_pyscal_diamond_structure(self, mode="total", ovito_compatibility=False):
-        return self._analyse.pyscal_diamond_structure(mode=mode, ovito_compatibility=ovito_compatibility)
+        return self._analyse.pyscal_diamond_structure(
+            mode=mode, ovito_compatibility=ovito_compatibility
+        )
+
     analyse_pyscal_diamond_structure.__doc__ = Analyse.pyscal_diamond_structure.__doc__
 
     @deprecate("Use Atoms.analyse.pyscal_voronoi_volume() instead")
     def analyse_pyscal_voronoi_volume(self):
         return self._analyse.pyscal_voronoi_volume()
+
     analyse_pyscal_voronoi_volume.__doc__ = Analyse.pyscal_voronoi_volume.__doc__
 
     @deprecate("Use get_symmetry()['equivalent_atoms'] instead")
     def analyse_phonopy_equivalent_atoms(self):
-        from pyiron_atomistics.atomistics.structure.phonopy import analyse_phonopy_equivalent_atoms
+        from pyiron_atomistics.atomistics.structure.phonopy import (
+            analyse_phonopy_equivalent_atoms,
+        )
+
         return analyse_phonopy_equivalent_atoms(atoms=self)
 
     def plot3d(
         self,
-        mode='NGLview',
+        mode="NGLview",
         show_cell=True,
         show_axes=True,
         camera="orthographic",
@@ -1138,7 +1204,7 @@ class Atoms(ASEAtoms):
         magnetic_moments=False,
         view_plane=np.array([0, 0, 1]),
         distance_from_camera=1.0,
-        opacity=1.0
+        opacity=1.0,
     ):
         return self.visualize.plot3d(
             mode=mode,
@@ -1162,6 +1228,7 @@ class Atoms(ASEAtoms):
             distance_from_camera=distance_from_camera,
             opacity=opacity,
         )
+
     plot3d.__doc__ = Visualize.plot3d.__doc__
 
     def pos_xyz(self):
@@ -1198,13 +1265,15 @@ class Atoms(ASEAtoms):
         Args:
             norm_order (int): Norm order (cf. numpy.linalg.norm)
         """
-        return np.linalg.det(self.cell)/np.linalg.norm(
+        return np.linalg.det(self.cell) / np.linalg.norm(
             np.cross(np.roll(self.cell, -1, axis=0), np.roll(self.cell, 1, axis=0)),
             axis=-1,
             ord=norm_order,
         )
 
-    def get_extended_positions(self, width, return_indices=False, norm_order=2, positions=None):
+    def get_extended_positions(
+        self, width, return_indices=False, norm_order=2, positions=None
+    ):
         """
         Get all atoms in the boundary around the supercell which have a distance
         to the supercell boundary of less than dist
@@ -1223,27 +1292,30 @@ class Atoms(ASEAtoms):
                 their original option (if return_indices=True)
 
         """
-        if width<0:
-            raise ValueError('Invalid width')
+        if width < 0:
+            raise ValueError("Invalid width")
         if positions is None:
             positions = self.positions
-        if width==0:
+        if width == 0:
             if return_indices:
                 return positions, np.arange(len(positions))
             return positions
         width /= self.get_vertical_length(norm_order=norm_order)
-        rep = 2*np.ceil(width).astype(int)*self.pbc+1
-        rep = [np.arange(r)-int(r/2) for r in rep]
+        rep = 2 * np.ceil(width).astype(int) * self.pbc + 1
+        rep = [np.arange(r) - int(r / 2) for r in rep]
         meshgrid = np.meshgrid(rep[0], rep[1], rep[2])
         meshgrid = np.stack(meshgrid, axis=-1).reshape(-1, 3)
-        v_repeated = np.einsum('ni,ij->nj', meshgrid, self.cell)
-        v_repeated = v_repeated[:,np.newaxis,:]+positions[np.newaxis,:,:]
+        v_repeated = np.einsum("ni,ij->nj", meshgrid, self.cell)
+        v_repeated = v_repeated[:, np.newaxis, :] + positions[np.newaxis, :, :]
         v_repeated = v_repeated.reshape(-1, 3)
         indices = np.tile(np.arange(len(positions)), len(meshgrid))
-        dist = v_repeated-np.sum(self.cell*0.5, axis=0)
-        dist = np.absolute(np.einsum('ni,ij->nj', dist+1e-8, np.linalg.inv(self.cell)))-0.5
-        check_dist = np.all(dist-width<0, axis=-1)
-        indices = indices[check_dist]%len(positions)
+        dist = v_repeated - np.sum(self.cell * 0.5, axis=0)
+        dist = (
+            np.absolute(np.einsum("ni,ij->nj", dist + 1e-8, np.linalg.inv(self.cell)))
+            - 0.5
+        )
+        check_dist = np.all(dist - width < 0, axis=-1)
+        indices = indices[check_dist] % len(positions)
         v_repeated = v_repeated[check_dist]
         if return_indices:
             return v_repeated, indices
@@ -1285,7 +1357,7 @@ class Atoms(ASEAtoms):
         cutoff_radius=np.inf,
         width_buffer=1.2,
         allow_ragged=None,
-        mode='filled',
+        mode="filled",
         norm_order=2,
     ):
         """
@@ -1334,7 +1406,7 @@ class Atoms(ASEAtoms):
         id_list=None,
         width_buffer=1.2,
         allow_ragged=None,
-        mode='ragged',
+        mode="ragged",
         norm_order=2,
     ):
         return self.get_neighbors(
@@ -1347,6 +1419,7 @@ class Atoms(ASEAtoms):
             mode=mode,
             norm_order=norm_order,
         )
+
     get_neighbors_by_distance.__doc__ = get_neighbors.__doc__
 
     def _get_neighbors(
@@ -1359,10 +1432,10 @@ class Atoms(ASEAtoms):
         get_tree=False,
         norm_order=2,
     ):
-        if num_neighbors is not None and num_neighbors<=0:
-            raise ValueError('invalid number of neighbors')
-        if width_buffer<0:
-            raise ValueError('width_buffer must be a positive float')
+        if num_neighbors is not None and num_neighbors <= 0:
+            raise ValueError("invalid number of neighbors")
+        if width_buffer < 0:
+            raise ValueError("width_buffer must be a positive float")
         if get_tree:
             neigh = Tree(ref_structure=self)
         else:
@@ -1391,8 +1464,10 @@ class Atoms(ASEAtoms):
             width_buffer=width_buffer,
         )
         if neigh._check_width(width=width, pbc=self.pbc):
-            warnings.warn('width_buffer may have been too small - '
-                          'most likely not all neighbors properly assigned')
+            warnings.warn(
+                "width_buffer may have been too small - "
+                "most likely not all neighbors properly assigned"
+            )
         return neigh
 
     def get_neighborhood(
@@ -1401,7 +1476,7 @@ class Atoms(ASEAtoms):
         num_neighbors=12,
         cutoff_radius=np.inf,
         width_buffer=1.2,
-        mode='filled',
+        mode="filled",
         norm_order=2,
     ):
         """
@@ -1439,18 +1514,32 @@ class Atoms(ASEAtoms):
             cutoff_radius=cutoff_radius,
         )
 
-    @deprecate("Use neigh.find_neighbors_by_vector() instead (after calling neigh = structure.get_neighbors())",
-               version="1.0.0")
-    def find_neighbors_by_vector(self, vector, return_deviation=False, num_neighbors=96):
+    @deprecate(
+        "Use neigh.find_neighbors_by_vector() instead (after calling neigh = structure.get_neighbors())",
+        version="1.0.0",
+    )
+    def find_neighbors_by_vector(
+        self, vector, return_deviation=False, num_neighbors=96
+    ):
         neighbors = self.get_neighbors(num_neighbors=num_neighbors)
-        return neighbors.find_neighbors_by_vector(vector=vector, return_deviation=return_deviation)
+        return neighbors.find_neighbors_by_vector(
+            vector=vector, return_deviation=return_deviation
+        )
+
     find_neighbors_by_vector.__doc__ = Neighbors.find_neighbors_by_vector.__doc__
 
-    @deprecate("Use neigh.get_shell_matrix() instead (after calling neigh = structure.get_neighbors())",
-               version="1.0.0")
+    @deprecate(
+        "Use neigh.get_shell_matrix() instead (after calling neigh = structure.get_neighbors())",
+        version="1.0.0",
+    )
     def get_shell_matrix(
-        self, id_list=None, chemical_pair=None, num_neighbors=100, tolerance=2,
-        cluster_by_distances=False, cluster_by_vecs=False
+        self,
+        id_list=None,
+        chemical_pair=None,
+        num_neighbors=100,
+        tolerance=2,
+        cluster_by_distances=False,
+        cluster_by_vecs=False,
     ):
         neigh_list = self.get_neighbors(
             num_neighbors=num_neighbors, id_list=id_list, tolerance=tolerance
@@ -1458,8 +1547,9 @@ class Atoms(ASEAtoms):
         return neigh_list.get_shell_matrix(
             chemical_pair=chemical_pair,
             cluster_by_distances=cluster_by_distances,
-            cluster_by_vecs=cluster_by_vecs
+            cluster_by_vecs=cluster_by_vecs,
         )
+
     get_shell_matrix.__doc__ = Neighbors.get_shell_matrix.__doc__
 
     def occupy_lattice(self, **qwargs):
@@ -1489,8 +1579,10 @@ class Atoms(ASEAtoms):
         self.set_species(new_species)
         self.indices = new_indices
 
-    @deprecate("Use neigh.cluster_analysis() instead (after calling neigh = structure.get_neighbors())",
-               version="1.0.0")
+    @deprecate(
+        "Use neigh.cluster_analysis() instead (after calling neigh = structure.get_neighbors())",
+        version="1.0.0",
+    )
     def cluster_analysis(
         self, id_list, neighbors=None, radius=None, return_cluster_sizes=False
     ):
@@ -1508,16 +1600,22 @@ class Atoms(ASEAtoms):
         if neighbors is None:
             if radius is None:
                 neigh = self.get_neighbors(num_neighbors=100)
-                indices = np.unique(neigh.shells[0][neigh.shells[0]<=2], return_index=True)[1]
+                indices = np.unique(
+                    neigh.shells[0][neigh.shells[0] <= 2], return_index=True
+                )[1]
                 radius = neigh.distances[0][indices]
                 radius = np.mean(radius)
                 # print "radius: ", radius
             neighbors = self.get_neighbors_by_distance(cutoff_radius=radius)
-        return neighbors.cluster_analysis(id_list=id_list, return_cluster_sizes=return_cluster_sizes)
+        return neighbors.cluster_analysis(
+            id_list=id_list, return_cluster_sizes=return_cluster_sizes
+        )
 
     # TODO: combine with corresponding routine in plot3d
-    @deprecate("Use neigh.get_bonds() instead (after calling neigh = structure.get_neighbors())",
-               version="1.0.0")
+    @deprecate(
+        "Use neigh.get_bonds() instead (after calling neigh = structure.get_neighbors())",
+        version="1.0.0",
+    )
     def get_bonds(self, radius=np.inf, max_shells=None, prec=0.1, num_neighbors=20):
         """
 
@@ -1557,12 +1655,17 @@ class Atoms(ASEAtoms):
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
-            angle_tolerance=angle_tolerance
+            angle_tolerance=angle_tolerance,
         )
 
-    @deprecate('Use structure.get_symmetry().symmetrize_vectors()')
+    @deprecate("Use structure.get_symmetry().symmetrize_vectors()")
     def symmetrize_vectors(
-        self, vectors, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
+        self,
+        vectors,
+        use_magmoms=False,
+        use_elements=True,
+        symprec=1e-5,
+        angle_tolerance=-1.0,
     ):
         """
         Symmetrization of natom x 3 vectors according to box symmetries
@@ -1581,12 +1684,17 @@ class Atoms(ASEAtoms):
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
-            angle_tolerance=angle_tolerance
+            angle_tolerance=angle_tolerance,
         ).symmetrize_vectors(vectors=vectors)
 
-    @deprecate('Use structure.get_symmetry().get_arg_equivalent_sites() instead')
+    @deprecate("Use structure.get_symmetry().get_arg_equivalent_sites() instead")
     def group_points_by_symmetry(
-        self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0
+        self,
+        points,
+        use_magmoms=False,
+        use_elements=True,
+        symprec=1e-5,
+        angle_tolerance=-1.0,
     ):
         """
         This function classifies the points into groups according to the box symmetry given by
@@ -1609,11 +1717,18 @@ class Atoms(ASEAtoms):
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
-            angle_tolerance=angle_tolerance
+            angle_tolerance=angle_tolerance,
         ).get_arg_equivalent_sites(points)
 
-    @deprecate('Use structure.get_symmetry().get_arg_equivalent_sites() instead')
-    def get_equivalent_points(self, points, use_magmoms=False, use_elements=True, symprec=1e-5, angle_tolerance=-1.0):
+    @deprecate("Use structure.get_symmetry().get_arg_equivalent_sites() instead")
+    def get_equivalent_points(
+        self,
+        points,
+        use_magmoms=False,
+        use_elements=True,
+        symprec=1e-5,
+        angle_tolerance=-1.0,
+    ):
         """
 
         Args:
@@ -1630,10 +1745,10 @@ class Atoms(ASEAtoms):
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
-            angle_tolerance=angle_tolerance
+            angle_tolerance=angle_tolerance,
         ).get_arg_equivalent_sites(points)
 
-    @deprecate('Use structure.get_symmetry().info instead')
+    @deprecate("Use structure.get_symmetry().info instead")
     def get_symmetry_dataset(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1647,7 +1762,7 @@ class Atoms(ASEAtoms):
         """
         return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).info
 
-    @deprecate('Use structure.get_symmetry().spacegroup instead')
+    @deprecate("Use structure.get_symmetry().spacegroup instead")
     def get_spacegroup(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1659,9 +1774,11 @@ class Atoms(ASEAtoms):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).spacegroup
+        return self.get_symmetry(
+            symprec=symprec, angle_tolerance=angle_tolerance
+        ).spacegroup
 
-    @deprecate('Use structure.get_symmetry().refine_cell() instead')
+    @deprecate("Use structure.get_symmetry().refine_cell() instead")
     def refine_cell(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1673,9 +1790,11 @@ class Atoms(ASEAtoms):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).refine_cell()
+        return self.get_symmetry(
+            symprec=symprec, angle_tolerance=angle_tolerance
+        ).refine_cell()
 
-    @deprecate('Use structure.get_symmetry().primitive_cell instead')
+    @deprecate("Use structure.get_symmetry().primitive_cell instead")
     def get_primitive_cell(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1686,9 +1805,11 @@ class Atoms(ASEAtoms):
         Returns:
 
         """
-        return self.get_symmetry(symprec=symprec, angle_tolerance=angle_tolerance).primitive_cell
+        return self.get_symmetry(
+            symprec=symprec, angle_tolerance=angle_tolerance
+        ).primitive_cell
 
-    @deprecate('Use structure.get_symmetry().get_ir_reciprocal_mesh() instead')
+    @deprecate("Use structure.get_symmetry().get_ir_reciprocal_mesh() instead")
     def get_ir_reciprocal_mesh(
         self,
         mesh,
@@ -1743,6 +1864,7 @@ class Atoms(ASEAtoms):
     @deprecate("Use Atoms.analyse.pyscal_voronoi_volume() instead")
     def get_voronoi_volume(self):
         return self._analyse.pyscal_voronoi_volume()
+
     get_voronoi_volume.__doc__ = Analyse.pyscal_voronoi_volume.__doc__
 
     def is_skewed(self, tolerance=1.0e-8):
@@ -1760,7 +1882,7 @@ class Atoms(ASEAtoms):
         volume = self.get_volume()
         prod = np.linalg.norm(self.cell, axis=-1).prod()
         if volume > 0:
-            if abs(volume-prod)/volume < tolerance:
+            if abs(volume - prod) / volume < tolerance:
                 return False
         return True
 
@@ -1776,9 +1898,9 @@ class Atoms(ASEAtoms):
         Returns: numpy.ndarray of the same shape as input with mic
         """
         if any(self.pbc):
-            v = np.einsum('ji,...j->...i', np.linalg.inv(self.cell), v)
+            v = np.einsum("ji,...j->...i", np.linalg.inv(self.cell), v)
             v[..., self.pbc] -= np.rint(v)[..., self.pbc]
-            v = np.einsum('ji,...j->...i', self.cell, v)
+            v = np.einsum("ji,...j->...i", self.cell, v)
         if vectors:
             return np.asarray(v)
         return np.linalg.norm(v, axis=-1)
@@ -1849,8 +1971,10 @@ class Atoms(ASEAtoms):
             p2 = self.positions
         p1 = np.asarray(p1)
         p2 = np.asarray(p2)
-        diff_relative = p2.reshape(-1,3)[np.newaxis,:,:]-p1.reshape(-1,3)[:,np.newaxis,:]
-        diff_relative = diff_relative.reshape(p1.shape[:-1]+p2.shape[:-1]+(3,))
+        diff_relative = (
+            p2.reshape(-1, 3)[np.newaxis, :, :] - p1.reshape(-1, 3)[:, np.newaxis, :]
+        )
+        diff_relative = diff_relative.reshape(p1.shape[:-1] + p2.shape[:-1] + (3,))
         if not mic:
             if vectors:
                 return diff_relative
@@ -1885,18 +2009,28 @@ class Atoms(ASEAtoms):
         elif isinstance(other, ASEAtom):
             other = self.__class__([ase_to_pyiron_atom(other)])
         if not isinstance(other, Atoms) and isinstance(other, ASEAtoms):
-            warnings.warn("Converting ase structure to pyiron before appending the structure")
+            warnings.warn(
+                "Converting ase structure to pyiron before appending the structure"
+            )
             other = ase_to_pyiron(other)
 
         new_indices = other.indices.copy()
         super(Atoms, self).extend(other=other)
         if isinstance(other, Atoms):
             if not np.allclose(self.cell, other.cell):
-                warnings.warn("You are adding structures with different cell shapes. "
-                              "Taking the cell and pbc of the first structure:{}".format(self.cell))
+                warnings.warn(
+                    "You are adding structures with different cell shapes. "
+                    "Taking the cell and pbc of the first structure:{}".format(
+                        self.cell
+                    )
+                )
             if not np.array_equal(self.pbc, other.pbc):
-                warnings.warn("You are adding structures with different periodic boundary conditions. "
-                              "Taking the cell and pbc of the first structure:{}".format(self.cell))
+                warnings.warn(
+                    "You are adding structures with different periodic boundary conditions. "
+                    "Taking the cell and pbc of the first structure:{}".format(
+                        self.cell
+                    )
+                )
             sum_atoms = self
             # sum_atoms = copy(self)
             sum_atoms._tag_list = sum_atoms._tag_list + other._tag_list
@@ -1917,7 +2051,7 @@ class Atoms(ASEAtoms):
             for key, val in ind_conv.items():
                 new_indices[new_indices == key] = val + 1000
             new_indices = np.mod(new_indices, 1000)
-            sum_atoms.indices[len(old_indices):] = new_indices
+            sum_atoms.indices[len(old_indices) :] = new_indices
             sum_atoms.set_species(new_species_lst)
             if not len(set(sum_atoms.indices)) == len(sum_atoms.species):
                 raise ValueError("Adding the atom instances went wrong!")
@@ -1968,8 +2102,9 @@ class Atoms(ASEAtoms):
         self.indices = new_indices
 
     def __eq__(self, other):
-        return super(Atoms, self).__eq__(other) and \
-               np.array_equal(self.get_chemical_symbols(), other.get_chemical_symbols())
+        return super(Atoms, self).__eq__(other) and np.array_equal(
+            self.get_chemical_symbols(), other.get_chemical_symbols()
+        )
 
     def __ne__(self, other):
         return not self == other
@@ -2174,11 +2309,19 @@ class Atoms(ASEAtoms):
         if isinstance(vec, (int, np.integer)):
             vec = [vec] * self.dimension
         initial_length = len(self)
-        if not hasattr(vec, '__len__'):
-            raise ValueError('Box repetition must be an integer or a list/ndarray of integers and not', type(vec))
+        if not hasattr(vec, "__len__"):
+            raise ValueError(
+                "Box repetition must be an integer or a list/ndarray of integers and not",
+                type(vec),
+            )
 
         if len(vec) != self.dimension:
-            raise AssertionError('Dimension of box repetition not consistent: ', len(vec), '!=', self.dimension)
+            raise AssertionError(
+                "Dimension of box repetition not consistent: ",
+                len(vec),
+                "!=",
+                self.dimension,
+            )
 
         i_vec = np.array([vec[0], 1, 1])
         if self.dimension > 1:
@@ -2199,7 +2342,9 @@ class Atoms(ASEAtoms):
         self.set_cell((self.cell.T * np.array(vec)).T, scale_atoms=True)
         # ASE compatibility
         for name, a in self.arrays.items():
-            self.arrays[name] = np.tile(a, (np.product(vec),) + (1, ) * (len(a.shape) - 1))
+            self.arrays[name] = np.tile(
+                a, (np.product(vec),) + (1,) * (len(a.shape) - 1)
+            )
         self.arrays["positions"] = np.dot(new_positions, self.cell)
         self.indices = np.tile(self.indices, len(lat))
         self._tag_list._length = len(self)
@@ -2256,8 +2401,13 @@ class Atoms(ASEAtoms):
         if "selective_dynamics" in self._tag_list._lists.keys():
             from ase.constraints import FixAtoms
 
-            return FixAtoms(indices=[atom_ind for atom_ind in
-                                     range(len(self)) if not any(self.selective_dynamics[atom_ind])])
+            return FixAtoms(
+                indices=[
+                    atom_ind
+                    for atom_ind in range(len(self))
+                    if not any(self.selective_dynamics[atom_ind])
+                ]
+            )
         else:
             return None
 
@@ -2265,7 +2415,9 @@ class Atoms(ASEAtoms):
         super(Atoms, self).set_constraint(constraint)
         if constraint is not None:
             if constraint.todict()["name"] != "FixAtoms":
-                raise ValueError("Only FixAtoms is supported as ASE compatible constraint.")
+                raise ValueError(
+                    "Only FixAtoms is supported as ASE compatible constraint."
+                )
             if "selective_dynamics" not in self._tag_list._lists.keys():
                 self.add_tag(selective_dynamics=None)
             for atom_ind in range(len(self)):
@@ -2274,7 +2426,7 @@ class Atoms(ASEAtoms):
                 else:
                     self.selective_dynamics[atom_ind] = [True, True, True]
 
-    def apply_strain(self, epsilon, return_box=False, mode='linear'):
+    def apply_strain(self, epsilon, return_box=False, mode="linear"):
         """
         Apply a given strain on the structure. It applies the matrix `F` in the manner:
 
@@ -2294,7 +2446,7 @@ class Atoms(ASEAtoms):
         """
         epsilon = np.array([epsilon]).flatten()
         if len(epsilon) == 3 or len(epsilon) == 1:
-            epsilon = epsilon*np.eye(3)
+            epsilon = epsilon * np.eye(3)
         epsilon = epsilon.reshape(3, 3)
         if epsilon.min() < -1.0:
             raise ValueError("Strain value too negative")
@@ -2303,15 +2455,15 @@ class Atoms(ASEAtoms):
         else:
             structure_copy = self
         cell = structure_copy.cell.copy()
-        if mode == 'linear':
+        if mode == "linear":
             F = epsilon + np.eye(3)
-        elif mode == 'lagrangian':
+        elif mode == "lagrangian":
             if not np.allclose(epsilon, epsilon.T):
                 raise ValueError("Strain must be symmetric if `mode = 'lagrangian'`")
-            E, V = np.linalg.eigh(2*epsilon+np.eye(3))
-            F = np.einsum('ik,k,jk->ij', V, np.sqrt(E), V)
+            E, V = np.linalg.eigh(2 * epsilon + np.eye(3))
+            F = np.einsum("ik,k,jk->ij", V, np.sqrt(E), V)
         else:
-            raise ValueError('mode must be `linear` or `lagrangian`')
+            raise ValueError("mode must be `linear` or `lagrangian`")
         cell = np.matmul(F, cell)
         structure_copy.set_cell(cell, scale_atoms=True)
         if return_box:
@@ -2319,19 +2471,19 @@ class Atoms(ASEAtoms):
 
     def get_spherical_coordinates(self, x=None):
         """
-            Args:
-                x (list/ndarray): coordinates to transform. If not set, the positions
-                                  in structure will be returned.
+        Args:
+            x (list/ndarray): coordinates to transform. If not set, the positions
+                              in structure will be returned.
 
-            Returns:
-                array in spherical coordinates
+        Returns:
+            array in spherical coordinates
         """
         if x is None:
             x = self.positions.copy()
         x = np.array(x).reshape(-1, 3)
         r = np.linalg.norm(x, axis=-1)
-        phi = np.arctan2(x[:,2], x[:,1])
-        theta = np.arctan2(np.linalg.norm(x[:,:2], axis=-1), x[:,2])
+        phi = np.arctan2(x[:, 2], x[:, 1])
+        theta = np.arctan2(np.linalg.norm(x[:, :2], axis=-1), x[:, 2])
         return np.stack((r, theta, phi), axis=-1)
 
     def get_initial_magnetic_moments(self):
@@ -2394,7 +2546,8 @@ class Atoms(ASEAtoms):
                 self.spin[ind] = spin
         self.spins = magmoms
 
-    def rotate(self, a=0.0, v=None, center=(0, 0, 0), rotate_cell=False, index_list=None
+    def rotate(
+        self, a=0.0, v=None, center=(0, 0, 0), rotate_cell=False, index_list=None
     ):
         """
         Rotate atoms based on a vector and an angle, or two vectors. This function is completely adopted from ASE code
@@ -2452,6 +2605,7 @@ class Atoms(ASEAtoms):
 
     def to_pyscal_system(self):
         return pyiron_to_pyscal_system(self)
+
 
 class _CrystalStructure(Atoms):
     """
@@ -2692,9 +2846,7 @@ class _CrystalStructure(Atoms):
             if self.bravais_basis == "primitive":
                 basis = np.array([[0.0]])
             else:
-                raise ValueError(
-                    "Only primitive cells are supported for 1D."
-                )
+                raise ValueError("Only primitive cells are supported for 1D.")
         self.coordinates = basis
 
     # ########################### get commmands ########################
@@ -3251,7 +3403,11 @@ class Symbols(ASESymbols):
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
         if self._structure is not None:
-            index_array = np.argwhere(self.numbers != self._structure.get_atomic_numbers()).flatten()
-            replace_elements = self.structure.numbers_to_elements(self.numbers[index_array])
+            index_array = np.argwhere(
+                self.numbers != self._structure.get_atomic_numbers()
+            ).flatten()
+            replace_elements = self.structure.numbers_to_elements(
+                self.numbers[index_array]
+            )
             for i, el in enumerate(replace_elements):
                 self._structure[index_array[i]] = el

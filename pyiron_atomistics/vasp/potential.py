@@ -9,7 +9,10 @@ import numpy as np
 import pandas
 import tables
 from pyiron_base import state, GenericParameters, deprecate
-from pyiron_atomistics.atomistics.job.potentials import PotentialAbstract, find_potential_file_base
+from pyiron_atomistics.atomistics.job.potentials import (
+    PotentialAbstract,
+    find_potential_file_base,
+)
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -266,11 +269,13 @@ def find_potential_file(path):
     return find_potential_file_base(
         path=path,
         resource_path_lst=state.settings.resource_paths,
-        rel_path=os.path.join("vasp", "potentials")
+        rel_path=os.path.join("vasp", "potentials"),
     )
 
 
-@deprecate("use get_enmax_among_potentials and note the adjustment to the signature (*args instead of list)")
+@deprecate(
+    "use get_enmax_among_potentials and note the adjustment to the signature (*args instead of list)"
+)
 def get_enmax_among_species(symbol_lst, return_list=False, xc="PBE"):
     """
     DEPRECATED: Please use `get_enmax_among_potentials`.
@@ -308,20 +313,28 @@ def get_enmax_among_potentials(*names, return_list=False, xc="PBE"):
         (float): The largest ENMAX among the POTCAR files for all the requested names.
         [optional](list): The ENMAX value corresponding to each species.
     """
+
     def _get_just_element_from_name(name):
-        return name.split('_')[0]
+        return name.split("_")[0]
 
     def _get_index_of_exact_match(name, potential_names):
         try:
-            return np.argwhere([name == strip_xc_from_potential_name(pn) for pn in potential_names])[0, 0]
+            return np.argwhere(
+                [name == strip_xc_from_potential_name(pn) for pn in potential_names]
+            )[0, 0]
         except IndexError:
-            raise ValueError("Couldn't find {} among potential names for {}".format(name,
-                                                                                    _get_just_element_from_name(name)))
+            raise ValueError(
+                "Couldn't find {} among potential names for {}".format(
+                    name, _get_just_element_from_name(name)
+                )
+            )
 
     def _get_potcar_filename(name, exch_corr):
-        potcar_table = VaspPotentialFile(xc=exch_corr).find(_get_just_element_from_name(name))
-        return potcar_table['Filename'].values[
-            _get_index_of_exact_match(name, potcar_table['Name'].values)
+        potcar_table = VaspPotentialFile(xc=exch_corr).find(
+            _get_just_element_from_name(name)
+        )
+        return potcar_table["Filename"].values[
+            _get_index_of_exact_match(name, potcar_table["Name"].values)
         ][0]
 
     enmax_lst = []
@@ -340,7 +353,7 @@ def get_enmax_among_potentials(*names, return_list=False, xc="PBE"):
 
 
 def strip_xc_from_potential_name(name):
-    return name.split('-')[0]
+    return name.split("-")[0]
 
 
 class Potcar(GenericParameters):
@@ -438,9 +451,9 @@ class Potcar(GenericParameters):
                         parent_element=el, new_element=new_element
                     )
                     el_path = find_potential_file(
-                        path=vasp_potentials.find_default(new_element)["Filename"].values[
-                            0
-                        ][0]
+                        path=vasp_potentials.find_default(new_element)[
+                            "Filename"
+                        ].values[0][0]
                     )
             else:
                 el_path = find_potential_file(

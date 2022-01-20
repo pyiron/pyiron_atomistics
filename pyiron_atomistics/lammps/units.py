@@ -18,16 +18,19 @@ __copyright__ = (
 AMU_TO_G = spc.atomic_mass * spc.kilo
 AMU_TO_KG = spc.atomic_mass
 ANG_PER_FS_TO_ANG_PER_PS = spc.pico / spc.femto
-ANG_PER_FS_TO_BOHR_PER_FS = spc.angstrom / spc.physical_constants['Bohr radius'][0]
+ANG_PER_FS_TO_BOHR_PER_FS = spc.angstrom / spc.physical_constants["Bohr radius"][0]
 ANG_PER_FS_TO_CM_PER_S = (spc.angstrom / spc.femto) / spc.centi
 ANG_PER_FS_TO_M_PER_S = spc.angstrom / spc.femto
-ANG_TO_BOHR = spc.angstrom / spc.physical_constants['Bohr radius'][0]
+ANG_TO_BOHR = spc.angstrom / spc.physical_constants["Bohr radius"][0]
 ANG_TO_CM = spc.angstrom / spc.centi
 ANG_TO_M = spc.angstrom
 EL_TO_COUL = spc.elementary_charge
 EV_PER_ANG_TO_DYNE = (spc.electron_volt / spc.angstrom) / spc.dyne
-EV_PER_ANG_TO_HA_PER_BOHR = spc.physical_constants["electron volt-hartree relationship"][0] * \
-                            spc.physical_constants['Bohr radius'][0] / spc.angstrom
+EV_PER_ANG_TO_HA_PER_BOHR = (
+    spc.physical_constants["electron volt-hartree relationship"][0]
+    * spc.physical_constants["Bohr radius"][0]
+    / spc.angstrom
+)
 EV_PER_ANG_TO_KCAL_PER_MOL_ANG = spc.eV / (spc.kilo * spc.calorie / spc.N_A)
 EV_PER_ANG_TO_N = spc.electron_volt / spc.angstrom
 EV_TO_ERG = spc.electron_volt / spc.erg
@@ -48,15 +51,15 @@ GPA_TO_PA = spc.giga
 
 LAMMPS_UNIT_CONVERSIONS = {
     "metal": {
-        "mass": 1.,
-        "distance": 1.,
+        "mass": 1.0,
+        "distance": 1.0,
         "time": FS_TO_PS,
-        "energy": 1.,
+        "energy": 1.0,
         "velocity": ANG_PER_FS_TO_ANG_PER_PS,
-        "force": 1.,
-        "temperature": 1.,
+        "force": 1.0,
+        "temperature": 1.0,
         "pressure": GPA_TO_BAR,
-        "charge": 1.
+        "charge": 1.0,
     },
     "si": {
         "mass": AMU_TO_KG,
@@ -65,9 +68,9 @@ LAMMPS_UNIT_CONVERSIONS = {
         "energy": EV_TO_J,
         "velocity": ANG_PER_FS_TO_M_PER_S,
         "force": EV_PER_ANG_TO_N,
-        "temperature": 1.,
+        "temperature": 1.0,
         "pressure": GPA_TO_PA,
-        "charge": EL_TO_COUL
+        "charge": EL_TO_COUL,
     },
     "cgs": {
         "mass": AMU_TO_G,
@@ -76,31 +79,31 @@ LAMMPS_UNIT_CONVERSIONS = {
         "energy": EV_TO_ERG,
         "velocity": ANG_PER_FS_TO_CM_PER_S,
         "force": EV_PER_ANG_TO_DYNE,
-        "temperature": 1.,
+        "temperature": 1.0,
         "pressure": GPA_TO_BARYE,
-        "charge": 4.8032044e-10  # In statCoulombs, but these are deprecated and thus not in scipt.constants
+        "charge": 4.8032044e-10,  # In statCoulombs, but these are deprecated and thus not in scipt.constants
     },
     "real": {
-        "mass": 1.,
-        "distance": 1.,
-        "time": 1.,
+        "mass": 1.0,
+        "distance": 1.0,
+        "time": 1.0,
         "energy": EV_TO_KCAL_PER_MOL,
-        "velocity": 1.,
+        "velocity": 1.0,
         "force": EV_PER_ANG_TO_KCAL_PER_MOL_ANG,
-        "temperature": 1.,
+        "temperature": 1.0,
         "pressure": GPA_TO_ATM,
-        "charge": 1.
+        "charge": 1.0,
     },
     "electron": {
-        "mass": 1.,
+        "mass": 1.0,
         "distance": ANG_TO_BOHR,
-        "time": 1.,
+        "time": 1.0,
         "energy": EV_TO_HA,
         "velocity": ANG_PER_FS_TO_BOHR_PER_FS,
         "force": EV_PER_ANG_TO_HA_PER_BOHR,
-        "temperature": 1.,
+        "temperature": 1.0,
         "pressure": GPA_TO_PA,
-        "charge": 1.
+        "charge": 1.0,
     },
 }
 
@@ -112,11 +115,21 @@ for values in LAMMPS_UNIT_CONVERSIONS.values():
 
 # Hard coded list of all quantities we store in pyiron and the type of quantity it stores (Expand if necessary)
 _conversion_dict = dict()
-_conversion_dict["distance"] = ["positions", "cells", "unwrapped_positions", "mean_unwrapped_positions"]
+_conversion_dict["distance"] = [
+    "positions",
+    "cells",
+    "unwrapped_positions",
+    "mean_unwrapped_positions",
+]
 _conversion_dict["volume"] = ["volume", "volumes"]
 _conversion_dict["pressure"] = ["pressure", "pressures", "mean_pressures"]
 _conversion_dict["time"] = ["time"]
-_conversion_dict["energy"] = ["energy_tot", "energy_pot", "energy_pot_per_atom", "mean_energy_pot"]
+_conversion_dict["energy"] = [
+    "energy_tot",
+    "energy_pot",
+    "energy_pot_per_atom",
+    "mean_energy_pot",
+]
 _conversion_dict["temperature"] = ["temperature", "temperatures"]
 _conversion_dict["velocity"] = ["velocity", "velocities", "mean_velocities"]
 _conversion_dict["mass"] = ["mass"]
@@ -179,7 +192,7 @@ class UnitConverter:
             float: The conversion factor
 
         """
-        return 1. / self[quantity]
+        return 1.0 / self[quantity]
 
     def pyiron_to_lammps(self, quantity):
         """
@@ -208,8 +221,12 @@ class UnitConverter:
 
         """
         if label in quantity_dict.keys():
-            return np.array(array * self.lammps_to_pyiron(quantity_dict[label]), dtype_dict[label])
+            return np.array(
+                array * self.lammps_to_pyiron(quantity_dict[label]), dtype_dict[label]
+            )
         else:
-            warnings.warn(message="Warning: Couldn't determine the LAMMPS to pyiron unit conversion type of quantity "
-                                  "{}. Returning un-normalized quantity".format(label))
+            warnings.warn(
+                message="Warning: Couldn't determine the LAMMPS to pyiron unit conversion type of quantity "
+                "{}. Returning un-normalized quantity".format(label)
+            )
             return array

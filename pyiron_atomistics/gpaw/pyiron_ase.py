@@ -84,8 +84,7 @@ def ase_structure_fromdict(atoms_dict):
         )
     if "constraint" in atoms_dict_copy.keys():
         atoms_dict_copy["constraint"] = [
-            dict2constraint(const_dict)
-            for const_dict in atoms_dict_copy["constraint"]
+            dict2constraint(const_dict) for const_dict in atoms_dict_copy["constraint"]
         ]
     atoms_dict_copy["cell"] = cell_fromdict(celldict=atoms_dict_copy["cell"])
     atoms = Atoms(**atoms_dict_copy)
@@ -99,8 +98,8 @@ class AseJob(GenericInteractive):
         super(AseJob, self).__init__(project, job_name)
         self.__name__ = "AseJob"
         self.__version__ = (
-            None
-        )  # Reset the version number to the executable is set automatically
+            None  # Reset the version number to the executable is set automatically
+        )
 
     @property
     def structure(self):
@@ -208,12 +207,10 @@ class AseJob(GenericInteractive):
         )
         el_lst = sorted(set(index_merge_lst), key=index_merge_lst.index)
         current_structure_index = [
-            el_lst.index(el)
-            for el in self._structure_current.get_chemical_symbols()
+            el_lst.index(el) for el in self._structure_current.get_chemical_symbols()
         ]
         previous_structure_index = [
-            el_lst.index(el)
-            for el in self._structure_previous.get_chemical_symbols()
+            el_lst.index(el) for el in self._structure_previous.get_chemical_symbols()
         ]
         if not np.array_equal(
             np.array(current_structure_index),
@@ -233,9 +230,7 @@ class AseJob(GenericInteractive):
             else:
                 return None
             if len(self._interactive_species_lst) == 0:
-                el_lst = list(
-                    np.unique(self._structure_current.get_chemical_symbols())
-                )
+                el_lst = list(np.unique(self._structure_current.get_chemical_symbols()))
             else:
                 el_lst = self._interactive_species_lst.tolist()
             if indices is not None:
@@ -265,9 +260,7 @@ class AseJob(GenericInteractive):
                 self.get("output/generic/cells") is not None
                 and len(self.get("output/generic/cells")) != 0
             ):
-                return super()._get_structure(
-                    frame=frame, wrap_atoms=wrap_atoms
-                )
+                return super()._get_structure(frame=frame, wrap_atoms=wrap_atoms)
             else:
                 return None
 
@@ -283,16 +276,12 @@ class AseAdapter(object):
                 "momenta": [],
                 "positions": [],
                 "energy_tot": [],
-                "energy_pot": []
+                "energy_pot": [],
             }
             self._ham.run()
             self._ham.interactive_cache = {}
         elif self._ham.server.run_mode.interactive:
-            self.interactive_cache = {
-                "velocities": [],
-                "energy_kin": [],
-                "momenta": []
-            }
+            self.interactive_cache = {"velocities": [], "energy_kin": [], "momenta": []}
         self.constraints = []
         try:
             self.arrays = {
@@ -323,7 +312,9 @@ class AseAdapter(object):
             self._ham.interactive_positions_setter(self.arrays["positions"])
             self.interactive_cache["positions"].append(self.arrays["positions"])
             self._ham.interactive_execute()
-            self.interactive_cache["energy_pot"].append(self._ham.interactive_energy_pot_getter())
+            self.interactive_cache["energy_pot"].append(
+                self._ham.interactive_energy_pot_getter()
+            )
             return np.array(self._ham.interactive_forces_getter())
         else:
             self._ham.structure.positions = self.arrays["positions"]

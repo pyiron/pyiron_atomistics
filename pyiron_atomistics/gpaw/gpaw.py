@@ -19,6 +19,7 @@ __date__ = "Sep 1, 2018"
 
 try:
     from gpaw import GPAW as GPAWcode, PW, MethfesselPaxton
+
     import_alarm = ImportAlarm()
 except ImportError:
     import_alarm = ImportAlarm(
@@ -58,13 +59,9 @@ class Gpaw(AseJob, GenericDFTJob):
         path_name=None,
     ):
         if scheme != "MP":
-            raise ValueError(
-                "Currently only MP is supported in the pyiron wrapper."
-            )
+            raise ValueError("Currently only MP is supported in the pyiron wrapper.")
         if center_shift is not None:
-            raise ValueError(
-                "centershift is not implemented in the pyiron wrapper."
-            )
+            raise ValueError("centershift is not implemented in the pyiron wrapper.")
         if not symmetry_reduction:
             raise ValueError(
                 "symmetry_reduction is not implemented in the pyiron wrapper."
@@ -74,29 +71,19 @@ class Gpaw(AseJob, GenericDFTJob):
                 "manual_kpoints are not implemented in the pyiron wrapper."
             )
         if weights is not None:
-            raise ValueError(
-                "weights are not implemented in the pyiron wrapper."
-            )
+            raise ValueError("weights are not implemented in the pyiron wrapper.")
         if not reciprocal:
-            raise ValueError(
-                "reciprocal is not implemented in the pyiron wrapper."
-            )
+            raise ValueError("reciprocal is not implemented in the pyiron wrapper.")
         if n_path is not None:
-            raise ValueError(
-                "n_path is not implemented in the pyiron wrapper."
-            )
+            raise ValueError("n_path is not implemented in the pyiron wrapper.")
         if path_name is not None:
-            raise ValueError(
-                "path_name is not implemented in the pyiron wrapper."
-            )
+            raise ValueError("path_name is not implemented in the pyiron wrapper.")
         self.input["kpoints"] = mesh
 
     def set_calculator(self):
         kpoints = self.input["kpoints"]
         if isinstance(kpoints, str):
-            kpoints = (
-                self.input["kpoints"].replace("[", "").replace("]", "").split()
-            )
+            kpoints = self.input["kpoints"].replace("[", "").replace("]", "").split()
         self._create_working_directory()
         calc = GPAWcode(
             mode=PW(float(self.input["encut"])),

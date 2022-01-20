@@ -5,15 +5,26 @@
 from __future__ import print_function
 import os
 import posixpath
+
 # import warnings
 from string import punctuation
 from shutil import copyfile
-from pyiron_base import ProjectHDFio, JobType, JobTypeChoice, Project as ProjectCore, Creator as CreatorCore
+from pyiron_base import (
+    ProjectHDFio,
+    JobType,
+    JobTypeChoice,
+    Project as ProjectCore,
+    Creator as CreatorCore,
+)
+
 try:
     from pyiron_base import ProjectGUI
 except (ImportError, TypeError, AttributeError):
     pass
-from pyiron_atomistics.atomistics.generic.object_type import ObjectType, ObjectTypeChoice
+from pyiron_atomistics.atomistics.generic.object_type import (
+    ObjectType,
+    ObjectTypeChoice,
+)
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile
 from pyiron_atomistics.vasp.potential import VaspPotential
@@ -103,12 +114,14 @@ class Project(ProjectCore):
                                              ‘ListMaster']
     """
 
-    def __init__(self, path="", user=None, sql_query=None, default_working_directory=False):
+    def __init__(
+        self, path="", user=None, sql_query=None, default_working_directory=False
+    ):
         super(Project, self).__init__(
             path=path,
             user=user,
             sql_query=sql_query,
-            default_working_directory=default_working_directory
+            default_working_directory=default_working_directory,
         )
         self.job_type = JobTypeChoice()
         self.object_type = ObjectTypeChoice()
@@ -230,7 +243,11 @@ class Project(ProjectCore):
         return job
 
     def import_single_calculation(
-        self, project_to_import_from, rel_path=None, job_type="Vasp", copy_raw_files=False
+        self,
+        project_to_import_from,
+        rel_path=None,
+        job_type="Vasp",
+        copy_raw_files=False,
     ):
         """
         A method to import a single calculation jobs into pyiron. Currently, it suppor
@@ -274,15 +291,14 @@ class Project(ProjectCore):
                 ham.status.aborted = True
             else:
                 ham._import_directory = None
-                del ham['import_directory']
+                del ham["import_directory"]
                 if copy_raw_files:
                     os.makedirs(ham.working_directory, exist_ok=True)
                     for f in os.listdir(project_to_import_from):
                         src = os.path.join(project_to_import_from, f)
                         if os.path.isfile(src):
                             copyfile(
-                                src=src,
-                                dst=os.path.join(ham.working_directory, f)
+                                src=src, dst=os.path.join(ham.working_directory, f)
                             )
                     ham.compress()
 
@@ -306,13 +322,19 @@ class Project(ProjectCore):
         if recursive:
             for x in os.walk(search_path):
                 self._calculation_validation(
-                    x[0], x[2], rel_path=posixpath.relpath(x[0], search_path), copy_raw_files=copy_raw_files
+                    x[0],
+                    x[2],
+                    rel_path=posixpath.relpath(x[0], search_path),
+                    copy_raw_files=copy_raw_files,
                 )
         else:
             abs_path = "/".join(search_path.replace("\\", "/").split("/")[:-1])
             rel_path = posixpath.relpath(abs_path, self.path)
             self._calculation_validation(
-                search_path, os.listdir(search_path), rel_path=rel_path, copy_raw_files=copy_raw_files
+                search_path,
+                os.listdir(search_path),
+                rel_path=rel_path,
+                copy_raw_files=copy_raw_files,
             )
 
     def get_structure(self, job_specifier, iteration_step=-1, wrap_atoms=True):
@@ -346,7 +368,9 @@ class Project(ProjectCore):
         else:
             return snapshot
 
-    def _calculation_validation(self, path, files_available, rel_path=None, copy_raw_files=False):
+    def _calculation_validation(
+        self, path, files_available, rel_path=None, copy_raw_files=False
+    ):
         """
 
         Args:
@@ -362,13 +386,17 @@ class Project(ProjectCore):
             or "vasprun.xml.bz2" in files_available
             or "vasprun.xml.gz" in files_available
         ):
-            self.import_single_calculation(path, rel_path=rel_path, job_type="Vasp", copy_raw_files=copy_raw_files)
+            self.import_single_calculation(
+                path, rel_path=rel_path, job_type="Vasp", copy_raw_files=copy_raw_files
+            )
         if (
             "incontrol.dat" in files_available
             and "lattice.out" in files_available
             and "lattice.inp" in files_available
         ):
-            self.import_single_calculation(path, rel_path=rel_path, job_type="KMC", copy_raw_files=copy_raw_files)
+            self.import_single_calculation(
+                path, rel_path=rel_path, job_type="KMC", copy_raw_files=copy_raw_files
+            )
 
     @staticmethod
     def inspect_periodic_table():
@@ -402,20 +430,25 @@ class Project(ProjectCore):
         Returns:
             FlexibleMaster:
         """
-        return pipe(project=self, job=job, step_lst=step_lst, delete_existing_job=delete_existing_job)
+        return pipe(
+            project=self,
+            job=job,
+            step_lst=step_lst,
+            delete_existing_job=delete_existing_job,
+        )
 
     # Deprecated methods
 
     def create_ase_bulk(
-            self,
-            name,
-            crystalstructure=None,
-            a=None,
-            c=None,
-            covera=None,
-            u=None,
-            orthorhombic=False,
-            cubic=False,
+        self,
+        name,
+        crystalstructure=None,
+        a=None,
+        c=None,
+        covera=None,
+        u=None,
+        orthorhombic=False,
+        cubic=False,
     ):
         """
         Creating bulk systems using ASE bulk module. Crystal structure and lattice constant(s) will be guessed if not
@@ -439,8 +472,16 @@ class Project(ProjectCore):
         #     "Project.create_ase_bulk is deprecated as of v0.3. Please use Project.create.structure.ase_bulk.",
         #     DeprecationWarning
         # )
-        return self.create.structure.ase.bulk(name=name, crystalstructure=crystalstructure, a=a, c=c,
-                                              covera=covera, u=u, orthorhombic=orthorhombic, cubic=cubic)
+        return self.create.structure.ase.bulk(
+            name=name,
+            crystalstructure=crystalstructure,
+            a=a,
+            c=c,
+            covera=covera,
+            u=u,
+            orthorhombic=orthorhombic,
+            cubic=cubic,
+        )
 
     def create_structure(self, element, bravais_basis, lattice_constant):
         """
@@ -459,11 +500,21 @@ class Project(ProjectCore):
         #     "Project.create_structure is deprecated as of v0.3. Please use Project.create.structure.structure.",
         #     DeprecationWarning
         # )
-        return self.create.structure.crystal(element=element, bravais_basis=bravais_basis,
-                                             lattice_constant=lattice_constant)
+        return self.create.structure.crystal(
+            element=element,
+            bravais_basis=bravais_basis,
+            lattice_constant=lattice_constant,
+        )
 
     def create_surface(
-            self, element, surface_type, size=(1, 1, 1), vacuum=1.0, center=False, pbc=None, **kwargs
+        self,
+        element,
+        surface_type,
+        size=(1, 1, 1),
+        vacuum=1.0,
+        center=False,
+        pbc=None,
+        **kwargs
     ):
         """
         Generate a surface based on the ase.build.surface module.
@@ -488,31 +539,38 @@ class Project(ProjectCore):
         #     "Project.create_surface is deprecated as of v0.3. Please use Project.create.structure.surface.",
         #     DeprecationWarning
         # )
-        return self.create.structure.surface(element=element, surface_type=surface_type, size=size,
-                                             vacuum=vacuum, center=center, pbc=pbc, **kwargs)
+        return self.create.structure.surface(
+            element=element,
+            surface_type=surface_type,
+            size=size,
+            vacuum=vacuum,
+            center=center,
+            pbc=pbc,
+            **kwargs
+        )
 
     def create_atoms(
-            self,
-            symbols=None,
-            positions=None,
-            numbers=None,
-            tags=None,
-            momenta=None,
-            masses=None,
-            magmoms=None,
-            charges=None,
-            scaled_positions=None,
-            cell=None,
-            pbc=None,
-            celldisp=None,
-            constraint=None,
-            calculator=None,
-            info=None,
-            indices=None,
-            elements=None,
-            dimension=None,
-            species=None,
-            **qwargs
+        self,
+        symbols=None,
+        positions=None,
+        numbers=None,
+        tags=None,
+        momenta=None,
+        masses=None,
+        magmoms=None,
+        charges=None,
+        scaled_positions=None,
+        cell=None,
+        pbc=None,
+        celldisp=None,
+        constraint=None,
+        calculator=None,
+        info=None,
+        indices=None,
+        elements=None,
+        dimension=None,
+        species=None,
+        **qwargs
     ):
         """
         Creates a atomistics.structure.atoms.Atoms instance.
@@ -569,7 +627,9 @@ class Project(ProjectCore):
             **qwargs
         )
 
-    def create_element(self, parent_element, new_element_name=None, spin=None, potential_file=None):
+    def create_element(
+        self, parent_element, new_element_name=None, spin=None, potential_file=None
+    ):
         """
         Args:
             parent_element (str, int): The parent element eq. "N", "O", "Mg" etc.
@@ -588,12 +648,11 @@ class Project(ProjectCore):
             parent_element=parent_element,
             new_element_name=new_element_name,
             spin=spin,
-            potential_file=potential_file
+            potential_file=potential_file,
         )
 
 
 class Creator(CreatorCore):
-
     def __init__(self, project):
         super().__init__(project)
         self._structure = StructureFactory()
