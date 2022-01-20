@@ -60,7 +60,7 @@ class HasStructure(ABC):
     ...     print(s)
     Fe: [0. 0. 0.]
     pbc: [False False False]
-    cell: 
+    cell:
     Cell([0.0, 0.0, 0.0])
     <BLANKLINE>
 
@@ -98,13 +98,16 @@ class HasStructure(ABC):
             try:
                 frame = self._translate_frame(frame)
             except NotImplementedError:
-                raise KeyError(f"argument frame {frame} is not an integer and _translate_frame() not implemented!") \
-                        from None
+                raise KeyError(
+                    f"argument frame {frame} is not an integer and _translate_frame() not implemented!"
+                ) from None
         num_structures = self.number_of_structures
         if frame < 0:
             frame += num_structures
         if not (0 <= frame < num_structures):
-            raise IndexError(f"argument frame {frame} out of range [-{num_structures}, {num_structures}).")
+            raise IndexError(
+                f"argument frame {frame} out of range [-{num_structures}, {num_structures})."
+            )
 
         return self._get_structure(frame=frame, wrap_atoms=wrap_atoms)
 

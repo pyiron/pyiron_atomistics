@@ -5,7 +5,10 @@
 import os
 import pandas
 from pyiron_base import state
-from pyiron_atomistics.vasp.potential import VaspPotentialAbstract, find_potential_file_base
+from pyiron_atomistics.vasp.potential import (
+    VaspPotentialAbstract,
+    find_potential_file_base,
+)
 
 __author__ = "Osamu Waseda"
 __copyright__ = (
@@ -27,6 +30,7 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
     Args:
         xc (str): Exchange correlation functional ['PBE', 'LDA']
     """
+
     def __init__(self, xc=None, selected_atoms=None):
         potential_df = self._get_potential_df(
             plugin_name="sphinx",
@@ -85,5 +89,5 @@ def find_potential_file(path):
     return find_potential_file_base(
         path=path,
         resource_path_lst=resource_path_lst,
-        rel_path=os.path.join("sphinx", "potentials")
+        rel_path=os.path.join("sphinx", "potentials"),
     )

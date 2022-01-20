@@ -7,8 +7,10 @@ from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 
 __author__ = "Jan Janssen"
-__copyright__ = "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH " \
-                "- Computational Materials Design (CM) Department"
+__copyright__ = (
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH "
+    "- Computational Materials Design (CM) Department"
+)
 __version__ = "1.0"
 __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
@@ -50,35 +52,40 @@ class HessianJob(GenericInteractive):
 
     def set_elastic_moduli(self, bulk_modulus=0, shear_modulus=0):
         self._stiffness_tensor = np.zeros((6, 6))
-        self._stiffness_tensor[:3, :3] = bulk_modulus-2*shear_modulus/3
-        self._stiffness_tensor[:3, :3] += np.eye(3)*2*shear_modulus
-        self._stiffness_tensor[3:, 3:] = np.eye(3)*shear_modulus
+        self._stiffness_tensor[:3, :3] = bulk_modulus - 2 * shear_modulus / 3
+        self._stiffness_tensor[:3, :3] += np.eye(3) * 2 * shear_modulus
+        self._stiffness_tensor[3:, 3:] = np.eye(3) * shear_modulus
 
     def set_force_constants(self, force_constants):
         if self.structure is None:
-            raise ValueError('Set reference structure via set_reference_structure() first')
+            raise ValueError(
+                "Set reference structure via set_reference_structure() first"
+            )
         n_atom = len(self.structure.positions)
         if len(np.array([force_constants]).flatten()) == 1:
-            self._force_constants = force_constants*np.eye(3*n_atom)
-        elif np.array(force_constants).shape == (3*n_atom, 3*n_atom):
+            self._force_constants = force_constants * np.eye(3 * n_atom)
+        elif np.array(force_constants).shape == (3 * n_atom, 3 * n_atom):
             self._force_constants = force_constants
         elif np.array(force_constants).shape == (n_atom, n_atom):
             na = np.newaxis
-            self._force_constants = (np.array(force_constants)[:, na, :, na]*np.eye(3)[na, :, na, :]).flatten()
+            self._force_constants = (
+                np.array(force_constants)[:, na, :, na] * np.eye(3)[na, :, na, :]
+            ).flatten()
         elif len(np.shape(force_constants)) == 4:
             force_shape = np.shape(force_constants)
             if force_shape[2] == 3 and force_shape[3] == 3:
                 force_reshape = force_shape[0] * force_shape[2]
                 self._force_constants = np.transpose(
-                    force_constants,
-                    (0, 2, 1, 3)
+                    force_constants, (0, 2, 1, 3)
                 ).reshape((force_reshape, force_reshape))
             elif force_shape[1] == 3 and force_shape[3] == 3:
-                self._force_constants = np.array(force_constants).reshape(3*n_atom, 3*n_atom)
+                self._force_constants = np.array(force_constants).reshape(
+                    3 * n_atom, 3 * n_atom
+                )
             else:
-                raise AssertionError('force constant shape not recognized')
+                raise AssertionError("force constant shape not recognized")
         else:
-            raise AssertionError('force constant shape not recognized')
+            raise AssertionError("force constant shape not recognized")
 
     def set_reference_structure(self, structure):
         self._reference_structure = structure.copy()
@@ -88,9 +95,13 @@ class HessianJob(GenericInteractive):
     def validate_ready_to_run(self):
         super(HessianJob, self).validate_ready_to_run()
         if self._force_constants is None:
-            raise AssertionError('set force constants by set_force_constants before run')
+            raise AssertionError(
+                "set force constants by set_force_constants before run"
+            )
         if self._reference_structure is None:
-            raise AssertionError('set reference structure by set_reference_structure before run')
+            raise AssertionError(
+                "set reference structure by set_reference_structure before run"
+            )
 
     def interactive_forces_getter(self):
         return self._forces
@@ -115,30 +126,35 @@ class HessianJob(GenericInteractive):
 
     def interactive_cells_setter(self, cell):
         if np.sum(self._stiffness_tensor) != 0:
-            epsilon = np.einsum(
-                'ij,jk->ik',
-                self.structure.cell,
-                np.linalg.inv(self._reference_structure.cell)
-            )-np.eye(3)
-            epsilon = (epsilon+epsilon.T)*0.5
-            epsilon = np.append(
-                epsilon.diagonal(),
-                np.roll(epsilon, -1, axis=0).diagonal()
+            epsilon = (
+                np.einsum(
+                    "ij,jk->ik",
+                    self.structure.cell,
+                    np.linalg.inv(self._reference_structure.cell),
+                )
+                - np.eye(3)
             )
-            pressure = -np.einsum('ij,j->i', self._stiffness_tensor, epsilon)
-            self._pressure = pressure[3:]*np.roll(np.eye(3), -1, axis=1)
-            self._pressure += self._pressure.T+np.eye(3)*pressure[:3]
-            self._pressure_times_volume = -np.sum(epsilon*pressure)*self.structure.get_volume()
+            epsilon = (epsilon + epsilon.T) * 0.5
+            epsilon = np.append(
+                epsilon.diagonal(), np.roll(epsilon, -1, axis=0).diagonal()
+            )
+            pressure = -np.einsum("ij,j->i", self._stiffness_tensor, epsilon)
+            self._pressure = pressure[3:] * np.roll(np.eye(3), -1, axis=1)
+            self._pressure += self._pressure.T + np.eye(3) * pressure[:3]
+            self._pressure_times_volume = (
+                -np.sum(epsilon * pressure) * self.structure.get_volume()
+            )
 
     def interactive_positions_setter(self, positions):
         displacements = self.structure.get_scaled_positions()
         displacements -= self._reference_structure.get_scaled_positions()
         displacements -= np.rint(displacements)
-        self._displacements = np.einsum('ji,ni->nj', self.structure.cell, displacements)
+        self._displacements = np.einsum("ji,ni->nj", self.structure.cell, displacements)
 
     def calculate_forces(self):
         position_transformed = self._displacements.reshape(
-            self._displacements.shape[0] * self._displacements.shape[1])
+            self._displacements.shape[0] * self._displacements.shape[1]
+        )
         forces_transformed = -np.dot(self._force_constants, position_transformed)
         self._forces = forces_transformed.reshape(self._displacements.shape)
         self._energy_pot = -1 / 2 * np.dot(position_transformed, forces_transformed)

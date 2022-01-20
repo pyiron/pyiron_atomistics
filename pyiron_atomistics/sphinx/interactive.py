@@ -9,7 +9,10 @@ import subprocess
 import warnings
 import time
 from pyiron_atomistics.sphinx.base import SphinxBase, Group
-from pyiron_atomistics.atomistics.job.interactive import GenericInteractive, GenericInteractiveOutput
+from pyiron_atomistics.atomistics.job.interactive import (
+    GenericInteractive,
+    GenericInteractiveOutput,
+)
 from pyiron_atomistics.vasp.potential import VaspPotentialSetter
 
 BOHR_TO_ANGSTROM = (
@@ -214,7 +217,9 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
                                 ]
 
     def collect_output(self, force_update=False, compress_files=True):
-        super(SphinxInteractive, self).collect_output(force_update=force_update, compress_files=compress_files)
+        super(SphinxInteractive, self).collect_output(
+            force_update=force_update, compress_files=compress_files
+        )
         self._output_interactive_to_generic()
 
     def interactive_close(self):
@@ -339,20 +344,22 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
             self.server.run_mode.interactive
             or self.server.run_mode.interactive_non_modal
         ):
-            commands = Group([
-                {
-                    "id": '"restart"',
-                    "scfDiag":
-                        self.get_scf_group(
+            commands = Group(
+                [
+                    {
+                        "id": '"restart"',
+                        "scfDiag": self.get_scf_group(
                             maxSteps=10, keepRhoFixed=True, dEnergy=1.0e-4
-                        )
-                }, {
-                    "id": '"electronicminimization"',
-                    "scfDiag": self.get_scf_group(),
-                }
-            ])
+                        ),
+                    },
+                    {
+                        "id": '"electronicminimization"',
+                        "scfDiag": self.get_scf_group(),
+                    },
+                ]
+            )
             self.input.sphinx.main.extControl = Group()
-            self.input.sphinx.main.extControl.set_group('bornOppenheimer')
+            self.input.sphinx.main.extControl.set_group("bornOppenheimer")
             self.input.sphinx.main.extControl.bornOppenheimer = commands
         else:
             super(SphinxInteractive, self).load_main_group()
@@ -364,37 +371,39 @@ class SphinxOutput(GenericInteractiveOutput):
 
     def check_band_occupancy(self, plot=True):
         """
-            Check whether there are still empty bands available.
+        Check whether there are still empty bands available.
 
-            args:
-                plot (bool): plots occupancy of the last step
+        args:
+            plot (bool): plots occupancy of the last step
 
-            returns:
-                True if there are still empty bands
+        returns:
+            True if there are still empty bands
         """
         import matplotlib.pylab as plt
-        elec_dict = self._job['output/generic/dft']['n_valence']
+
+        elec_dict = self._job["output/generic/dft"]["n_valence"]
         if elec_dict is None:
-            raise AssertionError('Number of electrons not parsed')
-        n_elec = np.sum([elec_dict[k]
-                         for k in self._job.structure.get_chemical_symbols()])
-        n_elec = int(np.ceil(n_elec/2))
-        bands = self._job['output/generic/dft/bands_occ'][-1]
+            raise AssertionError("Number of electrons not parsed")
+        n_elec = np.sum(
+            [elec_dict[k] for k in self._job.structure.get_chemical_symbols()]
+        )
+        n_elec = int(np.ceil(n_elec / 2))
+        bands = self._job["output/generic/dft/bands_occ"][-1]
         bands = bands.reshape(-1, bands.shape[-1])
-        max_occ = np.sum(bands>0, axis=-1).max()
+        max_occ = np.sum(bands > 0, axis=-1).max()
         n_bands = bands.shape[-1]
         if plot:
-            xticks = np.arange(1, n_bands+1)
-            plt.xlabel('Electron number')
-            plt.ylabel('Occupancy')
-            if n_bands<20:
+            xticks = np.arange(1, n_bands + 1)
+            plt.xlabel("Electron number")
+            plt.ylabel("Occupancy")
+            if n_bands < 20:
                 plt.xticks(xticks)
-            plt.axvline(n_elec, label='#electrons: {}'.format(n_elec))
-            plt.axvline(max_occ, color='red',
-                label='Max occupancy: {}'.format(max_occ))
-            plt.axvline(n_bands, color='green',
-                label='Number of bands: {}'.format(n_bands))
-            plt.plot(xticks, bands.T, 'x', color='black')
+            plt.axvline(n_elec, label="#electrons: {}".format(n_elec))
+            plt.axvline(max_occ, color="red", label="Max occupancy: {}".format(max_occ))
+            plt.axvline(
+                n_bands, color="green", label="Number of bands: {}".format(n_bands)
+            )
+            plt.plot(xticks, bands.T, "x", color="black")
             plt.legend()
         if max_occ < n_bands:
             return True

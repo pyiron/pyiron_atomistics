@@ -51,28 +51,30 @@ class ChemicalElement(object):
             self._init_mendeleev(self.sub.Abbreviation)
 
         self._mendeleev_translation_dict = {
-            'AtomicNumber': 'atomic_number',
-            'AtomicRadius': 'covalent_radius_cordero',
-            'AtomicMass': 'mass',
-            'Color': 'cpk_color',
-            'CovalentRadius': 'covalent_radius',
-            'CrystalStructure': 'lattice_structure',
-            'Density': 'density',
-            'DiscoveryYear': 'discovery_year',
-            'ElectronAffinity': 'electron_affinity',
-            'Electronegativity': 'electronegativity',
-            'Group': 'group_id',
-            'Name': 'name',
-            'Period': 'period',
-            'StandardName': 'name',
-            'VanDerWaalsRadius': 'vdw_radius',
-            'MeltingPoint': 'melting_point'
+            "AtomicNumber": "atomic_number",
+            "AtomicRadius": "covalent_radius_cordero",
+            "AtomicMass": "mass",
+            "Color": "cpk_color",
+            "CovalentRadius": "covalent_radius",
+            "CrystalStructure": "lattice_structure",
+            "Density": "density",
+            "DiscoveryYear": "discovery_year",
+            "ElectronAffinity": "electron_affinity",
+            "Electronegativity": "electronegativity",
+            "Group": "group_id",
+            "Name": "name",
+            "Period": "period",
+            "StandardName": "name",
+            "VanDerWaalsRadius": "vdw_radius",
+            "MeltingPoint": "melting_point",
         }
         self.el = None
 
     def _init_mendeleev(self, element_str):
         self._mendeleev_element = element(str(element_str))
-        self._mendeleev_property_lst = [s for s in dir(self._mendeleev_element) if not s.startswith('_')]
+        self._mendeleev_property_lst = [
+            s for s in dir(self._mendeleev_element) if not s.startswith("_")
+        ]
 
     def __getattr__(self, item):
         if item in ["__array_struct__", "__array_interface__", "__array__"]:
