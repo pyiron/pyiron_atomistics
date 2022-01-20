@@ -1912,6 +1912,17 @@ class Group(DataContainer):
         return line
 
 
+def splitter(arr, counter):
+    if len(arr) == 0 or len(counter) == 0:
+        return []
+    arr_new = []
+    spl_loc = list(np.where(np.array(counter) == min(counter))[0])
+    spl_loc.append(None)
+    for ii, ll in enumerate(spl_loc[:-1]):
+        arr_new.append(np.array(arr[ll:spl_loc[ii + 1]]).tolist())
+    return arr_new
+
+
 class _SphinxLogParser:
     def __init__(self, log_file):
         self.job_finished = True
@@ -1998,26 +2009,16 @@ class _SphinxLogParser:
         return self._counter
 
     def get_energy_free(self):
-        return self.splitter([
+        return splitter([
             float(line.split('=')[1]) * HARTREE_TO_EV
             for line in re.findall("F\(.*$", self.log_main, re.MULTILINE)
-        ])
+        ], self.counter)
 
     def get_energy_int(self):
-        return self.splitter([
+        return splitter([
             float(line.replace("=", " ").replace(",", " ").split()[1]) * HARTREE_TO_EV
             for line in re.findall("^eTot\([0-9].*$", self.log_main, re.MULTILINE)
-        ])
-
-    def splitter(self, arr):
-        if len(arr) == 0 or len(self.counter) == 0:
-            return []
-        arr_new = []
-        spl_loc = list(np.where(np.array(self.counter) == min(self.counter))[0])
-        spl_loc.append(None)
-        for ii, ll in enumerate(spl_loc[:-1]):
-            arr_new.append(np.array(arr[ll:spl_loc[ii + 1]]).tolist())
-        return arr_new
+        ], self.counter)
 
     @property
     def n_atoms(self):
@@ -2051,7 +2052,7 @@ class _SphinxLogParser:
             if spx_to_pyi is not None:
                 for ii, mm in enumerate(magnetic_forces):
                     magnetic_forces[ii] = mm[self._job.id_spx_to_pyi]
-        return self.splitter(magnetic_forces)
+        return splitter(magnetic_forces, self.counter)
 
     @property
     def n_steps(self):
@@ -2120,7 +2121,7 @@ class Output(object):
         if not os.path.isfile(posixpath.join(cwd, file_name)):
             return None
         spins = np.loadtxt(posixpath.join(cwd, file_name))
-        self._parse_dict["atom_scf_spins"] = self.splitter(
+        self._parse_dict["atom_scf_spins"] = splitter(
             np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]),
             spins[:, 0]
         )
@@ -2138,27 +2139,27 @@ class Output(object):
         if not os.path.isfile(posixpath.join(cwd, file_name)):
             return None
         energies = np.loadtxt(posixpath.join(cwd, file_name))
-        self._parse_dict["scf_computation_time"] = self.splitter(
+        self._parse_dict["scf_computation_time"] = splitter(
             energies[:, 1], energies[:, 0]
         )
-        self._parse_dict["scf_energy_int"] = self.splitter(
+        self._parse_dict["scf_energy_int"] = splitter(
             energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
         )
         if len(energies[0]) == 7:
-            self._parse_dict["scf_energy_free"] = self.splitter(
+            self._parse_dict["scf_energy_free"] = splitter(
                 energies[:, 3] * HARTREE_TO_EV, energies[:, 0]
             )
-            self._parse_dict["scf_energy_zero"] = self.splitter(
+            self._parse_dict["scf_energy_zero"] = splitter(
                 energies[:, 4] * HARTREE_TO_EV, energies[:, 0]
             )
-            self._parse_dict["scf_energy_band"] = self.splitter(
+            self._parse_dict["scf_energy_band"] = splitter(
                 energies[:, 5] * HARTREE_TO_EV, energies[:, 0]
             )
-            self._parse_dict["scf_electronic_entropy"] = self.splitter(
+            self._parse_dict["scf_electronic_entropy"] = splitter(
                 energies[:, 6] * HARTREE_TO_EV, energies[:, 0]
             )
         else:
-            self._parse_dict["scf_energy_band"] = self.splitter(
+            self._parse_dict["scf_energy_band"] = splitter(
                 energies[:, 3] * HARTREE_TO_EV, energies[:, 0]
             )
 
@@ -2178,11 +2179,11 @@ class Output(object):
         if len(residue) == 0:
             return None
         if len(residue[0]) == 2:
-            self._parse_dict["scf_residue"] = self.splitter(
+            self._parse_dict["scf_residue"] = splitter(
                 residue[:, 1], residue[:, 0]
             )
         else:
-            self._parse_dict["scf_residue"] = self.splitter(
+            self._parse_dict["scf_residue"] = splitter(
                 residue[:, 1:], residue[:, 0]
             )
 
