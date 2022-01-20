@@ -8,6 +8,7 @@ import pyiron_atomistics.atomistics.structure.atoms
 import pyscal.core as pc
 from sklearn import cluster
 from pyiron_base.generic.util import Deprecator
+
 deprecate = Deprecator()
 
 __author__ = "Sarath Menon, Jan Janssen"
@@ -23,8 +24,15 @@ __date__ = "Nov 6, 2019"
 
 
 @deprecate(arguments={"clustering": "use n_clusters=None instead of clustering=False."})
-def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0, n_clusters=2,
-                                       q=None, averaged=False, clustering=None):
+def get_steinhardt_parameter_structure(
+    atoms,
+    neighbor_method="cutoff",
+    cutoff=0,
+    n_clusters=2,
+    q=None,
+    averaged=False,
+    clustering=None,
+):
     """
     Calculate Steinhardts parameters
 
@@ -46,25 +54,14 @@ def get_steinhardt_parameter_structure(atoms, neighbor_method="cutoff", cutoff=0
     if clustering == False:
         n_clusters = None
 
-    sys.find_neighbors(
-        method=neighbor_method,
-        cutoff=cutoff
-    )
+    sys.find_neighbors(method=neighbor_method, cutoff=cutoff)
 
-    sys.calculate_q(
-        q,
-        averaged=averaged
-    )
+    sys.calculate_q(q, averaged=averaged)
 
-    sysq = np.array(sys.get_qvals(
-        q,
-        averaged=averaged
-    ))
+    sysq = np.array(sys.get_qvals(q, averaged=averaged))
 
     if n_clusters is not None:
-        cl = cluster.KMeans(
-            n_clusters=n_clusters
-        )
+        cl = cluster.KMeans(n_clusters=n_clusters)
 
         ind = cl.fit(list(zip(*sysq))).labels_
         return sysq, ind
@@ -108,22 +105,39 @@ def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
     diamond_dict = sys.identify_diamond()
 
     ovito_identifiers = [
-        'Cubic diamond',
-        'Cubic diamond (1st neighbor)',
-        'Cubic diamond (2nd neighbor)',
-        'Hexagonal diamond',
-        'Hexagonal diamond (1st neighbor)',
-        'Hexagonal diamond (2nd neighbor)',
-        'Other'
+        "Cubic diamond",
+        "Cubic diamond (1st neighbor)",
+        "Cubic diamond (2nd neighbor)",
+        "Hexagonal diamond",
+        "Hexagonal diamond (1st neighbor)",
+        "Hexagonal diamond (2nd neighbor)",
+        "Other",
     ]
     pyscal_identifiers = [
-        'others', 'fcc', 'hcp', 'bcc', 'ico', 'cubic diamond',
-        'cubic diamond 1NN', 'cubic diamond 2NN',
-        'hex diamond', 'hex diamond 1NN', 'hex diamond 2NN'
+        "others",
+        "fcc",
+        "hcp",
+        "bcc",
+        "ico",
+        "cubic diamond",
+        "cubic diamond 1NN",
+        "cubic diamond 2NN",
+        "hex diamond",
+        "hex diamond 1NN",
+        "hex diamond 2NN",
     ]
     convert_to_ovito = {
-        0: 6, 1: 6, 2: 6, 3: 6, 4: 6,
-        5: 0, 6: 1, 7: 2, 8: 3, 9: 4, 10: 5
+        0: 6,
+        1: 6,
+        2: 6,
+        3: 6,
+        4: 6,
+        5: 0,
+        6: 1,
+        7: 2,
+        8: 3,
+        9: 4,
+        10: 5,
     }
 
     if mode == "total":
@@ -131,18 +145,25 @@ def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
             return diamond_dict
         else:
             return {
-                'IdentifyDiamond.counts.CUBIC_DIAMOND': diamond_dict['cubic diamond'],
-                'IdentifyDiamond.counts.CUBIC_DIAMOND_FIRST_NEIGHBOR': diamond_dict['cubic diamond 1NN'],
-                'IdentifyDiamond.counts.CUBIC_DIAMOND_SECOND_NEIGHBOR': diamond_dict['cubic diamond 2NN'],
-                'IdentifyDiamond.counts.HEX_DIAMOND': diamond_dict['hex diamond'],
-                'IdentifyDiamond.counts.HEX_DIAMOND_FIRST_NEIGHBOR': diamond_dict['hex diamond 1NN'],
-                'IdentifyDiamond.counts.HEX_DIAMOND_SECOND_NEIGHBOR': diamond_dict['hex diamond 2NN'],
-                'IdentifyDiamond.counts.OTHER':
-                    diamond_dict['others'] +
-                    diamond_dict['fcc'] +
-                    diamond_dict['hcp'] +
-                    diamond_dict['bcc'] +
-                    diamond_dict['ico']
+                "IdentifyDiamond.counts.CUBIC_DIAMOND": diamond_dict["cubic diamond"],
+                "IdentifyDiamond.counts.CUBIC_DIAMOND_FIRST_NEIGHBOR": diamond_dict[
+                    "cubic diamond 1NN"
+                ],
+                "IdentifyDiamond.counts.CUBIC_DIAMOND_SECOND_NEIGHBOR": diamond_dict[
+                    "cubic diamond 2NN"
+                ],
+                "IdentifyDiamond.counts.HEX_DIAMOND": diamond_dict["hex diamond"],
+                "IdentifyDiamond.counts.HEX_DIAMOND_FIRST_NEIGHBOR": diamond_dict[
+                    "hex diamond 1NN"
+                ],
+                "IdentifyDiamond.counts.HEX_DIAMOND_SECOND_NEIGHBOR": diamond_dict[
+                    "hex diamond 2NN"
+                ],
+                "IdentifyDiamond.counts.OTHER": diamond_dict["others"]
+                + diamond_dict["fcc"]
+                + diamond_dict["hcp"]
+                + diamond_dict["bcc"]
+                + diamond_dict["ico"],
             }
     elif mode == "numeric":
         if not ovito_compatibility:
@@ -153,9 +174,16 @@ def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
         if not ovito_compatibility:
             return np.array([pyscal_identifiers[atom.structure] for atom in sys.atoms])
         else:
-            return np.array([ovito_identifiers[convert_to_ovito[atom.structure]] for atom in sys.atoms])
+            return np.array(
+                [
+                    ovito_identifiers[convert_to_ovito[atom.structure]]
+                    for atom in sys.atoms
+                ]
+            )
     else:
-        raise ValueError("Only total, str and numeric mode is imported for analyse_diamond_structure()")
+        raise ValueError(
+            "Only total, str and numeric mode is imported for analyse_diamond_structure()"
+        )
 
 
 def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
@@ -179,13 +207,13 @@ def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
     if mode not in ["total", "numeric", "str"]:
         raise ValueError("Unsupported mode")
 
-    pyscal_parameter = ['others', 'fcc', 'hcp', 'bcc', 'ico']
+    pyscal_parameter = ["others", "fcc", "hcp", "bcc", "ico"]
     ovito_parameter = [
-        'CommonNeighborAnalysis.counts.OTHER',
-        'CommonNeighborAnalysis.counts.FCC',
-        'CommonNeighborAnalysis.counts.HCP',
-        'CommonNeighborAnalysis.counts.BCC',
-        'CommonNeighborAnalysis.counts.ICO'
+        "CommonNeighborAnalysis.counts.OTHER",
+        "CommonNeighborAnalysis.counts.FCC",
+        "CommonNeighborAnalysis.counts.HCP",
+        "CommonNeighborAnalysis.counts.BCC",
+        "CommonNeighborAnalysis.counts.ICO",
     ]
 
     cna = sys.calculate_cna()
@@ -194,10 +222,7 @@ def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
         if not ovito_compatibility:
             return cna
         else:
-            return {o: cna[p] for o, p in zip(
-                ovito_parameter,
-                pyscal_parameter
-            )}
+            return {o: cna[p] for o, p in zip(ovito_parameter, pyscal_parameter)}
     else:
         atoms = sys.atoms
         cnalist = np.array([atom.structure for atom in atoms])
@@ -205,13 +230,15 @@ def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
             return cnalist
         elif mode == "str":
             if not ovito_compatibility:
-                dd = ['others', 'fcc', 'hcp', 'bcc', 'ico']
+                dd = ["others", "fcc", "hcp", "bcc", "ico"]
                 return np.array([dd[int(x)] for x in cnalist])
             else:
-                dd = ['Other', "FCC", "HCP", "BCC", "ICO"]
+                dd = ["Other", "FCC", "HCP", "BCC", "ICO"]
                 return np.array([dd[int(x)] for x in cnalist])
         else:
-            raise ValueError("Only total, str and numeric mode is imported for analyse_cna_adaptive()")
+            raise ValueError(
+                "Only total, str and numeric mode is imported for analyse_cna_adaptive()"
+            )
 
 
 def analyse_voronoi_volume(atoms):
@@ -225,6 +252,7 @@ def analyse_voronoi_volume(atoms):
     sys.find_neighbors(method="voronoi")
     atoms = sys.atoms
     return np.array([atom.volume for atom in atoms])
+
 
 def pyiron_to_pyscal_system(atoms):
     """
@@ -242,42 +270,58 @@ def pyiron_to_pyscal_system(atoms):
     sys.read_inputfile(
         pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(atoms),
         format="ase",
-        )
+    )
     return sys
 
-def analyse_find_solids(atoms, neighbor_method="cutoff",
-    cutoff=0, bonds=0.5,
-    threshold=0.5, avgthreshold=0.6,
-    cluster=False, q=6, right=True,
+
+def analyse_find_solids(
+    atoms,
+    neighbor_method="cutoff",
+    cutoff=0,
+    bonds=0.5,
+    threshold=0.5,
+    avgthreshold=0.6,
+    cluster=False,
+    q=6,
+    right=True,
     return_sys=False,
-    ):
+):
     """
-        Get the number of solids or the corresponding pyscal system.
-        Calls necessary pyscal methods as described in https://pyscal.org/en/latest/methods/03_solidliquid.html.
+    Get the number of solids or the corresponding pyscal system.
+    Calls necessary pyscal methods as described in https://pyscal.org/en/latest/methods/03_solidliquid.html.
 
-        Args:
-            neighbor_method (str, optional): Method used to get neighborlist. See pyscal documentation. Defaults to "cutoff".
-            cutoff (int, optional): Adaptive if 0. Defaults to 0.
-            bonds (float, optional): Number or fraction of bonds to consider atom as solid. Defaults to 0.5.
-            threshold (float, optional): See pyscal documentation. Defaults to 0.5.
-            avgthreshold (float, optional): See pyscal documentation. Defaults to 0.6.
-            cluster (bool, optional): See pyscal documentation. Defaults to False.
-            q (int, optional): Steinhard parameter to calculate. Defaults to 6.
-            right (bool, optional): See pyscal documentation. Defaults to True.
-            return_sys (bool, optional): Whether to return number of solid atoms or pyscal system. Defaults to False.
+    Args:
+        neighbor_method (str, optional): Method used to get neighborlist. See pyscal documentation. Defaults to "cutoff".
+        cutoff (int, optional): Adaptive if 0. Defaults to 0.
+        bonds (float, optional): Number or fraction of bonds to consider atom as solid. Defaults to 0.5.
+        threshold (float, optional): See pyscal documentation. Defaults to 0.5.
+        avgthreshold (float, optional): See pyscal documentation. Defaults to 0.6.
+        cluster (bool, optional): See pyscal documentation. Defaults to False.
+        q (int, optional): Steinhard parameter to calculate. Defaults to 6.
+        right (bool, optional): See pyscal documentation. Defaults to True.
+        return_sys (bool, optional): Whether to return number of solid atoms or pyscal system. Defaults to False.
 
-        Returns:
-            int: number of solids,
-            pyscal system: pyscal system when return_sys=True
+    Returns:
+        int: number of solids,
+        pyscal system: pyscal system when return_sys=True
     """
     sys = pyiron_to_pyscal_system(atoms)
     sys.find_neighbors(method=neighbor_method, cutoff=cutoff)
-    sys.find_solids(bonds=bonds, threshold=threshold, avgthreshold=avgthreshold, q=q, cutoff=cutoff, cluster=cluster, right=right)
+    sys.find_solids(
+        bonds=bonds,
+        threshold=threshold,
+        avgthreshold=avgthreshold,
+        q=q,
+        cutoff=cutoff,
+        cluster=cluster,
+        right=right,
+    )
     if return_sys:
         return sys
     atoms = sys.atoms
     solids = [atom for atom in atoms if atom.solid]
     return len(solids)
+
 
 def publication():
     return {

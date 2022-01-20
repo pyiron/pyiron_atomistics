@@ -604,6 +604,7 @@ class Murnaghan(AtomisticParallelMaster):
     The minimum energy volume and bulk modulus are stored in `ref_job['output/equilibrium_volume']`
     and `ref_job['output/equilibrium_bulk_modulus/']`.
     """
+
     def __init__(self, project, job_name):
         """
 
@@ -748,7 +749,7 @@ class Murnaghan(AtomisticParallelMaster):
                 elif "energy_pot" in ham["output/generic"].list_nodes():
                     energy = ham["output/generic/energy_pot"][-1]
                 else:
-                    raise ValueError('Neither energy_pot or energy_tot was found.')
+                    raise ValueError("Neither energy_pot or energy_tot was found.")
                 volume = ham["output/generic/volume"][-1]
                 erg_lst.append(np.mean(energy))
                 err_lst.append(np.var(energy))
@@ -775,7 +776,9 @@ class Murnaghan(AtomisticParallelMaster):
 
     def plot(self, num_steps=100, plt_show=True):
         if not self.status.finished:
-            raise ValueError("Job must be successfully run, before calling this method.")
+            raise ValueError(
+                "Job must be successfully run, before calling this method."
+            )
         try:
             import matplotlib.pylab as plt
         except ImportError:
@@ -808,9 +811,9 @@ class Murnaghan(AtomisticParallelMaster):
                 E0 = self.fit_dict["energy_eq"]
                 B0 = self.fit_dict["bulkmodul_eq"]
                 BP = self.fit_dict["b_prime_eq"]
-                eng_fit_lst = fitfunction(parameters=[E0, B0, BP, V0],
-                                          vol=x_i,
-                                          fittype=self.input["fit_type"])
+                eng_fit_lst = fitfunction(
+                    parameters=[E0, B0, BP, V0], vol=x_i, fittype=self.input["fit_type"]
+                )
                 plt.plot(
                     x_i,
                     eng_fit_lst,
@@ -855,4 +858,3 @@ class Murnaghan(AtomisticParallelMaster):
             return 1
         else:
             return 2
-

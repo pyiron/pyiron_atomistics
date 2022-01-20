@@ -23,8 +23,9 @@ class Visualize:
     def __init__(self, atoms):
         self._ref_atoms = atoms
 
-    def plot3d(self,
-        mode='NGLview',
+    def plot3d(
+        self,
+        mode="NGLview",
         show_cell=True,
         show_axes=True,
         camera="orthographic",
@@ -43,7 +44,7 @@ class Visualize:
         magnetic_moments=False,
         view_plane=np.array([0, 0, 1]),
         distance_from_camera=1.0,
-        opacity=1.0
+        opacity=1.0,
     ):
         """
         Plot3d relies on NGLView or plotly to visualize atomic structures. Here, we construct a string in the "protein database"
@@ -98,7 +99,7 @@ class Visualize:
             * Many features only work with space-filling atoms (e.g. coloring by a scalar field).
             * The colour interpretation of some hex codes is weird, e.g. 'green'.
         """
-        if mode=='NGLview':
+        if mode == "NGLview":
             return self._plot3d(
                 show_cell=show_cell,
                 show_axes=show_axes,
@@ -119,7 +120,7 @@ class Visualize:
                 view_plane=view_plane,
                 distance_from_camera=distance_from_camera,
             )
-        elif mode=='plotly':
+        elif mode == "plotly":
             return self._plot3d_plotly(
                 camera=camera,
                 particle_size=particle_size,
@@ -129,7 +130,7 @@ class Visualize:
                 distance_from_camera=distance_from_camera,
                 opacity=opacity,
             )
-        elif mode=='ase':
+        elif mode == "ase":
             return self._plot3d_ase(
                 show_cell=show_cell,
                 show_axes=show_axes,
@@ -140,7 +141,7 @@ class Visualize:
                 color_scheme=color_scheme,
             )
         else:
-            raise ValueError('plot method not recognized')
+            raise ValueError("plot method not recognized")
 
     def _plot3d_plotly(
         self,
@@ -185,21 +186,26 @@ class Visualize:
         atomic_numbers = parent_basis.get_atomic_numbers()
         if scalar_field is None:
             scalar_field = elements
-        fig = px.scatter_3d(x=self._ref_atoms.positions[select_atoms,0],
-                            y=self._ref_atoms.positions[select_atoms,1],
-                            z=self._ref_atoms.positions[select_atoms,2],
-                            color=scalar_field,
-                            opacity=opacity,
-                            size=_atomic_number_to_radius(atomic_numbers, scale=particle_size/(0.1*self._ref_atoms.get_volume()**(1/3))))
+        fig = px.scatter_3d(
+            x=self._ref_atoms.positions[select_atoms, 0],
+            y=self._ref_atoms.positions[select_atoms, 1],
+            z=self._ref_atoms.positions[select_atoms, 2],
+            color=scalar_field,
+            opacity=opacity,
+            size=_atomic_number_to_radius(
+                atomic_numbers,
+                scale=particle_size / (0.1 * self._ref_atoms.get_volume() ** (1 / 3)),
+            ),
+        )
         fig.layout.scene.camera.projection.type = camera
         rot = _get_orientation(view_plane).T
-        rot[0,:] *= distance_from_camera*1.25
+        rot[0, :] *= distance_from_camera * 1.25
         angle = dict(
-            up=dict(x=rot[2,0], y=rot[2,1], z=rot[2,2]),
-            eye=dict(x=rot[0,0], y=rot[0,1], z=rot[0,2])
+            up=dict(x=rot[2, 0], y=rot[2, 1], z=rot[2, 2]),
+            eye=dict(x=rot[0, 0], y=rot[0, 1], z=rot[0, 2]),
         )
         fig.update_layout(scene_camera=angle)
-        fig.update_traces(marker=dict(line=dict(width=0.1, color='DarkSlateGrey')))
+        fig.update_traces(marker=dict(line=dict(width=0.1, color="DarkSlateGrey")))
         return fig
 
     def _plot3d(
@@ -221,7 +227,7 @@ class Visualize:
         vector_color=None,
         magnetic_moments=False,
         view_plane=np.array([0, 0, 1]),
-        distance_from_camera=1.0
+        distance_from_camera=1.0,
     ):
         """
         Plot3d relies on NGLView to visualize atomic structures. Here, we construct a string in the "protein database"
@@ -284,7 +290,7 @@ class Visualize:
                 "The package nglview needs to be installed for the plot3d() function!"
             )
 
-        if magnetic_moments is True and hasattr(self._ref_atoms, 'spin'):
+        if magnetic_moments is True and hasattr(self._ref_atoms, "spin"):
             if len(self._ref_atoms.get_initial_magnetic_moments().shape) == 1:
                 scalar_field = self._ref_atoms.get_initial_magnetic_moments()
             else:
@@ -374,7 +380,8 @@ class Visualize:
             try:
                 if vector_color.shape != np.ones((len(self._ref_atoms), 3)).shape:
                     vector_color = np.outer(
-                        np.ones(len(self._ref_atoms)), vector_color / np.linalg.norm(vector_color)
+                        np.ones(len(self._ref_atoms)),
+                        vector_color / np.linalg.norm(vector_color),
                     )
             except AttributeError:
                 vector_color = np.ones((len(self._ref_atoms), 3)) * vector_color
@@ -408,8 +415,9 @@ class Visualize:
         view.camera = camera
         view.background = background
 
-        orientation = _get_flattened_orientation(view_plane=view_plane,
-                                                 distance_from_camera=distance_from_camera*14)
+        orientation = _get_flattened_orientation(
+            view_plane=view_plane, distance_from_camera=distance_from_camera * 14
+        )
         view.control.orient(orientation)
 
         return view
@@ -463,6 +471,7 @@ class Visualize:
         view.background = background
         return view
 
+
 def _ngl_write_cell(a1, a2, a3, f1=90, f2=90, f3=90):
     """
     Writes a PDB-formatted line to represent the simulation cell.
@@ -477,6 +486,7 @@ def _ngl_write_cell(a1, a2, a3, f1=90, f2=90, f3=90):
     return "CRYST1 {:8.3f} {:8.3f} {:8.3f} {:6.2f} {:6.2f} {:6.2f} P 1\n".format(
         a1, a2, a3, f1, f2, f3
     )
+
 
 def _ngl_write_atom(
     num,
@@ -517,6 +527,7 @@ def _ngl_write_atom(
         num, species, group, num2, x, y, z, occupancy, temperature_factor, species
     )
 
+
 def _ngl_write_structure(elements, positions, cell):
     """
     Turns structure information into a NGLView-readable protein-database-formatted string.
@@ -530,6 +541,7 @@ def _ngl_write_structure(elements, positions, cell):
         (str): The PDB-formatted representation of the structure.
     """
     from ase.geometry import cell_to_cellpar, cellpar_to_cell
+
     if cell is None or any(np.max(cell, axis=0) < 1e-2):
         # Define a dummy cell if it doesn't exist (eg. for clusters)
         max_pos = np.max(positions, axis=0) - np.min(positions, axis=0)
@@ -551,6 +563,7 @@ def _ngl_write_structure(elements, positions, cell):
     pdb_str += "ENDMDL \n"
     return pdb_str
 
+
 def _atomic_number_to_radius(atomic_number, shift=0.2, slope=0.1, scale=1.0):
     """
     Give the atomic radius for plotting, which scales like the root of the atomic number.
@@ -565,6 +578,7 @@ def _atomic_number_to_radius(atomic_number, shift=0.2, slope=0.1, scale=1.0):
         (float): The radius. (Not physical, just for visualization!)
     """
     return (shift + slope * np.sqrt(atomic_number)) * scale
+
 
 def _add_colorscheme_spacefill(
     view, elements, atomic_numbers, particle_size, scheme="element"
@@ -596,6 +610,7 @@ def _add_colorscheme_spacefill(
         )
     return view
 
+
 def _add_custom_color_spacefill(view, atomic_numbers, particle_size, colors):
     """
     Set NGLView spacefill parameters according to per-atom colors.
@@ -618,6 +633,7 @@ def _add_custom_color_spacefill(view, atomic_numbers, particle_size, colors):
         )
     return view
 
+
 def _scalars_to_hex_colors(scalar_field, start=None, end=None, cmap=None):
     """
     Convert scalar values to hex codes using a colormap.
@@ -638,9 +654,7 @@ def _scalars_to_hex_colors(scalar_field, start=None, end=None, cmap=None):
     if end is None:
         end = np.amax(scalar_field)
     interp = interp1d([start, end], [0, 1])
-    remapped_field = interp(
-        np.clip(scalar_field, start, end)
-    )  # Map field onto [0,1]
+    remapped_field = interp(np.clip(scalar_field, start, end))  # Map field onto [0,1]
 
     if cmap is None:
         try:
@@ -654,6 +668,7 @@ def _scalars_to_hex_colors(scalar_field, start=None, end=None, cmap=None):
     return [
         rgb2hex(cmap(scalar)[:3]) for scalar in remapped_field
     ]  # The slice gets RGB but leaves alpha
+
 
 def _get_orientation(view_plane):
     """
@@ -672,16 +687,29 @@ def _get_orientation(view_plane):
         (list): orientation tensor
     """
     if len(np.array(view_plane).flatten()) % 3 != 0:
-        raise ValueError("The shape of view plane should be (N, 3), where N = 1, 2 or 3. Refer docs for more info.")
+        raise ValueError(
+            "The shape of view plane should be (N, 3), where N = 1, 2 or 3. Refer docs for more info."
+        )
     view_plane = np.array(view_plane).reshape(-1, 3)
     rotation_matrix = np.roll(np.eye(3), -1, axis=0)
-    rotation_matrix[:len(view_plane)] = view_plane
+    rotation_matrix[: len(view_plane)] = view_plane
     rotation_matrix /= np.linalg.norm(rotation_matrix, axis=-1)[:, np.newaxis]
-    rotation_matrix[1] -= np.dot(rotation_matrix[0], rotation_matrix[1]) * rotation_matrix[0]  # Gran-Schmidt
-    rotation_matrix[2] = np.cross(rotation_matrix[0], rotation_matrix[1])  # Specify third axis
+    rotation_matrix[1] -= (
+        np.dot(rotation_matrix[0], rotation_matrix[1]) * rotation_matrix[0]
+    )  # Gran-Schmidt
+    rotation_matrix[2] = np.cross(
+        rotation_matrix[0], rotation_matrix[1]
+    )  # Specify third axis
     if np.isclose(np.linalg.det(rotation_matrix), 0):
-        return np.eye(3)  # view_plane = [0,0,1] is the default view of NGLview, so we do not modify it
-    return np.roll(rotation_matrix / np.linalg.norm(rotation_matrix, axis=-1)[:, np.newaxis], 2, axis=0).T
+        return np.eye(
+            3
+        )  # view_plane = [0,0,1] is the default view of NGLview, so we do not modify it
+    return np.roll(
+        rotation_matrix / np.linalg.norm(rotation_matrix, axis=-1)[:, np.newaxis],
+        2,
+        axis=0,
+    ).T
+
 
 def _get_flattened_orientation(view_plane, distance_from_camera):
     """
@@ -706,4 +734,3 @@ def _get_flattened_orientation(view_plane, distance_from_camera):
     flattened_orientation[:3, :3] = _get_orientation(view_plane)
 
     return (distance_from_camera * flattened_orientation).ravel().tolist()
-

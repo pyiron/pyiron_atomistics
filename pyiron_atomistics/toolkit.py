@@ -16,6 +16,7 @@ from pyiron_atomistics.atomistics.master.convergence_volume import ConvergenceVo
 from pyiron_atomistics.dft.master.convergence_kpoint_parallel import ConvKpointParallel
 from pyiron_atomistics.atomistics.master.elastic import ElasticTensor
 from pyiron_atomistics.testing.randomatomistic import ExampleJob
+
 # from pyiron_atomistics.gaussian.gaussian import Gaussian
 from pyiron_atomistics.gpaw.gpaw import Gpaw
 from pyiron_atomistics.thermodynamics.hessian import HessianJob
@@ -32,7 +33,12 @@ from pyiron_atomistics.atomistics.job.structurecontainer import StructureContain
 from pyiron_atomistics.atomistics.master.structure import StructureListMaster
 from pyiron_atomistics.atomistics.job.sqs import SQSJob
 from pyiron_atomistics.atomistics.master.sqsmaster import SQSMaster
-from pyiron_atomistics.thermodynamics.sxphonons import SxPhonons, SxDynMat, SxUniqDispl, SxHarmPotTst
+from pyiron_atomistics.thermodynamics.sxphonons import (
+    SxPhonons,
+    SxDynMat,
+    SxUniqDispl,
+    SxHarmPotTst,
+)
 from pyiron_atomistics.interactive.sxextoptint import SxExtOptInteractive
 from pyiron_atomistics.table.datamining import TableJob
 from pyiron_atomistics.vasp.vasp import Vasp
@@ -87,7 +93,7 @@ class JobFactory(JobFactoryCore):
             "TableJob": TableJob,
             "Vasp": Vasp,
             "VaspMetadyn": VaspMetadyn,
-            "VaspSol": VaspSol
+            "VaspSol": VaspSol,
         }
 
 

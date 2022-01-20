@@ -29,8 +29,10 @@ __date__ = "Sep 1, 2018"
 
 
 class SxExtOpt(InteractiveInterface):
-    @deprecate(ionic_forces="Use ionic_force_tolerance",
-               ionic_energy="use ionic_energy_tolerance")
+    @deprecate(
+        ionic_forces="Use ionic_force_tolerance",
+        ionic_energy="use ionic_energy_tolerance",
+    )
     def __init__(
         self,
         structure,
@@ -82,11 +84,11 @@ class SxExtOpt(InteractiveInterface):
             self._elements = structure.get_parent_symbols()
         else:
             magmom = structure.get_initial_magnetic_moments()
-            magmom[magmom!=None] = np.round(magmom[magmom!=None], decimals=1)
-            magmom = np.char.mod('%s', magmom)
+            magmom[magmom != None] = np.round(magmom[magmom != None], decimals=1)
+            magmom = np.char.mod("%s", magmom)
             self._elements = np.char.add(structure.get_parent_symbols(), magmom)
-            self._elements = np.char.replace(self._elements, '-', 'm')
-            self._elements = np.char.replace(self._elements, '.', 'p')
+            self._elements = np.char.replace(self._elements, "-", "m")
+            self._elements = np.char.replace(self._elements, ".", "p")
         self._positions = structure.positions
         self._converged = False
 
@@ -107,7 +109,9 @@ class SxExtOpt(InteractiveInterface):
             input_writer_obj = InputWriter()
             input_writer_obj.structure = structure
             if ssa:
-                input_writer_obj.structure.set_initial_magnetic_moments(len(structure)*[None])
+                input_writer_obj.structure.set_initial_magnetic_moments(
+                    len(structure) * [None]
+                )
             input_writer_obj.write_structure(
                 file_name="structure.sx",
                 cwd=self.working_directory,
@@ -160,16 +164,13 @@ class SxExtOpt(InteractiveInterface):
         selective_dynamics=False,
     ):
         with open(os.path.join(working_directory, "optim.sx"), "w") as f:
-            content = (
-                "main { ricQN { ric { maxDist = %f; withAngles; } maxSteps = %i; dEnergy = %f; dF = %f; maxStepLength = %f; softModeDamping = %f;}}"
-                % (
-                    maxDist,
-                    ionic_steps,
-                    ionic_energy_tolerance,
-                    ionic_force_tolerance,
-                    max_step_length,
-                    soft_mode_damping,
-                )
+            content = "main { ricQN { ric { maxDist = %f; withAngles; } maxSteps = %i; dEnergy = %f; dF = %f; maxStepLength = %f; softModeDamping = %f;}}" % (
+                maxDist,
+                ionic_steps,
+                ionic_energy_tolerance,
+                ionic_force_tolerance,
+                max_step_length,
+                soft_mode_damping,
             )
             if selective_dynamics:
                 content += "structure { include <structure.sx>; }"
@@ -199,7 +200,7 @@ class SxExtOpt(InteractiveInterface):
             self._interactive_library_read.close()
             self._delete_named_pipes(working_directory=self.working_directory)
 
-    @staticmethod 
+    @staticmethod
     def _delete_named_pipes(working_directory):
         for file in ["control", "response"]:
             file_path = posixpath.join(working_directory, file)
@@ -293,8 +294,8 @@ class SxExtOptInteractive(InteractiveWrapper):
         super(SxExtOptInteractive, self).__init__(project, job_name)
         self.__name__ = "SxExtOptInteractive"
         self.__version__ = (
-            None
-        )  # Reset the version number to the executable is set automatically
+            None  # Reset the version number to the executable is set automatically
+        )
         self._executable_activate()
         self.input = Input()
         self.output = SxExtOptOutput(job=self)
@@ -328,7 +329,7 @@ class SxExtOptInteractive(InteractiveWrapper):
             max_step_length=float(self.input["max_step_length"]),
             soft_mode_damping=float(self.input["soft_mode_damping"]),
             executable=self.executable.executable_path,
-            ssa=self.input['ssa'],
+            ssa=self.input["ssa"],
         )
         self.status.running = True
         self._logger.info("job status: %s", self.status)

@@ -22,16 +22,27 @@ from ase.build import (
     bcc111_root,
     root_surface,
     root_surface_analysis,
-    surface as ase_surf
+    surface as ase_surf,
 )
 import numpy as np
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
-from pyiron_atomistics.atomistics.structure.factories.atomsk import AtomskFactory, _ATOMSK_EXISTS
+from pyiron_atomistics.atomistics.structure.factories.atomsk import (
+    AtomskFactory,
+    _ATOMSK_EXISTS,
+)
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
 from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
-from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure, Atoms, \
-    ase_to_pyiron, pymatgen_to_pyiron, ovito_to_pyiron, pyiron_to_pymatgen
+from pyiron_atomistics.atomistics.structure.pyironase import (
+    publication as publication_ase,
+)
+from pyiron_atomistics.atomistics.structure.atoms import (
+    CrystalStructure,
+    Atoms,
+    ase_to_pyiron,
+    pymatgen_to_pyiron,
+    ovito_to_pyiron,
+    pyiron_to_pymatgen,
+)
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import state, PyironFactory, deprecate
@@ -63,6 +74,7 @@ class StructureFactory(PyironFactory):
         return self._ase
 
     if _ATOMSK_EXISTS:
+
         @property
         def atomsk(self):
             return self._atomsk
@@ -103,15 +115,15 @@ class StructureFactory(PyironFactory):
     ase_bulk.__doc__ = AseFactory.bulk.__doc__
 
     def bulk(
-            self,
-            name,
-            crystalstructure=None,
-            a=None,
-            c=None,
-            covera=None,
-            u=None,
-            orthorhombic=False,
-            cubic=False,
+        self,
+        name,
+        crystalstructure=None,
+        a=None,
+        c=None,
+        covera=None,
+        u=None,
+        orthorhombic=False,
+        cubic=False,
     ):
         """
         Creating bulk systems (using ASE bulk module). Crystal structure and lattice constant(s) will be guessed if not
@@ -143,7 +155,13 @@ class StructureFactory(PyironFactory):
 
     @staticmethod
     def surface(
-            element, surface_type, size=(1, 1, 1), vacuum=1.0, center=False, pbc=True, **kwargs
+        element,
+        surface_type,
+        size=(1, 1, 1),
+        vacuum=1.0,
+        center=False,
+        pbc=True,
+        **kwargs,
     ):
         """
         Generate a surface based on the ase.build.surface module.
@@ -256,26 +274,26 @@ class StructureFactory(PyironFactory):
 
     @staticmethod
     def atoms(
-            symbols=None,
-            positions=None,
-            numbers=None,
-            tags=None,
-            momenta=None,
-            masses=None,
-            magmoms=None,
-            charges=None,
-            scaled_positions=None,
-            cell=None,
-            pbc=None,
-            celldisp=None,
-            constraint=None,
-            calculator=None,
-            info=None,
-            indices=None,
-            elements=None,
-            dimension=None,
-            species=None,
-            **qwargs
+        symbols=None,
+        positions=None,
+        numbers=None,
+        tags=None,
+        momenta=None,
+        masses=None,
+        magmoms=None,
+        charges=None,
+        scaled_positions=None,
+        cell=None,
+        pbc=None,
+        celldisp=None,
+        constraint=None,
+        calculator=None,
+        info=None,
+        indices=None,
+        elements=None,
+        dimension=None,
+        species=None,
+        **qwargs,
     ):
         """
         Creates a atomistics.structure.atoms.Atoms instance.
@@ -327,7 +345,7 @@ class StructureFactory(PyironFactory):
             elements=elements,
             dimension=dimension,
             species=species,
-            **qwargs
+            **qwargs,
         )
 
     @staticmethod
@@ -347,7 +365,7 @@ class StructureFactory(PyironFactory):
         if new_element_name is None:
             if spin is not None:
                 new_element_name = (
-                        parent_element + "_spin_" + str(spin).replace(".", "_")
+                    parent_element + "_spin_" + str(spin).replace(".", "_")
                 )
             else:
                 new_element_name = parent_element + "_1"
@@ -385,14 +403,14 @@ class StructureFactory(PyironFactory):
 
     @deprecate(message="Use .aimsgb.build", version="0.2.2")
     def aimsgb_build(
-            self,
-            axis,
-            sigma,
-            plane,
-            initial_struct,
-            to_primitive=False,
-            delete_layer='0b0t0b0t',
-            add_if_dist=0.0
+        self,
+        axis,
+        sigma,
+        plane,
+        initial_struct,
+        to_primitive=False,
+        delete_layer="0b0t0b0t",
+        add_if_dist=0.0,
     ):
         return self.aimsgb.build(
             axis=axis,
@@ -401,7 +419,7 @@ class StructureFactory(PyironFactory):
             initial_struct=initial_struct,
             to_primitive=to_primitive,
             delete_layer=delete_layer,
-            add_if_dist=add_if_dist
+            add_if_dist=add_if_dist,
         )
 
     aimsgb_build.__doc__ = AimsgbFactory.build.__doc__
@@ -421,9 +439,19 @@ class StructureFactory(PyironFactory):
     def from_ovito(ovito_obj):
         return ovito_to_pyiron(ovito_obj)
 
-    def high_index_surface_info(self, element, crystal_structure, lattice_constant,
-                                terrace_orientation=None, step_orientation=None, kink_orientation=None,
-                                step_down_vector=None, length_step=3, length_terrace=3, length_kink=1):
+    def high_index_surface_info(
+        self,
+        element,
+        crystal_structure,
+        lattice_constant,
+        terrace_orientation=None,
+        step_orientation=None,
+        kink_orientation=None,
+        step_down_vector=None,
+        length_step=3,
+        length_terrace=3,
+        length_kink=1,
+    ):
         """
         Gives the miller indices of high index surface required to create a stepped and kink surface, based
         on the general orientation and length of terrace, step and kinks respectively. The microfacet notation used is
@@ -450,40 +478,80 @@ class StructureFactory(PyironFactory):
             fin_kink_orientation: The kink orientation lying in the terrace
             fin_step_orientation: The step orientation lying in the terrace
         """
-        terrace_orientation = terrace_orientation if terrace_orientation is not None else [1, 1, 1]
-        step_orientation = step_orientation if step_orientation is not None else [1, 1, 0]
-        kink_orientation = kink_orientation if kink_orientation is not None else [1, 1, 1]
-        step_down_vector = step_down_vector if step_down_vector is not None else [1, 1, 0]
+        terrace_orientation = (
+            terrace_orientation if terrace_orientation is not None else [1, 1, 1]
+        )
+        step_orientation = (
+            step_orientation if step_orientation is not None else [1, 1, 0]
+        )
+        kink_orientation = (
+            kink_orientation if kink_orientation is not None else [1, 1, 1]
+        )
+        step_down_vector = (
+            step_down_vector if step_down_vector is not None else [1, 1, 0]
+        )
 
-        basis = self.crystal(element=element, bravais_basis=crystal_structure, lattice_constant=lattice_constant)
+        basis = self.crystal(
+            element=element,
+            bravais_basis=crystal_structure,
+            lattice_constant=lattice_constant,
+        )
         sym = basis.get_symmetry()
-        eqvdirs = np.unique(np.matmul(sym.rotations[:], (np.array(step_orientation))), axis=0)
-        eqvdirk = np.unique(np.matmul(sym.rotations[:], (np.array(kink_orientation))), axis=0)
+        eqvdirs = np.unique(
+            np.matmul(sym.rotations[:], (np.array(step_orientation))), axis=0
+        )
+        eqvdirk = np.unique(
+            np.matmul(sym.rotations[:], (np.array(kink_orientation))), axis=0
+        )
         eqvdirs_ind = np.where(np.dot(np.squeeze(eqvdirs), terrace_orientation) == 0)[0]
         eqvdirk_ind = np.where(np.dot(np.squeeze(eqvdirk), terrace_orientation) == 0)[0]
         if len(eqvdirs_ind) == 0:
-            raise ValueError('Step orientation vector should lie in terrace.\
+            raise ValueError(
+                "Step orientation vector should lie in terrace.\
             For the given choice I could not find any symmetrically equivalent vector that lies in the terrace.\
-            please change the stepOrientation and try again')
+            please change the stepOrientation and try again"
+            )
         if len(eqvdirk_ind) == 0:
-            raise ValueError('Kink orientation vector should lie in terrace.\
+            raise ValueError(
+                "Kink orientation vector should lie in terrace.\
             For the given choice I could not find any symmetrically equivalent vector that lies in the terrace.\
-            please change the kinkOrientation and try again')
-        temp = (np.cross(np.squeeze(eqvdirk[eqvdirk_ind[0]]), np.squeeze(eqvdirs))).tolist().index(terrace_orientation)
+            please change the kinkOrientation and try again"
+            )
+        temp = (
+            (np.cross(np.squeeze(eqvdirk[eqvdirk_ind[0]]), np.squeeze(eqvdirs)))
+            .tolist()
+            .index(terrace_orientation)
+        )
         fin_kink_orientation = eqvdirk[eqvdirk_ind[0]]
         fin_step_orientation = eqvdirs[temp]
-        vec1 = (np.asanyarray(fin_step_orientation).dot(length_step)) + \
-               (np.asanyarray(fin_kink_orientation).dot(length_kink))
-        vec2 = (np.asanyarray(fin_kink_orientation).dot(length_terrace)) + step_down_vector
+        vec1 = (np.asanyarray(fin_step_orientation).dot(length_step)) + (
+            np.asanyarray(fin_kink_orientation).dot(length_kink)
+        )
+        vec2 = (
+            np.asanyarray(fin_kink_orientation).dot(length_terrace)
+        ) + step_down_vector
         high_index_surface = np.cross(np.asanyarray(vec1), np.asanyarray(vec2))
-        high_index_surface = np.array(high_index_surface / np.gcd.reduce(high_index_surface), dtype=int)
+        high_index_surface = np.array(
+            high_index_surface / np.gcd.reduce(high_index_surface), dtype=int
+        )
 
         return high_index_surface, fin_kink_orientation, fin_step_orientation
 
-    def high_index_surface(self, element, crystal_structure, lattice_constant,
-                           terrace_orientation=None, step_orientation=None, kink_orientation=None,
-                           step_down_vector=None, length_step=3, length_terrace=3, length_kink=1, layers=60,
-                           vacuum=10):
+    def high_index_surface(
+        self,
+        element,
+        crystal_structure,
+        lattice_constant,
+        terrace_orientation=None,
+        step_orientation=None,
+        kink_orientation=None,
+        step_down_vector=None,
+        length_step=3,
+        length_terrace=3,
+        length_kink=1,
+        layers=60,
+        vacuum=10,
+    ):
         """
         Gives a slab positioned at the bottom with the high index surface computed by high_index_surface_info().
         Args:
@@ -503,17 +571,23 @@ class StructureFactory(PyironFactory):
         Returns:
             slab: pyiron_atomistics.atomistics.structure.atoms.Atoms instance Required surface
         """
-        basis = self.crystal(element=element, bravais_basis=crystal_structure, lattice_constant=lattice_constant)
-        high_index_surface, _, _ = self.high_index_surface_info(element=element,
-                                                                crystal_structure=crystal_structure,
-                                                                lattice_constant=lattice_constant,
-                                                                terrace_orientation=terrace_orientation,
-                                                                step_orientation=step_orientation,
-                                                                kink_orientation=kink_orientation,
-                                                                step_down_vector=step_down_vector,
-                                                                length_step=length_step,
-                                                                length_terrace=length_terrace,
-                                                                length_kink=length_kink)
+        basis = self.crystal(
+            element=element,
+            bravais_basis=crystal_structure,
+            lattice_constant=lattice_constant,
+        )
+        high_index_surface, _, _ = self.high_index_surface_info(
+            element=element,
+            crystal_structure=crystal_structure,
+            lattice_constant=lattice_constant,
+            terrace_orientation=terrace_orientation,
+            step_orientation=step_orientation,
+            kink_orientation=kink_orientation,
+            step_down_vector=step_down_vector,
+            length_step=length_step,
+            length_terrace=length_terrace,
+            length_kink=length_kink,
+        )
         surf = ase_surf(basis, high_index_surface, layers, vacuum)
         sga = SpacegroupAnalyzer(pyiron_to_pymatgen(ase_to_pyiron(surf)))
         pmg_refined = sga.get_refined_structure()

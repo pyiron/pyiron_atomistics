@@ -22,7 +22,11 @@ def calc_v0_from_fit_funct(fit_funct, x, save_range=0.0, return_ind=False):
     fit_funct_der = fit_funct.deriv().r
     fit_funct_der_r = fit_funct_der[fit_funct_der.imag == 0].real
     fit_funct_der_val = fit_funct.deriv(2)(fit_funct_der_r)
-    select = (fit_funct_der_val > 0) & (fit_funct_der_r > np.min(x) * (1-save_range)) & (fit_funct_der_r < np.max(x) *(1+save_range))
+    select = (
+        (fit_funct_der_val > 0)
+        & (fit_funct_der_r > np.min(x) * (1 - save_range))
+        & (fit_funct_der_r < np.max(x) * (1 + save_range))
+    )
     v0_lst = fit_funct_der_r[select]
     if len(v0_lst) == 1:
         if return_ind:
@@ -69,6 +73,7 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
     >>> qha.input['temperature_start'] = temperature_start
     >>> qha.collect_output()
     """
+
     def __init__(self, project, job_name="murnaghan"):
         """
 
@@ -96,11 +101,13 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         free_energy_lst, entropy_lst, cv_lst, volume_lst = [], [], [], []
         for job_id in self.child_ids:
             job = self.project_hdf5.load(job_id)
-            thermal_properties = job.get_thermal_properties(temperatures=np.linspace(
-                self.input["temperature_start"],
-                self.input["temperature_end"],
-                int(self.input["temperature_steps"])
-            ))
+            thermal_properties = job.get_thermal_properties(
+                temperatures=np.linspace(
+                    self.input["temperature_start"],
+                    self.input["temperature_end"],
+                    int(self.input["temperature_steps"]),
+                )
+            )
             free_energy_lst.append(thermal_properties.free_energies)
             entropy_lst.append(thermal_properties.entropy)
             cv_lst.append(thermal_properties.cv)
@@ -116,7 +123,7 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
             np.linspace(
                 self.input["temperature_start"],
                 self.input["temperature_end"],
-                int(self.input["temperature_steps"])
+                int(self.input["temperature_steps"]),
             ),
             np.array(volume_lst)[arg_lst],
         )
@@ -144,13 +151,22 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         """
         v0_lst, free_eng_lst, entropy_lst, cv_lst = [], [], [], []
         for i, [t, free_energy, cv, entropy, v] in enumerate(
-                zip(self["output/temperatures"].T,
-                    self["output/free_energy"].T,
-                    self["output/cv"].T,
-                    self["output/entropy"].T,
-                    self["output/volumes"].T)):
-            fit = np.poly1d(np.polyfit(v, free_energy + bulk_eng, int(self.input["polynomial_degree"])))
-            v0, ind = calc_v0_from_fit_funct(fit_funct=fit, x=v, save_range=0.0, return_ind=True)
+            zip(
+                self["output/temperatures"].T,
+                self["output/free_energy"].T,
+                self["output/cv"].T,
+                self["output/entropy"].T,
+                self["output/volumes"].T,
+            )
+        ):
+            fit = np.poly1d(
+                np.polyfit(
+                    v, free_energy + bulk_eng, int(self.input["polynomial_degree"])
+                )
+            )
+            v0, ind = calc_v0_from_fit_funct(
+                fit_funct=fit, x=v, save_range=0.0, return_ind=True
+            )
 
             v0_lst.append(v0)
             free_eng_lst.append(fit([v0]))
