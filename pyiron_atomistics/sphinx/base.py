@@ -2343,49 +2343,23 @@ class Output:
         file_name = posixpath.join(cwd, file_name)
         if not os.path.isfile(file_name):
             return None
-        with open(file_name, "r") as file_content:
-            file_content = file_content.readlines()
-            natoms = len(self._job.id_spx_to_pyi)
-            coords = np.array(
-                [
-                    json.loads(line.split("=")[1].split(";")[0])
-                    for line in file_content
-                    if "coords" in line
-                ]
+        with open(file_name, "r") as f:
+            file_content = ''.join(f.readlines())
+        natoms = len(self._job.id_spx_to_pyi)
+        def get_value(term, file_content=file_content, natoms=natoms):
+            value = np.array([
+                re.split('\[|\]', line)[1].split(',')
+                for line in re.findall(term, file_content, re.MULTILINE)
+            ]).astype(float).reshape(-1, natoms, 3)
+            return np.array(
+                [ff[self._job.id_spx_to_pyi] for ff in value]
             )
-            self.generic.positions = (
-                coords.reshape(-1, natoms, 3) * BOHR_TO_ANGSTROM
-            )
-            self.generic.positions = np.array(
-                [ff[self._job.id_spx_to_pyi] for ff in self.generic.positions]
-            )
-            force = np.array(
-                [
-                    json.loads(line.split("=")[1].split(";")[0])
-                    for line in file_content
-                    if "force" in line
-                ]
-            )
-            self.generic.forces = (
-                force.reshape(-1, natoms, 3) * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-            )
-            self.generic.forces = np.array(
-                [ff[self._job.id_spx_to_pyi] for ff in self.generic.forces]
-            )
-            self.generic.cell = (
-                np.array(
-                    [
-                        json.loads(
-                            "".join(file_content[i_line: i_line + 3])
-                            .split("=")[1]
-                            .split(";")[0]
-                        )
-                        for i_line, line in enumerate(file_content)
-                        if "cell" in line
-                    ]
-                )
-                * BOHR_TO_ANGSTROM
-            )
+        self.generic.positions = get_value('coords.*$') * BOHR_TO_ANGSTROM
+        self.generic.forces = get_value('force.*$') * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+        self.generic.cells = np.array([
+            json.loads(line)
+            for line in re.findall('cell =(.*?);', file_content.replace('\n', ''), re.MULTILINE)
+        ]) * BOHR_TO_ANGSTROM
 
     def collect_charge_density(self, file_name, cwd):
         if (
