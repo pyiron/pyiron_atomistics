@@ -2114,9 +2114,9 @@ class Output(object):
     def _get_convergence(log_file):
         conv_dict = {
             'WARNING: Maximum number of steps exceeded': False,
-            'Convergence reached': True
+            'Convergence reached.': True
         }
-        key = '|'.join(list(conv_dict.keys()))
+        key = '|'.join(list(conv_dict.keys())).replace('.', '\.')
         items = re.findall(key, log_file, re.MULTILINE)
         return [conv_dict[k] for k in items]
 
