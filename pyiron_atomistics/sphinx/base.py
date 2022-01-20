@@ -2152,14 +2152,6 @@ class Output(object):
         if not os.path.isfile(posixpath.join(cwd, file_name)):
             return None
 
-        def check_conv(line):
-            if line.startswith("WARNING: Maximum number of steps exceeded"):
-                return False
-            elif line.startswith("Convergence reached"):
-                return True
-            else:
-                return None
-
         with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
             log_file = ''.join(sphinx_log_file.readlines())
         self._check_enter_scf(log_file)
