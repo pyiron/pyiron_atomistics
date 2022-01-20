@@ -126,11 +126,14 @@ class HessianJob(GenericInteractive):
 
     def interactive_cells_setter(self, cell):
         if np.sum(self._stiffness_tensor) != 0:
-            epsilon = np.einsum(
-                "ij,jk->ik",
-                self.structure.cell,
-                np.linalg.inv(self._reference_structure.cell),
-            ) - np.eye(3)
+            epsilon = (
+                np.einsum(
+                    "ij,jk->ik",
+                    self.structure.cell,
+                    np.linalg.inv(self._reference_structure.cell),
+                )
+                - np.eye(3)
+            )
             epsilon = (epsilon + epsilon.T) * 0.5
             epsilon = np.append(
                 epsilon.diagonal(), np.roll(epsilon, -1, axis=0).diagonal()
