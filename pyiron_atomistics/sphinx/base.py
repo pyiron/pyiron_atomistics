@@ -102,6 +102,21 @@ class SphinxBase(GenericDFTJob):
         self._generic_input["path_name"] = None
         self._generic_input["n_path"] = None
 
+    @staticmethod
+    def _hdf_str(item):
+        for term in ['HDF_VERSION', 'NAME', 'OBJECT', 'READ_ONLY', 'TYPE', 'VERSION']:
+            if term in item:
+                return False
+        return True
+
+    def __getitem__(self, item):
+        if isinstance(item, str) and item.startswith('output/generic') and self._hdf_str(item):
+            item_lst = item.split('/')
+            if len(item_lst) < 3 or len(item_lst[-1]) == 0:
+                return self._output_parser.generic
+            return self._output_parser.generic['/'.join(item_lst[2:])]
+        return super().__getitem__(item)
+
     @property
     def structure(self):
         """
@@ -2416,15 +2431,15 @@ class Output:
             return np.array([vv[-1] for vv in arr])
 
         for k in self.generic.dft.list_nodes():
-            if k.startswith('scf_') and k != 'scf_convergence':
+            if 'scf' in k and k != 'scf_convergence':
                 self.generic.dft[k.replace("scf_", "")] = get_last(self.generic.dft[k])
         if 'energy_free' in self.generic.dft.list_nodes():
             self.generic.energy_tot = self.generic.dft.energy_free
             self.generic.energy_pot = self.generic.dft.energy_free
         if 'positions' not in self.generic.list_nodes():
-            self.generic.positions = [self._job.structure.positions]
+            self.generic.positions = np.array([self._job.structure.positions])
         if 'cells' not in self.generic.list_nodes():
-            self.generic.positions = [self._job.structure.cell.tolist()]
+            self.generic.cells = np.array([self._job.structure.cell.tolist()])
         self.generic.to_hdf(hdf=hdf)
 
         with hdf.open("output") as hdf5_output:
