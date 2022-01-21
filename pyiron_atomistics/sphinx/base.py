@@ -2245,14 +2245,8 @@ class Output:
         elif os.path.isfile(posixpath.join(cwd, "eps.0.dat")) and os.path.isfile(
             posixpath.join(cwd, "eps.1.dat")
         ):
-            eps_up = np.loadtxt(posixpath.join(cwd, "eps.0.dat"))
-            eps_down = np.loadtxt(posixpath.join(cwd, "eps.1.dat"))
-            if len(eps_up.shape) == 2:
-                eps_up = eps_up[:, 1:]
-                eps_down = eps_down[:, 1:]
-            else:
-                eps_up = eps_up[1:]
-                eps_down = eps_down[1:]
+            eps_up = np.loadtxt(posixpath.join(cwd, "eps.0.dat"))[..., 1:]
+            eps_down = np.loadtxt(posixpath.join(cwd, "eps.1.dat"))[..., 1:]
             value = np.vstack((eps_up, eps_down)).reshape((2,) + eps_up.shape)
         else:
             return
