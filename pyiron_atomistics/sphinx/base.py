@@ -111,7 +111,8 @@ class SphinxBase(GenericDFTJob):
         return True
 
     def __getitem__(self, item):
-        if isinstance(item, str) and item.startswith('output/generic') and self._hdf_str(item):
+        if (item.startswith('output/generic')
+                and self._hdf_str(item) and not self._output_parser.old_version):
             item_lst = item.split('/')
             if len(item_lst) < 3 or len(item_lst[-1]) == 0:
                 return self._output_parser.generic
@@ -2150,6 +2151,7 @@ class Output:
         self.charge_density = SphinxVolumetricData()
         self.electrostatic_potential = SphinxVolumetricData()
         self.generic.create_group('dft')
+        self.old_version = False
 
     def collect_spins_dat(self, file_name="spins.dat", cwd=None):
         """
@@ -2451,4 +2453,9 @@ class Output:
         """
         Load output from an HDF5 file
         """
-        self.generic.from_hdf(hdf=hdf)
+        try:
+            self.generic.from_hdf(hdf=hdf)
+        except ValueError:
+            warnings.warn("You are using an old version of SPHInX output")
+            self.old_version = True
+            pass
