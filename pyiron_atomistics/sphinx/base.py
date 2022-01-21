@@ -2188,6 +2188,7 @@ class Output:
         self.generic.dft.scf_energy_int = splitter(
             energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
         )
+
         def en_split(e, counter=energies[:, 0]):
             return splitter(e * HARTREE_TO_EV, counter)
         if len(energies[0]) == 7:
@@ -2266,7 +2267,8 @@ class Output:
                 for line in f.readlines():
                     line = line.split()
                     energy_free_lst.append(float(line[1]) * HARTREE_TO_EV)
-        self.generic.dft.energy_free = energy_free_lst
+        if len(energy_free_lst) > 0:
+            self.generic.dft.energy_free = energy_free_lst
 
     def collect_sphinx_log(
         self, file_name="sphinx.log", cwd=None, check_consistency=True
@@ -2332,6 +2334,7 @@ class Output:
         with open(file_name, "r") as f:
             file_content = ''.join(f.readlines())
         natoms = len(self._job.id_spx_to_pyi)
+
         def get_value(term, file_content=file_content, natoms=natoms):
             value = np.array([
                 re.split('\[|\]', line)[1].split(',')
