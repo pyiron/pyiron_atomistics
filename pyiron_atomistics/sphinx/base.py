@@ -2300,8 +2300,10 @@ class Output:
         self.generic.dft.kpoints_cartesian = self._spx_log_parser.get_kpoints_cartesian()
         self.generic.volume = self._spx_log_parser.get_volume()
         self.generic.dft.bands_e_fermi = self._spx_log_parser.get_fermi()
-        self.generic.dft.bands_occ = self._spx_log_parser.get_occupancy()
-        self.generic.dft.bands_eigen_values = self._spx_log_parser.get_band_energy()
+        self.generic.dft.bands_occ = self._spx_log_parser.get_occupancy(self._job._spin_enabled)
+        self.generic.dft.bands_eigen_values = self._spx_log_parser.get_band_energy(
+            self._job._spin_enabled
+        )
         self.generic.dft.scf_convergence = self._spx_log_parser.get_convergence()
         if 'scf_energy_int' not in self.generic.dft.list_nodes():
             self.generic.dft.scf_energy_int = self._spx_log_parser.get_energy_int()
