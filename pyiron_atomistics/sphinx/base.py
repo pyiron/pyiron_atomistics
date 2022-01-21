@@ -2460,7 +2460,9 @@ class Output:
         try:
             self.generic.from_hdf(hdf=hdf)
         except ValueError:
-            warnings.warn("You are using an old version of SPHInX output")
+            warnings.warn(
+                "You are using an old version of SPHInX output - update via job.update_sphinx()"
+            )
             self.old_version = True
             pass
 
@@ -2473,3 +2475,4 @@ def _update_datacontainer(job):
         job._output_parser.generic[node] = job['output/generic'][node]
     job['output/generic'].remove_group()
     job._output_parser.generic.to_hdf(hdf=job.project_hdf5)
+    job._output_parser.old_version = False
