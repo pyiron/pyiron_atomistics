@@ -103,6 +103,10 @@ class SphinxBase(GenericDFTJob):
         self._generic_input["path_name"] = None
         self._generic_input["n_path"] = None
 
+    def update_sphinx(self):
+        if self._output_parser.old_version:
+            _update_datacontainer(self)
+
     @staticmethod
     def _hdf_str(item):
         for term in ['HDF_VERSION', 'NAME', 'OBJECT', 'READ_ONLY', 'TYPE', 'VERSION']:
@@ -2459,3 +2463,13 @@ class Output:
             warnings.warn("You are using an old version of SPHInX output")
             self.old_version = True
             pass
+
+
+def _update_datacontainer(job):
+    job._output_parser.generic.create_group('dft')
+    for node in job['output/generic/dft'].list_nodes():
+        job._output_parser.generic.dft[node] = job['output/generic/dft'][node]
+    for node in job['output/generic'].list_nodes():
+        job._output_parser.generic[node] = job['output/generic'][node]
+    job['output/generic'].remove_group()
+    job._output_parser.generic.to_hdf(hdf=job.project_hdf5)
