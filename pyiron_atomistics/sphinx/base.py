@@ -1979,6 +1979,13 @@ class _SphinxLogParser:
         self._counter = None
         self._n_atoms = None
         self._n_steps = None
+        self._spin_enabled = None
+
+    @property
+    def spin_enabled(self):
+        if self._spin_enabled is None:
+            self._spin_enabled = len(re.findall('The spin for the label', self.log_file)) > 0
+        return self._spin_enabled
 
     @property
     def log_main(self):
@@ -2107,21 +2114,21 @@ class _SphinxLogParser:
             self._n_steps = len(re.findall("\| SCF calculation", self.log_file, re.MULTILINE))
         return self._n_steps
 
-    def _parse_band(self, term, spin_enabled=False):
+    def _parse_band(self, term):
         fa = re.findall(term, self.log_main, re.MULTILINE)
         arr = np.array(re.sub(
             '[^0-9\. ]', '', ''.join(fa)
         ).split()).astype(float).reshape(len(fa), -1)
         shape = (-1, len(self.k_points), arr.shape[-1])
-        if spin_enabled:
+        if self.spin_enabled:
             shape = (-1, 2, len(self.k_points), shape[-1])
         return arr.reshape(shape)
 
-    def get_band_energy(self, spin_enabled=False):
-        return self._parse_band('final eig \[eV\].*$', spin_enabled=spin_enabled)
+    def get_band_energy(self):
+        return self._parse_band('final eig \[eV\].*$')
 
-    def get_occupancy(self, spin_enabled=False):
-        return self._parse_band('final focc:.*$', spin_enabled=spin_enabled)
+    def get_occupancy(self):
+        return self._parse_band('final focc:.*$')
 
     def get_convergence(self):
         conv_dict = {
@@ -2300,10 +2307,8 @@ class Output:
         self.generic.dft.kpoints_cartesian = self._spx_log_parser.get_kpoints_cartesian()
         self.generic.volume = self._spx_log_parser.get_volume()
         self.generic.dft.bands_e_fermi = self._spx_log_parser.get_fermi()
-        self.generic.dft.bands_occ = self._spx_log_parser.get_occupancy(self._job._spin_enabled)
-        self.generic.dft.bands_eigen_values = self._spx_log_parser.get_band_energy(
-            self._job._spin_enabled
-        )
+        self.generic.dft.bands_occ = self._spx_log_parser.get_occupancy()
+        self.generic.dft.bands_eigen_values = self._spx_log_parser.get_band_energy()
         self.generic.dft.scf_convergence = self._spx_log_parser.get_convergence()
         if 'scf_energy_int' not in self.generic.dft.list_nodes():
             self.generic.dft.scf_energy_int = self._spx_log_parser.get_energy_int()
