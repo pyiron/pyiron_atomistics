@@ -1426,17 +1426,7 @@ class SphinxBase(GenericDFTJob):
         # Checks if sufficient empty states are present
         if not self.nbands_convergence_check():
             return False
-        if (
-            self._generic_input["calc_mode"] == "minimize"
-            and self._output_parser.generic.dft.scf_convergence[-1]
-        ):
-            return True
-        elif self._generic_input["calc_mode"] == "static" and np.all(
-            self._output_parser.generic.dft.scf_convergence
-        ):
-            return True
-        else:
-            return False
+        return self._output_parser.generic.dft.scf_convergence[-1]
 
     def collect_logfiles(self):
         """
