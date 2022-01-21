@@ -2107,22 +2107,21 @@ class _SphinxLogParser:
             self._n_steps = len(re.findall("\| SCF calculation", self.log_file, re.MULTILINE))
         return self._n_steps
 
-    def get_parse_band(self, spin_enabled=False):
-        results = {}
-        for k, v in {
-            "bands_occ": 'final focc:.*$', "bands_eigen_values": 'final eig \[eV\].*$'
-        }.items():
-            fa = re.findall(v, self.log_main, re.MULTILINE)
-            arr = np.array(re.sub(
-                '[^0-9\. ]', '', ''.join(fa)
-            ).split()).astype(float).reshape(len(fa), -1)
-            results[k] = arr
+    def _parse_band(self, term, spin_enabled=False):
+        fa = re.findall(term, self.log_main, re.MULTILINE)
+        arr = np.array(re.sub(
+            '[^0-9\. ]', '', ''.join(fa)
+        ).split()).astype(float).reshape(len(fa), -1)
         shape = (-1, len(self.k_points), arr.shape[-1])
         if spin_enabled:
             shape = (-1, 2, len(self.k_points), shape[-1])
-        for k in ["bands_occ", "bands_eigen_values"]:
-            results[k] = results[k].reshape(shape)
-        return results
+        return arr.reshape(shape)
+
+    def get_band_energy(self, spin_enabled=False):
+        return self._parse_band('final eig \[eV\].*$', spin_enabled=spin_enabled)
+
+    def get_occupancy(self, spin_enabled=False):
+        return self._parse_band('final focc:.*$', spin_enabled=spin_enabled)
 
     def get_convergence(self):
         conv_dict = {
@@ -2301,9 +2300,8 @@ class Output:
         self.generic.dft.kpoints_cartesian = self._spx_log_parser.get_kpoints_cartesian()
         self.generic.volume = self._spx_log_parser.get_volume()
         self.generic.dft.bands_e_fermi = self._spx_log_parser.get_fermi()
-        band = self._spx_log_parser.get_parse_band(self._job._spin_enabled)
-        for k, v in band.items():
-            self.generic.dft[k] = v
+        self.generic.dft.bands_occ = self._spx_log_parser.get_occupancy()
+        self.generic.dft.bands_eigen_values = self._spx_log_parser.get_band_energy()
         self.generic.dft.scf_convergence = self._spx_log_parser.get_convergence()
         if 'scf_energy_int' not in self.generic.dft.list_nodes():
             self.generic.dft.scf_energy_int = self._spx_log_parser.get_energy_int()
