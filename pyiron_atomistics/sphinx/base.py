@@ -2266,15 +2266,9 @@ class Output:
         Returns:
 
         """
-        energy_free_lst = []
         file_name = posixpath.join(cwd, file_name)
         if os.path.isfile(file_name):
-            with open(file_name, "r") as f:
-                for line in f.readlines():
-                    line = line.split()
-                    energy_free_lst.append(float(line[1]) * HARTREE_TO_EV)
-        if len(energy_free_lst) > 0:
-            self.generic.dft.energy_free = energy_free_lst
+            self.generic.dft.energy_free = np.loadtxt(file_name)[:, 1] * HARTREE_TO_EV
 
     def collect_sphinx_log(
         self, file_name="sphinx.log", cwd=None, check_consistency=True
@@ -2399,12 +2393,12 @@ class Output:
         Args:
             directory (str): the directory to collect the output from.
         """
+        self.collect_energy_struct(file_name="energy-structOpt.dat", cwd=directory)
         self.collect_sphinx_log(file_name="sphinx.log", cwd=directory)
         self.collect_energy_dat(file_name="energy.dat", cwd=directory)
         self.collect_residue_dat(file_name="residue.dat", cwd=directory)
         self.collect_eps_dat(file_name="eps.dat", cwd=directory)
         self.collect_spins_dat(file_name="spins.dat", cwd=directory)
-        self.collect_energy_struct(file_name="energy-structOpt.dat", cwd=directory)
         self.collect_relaxed_hist(file_name="relaxHist.sx", cwd=directory)
         self.collect_electrostatic_potential(file_name="vElStat-eV.sxb", cwd=directory)
         self.collect_charge_density(file_name="rho.sxb", cwd=directory)
