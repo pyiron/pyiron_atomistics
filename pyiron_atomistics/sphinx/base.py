@@ -2188,23 +2188,15 @@ class Output:
         self.generic.dft.scf_energy_int = splitter(
             energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
         )
+        def en_split(e, counter=energies[:, 0]):
+            return splitter(e * HARTREE_TO_EV, counter)
         if len(energies[0]) == 7:
-            self.generic.dft.scf_energy_free = splitter(
-                energies[:, 3] * HARTREE_TO_EV, energies[:, 0]
-            )
-            self.generic.dft.scf_energy_zero = splitter(
-                energies[:, 4] * HARTREE_TO_EV, energies[:, 0]
-            )
-            self.generic.dft.scf_energy_band = splitter(
-                energies[:, 5] * HARTREE_TO_EV, energies[:, 0]
-            )
-            self.generic.dft.scf_electronic_entropy = splitter(
-                energies[:, 6] * HARTREE_TO_EV, energies[:, 0]
-            )
+            self.generic.dft.scf_energy_free = en_split(energies[:, 3])
+            self.generic.dft.scf_energy_zero = en_split(energies[:, 4])
+            self.generic.dft.scf_energy_band = en_split(energies[:, 5])
+            self.generic.dft.scf_electronic_entropy = en_split(energies[:, 6])
         else:
-            self.generic.dft.scf_energy_band = splitter(
-                energies[:, 3] * HARTREE_TO_EV, energies[:, 0]
-            )
+            self.generic.dft.scf_energy_band = en_split(energies[:, 3])
 
     def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         """
