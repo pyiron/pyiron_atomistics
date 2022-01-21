@@ -118,9 +118,12 @@ class SphinxBase(GenericDFTJob):
         if (item.startswith('output/generic')
                 and self._hdf_str(item) and not self._output_parser.old_version):
             item_lst = item.split('/')
-            if len(item_lst) < 3 or len(item_lst[-1]) == 0:
-                return self._output_parser.generic
-            return self._output_parser.generic['/'.join(item_lst[2:])]
+            try:
+                if len(item_lst) < 3 or len(item_lst[-1]) == 0:
+                    return self._output_parser.generic
+                return self._output_parser.generic['/'.join(item_lst[2:])]
+            except KeyError:
+                return super().__getitem__(item)
         return super().__getitem__(item)
 
     @property
@@ -2095,7 +2098,7 @@ class _SphinxLogParser:
             magnetic_forces = np.array(magnetic_forces).reshape(-1, self.n_atoms)
             if spx_to_pyi is not None:
                 for ii, mm in enumerate(magnetic_forces):
-                    magnetic_forces[ii] = mm[self._job.id_spx_to_pyi]
+                    magnetic_forces[ii] = mm[spx_to_pyi]
         return splitter(magnetic_forces, self.counter)
 
     @property
