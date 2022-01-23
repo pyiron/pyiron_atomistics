@@ -2234,26 +2234,17 @@ class Output:
         Returns:
 
         """
-        file_name = posixpath.join(cwd, file_name)
-        if os.path.isfile(file_name):
-            try:
-                value = np.loadtxt(file_name)[:, 1:]
-            except IndexError:
-                value = np.loadtxt(file_name)[1:]
-        elif os.path.isfile(posixpath.join(cwd, "eps.0.dat")) and os.path.isfile(
-            posixpath.join(cwd, "eps.1.dat")
-        ):
-            eps_up = np.loadtxt(posixpath.join(cwd, "eps.0.dat"))[..., 1:]
-            eps_down = np.loadtxt(posixpath.join(cwd, "eps.1.dat"))[..., 1:]
-            value = np.vstack((eps_up, eps_down)).reshape((2,) + eps_up.shape)
-        else:
-            return
-        shape = np.asarray(self.generic.dft.bands_eigen_values).shape
-        if shape[1:] == value.shape:
-            self.generic.dft.bands_eigen_values[-1] = value
-        else:
-            self.generic.dft.bands_eigen_values = value.reshape((-1,) + value.shape)
-        return None
+        if isinstance(file_name, str):
+            file_name = [file_name]
+        values = []
+        for f in file_name:
+            file_tmp = posixpath.join(cwd, f)
+            if not os.path.isfile(file_tmp):
+                return
+            values.append(np.loadtxt(file_tmp)[..., 1:])
+        values = np.stack(values, axis=0)
+        if 'bands_eigen_values' not in self.generic.dft.list_nodes():
+            self.generic.dft.bands_eigen_values = values.reshape((-1,) + values.shape)
 
     def collect_energy_struct(self, file_name="energy-structOpt.dat", cwd=None):
         """
@@ -2358,10 +2349,7 @@ class Output:
             )
 
     def collect_electrostatic_potential(self, file_name, cwd):
-        if (
-            file_name in os.listdir(cwd)
-            and os.stat(posixpath.join(cwd, file_name)).st_size != 0
-        ):
+        if file_name in os.listdir(cwd) and os.stat(posixpath.join(cwd, file_name)).st_size != 0:
             self.electrostatic_potential.from_file(
                 filename=posixpath.join(cwd, file_name), normalize=False
             )
@@ -2395,7 +2383,10 @@ class Output:
         self.collect_sphinx_log(file_name="sphinx.log", cwd=directory)
         self.collect_energy_dat(file_name="energy.dat", cwd=directory)
         self.collect_residue_dat(file_name="residue.dat", cwd=directory)
-        self.collect_eps_dat(file_name="eps.dat", cwd=directory)
+        if self._job._spin_enabled:
+            self.collect_eps_dat(file_name="eps.dat", cwd=directory)
+        else:
+            self.collect_eps_dat(file_name=[f"eps.{i}.dat" for i in [0, 1]], cwd=directory)
         self.collect_spins_dat(file_name="spins.dat", cwd=directory)
         self.collect_relaxed_hist(file_name="relaxHist.sx", cwd=directory)
         self.collect_electrostatic_potential(file_name="vElStat-eV.sxb", cwd=directory)
