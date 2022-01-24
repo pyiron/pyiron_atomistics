@@ -12,4 +12,3 @@ dependencies:
 - iprpy-data
 - pyiron-data >=0.0.14
 - sqsgenerator
-- mkl <2022
