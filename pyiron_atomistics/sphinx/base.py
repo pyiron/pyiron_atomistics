@@ -107,24 +107,11 @@ class SphinxBase(GenericDFTJob):
         if self._output_parser.old_version:
             _update_datacontainer(self)
 
-    @staticmethod
-    def _hdf_str(item):
-        for term in ['HDF_VERSION', 'NAME', 'OBJECT', 'READ_ONLY', 'TYPE', 'VERSION']:
-            if term in item:
-                return False
-        return True
-
     def __getitem__(self, item):
-        if (item.startswith('output/generic')
-                and self._hdf_str(item) and not self._output_parser.old_version):
-            item_lst = item.split('/')
-            try:
-                if len(item_lst) < 3 or len(item_lst[-1]) == 0:
-                    return self._output_parser.generic
-                return self._output_parser.generic['/'.join(item_lst[2:])]
-            except KeyError:
-                return super().__getitem__(item)
-        return super().__getitem__(item)
+        result = super().__getitem__(item)
+        if 'TYPE' in result.list_nodes():
+            return result.to_object(lazy=True)
+        return result
 
     @property
     def structure(self):
@@ -894,15 +881,12 @@ class SphinxBase(GenericDFTJob):
             gp.from_hdf(self._hdf5)
             for k in gp.keys():
                 self.input[k] = gp[k]
-            if self.status.finished:
-                self._output_parser.from_hdf(self._hdf5)
         elif self._hdf5["HDF_VERSION"] == "0.1.0":
             super(SphinxBase, self).from_hdf(hdf=hdf, group_name=group_name)
             self._structure_from_hdf()
             with self._hdf5.open("input") as hdf:
                 self.input.from_hdf(hdf, group_name="parameters")
-            if self.status.finished:
-                self._output_parser.from_hdf(self._hdf5)
+        self._output_parser.from_hdf(self._hdf5)
 
     def from_directory(self, directory, file_name="structure.sx"):
         try:
