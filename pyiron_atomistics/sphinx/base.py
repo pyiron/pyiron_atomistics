@@ -109,7 +109,7 @@ class SphinxBase(GenericDFTJob):
 
     def __getitem__(self, item):
         result = super().__getitem__(item)
-        if 'TYPE' in result.list_nodes():
+        if hasattr(result, 'list_nodes') and 'TYPE' in result.list_nodes():
             return result.to_object(lazy=True)
         return result
 
