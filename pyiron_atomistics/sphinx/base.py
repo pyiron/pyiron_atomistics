@@ -108,9 +108,16 @@ class SphinxBase(GenericDFTJob):
             _update_datacontainer(self)
 
     def __getitem__(self, item):
-        result = super().__getitem__(item)
-        if hasattr(result, 'list_nodes') and 'TYPE' in result.list_nodes():
-            return result.to_object(lazy=True)
+        if not isinstance(item, str):
+            return super().__getitem__(item)
+        result = None
+        for tag in item.split('/'):
+            if result is None:
+                result = super().__getitem__(tag)
+            else:
+                result = result[tag]
+            if hasattr(result, 'list_nodes') and 'TYPE' in result.list_nodes():
+                result = result.to_object(lazy=True)
         return result
 
     @property
