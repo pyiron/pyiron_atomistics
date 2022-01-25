@@ -117,7 +117,7 @@ class SphinxBase(GenericDFTJob):
             else:
                 result = result[tag]
             if hasattr(result, 'list_nodes') and 'TYPE' in result.list_nodes():
-                result = result.to_object(lazy=True)
+                result = result.to_object()
         return result
 
     @property
