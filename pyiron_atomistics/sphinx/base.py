@@ -111,13 +111,13 @@ class SphinxBase(GenericDFTJob):
         if not isinstance(item, str):
             return super().__getitem__(item)
         result = None
-        for tag in item.split('/'):
-            try: # horrible workaround to be removed when hdf output becomes consistent
+        for tag in item.split("/"):
+            try:  # horrible workaround to be removed when hdf output becomes consistent
                 if result is None:
                     result = super().__getitem__(tag)
                 else:
                     result = result[tag]
-                if hasattr(result, 'list_nodes') and 'TYPE' in result.list_nodes():
+                if hasattr(result, "list_nodes") and "TYPE" in result.list_nodes():
                     result = result.to_object()
             except (ValueError, KeyError):
                 return None
@@ -1952,7 +1952,7 @@ def splitter(arr, counter):
     spl_loc = list(np.where(np.array(counter) == min(counter))[0])
     spl_loc.append(None)
     for ii, ll in enumerate(spl_loc[:-1]):
-        arr_new.append(np.array(arr[ll:spl_loc[ii + 1]]).tolist())
+        arr_new.append(np.array(arr[ll : spl_loc[ii + 1]]).tolist())
     return arr_new
 
 
@@ -1971,19 +1971,24 @@ class _SphinxLogParser:
     @property
     def spin_enabled(self):
         if self._spin_enabled is None:
-            self._spin_enabled = len(re.findall('The spin for the label', self.log_file)) > 0
+            self._spin_enabled = (
+                len(re.findall("The spin for the label", self.log_file)) > 0
+            )
         return self._spin_enabled
 
     @property
     def log_main(self):
         if self._log_main is None:
             match = re.search("Enter Main Loop", self.log_file)
-            self._log_main = self.log_file[match.end() + 1:]
+            self._log_main = self.log_file[match.end() + 1 :]
         return self._log_main
 
     @property
     def job_finished(self):
-        if len(re.findall("Program exited normally.", self.log_file, re.MULTILINE)) == 0:
+        if (
+            len(re.findall("Program exited normally.", self.log_file, re.MULTILINE))
+            == 0
+        ):
             warnings.warn("Log file created but first scf loop not reached")
             return False
         return True
@@ -1993,11 +1998,11 @@ class _SphinxLogParser:
             raise AssertionError("Log file created but first scf loop not reached")
 
     def get_n_valence(self):
-        log = self.log_file.split('\n')
+        log = self.log_file.split("\n")
         return {
-            log[ii - 1].split()[1]: int(ll.split('=')[-1])
+            log[ii - 1].split()[1]: int(ll.split("=")[-1])
             for ii, ll in enumerate(log)
-            if ll.startswith('| Z=')
+            if ll.startswith("| Z=")
         }
 
     @property
@@ -2005,11 +2010,11 @@ class _SphinxLogParser:
         if self._log_k_points is None:
             start_match = re.search(
                 "-ik-     -x-      -y-       -z-    \|  -weight-    -nG-    -label-",
-                self.log_file
+                self.log_file,
             )
-            log_part = self.log_file[start_match.end() + 1:]
-            log_part = log_part[:re.search('^\n', log_part, re.MULTILINE).start()]
-            self._log_k_points = log_part.split('\n')[:-2]
+            log_part = self.log_file[start_match.end() + 1 :]
+            log_part = log_part[: re.search("^\n", log_part, re.MULTILINE).start()]
+            self._log_k_points = log_part.split("\n")[:-2]
         return self._log_k_points
 
     def get_bands_k_weights(self):
@@ -2017,22 +2022,28 @@ class _SphinxLogParser:
 
     @property
     def _rec_cell(self):
-        log_extract = re.findall('b[1-3]:.*$', self.log_file, re.MULTILINE)
-        return np.array([ll.split()[1:4] for ll in log_extract]).astype(float) / BOHR_TO_ANGSTROM
+        log_extract = re.findall("b[1-3]:.*$", self.log_file, re.MULTILINE)
+        return (
+            np.array([ll.split()[1:4] for ll in log_extract]).astype(float)
+            / BOHR_TO_ANGSTROM
+        )
 
     def get_kpoints_cartesian(self):
-        return np.einsum('ni,ij->nj', self.k_points, self._rec_cell)
+        return np.einsum("ni,ij->nj", self.k_points, self._rec_cell)
 
     @property
     def k_points(self):
         if self._k_points is None:
-            self._k_points = np.array([
-                [float(kk.split()[i]) for i in range(2, 5)] for kk in self.log_k_points
-            ])
+            self._k_points = np.array(
+                [
+                    [float(kk.split()[i]) for i in range(2, 5)]
+                    for kk in self.log_k_points
+                ]
+            )
         return self._k_points
 
     def get_volume(self):
-        volume = re.findall('Omega:.*$', self.log_file, re.MULTILINE)
+        volume = re.findall("Omega:.*$", self.log_file, re.MULTILINE)
         if len(volume) > 0:
             volume = float(volume[0].split()[1])
             volume *= BOHR_TO_ANGSTROM ** 3
@@ -2044,28 +2055,35 @@ class _SphinxLogParser:
     def counter(self):
         if self._counter is None:
             self._counter = [
-                int(re.sub('[^0-9]', '', line.split('=')[0]))
+                int(re.sub("[^0-9]", "", line.split("=")[0]))
                 for line in re.findall("F\(.*$", self.log_main, re.MULTILINE)
             ]
         return self._counter
 
     def get_energy_free(self):
-        return splitter([
-            float(line.split('=')[1]) * HARTREE_TO_EV
-            for line in re.findall("F\(.*$", self.log_main, re.MULTILINE)
-        ], self.counter)
+        return splitter(
+            [
+                float(line.split("=")[1]) * HARTREE_TO_EV
+                for line in re.findall("F\(.*$", self.log_main, re.MULTILINE)
+            ],
+            self.counter,
+        )
 
     def get_energy_int(self):
-        return splitter([
-            float(line.replace("=", " ").replace(",", " ").split()[1]) * HARTREE_TO_EV
-            for line in re.findall("^eTot\([0-9].*$", self.log_main, re.MULTILINE)
-        ], self.counter)
+        return splitter(
+            [
+                float(line.replace("=", " ").replace(",", " ").split()[1])
+                * HARTREE_TO_EV
+                for line in re.findall("^eTot\([0-9].*$", self.log_main, re.MULTILINE)
+            ],
+            self.counter,
+        )
 
     @property
     def n_atoms(self):
         if self._n_atoms is None:
             self._n_atoms = len(
-                np.unique(re.findall('^Species.*\{', self.log_main, re.MULTILINE))
+                np.unique(re.findall("^Species.*\{", self.log_main, re.MULTILINE))
             )
         return self._n_atoms
 
@@ -2098,31 +2116,35 @@ class _SphinxLogParser:
     @property
     def n_steps(self):
         if self._n_steps is None:
-            self._n_steps = len(re.findall("\| SCF calculation", self.log_file, re.MULTILINE))
+            self._n_steps = len(
+                re.findall("\| SCF calculation", self.log_file, re.MULTILINE)
+            )
         return self._n_steps
 
     def _parse_band(self, term):
         fa = re.findall(term, self.log_main, re.MULTILINE)
-        arr = np.array(re.sub(
-            '[^0-9\. ]', '', ''.join(fa)
-        ).split()).astype(float).reshape(len(fa), -1)
+        arr = (
+            np.array(re.sub("[^0-9\. ]", "", "".join(fa)).split())
+            .astype(float)
+            .reshape(len(fa), -1)
+        )
         shape = (-1, len(self.k_points), arr.shape[-1])
         if self.spin_enabled:
             shape = (-1, 2, len(self.k_points), shape[-1])
         return arr.reshape(shape)
 
     def get_band_energy(self):
-        return self._parse_band('final eig \[eV\].*$')
+        return self._parse_band("final eig \[eV\].*$")
 
     def get_occupancy(self):
-        return self._parse_band('final focc:.*$')
+        return self._parse_band("final focc:.*$")
 
     def get_convergence(self):
         conv_dict = {
-            'WARNING: Maximum number of steps exceeded': False,
-            'Convergence reached.': True
+            "WARNING: Maximum number of steps exceeded": False,
+            "Convergence reached.": True,
         }
-        key = '|'.join(list(conv_dict.keys())).replace('.', '\.')
+        key = "|".join(list(conv_dict.keys())).replace(".", "\.")
         items = re.findall(key, self.log_main, re.MULTILINE)
         convergence = [conv_dict[k] for k in items]
         diff = self.n_steps - len(convergence)
@@ -2131,10 +2153,12 @@ class _SphinxLogParser:
         return convergence
 
     def get_fermi(self):
-        return np.array([
-            float(line.split()[2])
-            for line in re.findall('Fermi energy:.*$', self.log_main, re.MULTILINE)
-        ])
+        return np.array(
+            [
+                float(line.split()[2])
+                for line in re.findall("Fermi energy:.*$", self.log_main, re.MULTILINE)
+            ]
+        )
 
 
 class Output:
@@ -2143,11 +2167,11 @@ class Output:
     """
 
     def __init__(self, job):
-        self.generic = DataContainer(table_name='output/generic')
+        self.generic = DataContainer(table_name="output/generic")
         self._job = job
         self.charge_density = SphinxVolumetricData()
         self.electrostatic_potential = SphinxVolumetricData()
-        self.generic.create_group('dft')
+        self.generic.create_group("dft")
         self.old_version = False
 
     def collect_spins_dat(self, file_name="spins.dat", cwd=None):
@@ -2164,8 +2188,7 @@ class Output:
             return None
         spins = np.loadtxt(posixpath.join(cwd, file_name))
         self.generic.dft.atom_scf_spins = splitter(
-            np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]),
-            spins[:, 0]
+            np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]), spins[:, 0]
         )
 
     def collect_energy_dat(self, file_name="energy.dat", cwd=None):
@@ -2181,15 +2204,14 @@ class Output:
         if not os.path.isfile(posixpath.join(cwd, file_name)):
             return None
         energies = np.loadtxt(posixpath.join(cwd, file_name))
-        self.generic.dft.scf_computation_time = splitter(
-            energies[:, 1], energies[:, 0]
-        )
+        self.generic.dft.scf_computation_time = splitter(energies[:, 1], energies[:, 0])
         self.generic.dft.scf_energy_int = splitter(
             energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
         )
 
         def en_split(e, counter=energies[:, 0]):
             return splitter(e * HARTREE_TO_EV, counter)
+
         if len(energies[0]) == 7:
             self.generic.dft.scf_energy_free = en_split(energies[:, 3])
             self.generic.dft.scf_energy_zero = en_split(energies[:, 4])
@@ -2237,7 +2259,7 @@ class Output:
                 return
             values.append(np.loadtxt(file_tmp)[..., 1:])
         values = np.stack(values, axis=0)
-        if 'bands_eigen_values' not in self.generic.dft.list_nodes():
+        if "bands_eigen_values" not in self.generic.dft.list_nodes():
             self.generic.dft.bands_eigen_values = values.reshape((-1,) + values.shape)
 
     def collect_energy_struct(self, file_name="energy-structOpt.dat", cwd=None):
@@ -2272,7 +2294,7 @@ class Output:
             return None
 
         with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
-            log_file = ''.join(sphinx_log_file.readlines())
+            log_file = "".join(sphinx_log_file.readlines())
         try:
             self._spx_log_parser = _SphinxLogParser(log_file)
         except AssertionError as e:
@@ -2282,23 +2304,25 @@ class Output:
             self._job.status.aborted = True
         self.generic.dft.n_valence = self._spx_log_parser.get_n_valence()
         self.generic.dft.bands_k_weights = self._spx_log_parser.get_bands_k_weights()
-        self.generic.dft.kpoints_cartesian = self._spx_log_parser.get_kpoints_cartesian()
+        self.generic.dft.kpoints_cartesian = (
+            self._spx_log_parser.get_kpoints_cartesian()
+        )
         self.generic.volume = self._spx_log_parser.get_volume()
         self.generic.dft.bands_e_fermi = self._spx_log_parser.get_fermi()
         self.generic.dft.bands_occ = self._spx_log_parser.get_occupancy()
         self.generic.dft.bands_eigen_values = self._spx_log_parser.get_band_energy()
         self.generic.dft.scf_convergence = self._spx_log_parser.get_convergence()
-        if 'scf_energy_int' not in self.generic.dft.list_nodes():
+        if "scf_energy_int" not in self.generic.dft.list_nodes():
             self.generic.dft.scf_energy_int = self._spx_log_parser.get_energy_int()
-        if 'scf_energy_free' not in self.generic.dft.list_nodes():
+        if "scf_energy_free" not in self.generic.dft.list_nodes():
             self.generic.dft.scf_energy_free = self._spx_log_parser.get_energy_free()
-        if 'forces' in self.generic.list_nodes():
+        if "forces" in self.generic.list_nodes():
             self.generic.forces = self._spx_log_parser.get_forces(
                 self._job.id_spx_to_pyi
             )
-        if 'scf_magnetic_forces' not in self.generic.dft.list_nodes():
-            self.generic.dft.scf_magnetic_forces = self._spx_log_parser.get_magnetic_forces(
-                self._job.id_spx_to_pyi
+        if "scf_magnetic_forces" not in self.generic.dft.list_nodes():
+            self.generic.dft.scf_magnetic_forces = (
+                self._spx_log_parser.get_magnetic_forces(self._job.id_spx_to_pyi)
             )
 
     def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=None):
@@ -2315,23 +2339,37 @@ class Output:
         if not os.path.isfile(file_name):
             return None
         with open(file_name, "r") as f:
-            file_content = ''.join(f.readlines())
+            file_content = "".join(f.readlines())
         natoms = len(self._job.id_spx_to_pyi)
 
         def get_value(term, file_content=file_content, natoms=natoms):
-            value = np.array([
-                re.split('\[|\]', line)[1].split(',')
-                for line in re.findall(term, file_content, re.MULTILINE)
-            ]).astype(float).reshape(-1, natoms, 3)
-            return np.array(
-                [ff[self._job.id_spx_to_pyi] for ff in value]
+            value = (
+                np.array(
+                    [
+                        re.split("\[|\]", line)[1].split(",")
+                        for line in re.findall(term, file_content, re.MULTILINE)
+                    ]
+                )
+                .astype(float)
+                .reshape(-1, natoms, 3)
             )
-        self.generic.positions = get_value('coords.*$') * BOHR_TO_ANGSTROM
-        self.generic.forces = get_value('force.*$') * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-        self.generic.cells = np.array([
-            json.loads(line)
-            for line in re.findall('cell =(.*?);', file_content.replace('\n', ''), re.MULTILINE)
-        ]) * BOHR_TO_ANGSTROM
+            return np.array([ff[self._job.id_spx_to_pyi] for ff in value])
+
+        self.generic.positions = get_value("coords.*$") * BOHR_TO_ANGSTROM
+        self.generic.forces = (
+            get_value("force.*$") * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+        )
+        self.generic.cells = (
+            np.array(
+                [
+                    json.loads(line)
+                    for line in re.findall(
+                        "cell =(.*?);", file_content.replace("\n", ""), re.MULTILINE
+                    )
+                ]
+            )
+            * BOHR_TO_ANGSTROM
+        )
 
     def collect_charge_density(self, file_name, cwd):
         if (
@@ -2343,7 +2381,10 @@ class Output:
             )
 
     def collect_electrostatic_potential(self, file_name, cwd):
-        if file_name in os.listdir(cwd) and os.stat(posixpath.join(cwd, file_name)).st_size != 0:
+        if (
+            file_name in os.listdir(cwd)
+            and os.stat(posixpath.join(cwd, file_name)).st_size != 0
+        ):
             self.electrostatic_potential.from_file(
                 filename=posixpath.join(cwd, file_name), normalize=False
             )
@@ -2380,7 +2421,9 @@ class Output:
         if self._job._spin_enabled:
             self.collect_eps_dat(file_name="eps.dat", cwd=directory)
         else:
-            self.collect_eps_dat(file_name=[f"eps.{i}.dat" for i in [0, 1]], cwd=directory)
+            self.collect_eps_dat(
+                file_name=[f"eps.{i}.dat" for i in [0, 1]], cwd=directory
+            )
         self.collect_spins_dat(file_name="spins.dat", cwd=directory)
         self.collect_relaxed_hist(file_name="relaxHist.sx", cwd=directory)
         self.collect_electrostatic_potential(file_name="vElStat-eV.sxb", cwd=directory)
@@ -2394,18 +2437,19 @@ class Output:
             hdf: HDF5 group
             force_update(bool):
         """
+
         def get_last(arr):
             return np.array([vv[-1] for vv in arr])
 
         for k in self.generic.dft.list_nodes():
-            if 'scf' in k and k != 'scf_convergence':
+            if "scf" in k and k != "scf_convergence":
                 self.generic.dft[k.replace("scf_", "")] = get_last(self.generic.dft[k])
-        if 'energy_free' in self.generic.dft.list_nodes():
+        if "energy_free" in self.generic.dft.list_nodes():
             self.generic.energy_tot = self.generic.dft.energy_free
             self.generic.energy_pot = self.generic.dft.energy_free
-        if 'positions' not in self.generic.list_nodes():
+        if "positions" not in self.generic.list_nodes():
             self.generic.positions = np.array([self._job.structure.positions])
-        if 'cells' not in self.generic.list_nodes():
+        if "cells" not in self.generic.list_nodes():
             self.generic.cells = np.array([self._job.structure.cell.tolist()])
         self.generic.to_hdf(hdf=hdf)
 
@@ -2424,10 +2468,8 @@ class Output:
                 if "dos" not in hdf5_es.list_groups():
                     hdf5_es.create_group("dos")
                 with hdf5_es.open("dos") as hdf5_dos:
-                    warning_message = (
-                        ' is not stored in SPHInX; use job.get_density_of_states instead'
-                    )
-                    for k in ['energies', 'int_densities', 'tot_densities']:
+                    warning_message = " is not stored in SPHInX; use job.get_density_of_states instead"
+                    for k in ["energies", "int_densities", "tot_densities"]:
                         hdf5_dos[k] = k + warning_message
 
     def from_hdf(self, hdf):
@@ -2445,11 +2487,11 @@ class Output:
 
 
 def _update_datacontainer(job):
-    job._output_parser.generic.create_group('dft')
-    for node in job['output/generic/dft'].list_nodes():
-        job._output_parser.generic.dft[node] = job['output/generic/dft'][node]
-    for node in job['output/generic'].list_nodes():
-        job._output_parser.generic[node] = job['output/generic'][node]
-    job['output/generic'].remove_group()
+    job._output_parser.generic.create_group("dft")
+    for node in job["output/generic/dft"].list_nodes():
+        job._output_parser.generic.dft[node] = job["output/generic/dft"][node]
+    for node in job["output/generic"].list_nodes():
+        job._output_parser.generic[node] = job["output/generic"][node]
+    job["output/generic"].remove_group()
     job._output_parser.generic.to_hdf(hdf=job.project_hdf5)
     job._output_parser.old_version = False
