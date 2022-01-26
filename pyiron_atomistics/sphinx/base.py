@@ -112,12 +112,15 @@ class SphinxBase(GenericDFTJob):
             return super().__getitem__(item)
         result = None
         for tag in item.split('/'):
-            if result is None:
-                result = super().__getitem__(tag)
-            else:
-                result = result[tag]
-            if hasattr(result, 'list_nodes') and 'TYPE' in result.list_nodes():
-                result = result.to_object()
+            try: # horrible workaround to be removed when hdf output becomes consistent
+                if result is None:
+                    result = super().__getitem__(tag)
+                else:
+                    result = result[tag]
+                if hasattr(result, 'list_nodes') and 'TYPE' in result.list_nodes():
+                    result = result.to_object()
+            except (ValueError, KeyError):
+                return None
         return result
 
     @property
