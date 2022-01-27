@@ -9,24 +9,24 @@ unit = pint.UnitRegistry()
 
 
 def get_helmholtz_free_energy(frequencies, temperature, E_0=0):
-    hn = (frequencies * 1e12 * unit.hertz * unit.planck_constant).to('eV').magnitude
+    hn = (frequencies * 1e12 * unit.hertz * unit.planck_constant).to("eV").magnitude
     hn = hn[hn > 0]
-    kBT = (temperature * unit.kelvin * unit.boltzmann_constant).to('eV').magnitude
+    kBT = (temperature * unit.kelvin * unit.boltzmann_constant).to("eV").magnitude
     kBT = np.atleast_1d(kBT)
     values = np.zeros_like(kBT)
     values[kBT > 0] = kBT[kBT > 0] * np.log(
-        1 - np.exp(-np.einsum('i,...->...i', hn, 1 / kBT[kBT > 0]))
+        1 - np.exp(-np.einsum("i,...->...i", hn, 1 / kBT[kBT > 0]))
     ).sum(axis=-1)
     return 0.5 * np.sum(hn) + values + E_0
 
 
 def get_potential_energy(frequencies, temperature, E_0=0):
-    hn = (frequencies * 1e12 * unit.hertz * unit.planck_constant).to('eV').magnitude
-    kBT = (temperature * unit.kelvin * unit.boltzmann_constant).to('eV').magnitude
+    hn = (frequencies * 1e12 * unit.hertz * unit.planck_constant).to("eV").magnitude
+    kBT = (temperature * unit.kelvin * unit.boltzmann_constant).to("eV").magnitude
     kBT = np.atleast_1d(kBT)
     values = np.zeros_like(kBT)
     values[kBT > 0] = np.sum(
-        hn / (np.exp(-np.einsum('i,...->...i', hn, 1 / kBT[kBT > 0])) - 1), axis=-1
+        hn / (np.exp(-np.einsum("i,...->...i", hn, 1 / kBT[kBT > 0])) - 1), axis=-1
     )
     return 0.5 * np.sum(hn) + values + E_0
 
@@ -41,7 +41,9 @@ def generate_displacements(structure, symprec=1.0e-2):
 
 
 class Hessian:
-    def __init__(self, structure, dx=0.01, symprec=1.0e-2, include_zero_displacement=True):
+    def __init__(
+        self, structure, dx=0.01, symprec=1.0e-2, include_zero_displacement=True
+    ):
         """
 
         Args:
@@ -83,7 +85,9 @@ class Hessian:
     @energy.setter
     def energy(self, energy):
         if energy is not None and len(energy) != len(self.displacements):
-            raise AssertionError('Energy shape does not match existing displacement shape')
+            raise AssertionError(
+                "Energy shape does not match existing displacement shape"
+            )
         self._energy = np.array(energy)
         self.reset()
 
@@ -94,15 +98,18 @@ class Hessian:
     @forces.setter
     def forces(self, forces):
         if np.array(forces).shape != self.displacements.shape:
-            raise AssertionError('Force shape does not match existing displacement shape')
+            raise AssertionError(
+                "Force shape does not match existing displacement shape"
+            )
         self._forces = np.array(forces)
         self.reset()
 
     @property
     def all_displacements(self):
         return np.einsum(
-            'nxy,lnmy->lnmx', self.symmetry.rotations,
-            self.displacements[:, self.symmetry.permutations]
+            "nxy,lnmy->lnmx",
+            self.symmetry.rotations,
+            self.displacements[:, self.symmetry.permutations],
         ).reshape(-1, np.prod(self.structure.positions.shape))
 
     @property
@@ -112,30 +119,34 @@ class Hessian:
     @property
     def inequivalent_displacements(self):
         if self._inequivalent_displacements is None:
-            self._inequivalent_displacements = self.all_displacements[self.inequivalent_indices]
+            self._inequivalent_displacements = self.all_displacements[
+                self.inequivalent_indices
+            ]
             self._inequivalent_displacements -= self.origin.flatten()
         return self._inequivalent_displacements
 
     @property
     def inequivalent_forces(self):
         forces = np.einsum(
-            'nxy,lnmy->lnmx', self.symmetry.rotations, self.forces[:, self.symmetry.permutations]
+            "nxy,lnmy->lnmx",
+            self.symmetry.rotations,
+            self.forces[:, self.symmetry.permutations],
         ).reshape(-1, np.prod(self.structure.positions.shape))
         return forces[self.inequivalent_indices]
 
     @property
     def _x_outer(self):
-        return np.einsum('ik,ij->kj', *2 * [self.inequivalent_displacements])
+        return np.einsum("ik,ij->kj", *2 * [self.inequivalent_displacements])
 
     @property
     def hessian(self):
         if self._hessian is None:
             H = -np.einsum(
-                'kj,in,ik->nj',
+                "kj,in,ik->nj",
                 np.linalg.inv(self._x_outer),
                 self.inequivalent_forces,
                 self.inequivalent_displacements,
-                optimize=True
+                optimize=True,
             )
             self._hessian = 0.5 * (H + H.T)
         return self._hessian
@@ -149,10 +160,19 @@ class Hessian:
     def vibrational_frequencies(self):
         if self._nu is None:
             H = self.hessian
-            nu_square = (np.linalg.eigh(
-                H / self._mass_tensor
-            )[0] * unit.electron_volt / unit.angstrom**2 / unit.amu).to('THz**2').magnitude
-            self._nu = np.sign(nu_square) * np.sqrt(np.absolute(nu_square)) / (2 * np.pi)
+            nu_square = (
+                (
+                    np.linalg.eigh(H / self._mass_tensor)[0]
+                    * unit.electron_volt
+                    / unit.angstrom ** 2
+                    / unit.amu
+                )
+                .to("THz**2")
+                .magnitude
+            )
+            self._nu = (
+                np.sign(nu_square) * np.sqrt(np.absolute(nu_square)) / (2 * np.pi)
+            )
         return self._nu
 
     def get_free_energy(self, temperature):
@@ -167,7 +187,10 @@ class Hessian:
 
     @property
     def minimum_displacements(self):
-        return generate_displacements(structure=self.structure, symprec=self._symprec) * self.dx
+        return (
+            generate_displacements(structure=self.structure, symprec=self._symprec)
+            * self.dx
+        )
 
     @property
     def displacements(self):
@@ -175,7 +198,8 @@ class Hessian:
             self.displacements = self.minimum_displacements
             if self.include_zero_displacement:
                 self.displacements = np.concatenate(
-                    ([np.zeros_like(self.structure.positions)], self.displacements), axis=0
+                    ([np.zeros_like(self.structure.positions)], self.displacements),
+                    axis=0,
                 )
         return np.asarray(self._displacements)
 
@@ -186,7 +210,7 @@ class Hessian:
 
     @property
     def _fit(self):
-        E = self.energy + 0.5 * np.einsum('nij,nij->n', self.forces, self.displacements)
+        E = self.energy + 0.5 * np.einsum("nij,nij->n", self.forces, self.displacements)
         E = np.repeat(E, len(self.symmetry.rotations))[self.inequivalent_indices]
         reg = LinearRegression()
         reg.fit(self.inequivalent_forces, E)
@@ -254,6 +278,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
         `self.input['num_points'] = 1`, in which case all values are returned for the given
         volume of the reference structure.
     """
+
     def __init__(self, project, job_name):
         """
 
@@ -265,8 +290,8 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
         self.__name__ = "QuasiHarmonicApproximation"
         self.__version__ = "0.0.1"
         self.input["displacement"] = (0.01, "Atom displacement magnitude")
-        self.input['symprec'] = 1.0e-2
-        self.input['include_zero_displacement'] = True
+        self.input["symprec"] = 1.0e-2
+        self.input["include_zero_displacement"] = True
         self.input["num_points"] = (11, "number of sample points")
         self.input["vol_range"] = (
             0.1,
@@ -278,9 +303,11 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
 
     @property
     def strain_lst(self):
-        if self.input['num_points'] == 1:
+        if self.input["num_points"] == 1:
             return [0]
-        return np.linspace(-1, 1, self.input['num_points']) * self.input['vol_range'] / 2
+        return (
+            np.linspace(-1, 1, self.input["num_points"]) * self.input["vol_range"] / 2
+        )
 
     @property
     def hessian(self):
@@ -290,12 +317,12 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
 
     def get_supercells_with_displacements(self):
         dx = self.structure.positions + self.hessian.displacements
-        sc_dx = np.einsum('ij,...i->...j', np.linalg.inv(self.structure.cell), dx)
-        positions = np.concatenate((len(self.strain_lst)*[sc_dx]))
+        sc_dx = np.einsum("ij,...i->...j", np.linalg.inv(self.structure.cell), dx)
+        positions = np.concatenate((len(self.strain_lst) * [sc_dx]))
         cell = np.repeat(
             self.structure.cell * (1 + self.strain_lst[:, np.newaxis, np.newaxis]),
             len(self.hessian.displacements),
-            axis=0
+            axis=0,
         )
         return cell, positions
 
@@ -321,26 +348,26 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
         """
         super().from_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            if 'displacements' in hdf5_input.list_nodes():
-                self.hessian.displacements = hdf5_input['displacements']
+            if "displacements" in hdf5_input.list_nodes():
+                self.hessian.displacements = hdf5_input["displacements"]
 
     def load_output(self):
         if self.ref_job.server.run_mode.interactive:
             inspect = self.project_hdf5.inspect(self.child_ids[0])
             forces_lst = inspect["output/generic/forces"]
-            energy_lst = inspect['output/generic/energy_pot']
+            energy_lst = inspect["output/generic/energy_pot"]
         else:
             pr_job = self.project_hdf5.project.open(self.job_name + "_hdf5")
             forces_lst, energy_lst = [], []
             for job_name in self._get_jobs_sorted():
                 inspect = pr_job.inspect(job_name)
             forces_lst.append(inspect["output/generic/forces"])
-            energy_lst.append(inspect['output/generic/energy_pot'])
+            energy_lst.append(inspect["output/generic/energy_pot"])
         forces_lst = np.asarray(forces_lst).reshape(
-            (self.input['num_points'], ) + self.hessian.displacements.shape
+            (self.input["num_points"],) + self.hessian.displacements.shape
         )
         energy_lst = np.asarray(energy_lst).reshape(
-            self.input['num_points'], len(self.hessian.displacements)
+            self.input["num_points"], len(self.hessian.displacements)
         )
         return forces_lst, energy_lst
 
@@ -369,17 +396,21 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
         if self._td is None:
             self._td = Thermodynamics(
                 self.strain_lst,
-                self['output/vibrational_frequencies'],
-                self['output/box_energy'],
-                self.hessian.volume
+                self["output/vibrational_frequencies"],
+                self["output/box_energy"],
+                self.hessian.volume,
             )
         return self._td
 
     def get_helmholtz_free_energy(self, temperature, strain=None):
-        return self._thermo.get_helmholtz_free_energy(temperature=temperature, strain=strain)
+        return self._thermo.get_helmholtz_free_energy(
+            temperature=temperature, strain=strain
+        )
 
     def get_gibbs_free_energy(self, temperature, pressure):
-        return self._thermo.get_gibbs_free_energy(temperature=temperature, pressure=pressure)
+        return self._thermo.get_gibbs_free_energy(
+            temperature=temperature, pressure=pressure
+        )
 
     def get_volume(self, temperature, pressure):
         return self.hessian.volume * (
@@ -394,9 +425,11 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
 
     def validate_ready_to_run(self):
         if self.ref_job._generic_input["calc_mode"] != "static":
-            raise ValueError("Phonopy reference jobs should be static calculations, but got {}".format(
-                self.ref_job._generic_input["calc_mode"]
-            ))
+            raise ValueError(
+                "Phonopy reference jobs should be static calculations, but got {}".format(
+                    self.ref_job._generic_input["calc_mode"]
+                )
+            )
         super().validate_ready_to_run()
 
 
@@ -419,15 +452,17 @@ class Thermodynamics:
 
     @property
     def coeff(self):
-        return np.einsum('ni,nj->ji', self.fit_mat, self.free_energy)
+        return np.einsum("ni,nj->ji", self.fit_mat, self.free_energy)
 
     @property
     def free_energy(self):
         if self._free_energy is None:
-            self._free_energy = np.array([
-                get_helmholtz_free_energy(nu, self.temperature, E)
-                for nu, E in zip(self.nu, self.E)
-            ])
+            self._free_energy = np.array(
+                [
+                    get_helmholtz_free_energy(nu, self.temperature, E)
+                    for nu, E in zip(self.nu, self.E)
+                ]
+            )
         return self._free_energy
 
     @staticmethod
@@ -451,39 +486,47 @@ class Thermodynamics:
     @property
     def fit_mat(self):
         if self._fit_mat is None:
-            s_ni = self.strain[:, np.newaxis]**np.arange(4)
-            S_inv = np.linalg.inv(np.einsum('ni,nk->ik', *2 * [s_ni]))
-            self._fit_mat = np.einsum('ik,nk->ni', S_inv, s_ni)
+            s_ni = self.strain[:, np.newaxis] ** np.arange(4)
+            S_inv = np.linalg.inv(np.einsum("ni,nk->ik", *2 * [s_ni]))
+            self._fit_mat = np.einsum("ik,nk->ni", S_inv, s_ni)
         return self._fit_mat
 
     def _get_min_strain(self, pressure):
         c = self.coeff.T
-        return (-c[2] + np.sqrt(c[2]**2 - 3 * c[3] * (c[1] + pressure.flatten()))) / (3 * c[3])
+        return (-c[2] + np.sqrt(c[2] ** 2 - 3 * c[3] * (c[1] + pressure.flatten()))) / (
+            3 * c[3]
+        )
 
     def get_helmholtz_free_energy(self, temperature, strain=None):
         temperature, strain = self._harmonize(temperature, strain)
         self.temperature = temperature
         if strain is None or len(self.strain) == 1:
             return self.free_energy.squeeze()
-        return np.einsum(
-            'ik,ik->i', self.coeff, strain.flatten()[..., np.newaxis]**np.arange(4)
-        ).reshape(np.shape(temperature)).squeeze()
+        return (
+            np.einsum(
+                "ik,ik->i",
+                self.coeff,
+                strain.flatten()[..., np.newaxis] ** np.arange(4),
+            )
+            .reshape(np.shape(temperature))
+            .squeeze()
+        )
 
     def get_gibbs_free_energy(self, temperature, pressure):
         temperature, pressure = self._harmonize(temperature, pressure)
         pV = (
-            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom**3).to('eV')
+            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom ** 3).to("eV")
         ).magnitude
         self.temperature = temperature
         strain = self._get_min_strain(pV)
         return np.einsum(
-            'ik,ik->i', self.coeff, strain.flatten()[:, np.newaxis]**np.arange(4)
+            "ik,ik->i", self.coeff, strain.flatten()[:, np.newaxis] ** np.arange(4)
         ).reshape(np.shape(temperature))
 
     def get_strain(self, temperature, pressure):
         temperature, pressure = self._harmonize(temperature, pressure)
         pV = (
-            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom**3).to('eV')
+            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom ** 3).to("eV")
         ).magnitude
         self.temperature = temperature
         return self._get_min_strain(pV).reshape(np.shape(temperature))
@@ -491,8 +534,12 @@ class Thermodynamics:
     def get_pressure(self, temperature, strain):
         temperature, strain = self._harmonize(temperature, strain)
         self.temperature = temperature
-        pressure = -np.einsum(
-            'ik,ik->i', (self.coeff * np.arange(4))[:, 1:],
-            np.array([strain]).flatten()[:, np.newaxis]**np.arange(3)
-        ).reshape(np.shape(strain)) / self.volume
-        return (pressure / 1.0e9 * unit.eV / unit.angstrom**3).to(unit.Pa).magnitude
+        pressure = (
+            -np.einsum(
+                "ik,ik->i",
+                (self.coeff * np.arange(4))[:, 1:],
+                np.array([strain]).flatten()[:, np.newaxis] ** np.arange(3),
+            ).reshape(np.shape(strain))
+            / self.volume
+        )
+        return (pressure / 1.0e9 * unit.eV / unit.angstrom ** 3).to(unit.Pa).magnitude
