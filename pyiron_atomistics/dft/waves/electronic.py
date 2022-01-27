@@ -51,6 +51,7 @@ class ElectronicStructure(object):
         self.n_spins = 1
         self._structure = None
         self._orbital_dict = None
+        self._output_dict = {}
 
     def add_kpoint(self, value, weight):
         """
@@ -469,6 +470,9 @@ class ElectronicStructure(object):
         """
         self._grand_dos_matrix = val
 
+    def __getitem__(self, item):
+        return self._output_dict[item]
+
     def to_hdf(self, hdf, group_name="electronic_structure"):
         """
         Store the object to hdf5 file
@@ -533,6 +537,7 @@ class ElectronicStructure(object):
                         self.grand_dos_matrix = h_dos["grand_dos_matrix"]
                     if "resolved_densities" in nodes:
                         self.resolved_densities = h_dos["resolved_densities"]
+                self._output_dict = h_es.copy()
             self.generate_from_matrices()
 
     def to_hdf_old(self, hdf, group_name="electronic_structure"):
@@ -589,6 +594,7 @@ class ElectronicStructure(object):
                 self.grand_dos_matrix = h_es["grand_dos_matrix"]
             if "resolved_densities" in nodes:
                 self.resolved_densities = h_es["resolved_densities"]
+            self._output_dict = h_es.copy()
         self.generate_from_matrices()
 
     def generate_from_matrices(self):
