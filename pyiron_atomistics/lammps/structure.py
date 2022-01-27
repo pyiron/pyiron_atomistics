@@ -117,7 +117,9 @@ class UnfoldingPrism(Prism):
         self.A = apre
 
         if self.is_skewed() and (not (pbc[0] and pbc[1] and pbc[2])):
-            warnings.warn( "Skewed lammps cells should have PBC == True in all directions!")
+            warnings.warn(
+                "Skewed lammps cells should have PBC == True in all directions!"
+            )
 
     def unfold_cell(self, cell):
         """
@@ -431,12 +433,17 @@ class LammpsStructure(GenericParameters):
                     for i, v in enumerate(val["element_list"]):
                         el_2_list = self._structure.select_index(v)
                         cutoff_dist = val["cutoff_list"][i]
-                        for j, ind in enumerate(np.array(neighbors.indices, dtype=object)[el_1_list]):
+                        for j, ind in enumerate(
+                            np.array(neighbors.indices, dtype=object)[el_1_list]
+                        ):
                             # Only chose those indices within the cutoff distance and which belong
                             # to the species defined in the element_list
                             # i is the index of each bond type, and j is the element index
                             id_el = el_1_list[j]
-                            bool_1 = np.array(neighbors.distances, dtype=object)[id_el] <= cutoff_dist
+                            bool_1 = (
+                                np.array(neighbors.distances, dtype=object)[id_el]
+                                <= cutoff_dist
+                            )
                             act_ind = ind[bool_1]
                             bool_2 = np.in1d(act_ind, el_2_list)
                             final_ind = act_ind[bool_2]
@@ -444,14 +451,19 @@ class LammpsStructure(GenericParameters):
                             bond_type = val["bond_type_list"][i]
                             angle_type = val["angle_type_list"][i]
                             # Draw only maximum allowed bonds
-                            final_ind = final_ind[:val["max_bond_list"][i]]
+                            final_ind = final_ind[: val["max_bond_list"][i]]
                             for fi in final_ind:
                                 bonds_lst.append([id_el + 1, fi + 1])
                                 bond_type_lst.append(bond_type)
                             # Draw angles if at least 2 bonds are present and if an angle type is defined for this
                             # particular set of bonds
-                            if len(final_ind) >= 2 and val["angle_type_list"][i] is not None:
-                                angles_lst.append([final_ind[0] + 1, id_el + 1, final_ind[1] + 1])
+                            if (
+                                len(final_ind) >= 2
+                                and val["angle_type_list"][i] is not None
+                            ):
+                                angles_lst.append(
+                                    [final_ind[0] + 1, id_el + 1, final_ind[1] + 1]
+                                )
                                 angle_type_lst.append(angle_type)
         m_lst = np.array(molecule_lst)
         molecule_lst = m_lst[m_lst[:, 0].argsort()]
@@ -495,7 +507,9 @@ class LammpsStructure(GenericParameters):
         for atom in molecule_lst:
             id_atom, id_mol, id_species = atom
             x, y, z = coords[id_atom]
-            ind = np.argwhere(np.array(species_translate_list) == id_species).flatten()[0]
+            ind = np.argwhere(np.array(species_translate_list) == id_species).flatten()[
+                0
+            ]
             el_id = self._structure.species[ind].Abbreviation
             atoms += (
                 format_str.format(
@@ -521,7 +535,11 @@ class LammpsStructure(GenericParameters):
             for i_angle, id_vec in enumerate(angles_lst):
                 angles_str += (
                     "{0:d} {1:d} {2:d} {3:d} {4:d}".format(
-                        i_angle + 1, angle_type_lst[i_angle], id_vec[0], id_vec[1], id_vec[2]
+                        i_angle + 1,
+                        angle_type_lst[i_angle],
+                        id_vec[0],
+                        id_vec[1],
+                        id_vec[2],
                     )
                     + "\n"
                 )
@@ -629,7 +647,9 @@ class LammpsStructure(GenericParameters):
             if el in el_dict.keys():
                 id_el = el_dict[el]
             else:
-                raise ValueError("Selected potential does not support the existing chemical composition")
+                raise ValueError(
+                    "Selected potential does not support the existing chemical composition"
+                )
             dim = self._structure.dimension
             c = np.zeros(3)
             c[:dim] = coord

@@ -34,9 +34,13 @@ class Report(object):
         """
         with open(filename, "r") as f:
             lines = f.readlines()
-        rel_lines = [lines[i + 2] for i, line in enumerate(lines) if "Blue_moon" in line]
+        rel_lines = [
+            lines[i + 2] for i, line in enumerate(lines) if "Blue_moon" in line
+        ]
         if len(rel_lines) > 0:
-            [lam, _, _, _] = [val for val in np.genfromtxt(rel_lines, usecols=[1, 2, 3, 4]).T]
+            [lam, _, _, _] = [
+                val for val in np.genfromtxt(rel_lines, usecols=[1, 2, 3, 4]).T
+            ]
             rel_lines = [lines[i] for i, line in enumerate(lines) if "cc>" in line]
             cv = np.genfromtxt(rel_lines, usecols=[2])
             fe = cumtrapz(lam, cv)

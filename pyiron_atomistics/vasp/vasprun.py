@@ -218,16 +218,27 @@ class Vasprun(object):
                                         else:
                                             count += 1
                                     if species_key is not None:
-                                        pse.add_element(clean_character(elements[1].text), species_key)
+                                        pse.add_element(
+                                            clean_character(elements[1].text),
+                                            species_key,
+                                        )
                                         special_element = pse.element(species_key)
                                         species_dict[special_element] = dict()
-                                        species_dict[special_element]["n_atoms"] = int(elements[0].text)
-                                        species_dict[special_element]["valence"] = float(elements[3].text)
+                                        species_dict[special_element]["n_atoms"] = int(
+                                            elements[0].text
+                                        )
+                                        species_dict[special_element][
+                                            "valence"
+                                        ] = float(elements[3].text)
                                 else:
                                     species_key = elements[1].text
                                     species_dict[species_key] = dict()
-                                    species_dict[species_key]["n_atoms"] = int(elements[0].text)
-                                    species_dict[species_key]["valence"] = float(elements[3].text)
+                                    species_dict[species_key]["n_atoms"] = int(
+                                        elements[0].text
+                                    )
+                                    species_dict[species_key]["valence"] = float(
+                                        elements[3].text
+                                    )
         d["species_dict"] = species_dict
         species_list = list()
         for key, val in species_dict.items():
@@ -466,9 +477,9 @@ class Vasprun(object):
     @staticmethod
     def parse_cce_to_dict(node, d):
         for item in node:
-            if item.attrib['name'] not in list(d.keys()):
-                d[item.attrib['name']] = list()
-            d[item.attrib['name']].append(float(item.text))
+            if item.attrib["name"] not in list(d.keys()):
+                d[item.attrib["name"]] = list()
+            d[item.attrib["name"]].append(float(item.text))
 
     def parse_eigenvalues_to_dict(self, node, d):
         """
@@ -656,7 +667,9 @@ class Vasprun(object):
                     basis[i].selective_dynamics = val
             return basis
         except KeyError:
-            state.logger.warning("The initial structure could not be extracted from vasprun properly")
+            state.logger.warning(
+                "The initial structure could not be extracted from vasprun properly"
+            )
             return
 
     def get_final_structure(self):
@@ -719,10 +732,22 @@ class Vasprun(object):
         if "dftnw_pot" not in self.vasprun_dict.keys():
             return
         try:
-            vasprun_dict_keys = ["dftnw_pot", "dftnw_zval", "dftnw_electrodecharge", "dftnw_vaclevel_upperside_surf",
-                                 "dftnw_vaclevel_lowerside_surf", "dftnw_efermi"]
-            potstat_dict_keys = ["potential_drop", "Ne_charge", "electrode_charge", "vac_level_upper",
-                                 "vac_level_lower", "fermi_level"]
+            vasprun_dict_keys = [
+                "dftnw_pot",
+                "dftnw_zval",
+                "dftnw_electrodecharge",
+                "dftnw_vaclevel_upperside_surf",
+                "dftnw_vaclevel_lowerside_surf",
+                "dftnw_efermi",
+            ]
+            potstat_dict_keys = [
+                "potential_drop",
+                "Ne_charge",
+                "electrode_charge",
+                "vac_level_upper",
+                "vac_level_lower",
+                "fermi_level",
+            ]
             for k, vk in zip(potstat_dict_keys, vasprun_dict_keys):
                 if vk in self.vasprun_dict.keys():
                     potstat_dict[k] = np.array(self.vasprun_dict[vk])
@@ -741,7 +766,9 @@ class Vasprun(object):
             numpy.ndarray: Array of valence charges
         """
         sp_dict = self.vasprun_dict["atominfo"]["species_dict"]
-        return np.hstack([[val["valence"]] * val["n_atoms"] for val in sp_dict.values()])
+        return np.hstack(
+            [[val["valence"]] * val["n_atoms"] for val in sp_dict.values()]
+        )
 
 
 def clean_character(a, remove_char=" "):
