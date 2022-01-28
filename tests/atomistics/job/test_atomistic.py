@@ -12,7 +12,6 @@ from pyiron_base._tests import TestWithCleanProject
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob, Trajectory
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 import warnings
-from nglview.widget import NGLWidget
 
 
 class ToyAtomisticJob(AtomisticGenericJob):
@@ -117,5 +116,3 @@ class TestAtomisticGenericJob(TestWithCleanProject):
         self.assertEqual(len(traj), len(self.job.output.positions))
         traj = self.job.trajectory(atom_indices=[3, 5], snapshot_indices=[3, 4])
         self.assertEqual(len(traj), 2)
-        self.assertIsInstance(self.job.animate_structure(), NGLWidget)
-        self.assertIsInstance(self.job.animate_structure(atom_indices=[3, 5], snapshot_indices=[3, 4]), NGLWidget)

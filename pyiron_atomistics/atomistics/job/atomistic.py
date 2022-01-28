@@ -15,7 +15,6 @@ from pyiron_base import (
     GenericJob as GenericJobCore,
     deprecate,
 )
-from nglview.widget import NGLWidget
 
 try:
     from pyiron_base import ProjectGUI
@@ -315,7 +314,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         camera: str = "orthographic",
         atom_indices: Union[list, np.ndarray] = None,
         snapshot_indices: Union[list, np.ndarray] = None
-    ) -> NGLWidget:
+    ):
         """
         Animates the job if a trajectory is present
 
