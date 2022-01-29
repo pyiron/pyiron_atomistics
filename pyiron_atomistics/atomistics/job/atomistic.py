@@ -320,11 +320,12 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
 
         Args:
             spacefill (bool): If True, then atoms are visualized in spacefill stype
-            show_cell (bool): True if the unitcell is to be shown
+            show_cell (bool): True if the cell boundaries of the structure is to be shown
             stride (int): show animation every stride [::stride]
                           use value >1 to make animation faster
                            default=1
-            particle_size (float): Radius of the spacefills
+            particle_size (float): Scaling factor for the spheres representing the atoms.
+                                    (The radius is determined by the atomic number)
             center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
             camera (str):
                 camera perspective, choose from "orthographic" or "perspective"
