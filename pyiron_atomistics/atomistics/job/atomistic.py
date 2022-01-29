@@ -313,7 +313,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         particle_size: float = 0.5,
         camera: str = "orthographic",
         atom_indices: Union[list, np.ndarray] = None,
-        snapshot_indices: Union[list, np.ndarray] = None
+        snapshot_indices: Union[list, np.ndarray] = None,
     ):
         """
         Animates the job if a trajectory is present
@@ -347,8 +347,12 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             raise ValueError("job must have more than one structure to animate!")
 
         animation = nglview.show_asetraj(
-            self.trajectory(stride=stride, center_of_mass=center_of_mass,
-                            atom_indices=atom_indices, snapshot_indices=snapshot_indices)
+            self.trajectory(
+                stride=stride,
+                center_of_mass=center_of_mass,
+                atom_indices=atom_indices,
+                snapshot_indices=snapshot_indices,
+            )
         )
         if spacefill:
             animation.add_spacefill(radius_type="vdw", scale=0.5, radius=particle_size)
