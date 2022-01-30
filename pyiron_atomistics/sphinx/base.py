@@ -117,7 +117,11 @@ class SphinxBase(GenericDFTJob):
                     result = super().__getitem__(tag)
                 else:
                     result = result[tag]
-                if hasattr(result, "list_nodes") and "NAME" in result.list_nodes() and result["NAME"] == "DataContainer":
+                if (
+                    hasattr(result, "list_nodes")
+                    and "NAME" in result.list_nodes()
+                    and result["NAME"] == "DataContainer"
+                ):
                     result = result.to_object()
             except (ValueError, KeyError):
                 return None
@@ -2046,7 +2050,7 @@ class _SphinxLogParser:
         volume = re.findall("Omega:.*$", self.log_file, re.MULTILINE)
         if len(volume) > 0:
             volume = float(volume[0].split()[1])
-            volume *= BOHR_TO_ANGSTROM ** 3
+            volume *= BOHR_TO_ANGSTROM**3
         else:
             volume = 0
         return np.array(self.n_steps * [volume])

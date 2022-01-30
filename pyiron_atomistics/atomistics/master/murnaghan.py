@@ -31,7 +31,7 @@ eV_div_A3_to_GPa = (
 
 
 def _debye_kernel(xi):
-    return xi ** 3 / (np.exp(xi) - 1)
+    return xi**3 / (np.exp(xi) - 1)
 
 
 def debye_integral(x):
@@ -40,16 +40,16 @@ def debye_integral(x):
 
 def debye_function(x):
     if hasattr(x, "__len__"):
-        return np.array([3 / xx ** 3 * debye_integral(xx) for xx in x])
-    return 3 / x ** 3 * debye_integral(x)
+        return np.array([3 / xx**3 * debye_integral(xx) for xx in x])
+    return 3 / x**3 * debye_integral(x)
 
 
 # https://gitlab.com/ase/ase/blob/master/ase/eos.py
 def birchmurnaghan_energy(V, E0, B0, BP, V0):
     "BirchMurnaghan equation from PRB 70, 224107"
     eta = (V0 / V) ** (1 / 3)
-    return E0 + 9 * B0 * V0 / 16 * (eta ** 2 - 1) ** 2 * (
-        6 + BP * (eta ** 2 - 1) - 4 * eta ** 2
+    return E0 + 9 * B0 * V0 / 16 * (eta**2 - 1) ** 2 * (
+        6 + BP * (eta**2 - 1) - 4 * eta**2
     )
 
 
@@ -88,7 +88,7 @@ def pouriertarantola(V, E0, B0, BP, V0):
     eta = (V / V0) ** (1 / 3)
     squiggle = -3 * np.log(eta)
 
-    E = E0 + B0 * V0 * squiggle ** 2 / 6 * (3 + squiggle * (BP - 2))
+    E = E0 + B0 * V0 * squiggle**2 / 6 * (3 + squiggle * (BP - 2))
     return E
 
 
@@ -235,7 +235,7 @@ class DebyeModel(object):
 
         GPaTokBar = 10
         Ang3_to_Bohr3 = (
-            scipy.constants.angstrom ** 3
+            scipy.constants.angstrom**3
             / scipy.constants.physical_constants["Bohr radius"][0] ** 3
         )
         convert = 67.48  # conversion factor, Moruzzi Eq. (4)
@@ -505,7 +505,7 @@ class EnergyVolumeFit(object):
         a, b, c = np.polyfit(vol_lst, eng_lst, 2)
         v0 = -b / (2 * a)
         pfit_leastsq, perr_leastsq = fit_leastsq(
-            [a * v0 ** 2 + b * v0 + c, 2 * a * v0 * eV_div_A3_to_GPa, 4, v0],
+            [a * v0**2 + b * v0 + c, 2 * a * v0 * eV_div_A3_to_GPa, 4, v0],
             vol_lst,
             eng_lst,
             fittype,
