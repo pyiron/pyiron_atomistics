@@ -339,7 +339,7 @@ class PhonopyJob(AtomisticParallelMaster):
         unit_conversion = (
             scipy.constants.physical_constants["Hartree energy in eV"][0]
             / scipy.constants.physical_constants["Bohr radius"][0] ** 2
-            * scipy.constants.angstrom ** 2
+            * scipy.constants.angstrom**2
         )
         force_shape = np.shape(self.phonopy.force_constants)
         force_reshape = force_shape[0] * force_shape[2]
