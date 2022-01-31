@@ -16,7 +16,7 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-class Lammps(LammpsInteractive ):
+class Lammps(LammpsInteractive):
     """
     Class to setup and run and analyze LAMMPS simulations which is a derivative of
     atomistics.job.generic.GenericJob. The functions in these modules are written in such the function names and

@@ -354,7 +354,7 @@ class Tree:
             volume = self._ref_structure.get_volume(per_atom=True)
             width_buffer = 1 + width_buffer
             width_buffer *= get_volume_of_n_sphere_in_p_norm(3, self.norm_order)
-            num_neighbors = max(14, int(width_buffer * cutoff_radius ** 3 / volume))
+            num_neighbors = max(14, int(width_buffer * cutoff_radius**3 / volume))
         elif num_neighbors is None:
             num_neighbors = self.num_neighbors
         if self.num_neighbors is None:
@@ -575,7 +575,7 @@ class Tree:
         indices = np.indices((len(self.vecs),) + all_arr.shape[:-1])
         v = self.vecs[indices[0], all_arr[np.newaxis, :, :, 0]]
         v += self.vecs[indices[0], all_arr[np.newaxis, :, :, 1]]
-        return np.sum(v ** 2, axis=-1).sum(axis=-1).min(axis=-1)
+        return np.sum(v**2, axis=-1).sum(axis=-1).min(axis=-1)
 
     def __getattr__(self, name):
         """Attributes for the mode. Same as setting `neigh.mode`."""
