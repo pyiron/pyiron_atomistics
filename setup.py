@@ -45,7 +45,7 @@ setup(
         'seekpath==2.0.1',
         'scikit-learn==1.0.2',
         'spglib==1.16.3',
-        'tables==3.6.1'
+        'tables==3.7.0'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
