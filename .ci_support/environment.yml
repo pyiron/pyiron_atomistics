@@ -17,7 +17,7 @@ dependencies:
 - pyiron_base =0.5.2
 - pymatgen =2022.1.24
 - pyscal =2.10.15
-- pytables =3.6.1
+- pytables =3.7.0
 - scipy =1.7.3
 - seekpath =2.0.1
 - scikit-learn =1.0.2
