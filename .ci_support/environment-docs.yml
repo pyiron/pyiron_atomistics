@@ -28,3 +28,4 @@ dependencies:
 - seekpath
 - scikit-learn
 - spglib
+- pip
