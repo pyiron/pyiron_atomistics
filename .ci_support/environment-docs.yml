@@ -10,3 +10,21 @@ dependencies:
 - sphinxcontrib-applehelp
 - seaborn
 - jinja2 <3
+- aimsgb
+- ase
+- defusedxml
+- future
+- h5py
+- matplotlib-base
+- mendeleev
+- numpy
+- pandas
+- phonopy
+- pyiron_base
+- pymatgen
+- pyscal
+- pytables
+- scipy
+- seekpath
+- scikit-learn
+- spglib
