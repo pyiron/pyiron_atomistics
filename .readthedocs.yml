@@ -14,11 +14,11 @@ formats: []
 
 # Install pyiron from conda 
 conda:
-  environment: .ci_support/environment-docs.yml
+  environment: .ci_support/environment.yml
 
 # Optionally set the version of Python and requirements required to build your docs
 python:
-  version: 3.7
+  version: 3.9
   install:
     - method: pip
       path: .
