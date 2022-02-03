@@ -1,5 +1,12 @@
 # Unreleased
 
+# pyiron_atomistics-0.2.36
+- Update Readthedocs ([#519](https://github.com/pyiron/pyiron_atomistics/pull/519))
+- Selected animation ([#513](https://github.com/pyiron/pyiron_atomistics/pull/513))
+- Spx refactor ([#505](https://github.com/pyiron/pyiron_atomistics/pull/505))
+- Make codebase black ([#507](https://github.com/pyiron/pyiron_atomistics/pull/507) and [#517](https://github.com/pyiron/pyiron_atomistics/pull/517))
+- Dependency updates: [#494](https://github.com/pyiron/pyiron_atomistics/pull/494), [#515](https://github.com/pyiron/pyiron_atomistics/pull/515), [#516](https://github.com/pyiron/pyiron_atomistics/pull/516), [#510](https://github.com/pyiron/pyiron_atomistics/pull/510), [#503](https://github.com/pyiron/pyiron_atomistics/pull/503), [#509](https://github.com/pyiron/pyiron_atomistics/pull/509), [#520](https://github.com/pyiron/pyiron_atomistics/pull/520)
+
 # pyiron_atomistics-0.2.35
 - High index surfaces  ([#400](https://github.com/pyiron/pyiron_atomistics/pull/400))
 - Consistent indices for StructureStorage.get_structures ([#482](https://github.com/pyiron/pyiron_atomistics/pull/482))
