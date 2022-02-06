@@ -435,7 +435,9 @@ class PhonopyJob(AtomisticParallelMaster):
             axis = ax
         if axis is None:
             _, axis = plt.subplots(1, 1)
-        axis.plot(self["output/dos_energies"], self["output/dos_total"], *args, **kwargs)
+        axis.plot(
+            self["output/dos_energies"], self["output/dos_total"], *args, **kwargs
+        )
         axis.set_xlabel("Frequency [THz]")
         axis.set_ylabel("DOS")
         axis.set_title("Phonon DOS vs Energy")
