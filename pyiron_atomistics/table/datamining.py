@@ -83,6 +83,7 @@ class TableJob(BaseTableJob):
 
     More can be found on this page: https://github.com/pyiron/pyiron_atomistics/blob/master/notebooks/data_mining.ipynb
     """
+
     def __init__(self, project, job_name):
         super(TableJob, self).__init__(project, job_name)
         self._system_function_lst += [
@@ -125,5 +126,5 @@ class TableJob(BaseTableJob):
         self._pyiron_table = PyironTable(
             project=None,
             system_function_lst=self._system_function_lst,
-            csv_file_name=os.path.join(self.working_directory, "pyirontable.csv")
+            csv_file_name=os.path.join(self.working_directory, "pyirontable.csv"),
         )

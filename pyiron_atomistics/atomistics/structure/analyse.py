@@ -5,12 +5,21 @@
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
-from scipy.spatial import Voronoi
-from pyiron_atomistics.atomistics.structure.pyscal import get_steinhardt_parameter_structure, analyse_cna_adaptive, \
-    analyse_centro_symmetry, analyse_diamond_structure, analyse_voronoi_volume, analyse_find_solids
+from scipy.spatial import Voronoi, Delaunay
+from scipy.spatial.qhull import _QhullUser
+from pyiron_atomistics.atomistics.structure.pyscal import (
+    get_steinhardt_parameter_structure,
+    analyse_cna_adaptive,
+    analyse_centro_symmetry,
+    analyse_diamond_structure,
+    analyse_voronoi_volume,
+    analyse_find_solids,
+)
 from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
+from typing import Type
+
 deprecate = Deprecator()
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
@@ -46,9 +55,9 @@ def get_mean_positions(positions, cell, pbc, labels):
     # Get displacement vectors from reference points to all other points for the same labels
     all_positions = positions - mean_positions[labels]
     # Account for pbc
-    all_positions = np.einsum('ji,nj->ni', np.linalg.inv(cell), all_positions)
+    all_positions = np.einsum("ji,nj->ni", np.linalg.inv(cell), all_positions)
     all_positions[:, pbc] -= np.rint(all_positions)[:, pbc]
-    all_positions = np.einsum('ji,nj->ni', cell, all_positions)
+    all_positions = np.einsum("ji,nj->ni", cell, all_positions)
     # Add average displacement vector of each label to the reference point
     np.add.at(mean_positions, labels, (all_positions.T / counts[labels]).T)
     return mean_positions
@@ -70,7 +79,9 @@ def get_average_of_unique_labels(labels, values):
     labels = np.unique(labels, return_inverse=True)[1]
     unique_labels = np.unique(labels)
     mat = coo_matrix((np.ones_like(labels), (labels, np.arange(len(labels)))))
-    mean_values = np.asarray(mat.dot(np.asarray(values).reshape(len(labels), -1)) / mat.sum(axis=1))
+    mean_values = np.asarray(
+        mat.dot(np.asarray(values).reshape(len(labels), -1)) / mat.sum(axis=1)
+    )
     if np.prod(mean_values.shape).astype(int) == len(unique_labels):
         return mean_values.flatten()
     return mean_values
@@ -105,6 +116,7 @@ class Interstitials:
         - `get_volumes()`
         - `get_areas()`
     """
+
     def __init__(
         self,
         structure,
@@ -156,7 +168,7 @@ class Interstitials:
             use_voronoi=use_voronoi,
             variance_buffer=variance_buffer,
             n_iterations=n_iterations,
-            eps=eps
+            eps=eps,
         )
 
     def _initialize(
@@ -166,7 +178,7 @@ class Interstitials:
         use_voronoi=False,
         variance_buffer=0.01,
         n_iterations=2,
-        eps=0.1
+        eps=0.1,
     ):
         if use_voronoi:
             self.positions = self.structure.analyse.get_voronoi_vertices()
@@ -253,9 +265,11 @@ class Interstitials:
     def _create_gridpoints(self, n_gridpoints_per_angstrom=5):
         cell = self.structure.get_vertical_length()
         n_points = (n_gridpoints_per_angstrom * cell).astype(int)
-        positions = np.meshgrid(*[np.linspace(0, 1, n_points[i], endpoint=False) for i in range(3)])
+        positions = np.meshgrid(
+            *[np.linspace(0, 1, n_points[i], endpoint=False) for i in range(3)]
+        )
         positions = np.stack(positions, axis=-1).reshape(-1, 3)
-        return np.einsum('ji,nj->ni', self.structure.cell, positions)
+        return np.einsum("ji,nj->ni", self.structure.cell, positions)
 
     def _remove_too_close(self, min_distance=1):
         neigh = self.structure.get_neighborhood(self.positions, num_neighbors=1)
@@ -333,7 +347,8 @@ class Interstitials:
 
 
 class Analyse:
-    """ Class to analyse atom structure.  """
+    """Class to analyse atom structure."""
+
     def __init__(self, structure):
         """
         Args:
@@ -361,9 +376,20 @@ class Analyse:
             n_iterations=n_iterations,
             eps=eps,
         )
-    get_interstitials.__doc__ = Interstitials.__doc__.replace('Class', 'Function') + Interstitials.__init__.__doc__
 
-    def get_layers(self, distance_threshold=0.01, id_list=None, wrap_atoms=True, planes=None, cluster_method=None):
+    get_interstitials.__doc__ = (
+        Interstitials.__doc__.replace("Class", "Function")
+        + Interstitials.__init__.__doc__
+    )
+
+    def get_layers(
+        self,
+        distance_threshold=0.01,
+        id_list=None,
+        wrap_atoms=True,
+        planes=None,
+        cluster_method=None,
+    ):
         """
         Get an array of layer numbers.
 
@@ -406,16 +432,18 @@ class Analyse:
         >>> layers = structure.analyse.get_layers(cluster_method=DBSCAN())
         """
         if distance_threshold <= 0:
-            raise ValueError('distance_threshold must be a positive float')
+            raise ValueError("distance_threshold must be a positive float")
         if id_list is not None and len(id_list) == 0:
-            raise ValueError('id_list must contain at least one id')
+            raise ValueError("id_list must contain at least one id")
         if wrap_atoms and planes is None:
             positions, indices = self._structure.get_extended_positions(
                 width=distance_threshold, return_indices=True
             )
             if id_list is not None:
                 id_list = np.arange(len(self._structure))[np.array(id_list)]
-                id_list = np.any(id_list[:, np.newaxis] == indices[np.newaxis, :], axis=0)
+                id_list = np.any(
+                    id_list[:, np.newaxis] == indices[np.newaxis, :], axis=0
+                )
                 positions = positions[id_list]
                 indices = indices[id_list]
         else:
@@ -426,12 +454,14 @@ class Analyse:
                 positions = self._structure.get_wrapped_coordinates(positions)
         if planes is not None:
             mat = np.asarray(planes).reshape(-1, 3)
-            positions = np.einsum('ij,i,nj->ni', mat, 1 / np.linalg.norm(mat, axis=-1), positions)
+            positions = np.einsum(
+                "ij,i,nj->ni", mat, 1 / np.linalg.norm(mat, axis=-1), positions
+            )
         if cluster_method is None:
             cluster_method = AgglomerativeClustering(
-                linkage='complete',
+                linkage="complete",
                 n_clusters=None,
-                distance_threshold=distance_threshold
+                distance_threshold=distance_threshold,
             )
         layers = []
         for ii, x in enumerate(positions.T):
@@ -442,13 +472,18 @@ class Analyse:
             if wrap_atoms and planes is None and self._structure.pbc[ii]:
                 mean_positions = get_average_of_unique_labels(labels, positions)
                 scaled_positions = np.einsum(
-                    'ji,nj->ni', np.linalg.inv(self._structure.cell), mean_positions
+                    "ji,nj->ni", np.linalg.inv(self._structure.cell), mean_positions
                 )
-                unique_inside_box = np.all(np.absolute(scaled_positions - 0.5 + 1.0e-8) < 0.5, axis=-1)
+                unique_inside_box = np.all(
+                    np.absolute(scaled_positions - 0.5 + 1.0e-8) < 0.5, axis=-1
+                )
                 arr_inside_box = np.any(
-                    labels[:, None] == np.unique(labels)[unique_inside_box][None, :], axis=-1
+                    labels[:, None] == np.unique(labels)[unique_inside_box][None, :],
+                    axis=-1,
                 )
-                first_occurences = np.unique(indices[arr_inside_box], return_index=True)[1]
+                first_occurences = np.unique(
+                    indices[arr_inside_box], return_index=True
+                )[1]
                 labels = labels[arr_inside_box]
                 labels -= np.min(labels)
                 labels = labels[first_occurences]
@@ -457,9 +492,18 @@ class Analyse:
             return np.asarray(layers).flatten()
         return np.vstack(layers).T
 
-    @deprecate(arguments={"clustering": "use n_clusters=None instead of clustering=False."})
-    def pyscal_steinhardt_parameter(self, neighbor_method="cutoff", cutoff=0, n_clusters=2,
-                                    q=None, averaged=False, clustering=None):
+    @deprecate(
+        arguments={"clustering": "use n_clusters=None instead of clustering=False."}
+    )
+    def pyscal_steinhardt_parameter(
+        self,
+        neighbor_method="cutoff",
+        cutoff=0,
+        n_clusters=2,
+        q=None,
+        averaged=False,
+        clustering=None,
+    ):
         """
         Calculate Steinhardts parameters
 
@@ -476,8 +520,13 @@ class Analyse:
             numpy.ndarray: If `clustering=True`, an additional per-atom array of cluster ids is also returned
         """
         return get_steinhardt_parameter_structure(
-            self._structure, neighbor_method=neighbor_method, cutoff=cutoff, n_clusters=n_clusters,
-            q=q, averaged=averaged, clustering=clustering
+            self._structure,
+            neighbor_method=neighbor_method,
+            cutoff=cutoff,
+            n_clusters=n_clusters,
+            q=q,
+            averaged=averaged,
+            clustering=clustering,
         )
 
     def pyscal_cna_adaptive(self, mode="total", ovito_compatibility=False):
@@ -496,7 +545,9 @@ class Analyse:
         Returns:
             (depends on `mode`)
         """
-        return analyse_cna_adaptive(atoms=self._structure, mode=mode, ovito_compatibility=ovito_compatibility)
+        return analyse_cna_adaptive(
+            atoms=self._structure, mode=mode, ovito_compatibility=ovito_compatibility
+        )
 
     def pyscal_centro_symmetry(self, num_neighbors=12):
         """
@@ -508,7 +559,9 @@ class Analyse:
         Returns:
             list: list of centrosymmetry parameter
         """
-        return analyse_centro_symmetry(atoms=self._structure, num_neighbors=num_neighbors)
+        return analyse_centro_symmetry(
+            atoms=self._structure, num_neighbors=num_neighbors
+        )
 
     def pyscal_diamond_structure(self, mode="total", ovito_compatibility=False):
         """
@@ -526,17 +579,24 @@ class Analyse:
         Returns:
             (depends on `mode`)
         """
-        return analyse_diamond_structure(atoms=self._structure, mode=mode, ovito_compatibility=ovito_compatibility)
+        return analyse_diamond_structure(
+            atoms=self._structure, mode=mode, ovito_compatibility=ovito_compatibility
+        )
 
     def pyscal_voronoi_volume(self):
-        """    Calculate the Voronoi volume of atoms        """
+        """Calculate the Voronoi volume of atoms"""
         return analyse_voronoi_volume(atoms=self._structure)
 
     def pyscal_find_solids(
-        self, neighbor_method="cutoff",
-        cutoff=0, bonds=0.5,
-        threshold=0.5, avgthreshold=0.6,
-        cluster=False, q=6, right=True,
+        self,
+        neighbor_method="cutoff",
+        cutoff=0,
+        bonds=0.5,
+        threshold=0.5,
+        avgthreshold=0.6,
+        cluster=False,
+        q=6,
+        right=True,
         return_sys=False,
     ):
         """
@@ -561,14 +621,19 @@ class Analyse:
         return analyse_find_solids(
             atoms=self._structure,
             neighbor_method=neighbor_method,
-            cutoff=cutoff, bonds=bonds,
+            cutoff=cutoff,
+            bonds=bonds,
             threshold=threshold,
             avgthreshold=avgthreshold,
-            cluster=cluster, q=q,
-            right=right, return_sys=return_sys,
+            cluster=cluster,
+            q=q,
+            right=right,
+            return_sys=return_sys,
         )
 
-    def get_voronoi_vertices(self, epsilon=2.5e-4, distance_threshold=0, width_buffer=10):
+    def get_voronoi_vertices(
+        self, epsilon=2.5e-4, distance_threshold=0, width_buffer=10
+    ):
         """
         Get voronoi vertices of the box.
 
@@ -597,13 +662,16 @@ class Analyse:
         xx = voro.vertices
         if distance_threshold > 0:
             cluster = AgglomerativeClustering(
-                linkage='single',
-                distance_threshold=distance_threshold,
-                n_clusters=None
+                linkage="single", distance_threshold=distance_threshold, n_clusters=None
             )
             cluster.fit(xx)
             xx = get_average_of_unique_labels(cluster.labels_, xx)
-        xx = xx[np.linalg.norm(xx - self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1) < epsilon]
+        xx = xx[
+            np.linalg.norm(
+                xx - self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1
+            )
+            < epsilon
+        ]
         return xx - epsilon
 
     def get_strain(self, ref_structure, num_neighbors=None, only_bulk_type=False):
@@ -646,10 +714,58 @@ class Analyse:
             structure=self._structure,
             ref_structure=ref_structure,
             num_neighbors=num_neighbors,
-            only_bulk_type=only_bulk_type
+            only_bulk_type=only_bulk_type,
         ).strain
 
-    def cluster_positions(self, positions=None, eps=1, buffer_width=None, return_labels=False):
+    def _get_neighbors(
+        self,
+        position_interpreter: Type[_QhullUser],
+        data_field: str,
+        width_buffer: float = 10,
+    ) -> np.ndarray:
+        positions, indices = self._structure.get_extended_positions(
+            width_buffer, return_indices=True
+        )
+        interpretation = position_interpreter(positions)
+        data = getattr(interpretation, data_field)
+        x = positions[data]
+        return indices[
+            data[
+                np.isclose(self._structure.get_wrapped_coordinates(x), x)
+                .all(axis=-1)
+                .any(axis=-1)
+            ]
+        ]
+
+    def get_voronoi_neighbors(self, width_buffer: float = 10) -> np.ndarray:
+        """
+        Get pairs of atom indices sharing the same Voronoi vertices/areas.
+
+        Args:
+            width_buffer (float): Width of the layer to be added to account for pbc.
+
+        Returns:
+            pairs (ndarray): Pair indices
+        """
+        return self._get_neighbors(Voronoi, "ridge_points", width_buffer=width_buffer)
+
+    def get_delaunay_neighbors(self, width_buffer: float = 10.0) -> np.ndarray:
+        """
+        Get indices of atoms sharing the same Delaunay tetrahedrons (commonly known as Delaunay
+        triangles), i.e. indices of neighboring atoms, which form a tetrahedron, in which no other
+        atom exists.
+
+        Args:
+            width_buffer (float): Width of the layer to be added to account for pbc.
+
+        Returns:
+            pairs (ndarray): Delaunay neighbor indices
+        """
+        return self._get_neighbors(Delaunay, "simplices", width_buffer=width_buffer)
+
+    def cluster_positions(
+        self, positions=None, eps=1, buffer_width=None, return_labels=False
+    ):
         """
         Cluster positions according to the distances. Clustering algorithm uses DBSCAN:
 
@@ -689,9 +805,9 @@ class Analyse:
             positions (numpy.ndarray): Mean positions
             label (numpy.ndarray): Labels of the positions (returned when `return_labels = True`)
         """
-        if positions is None:
-            positions = self._structure.positions
-        positions = np.array(positions)
+        positions = (
+            self._structure.positions if positions is None else np.array(positions)
+        )
         if buffer_width is None:
             buffer_width = eps
         extended_positions, indices = self._structure.get_extended_positions(

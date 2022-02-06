@@ -9,8 +9,10 @@ Alternative structure container that stores them in flattened arrays.
 import numpy as np
 
 from pyiron_base import FlattenedStorage
+from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+
 
 class StructureStorage(FlattenedStorage, HasStructure):
     """
@@ -85,12 +87,15 @@ class StructureStorage(FlattenedStorage, HasStructure):
     def _init_arrays(self):
         super()._init_arrays()
         # 2 character unicode array for chemical symbols
-        self._per_element_arrays["symbols"] = np.full(self._num_elements_alloc, "XX", dtype=np.dtype("U2"))
+        self._per_element_arrays["symbols"] = np.full(
+            self._num_elements_alloc, "XX", dtype=np.dtype("U2")
+        )
         self._per_element_arrays["positions"] = np.empty((self._num_elements_alloc, 3))
 
         self._per_chunk_arrays["cell"] = np.empty((self._num_chunks_alloc, 3, 3))
-        self._per_chunk_arrays["pbc"] = np.empty((self._num_elements_alloc, 3), dtype=bool)
-
+        self._per_chunk_arrays["pbc"] = np.empty(
+            (self._num_elements_alloc, 3), dtype=bool
+        )
 
     @property
     def symbols(self):
@@ -126,7 +131,6 @@ class StructureStorage(FlattenedStorage, HasStructure):
     def pbc(self):
         """:meta private:"""
         return self._per_chunk_arrays["pbc"]
-
 
     def get_elements(self):
         """
@@ -174,14 +178,15 @@ class StructureStorage(FlattenedStorage, HasStructure):
         if structure.spins is not None:
             arrays["spins"] = structure.spins
 
-        self.add_chunk(len(structure),
-                       identifier=identifier,
-                       symbols=np.array(structure.symbols),
-                       positions=structure.positions,
-                       cell=[structure.cell.array],
-                       pbc=[structure.pbc],
-                       **arrays)
-
+        self.add_chunk(
+            len(structure),
+            identifier=identifier,
+            symbols=np.array(structure.symbols),
+            positions=structure.positions,
+            cell=[structure.cell.array],
+            pbc=[structure.pbc],
+            **arrays,
+        )
 
     def _translate_frame(self, frame):
         try:
@@ -190,20 +195,25 @@ class StructureStorage(FlattenedStorage, HasStructure):
             raise KeyError(f"No structure named {frame}.") from None
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
+        elements = self.get_elements()
+        index_map = {e: i for i, e in enumerate(elements)}
         try:
             magmoms = self.get_array("spins", frame)
         except KeyError:
             # not all structures have spins saved on them
             magmoms = None
-        return Atoms(symbols=self.get_array("symbols", frame),
-                     positions=self.get_array("positions", frame),
-                     cell=self.get_array("cell", frame),
-                     pbc=self.get_array("pbc", frame),
-                     magmoms=magmoms)
+        symbols = self.get_array("symbols", frame)
+        return Atoms(
+            species=[Atom(e).element for e in elements],
+            indices=[index_map[e] for e in symbols],
+            positions=self.get_array("positions", frame),
+            cell=self.get_array("cell", frame),
+            pbc=self.get_array("pbc", frame),
+            magmoms=magmoms,
+        )
 
     def _number_of_structures(self):
         return len(self)
-
 
     def _get_hdf_group_name(self):
         return "structures"

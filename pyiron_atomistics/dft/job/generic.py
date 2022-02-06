@@ -3,7 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob, MapFunctions as AtomisticMapFunctions
+from pyiron_atomistics.atomistics.job.atomistic import (
+    AtomisticGenericJob,
+    MapFunctions as AtomisticMapFunctions,
+)
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 import warnings
 
@@ -253,7 +256,9 @@ class GenericDFTJob(AtomisticGenericJob):
         """
         if cell is None:
             if self.structure is None:
-                raise ValueError("Can't generate k-points without structure being set and if cell is not specified")
+                raise ValueError(
+                    "Can't generate k-points without structure being set and if cell is not specified"
+                )
             cell = self.structure.cell
         return get_k_mesh_by_density(cell=cell, k_mesh_spacing=k_mesh_spacing)
 
@@ -367,8 +372,10 @@ class GenericDFTJob(AtomisticGenericJob):
 
             bool : True if the highest band is unoccupied, False if the highest band is occupied
         """
-        return np.all(np.isclose(self["output/electronic_structure/occ_matrix"][:,:,-1], 0)) #shape is n_spin x n_kpoints x n_bands
-    
+        return np.all(
+            np.isclose(self["output/electronic_structure/occ_matrix"][:, :, -1], 0)
+        )  # shape is n_spin x n_kpoints x n_bands
+
     # Backward compatibility
     def get_encut(self):
         return self.encut
@@ -442,9 +449,11 @@ class GenericDFTJob(AtomisticGenericJob):
 
     def modify_kpoints(self):
         if self.k_mesh_spacing is not None:
-            self.set_kpoints(center_shift=self.k_mesh_center_shift,
-                             k_mesh_spacing=self.k_mesh_spacing,
-                             symmetry_reduction=self.reduce_kpoint_symmetry)
+            self.set_kpoints(
+                center_shift=self.k_mesh_center_shift,
+                k_mesh_spacing=self.k_mesh_spacing,
+                symmetry_reduction=self.reduce_kpoint_symmetry,
+            )
 
     def save(self):
         self.modify_kpoints()
@@ -467,22 +476,30 @@ class GenericDFTJob(AtomisticGenericJob):
             (dict): grid and density of states (n_spin x energy_grid)
         """
         if sigma <= 0:
-            raise ValueError('Sigma must be a positive float')
-        k_weights = self['output/electronic_structure/k_weights']
+            raise ValueError("Sigma must be a positive float")
+        k_weights = self["output/electronic_structure/k_weights"]
         if k_weights is None:
-            raise ValueError('k-point weighting not found')
+            raise ValueError("k-point weighting not found")
         e_fermi = 0
         if shift_by_fermi_energy:
-            e_fermi = self['output/electronic_structure/efermi']
-        eigen_values = self['output/electronic_structure/eig_matrix']
-        eigen_values = eigen_values-e_fermi
+            e_fermi = self["output/electronic_structure/efermi"]
+        eigen_values = self["output/electronic_structure/eig_matrix"]
+        eigen_values = eigen_values - e_fermi
         if grid is None:
-            grid = np.arange(eigen_values.min()-5*sigma, eigen_values.max()+5*sigma, sigma)
-        hist = eigen_values[:,:,:,np.newaxis]-grid[np.newaxis,np.newaxis,np.newaxis,:]
-        hist = np.exp(-(hist)**2/(2*sigma**2))*k_weights[np.newaxis,:,np.newaxis,np.newaxis]
-        hist = np.sum(hist, axis=(1,2))
-        hist *= 2/len(eigen_values)/np.sqrt(2*np.pi*sigma**2)
-        return {'grid': grid, 'dos': hist}
+            grid = np.arange(
+                eigen_values.min() - 5 * sigma, eigen_values.max() + 5 * sigma, sigma
+            )
+        hist = (
+            eigen_values[:, :, :, np.newaxis]
+            - grid[np.newaxis, np.newaxis, np.newaxis, :]
+        )
+        hist = (
+            np.exp(-((hist) ** 2) / (2 * sigma**2))
+            * k_weights[np.newaxis, :, np.newaxis, np.newaxis]
+        )
+        hist = np.sum(hist, axis=(1, 2))
+        hist *= 2 / len(eigen_values) / np.sqrt(2 * np.pi * sigma**2)
+        return {"grid": grid, "dos": hist}
 
 
 def get_k_mesh_by_density(cell, k_mesh_spacing=0.5):

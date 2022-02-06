@@ -42,5 +42,5 @@ class Oszicar(object):
         for i, line in enumerate(lines):
             line = line.strip()
             if trigger in line:
-                energy_list.append(float(lines[i-1].strip().split()[2]))
+                energy_list.append(float(lines[i - 1].strip().split()[2]))
         return np.array(energy_list)

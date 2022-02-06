@@ -54,9 +54,11 @@ class Procar(object):
                             eigenvalue=eigenvalue, occupancy=occupancy
                         )
                         band_obj = es_obj.kpoints[-1].bands[-1]
-                        band_obj.resolved_dos_matrix, band_obj.orbital_resolved_dos, band_obj.atom_resolved_dos = self._get_dos_matrix(
-                            lines[i + 2 : i + num_atoms + 4]
-                        )
+                        (
+                            band_obj.resolved_dos_matrix,
+                            band_obj.orbital_resolved_dos,
+                            band_obj.atom_resolved_dos,
+                        ) = self._get_dos_matrix(lines[i + 2 : i + num_atoms + 4])
         return es_obj
 
     @staticmethod

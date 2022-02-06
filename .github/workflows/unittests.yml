@@ -19,8 +19,6 @@ jobs:
         python-version: ['3.10']
         include:
         - operating-system: ubuntu-latest
-          python-version: 3.7
-        - operating-system: ubuntu-latest
           python-version: 3.8
         - operating-system: ubuntu-latest
           python-version: 3.9
