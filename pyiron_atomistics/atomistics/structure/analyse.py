@@ -6,7 +6,6 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi, Delaunay
-from scipy.spatial.qhull import _QhullUser
 from pyiron_atomistics.atomistics.structure.pyscal import (
     get_steinhardt_parameter_structure,
     analyse_cna_adaptive,
@@ -19,6 +18,11 @@ from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
 from typing import Type
+
+try:  # scipy <1.8
+    from scipy.spatial.qhull import _QhullUser
+except ImportError:  # scipy >= 1.8
+    from scipy.spatial._qhull import _QhullUser
 
 deprecate = Deprecator()
 
