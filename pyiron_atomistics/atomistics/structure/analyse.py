@@ -6,7 +6,10 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi, Delaunay
-from scipy.spatial.qhull import _QhullUser
+try:
+    from scipy.spatial.qhull import _QhullUser
+except ImportError:
+    from scipy.spatial._qhull import _QhullUser
 from pyiron_atomistics.atomistics.structure.pyscal import (
     get_steinhardt_parameter_structure,
     analyse_cna_adaptive,
