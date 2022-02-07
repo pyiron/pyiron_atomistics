@@ -17,12 +17,6 @@ from pyiron_atomistics.atomistics.structure.pyscal import (
 from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
-from typing import Type
-
-try:  # scipy <1.8
-    from scipy.spatial.qhull import _QhullUser
-except ImportError:  # scipy >= 1.8
-    from scipy.spatial._qhull import _QhullUser
 
 deprecate = Deprecator()
 
@@ -723,7 +717,7 @@ class Analyse:
 
     def _get_neighbors(
         self,
-        position_interpreter: Type[_QhullUser],
+        position_interpreter,
         data_field: str,
         width_buffer: float = 10,
     ) -> np.ndarray:
