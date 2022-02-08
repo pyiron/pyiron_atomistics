@@ -743,7 +743,6 @@ class Murnaghan(AtomisticParallelMaster):
             erg_lst, vol_lst, err_lst, id_lst = [], [], [], []
             for job_id in self.child_ids:
                 ham = self.project_hdf5.inspect(job_id)
-                print("job_id: ", job_id, ham.status)
                 if "energy_tot" in ham["output/generic"].list_nodes():
                     energy = ham["output/generic/energy_tot"][-1]
                 elif "energy_pot" in ham["output/generic"].list_nodes():
