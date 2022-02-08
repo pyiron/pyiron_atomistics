@@ -770,9 +770,11 @@ class Murnaghan(AtomisticParallelMaster):
             for key, val in self._output.items():
                 hdf5_out[key] = val
         if self.input["fit_type"] == "polynomial":
-            self.fit_polynomial(fit_order=self.input["fit_order"])
+            fit_output = self.fit_polynomial(fit_order=self.input["fit_order"])
         else:
-            self._fit_eos_general(fittype=self.input["fit_type"])
+            fit_output = self._fit_eos_general(fittype=self.input["fit_type"])
+        if fit_output is None:
+            self.status.not_converged = True
 
     def plot(self, num_steps=100, plt_show=True):
         if not self.status.finished:
