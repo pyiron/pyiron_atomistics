@@ -1,5 +1,12 @@
 # Unreleased
 
+# pyiron_atomistics-0.2.37
+
+- Remove _QhullUser import ([#527](https://github.com/pyiron/pyiron_atomistics/pull/527))
+- Add pint as dependency ([#529](https://github.com/pyiron/pyiron_atomistics/pull/529))
+- Some docstrings for phono ([#447](https://github.com/pyiron/pyiron_atomistics/pull/447))
+- Dependency updates:  [#522](https://github.com/pyiron/pyiron_atomistics/pull/522), [#523](https://github.com/pyiron/pyiron_atomistics/pull/523), [#524](https://github.com/pyiron/pyiron_atomistics/pull/524)
+
 # pyiron_atomistics-0.2.36
 - Update Readthedocs ([#519](https://github.com/pyiron/pyiron_atomistics/pull/519))
 - Selected animation ([#513](https://github.com/pyiron/pyiron_atomistics/pull/513))
