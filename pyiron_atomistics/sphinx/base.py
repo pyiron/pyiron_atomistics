@@ -118,7 +118,7 @@ class SphinxBase(GenericDFTJob):
                 else:
                     result = result[tag]
                 if (
-                    hasattr(result, "list_nodes")
+                    isinstance(result, HasGroups)
                     and "NAME" in result.list_nodes()
                     and result["NAME"] == "DataContainer"
                 ):
