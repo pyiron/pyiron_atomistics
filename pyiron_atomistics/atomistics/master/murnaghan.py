@@ -773,7 +773,7 @@ class Murnaghan(AtomisticParallelMaster):
         else:
             self._fit_eos_general(fittype=self.input["fit_type"])
 
-    def plot(self, num_steps=100, plt_show=True, ax=None):
+    def plot(self, num_steps=100, plt_show=True, ax=None, plot_kwargs=None):
         if not self.status.finished:
             raise ValueError(
                 "Job must be successfully run, before calling this method."
@@ -793,7 +793,24 @@ class Murnaghan(AtomisticParallelMaster):
         df = self.output_to_pandas()
         vol_lst, erg_lst = df["volume"].values, df["energy"].values
         x_i = np.linspace(np.min(vol_lst), np.max(vol_lst), num_steps)
-        color = "blue"
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+
+        if "color" in plot_kwargs.keys():
+            color = plot_kwargs["color"]
+            del plot_kwargs["color"]
+        else:
+            color = "blue"
+
+        if "marker" in plot_kwargs.keys():
+            del plot_kwargs["marker"]
+
+        if "label" in plot_kwargs.keys():
+            label = plot_kwargs["label"]
+            del plot_kwargs["label"]
+        else:
+            label = self.input["fit_type"]
 
         if self.fit_dict is not None:
             if self.input["fit_type"] == "polynomial":
@@ -804,9 +821,10 @@ class Murnaghan(AtomisticParallelMaster):
                     x_i,
                     p_fit(x_i),
                     "-",
-                    label=self.input["fit_type"],
+                    label=label,
                     color=color,
                     linewidth=3,
+                    **plot_kwargs,
                 )
             else:
                 V0 = self.fit_dict["volume_eq"]
@@ -820,12 +838,13 @@ class Murnaghan(AtomisticParallelMaster):
                     x_i,
                     eng_fit_lst,
                     "-",
-                    label=self.input["fit_type"],
+                    label=label,
                     color=color,
                     linewidth=3,
+                    **plot_kwargs,
                 )
 
-        ax.plot(vol_lst, erg_lst, "x", color=color, markersize=20)
+        ax.plot(vol_lst, erg_lst, "x", color=color, markersize=20, **plot_kwargs)
         ax.legend()
         ax.set_xlabel("Volume ($\AA^3$)")
         ax.set_ylabel("energy (eV)")
