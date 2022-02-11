@@ -468,7 +468,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
 
     def interactive_energy_pot_getter(self):
         return self.input["epsilon"] * (
-            np.sum(self._s_r ** 12) - np.sum(self._s_r ** 6)
+            np.sum(self._s_r**12) - np.sum(self._s_r**6)
         )
 
     def interactive_energy_tot_getter(self):
@@ -477,12 +477,12 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         )
 
     def interadtive_energy_kin_getter(self):
-        v = np.einsum("ni,n->", self._velocity ** 2, self.structure.get_masses()) / 2
+        v = np.einsum("ni,n->", self._velocity**2, self.structure.get_masses()) / 2
         return (
             (
                 v
-                * self._unit.angstrom ** 2
-                / self._unit.second ** 2
+                * self._unit.angstrom**2
+                / self._unit.second**2
                 / 1e-30
                 * self._unit.amu
             )
@@ -494,8 +494,8 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         all_values = self.input["epsilon"] * np.einsum(
             "ni,n,n->ni",
             self.neigh.flattened.vecs,
-            1 / self.neigh.flattened.distances ** 2,
-            12 * self._s_r ** 12 - 6 * self._s_r ** 6,
+            1 / self.neigh.flattened.distances**2,
+            12 * self._s_r**12 - 6 * self._s_r**6,
         )
         forces = np.zeros_like(self.structure.positions)
         np.add.at(forces, self.neigh.flattened.atom_numbers, all_values)
@@ -511,8 +511,8 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
                 "ni,nj,n,n->ij",
                 self.neigh.flattened.vecs,
                 self.neigh.flattened.vecs,
-                1 / self.neigh.flattened.distances ** 2,
-                12 * self._s_r ** 12 - 6 * self._s_r ** 6,
+                1 / self.neigh.flattened.distances**2,
+                12 * self._s_r**12 - 6 * self._s_r**6,
             )
             * self._unit.electron_volt
         )
@@ -523,15 +523,15 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
                 self._velocity,
                 self.structure.get_masses(),
             )
-            * self._unit.angstrom ** 2
-            / self._unit.second ** 2
+            * self._unit.angstrom**2
+            / self._unit.second**2
             / 1e-30
             * self._unit.amu
         )
         return (
             (pot_part + kin_part)
             / self.structure.get_volume()
-            / self._unit.angstrom ** 3
+            / self._unit.angstrom**3
         ).to(self._unit.pascal).magnitude / 1e9
 
     def interactive_stress_getter(self):

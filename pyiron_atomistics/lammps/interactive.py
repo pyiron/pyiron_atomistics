@@ -722,7 +722,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             ss[:, ind].reshape(len(self.structure), 3, 3)
             / constants.eV
             * constants.bar
-            * constants.angstrom ** 3
+            * constants.angstrom**3
         )
         if np.matrix.trace(self._prism.R) != 3:
             ss = np.einsum("ij,njk->nik", self._prism.R, ss)
