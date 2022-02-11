@@ -30,6 +30,7 @@ from pyiron_atomistics.sphinx.potential import (
 )
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
+from pyiron_base.interfaces.has_groups import HasGroups
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
