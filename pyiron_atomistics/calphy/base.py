@@ -10,7 +10,7 @@ from pyiron_base import GenericJob
 from calphy.input import check_and_convert_to_list
 from calphy.queuekernel import Solid, Liquid, routine_fe
 
-class Calphy(GenericJob):
+class CalphyBase(GenericJob):
     def __init__(self, project, job_name):
         super(CalphyBase, self).__init__(project, job_name)
         #now calphy input parameters need to be handled; for the moment minimal is better
