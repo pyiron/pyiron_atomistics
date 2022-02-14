@@ -37,7 +37,7 @@ setup(
         'matplotlib==3.5.1',
         'mendeleev==0.9.0',
         'numpy==1.22.2',
-        'pandas==1.4.0',
+        'pandas==1.4.1',
         'phonopy==2.12.0',
         'pint==0.18',
         'pyiron_base==0.5.4',
