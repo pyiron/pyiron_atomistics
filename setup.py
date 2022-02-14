@@ -41,7 +41,7 @@ setup(
         'phonopy==2.12.0',
         'pint==0.18',
         'pyiron_base==0.5.4',
-        'pymatgen==2022.2.1',
+        'pymatgen==2022.2.10',
         'scipy==1.8.0',
         'seekpath==2.0.1',
         'scikit-learn==1.0.2',
