@@ -4,6 +4,7 @@
 
 import unittest
 import matplotlib
+import matplotlib.pylab as plt
 import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_base._tests import TestWithProject
@@ -90,6 +91,11 @@ class TestMurnaghan(TestWithProject):
         murn.status.finished = True
 
         self.assertIsInstance(murn.plot(plt_show=True), matplotlib.axes.Axes)
+        _, ax_list = plt.subplots(ncols=2, nrows=1)
+        for i, ax in enumerate(ax_list):
+            ax = murn.plot(ax=ax, plot_kwargs={"color": "black", "label": f"plot{i}", "marker": "x"})
+            ax.set_title(f"Axis {i+1}")
+            self.assertEqual(len(ax.lines), 2)
         with self.subTest(msg="standard polynomial fit"):
             self.assertAlmostEqual(-90.71969974284912, murn.equilibrium_energy)
             self.assertAlmostEqual(448.1341230545222, murn.equilibrium_volume)
