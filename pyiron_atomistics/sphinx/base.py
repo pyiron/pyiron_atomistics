@@ -2031,7 +2031,7 @@ class _SphinxLogParser:
         return (
             np.array([ll.split()[1:4] for ll in log_extract]).astype(float)
             / BOHR_TO_ANGSTROM
-        )
+        )[:3]
 
     def get_kpoints_cartesian(self):
         return np.einsum("ni,ij->nj", self.k_points, self._rec_cell)
@@ -2279,7 +2279,9 @@ class Output:
         """
         file_name = posixpath.join(cwd, file_name)
         if os.path.isfile(file_name):
-            self.generic.dft.energy_free = np.loadtxt(file_name)[:, 1] * HARTREE_TO_EV
+            self.generic.dft.energy_free = np.loadtxt(
+                file_name
+            ).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
 
     def collect_sphinx_log(
         self, file_name="sphinx.log", cwd=None, check_consistency=True
