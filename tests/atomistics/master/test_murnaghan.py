@@ -3,9 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-
+import matplotlib
 import numpy as np
-
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_base._tests import TestWithProject
 
@@ -90,7 +89,7 @@ class TestMurnaghan(TestWithProject):
         murn._hdf5["output/equilibrium_volume"] = 448.4033384110422
         murn.status.finished = True
 
-        murn.plot(plt_show=False)
+        self.assertIsInstance(murn.plot(plt_show=True), matplotlib.axes.Axes)
         with self.subTest(msg="standard polynomial fit"):
             self.assertAlmostEqual(-90.71969974284912, murn.equilibrium_energy)
             self.assertAlmostEqual(448.1341230545222, murn.equilibrium_volume)
