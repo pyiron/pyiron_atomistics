@@ -785,6 +785,8 @@ class Murnaghan(AtomisticParallelMaster):
 
         if ax is None:
             ax = plt.subplot(111)
+        else:
+            plt_show = False
         if not self.fit_dict:
             if self.input["fit_type"] == "polynomial":
                 self.fit_polynomial(fit_order=self.input["fit_order"])
