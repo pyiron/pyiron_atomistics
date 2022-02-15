@@ -2279,9 +2279,9 @@ class Output:
         """
         file_name = posixpath.join(cwd, file_name)
         if os.path.isfile(file_name):
-            self.generic.dft.energy_free = np.loadtxt(
-                file_name
-            ).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
+            self.generic.dft.energy_free = (
+                np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
+            )
 
     def collect_sphinx_log(
         self, file_name="sphinx.log", cwd=None, check_consistency=True
