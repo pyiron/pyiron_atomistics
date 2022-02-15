@@ -90,7 +90,7 @@ class TestMurnaghan(TestWithProject):
         murn._hdf5["output/equilibrium_volume"] = 448.4033384110422
         murn.status.finished = True
 
-        self.assertIsInstance(murn.plot(plt_show=True), matplotlib.axes.Axes)
+        self.assertIsInstance(murn.plot(plt_show=False), matplotlib.axes.Axes)
         _, ax_list = plt.subplots(ncols=2, nrows=1)
         for i, ax in enumerate(ax_list):
             ax = murn.plot(ax=ax, plot_kwargs={"color": "black", "label": f"plot{i}", "marker": "x"})
