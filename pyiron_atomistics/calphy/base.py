@@ -14,7 +14,7 @@ class CalphyBase(GenericJob):
     def __init__(self, project, job_name):
         super(CalphyBase, self).__init__(project, job_name)
         #now calphy input parameters need to be handled; for the moment minimal is better
-        self.__name__ = "CalphyFreeneergyJob"
+        self.__name__ = "CalphyJob"
         #things that will be taken over by pyiron
         #element, mass, lattice, repeat, lattice-constant
         self.structure = False
@@ -73,7 +73,7 @@ class CalphyBase(GenericJob):
             del self._data['input']
     
     def collect_output(self):
-        pass
+        self.to_hdf()
         
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
@@ -134,7 +134,7 @@ class Input:
     
     @mode.setter
     def mode(self, value):
-        if value in ["fe"]:
+        if value in ["fe", "ts"]:
             self._mode = value
         else:
             raise ValueError("Currently only mode fe is supported")
@@ -200,3 +200,4 @@ class Input:
     def from_hdf(self, hdf5):
         self.potential.from_hdf(hdf5)
         self.input.options = hdf5["input"]
+
