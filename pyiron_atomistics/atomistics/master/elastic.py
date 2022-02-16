@@ -78,8 +78,7 @@ def calc_elastic_constants(elastic_tensor):
         np.linalg.inv(elastic_tensor[:3, :3]).diagonal()
     )
     output["poissons_ratio"] = (
-        -output["youngs_modulus"] * np.sum(np.linalg.inv(elastic_tensor[:3, :3])) / 6
-        + 0.5
+        -output["youngs_modulus"] * np.sum(np.linalg.inv(elastic_tensor[:3, :3])) / 6 + 0.5
     )
     output["zener_ratio"] = 12 * np.mean(elastic_tensor[3:, 3:].diagonal())
     output["zener_ratio"] /= 3 * np.trace(elastic_tensor[:3, :3]) - np.sum(
@@ -147,7 +146,7 @@ def _fit_coeffs_with_energies(
     energy = np.tile(energy, len(rotations))
     volume = np.tile(volume, len(rotations))
     # Create symmetric tensor for elastic tensor
-    strain = 0.5 * np.einsum("ni,nj->nij", strain_voigt, strain_voigt)
+    strain = 0.5 * np.einsum("ni,nj->nij", *2 * [strain_voigt])
     # Remove lower triangle
     strain = strain.T[np.tril_indices(6)].T
     if higher_strains is not None:
@@ -236,7 +235,7 @@ def _get_higher_order_strains(
             E = E[:, na] ** (np.arange(cc) + 3)[na, :]
         # Check starting column
         starting_index = np.sum(np.any(strain_higher_order != 0, axis=0))
-        strain_higher_order[ind, starting_index : starting_index + E.shape[1]] = E
+        strain_higher_order[ind, starting_index: starting_index + E.shape[1]] = E
     # Repeat by the number of rotations (nothing to do with real rotations)
     if rotations is not None:
         strain_higher_order = np.einsum(
