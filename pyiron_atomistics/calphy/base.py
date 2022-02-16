@@ -8,7 +8,7 @@ from pyiron_atomistics.lammps.potential import LammpsPotentialFile, PotentialAva
 from pyiron_base import GenericJob
 
 from calphy.input import check_and_convert_to_list
-from calphy.queuekernel import Solid, Liquid, routine_fe
+from calphy.queuekernel import Solid, Liquid, routine_fe, routine_ts
 
 class CalphyBase(GenericJob):
     def __init__(self, project, job_name):
@@ -71,9 +71,25 @@ class CalphyBase(GenericJob):
             #needs to be done on the pyscal side
             self._data = job.report
             del self._data['input']
-    
+
+        elif self.input.mode == "ts":
+            if self.input.options["calculations"][0]["state"] == "liquid":
+                job = Liquid(options=self.input.options, 
+                             kernel=0, 
+                             simfolder=self.working_directory)
+            else:
+                job = Solid(options=self.input.options, 
+                             kernel=0, 
+                             simfolder=self.working_directory)
+            routine_ts(job)
+            self._data = job.report
+            del self._data['input']
+
+        self.collect_output()
+
     def collect_output(self):
         self.to_hdf()
+        self.collect_logs()
         
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
@@ -82,13 +98,42 @@ class CalphyBase(GenericJob):
             self.structure.to_hdf(h5in)
         if self._data is not None:
             with self.project_hdf5.open("output") as hdf5_out:
-                hdf5_out["fe"] = self._data
+                hdf5_out["average"] = self._data["average"]
+                hdf5_out["fe_total"] = self._data['results']['free_energy']
+                hdf5_out["fe_error"] = self._data['results']['error']
+                hdf5_out["fe_reference"] = self._data['results']['reference_system']
+                hdf5_out["fe_work"] = self._data['results']['work']
+                hdf5_out["fe_pv"] = self._data['results']['pv']
+                hdf5_out["temperature"] = self.input.temperature
+
+                if self.input.mode == "ts":
+                    datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
+                    t, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0,1,2))
+                    hdf5_out["fe_total"] = fe
+                    hdf5_out["temperature"] = t
+                    hdf5_out["fe_error"] = ferr
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as h5in:
             self.input.from_hdf(h5in)
             self.structure.from_hdf(h5in)
+
+    def collect_logs(self):
+        logile = os.path.join(self.working_directory, "calphy.log")
+        with open(logile, 'r') as fin:
+            content = fin.read()
+        with self.project_hdf5.open("output") as hdf5_out:
+            hdf5_out["calphy_log"] = content
+        logile = os.path.join(self.working_directory, "log.lammps")
+        with open(logile, 'r') as fin:
+            content = fin.read()
+        with self.project_hdf5.open("output") as hdf5_out:
+            hdf5_out["lammps_log"] = content
+
+    def collect_files(self):
+        datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
+        t, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0,1,2))
 
 
 class Input:
@@ -199,5 +244,5 @@ class Input:
     
     def from_hdf(self, hdf5):
         self.potential.from_hdf(hdf5)
-        self.input.options = hdf5["input"]
+        self.options = hdf5["input"]
 
