@@ -143,17 +143,19 @@ def _fit_coeffs_with_energies(
         derivative=False,
     )
     strain_voigt = _convert_to_voigt(strain, rotations=rotations, strain=True)
-    e_per_v = np.tile(energy / volume, len(rotations))
+    energy = np.tile(energy, len(rotations))
+    volume = np.tile(volume, len(rotations))
     # Create symmetric tensor for elastic tensor
     strain = 0.5 * np.einsum("ni,nj->nij", *2 * [strain_voigt])
     # Remove lower triangle
-    strain = strain.T[np.tril_indices(6)].T
+    strain = np.array([s[np.triu_indices(6)] for s in strain])
     if higher_strains is not None:
         strain = np.concatenate((strain, higher_strains), axis=-1)
     if fit_first_order:
         strain = np.concatenate((strain, strain_voigt), axis=-1)
-    reg = LinearRegression().fit(strain, e_per_v)
-    score = reg.score(strain, e_per_v)
+    strain = np.einsum('n,ni->ni', volume, strain)
+    reg = LinearRegression().fit(strain, energy)
+    score = reg.score(strain, energy)
     # Create base tensor for elastic tensor
     coeff = np.zeros((6, 6))
     # Multiply upper triangle with upper triangle coeffs (v.s.)
