@@ -792,6 +792,13 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         if ham._generic_input["structure"] == "continue_final":
             ham.structure = self.get_structure(iteration_step=-1)
             ham.to_hdf()
+            
+    def __del__(self):
+        del self._structure
+        del self._generic_input
+        del self.output
+        del self.map_functions
+        super().__del__()
 
 
 def set_structure(job, parameter):
