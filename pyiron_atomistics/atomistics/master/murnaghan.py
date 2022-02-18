@@ -31,7 +31,7 @@ eV_div_A3_to_GPa = (
 
 
 def _debye_kernel(xi):
-    return xi ** 3 / (np.exp(xi) - 1)
+    return xi**3 / (np.exp(xi) - 1)
 
 
 def debye_integral(x):
@@ -40,16 +40,16 @@ def debye_integral(x):
 
 def debye_function(x):
     if hasattr(x, "__len__"):
-        return np.array([3 / xx ** 3 * debye_integral(xx) for xx in x])
-    return 3 / x ** 3 * debye_integral(x)
+        return np.array([3 / xx**3 * debye_integral(xx) for xx in x])
+    return 3 / x**3 * debye_integral(x)
 
 
 # https://gitlab.com/ase/ase/blob/master/ase/eos.py
 def birchmurnaghan_energy(V, E0, B0, BP, V0):
     "BirchMurnaghan equation from PRB 70, 224107"
     eta = (V0 / V) ** (1 / 3)
-    return E0 + 9 * B0 * V0 / 16 * (eta ** 2 - 1) ** 2 * (
-        6 + BP * (eta ** 2 - 1) - 4 * eta ** 2
+    return E0 + 9 * B0 * V0 / 16 * (eta**2 - 1) ** 2 * (
+        6 + BP * (eta**2 - 1) - 4 * eta**2
     )
 
 
@@ -88,7 +88,7 @@ def pouriertarantola(V, E0, B0, BP, V0):
     eta = (V / V0) ** (1 / 3)
     squiggle = -3 * np.log(eta)
 
-    E = E0 + B0 * V0 * squiggle ** 2 / 6 * (3 + squiggle * (BP - 2))
+    E = E0 + B0 * V0 * squiggle**2 / 6 * (3 + squiggle * (BP - 2))
     return E
 
 
@@ -235,7 +235,7 @@ class DebyeModel(object):
 
         GPaTokBar = 10
         Ang3_to_Bohr3 = (
-            scipy.constants.angstrom ** 3
+            scipy.constants.angstrom**3
             / scipy.constants.physical_constants["Bohr radius"][0] ** 3
         )
         convert = 67.48  # conversion factor, Moruzzi Eq. (4)
@@ -505,7 +505,7 @@ class EnergyVolumeFit(object):
         a, b, c = np.polyfit(vol_lst, eng_lst, 2)
         v0 = -b / (2 * a)
         pfit_leastsq, perr_leastsq = fit_leastsq(
-            [a * v0 ** 2 + b * v0 + c, 2 * a * v0 * eV_div_A3_to_GPa, 4, v0],
+            [a * v0**2 + b * v0 + c, 2 * a * v0 * eV_div_A3_to_GPa, 4, v0],
             vol_lst,
             eng_lst,
             fittype,
@@ -604,6 +604,7 @@ class Murnaghan(AtomisticParallelMaster):
     The minimum energy volume and bulk modulus are stored in `ref_job['output/equilibrium_volume']`
     and `ref_job['output/equilibrium_bulk_modulus/']`.
     """
+
     def __init__(self, project, job_name):
         """
 
@@ -742,13 +743,12 @@ class Murnaghan(AtomisticParallelMaster):
             erg_lst, vol_lst, err_lst, id_lst = [], [], [], []
             for job_id in self.child_ids:
                 ham = self.project_hdf5.inspect(job_id)
-                print("job_id: ", job_id, ham.status)
                 if "energy_tot" in ham["output/generic"].list_nodes():
                     energy = ham["output/generic/energy_tot"][-1]
                 elif "energy_pot" in ham["output/generic"].list_nodes():
                     energy = ham["output/generic/energy_pot"][-1]
                 else:
-                    raise ValueError('Neither energy_pot or energy_tot was found.')
+                    raise ValueError("Neither energy_pot or energy_tot was found.")
                 volume = ham["output/generic/volume"][-1]
                 erg_lst.append(np.mean(energy))
                 err_lst.append(np.var(energy))
@@ -773,13 +773,20 @@ class Murnaghan(AtomisticParallelMaster):
         else:
             self._fit_eos_general(fittype=self.input["fit_type"])
 
-    def plot(self, num_steps=100, plt_show=True):
+    def plot(self, num_steps=100, plt_show=True, ax=None, plot_kwargs=None):
         if not self.status.finished:
-            raise ValueError("Job must be successfully run, before calling this method.")
+            raise ValueError(
+                "Job must be successfully run, before calling this method."
+            )
         try:
             import matplotlib.pylab as plt
         except ImportError:
             import matplotlib.pyplot as plt
+
+        if ax is None:
+            ax = plt.subplot(111)
+        else:
+            plt_show = False
         if not self.fit_dict:
             if self.input["fit_type"] == "polynomial":
                 self.fit_polynomial(fit_order=self.input["fit_order"])
@@ -788,44 +795,64 @@ class Murnaghan(AtomisticParallelMaster):
         df = self.output_to_pandas()
         vol_lst, erg_lst = df["volume"].values, df["energy"].values
         x_i = np.linspace(np.min(vol_lst), np.max(vol_lst), num_steps)
-        color = "blue"
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+
+        if "color" in plot_kwargs.keys():
+            color = plot_kwargs["color"]
+            del plot_kwargs["color"]
+        else:
+            color = "blue"
+
+        if "marker" in plot_kwargs.keys():
+            del plot_kwargs["marker"]
+
+        if "label" in plot_kwargs.keys():
+            label = plot_kwargs["label"]
+            del plot_kwargs["label"]
+        else:
+            label = self.input["fit_type"]
 
         if self.fit_dict is not None:
             if self.input["fit_type"] == "polynomial":
                 p_fit = np.poly1d(self.fit_dict["poly_fit"])
                 least_square_error = self.fit_module.get_error(vol_lst, erg_lst, p_fit)
-                plt.title("Murnaghan: error: " + str(least_square_error))
-                plt.plot(
+                ax.set_title("Murnaghan: error: " + str(least_square_error))
+                ax.plot(
                     x_i,
                     p_fit(x_i),
                     "-",
-                    label=self.input["fit_type"],
+                    label=label,
                     color=color,
                     linewidth=3,
+                    **plot_kwargs,
                 )
             else:
                 V0 = self.fit_dict["volume_eq"]
                 E0 = self.fit_dict["energy_eq"]
                 B0 = self.fit_dict["bulkmodul_eq"]
                 BP = self.fit_dict["b_prime_eq"]
-                eng_fit_lst = fitfunction(parameters=[E0, B0, BP, V0],
-                                          vol=x_i,
-                                          fittype=self.input["fit_type"])
-                plt.plot(
+                eng_fit_lst = fitfunction(
+                    parameters=[E0, B0, BP, V0], vol=x_i, fittype=self.input["fit_type"]
+                )
+                ax.plot(
                     x_i,
                     eng_fit_lst,
                     "-",
-                    label=self.input["fit_type"],
+                    label=label,
                     color=color,
                     linewidth=3,
+                    **plot_kwargs,
                 )
 
-        plt.plot(vol_lst, erg_lst, "x", color=color, markersize=20)
-        plt.legend()
-        plt.xlabel("Volume ($\AA^3$)")
-        plt.ylabel("energy (eV)")
+        ax.plot(vol_lst, erg_lst, "x", color=color, markersize=20, **plot_kwargs)
+        ax.legend()
+        ax.set_xlabel("Volume ($\AA^3$)")
+        ax.set_ylabel("energy (eV)")
         if plt_show:
             plt.show()
+        return ax
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         """
@@ -855,4 +882,3 @@ class Murnaghan(AtomisticParallelMaster):
             return 1
         else:
             return 2
-

@@ -48,12 +48,13 @@ class Dos(object):
                 n_bins = int((dos_max - dos_min) * bin_density)
             else:
                 n_bins = self.n_bins
-            t_dos, energies = np.histogram(
-                eig_val, bins=int(n_bins), density=True
-            )
+            t_dos, energies = np.histogram(eig_val, bins=int(n_bins), density=True)
             self.t_dos.append(t_dos)
             self.energies.append(energies)
-        self.energies = [energies[1:] - ((energies[1] - energies[0]) / 2.0) for energies in self.energies]
+        self.energies = [
+            energies[1:] - ((energies[1] - energies[0]) / 2.0)
+            for energies in self.energies
+        ]
 
     def plot_total_dos(self, **kwargs):
         """
@@ -74,7 +75,9 @@ class Dos(object):
         ax1.set_xlabel("E (eV)", fontsize=14)
         ax1.set_ylabel("DOS", fontsize=14)
         for i, energies in enumerate(self.energies):
-            plt.fill_between(energies, self.t_dos[i], label="spin {}".format(i), **kwargs)
+            plt.fill_between(
+                energies, self.t_dos[i], label="spin {}".format(i), **kwargs
+            )
         plt.legend()
         return plt
 
@@ -101,7 +104,9 @@ class Dos(object):
         for spin in range(len(self.energies)):
             for key, val in self.orbital_dict.items():
                 r_dos = self.get_orbital_resolved_dos(val)
-                plt.plot(self.energies, r_dos, label=key + "spin {}".format(spin), **kwargs)
+                plt.plot(
+                    self.energies, r_dos, label=key + "spin {}".format(spin), **kwargs
+                )
         plot.legend()
         return plot
 
@@ -139,7 +144,9 @@ class Dos(object):
             else:
                 b = 0
                 k += 1
-            index = len(self.energies[spin_indices][self.energies[spin_indices] < e]) - 1
+            index = (
+                len(self.energies[spin_indices][self.energies[spin_indices] < e]) - 1
+            )
             if index >= 0:
                 r_dos[index] = r_dos[index] + weight
                 w_dos[index] = w_dos[index] + weight_sum
@@ -186,7 +193,9 @@ class Dos(object):
             else:
                 b = 0
                 k += 1
-            index = len(self.energies[spin_indices][self.energies[spin_indices] < e]) - 1
+            index = (
+                len(self.energies[spin_indices][self.energies[spin_indices] < e]) - 1
+            )
             if index >= 0:
                 r_dos[index] = r_dos[index] + weight
                 w_dos[index] = w_dos[index] + weight_sum
@@ -233,7 +242,9 @@ class Dos(object):
             else:
                 b = 0
                 k += 1
-            index = len(self.energies[spin_indices][self.energies[spin_indices] < e]) - 1
+            index = (
+                len(self.energies[spin_indices][self.energies[spin_indices] < e]) - 1
+            )
             if index >= 0:
                 r_dos[index] = r_dos[index] + weight
                 w_dos[index] = w_dos[index] + weight_sum
@@ -288,7 +299,9 @@ class Dos(object):
             else:
                 b = 0
                 k += 1
-            index = len(self.energies[spin_indices][self.energies[spin_indices] < e]) - 1
+            index = (
+                len(self.energies[spin_indices][self.energies[spin_indices] < e]) - 1
+            )
             if index >= 0:
                 r_dos[index] = r_dos[index] + weight
                 w_dos[index] = w_dos[index] + weight_sum

@@ -43,8 +43,12 @@ class Bader:
         Create CUBE format files of the total and valce charges to be used by the Bader program
         """
         cd_val, cd_total = self.job.get_valence_and_total_charge_density()
-        cd_val.write_cube_file(filename=os.path.join(self._working_directory, "valence_charge.CUBE"))
-        cd_total.write_cube_file(filename=os.path.join(self._working_directory, "total_charge.CUBE"))
+        cd_val.write_cube_file(
+            filename=os.path.join(self._working_directory, "valence_charge.CUBE")
+        )
+        cd_total.write_cube_file(
+            filename=os.path.join(self._working_directory, "total_charge.CUBE")
+        )
 
     def compute_bader_charges(self, extra_arguments=None):
         """
@@ -58,7 +62,9 @@ class Bader:
 
         """
         self._create_cube_files()
-        error_code = call_bader(foldername=self._working_directory, extra_arguments=extra_arguments)
+        error_code = call_bader(
+            foldername=self._working_directory, extra_arguments=extra_arguments
+        )
         if error_code > 0:
             self._remove_cube_files()
             raise ValueError("Invoking Bader charge analysis failed!")

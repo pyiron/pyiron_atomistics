@@ -3,14 +3,22 @@ __all__ = []
 
 from pyiron_atomistics.project import Project
 from pyiron_atomistics.toolkit import AtomisticsTools
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron, pyiron_to_ase, Atoms
+from pyiron_atomistics.atomistics.structure.atoms import (
+    ase_to_pyiron,
+    pyiron_to_ase,
+    Atoms,
+)
 from pyiron_base import Notebook, install_dialog, JOB_CLASS_DICT
 
 from pyiron_base import Project as ProjectBase
-ProjectBase.register_tools('atomistics', AtomisticsTools)
+
+ProjectBase.register_tools("atomistics", AtomisticsTools)
 
 # To maintain backwards compatibility until we deprecate the old structure creation functions:
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory as _StructureFactory
+from pyiron_atomistics.atomistics.structure.factory import (
+    StructureFactory as _StructureFactory,
+)
+
 create_surface = _StructureFactory.surface
 create_ase_bulk = _StructureFactory().ase.bulk
 create_structure = _StructureFactory.crystal
@@ -18,10 +26,18 @@ create_structure = _StructureFactory.crystal
 # Make classes available for new pyiron version
 JOB_CLASS_DICT["ART"] = "pyiron_atomistics.interactive.activation_relaxation_technique"
 JOB_CLASS_DICT["AtomisticExampleJob"] = "pyiron_atomistics.testing.randomatomistic"
-JOB_CLASS_DICT["ConvEncutParallel"] = "pyiron_atomistics.dft.master.convergence_encut_parallel"
-JOB_CLASS_DICT["ConvEncutSerial"] = "pyiron_atomistics.dft.master.convergence_encut_serial"
-JOB_CLASS_DICT["ConvergenceVolume"] = "pyiron_atomistics.atomistics.master.convergence_volume"
-JOB_CLASS_DICT["ConvKpointParallel"] = "pyiron_atomistics.dft.master.convergence_kpoint_parallel"
+JOB_CLASS_DICT[
+    "ConvEncutParallel"
+] = "pyiron_atomistics.dft.master.convergence_encut_parallel"
+JOB_CLASS_DICT[
+    "ConvEncutSerial"
+] = "pyiron_atomistics.dft.master.convergence_encut_serial"
+JOB_CLASS_DICT[
+    "ConvergenceVolume"
+] = "pyiron_atomistics.atomistics.master.convergence_volume"
+JOB_CLASS_DICT[
+    "ConvKpointParallel"
+] = "pyiron_atomistics.dft.master.convergence_kpoint_parallel"
 JOB_CLASS_DICT["ElasticTensor"] = "pyiron_atomistics.atomistics.master.elastic"
 JOB_CLASS_DICT["ExampleJob"] = "pyiron_atomistics.testing.randomatomistic"
 JOB_CLASS_DICT["Gaussian"] = "pyiron_atomistics.gaussian.gaussian"
@@ -37,7 +53,9 @@ JOB_CLASS_DICT["QuasiNewton"] = "pyiron_atomistics.interactive.quasi_newton"
 JOB_CLASS_DICT["ScipyMinimizer"] = "pyiron_atomistics.interactive.scipy_minimizer"
 JOB_CLASS_DICT["SerialMaster"] = "pyiron_atomistics.atomistics.master.serial"
 JOB_CLASS_DICT["Sphinx"] = "pyiron_atomistics.sphinx.sphinx"
-JOB_CLASS_DICT["StructureContainer"] = "pyiron_atomistics.atomistics.job.structurecontainer"
+JOB_CLASS_DICT[
+    "StructureContainer"
+] = "pyiron_atomistics.atomistics.job.structurecontainer"
 JOB_CLASS_DICT["StructureListMaster"] = "pyiron_atomistics.atomistics.master.structure"
 JOB_CLASS_DICT["SQSJob"] = "pyiron_atomistics.atomistics.job.sqs"
 JOB_CLASS_DICT["SQSMaster"] = "pyiron_atomistics.atomistics.master.sqsmaster"

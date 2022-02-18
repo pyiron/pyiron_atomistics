@@ -32,7 +32,7 @@ class StructureContainer(GenericJob, HasStructure):
         super().__init__(project, job_name)
         self.__version__ = "0.2.0"
         self.__hdf_version__ = "0.3.0"
-        self._structure_lst = DataContainer(table_name = "structures")
+        self._structure_lst = DataContainer(table_name="structures")
         self._container = StructureStorage()
         self.server.run_mode.interactive = True
 
@@ -68,13 +68,13 @@ class StructureContainer(GenericJob, HasStructure):
                 s.info["jobid"] = structure_or_job.job_id
                 return s
             else:
-                raise ValueError(
-                        "The job does not contain any structure to import."
-                )
+                raise ValueError("The job does not contain any structure to import.")
         elif isinstance(structure_or_job, Atoms):
             return structure_or_job
         else:
-            raise TypeError(f"structure_or_job must be of type {Atoms} or {AtomisticGenericJob}, not {type(structure_or_job)}")
+            raise TypeError(
+                f"structure_or_job must be of type {Atoms} or {AtomisticGenericJob}, not {type(structure_or_job)}"
+            )
 
     def append(self, structure_or_job):
         """
@@ -126,11 +126,11 @@ class StructureContainer(GenericJob, HasStructure):
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self._container._get_structure(frame=frame, wrap_atoms=wrap_atoms)
 
-    def to_hdf(self, hdf = None, group_name = None):
+    def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self._container.to_hdf(hdf=self.project_hdf5, group_name="structures")
 
-    def from_hdf(self, hdf = None, group_name = None):
+    def from_hdf(self, hdf=None, group_name=None):
         # keep hdf structure for version peeking in separate variable, so that
         # the inherited from_hdf() can properly deal with it
         h5 = hdf or self.project_hdf5
@@ -146,7 +146,7 @@ class StructureContainer(GenericJob, HasStructure):
             with self.project_hdf5.open("input") as hdf5_input:
                 self.append(Atoms().from_hdf(hdf5_input))
         elif hdf_version == "0.2.0":
-            GenericJob.from_hdf(self, hdf = hdf, group_name = group_name)
+            GenericJob.from_hdf(self, hdf=hdf, group_name=group_name)
 
             hdf = self.project_hdf5["structures"]
             for group in sorted(hdf.list_groups()):

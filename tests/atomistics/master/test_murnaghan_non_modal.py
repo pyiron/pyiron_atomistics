@@ -11,7 +11,7 @@ import unittest
 def convergence_goal(self, **qwargs):
     import numpy as np
 
-    eps = 0.2
+    eps = 0.3
     if "eps" in qwargs:
         eps = qwargs["eps"]
     erg_lst = self.get_from_childs("output/generic/energy")
