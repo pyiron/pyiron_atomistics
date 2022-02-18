@@ -6,7 +6,6 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 from scipy.sparse import coo_matrix
 from scipy.spatial import Voronoi, Delaunay
-from scipy.spatial.qhull import _QhullUser
 from pyiron_atomistics.atomistics.structure.pyscal import (
     get_steinhardt_parameter_structure,
     analyse_cna_adaptive,
@@ -18,7 +17,6 @@ from pyiron_atomistics.atomistics.structure.pyscal import (
 from pyiron_atomistics.atomistics.structure.strain import Strain
 from pyiron_base.generic.util import Deprecator
 from scipy.spatial import ConvexHull
-from typing import Type
 
 deprecate = Deprecator()
 
@@ -719,7 +717,7 @@ class Analyse:
 
     def _get_neighbors(
         self,
-        position_interpreter: Type[_QhullUser],
+        position_interpreter,
         data_field: str,
         width_buffer: float = 10,
     ) -> np.ndarray:

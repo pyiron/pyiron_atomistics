@@ -70,7 +70,7 @@ class UnfoldingPrism(Prism):
         yhi = np.sin(gamma) * bn
         xzp = np.cos(beta) * cn
         yzp = (bn * cn * np.cos(alpha) - xyp * xzp) / yhi
-        zhi = np.sqrt(cn ** 2 - xzp ** 2 - yzp ** 2)
+        zhi = np.sqrt(cn**2 - xzp**2 - yzp**2)
 
         # Set precision
         self.car_prec = dec.Decimal("10.0") ** int(

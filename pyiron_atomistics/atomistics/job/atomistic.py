@@ -20,6 +20,7 @@ try:
     from pyiron_base import ProjectGUI
 except (ImportError, TypeError, AttributeError):
     pass
+from typing import Union
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -305,25 +306,31 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
 
     def animate_structure(
         self,
-        spacefill=True,
-        show_cell=True,
-        stride=1,
-        center_of_mass=False,
-        particle_size=0.5,
-        camera="orthographic",
+        spacefill: bool = True,
+        show_cell: bool = True,
+        stride: int = 1,
+        center_of_mass: bool = False,
+        particle_size: float = 0.5,
+        camera: str = "orthographic",
+        atom_indices: Union[list, np.ndarray] = None,
+        snapshot_indices: Union[list, np.ndarray] = None,
     ):
         """
         Animates the job if a trajectory is present
 
         Args:
-            spacefill (bool):
-            show_cell (bool):
+            spacefill (bool): If True, then atoms are visualized in spacefill stype
+            show_cell (bool): True if the cell boundaries of the structure is to be shown
             stride (int): show animation every stride [::stride]
                           use value >1 to make animation faster
                            default=1
-            center_of_mass (bool):
+            particle_size (float): Scaling factor for the spheres representing the atoms.
+                                    (The radius is determined by the atomic number)
+            center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
             camera (str):
                 camera perspective, choose from "orthographic" or "perspective"
+            atom_indices (list/numpy.ndarray): The atom indices for which the trajectory should be generated
+            snapshot_indices (list/numpy.ndarray): The snapshots for which the trajectory should be generated
 
         Returns:
             animation: nglview IPython widget
@@ -340,7 +347,12 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             raise ValueError("job must have more than one structure to animate!")
 
         animation = nglview.show_asetraj(
-            self.trajectory(stride=stride, center_of_mass=center_of_mass)
+            self.trajectory(
+                stride=stride,
+                center_of_mass=center_of_mass,
+                atom_indices=atom_indices,
+                snapshot_indices=snapshot_indices,
+            )
         )
         if spacefill:
             animation.add_spacefill(radius_type="vdw", scale=0.5, radius=particle_size)
@@ -490,12 +502,12 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
 
         Args:
             stride (int): The trajectories are generated with every 'stride' steps
-            center_of_mass (list/numpy.ndarray): The center of mass
-            atom_indices (list/numpy.ndarray): The atom indices for which the trajectory should be generated
-            snapshot_indices (list/numpy.ndarray): The snapshots for which the trajectory should be generated
-            overwrite_positions (list/numpy.ndarray): List of positions that are meant to overwrite the existing
+            center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
+            atom_indices (list/ndarray): The atom indices for which the trajectory should be generated
+            snapshot_indices (list/ndarray): The snapshots for which the trajectory should be generated
+            overwrite_positions (list/ndarray): List of positions that are meant to overwrite the existing
                                                       trajectory. Useful to wrap coordinates for example
-            overwrite_cells(list/numpy.ndarray): List of cells that are meant to overwrite the existing
+            overwrite_cells(list/ndarray): List of cells that are meant to overwrite the existing
                                                  trajectory. Only used when `overwrite_positions` is defined. This must
                                                  have the same length of `overwrite_positions`
 

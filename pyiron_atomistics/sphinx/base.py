@@ -30,6 +30,7 @@ from pyiron_atomistics.sphinx.potential import (
 )
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
+from pyiron_base.interfaces.has_groups import HasGroups
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -2026,7 +2027,7 @@ class _SphinxLogParser:
         return (
             np.array([ll.split()[1:4] for ll in log_extract]).astype(float)
             / BOHR_TO_ANGSTROM
-        )
+        )[:3]
 
     def get_kpoints_cartesian(self):
         return np.einsum("ni,ij->nj", self.k_points, self._rec_cell)
@@ -2046,7 +2047,7 @@ class _SphinxLogParser:
         volume = re.findall("Omega:.*$", self.log_file, re.MULTILINE)
         if len(volume) > 0:
             volume = float(volume[0].split()[1])
-            volume *= BOHR_TO_ANGSTROM ** 3
+            volume *= BOHR_TO_ANGSTROM**3
         else:
             volume = 0
         return np.array(self.n_steps * [volume])
@@ -2274,7 +2275,9 @@ class Output:
         """
         file_name = posixpath.join(cwd, file_name)
         if os.path.isfile(file_name):
-            self.generic.dft.energy_free = np.loadtxt(file_name)[:, 1] * HARTREE_TO_EV
+            self.generic.dft.energy_free = (
+                np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
+            )
 
     def collect_sphinx_log(
         self, file_name="sphinx.log", cwd=None, check_consistency=True

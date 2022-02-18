@@ -111,7 +111,7 @@ class SparseList(object):
             my_dict["index"] = self.keys()
             if data_type == "list_bool":
                 my_dict["values"] = [
-                    sum([2 ** i * int(v) for i, v in enumerate(val)])
+                    sum([2**i * int(v) for i, v in enumerate(val)])
                     for val in self.values()
                 ]
             else:
