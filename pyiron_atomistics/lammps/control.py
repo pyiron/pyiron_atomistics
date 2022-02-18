@@ -231,6 +231,9 @@ class LammpsControl(GenericParameters):
         # defaults stay consistent!
 
         max_evaluations = 100 * max_iter
+        if n_print > max_iter:
+            warnings.warn('n_print larger than max_iter, adjusting to n_print=max_iter')
+            n_print = max_iter
 
         if self["units"] not in LAMMPS_UNIT_CONVERSIONS.keys():
             raise NotImplementedError
