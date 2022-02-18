@@ -7,7 +7,7 @@ from collections import OrderedDict
 import hashlib
 import numpy as np
 import warnings
-from pyiron_base import GenericParameters
+from pyiron_base import GenericParameters, state
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
