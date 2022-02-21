@@ -96,7 +96,9 @@ class QuasiNewtonInteractive:
                 self.eigenvectors
             )
         else:
-            return np.linalg.inv(self.hessian + np.eye(len(self.hessian)) * np.exp(self.regularization))
+            return np.linalg.inv(
+                self.hessian + np.eye(len(self.hessian)) * np.exp(self.regularization)
+            )
 
     @property
     def hessian(self):
@@ -285,7 +287,7 @@ class QuasiNewton(InteractiveWrapper):
 class Input(DataContainer):
     """
     Args:
-        minimizer (str): minimizer to use (currently only 'CG' and 'BFGS' run
+        minimizer (str): minimizer to use (currently only 'CG' and 'PSB' run
             reliably)
         ionic_steps (int): max number of steps
         ionic_force_tolerance (float): maximum force tolerance
