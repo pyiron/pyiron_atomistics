@@ -7,7 +7,7 @@ from collections import OrderedDict
 import hashlib
 import numpy as np
 import warnings
-from pyiron_base import GenericParameters
+from pyiron_base import GenericParameters, state
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
@@ -231,6 +231,11 @@ class LammpsControl(GenericParameters):
         # defaults stay consistent!
 
         max_evaluations = 100 * max_iter
+        if n_print > max_iter:
+            state.logger.warning(
+                "n_print larger than max_iter, adjusting to n_print=max_iter"
+            )
+            n_print = max_iter
 
         if self["units"] not in LAMMPS_UNIT_CONVERSIONS.keys():
             raise NotImplementedError
