@@ -21,14 +21,16 @@ class TestQuasiNewton(unittest.TestCase):
     def test_run_qn_regularization(self):
         lj = self.project.create.job.AtomisticExampleJob('exp_reg')
         lj.structure = self.project.create.structure.bulk('Al', cubic=True).repeat(3)
-        lj.structure.positions[-1, -1] += 0.
+        lj.structure.positions[-1, -1] += 0.1
         lj.interactive_open()
         ionic_force_tolerance = 0.01
         qn = run_qn(
             lj, mode='PSB', ionic_force_tolerance=ionic_force_tolerance, max_displacement=0.01
         )
         self.assertLess(lj.output.force_max[-1], ionic_force_tolerance)
-        dx = qn.get_dx(np.random.randn(*lj.structure.positions.shape))
+        random_forces = np.ones(lj.structure.positions.shape)
+        random_forces[-1, -1] *= -1
+        dx = qn.get_dx(random_forces)
         self.assertLess(np.absolute(dx).max(), 0.01)
 
     def test_job(self):

@@ -56,16 +56,14 @@ class QuasiNewtonInteractive:
         for _ in range(max_cycle):
             H_inv = self.inv_hessian
             gH = H_inv.dot(g)
-            dH_inv = self._get_d_inv_hessian(H_inv, gH, g)
             value = np.absolute(gH).max() - self.max_displacement
             if np.absolute(value) < tol:
                 break
-            self.regularization -= value / dH_inv
+            self.regularization -= np.tanh(value / self._get_d_inv_hessian(H_inv, gH, g))
             if np.absolute(self.regularization) > max_value:
                 self.regularization = max_value * np.sign(self.regularization)
 
     def _get_d_inv_hessian(self, H_inv, gH, g):
-        s = np.sign(gH[np.absolute(gH).argmax()])
         if self.use_eigenvalues:
             return -np.einsum(
                 ',k,k,k,jk,j->',
@@ -75,14 +73,14 @@ class QuasiNewtonInteractive:
                 1 / (self.eigenvalues**2 + np.exp(self.regularization))**2,
                 self.eigenvectors, g,
                 optimize=True
-            ) * s
+            ) * np.sign(gH[np.absolute(gH).argmax()])
         else:
             return -np.einsum(
                 ',j,j->',
                 np.exp(self.regularization),
                 H_inv[np.absolute(gH).argmax()],
                 gH, optimize=True
-            ) * s
+            ) * np.sign(gH[np.absolute(gH).argmax()])
 
     @property
     def inv_hessian(self):
