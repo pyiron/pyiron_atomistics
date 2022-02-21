@@ -40,6 +40,21 @@ def generate_displacements(structure, symprec=1.0e-2):
     return displacements
 
 
+thermo_doc = """
+Get OUTPUT that minimizes the free energy.
+
+Args:
+    INPUT_ONE (float/ndarray): INPUT_ONE value(-s)
+    INPUT_TWO (float/ndarray): INPUT_TWO value(-s)
+
+Returns:
+    OUTPUT (float/ndarray): OUTPUT value(-s)
+
+Input values must be either both float, both ndarray of the same shape, or one of them
+ndarray and the other one float.
+"""
+
+
 class Hessian:
     def __init__(
         self, structure, dx=0.01, symprec=1.0e-2, include_zero_displacement=True
@@ -304,7 +319,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
     @property
     def strain_lst(self):
         if self.input["num_points"] == 1:
-            return [0]
+            return np.array([0])
         return (
             np.linspace(-1, 1, self.input["num_points"]) * self.input["vol_range"] / 2
         )
@@ -351,7 +366,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
             if "displacements" in hdf5_input.list_nodes():
                 self.hessian.displacements = hdf5_input["displacements"]
 
-    def load_output(self):
+    def _load_output(self):
         if self.ref_job.server.run_mode.interactive:
             inspect = self.project_hdf5.inspect(self.child_ids[0])
             forces_lst = inspect["output/generic/forces"]
@@ -361,8 +376,8 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
             forces_lst, energy_lst = [], []
             for job_name in self._get_jobs_sorted():
                 inspect = pr_job.inspect(job_name)
-            forces_lst.append(inspect["output/generic/forces"])
-            energy_lst.append(inspect["output/generic/energy_pot"])
+                forces_lst.append(inspect["output/generic/forces"])
+                energy_lst.append(inspect["output/generic/energy_pot"])
         forces_lst = np.asarray(forces_lst).reshape(
             (self.input["num_points"],) + self.hessian.displacements.shape
         )
@@ -377,7 +392,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
         Returns:
 
         """
-        forces, energy = self.load_output()
+        forces, energy = self._load_output()
         nu_lst, h_lst, e_lst = [], [], []
         for f, e in zip(forces, energy):
             self.hessian.forces = f
@@ -417,11 +432,23 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
             1 + self.get_strain(temperature=temperature, pressure=pressure)
         )
 
+    get_volume.__doc__ = thermo_doc.replace('INPUT_ONE', 'temperature').replace(
+        'INPUT_TWO', 'pressure'
+    ).replace('OUTPUT', 'volume')
+
     def get_strain(self, temperature, pressure):
         return self._thermo.get_strain(temperature=temperature, pressure=pressure)
 
+    get_strain.__doc__ = thermo_doc.replace('INPUT_ONE', 'temperature').replace(
+        'INPUT_TWO', 'pressure'
+    ).replace('OUTPUT', 'strain')
+
     def get_pressure(self, temperature, strain):
         return self._thermo.get_pressure(temperature=temperature, strain=strain)
+
+    get_pressure.__doc__ = thermo_doc.replace('INPUT_ONE', 'temperature').replace(
+        'INPUT_TWO', 'strain'
+    ).replace('OUTPUT', 'pressure')
 
     def validate_ready_to_run(self):
         if self.ref_job._generic_input["calc_mode"] != "static":
@@ -430,6 +457,8 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
                     self.ref_job._generic_input["calc_mode"]
                 )
             )
+        if self.input['num_points'] > 1 and self.input['num_points'] < 4:
+            raise ValueError('num_points must be 1 or larger than 3')
         super().validate_ready_to_run()
 
 
@@ -440,7 +469,7 @@ class Thermodynamics:
         Args:
             strain ((n_snapshots, n_atoms, 3)-np.ndarray): List of strain values
             nu ((n_snapshots, 3 * n_atoms)-np.ndarray): Vibrational frequencies
-            E ((n_snapshots,)-np.ndarray): Force free energy values
+            E ((n_snapshots,)-ndarray): Force free energy values
         """
         self.strain = strain
         self.nu = nu
@@ -452,6 +481,8 @@ class Thermodynamics:
 
     @property
     def coeff(self):
+        if len(self.free_energy) < 4:
+            raise ValueError('Volume dependence makes sense only when num_points > 5')
         return np.einsum("ni,nj->ji", self.fit_mat, self.free_energy)
 
     @property
