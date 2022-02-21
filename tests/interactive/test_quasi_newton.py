@@ -18,6 +18,17 @@ class TestQuasiNewton(unittest.TestCase):
         cls.project.remove_jobs_silently(recursive=True)
         cls.project.remove(enable=True)
 
+    def test_run_qn_regularization(self):
+        lj = self.project.create.job.AtomisticExampleJob('exp_reg')
+        lj.structure = self.project.create.structure.bulk('Al', cubic=True).repeat(3)
+        lj.structure.positions[-1, -1] += 0.01
+        lj.interactive_open()
+        ionic_force_tolerance = 0.01
+        qn = run_qn(
+            lj, mode='PSB', ionic_force_tolerance=ionic_force_tolerance, max_displacement = 1e-4
+        )
+        self.assertLess(lj.output.force_max[-1], ionic_force_tolerance)
+
     def test_run_qn(self):
         lj = self.project.create.job.AtomisticExampleJob('exp')
         lj.structure = self.project.create.structure.bulk('Al', cubic=True).repeat(3)
@@ -26,6 +37,12 @@ class TestQuasiNewton(unittest.TestCase):
         ionic_force_tolerance = 0.01
         qn = run_qn(lj, mode='PSB', ionic_force_tolerance=ionic_force_tolerance)
         self.assertLess(lj.output.force_max[-1], ionic_force_tolerance)
+
+    def test_job(self):
+        lj = self.project.create.job.AtomisticExampleJob('exp')
+        lj.structure = self.project.create.structure.bulk('Al', cubic=True).repeat(3)
+        qn = lj.create_job('QuasiNewton', 'qn')
+        self.assertTrue(qn.input.symmetrize)
 
 
 if __name__ == '__main__':
