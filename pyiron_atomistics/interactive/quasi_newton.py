@@ -343,6 +343,8 @@ class QuasiNewton(InteractiveWrapper):
 
     interactive_close.__doc__ = InteractiveWrapper.interactive_close.__doc__
 
+    def write_input(self):
+        pass
 
     def collect_output(self):
         self.output._index_lst.append(len(self.ref_job.output.energy_pot))
