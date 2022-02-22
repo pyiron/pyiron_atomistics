@@ -39,6 +39,11 @@ class TestQuasiNewton(unittest.TestCase):
         qn = lj.create_job('QuasiNewton', 'qn')
         self.assertTrue(qn.input.symmetrize)
 
+    def test_initialize_hessian(self):
+        structure = self.project.create.structure.bulk('Al', cubic=True).repeat(3)
+        qn = QuasiNewtonInteractive(structure, diffusion_id=0, diffusion_direction=[1, 0, 0])
+        self.assertEqual(np.sum(np.linalg.eigh(qn.hessian)[0] < 0), 1)
+
 
 if __name__ == '__main__':
     unittest.main()
