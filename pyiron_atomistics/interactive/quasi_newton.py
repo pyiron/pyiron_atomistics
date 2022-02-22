@@ -246,7 +246,10 @@ def run_qn(
             break
         job.structure.positions += dx
         job.structure.center_coordinates_in_unit_cell()
-        job.run()
+        if job.server.run_mode.interactive:
+            job.run()
+        else:
+            job.run(delete_existing_job=True)
     return qn
 
 
