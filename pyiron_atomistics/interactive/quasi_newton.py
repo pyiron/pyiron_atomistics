@@ -12,6 +12,7 @@ class QuasiNewtonInteractive:
     Interactive class of Quasi Newton. This class can be used without a pyiron job definition.
     After the initialization, the displacement is obtained by calling `get_dx` successively.
     """
+
     def __init__(
         self,
         structure,
