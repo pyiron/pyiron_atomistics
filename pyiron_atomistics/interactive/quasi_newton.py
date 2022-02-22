@@ -8,16 +8,33 @@ from pyiron_atomistics.atomistics.job.interactivewrapper import (
 
 
 class QuasiNewtonInteractive:
+    """
+    Interactive class of Quasi Newton. This class can be used without a pyiron job definition.
+    After the initialization, the displacement is obtained by calling `get_dx` successively.
+    """
     def __init__(
         self,
         structure,
         starting_h=10,
         diffusion_id=None,
-        use_eigenvalues=True,
         diffusion_direction=None,
+        use_eigenvalues=True,
         symmetrize=True,
         max_displacement=0.1,
     ):
+        """
+        Args:
+            structure (pyiron_atomistics.atomistics.structure.atoms.Atoms): pyiron structure
+            starting_H (float/ndarray): Starting Hessian value (diagonal value or total Hessian)
+            diffusion_id (int/None): Atom id at saddle point. No need to define if the structure
+                is close enough to the saddle point. This has to be defined together with
+                `diffusion_direction`.
+            use_eigenvalues (bool): Whether to use the eigenvalue softening or standard Tikhonov
+                regularization to prevent unphysical displacement.
+            symmetrize (bool): Whether to symmetrize forces following the box symmetries. DFT
+                calculations might fail if set to `False`
+            max_displacement (float): Maximum displacement allowed for an atom.
+        """
         self.use_eigenvalues = use_eigenvalues
         self._hessian = None
         self._eigenvalues = None
@@ -126,13 +143,15 @@ class QuasiNewtonInteractive:
             )
         return self.dx
 
-    def _get_SR(self, dx, dg, H_tmp, threshold=1e-4):
+    @staticmethod
+    def _get_SR(dx, dg, H_tmp, threshold=1e-4):
         denominator = np.dot(H_tmp, dx)
         if np.absolute(denominator) < threshold:
             denominator += threshold
         return np.outer(H_tmp, H_tmp) / denominator
 
-    def _get_PSB(self, dx, dg, H_tmp):
+    @staticmethod
+    def _get_PSB(dx, dg, H_tmp):
         dxdx = np.einsum("i,i->", dx, dx)
         dH = np.einsum("i,j->ij", H_tmp, dx)
         dH = (dH + dH.T) / dxdx
@@ -142,7 +161,8 @@ class QuasiNewtonInteractive:
             / dxdx**2
         )
 
-    def _get_BFGS(self, dx, dg, H_tmp):
+    @staticmethod
+    def _get_BFGS(dx, dg, H_tmp):
         return np.outer(dg, dg) / dg.dot(dx) - np.outer(H_tmp, H_tmp) / dx.dot(H_tmp)
 
     def update_hessian(self, g, threshold=1e-4, mode="PSB"):
@@ -178,18 +198,39 @@ def run_qn(
     ionic_energy_tolerance=0,
     starting_h=10,
     diffusion_id=None,
-    use_eigenvalues=True,
     diffusion_direction=None,
+    use_eigenvalues=True,
     symmetrize=True,
     max_displacement=0.1,
     min_displacement=1.0e-8,
 ):
+    """
+    Args:
+        job (pyiron): pyiron job
+        mode (str): Hessian update scheme. `PSB`, `SR` and `BFGS` are currently available.
+        ionic_steps (int): Maximum number of steps.
+        ionic_force_tolerance (float): Maximum force of an atom tolerated for convergence
+        ionic_energy_tolerance (float): Maximum energy difference for convergence
+        starting_H (float/ndarray): Starting Hessian value (diagonal value or total Hessian)
+        diffusion_id (int/None): Atom id at saddle point. No need to define if the structure
+            is close enough to the saddle point. This has to be defined together with
+            `diffusion_direction`.
+        use_eigenvalues (bool): Whether to use the eigenvalue softening or standard Tikhonov
+            regularization to prevent unphysical displacement.
+        symmetrize (bool): Whether to symmetrize forces following the box symmetries. DFT
+            calculations might fail if set to `False`
+        max_displacement (float): Maximum displacement allowed for an atom.
+        min_displacement (float): Minimum displacement for a system to rerun
+
+    Returns:
+        qn (QuasiNewtonInteractive): Quasi Newton class variable
+    """
     qn = QuasiNewtonInteractive(
         structure=job.structure,
         starting_h=starting_h,
         diffusion_id=diffusion_id,
-        use_eigenvalues=use_eigenvalues,
         diffusion_direction=diffusion_direction,
+        use_eigenvalues=use_eigenvalues,
         max_displacement=max_displacement,
         symmetrize=symmetrize,
     )
@@ -209,6 +250,7 @@ def run_qn(
 
 
 class QuasiNewton(InteractiveWrapper):
+
     """
     Structure optimization scheme via Quasi-Newton algorithm.
 
@@ -258,12 +300,12 @@ class QuasiNewton(InteractiveWrapper):
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self.__name__ = "QuasiNewton"
-        self.__version__ = (
-            None  # Reset the version number to the executable is set automatically
-        )
+        self.__version__ = None
         self.input = Input()
         self.output = Output(self)
         self._interactive_interface = None
+
+    __init__.__doc__ = InteractiveWrapper.__init__.__doc__
 
     def _run(self):
         run_qn(
@@ -274,8 +316,8 @@ class QuasiNewton(InteractiveWrapper):
             ionic_energy_tolerance=self.input.ionic_energy_tolerance,
             starting_h=self.input.starting_h,
             diffusion_id=self.input.diffusion_id,
-            use_eigenvalues=self.input.use_eigenvalues,
             diffusion_direction=self.input.diffusion_direction,
+            use_eigenvalues=self.input.use_eigenvalues,
             symmetrize=self.input.symmetrize,
             max_displacement=self.input.max_displacement,
         )
@@ -341,6 +383,8 @@ class Input(DataContainer):
         self.diffusion_direction = None
         self.symmetrize = True
         self.max_displacement = 0.1
+
+    __init__.__doc__ = DataContainer.__init__.__doc__
 
 
 class Output(ReferenceJobOutput):
