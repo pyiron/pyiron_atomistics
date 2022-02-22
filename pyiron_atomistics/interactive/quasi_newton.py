@@ -229,7 +229,10 @@ class QuasiNewton(InteractiveWrapper):
     - `BFGS`: Broyden–Fletcher–Goldfarb–Shanno
 
     `PBS` and `SR` do not enforce positive definite Hessian matrix, meaning they can be used to
-    obtain an energy barrier state.
+    obtain an energy barrier state. An energy barrier state calculation is automatically
+    performed if the system is within a harmonic distance from the saddle point. If, however,
+    the diffusion direction is already known, this information can be inserted in
+    `qn.input.diffusion_direction` and the atom id in `qn.input.diffusion_id`.
 
     There are two types of regularization: Tikhonov regularization and eigenvalue softening
     (`qn.input.use_eivenvalues = True`: eigenvalue softening, `... = False`: Tihkonov
