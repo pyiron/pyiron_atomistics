@@ -343,20 +343,6 @@ class QuasiNewton(InteractiveWrapper):
 
     interactive_close.__doc__ = InteractiveWrapper.interactive_close.__doc__
 
-    def write_input(self):
-        pass
-
-    write_input.__doc__ = InteractiveWrapper.write_input.__doc__
-
-    def to_hdf(self, hdf=None, group_name=None):
-        super().to_hdf(hdf=hdf, group_name=group_name)
-
-    to_hdf.__doc__ = InteractiveWrapper.to_hdf.__doc__
-
-    def from_hdf(self, hdf=None, group_name=None):
-        super().from_hdf(hdf=hdf, group_name=group_name)
-
-    from_hdf.__doc__ = InteractiveWrapper.from_hdf.__doc__
 
     def collect_output(self):
         self.output._index_lst.append(len(self.ref_job.output.energy_pot))
