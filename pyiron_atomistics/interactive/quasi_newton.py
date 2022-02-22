@@ -194,6 +194,48 @@ def run_qn(
 
 
 class QuasiNewton(InteractiveWrapper):
+    """
+    Structure optimization scheme via Quasi-Newton algorithm.
+
+    Example:
+
+    >>> from pyiron_atomistics import Project
+    >>> spx = pr.create.job.Sphinx('spx')
+    >>> spx.structure = pr.create.structure.bulk('Al')
+    >>> spx.structure[0] = 'Ni'
+    >>> spx.interactive_open()
+    >>> qn = spx.create_job('QuasiNewton', 'qn')
+    >>> qn.run()
+
+    Currently, there are three Hessian update schemes available (cf. `qn.input.mode`):
+
+    - `PSB`: Powell-Symmetric-Broyden
+    - `SR`: Symmetric-Rank-One
+    - `BFGS`: Broyden–Fletcher–Goldfarb–Shanno
+
+    `PBS` and `SR` do not enforce positive definite Hessian matrix, meaning they can be used to
+    obtain an energy barrier state.
+
+    There are two types of regularization: Tikhonov regularization and eigenvalue softening
+    (`qn.input.use_eivenvalues = True`: eigenvalue softening, `... = False`: Tihkonov
+    regularization). In both cases, the regularization value is increased until the largest
+    displacement is smaller than `qn.input.max_displacement`.
+
+    Tikhonov regularization:
+
+    `x = (H + L)^{-1} * f`
+
+    where `x` is the displacement field, `H` is the Hessian matrix, `L` is the regularization
+    matrix and `f` is the force field. The regularization values get an opposite sign for the
+    directions along the negative eigenvalues, to make sure that the regularization indeed
+    regularizes when there is a saddle point configuration.
+
+    Eigenvalue softening:
+
+    `x = M * (d / (d^2 + L)) * M^{-1} * f`
+
+    where `M` is the eigenvector matrix, `d` are the eigenvalues and `L` is the regularization.
+    """
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self.__name__ = "QuasiNewton"
@@ -215,12 +257,11 @@ class QuasiNewton(InteractiveWrapper):
             diffusion_id=self.input.diffusion_id,
             use_eigenvalues=self.input.use_eigenvalues,
             diffusion_direction=self.input.diffusion_direction,
-            symmetrize=self.input.symmetrize
+            symmetrize=self.input.symmetrize,
+            max_displacement=self.input.max_displacement,
         )
         self.collect_output()
 
-    def run_if_interactive(self):
-        self._run()
 
     def run_static(self):
         self.status.running = True
@@ -231,9 +272,7 @@ class QuasiNewton(InteractiveWrapper):
         self.status.collect = True
         self.run()
 
-    def interactive_open(self):
-        self.server.run_mode.interactive = True
-        self.ref_job.interactive_open()
+    run_static.__doc__ = InteractiveWrapper.run_static.__doc__
 
     def interactive_close(self):
         self.status.collect = True
@@ -241,8 +280,12 @@ class QuasiNewton(InteractiveWrapper):
             self.ref_job.interactive_close()
         self.run()
 
+    interactive_close.__doc__ = InteractiveWrapper.interactive_close.__doc__
+
     def write_input(self):
         pass
+
+    write_input.__doc__ = InteractiveWrapper.write_input.__doc__
 
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(
@@ -250,14 +293,20 @@ class QuasiNewton(InteractiveWrapper):
             group_name=group_name
         )
 
+    to_hdf.__doc__ = InteractiveWrapper.to_hdf.__doc__
+
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(
             hdf=hdf,
             group_name=group_name
         )
 
+    from_hdf.__doc__ = InteractiveWrapper.from_hdf.__doc__
+
     def collect_output(self):
         self.output._index_lst.append(len(self.ref_job.output.energy_pot))
+
+    collect_output.__doc__ = InteractiveWrapper.collect_output.__doc__
 
 
 class Input(DataContainer):
@@ -279,6 +328,7 @@ class Input(DataContainer):
         self.use_eigenvalues = True
         self.diffusion_direction = None
         self.symmetrize = True
+        self.max_displacement = 0.1
 
 
 class Output(ReferenceJobOutput):
