@@ -111,7 +111,7 @@ class SparseList(object):
             my_dict["index"] = self.keys()
             if data_type == "list_bool":
                 my_dict["values"] = [
-                    sum([2 ** i * int(v) for i, v in enumerate(val)])
+                    sum([2**i * int(v) for i, v in enumerate(val)])
                     for val in self.values()
                 ]
             else:
@@ -524,9 +524,7 @@ class SparseArray(object):
             elif isinstance(val, SparseList):
                 new_array._lists[
                     key
-                ]._length = (
-                    new_length
-                )  # TODO: default extends to all elements (may be undesired)
+                ]._length = new_length  # TODO: default extends to all elements (may be undesired)
             else:
                 print("non-matching key: ", key)
                 raise ValueError(

@@ -9,9 +9,30 @@ import shutil
 from pathlib import Path
 from pyiron_base import ProjectHDFio
 from pyiron_base._tests import TestWithCleanProject
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
+from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob, Trajectory
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 import warnings
+
+
+class ToyAtomisticJob(AtomisticGenericJob):
+
+    def _check_if_input_should_be_written(self):
+        return False
+
+    def run_static(self):
+        self.save()
+        self.status.running = True
+        self.status.finished = True
+        self.to_hdf()
+
+    def to_hdf(self, hdf=None, group_name=None):
+        super().to_hdf(hdf=hdf, group_name=group_name)
+        # create some dummy output
+        n_steps = 10
+        with self.project_hdf5.open("output/generic") as h_out:
+            h_out["positions"] = np.array([self.structure.positions + 0.5 * i for i in range(n_steps)])
+            h_out["cells"] = np.array([self.structure.cell] * n_steps)
+            h_out["indices"] = np.zeros((n_steps, len(self.structure)), dtype=int)
 
 
 class TestAtomisticGenericJob(TestWithCleanProject):
@@ -23,13 +44,14 @@ class TestAtomisticGenericJob(TestWithCleanProject):
 
     def setUp(self) -> None:
         super().setUp()
-        self.job = AtomisticGenericJob(
+        self.job = ToyAtomisticJob(
             project=ProjectHDFio(project=self.project, file_name="test_job"),
             job_name="test_job",
         )
         self.job.structure = CrystalStructure(
             element="Al", bravais_basis="fcc", lattice_constants=4
         ).repeat(4)
+        self.job.run()
 
     def test_attributes(self):
         self.assertIsInstance(self.job.structure, Atoms)
@@ -87,3 +109,10 @@ class TestAtomisticGenericJob(TestWithCleanProject):
             self.assertTrue(np.allclose(job.output.positions[i], struct.positions))
             self.assertTrue(np.allclose(job.output.cells[i], struct.cell.array))
             self.assertTrue(np.allclose(job.output.indices[i], struct.indices))
+
+    def test_animate_structure(self):
+        traj = self.job.trajectory()
+        self.assertIsInstance(traj, Trajectory)
+        self.assertEqual(len(traj), len(self.job.output.positions))
+        traj = self.job.trajectory(atom_indices=[3, 5], snapshot_indices=[3, 4])
+        self.assertEqual(len(traj), 2)

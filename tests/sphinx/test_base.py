@@ -518,29 +518,9 @@ class TestSphinx(unittest.TestCase):
     def test_collect_2_5(self):
         output = self.sphinx_2_5._output_parser
         output.collect(directory=self.sphinx_2_5.working_directory)
-        self.assertTrue(
-            all(
-                (
-                        output._parse_dict["scf_computation_time"][0]
-                        - np.roll(output._parse_dict["scf_computation_time"][0], 1)
-                )[1:]
-                > 0
-            )
-        )
-        self.assertTrue(
-            all(
-                np.array(output._parse_dict["scf_energy_free"][0])
-                - np.array(output._parse_dict["scf_energy_int"][0])
-                < 0
-            )
-        )
-        self.assertTrue(
-            all(
-                np.array(output._parse_dict["scf_energy_free"][0])
-                - np.array(output._parse_dict["scf_energy_zero"][0])
-                < 0
-            )
-        )
+        self.assertTrue(all(np.diff(output.generic.dft.computation_time) > 0))
+        self.assertTrue(all(output.generic.dft.energy_free - output.generic.dft.energy_int < 0))
+        self.assertTrue(all(output.generic.dft.energy_free - output.generic.dft.energy_zero < 0))
         list_values = [
             "scf_energy_int",
             "scf_energy_zero",
@@ -552,7 +532,7 @@ class TestSphinx(unittest.TestCase):
         for list_one in list_values:
             for list_two in list_values:
                 self.assertEqual(
-                    len(output._parse_dict[list_one]), len(output._parse_dict[list_two])
+                    len(output.generic.dft[list_one]), len(output.generic.dft[list_two])
                 )
 
         rho = self.sphinx_2_5._output_parser.charge_density
@@ -574,30 +554,24 @@ class TestSphinx(unittest.TestCase):
         energy_int_lst = (energy_int_lst * HARTREE_TO_EV).tolist()
         with open(file_location + "sphinx.log") as ffile:
             energy_free_lst = [[float(line.split('=')[-1]) * HARTREE_TO_EV for line in ffile if line.startswith('F(')]]
-        energy_zero_lst = [(0.5 * (np.array(ff) + np.array(uu))).tolist() for ff, uu in
-                           zip(energy_free_lst, energy_int_lst)]
         eig_lst = [np.loadtxt(file_location + "eps.dat")[:, 1:].tolist()]
         self.sphinx_2_3.collect_output()
         self.assertEqual(
-            residue_lst, self.sphinx_2_3._output_parser._parse_dict["scf_residue"]
+            residue_lst, self.sphinx_2_3._output_parser.generic.dft["scf_residue"]
         )
         self.assertEqual(
-            energy_int_lst, self.sphinx_2_3._output_parser._parse_dict["scf_energy_int"]
-        )
-        self.assertEqual(
-            energy_zero_lst,
-            self.sphinx_2_3._output_parser._parse_dict["scf_energy_zero"],
+            energy_int_lst, self.sphinx_2_3._output_parser.generic.dft["scf_energy_int"]
         )
         self.assertEqual(
             eig_lst,
-            self.sphinx_2_3._output_parser._parse_dict["bands_eigen_values"].tolist(),
+            self.sphinx_2_3._output_parser.generic.dft["bands_eigen_values"].tolist(),
         )
         self.assertEqual(
             energy_free_lst,
-            self.sphinx_2_3._output_parser._parse_dict["scf_energy_free"],
+            self.sphinx_2_3._output_parser.generic.dft["scf_energy_free"],
         )
         self.assertEqual(
-            21.952 * BOHR_TO_ANGSTROM ** 3, self.sphinx_2_3._output_parser._parse_dict["volume"]
+            21.952 * BOHR_TO_ANGSTROM ** 3, self.sphinx_2_3._output_parser.generic["volume"]
         )
 
     def test_structure_parsing(self):

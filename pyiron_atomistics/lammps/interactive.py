@@ -110,7 +110,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 ],
             ]
         )
-        return uc.convert_array_to_pyiron_units(self._prism.unfold_cell(cc), label="cells")
+        return uc.convert_array_to_pyiron_units(
+            self._prism.unfold_cell(cc), label="cells"
+        )
 
     def interactive_cells_setter(self, cell):
         self._prism = UnfoldingPrism(cell)
@@ -125,9 +127,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
         if is_skewed:
             if not was_skewed:
-                self._interactive_lib_command(
-                    "change_box all triclinic"
-                )
+                self._interactive_lib_command("change_box all triclinic")
             self._interactive_lib_command(
                 "change_box all x final 0 %f y final 0 %f z final 0 %f \
                  xy final %f xz final %f yz final %f remap units box"
@@ -139,9 +139,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 xy final %f xz final %f yz final %f remap units box"
                 % (lx, ly, lz, 0.0, 0.0, 0.0)
             )
-            self._interactive_lib_command(
-                "change_box all ortho"
-            )
+            self._interactive_lib_command("change_box all ortho")
         else:
             self._interactive_lib_command(
                 "change_box all x final 0 %f y final 0 %f z final 0 %f remap units box"
@@ -150,7 +148,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
     def interactive_volume_getter(self):
         uc = UnitConverter(units=self.units)
-        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("vol"), label="volume")
+        return uc.convert_array_to_pyiron_units(
+            self._interactive_library.get_thermo("vol"), label="volume"
+        )
 
     def interactive_forces_getter(self):
         uc = UnitConverter(units=self.units)
@@ -202,8 +202,8 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         style_full = self.input.control["atom_style"] == "full"
         for line in self.input.potential.get_string_lst():
             for potential in potential_lst:
-                if ' ' + potential[0] in line:
-                    line = line.replace(' ' + potential[0], ' ' + potential[1])
+                if " " + potential[0] in line:
+                    line = line.replace(" " + potential[0], " " + potential[1])
             # Don't write the kspace_style or pair style commands if the atom style is "full"
             if not (style_full and ("kspace" in line or "pair" in line)):
                 self._interactive_lib_command(line.split("\n")[0])
@@ -232,11 +232,12 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             lammps = getattr(importlib.import_module("lammps"), "lammps")
             if self._log_file is None:
                 self._log_file = os.path.join(self.working_directory, "log.lammps")
-            self._interactive_library = lammps(cmdargs=["-screen", "none", "-log", self._log_file])
+            self._interactive_library = lammps(
+                cmdargs=["-screen", "none", "-log", self._log_file]
+            )
         else:
             self._interactive_library = LammpsLibrary(
-                cores=self.server.cores,
-                working_directory=self.working_directory
+                cores=self.server.cores, working_directory=self.working_directory
             )
         if not all(self.structure.pbc):
             self.input.control["boundary"] = " ".join(
@@ -245,7 +246,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._reset_interactive_run_command()
         self.interactive_structure_setter(self.structure)
 
-    def set_fix_external(self, function, n_call=1, n_apply=1, overload_internal_fix_external=False):
+    def set_fix_external(
+        self, function, n_call=1, n_apply=1, overload_internal_fix_external=False
+    ):
         """
         **********************
         *** Expert feature ***
@@ -322,24 +325,24 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         `fexternal = np.zeros_like(x)`.
         """
         if not self.server.run_mode.interactive:
-            raise AssertionError('Callback works only in interactive mode')
+            raise AssertionError("Callback works only in interactive mode")
         self._user_fix_external = _FixExternal(function)
-        self.input.control['fix___fix_external'] = 'all external pf/callback {} {}'.format(
-            n_call, n_apply
-        )
+        self.input.control[
+            "fix___fix_external"
+        ] = "all external pf/callback {} {}".format(n_call, n_apply)
         if overload_internal_fix_external:
             self._user_fix_external.fix_external = function
 
     def calc_minimize(
-            self,
-            ionic_energy_tolerance=0.0,
-            ionic_force_tolerance=1.0e-4,
-            e_tol=None,
-            f_tol=None,
-            max_iter=100000,
-            pressure=None,
-            n_print=100,
-            style='cg'
+        self,
+        ionic_energy_tolerance=0.0,
+        ionic_force_tolerance=1.0e-4,
+        e_tol=None,
+        f_tol=None,
+        max_iter=100000,
+        pressure=None,
+        n_print=100,
+        style="cg",
     ):
         # Docstring set programmatically -- Please ensure that changes to signature or defaults stay consistent!
         if e_tol is not None:
@@ -371,6 +374,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             or self.server.run_mode.interactive_non_modal
         ):
             self.interactive_structure_setter(self.structure)
+
     calc_minimize.__doc__ = LammpsControl.calc_minimize.__doc__
 
     def calc_md(
@@ -434,14 +438,16 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self.interactive_collect()
 
     def validate_ready_to_run(self):
-        if self.server.run_mode.interactive \
-                and self._generic_input["calc_mode"] in ["md", "vcsgc"] \
-                and 'fix___langevin' in self.input.control.keys():
+        if (
+            self.server.run_mode.interactive
+            and self._generic_input["calc_mode"] in ["md", "vcsgc"]
+            and "fix___langevin" in self.input.control.keys()
+        ):
             warnings.warn(
                 "Langevin thermostatted MD in interactive mode only gives correct physics in the limit that the "
                 "n_print variable goes to infinity. A more in-depth discussion can be found "
                 "[here](https://github.com/pyiron/pyiron/issues/1173).",
-                stacklevel=2
+                stacklevel=2,
             )
         super().validate_ready_to_run()
 
@@ -643,7 +649,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
     def interactive_indices_getter(self):
         uc = UnitConverter(units=self.units)
         lammps_indices = np.array(self._interactive_library.gather_atoms("type", 0, 1))
-        indices = uc.convert_array_to_pyiron_units(self.remap_indices(lammps_indices), label="indices")
+        indices = uc.convert_array_to_pyiron_units(
+            self.remap_indices(lammps_indices), label="indices"
+        )
         return indices.tolist()
 
     def interactive_indices_setter(self, indices):
@@ -668,19 +676,27 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
     def interactive_energy_pot_getter(self):
         uc = UnitConverter(units=self.units)
-        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("pe"), label="energy_pot")
+        return uc.convert_array_to_pyiron_units(
+            self._interactive_library.get_thermo("pe"), label="energy_pot"
+        )
 
     def interactive_energy_tot_getter(self):
         uc = UnitConverter(units=self.units)
-        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("etotal"), label="energy_tot")
+        return uc.convert_array_to_pyiron_units(
+            self._interactive_library.get_thermo("etotal"), label="energy_tot"
+        )
 
     def interactive_steps_getter(self):
         uc = UnitConverter(units=self.units)
-        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("step"), label="steps")
+        return uc.convert_array_to_pyiron_units(
+            self._interactive_library.get_thermo("step"), label="steps"
+        )
 
     def interactive_temperatures_getter(self):
         uc = UnitConverter(units=self.units)
-        return uc.convert_array_to_pyiron_units(self._interactive_library.get_thermo("temp"), label="temperature")
+        return uc.convert_array_to_pyiron_units(
+            self._interactive_library.get_thermo("temp"), label="temperature"
+        )
 
     def interactive_stress_getter(self):
         """
@@ -695,15 +711,22 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._interactive_lib_command("run 0")
             self.interactive_cache["stress"] = []
         id_lst = self._interactive_library.extract_atom("id", 0)
-        id_lst = np.array([id_lst[i] for i in range(len(self.structure))])-1
+        id_lst = np.array([id_lst[i] for i in range(len(self.structure))]) - 1
         id_lst = np.arange(len(id_lst))[np.argsort(id_lst)]
         ind = np.array([0, 3, 4, 3, 1, 5, 4, 5, 2])
         ss = self._interactive_library.extract_compute("st", 1, 2)
-        ss = np.array([ss[i][j] for i in range(len(self.structure)) for j in range(6)]).reshape(-1, 6)[id_lst]
-        ss = ss[:, ind].reshape(len(self.structure), 3, 3)/constants.eV*constants.bar*constants.angstrom**3
+        ss = np.array(
+            [ss[i][j] for i in range(len(self.structure)) for j in range(6)]
+        ).reshape(-1, 6)[id_lst]
+        ss = (
+            ss[:, ind].reshape(len(self.structure), 3, 3)
+            / constants.eV
+            * constants.bar
+            * constants.angstrom**3
+        )
         if np.matrix.trace(self._prism.R) != 3:
-            ss = np.einsum('ij,njk->nik', self._prism.R, ss)
-            ss = np.einsum('nij,kj->nik', ss, self._prism.R)
+            ss = np.einsum("ij,njk->nik", self._prism.R, ss)
+            ss = np.einsum("nij,kj->nik", ss, self._prism.R)
         return ss
 
     def interactive_pressures_getter(self):
@@ -750,6 +773,7 @@ class _FixExternal:
     Inside pyiron, `fix_external()` is passed to LAMMPS, which is to be called during run. The
     function arguments are given by LAMMPS -> DO NOT modify them.
     """
+
     def __init__(self, function):
         self.function = function
 

@@ -62,9 +62,13 @@ class VaspInteractive(VaspBase, GenericInteractive):
             self.server.run_mode.interactive
             or self.server.run_mode.interactive_non_modal
         ):
-            return super(GenericInteractive, self)._get_structure(frame=frame, wrap_atoms=wrap_atoms)
+            return super(GenericInteractive, self)._get_structure(
+                frame=frame, wrap_atoms=wrap_atoms
+            )
         else:
-            return super(VaspBase, self)._get_structure(frame=frame, wrap_atoms=wrap_atoms)
+            return super(VaspBase, self)._get_structure(
+                frame=frame, wrap_atoms=wrap_atoms
+            )
 
     def interactive_close(self):
         if self.interactive_is_activated():

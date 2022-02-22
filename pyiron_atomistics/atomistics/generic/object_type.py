@@ -17,7 +17,9 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-OBJECT_CLASS_DICT = {"ThermoBulk": "pyiron_atomistics.atomistics.thermodynamics.thermo_bulk"}
+OBJECT_CLASS_DICT = {
+    "ThermoBulk": "pyiron_atomistics.atomistics.thermodynamics.thermo_bulk"
+}
 
 
 class ObjectTypeChoice(object):

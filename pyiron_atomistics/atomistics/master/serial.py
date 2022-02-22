@@ -56,7 +56,9 @@ class SerialMaster(SerialMasterBase, AtomisticGenericJob):
         if self.start_job is not None:
             self._start_job.structure = basis
         else:
-            raise ValueError("A structure can only be set after a start job has been assigned.")
+            raise ValueError(
+                "A structure can only be set after a start job has been assigned."
+            )
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self.project.load(self.child_ids[-1]).get_structure(

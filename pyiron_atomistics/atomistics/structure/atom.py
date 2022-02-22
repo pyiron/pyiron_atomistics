@@ -3,7 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable, ChemicalElement
+from pyiron_atomistics.atomistics.structure.periodic_table import (
+    PeriodicTable,
+    ChemicalElement,
+)
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseArrayElement
 from ase.atom import Atom as ASEAtom
 
@@ -37,6 +40,7 @@ class Atom(ASEAtom, SparseArrayElement):
     .. _ASE atom class: https://wiki.fysik.dtu.dk/ase/ase/atom.html
 
     """
+
     def __init__(
         self,
         symbol="X",
@@ -86,7 +90,8 @@ class Atom(ASEAtom, SparseArrayElement):
                 magmom=magmom,
                 charge=charge,
                 atoms=atoms,
-                index=index)
+                index=index,
+            )
         except KeyError:
             symbol = pse.Parent[symbol]
             ASEAtom.__init__(
@@ -99,7 +104,8 @@ class Atom(ASEAtom, SparseArrayElement):
                 magmom=magmom,
                 charge=charge,
                 atoms=atoms,
-                index=index)
+                index=index,
+            )
 
         # ASE compatibility for tags
         for key, val in qwargs.items():
@@ -159,12 +165,14 @@ def ase_to_pyiron(ase_obj):
         pyiron.atomistics.structure.atom.Atom: The equivalent pyiron Atom
 
     """
-    return Atom(symbol=ase_obj.symbol,
-                position=ase_obj.position,
-                tag=ase_obj.tag,
-                momentum=ase_obj.momentum,
-                mass=ase_obj.mass,
-                magmom=ase_obj.magmom,
-                charge=ase_obj.charge,
-                atoms=ase_obj.atoms,
-                index=ase_obj.index)
+    return Atom(
+        symbol=ase_obj.symbol,
+        position=ase_obj.position,
+        tag=ase_obj.tag,
+        momentum=ase_obj.momentum,
+        mass=ase_obj.mass,
+        magmom=ase_obj.magmom,
+        charge=ase_obj.charge,
+        atoms=ase_obj.atoms,
+        index=ase_obj.index,
+    )

@@ -71,6 +71,7 @@ class MapMaster(AtomisticParallelMaster):
 
 
     """
+
     def __init__(self, project, job_name):
         """
 
@@ -179,13 +180,17 @@ def pipe(project, job, step_lst, delete_existing_job=False):
     Returns:
         FlexibleMaster:
     """
-    job_lst_master = project.create_job(project.job_type.FlexibleMaster, job.job_name + '_lstmaster', delete_existing_job=delete_existing_job)
+    job_lst_master = project.create_job(
+        project.job_type.FlexibleMaster,
+        job.job_name + "_lstmaster",
+        delete_existing_job=delete_existing_job,
+    )
     if job_lst_master.status.finished:
         return job_lst_master
     else:
         for i, step_funct in enumerate(step_lst):
             job_lst_master.append(step_funct(job))
-            if i > 0 and 'for_each_structure' in step_funct.__name__:
+            if i > 0 and "for_each_structure" in step_funct.__name__:
                 job_lst_master.function_lst.append(_structure_many_to_many)
             elif i > 0:
                 job_lst_master.function_lst.append(_structure_one_to_one)

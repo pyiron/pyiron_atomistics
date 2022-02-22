@@ -62,14 +62,27 @@ class VaspMetadyn(Vasp):
         self.__name__ = "VaspMetadyn"
         self.input = MetadynInput()
         self._output_parser = MetadynOutput()
-        self.supported_primitive_constraints = ["bond", "angle", "torsion", "x_pos", "y_pos", "z_pos"]
-        self.supported_complex_constraints = ["linear_combination", "norm", "coordination_number"]
+        self.supported_primitive_constraints = [
+            "bond",
+            "angle",
+            "torsion",
+            "x_pos",
+            "y_pos",
+            "z_pos",
+        ]
+        self.supported_complex_constraints = [
+            "linear_combination",
+            "norm",
+            "coordination_number",
+        ]
         self._constraint_dict = dict()
         self._complex_constraints = dict()
         # This is necessary to write the constrained dynamics output to the REPORT file
         self.input.incar["LBLUEOUT"] = True
 
-    def set_primitive_constraint(self, name, constraint_type, atom_indices, biased=False, increment=0.0):
+    def set_primitive_constraint(
+        self, name, constraint_type, atom_indices, biased=False, increment=0.0
+    ):
         """
         Function to set primitive geometric constraints  in VASP.
 
@@ -82,21 +95,35 @@ class VaspMetadyn(Vasp):
 
         """
         if self.structure is None:
-            raise ValueError("The structure has to be set before a dynamic constraint is assigned")
+            raise ValueError(
+                "The structure has to be set before a dynamic constraint is assigned"
+            )
         self._constraint_dict[name] = dict()
         if constraint_type in self.supported_primitive_constraints:
             self._constraint_dict[name]["constraint_type"] = constraint_type
         else:
-            raise ValueError("The constraint type '{}' is not supported".format(constraint_type))
+            raise ValueError(
+                "The constraint type '{}' is not supported".format(constraint_type)
+            )
         self._constraint_dict[name]["atom_indices"] = atom_indices
         self._constraint_dict[name]["biased"] = biased
         self._constraint_dict[name]["increment"] = increment
 
-    def _set_primitive_constraint_iconst(self, constraint_type, atom_indices, biased=False):
+    def _set_primitive_constraint_iconst(
+        self, constraint_type, atom_indices, biased=False
+    ):
         if self.structure is None:
-            raise ValueError("The structure has to be set before a dynamic constraint is assigned")
-        constraint_dict = {"bond": "R", "angle": "A", "torsion": "T",
-                           "x_pos": "X", "y_pos": "Y", "z_pos": "Z"}
+            raise ValueError(
+                "The structure has to be set before a dynamic constraint is assigned"
+            )
+        constraint_dict = {
+            "bond": "R",
+            "angle": "A",
+            "torsion": "T",
+            "x_pos": "X",
+            "y_pos": "Y",
+            "z_pos": "Z",
+        }
         if constraint_type not in list(constraint_dict.keys()):
             raise ValueError("Use a compatible constraint type")
         line = len(self.input.iconst._dataset["Value"])
@@ -110,18 +137,28 @@ class VaspMetadyn(Vasp):
                 a_ind = str(self.sorted_indices[atom_indices] + 1)
         elif constraint_type in ["bond"]:
             if len(atom_indices) != 2:
-                raise ValueError("For this constraint the atom_indices must be a list or numpy array with 2 values")
-            a_ind = ' '.join(map(str, self.sorted_indices[atom_indices] + 1))
+                raise ValueError(
+                    "For this constraint the atom_indices must be a list or numpy array with 2 values"
+                )
+            a_ind = " ".join(map(str, self.sorted_indices[atom_indices] + 1))
         elif constraint_type in ["angle"]:
             if len(atom_indices) != 3:
-                raise ValueError("For this constraint the atom_indices must be a list or numpy array with 3 values")
-            a_ind = ' '.join(map(str, self.sorted_indices[atom_indices] + 1))
+                raise ValueError(
+                    "For this constraint the atom_indices must be a list or numpy array with 3 values"
+                )
+            a_ind = " ".join(map(str, self.sorted_indices[atom_indices] + 1))
         else:
-            raise ValueError("The constraint {} is not implemented!".format(constraint_type))
-        constraint_string = "{} {} {}".format(constraint_dict[constraint_type], a_ind, status)
+            raise ValueError(
+                "The constraint {} is not implemented!".format(constraint_type)
+            )
+        constraint_string = "{} {} {}".format(
+            constraint_dict[constraint_type], a_ind, status
+        )
         self.input.iconst.set_value(line, constraint_string)
 
-    def set_complex_constraint(self, name, constraint_type, coefficient_dict, biased=False, increment=0.0):
+    def set_complex_constraint(
+        self, name, constraint_type, coefficient_dict, biased=False, increment=0.0
+    ):
         """
         Set complex constraints based on defined primitive constraints.
 
@@ -135,26 +172,38 @@ class VaspMetadyn(Vasp):
 
         """
         if self.structure is None:
-            raise ValueError("The structure has to be set before a dynamic constraint is assigned")
+            raise ValueError(
+                "The structure has to be set before a dynamic constraint is assigned"
+            )
         if constraint_type not in self.supported_complex_constraints:
             raise ValueError("Use a compatible complex constraint type")
         self._complex_constraints[name] = dict()
         self._complex_constraints[name]["constraint_type"] = constraint_type
-        if len(list(coefficient_dict.keys())) != len(list(self._constraint_dict.keys())):
-            raise ValueError("The number of coefficients should match the number of primitive contstraints")
+        if len(list(coefficient_dict.keys())) != len(
+            list(self._constraint_dict.keys())
+        ):
+            raise ValueError(
+                "The number of coefficients should match the number of primitive contstraints"
+            )
         self._complex_constraints[name]["coefficient_dict"] = coefficient_dict
         self._complex_constraints[name]["biased"] = biased
         self._complex_constraints[name]["increment"] = increment
 
     def _set_complex_constraint(self, constraint_type, coefficients, biased=False):
-        constraint_dict = {"linear_combination": "S", "norm": "C", "coordination_number": "D"}
+        constraint_dict = {
+            "linear_combination": "S",
+            "norm": "C",
+            "coordination_number": "D",
+        }
         if constraint_type not in list(constraint_dict.keys()):
             raise ValueError("Use a compatible constraint type")
         status = 0
         if biased:
             status = 5
         coeffs = " ".join(map(str, coefficients))
-        constraint_string = "{} {} {}".format(constraint_dict[constraint_type], coeffs, status)
+        constraint_string = "{} {} {}".format(
+            constraint_dict[constraint_type], coeffs, status
+        )
         line = len(self.input.iconst._dataset["Value"])
         self.input.iconst.set_value(line, constraint_string)
 
@@ -168,14 +217,22 @@ class VaspMetadyn(Vasp):
         self.input.iconst.clear_all()
         for key, constraint in self._constraint_dict.items():
             linear_constraint_order.append(key)
-            self._set_primitive_constraint_iconst(constraint_type=constraint["constraint_type"],
-                                                  atom_indices=constraint["atom_indices"], biased=constraint["biased"])
+            self._set_primitive_constraint_iconst(
+                constraint_type=constraint["constraint_type"],
+                atom_indices=constraint["atom_indices"],
+                biased=constraint["biased"],
+            )
             increment_list.append(constraint["increment"])
 
         for constraint in self._complex_constraints.values():
-            coefficients = [constraint["coefficient_dict"][val] for val in linear_constraint_order]
-            self._set_complex_constraint(constraint_type=constraint["constraint_type"],
-                                         coefficients=coefficients, biased=constraint["biased"])
+            coefficients = [
+                constraint["coefficient_dict"][val] for val in linear_constraint_order
+            ]
+            self._set_complex_constraint(
+                constraint_type=constraint["constraint_type"],
+                coefficients=coefficients,
+                biased=constraint["biased"],
+            )
             increment_list.append(constraint["increment"])
         self.input.incar["INCREM"] = " ".join(map(str, increment_list))
 
@@ -199,12 +256,17 @@ class VaspMetadyn(Vasp):
 
 
 class MetadynInput(Input):
-
     def __init__(self):
         super(MetadynInput, self).__init__()
-        self.iconst = GenericParameters(input_file_name=None, table_name="iconst", val_only=True, comment_char="!")
-        self.penaltypot = GenericParameters(input_file_name=None, table_name="penaltypot", val_only=True,
-                                            comment_char="!")
+        self.iconst = GenericParameters(
+            input_file_name=None, table_name="iconst", val_only=True, comment_char="!"
+        )
+        self.penaltypot = GenericParameters(
+            input_file_name=None,
+            table_name="penaltypot",
+            val_only=True,
+            comment_char="!",
+        )
         self._constraint_dict = dict()
         self._complex_constraints = dict()
 
@@ -241,13 +303,14 @@ class MetadynInput(Input):
 
 
 class MetadynOutput(Output):
-
     def __init__(self):
         super(MetadynOutput, self).__init__()
         self.report_file = Report()
 
     def collect(self, directory=os.getcwd(), sorted_indices=None):
-        super(MetadynOutput, self).collect(directory=directory, sorted_indices=sorted_indices)
+        super(MetadynOutput, self).collect(
+            directory=directory, sorted_indices=sorted_indices
+        )
         files_present = os.listdir(directory)
         if "REPORT" in files_present:
             self.report_file.from_file(filename=posixpath.join(directory, "REPORT"))

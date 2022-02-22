@@ -30,6 +30,7 @@ class SQSMaster(AtomisticParallelMaster):
 
     The other options to :class:`.SQSJob` must be set on the reference job.
     """
+
     def __init__(self, project, job_name):
         super(SQSMaster, self).__init__(project, job_name)
         self.__name__ = "SQSMaster"
@@ -47,7 +48,10 @@ class SQSMaster(AtomisticParallelMaster):
         """
         list: `len(self.input["fraction_lst"])` with the top-scoring structure from each sub job
         """
-        return [self.project_hdf5.load(job_id).list_of_structures[0] for job_id in self.child_ids]
+        return [
+            self.project_hdf5.load(job_id).list_of_structures[0]
+            for job_id in self.child_ids
+        ]
 
     def list_structures(self):
         """
@@ -70,7 +74,10 @@ class SQSJobGenerator(JobGenerator):
         return [
             [
                 "sqs_" + str(np.round(f, 4)).replace(".", "_"),
-                {self._master.input["species_one"]: f, self._master.input["species_two"]: 1-f}
+                {
+                    self._master.input["species_one"]: f,
+                    self._master.input["species_two"]: 1 - f,
+                },
             ]
             for f in self._master.input["fraction_lst"]
         ]
@@ -80,5 +87,5 @@ class SQSJobGenerator(JobGenerator):
         return parameter[0]
 
     def modify_job(self, job, parameter):
-        job.input['mole_fractions'] = parameter[1]
+        job.input["mole_fractions"] = parameter[1]
         return job
