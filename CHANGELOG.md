@@ -8,7 +8,7 @@
 - Improve Murngahan ([#531](https://github.com/pyiron/pyiron_atomistics/pull/531))
 - Revert "include DataConatiner check" ([#533](https://github.com/pyiron/pyiron_atomistics/pull/533))
 - include DataConatiner check ([#514](https://github.com/pyiron/pyiron_atomistics/pull/514))
-- Dependency updates: [#538](https://github.com/pyiron/pyiron_atomistics/pull/538), [#537](https://github.com/pyiron/pyiron_atomistics/pull/537), [#536](https://github.com/pyiron/pyiron_atomistics/pull/536), [#543](https://github.com/pyiron/pyiron_atomistics/pull/543)
+- Dependency updates: [#538](https://github.com/pyiron/pyiron_atomistics/pull/538), [#537](https://github.com/pyiron/pyiron_atomistics/pull/537), [#536](https://github.com/pyiron/pyiron_atomistics/pull/536), [#543](https://github.com/pyiron/pyiron_atomistics/pull/543), [#548](https://github.com/pyiron/pyiron_atomistics/pull/548)
 
 # pyiron_atomistics-0.2.37
 
