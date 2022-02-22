@@ -829,9 +829,11 @@ class SphinxBase(GenericDFTJob):
                     self.collect_output()
                 except AssertionError as orig_error:
                     if from_charge_density or from_wave_functions:
-                        raise AssertionError(orig_error.message +
-                            '\nCowardly refusing to use density or wavefunctions for restart.\n' +
-                            'Solution: set from_charge_density and from_wave_functions to False.')
+                        raise AssertionError(
+                            orig_error.message
+                            + "\nCowardly refusing to use density or wavefunctions for restart.\n"
+                            + "Solution: set from_charge_density and from_wave_functions to False."
+                        )
                 if len(w) > 0:
                     self.status.not_converged = True
         new_job = super(SphinxBase, self).restart(job_name=job_name, job_type=job_type)

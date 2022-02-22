@@ -461,7 +461,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         appended_path = posixpath.join(self.working_directory, filename)
         if not os.path.isfile(appended_path):
-            raise FileNotFoundError(f"File {filename} not found in working directory: {self.working_directory}")
+            raise FileNotFoundError(
+                f"File {filename} not found in working directory: {self.working_directory}"
+            )
         return appended_path
 
     # Required functions
@@ -626,7 +628,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         snapshot_indices=None,
         overwrite_positions=None,
         overwrite_cells=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Writes the trajectory in a given file file_format based on the `ase.io.write`_ function.
@@ -664,7 +666,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             format=file_format,
             parallel=parallel,
             append=append,
-            **kwargs
+            **kwargs,
         )
 
     def get_neighbors_snapshots(
