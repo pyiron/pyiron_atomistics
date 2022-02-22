@@ -32,13 +32,16 @@ class QuasiNewtonInteractive:
             structure=structure,
             starting_h=starting_h,
             diffusion_id=diffusion_id,
-            diffusion_direction=diffusion_direction
+            diffusion_direction=diffusion_direction,
         )
 
     def _initialize_hessian(
         self, structure, starting_h=10, diffusion_id=None, diffusion_direction=None
     ):
-        if np.prod(np.array(starting_h).shape) == np.prod(structure.positions.shape)**2:
+        if (
+            np.prod(np.array(starting_h).shape)
+            == np.prod(structure.positions.shape) ** 2
+        ):
             self.hessian = starting_h
         else:
             self.hessian = starting_h * np.eye(np.prod(structure.positions.shape))
@@ -46,10 +49,12 @@ class QuasiNewtonInteractive:
             v = np.zeros_like(structure.positions)
             v[diffusion_id] = diffusion_direction
             v = v.flatten()
-            self.hessian -= (starting_h + 1) * np.einsum('i,j->ij', v, v) / np.linalg.norm(v)**2
+            self.hessian -= (
+                (starting_h + 1) * np.einsum("i,j->ij", v, v) / np.linalg.norm(v) ** 2
+            )
             self.use_eigenvalues = True
         elif diffusion_id is not None or diffusion_direction is not None:
-            raise ValueError('diffusion id or diffusion direction not specified')
+            raise ValueError("diffusion id or diffusion direction not specified")
 
     def _set_regularization(self, g, max_cycle=20, max_value=20, tol=1.0e-8):
         self.regularization = -2
@@ -66,10 +71,11 @@ class QuasiNewtonInteractive:
             return np.linalg.inv(self.hessian)
         if self.use_eigenvalues:
             return np.einsum(
-                'ik,k,jk->ij',
+                "ik,k,jk->ij",
                 self.eigenvectors,
-                self.eigenvalues / (self.eigenvalues**2 + np.exp(self.regularization)),
-                self.eigenvectors
+                self.eigenvalues
+                / (self.eigenvalues**2 + np.exp(self.regularization)),
+                self.eigenvectors,
             )
         else:
             return np.linalg.inv(
@@ -104,17 +110,20 @@ class QuasiNewtonInteractive:
             self._calc_eig()
         return self._eigenvectors
 
-    def get_dx(self, g, threshold=1e-4, mode='PSB', update_hessian=True):
+    def get_dx(self, g, threshold=1e-4, mode="PSB", update_hessian=True):
         if update_hessian:
             self.update_hessian(g, threshold=threshold, mode=mode)
-        self.dx = -np.einsum('ij,j->i', self.inv_hessian, g.flatten()).reshape(-1, 3)
+        self.dx = -np.einsum("ij,j->i", self.inv_hessian, g.flatten()).reshape(-1, 3)
         if self.symmetry is not None:
             self.dx = self.symmetry.symmetrize_vectors(self.dx)
-        if np.linalg.norm(
-            self.dx, axis=-1
-        ).max() > self.max_displacement and self.regularization is None:
+        if (
+            np.linalg.norm(self.dx, axis=-1).max() > self.max_displacement
+            and self.regularization is None
+        ):
             self._set_regularization(g=g.flatten())
-            return self.get_dx(g=g, threshold=threshold, mode=mode, update_hessian=False)
+            return self.get_dx(
+                g=g, threshold=threshold, mode=mode, update_hessian=False
+            )
         return self.dx
 
     def _get_SR(self, dx, dg, H_tmp, threshold=1e-4):
@@ -124,30 +133,36 @@ class QuasiNewtonInteractive:
         return np.outer(H_tmp, H_tmp) / denominator
 
     def _get_PSB(self, dx, dg, H_tmp):
-        dxdx = np.einsum('i,i->', dx, dx)
-        dH = np.einsum('i,j->ij', H_tmp, dx)
+        dxdx = np.einsum("i,i->", dx, dx)
+        dH = np.einsum("i,j->ij", H_tmp, dx)
         dH = (dH + dH.T) / dxdx
-        return dH - np.einsum('i,i,j,k->jk', dx, H_tmp, dx, dx, optimize='optimal') / dxdx**2
+        return (
+            dH
+            - np.einsum("i,i,j,k->jk", dx, H_tmp, dx, dx, optimize="optimal")
+            / dxdx**2
+        )
 
     def _get_BFGS(self, dx, dg, H_tmp):
         return np.outer(dg, dg) / dg.dot(dx) - np.outer(H_tmp, H_tmp) / dx.dot(H_tmp)
 
-    def update_hessian(self, g, threshold=1e-4, mode='PSB'):
+    def update_hessian(self, g, threshold=1e-4, mode="PSB"):
         if self.g_old is None:
             self.g_old = g
             return
         dg = self.get_dg(g).flatten()
         dx = self.dx.flatten()
-        H_tmp = dg - np.einsum('ij,j->i', self.hessian, dx)
-        if mode == 'SR':
+        H_tmp = dg - np.einsum("ij,j->i", self.hessian, dx)
+        if mode == "SR":
             self.hessian = self._get_SR(dx, dg, H_tmp) + self.hessian
-        elif mode == 'PSB':
+        elif mode == "PSB":
             self.hessian = self._get_PSB(dx, dg, H_tmp) + self.hessian
-        elif mode == 'BFGS':
+        elif mode == "BFGS":
             self.hessian = self._get_BFGS(dx, dg, H_tmp) + self.hessian
         else:
             raise ValueError(
-                'Mode not recognized: {}. Choose from `SR`, `PSB` and `BFGS`'.format(mode)
+                "Mode not recognized: {}. Choose from `SR`, `PSB` and `BFGS`".format(
+                    mode
+                )
             )
         self.g_old = g
 
@@ -157,7 +172,7 @@ class QuasiNewtonInteractive:
 
 def run_qn(
     job,
-    mode='PSB',
+    mode="PSB",
     ionic_steps=100,
     ionic_force_tolerance=1.0e-2,
     ionic_energy_tolerance=0,
@@ -185,7 +200,7 @@ def run_qn(
             break
         dx = qn.get_dx(-f, mode=mode)
         if np.linalg.norm(dx, axis=-1).max() < min_displacement:
-            warnings.warn('line search alpha is zero')
+            warnings.warn("line search alpha is zero")
             break
         job.structure.positions += dx
         job.structure.center_coordinates_in_unit_cell()
@@ -236,12 +251,13 @@ class QuasiNewton(InteractiveWrapper):
 
     where `M` is the eigenvector matrix, `d` are the eigenvalues and `L` is the regularization.
     """
+
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
         self.__name__ = "QuasiNewton"
         self.__version__ = (
-            None
-        )  # Reset the version number to the executable is set automatically
+            None  # Reset the version number to the executable is set automatically
+        )
         self.input = Input()
         self.output = Output(self)
         self._interactive_interface = None
@@ -261,7 +277,6 @@ class QuasiNewton(InteractiveWrapper):
             max_displacement=self.input.max_displacement,
         )
         self.collect_output()
-
 
     def run_static(self):
         self.status.running = True
@@ -288,18 +303,12 @@ class QuasiNewton(InteractiveWrapper):
     write_input.__doc__ = InteractiveWrapper.write_input.__doc__
 
     def to_hdf(self, hdf=None, group_name=None):
-        super().to_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
+        super().to_hdf(hdf=hdf, group_name=group_name)
 
     to_hdf.__doc__ = InteractiveWrapper.to_hdf.__doc__
 
     def from_hdf(self, hdf=None, group_name=None):
-        super().from_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
+        super().from_hdf(hdf=hdf, group_name=group_name)
 
     from_hdf.__doc__ = InteractiveWrapper.from_hdf.__doc__
 
@@ -319,7 +328,7 @@ class Input(DataContainer):
     """
 
     def __init__(self, input_file_name=None, table_name="input"):
-        self.mode = 'PSB'
+        self.mode = "PSB"
         self.ionic_steps = 100
         self.ionic_force_tolerance = 1.0e-2
         self.ionic_energy_tolerance = 0
