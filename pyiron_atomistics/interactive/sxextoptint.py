@@ -164,13 +164,16 @@ class SxExtOpt(InteractiveInterface):
         selective_dynamics=False,
     ):
         with open(os.path.join(working_directory, "optim.sx"), "w") as f:
-            content = "main { ricQN { ric { maxDist = %f; withAngles; } maxSteps = %i; dEnergy = %f; dF = %f; maxStepLength = %f; softModeDamping = %f;}}" % (
-                maxDist,
-                ionic_steps,
-                ionic_energy_tolerance,
-                ionic_force_tolerance,
-                max_step_length,
-                soft_mode_damping,
+            content = (
+                "main { ricQN { ric { maxDist = %f; withAngles; } maxSteps = %i; dEnergy = %f; dF = %f; maxStepLength = %f; softModeDamping = %f;}}"
+                % (
+                    maxDist,
+                    ionic_steps,
+                    ionic_energy_tolerance,
+                    ionic_force_tolerance,
+                    max_step_length,
+                    soft_mode_damping,
+                )
             )
             if selective_dynamics:
                 content += "structure { include <structure.sx>; }"

@@ -180,11 +180,11 @@ class StructureStorage(FlattenedStorage, HasStructure):
 
         # Extract energies, forces, and atomic charges from ASE Atoms objects.
         if isinstance(structure, ASEAtoms):
-            arrays['charges'] = structure.get_initial_charges()
+            arrays["charges"] = structure.get_initial_charges()
 
             if structure.calc is not None:
-                arrays['energy'] = structure.calc.get_potential_energy()
-                arrays['forces'] = structure.calc.get_forces()
+                arrays["energy"] = structure.calc.get_potential_energy()
+                arrays["forces"] = structure.calc.get_forces()
 
             structure = ase_to_pyiron(structure)
 

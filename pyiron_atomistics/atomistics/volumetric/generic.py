@@ -85,7 +85,7 @@ class VolumetricData(object):
         """
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         d2 = d * d
-        return np.exp(-1 / (2 * sigma ** 2) * d2)
+        return np.exp(-1 / (2 * sigma**2) * d2)
 
     @staticmethod
     def dist_between_two_grid_points(

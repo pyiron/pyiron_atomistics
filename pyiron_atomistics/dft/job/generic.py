@@ -494,11 +494,11 @@ class GenericDFTJob(AtomisticGenericJob):
             - grid[np.newaxis, np.newaxis, np.newaxis, :]
         )
         hist = (
-            np.exp(-((hist) ** 2) / (2 * sigma ** 2))
+            np.exp(-((hist) ** 2) / (2 * sigma**2))
             * k_weights[np.newaxis, :, np.newaxis, np.newaxis]
         )
         hist = np.sum(hist, axis=(1, 2))
-        hist *= 2 / len(eigen_values) / np.sqrt(2 * np.pi * sigma ** 2)
+        hist *= 2 / len(eigen_values) / np.sqrt(2 * np.pi * sigma**2)
         return {"grid": grid, "dos": hist}
 
 

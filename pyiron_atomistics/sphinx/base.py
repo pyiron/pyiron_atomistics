@@ -2046,7 +2046,7 @@ class _SphinxLogParser:
         volume = re.findall("Omega:.*$", self.log_file, re.MULTILINE)
         if len(volume) > 0:
             volume = float(volume[0].split()[1])
-            volume *= BOHR_TO_ANGSTROM ** 3
+            volume *= BOHR_TO_ANGSTROM**3
         else:
             volume = 0
         return np.array(self.n_steps * [volume])
