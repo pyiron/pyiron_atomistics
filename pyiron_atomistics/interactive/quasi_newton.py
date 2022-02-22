@@ -52,35 +52,13 @@ class QuasiNewtonInteractive:
             raise ValueError('diffusion id or diffusion direction not specified')
 
     def _set_regularization(self, g, max_cycle=20, max_value=20, tol=1.0e-8):
-        self.regularization = 1
+        self.regularization = -2
         for _ in range(max_cycle):
-            H_inv = self.inv_hessian
-            gH = H_inv.dot(g)
-            value = np.absolute(gH).max() - self.max_displacement
-            if np.absolute(value) < tol:
+            if np.absolute(self.inv_hessian.dot(g)).max() < self.max_displacement:
                 break
-            self.regularization -= np.tanh(value / self._get_d_inv_hessian(H_inv, gH, g))
+            self.regularization += 1
             if np.absolute(self.regularization) > max_value:
-                self.regularization = max_value * np.sign(self.regularization)
-
-    def _get_d_inv_hessian(self, H_inv, gH, g):
-        if self.use_eigenvalues:
-            return -np.einsum(
-                ',k,k,k,jk,j->',
-                np.exp(self.regularization),
-                self.eigenvectors[np.absolute(gH).argmax()],
-                self.eigenvalues,
-                1 / (self.eigenvalues**2 + np.exp(self.regularization))**2,
-                self.eigenvectors, g,
-                optimize=True
-            ) * np.sign(gH[np.absolute(gH).argmax()])
-        else:
-            return -np.einsum(
-                ',j,j->',
-                np.exp(self.regularization),
-                H_inv[np.absolute(gH).argmax()],
-                gH, optimize=True
-            ) * np.sign(gH[np.absolute(gH).argmax()])
+                self.regularization = max_value
 
     @property
     def inv_hessian(self):
