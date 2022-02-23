@@ -176,6 +176,15 @@ class PhonopyJob(AtomisticParallelMaster):
             "'distance' parameter, i.e., all atoms in supercell are displaced with the same displacement distance in "
             "direct space. (Copied directly from phonopy docs. Requires the alm package to work.)",
         )
+        self.input["plus_minus"] = (
+            "auto", 
+            "auto, True or False. This tag specifies how displacements are found. 'False': Least displacements that can "
+            "calculate force constants are found. This may cause less accurate result. 'True': all the displacements "
+            "that are opposite directions to the least displacements are also found. The default setting is 'auto'. "
+            "Plus-minus displacements are considered with this tag. If the plus and minus displacements are symmetrically "
+            "equivalent, only the plus displacement is found. This may be in between 'False' and 'True'. (Copied directly "
+            "from phonopy docs.)",
+        )
 
         self.phonopy = None
         self._job_generator = PhonopyJobGenerator(self)
@@ -208,6 +217,7 @@ class PhonopyJob(AtomisticParallelMaster):
                 )
                 self.phonopy.generate_displacements(
                     distance=self.input["displacement"],
+                    is_plusminus=self.input["plus_minus"],
                     number_of_snapshots=self.input["number_of_snapshots"],
                 )
                 self.to_hdf()
