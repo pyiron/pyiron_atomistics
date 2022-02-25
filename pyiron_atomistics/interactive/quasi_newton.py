@@ -308,11 +308,12 @@ class QuasiNewton(InteractiveWrapper):
         self.input = Input()
         self.output = Output(self)
         self._interactive_interface = None
+        self.qn = None
 
     __init__.__doc__ = InteractiveWrapper.__init__.__doc__
 
     def _run(self):
-        run_qn(
+        self.qn = run_qn(
             job=self.ref_job,
             mode=self.input.mode,
             ionic_steps=self.input.ionic_steps,
@@ -351,6 +352,8 @@ class QuasiNewton(InteractiveWrapper):
 
     def collect_output(self):
         self.output._index_lst.append(len(self.ref_job.output.energy_pot))
+        if self.qn is not None:
+            self.output.hessian = self.qn.hessian
 
     collect_output.__doc__ = InteractiveWrapper.collect_output.__doc__
 
