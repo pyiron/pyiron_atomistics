@@ -1,5 +1,5 @@
 import numpy as np
-from pyiron_base import DataContainer
+from pyiron_base import GenericParameters
 import warnings
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
@@ -315,16 +315,16 @@ class QuasiNewton(InteractiveWrapper):
     def _run(self):
         self.qn = run_qn(
             job=self.ref_job,
-            mode=self.input.mode,
-            ionic_steps=self.input.ionic_steps,
-            ionic_force_tolerance=self.input.ionic_force_tolerance,
-            ionic_energy_tolerance=self.input.ionic_energy_tolerance,
-            starting_h=self.input.starting_h,
-            diffusion_id=self.input.diffusion_id,
-            diffusion_direction=self.input.diffusion_direction,
-            use_eigenvalues=self.input.use_eigenvalues,
-            symmetrize=self.input.symmetrize,
-            max_displacement=self.input.max_displacement,
+            mode=self.input["mode"],
+            ionic_steps=self.input["ionic_steps"],
+            ionic_force_tolerance=self.input["ionic_force_tolerance"],
+            ionic_energy_tolerance=self.input["ionic_energy_tolerance"],
+            starting_h=self.input["starting_h"],
+            diffusion_id=self.input["diffusion_id"],
+            diffusion_direction=self.input["diffusion_direction"],
+            use_eigenvalues=self.input["use_eigenvalues"],
+            symmetrize=self.input["symmetrize"],
+            max_displacement=self.input["max_displacement"],
         )
         self.collect_output()
 
@@ -354,39 +354,58 @@ class QuasiNewton(InteractiveWrapper):
         self.output._index_lst.append(len(self.ref_job.output.energy_pot))
         if self.qn is not None:
             self.output.hessian = self.qn.hessian
+        self.output.to_hdf(hdf=self.project_hdf5)
 
     collect_output.__doc__ = InteractiveWrapper.collect_output.__doc__
 
 
-class Input(DataContainer):
+class Input(GenericParameters):
     """
+    class to control the generic input for a Sphinx calculation.
+
     Args:
-        minimizer (str): minimizer to use (currently only 'CG' and 'PSB' run
-            reliably)
-        ionic_steps (int): max number of steps
-        ionic_force_tolerance (float): maximum force tolerance
+        input_file_name (str): name of the input file
+        table_name (str): name of the GenericParameters table
     """
 
     def __init__(self, input_file_name=None, table_name="input"):
-        self.mode = "PSB"
-        self.ionic_steps = 100
-        self.ionic_force_tolerance = 1.0e-2
-        self.ionic_energy_tolerance = 0
-        self.starting_h = 10
-        self.diffusion_id = None
-        self.use_eigenvalues = True
-        self.diffusion_direction = None
-        self.symmetrize = True
-        self.max_displacement = 0.1
+        super(Input, self).__init__(
+            input_file_name=input_file_name,
+            table_name=table_name,
+            comment_char="//",
+            separator_char="=",
+            end_value_char=";",
+        )
 
-    __init__.__doc__ = DataContainer.__init__.__doc__
+    __init__.__doc__ = GenericParameters.__init__.__doc__
+
+    def load_default(self):
+        file_content = (
+            "mode = 'PSB'\n"
+            "ionic_steps = 100\n"
+            "ionic_force_tolerance = 1.0e-2\n"
+            "ionic_energy_tolerance = 0\n"
+            "starting_h = 10\n"
+            "diffusion_id = None\n"
+            "use_eigenvalues = True\n"
+            "diffusion_direction = None\n"
+            "symmetrize = True\n"
+            "max_displacement = 0.1\n"
+        )
+        self.load_string(file_content)
 
 
 class Output(ReferenceJobOutput):
     def __init__(self, job):
         super().__init__(job=job)
         self._index_lst = []
+        self.hessian = None
 
     @property
     def index_lst(self):
         return np.asarray(self._index_lst)
+
+    def to_hdf(self, hdf, group_name="output"):
+        if self.hessian is not None:
+            with hdf.open(group_name) as hdf_output:
+                hdf_output["hessian"] = self.hessian
