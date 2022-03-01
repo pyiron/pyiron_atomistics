@@ -98,6 +98,11 @@ class TestVaspImport(unittest.TestCase):
         ham = self.project.inspect("full_job_sample")
         self.assertEqual(ham["output/generic/dft/energy_free"][-1], -17.7379867884)
         self.assertIsInstance(ham["output/charge_density"].to_object(), VaspVolumetricData)
+        with ham.project_hdf5.open("output/generic") as h_gen:
+            for node in h_gen.list_nodes():
+                if h_gen[node] is not None:
+                    self.assertIsInstance(h_gen[node], np.ndarray,
+                                          f"output/generic/{node} is not stored as a numpy array")
 
 
 if __name__ == "__main__":

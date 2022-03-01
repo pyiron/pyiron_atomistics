@@ -512,6 +512,10 @@ class ElasticTensor(AtomisticParallelMaster):
             normalize=self.input["normalize_magnitude"],
         ).tolist()
 
+    def save(self):
+        self.validate_ready_to_run()
+        super().save()
+
     def validate_ready_to_run(self):
         super().validate_ready_to_run()
         if self.input["use_symmetry"] and len(self.input["rotations"]) == 0:
