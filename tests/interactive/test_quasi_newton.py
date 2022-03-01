@@ -37,7 +37,7 @@ class TestQuasiNewton(unittest.TestCase):
         lj = self.project.create.job.AtomisticExampleJob('exp')
         lj.structure = self.project.create.structure.bulk('Al', cubic=True).repeat(3)
         qn = lj.create_job('QuasiNewton', 'qn')
-        self.assertTrue(qn.input.symmetrize)
+        self.assertTrue(qn.input["symmetrize"])
 
     def test_initialize_hessian(self):
         structure = self.project.create.structure.bulk('Al', cubic=True).repeat(3)
