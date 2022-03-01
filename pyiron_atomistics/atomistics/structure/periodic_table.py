@@ -351,7 +351,7 @@ class PeriodicTable(object):
         parent_element_data_series.name = new_element
         if new_element not in self.dataframe.T.columns:
             self.dataframe = pandas.concat(
-                [self.dataframe, parent_element_data_series],
+                [self.dataframe, parent_element_data_series.to_frame().T],
             )
         else:
             self.dataframe.loc[new_element] = parent_element_data_series
