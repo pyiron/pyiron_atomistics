@@ -220,7 +220,7 @@ class VaspPotentialFile(VaspPotentialAbstract):
                 dtype=str,
                 name=new_element,
             )
-            self._default_df = pandas.concat([self._default_df, ds])
+            self._default_df = pandas.concat([self._default_df, ds.to_frame().T])
         else:
             self._default_df.loc[new_element] = "-".join(name_list)
 
