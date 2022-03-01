@@ -436,12 +436,15 @@ class TestVasp(unittest.TestCase):
             job.set_mixing_parameters(density_residual_scaling=0.1)
 
     def test_potentials(self):
-        structure = self.project.create_ase_bulk("Al", cubic=True)
-        element = self.project.create_element(new_element_name='Al_GW', parent_element="Al", potential_file='Al_GW')
-        structure[:] = element
-        job = self.project.create.job.Vasp("test")
-        job.structure = structure
-        job.run(run_mode="manual")
+        # Assert that no warnings are raised
+        with warnings.catch_warnings(record=True) as w:
+            structure = self.project.create_ase_bulk("Al", cubic=True)
+            element = self.project.create_element(new_element_name='Al_GW', parent_element="Al", potential_file='Al_GW')
+            structure[:] = element
+            job = self.project.create.job.Vasp("test")
+            job.structure = structure
+            job.run(run_mode="manual")
+            self.assertEqual(len(w), 0)
 
 
 if __name__ == "__main__":
