@@ -254,7 +254,7 @@ class PeriodicTable(object):
                     self.dataframe["tags"] = None
                 self.dataframe["tags"][el] = new_element.tags
             else:
-                self.dataframe = self.dataframe.append(new_element.sub)
+                self.dataframe = pandas.concat([self.dataframe, new_element.sub.to_frame().T])
                 self.dataframe["tags"] = self.dataframe["tags"].apply(
                     lambda x: None if pandas.isnull(x) else x
                 )
