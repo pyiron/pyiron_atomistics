@@ -218,7 +218,7 @@ class VaspPotentialFile(VaspPotentialAbstract):
                 ["-".join(name_list)],
                 columns=["Name", "Filename"],
                 dtype=str,
-                name=new_element
+                name=new_element,
             )
             self._default_df = pandas.concat([self._default_df, ds])
         else:
