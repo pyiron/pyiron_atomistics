@@ -1,5 +1,12 @@
 # Unreleased
 
+# pyiron_atomistics-0.2.39
+
+- Add save in ElasticTensor ([#551](https://github.com/pyiron/pyiron_atomistics/pull/551))
+- Raising errors when restart files don't exist ([#422](https://github.com/pyiron/pyiron_atomistics/pull/422))
+- Save more input variables in calc_md ([#547](https://github.com/pyiron/pyiron_atomistics/pull/547))
+- Support cube files without atoms ([#526](https://github.com/pyiron/pyiron_atomistics/pull/526))
+
 # pyiron_atomistics-0.2.38
 
 - Store VASP volumes as numpy arrays ([#546](https://github.com/pyiron/pyiron_atomistics/pull/546))
