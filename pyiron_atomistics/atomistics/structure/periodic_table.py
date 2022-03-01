@@ -235,7 +235,7 @@ class PeriodicTable(object):
         """
         elements = hdf.list_groups()  # ["elements"]
         for el in elements:
-            sub = pandas.Series()
+            sub = pandas.Series(dtype=object)
             new_element = ChemicalElement(sub)
             new_element.sub.name = el
             new_element.from_hdf(hdf)
