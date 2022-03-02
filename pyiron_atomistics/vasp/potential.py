@@ -204,20 +204,23 @@ class VaspPotentialFile(VaspPotentialAbstract):
             new_element (str): Name of the new element (the name of the folder where the new POTCAR file exists
 
         """
-        ds = self.find_default(element=parent_element)
-        ds["Species"].values[0][0] = new_element
-        path_list = ds["Filename"].values[0][0].split("/")
+        df = self.find_default(element=parent_element)
+        df["Species"].values[0][0] = new_element
+        path_list = df["Filename"].values[0][0].split("/")
         path_list[-2] = new_element
-        name_list = ds["Name"].values[0].split("-")
+        name_list = df["Name"].values[0].split("-")
         name_list[0] = new_element
-        ds["Name"].values[0] = "-".join(name_list)
-        ds["Filename"].values[0][0] = "/".join(path_list)
-        self._potential_df = self._potential_df.append(ds)
+        df["Name"].values[0] = "-".join(name_list)
+        df["Filename"].values[0][0] = "/".join(path_list)
+        self._potential_df = pandas.concat([self._potential_df, df])
         if new_element not in self._default_df.index.values:
-            ds = pandas.Series()
-            ds.name = new_element
-            ds["Name"] = "-".join(name_list)
-            self._default_df = self._default_df.append(ds)
+            ds = pandas.Series(
+                ["-".join(name_list), "/".join(path_list)],
+                index=["Name", "Filename"],
+                dtype=str,
+                name=new_element,
+            )
+            self._default_df = pandas.concat([self._default_df, ds.to_frame().T])
         else:
             self._default_df.loc[new_element] = "-".join(name_list)
 

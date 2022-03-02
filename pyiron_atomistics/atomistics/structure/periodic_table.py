@@ -235,7 +235,7 @@ class PeriodicTable(object):
         """
         elements = hdf.list_groups()  # ["elements"]
         for el in elements:
-            sub = pandas.Series()
+            sub = pandas.Series(dtype=object)
             new_element = ChemicalElement(sub)
             new_element.sub.name = el
             new_element.from_hdf(hdf)
@@ -254,7 +254,9 @@ class PeriodicTable(object):
                     self.dataframe["tags"] = None
                 self.dataframe["tags"][el] = new_element.tags
             else:
-                self.dataframe = self.dataframe.append(new_element.sub)
+                self.dataframe = pandas.concat(
+                    [self.dataframe, new_element.sub.to_frame().T]
+                )
                 self.dataframe["tags"] = self.dataframe["tags"].apply(
                     lambda x: None if pandas.isnull(x) else x
                 )
@@ -350,7 +352,9 @@ class PeriodicTable(object):
         parent_element_data_series["Parent"] = parent_element
         parent_element_data_series.name = new_element
         if new_element not in self.dataframe.T.columns:
-            self.dataframe = self.dataframe.append(parent_element_data_series)
+            self.dataframe = pandas.concat(
+                [self.dataframe, parent_element_data_series.to_frame().T],
+            )
         else:
             self.dataframe.loc[new_element] = parent_element_data_series
         if use_parent_potential:
