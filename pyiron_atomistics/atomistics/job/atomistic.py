@@ -5,7 +5,9 @@
 import copy
 import warnings
 import numpy as np
+import os
 from ase.io import write as ase_write
+import posixpath
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
@@ -256,7 +258,18 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         self._generic_input["temperature"] = temperature
         self._generic_input["n_ionic_steps"] = n_ionic_steps
         self._generic_input["n_print"] = n_print
-        self._generic_input.remove_keys(["max_iter", "pressure"])
+        self._generic_input[
+            "temperature_damping_timescale"
+        ] = temperature_damping_timescale
+        if pressure is not None:
+            self._generic_input["pressure"] = pressure
+        if pressure_damping_timescale is not None:
+            self._generic_input[
+                "pressure_damping_timescale"
+            ] = pressure_damping_timescale
+        if time_step is not None:
+            self._generic_input["time_step"] = time_step
+        self._generic_input.remove_keys(["max_iter"])
 
     def from_hdf(self, hdf=None, group_name=None):
         """
@@ -442,6 +455,28 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         new_ham._generic_input["structure"] = "atoms"
         return new_ham
 
+    def get_workdir_file(self, filename: str) -> None:
+        """
+        Checks if a given file exists within the job's working directory and returns the absolute path to it.
+
+        ToDo: Move this to pyiron_base since this is more generic.
+
+        Args:
+            filename (str): The name of the file
+
+        Returns:
+            str: The name absolute path of the file in the working directory
+
+        Raises:
+            FileNotFoundError: Raised if the given file does not exist.
+        """
+        appended_path = posixpath.join(self.working_directory, filename)
+        if not os.path.isfile(appended_path):
+            raise FileNotFoundError(
+                f"File {filename} not found in working directory: {self.working_directory}"
+            )
+        return appended_path
+
     # Required functions
     def continue_with_restart_files(self, job_type=None, job_name=None):
         """
@@ -604,7 +639,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         snapshot_indices=None,
         overwrite_positions=None,
         overwrite_cells=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Writes the trajectory in a given file file_format based on the `ase.io.write`_ function.
@@ -642,7 +677,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             format=file_format,
             parallel=parallel,
             append=append,
-            **kwargs
+            **kwargs,
         )
 
     def get_neighbors_snapshots(

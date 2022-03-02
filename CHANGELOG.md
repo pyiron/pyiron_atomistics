@@ -1,5 +1,22 @@
 # Unreleased
 
+# pyiron_atomistics-0.2.39
+
+- Add save in ElasticTensor ([#551](https://github.com/pyiron/pyiron_atomistics/pull/551))
+- Raising errors when restart files don't exist ([#422](https://github.com/pyiron/pyiron_atomistics/pull/422))
+- Save more input variables in calc_md ([#547](https://github.com/pyiron/pyiron_atomistics/pull/547))
+- Support cube files without atoms ([#526](https://github.com/pyiron/pyiron_atomistics/pull/526))
+
+# pyiron_atomistics-0.2.38
+
+- Store VASP volumes as numpy arrays ([#546](https://github.com/pyiron/pyiron_atomistics/pull/546))
+- Adjust n_print to be at most max_iter in calc_minimize ([#541](https://github.com/pyiron/pyiron_atomistics/pull/541))
+- Check SPHInX output class format_black integration ([#534](https://github.com/pyiron/pyiron_atomistics/pull/534))
+- Improve Murngahan ([#531](https://github.com/pyiron/pyiron_atomistics/pull/531))
+- Revert "include DataConatiner check" ([#533](https://github.com/pyiron/pyiron_atomistics/pull/533))
+- include DataConatiner check ([#514](https://github.com/pyiron/pyiron_atomistics/pull/514))
+- Dependency updates: [#538](https://github.com/pyiron/pyiron_atomistics/pull/538), [#537](https://github.com/pyiron/pyiron_atomistics/pull/537), [#536](https://github.com/pyiron/pyiron_atomistics/pull/536), [#543](https://github.com/pyiron/pyiron_atomistics/pull/543), [#548](https://github.com/pyiron/pyiron_atomistics/pull/548)
+
 # pyiron_atomistics-0.2.37
 
 - Remove _QhullUser import ([#527](https://github.com/pyiron/pyiron_atomistics/pull/527))
