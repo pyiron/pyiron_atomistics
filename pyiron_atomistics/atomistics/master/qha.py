@@ -179,7 +179,7 @@ class Hessian:
                 (
                     np.linalg.eigh(H / self._mass_tensor)[0]
                     * unit.electron_volt
-                    / unit.angstrom ** 2
+                    / unit.angstrom**2
                     / unit.amu
                 )
                 .to("THz**2")
@@ -546,7 +546,7 @@ class Thermodynamics:
     def get_gibbs_free_energy(self, temperature, pressure):
         temperature, pressure = self._harmonize(temperature, pressure)
         pV = (
-            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom ** 3).to("eV")
+            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom**3).to("eV")
         ).magnitude
         self.temperature = temperature
         strain = self._get_min_strain(pV)
@@ -557,7 +557,7 @@ class Thermodynamics:
     def get_strain(self, temperature, pressure):
         temperature, pressure = self._harmonize(temperature, pressure)
         pV = (
-            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom ** 3).to("eV")
+            (pressure * self.volume * 1e9 * unit.Pa * unit.angstrom**3).to("eV")
         ).magnitude
         self.temperature = temperature
         return self._get_min_strain(pV).reshape(np.shape(temperature))
@@ -573,4 +573,4 @@ class Thermodynamics:
             ).reshape(np.shape(strain))
             / self.volume
         )
-        return (pressure / 1.0e9 * unit.eV / unit.angstrom ** 3).to(unit.Pa).magnitude
+        return (pressure / 1.0e9 * unit.eV / unit.angstrom**3).to(unit.Pa).magnitude
