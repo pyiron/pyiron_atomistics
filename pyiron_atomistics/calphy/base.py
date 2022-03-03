@@ -263,6 +263,8 @@ class CalphyBase(GenericJob):
         else:
             raise ValueError("Unknown mode")
         self._data = job.report
+        #save conc for later use
+        self.input.concentration = job.concentration
         del self._data['input']
         self.status.collect = True
         self.run()
@@ -275,7 +277,16 @@ class CalphyBase(GenericJob):
                 #hdf5_out["spring_constant"] = self._data["average"]["spring_constant"]
                 hdf5_out["energy_free"] = self._data['results']['free_energy']
                 hdf5_out["energy_free_error"] = self._data['results']['error']
+                hdf5_out["energy_free_reference"] = self._data['results']['reference_system']
+                hdf5_out["energy_work"] = self._data['results']['work']
                 hdf5_out["temperature"] = self.input.temperature
+
+                f_ediff, b_ediff flambda, blambda = self.collect_ediff()
+
+                hdf5_out["forward/energy_diff"] = f_ediff
+                hdf5_out["backward/energy_diff"] = b_ediff
+                hdf5_out["forward/lambda"] = flambda
+                hdf5_out["backward/lambda"] = blambda
 
                 if self.input.mode == "ts":
                         datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
@@ -283,6 +294,40 @@ class CalphyBase(GenericJob):
                         hdf5_out["energy_free"] = fe
                         hdf5_out["energy_free_error"] = ferr
                         hdf5_out["temperature"] = t
+
+    def collect_ediff(self):
+
+        f_ediff = []
+        b_ediff = []
+
+        for i in range(1, self.input.n_cycles+1):            
+            fwdfilename = os.path.join(self.working_directory, "forward_%d.dat"%i)
+            bkdfilename = os.path.join(self.working_directory, "backward_%d.dat"%i)
+            nelements = self.input.options["nelements"]
+
+            if self.input.reference_state == "solid":
+                fdui = np.loadtxt(fwdfilename, unpack=True, comments="#", usecols=(0,))
+                bdui = np.loadtxt(bkdfilename, unpack=True, comments="#", usecols=(0,))
+
+                fdur = np.zeros(len(fdui))
+                bdur = np.zeros(len(bdui))
+
+                for i in range(nelements):
+                    fdur += self.input.concentration[i]*np.loadtxt(fwdfilename, unpack=True, comments="#", usecols=(i+1,))
+                    bdur += self.input.concentration[i]*np.loadtxt(bkdfilename, unpack=True, comments="#", usecols=(i+1,))
+
+                flambda = np.loadtxt(fwdfilename, unpack=True, comments="#", usecols=(nelements+1,))
+                blambda = np.loadtxt(bkdfilename, unpack=True, comments="#", usecols=(nelements+1,))
+            else:
+                fdui, fdur, flambda = np.loadtxt(fwdfilename, unpack=True, comments="#", usecols=(0,1,2))
+                bdui, bdur, blambda = np.loadtxt(bkdfilename, unpack=True, comments="#", usecols=(0,1,2))
+
+            f_ediff.append(fdui-fdur)
+            b_ediff.append(bdui-bdur)
+
+        return f_ediff, b_ediff, flambda, blambda
+
+
 
     def collect_output(self):
         self.to_hdf()
