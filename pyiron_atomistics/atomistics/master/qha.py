@@ -422,10 +422,21 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
             temperature=temperature, strain=strain
         )
 
+    get_helmholtz_free_energy.__doc__ = thermo_doc.replace('INPUT_ONE', 'temperature').replace(
+        'INPUT_TWO', 'strain'
+    ).replace('OUTPUT', 'Helmholtz free energy')
+    get_helmholtz_free_energy.__doc__ = get_helmholtz_free_energy.__doc__.split('\n')
+    get_helmholtz_free_energy.__doc__[0] = 'Helmholtz free energy'
+    get_helmholtz_free_energy.__doc__ = '\n'.join(get_helmholtz_free_energy.__doc__)
+
     def get_gibbs_free_energy(self, temperature, pressure):
         return self._thermo.get_gibbs_free_energy(
             temperature=temperature, pressure=pressure
         )
+
+    get_gibbs_free_energy.__doc__ = get_helmholtz_free_energy.__doc__.replace(
+        'Helmholtz', 'Gibbs'
+    ).replace('strain', 'pressure')
 
     def get_volume(self, temperature, pressure):
         return self.hessian.volume * (
