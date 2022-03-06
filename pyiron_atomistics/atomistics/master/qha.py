@@ -31,6 +31,61 @@ def get_potential_energy(frequencies, temperature, E_0=0):
     return 0.5 * np.sum(hn) + values + E_0
 
 
+class Displacements:
+    def __init__(self, structure, symprec=1.0e-2, include_zero=True, second_order=True):
+        self.structure = structure
+        self.symprec = symprec
+        self.include_zero = include_zero
+        self.second_order = second_order
+        self._sym = None
+        self._unique_entries = None
+
+    @property
+    def symmetry(self):
+        if self._sym is None:
+            self._sym = self.structure.get_symmetry(symprec=self.symprec)
+        return self._sym
+
+    @property
+    def unique_entries(self):
+        if self._unique_entries is None:
+            self._unique_entries = np.unique(
+                self.symmetry.arg_equivalent_vectors, return_index=True
+            )[1]
+        return self._unique_entries
+
+    def unravel(self, entries):
+        return np.unravel_index(entries, self.structure.positions.shape)
+
+    @property
+    def even_entries(self):
+        rand = np.random.random(self.structure.positions.shape)
+        rand_sym = self.symmetry.symmetrize_vectors(rand)
+        return ~np.isclose(rand_sym, 0)
+
+    def get_unique_indices(self, positive=True):
+        if positive:
+            return self.unravel(self.unique_entries)
+        return self.unravel(
+            self.unique_entries[self.even_entries.flatten()[self.unique_entries]]
+        )
+
+    def get_displacements(self, positive=True):
+        ind_x, ind_y = self.get_unique_indices(positive=positive)
+        displacements = np.zeros((len(ind_x),) + self.structure.positions.shape)
+        displacements[np.arange(len(ind_x)), ind_x, ind_y] = 1
+        return displacements
+
+    @property
+    def displacements(self):
+        d = self.get_displacements(positive=True)
+        if self.include_zero:
+            d = np.append([np.zeros_like(self.structure.positions)], d, axis=0)
+        if self.second_order:
+            d = np.append(d, self.get_displacements(positive=False), axis=0)
+        return d
+
+
 def generate_displacements(structure, symprec=1.0e-2):
     sym = structure.get_symmetry(symprec=symprec)
     _, comp = np.unique(sym.arg_equivalent_vectors, return_index=True)
@@ -57,7 +112,12 @@ ndarray and the other one float.
 
 class Hessian:
     def __init__(
-        self, structure, dx=0.01, symprec=1.0e-2, include_zero_displacement=True
+        self,
+        structure,
+        dx=0.01,
+        symprec=1.0e-2,
+        include_zero_displacement=True,
+        second_order=True
     ):
         """
 
@@ -81,6 +141,7 @@ class Hessian:
         self._energy = None
         self._hessian = None
         self.include_zero_displacement = include_zero_displacement
+        self.second_order = second_order
 
     @property
     def symmetry(self):
@@ -202,20 +263,16 @@ class Hessian:
 
     @property
     def minimum_displacements(self):
-        return (
-            generate_displacements(structure=self.structure, symprec=self._symprec)
-            * self.dx
-        )
+        return Displacements(
+            structure=self.structure,
+            include_zero=self.include_zero_displacement,
+            second_order=self.second_order
+        ).displacements * self.dx
 
     @property
     def displacements(self):
         if len(self._displacements) == 0:
             self.displacements = self.minimum_displacements
-            if self.include_zero_displacement:
-                self.displacements = np.concatenate(
-                    ([np.zeros_like(self.structure.positions)], self.displacements),
-                    axis=0,
-                )
         return np.asarray(self._displacements)
 
     @displacements.setter
@@ -307,6 +364,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
         self.input["displacement"] = (0.01, "Atom displacement magnitude")
         self.input["symprec"] = 1.0e-2
         self.input["include_zero_displacement"] = True
+        self.input["second_order"] = True
         self.input["num_points"] = (11, "number of sample points")
         self.input["vol_range"] = (
             0.1,
@@ -327,7 +385,11 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
     @property
     def hessian(self):
         if self._hessian is None:
-            self._hessian = Hessian(self.structure)
+            self._hessian = Hessian(
+                self.structure,
+                include_zero_displacement=self.input["include_zero_displacement"],
+                second_order=self.input["second_order"]
+            )
         return self._hessian
 
     def get_supercells_with_displacements(self):
