@@ -973,6 +973,64 @@ class Outcar(object):
             warnings.warn("Unable to parse the cells from the OUTCAR file")
             return
 
+    @staticmethod
+    def get_energy_components(filename="OUTCAR", lines=None):
+        """
+        Gets the individual components of the free energy energy for every electronic step from the OUTCAR file
+
+        alpha Z        PSCENC =        -0.19957337
+        Ewald energy   TEWEN  =       -73.03212173
+        -Hartree energ DENC   =        -0.10933240
+        -exchange      EXHF   =         0.00000000
+        -V(xc)+E(xc)   XCENC  =       -26.17018410
+        PAW double counting   =       168.82497547     -136.88269783
+        entropy T*S    EENTRO =        -0.00827174
+        eigenvalues    EBANDS =        10.35379785
+        atomic energy  EATOM  =        53.53616173
+        Solvation  Ediel_sol  =         0.00000000
+
+        Args:
+            filename (str): Filename of the OUTCAR file to parse
+            lines (list/None): lines read from the file
+        Returns:
+            numpy.ndarray: A 1xM array of the total energies in $eV$
+            where M is the number of time steps
+        """
+        ind_ionic_lst, lines = _get_trigger(
+            trigger="FREE ENERGIE OF THE ION-ELECTRON SYSTEM (eV)",
+            filename=filename,
+            lines=lines,
+            return_lines=True,
+        )
+        ind_elec_lst = _get_trigger(
+            trigger="Free energy of the ion-electron system (eV)",
+            filename=None,
+            lines=lines,
+            return_lines=False,
+        )
+        ind_combo_lst = _split_indices(
+            ind_ionic_lst=ind_ionic_lst, ind_elec_lst=ind_elec_lst
+        )
+        return [
+            np.array(
+                [
+                    np.hstack(
+                        [
+                            float(lines[ind + i].split()[-1])
+                            if i != 7
+                            else [
+                                float(lines[ind_lst[-1] + 7].split()[-2]),
+                                float(lines[ind_lst[-1] + 7].split()[-1]),
+                            ]
+                            for i in range(2, 12)
+                        ]
+                    )
+                    for ind in ind_lst
+                ]
+            ).T
+            for ind_lst in ind_combo_lst
+        ]
+
 
 def _clean_line(line):
     return line.replace("-", " -")
