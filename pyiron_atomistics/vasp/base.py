@@ -2442,7 +2442,7 @@ class Kpoints(GenericParameters):
         )
         self._path_name = None
         self._n_path = None
-        
+
     def write_file(self, file_name, cwd=None):
         if self.file_name == False:
             return
