@@ -1856,7 +1856,10 @@ class Input:
             directory (str): The working directory for the VASP run
         """
         self.incar.write_file(file_name="INCAR", cwd=directory)
-        self.kpoints.write_file(file_name="KPOINTS", cwd=directory)
+        if "KSPACING" in self.incar.keys():
+            warnings.warn("'KSPACING' found in INCAR, no KPOINTS file written")
+        else:
+            self.kpoints.write_file(file_name="KPOINTS", cwd=directory)
         self.potcar.potcar_set_structure(structure, modified_elements)
         self.potcar.write_file(file_name="POTCAR", cwd=directory)
         # Write the species info in the POSCAR file only if there are no user defined species
@@ -2442,11 +2445,6 @@ class Kpoints(GenericParameters):
         )
         self._path_name = None
         self._n_path = None
-
-    def write_file(self, file_name, cwd=None):
-        if self.file_name == False:
-            return
-        return super().write_file(file_name, cwd)
 
     def set_kpoints_file(
         self, method=None, size_of_mesh=None, shift=None, n_path=None, path=None
