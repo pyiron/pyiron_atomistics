@@ -83,6 +83,7 @@ class StructureStorage(FlattenedStorage, HasStructure):
             num_structures (int): number of structures to pre-allocate
         """
         super().__init__(num_elements=num_atoms, num_chunks=num_structures)
+        self._element_cache = None
 
     def _init_arrays(self):
         super()._init_arrays()
@@ -132,6 +133,25 @@ class StructureStorage(FlattenedStorage, HasStructure):
         """:meta private:"""
         return self._per_chunk_arrays["pbc"]
 
+    def set_array(self, name, frame, value):
+        """
+        Add array for given structure.
+
+        Works for per chunk and per element arrays.
+
+        Args:
+            name (str): name of array to set
+            frame (int, str): selects structure to set, as in :method:`.get_strucure()`
+            value: value (for per chunk) or array of values (for per element); type and shape as per :meth:`.hasarray()`.
+
+        Raises:
+            `KeyError`: if array with name does not exists
+        """
+        super().set_array(name, frame, value)
+        # invalidate cache when writing to symbols; could be smarter by checking if value is not in in cache but w/e
+        if name == "symbols":
+            self._element_cache = None
+
     def get_elements(self):
         """
         Return a list of chemical elements in the training set.
@@ -139,7 +159,9 @@ class StructureStorage(FlattenedStorage, HasStructure):
         Returns:
             :class:`list`: list of unique elements in the training set as strings of their standard abbreviations
         """
-        return list(set(self._per_element_arrays["symbols"]))
+        if self._element_cache is None:
+            self._element_cache = list(np.unique(self._per_element_arrays["symbols"]))
+        return self._element_cache
 
     def add_structure(self, structure, identifier=None, **arrays):
         """
