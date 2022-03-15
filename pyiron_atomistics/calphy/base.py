@@ -27,16 +27,16 @@ class Potential:
     def get_potentials(self):
         return [potential.df for potential in self.potentials]
     
-    def to_hdf(self, project_hdf5):
-        with project_hdf5.open("potentials") as mlevel:
+    def to_hdf(self, hdf=None, group_name=None):
+        with hdf.open("potentials") as mlevel:
             mlevel["count"] = len(self.potentials)
             for count, potential in enumerate(self.potentials):
                 with mlevel.open("p%d"%count) as hdf5_out:
                     potential.to_hdf(hdf5_out)
 
-    def from_hdf(self, project_hdf5):
+    def from_hdf(self, hdf=None, group_name=None):
         plist = []
-        with project_hdf5.open("potentials") as mlevel:
+        with hdf.open("potentials") as mlevel:
             count = mlevel["count"]
             for x in range(count):
                 with mlevel.open("p%d"%count) as hdf5_out:
