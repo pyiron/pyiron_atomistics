@@ -15,7 +15,7 @@ class Potential:
     def __init__(self):
         pass
     
-    def set_potential(self, potential_filenames):
+    def set_potentials(self, potential_filenames):
         if not isinstance(potential_filenames, list):
             potential_filenames = [potential_filenames]
         potential_db = LammpsPotentialFile()
@@ -44,6 +44,19 @@ class Potential:
                     potential.from_hdf(hdf5_out)
                     plist.append(potential)
         self.potentials = plist
+    
+    def copy_pot_files(self, working_directory):
+        for potential in self.potentials:
+            potential.copy_pot_files(working_directory)
+
+    def prepare_pair_styles(self):
+        pair_style = []
+        pair_coeff = []
+        
+        for potential in self.potentials:
+            pair_style.append(potential.df['Config'].to_list()[0][0].strip().split()[1:][0])
+            pair_coeff.append(" ".join(potential.df['Config'].to_list()[0][1].strip().split()[1:]))
+        return pair_style, pair_coeff
                 
 class Input(DataContainer):
     def __init__(self):
@@ -70,7 +83,7 @@ class Input(DataContainer):
             "commands": None, "modules": None, "options": None
         }
         self.mode = None
-        self._potential = None
+        self._potential = Potential()
         self.tguess = None
         self.structure = None
         self.options = {}
@@ -137,14 +150,15 @@ class Input(DataContainer):
     
     @property
     def potential(self):
-        return self._potential.df
+        return self._potential.get_potentials()
     
     @potential.setter
-    def potential(self, potential_filename):
-        potential_db = LammpsPotentialFile()
-        potential = potential_db.find_by_name(potential_filename)
-        self._potential = LammpsPotential()
-        self._potential.df = potential
+    def potential(self, potential_filenames):
+        self._potential.set_potentials(potential_filenames)        
+        #potential_db = LammpsPotentialFile()
+        #potential = potential_db.find_by_name(potential_filename)
+        #self._potential = LammpsPotential()
+        #self._potential.df = potential
     
     def structure_to_lammps(self, structure):
         prism = UnfoldingPrism(structure.cell)
@@ -168,7 +182,7 @@ class Input(DataContainer):
         #if mode was not set, raise Error
         if self.mode is None:
             raise RuntimeError("Could not determine the mode")
-            
+    
     def prepare_input(self, structure, working_directory, cores=1):
                 
         #self.structure = structure
@@ -192,11 +206,7 @@ class Input(DataContainer):
         self.options["queue"]["cores"] = cores
         
         #prepare potentials
-        pair_style = []
-        pair_coeff = []
-        pair_style.append(self._potential.df['Config'].to_list()[0][0].strip().split()[1:][0])
-        pair_coeff.append(" ".join(self._potential.df['Config'].to_list()[0][1].strip().split()[1:]))
-        
+        pair_style, pair_coeff = self._potential.prepare_pair_styles()
         self.options["md"]["pair_style"] = pair_style
         self.options["md"]["pair_coeff"] = pair_coeff
         self.options["calculations"] = []
