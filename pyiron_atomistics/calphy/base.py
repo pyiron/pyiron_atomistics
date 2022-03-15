@@ -143,9 +143,9 @@ class Input(DataContainer):
         self._potential.copy_pot_files(working_directory)
         
         #this still needs to be fixed
-        self.options["element"] = np.unique(structure.get_chemical_symbols())
+        self.options["element"] = list(np.unique(structure.get_chemical_symbols()))
         self.options["nelements"] = len(self.options["element"])
-        self.options["mass"] = np.unique(structure.get_masses())
+        self.options["mass"] = list(np.unique(structure.get_masses()))
         
         self.options["md"] = self.md
         self.options["md"]["te"] = self.n_equilibration_steps
@@ -204,8 +204,7 @@ class CalphyBase(GenericJob):
         self.__name__ = "CalphyJob"
         self.structure = False
         self.input = Input()
-        #self.output = DataContainer(table_name="output")
-        
+        self.output = DataContainer(table_name="output")        
         self._data = None
     
     #we wrap some properties for easy access
@@ -271,8 +270,9 @@ class CalphyBase(GenericJob):
     
 
     def collect_general_output(self):
-        #self.output.spring_constant = self._data["average"]["spring_constant"]
+        
         if self._data is not None:
+            self.output.spring_constant = self._data["average"]["spring_constant"]
             with self.project_hdf5.open("output") as hdf5_out:
                 #hdf5_out["spring_constant"] = self._data["average"]["spring_constant"]
                 hdf5_out["energy_free"] = self._data['results']['free_energy']
@@ -281,7 +281,7 @@ class CalphyBase(GenericJob):
                 hdf5_out["energy_work"] = self._data['results']['work']
                 hdf5_out["temperature"] = self.input.temperature
 
-                f_ediff, b_ediff flambda, blambda = self.collect_ediff()
+                f_ediff, b_ediff, flambda, blambda = self.collect_ediff()
 
                 hdf5_out["forward/energy_diff"] = f_ediff
                 hdf5_out["backward/energy_diff"] = b_ediff
@@ -330,13 +330,14 @@ class CalphyBase(GenericJob):
 
 
     def collect_output(self):
+        self.collect_general_output()
         self.to_hdf()
     
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
-        self.collect_general_output()
+        self.input.to_hdf(self.project_hdf5)
+        self.output.to_hdf(self.project_hdf5)
+
         #self.structure.to_hdf(hdf)
         #with self.project_hdf5.open("input") as hdf5_in:
-        #self.input.to_hdf(self.project_hdf5)
         #with self.project_hdf5.open("output") as hdf5_out:
-        #self.output.to_hdf(self.project_hdf5)
