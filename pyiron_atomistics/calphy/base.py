@@ -175,7 +175,7 @@ class Input(DataContainer):
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
     
     def determine_mode(self):
-        if len(self.input.potential) == 2:
+        if len(self.potential) == 2:
             self.mode = "alchemy"
             self.reference_state = "alchemy"
         elif len(self.temperature) == 1:
@@ -328,7 +328,8 @@ class CalphyBase(GenericJob):
     def collect_general_output(self):
         
         if self._data is not None:
-            self.output.spring_constant = self._data["average"]["spring_constant"]
+            if "spring_constant" in self._data["average"].keys():
+                self.output.spring_constant = self._data["average"]["spring_constant"]
             with self.project_hdf5.open("output") as hdf5_out:
                 #hdf5_out["spring_constant"] = self._data["average"]["spring_constant"]
                 hdf5_out["energy_free"] = self._data['results']['free_energy']
