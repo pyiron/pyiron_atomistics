@@ -11,6 +11,40 @@ import copy
 import os
 import numpy as np
 
+class Potential:
+    def __init__(self):
+        pass
+    
+    def set_potential(self, potential_filenames):
+        if not isinstance(potential_filenames, list):
+            potential_filenames = [potential_filenames]
+        potential_db = LammpsPotentialFile()
+        potentials = [potential_db.find_by_name(potential_filename) for potential_filename in potential_filenames]
+        self.potentials = [LammpsPotential() for x in range(len(potential_filenames))]
+        for x in range(len(potential_filenames)):
+            self.potentials[x].df = potentials[x]
+    
+    def get_potentials(self):
+        return [potential.df for potential in self.potentials]
+    
+    def to_hdf(self, project_hdf5):
+        with project_hdf5.open("potentials") as mlevel:
+            mlevel["count"] = len(self.potentials)
+            for count, potential in enumerate(self.potentials):
+                with mlevel.open("p%d"%count) as hdf5_out:
+                    potential.to_hdf(hdf5_out)
+
+    def from_hdf(self, project_hdf5):
+        plist = []
+        with project_hdf5.open("potentials") as mlevel:
+            count = mlevel["count"]
+            for x in range(count):
+                with mlevel.open("p%d"%count) as hdf5_out:
+                    potential = LammpsPotential()
+                    potential.from_hdf(hdf5_out)
+                    plist.append(potential)
+        self.potentials = plist
+                
 class Input(DataContainer):
     def __init__(self):
         super(Input, self).__init__(table_name="input")
