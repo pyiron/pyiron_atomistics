@@ -5,7 +5,7 @@ from pyiron_base import GenericJob
 from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
 
 from calphy.input import check_and_convert_to_list
-from calphy.queuekernel import Solid, Liquid, routine_fe, routine_ts
+from calphy.queuekernel import Solid, Liquid, Alchemy, routine_fe, routine_ts, routine_alchemy
 
 import copy
 import os
@@ -175,7 +175,10 @@ class Input(DataContainer):
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
     
     def determine_mode(self):
-        if len(self.temperature) == 1:
+        if len(self.input.potential) == 2:
+            self.mode = "alchemy"
+            self.reference_state = "alchemy"
+        elif len(self.temperature) == 1:
             self.mode = "fe"
         elif len(self.temperature) == 2:
             self.mode = "ts"
@@ -283,12 +286,19 @@ class CalphyBase(GenericJob):
     def calc_mode_ts(self):
         self.input.mode = "ts"
 
+    def calc_mode_alchemy(self):
+        self.input.mode = "alchemy"
+
     def calc_free_energy(self):
         self.input.determine_mode()
     
     def run_static(self):
         self.status.running = True
-        if self.input.reference_state == "solid":
+        if self.input.reference_state == "alchemy":
+            job = Alchemy(options=self.input.options, 
+                          kernel=0, 
+                          simfolder=self.working_directory)
+        elif self.input.reference_state == "solid":
             job = Solid(options=self.input.options, 
                          kernel=0, 
                          simfolder=self.working_directory)
@@ -299,7 +309,9 @@ class CalphyBase(GenericJob):
         else:
             raise ValueError("Unknown reference state")
         
-        if self.input.mode == "fe":
+        if self.input.mode == "alchemy":
+            routine_alchemy(job)
+        elif self.input.mode == "fe":
             routine_fe(job)        
         elif self.input.mode == "ts":
             routine_ts(job)
