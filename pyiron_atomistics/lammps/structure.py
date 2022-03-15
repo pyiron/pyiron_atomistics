@@ -341,7 +341,7 @@ class LammpsStructure(GenericParameters):
             + " \n"
             + "{0} atom types".format(self._structure.get_number_of_species())
             + " \n"
-            + "{0} bond types".format(np.max(bond_type))
+            + "{0} bond types".format(np.max(bonds[:, 2]))
             + " \n"
         )
 
