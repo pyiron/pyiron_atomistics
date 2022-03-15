@@ -5,7 +5,7 @@ from pyiron_base import GenericJob
 from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
 
 from calphy.input import check_and_convert_to_list
-from calphy.queuekernel import Solid, Liquid, Alchemy, routine_fe, routine_ts, routine_alchemy
+from calphy.queuekernel import Solid, Liquid, Alchemy, routine_fe, routine_ts, routine_alchemy, routine_pscale
 
 import copy
 import os
@@ -93,6 +93,7 @@ class Input(DataContainer):
 
         #Pressure
         self._pressure = 0
+        self._pressure_end = None
         self.iso = True
         self.fix_lattice = False
         self.npt = True
@@ -140,6 +141,9 @@ class Input(DataContainer):
                     self.iso = False
                 else:
                     raise NotImplementedError()
+            elif len(value) == 2:
+                self._pressure = value[0]
+                self._pressure_end = value[1]
             else:
                 raise NotImplementedError()
         else:
@@ -178,6 +182,10 @@ class Input(DataContainer):
         if len(self.potential) == 2:
             self.mode = "alchemy"
             self.reference_state = "alchemy"
+        elif self._pressure_end is not None:
+            self.mode = "pscale"
+            if len(self.temperature) != 1:
+                raise ValueError("Only one temperature can be used with pressure scaling")
         elif len(self.temperature) == 1:
             self.mode = "fe"
         elif len(self.temperature) == 2:
@@ -233,6 +241,8 @@ class Input(DataContainer):
         cdict["lattice_constant"] = 0
 
         cdict["pressure"] = self._pressure
+        if self._pressure_end is not None:
+            cdict["pressure_stop"] = self._pressure_end
         cdict["iso"] = self.iso
         cdict["fix_lattice"] = self.fix_lattice
         cdict["npt"] = self.npt
@@ -289,6 +299,9 @@ class CalphyBase(GenericJob):
     def calc_mode_alchemy(self):
         self.input.mode = "alchemy"
 
+    def calc_mode_pscale(self):
+        self.input.mode = "pscale"
+
     def calc_free_energy(self):
         self.input.determine_mode()
     
@@ -315,6 +328,8 @@ class CalphyBase(GenericJob):
             routine_fe(job)        
         elif self.input.mode == "ts":
             routine_ts(job)
+        elif self.input.mode == "pscale":
+            routine_pscale(job)
         else:
             raise ValueError("Unknown mode")
         self._data = job.report
@@ -351,6 +366,13 @@ class CalphyBase(GenericJob):
                         hdf5_out["energy_free"] = fe
                         hdf5_out["energy_free_error"] = ferr
                         hdf5_out["temperature"] = t
+                
+                elif self.input.mode == "pscale":
+                        datfile = os.path.join(self.working_directory, "pressure_sweep.dat")
+                        p, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0,1,2))                
+                        hdf5_out["energy_free"] = fe
+                        hdf5_out["energy_free_error"] = ferr
+                        hdf5_out["pressure"] = p
 
     def collect_ediff(self):
 
