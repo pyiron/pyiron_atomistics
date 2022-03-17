@@ -64,6 +64,26 @@ class TestContainer(TestWithProject):
             self.assertEqual(s, self.cont.get_structure(s.get_chemical_formula()),
                              "get_structure returned wrong structure for given identifier.")
 
+    def test_get_elements(self):
+        self.assertEqual(
+            sorted(self.cont.get_elements()),
+            sorted(self.elements),
+            "get_elements() returned wrong elements."
+        )
+        cont = self.cont.copy()
+        cont.add_structure(self.project.create.structure.bulk("Fe").repeat(2))
+        self.assertEqual(
+            sorted(cont.get_elements()),
+            sorted(self.elements),
+            "get_elements() returned wrong elements after adding same structure again."
+        )
+        cont.add_structure(self.project.create.structure.bulk("Ag"))
+        self.assertEqual(
+            sorted(cont.get_elements()),
+            sorted(self.elements + ("Ag",)),
+            "get_elements() returned wrong elements after adding new structure."
+        )
+
     def test_add_structure(self):
         """add_structure(identifier=None) should set the current structure index as identifier"""
 
