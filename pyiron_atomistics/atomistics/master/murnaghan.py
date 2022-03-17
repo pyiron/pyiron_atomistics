@@ -326,11 +326,11 @@ class MurnaghanJobGenerator(JobGenerator):
         axes = np.array([a in self._master.input["axes"] for a in ("x", "y", "z")])
         num_axes = sum(axes)
         for strain in np.linspace(
-            -self._master.input["vol_range"],
-            +self._master.input["vol_range"],
+            1 - self._master.input["vol_range"],
+            1 + self._master.input["vol_range"],
             int(self._master.input["num_points"]),
         ):
-            strains = axes * strain**(1.0/num_axes)
+            strains = axes * (strain**(1.0/num_axes) - 1)
             basis = self._master.ref_job.structure.apply_strain(strains, return_box=True)
             parameter_lst.append([np.round(strain, 7), basis])
         return parameter_lst
