@@ -6,6 +6,8 @@
 Alternative structure container that stores them in flattened arrays.
 """
 
+from typing import List
+
 import numpy as np
 
 from pyiron_base import FlattenedStorage
@@ -152,12 +154,12 @@ class StructureStorage(FlattenedStorage, HasStructure):
         if name == "symbols":
             self._element_cache = None
 
-    def get_elements(self):
+    def get_elements(self) -> List[str]:
         """
-        Return a list of chemical elements in the training set.
+        Return a list of chemical elements present in the storage.
 
         Returns:
-            :class:`list`: list of unique elements in the training set as strings of their standard abbreviations
+            :class:`list`: list of unique elements as strings of chemical symbols
         """
         if self._element_cache is None:
             self._element_cache = list(np.unique(self._per_element_arrays["symbols"]))
