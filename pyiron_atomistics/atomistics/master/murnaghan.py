@@ -323,7 +323,7 @@ class MurnaghanJobGenerator(JobGenerator):
             (list)
         """
         parameter_lst = []
-        axes = np.array([a in self._master.input["axes"] for a in ('x', 'y', 'z')])
+        axes = np.array([a in self._master.input["axes"] for a in ("x", "y", "z")])
         num_axes = sum(axes)
         for strain in np.linspace(
             -self._master.input["vol_range"],
@@ -769,6 +769,15 @@ class Murnaghan(AtomisticParallelMaster):
             return [parameter[1] for parameter in self._job_generator.parameter_list]
         else:
             return []
+
+    def validate_ready_to_run(self):
+        axes = self.input["axes"]
+        if len(set(axes)) != len(axes):
+            raise ValueError("input[\"axes\"] may not contain duplicate entries!")
+        if not (1 <= len(axes) <= 3):
+            raise ValueError("input[\"axes\"] must contain one to three entries!")
+        if set(axes).union(["x", "y", "z"]) != {"x", "y", "z"}:
+            raise ValueError("input[\"axes\"] entries must be one of \"x\", \"y\" or \"z\"!")
 
     def collect_output(self):
         if self.ref_job.server.run_mode.interactive:
