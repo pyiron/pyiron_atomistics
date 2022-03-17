@@ -2,8 +2,9 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import random
+import warnings
 import itertools
-
 from multiprocessing import cpu_count
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, DataContainer, GenericParameters, ImportAlarm
@@ -65,8 +66,41 @@ def chemical_formula(atoms: Atoms) -> str:
     return ''.join(group_symbols())
 
 
+def map_dict(f, d: Dict) -> Dict:
+    return {k: f(v) for k, v in d.items()}
+
+
 def mole_fractions_to_composition(mole_fractions: Dict[str, float], num_atoms: int) -> Dict[str, int]:
-    return {el: int(x*num_atoms) for el, x in mole_fractions}
+    # if the sum of x is less than 1 - 1/n then we are missing at least one atoms
+    if not (1.0 - 1/num_atoms) < sum(mole_fractions.values()) < (1.0 + 1/num_atoms):
+        raise ValueError('mole-fractions must sum up to one: {}'.format(sum(mole_fractions.values())))
+
+    composition = map_dict(lambda x: x*num_atoms, mole_fractions)
+    # check to avoid partial occupation
+    if any(map(lambda occupation: not float.is_integer(round(occupation, 1)), composition.values())):
+        # at least one of the specified species exhibits fractional occupation, we try to fix it by rounding
+        composition_ = map_dict(lambda occ: int(round(occ)), composition)
+        warnings.warn(
+            'The current mole-fraction specification cannot be applied to {} atoms, '
+            'as it would lead to fractional occupation. Hence, I have changed it from '
+            '"{}" -> "{}"'.format(num_atoms, mole_fractions, map_dict(lambda n: n/num_atoms, composition_)))
+        composition = composition_
+
+    actual_atoms = sum(composition.values())
+    diff = actual_atoms - num_atoms
+    if abs(diff) == 1:
+        # it is not possible to distribute atoms equally e.g x_a = x_b = x_c = 1/3 on 32 atoms
+        # we remove one randomly bet we inform the user
+        removed_species = random.choice(tuple(composition))
+        composition[removed_species] -= 1
+        warnings.warn(
+            'It is not possible to distribute the species. Therefore one "{}" atom was removed. '
+            'This changes the input mole-fraction specification. '
+            '"{}" -> "{}"'.format(removed_species, mole_fractions, map_dict(lambda n: n/num_atoms, composition)))
+    else:
+        raise ValueError('Cannot interpret mole-fraction dict {}'.format(mole_fractions))
+
+    return composition
 
 
 if DEPRECATED_SQS_API:
@@ -112,12 +146,14 @@ else:
             output_structures: int=10,
             mode: IterationMode = IterationMode.random,
             num_threads: Optional[int] = None,
-            prefactors: Optional[float, np.ndarray] = None,
+            prefactors: Optional[Union[float, np.ndarray]] = None,
             pair_weights: Optional[np.ndarray] = None,
             rtol: float=None,
             atol: Optional[float]=None,
             which: Optional[Iterable[int]] = None,
-            shell_distances: Optional[Iterable[int]] = None
+            shell_distances: Optional[Iterable[int]] = None,
+            minimal: Optional[bool] = True,
+            similar: Optional[bool] = True
     ):
 
         structure = pyiron_to_ase(structure)
@@ -127,6 +163,7 @@ else:
             atol=atol,
             rtol=rtol,
             mode=mode,
+            which=which,
             structure=structure,
             prefactors=prefactors,
             shell_weights=weights,
@@ -138,9 +175,18 @@ else:
             threads_per_rank=num_threads or cpu_count(),
             max_output_configurations=output_structures
         )
-        results, timings = sqs_optimize(
+        # not specifying a parameter in settings causes sqsgenerator to choose a "sensible" default,
+        # hence we remove all entries with a None value
 
+        results, timings = sqs_optimize(
+            {param: value for param, value in settings.items() if value is not None},
+            minimal=minimal,
+            similar=similar,
+            make_structures=True,
+            structure_format='ase'
         )
+
+        print(results)
 
 
 
@@ -264,10 +310,7 @@ class SQSJob(AtomisticGenericJob):
         return db_dict
 
     def list_structures(self):
-        if self.status.finished:
-            return self._lst_of_struct
-        else:
-            return []
+        return self._lst_of_struct if self.status.finished else []
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self.list_structures()[frame]
