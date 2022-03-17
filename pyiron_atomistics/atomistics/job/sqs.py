@@ -55,8 +55,24 @@ __status__ = "development"
 __date__ = "Aug 14, 2020"
 
 
-def pyiron_to_pymatgen(structure):
-    return AseAtomsAdaptor.get_structure(pyiron_to_ase(structure))
+def chemical_formula(atoms: Atoms) -> str:
+
+    def group_symbols():
+        for species, same in itertools.groupby(atoms.get_chemical_symbols()):
+            num_same = len(list(same))
+            yield species if num_same == 1 else f'{species}{num_same}'
+
+    return ''.join(group_symbols())
+
+
+def mole_fractions_to_composition(mole_fractions: Dict[str, float], num_atoms: int) -> Dict[str, int]:
+    return {el: int(x*num_atoms) for el, x in mole_fractions}
+
+
+if DEPRECATED_SQS_API:
+
+    def pyiron_to_pymatgen(structure):
+        return AseAtomsAdaptor.get_structure(pyiron_to_ase(structure))
 
 
     def pymatgen_to_pyiron(structure):
