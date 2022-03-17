@@ -5,7 +5,9 @@
 import copy
 import warnings
 import numpy as np
+import numbers
 import os
+from typing import Callable, Union, Tuple
 from ase.io import write as ase_write
 import posixpath
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
@@ -327,6 +329,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         camera: str = "orthographic",
         atom_indices: Union[list, np.ndarray] = None,
         snapshot_indices: Union[list, np.ndarray] = None,
+        repeat: Union[int, Tuple[int, int, int]] = None,
     ):
         """
         Animates the job if a trajectory is present
@@ -344,6 +347,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 camera perspective, choose from "orthographic" or "perspective"
             atom_indices (list/numpy.ndarray): The atom indices for which the trajectory should be generated
             snapshot_indices (list/numpy.ndarray): The snapshots for which the trajectory should be generated
+            repeat (int/3-tuple of int): Repeat the structures by this before animating
 
         Returns:
             animation: nglview IPython widget
@@ -359,14 +363,15 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         if self.number_of_structures <= 1:
             raise ValueError("job must have more than one structure to animate!")
 
-        animation = nglview.show_asetraj(
-            self.trajectory(
+        traj = self.trajectory(
                 stride=stride,
                 center_of_mass=center_of_mass,
                 atom_indices=atom_indices,
                 snapshot_indices=snapshot_indices,
-            )
         )
+        if repeat is not None:
+            traj = traj.transform(lambda s: s.repeat(repeat))
+        animation = nglview.show_asetraj(traj)
         if spacefill:
             animation.add_spacefill(radius_type="vdw", scale=0.5, radius=particle_size)
             animation.remove_ball_and_stick()
@@ -872,7 +877,7 @@ class Trajectory(HasStructure):
         self._indices = indices
 
     def __getitem__(self, item):
-        if isinstance(item, (int, np.int_)):
+        if isinstance(item, numbers.Integral):
             new_structure = self._structure.copy()
             if self._cells is not None:
                 new_structure.cell = self._cells[item]
@@ -955,6 +960,52 @@ class Trajectory(HasStructure):
             snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs
         )
 
+    def transform(self, transform: Callable[[Atoms], Atoms]):
+        """
+        Return new trajectory with transformed structures.
+
+        Args:
+            transform (function): takes a structure and must return a structure.
+
+        Returns:
+            :class:`~.TransformTrajectory`: trajectory that contains the transformed structures
+        """
+        return TransformTrajectory(self, transform)
+
+
+class TransformTrajectory(HasStructure):
+    """
+    Wrapper around :class:`.Trajectory` that returns structures after passing them through a transforming function.
+
+    Has to be compatible to ase.io.Trajectory.
+    """
+
+    def __init__(self,
+            trajectory: Union["TransformTrajectory", Trajectory],
+            transform: Callable[[Atoms], Atoms] = lambda x: x
+    ):
+        self._trajectory = trajectory
+        self._transform = transform
+
+    def _number_of_structures(self):
+        return self._trajectory.number_of_structures
+
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        return self._transform(self._trajectory.get_structure(frame=frame, wrap_atoms=wrap_atoms))
+
+    def __getitem__(self, item):
+        if isinstance(item, numbers.Integral):
+            return self._get_structure(item)
+        elif isinstance(item, (list, np.ndarray, slice)):
+            return TransformTrajectory(self._trajectory[item], self._transform)
+        else:
+            raise TypeError("item must be integral number, list, array or slice.")
+
+    def __len__(self):
+        return self._trajectory.number_of_structures
+
+    def __iter__(self):
+        yield from self.iter_structures()
 
 class GenericInput(GenericParameters):
     def __init__(self, input_file_name=None, table_name="generic"):
