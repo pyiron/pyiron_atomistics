@@ -2,6 +2,8 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import itertools
+
 from multiprocessing import cpu_count
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, DataContainer, GenericParameters, ImportAlarm
@@ -10,16 +12,27 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     ase_to_pyiron,
     pyiron_to_ase,
 )
-from pymatgen.io.ase import AseAtomsAdaptor
 import numpy as np
 
 try:
     from sqsgenerator.core.sqs import ParallelSqsIterator
+    import_alarm = ImportAlarm(
+        "SQSJob relies on the [sqsgenerator module](https://github.com/dgehringer/sqsgenerator) module. The package "
+        "got a major update (0.0.5 -> 0.1) recently. Please consider to update the package, e. g. with "
+        "`conda update -c conda-forge sqsgenerator`"
+    )
+    DEPRECATED_SQS_API = True
+except ImportError:
+    pass
 
+try:
+    from sqsgenerator.settings import BadSettings
+    from sqsgenerator import sqs_optimize, process_settings, IterationMode
+    DEPRECATED_SQS_API = False
     import_alarm = ImportAlarm()
 except ImportError:
     import_alarm = ImportAlarm(
-        "SQSJob relies on sqsgenerator.core.sqs.ParallelSqsIterator, but this is unavailable. Please ensure your "
+        "SQSJob relies on the sqsgenerator, but this is unavailable. Please ensure your "
         "python environment contains the [sqsgenerator module](https://github.com/dgehringer/sqsgenerator), e.g. with "
         "`conda install -c conda-forge sqsgenerator`."
     )
