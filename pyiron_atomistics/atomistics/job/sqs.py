@@ -36,6 +36,12 @@ except ImportError:
         "python environment contains the [sqsgenerator module](https://github.com/dgehringer/sqsgenerator), e.g. with "
         "`conda install -c conda-forge sqsgenerator`."
     )
+    DEPRECATED_SQS_API = None
+
+from typing import Dict, Optional, Union, Iterable
+
+if not DEPRECATED_SQS_API:
+    from pymatgen.io.ase import AseAtomsAdaptor
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -53,32 +59,73 @@ def pyiron_to_pymatgen(structure):
     return AseAtomsAdaptor.get_structure(pyiron_to_ase(structure))
 
 
-def pymatgen_to_pyiron(structure):
-    return ase_to_pyiron(AseAtomsAdaptor.get_atoms(structure))
+    def pymatgen_to_pyiron(structure):
+        return ase_to_pyiron(AseAtomsAdaptor.get_atoms(structure))
 
 
-def get_sqs_structures(
-    structure,
-    mole_fractions,
-    weights=None,
-    objective=0.0,
-    iterations=1e6,
-    output_structures=10,
-    num_threads=None,
-):
-    structure = pyiron_to_pymatgen(structure)
-    if not weights:
-        weights = {i: 1.0 / i for i in range(1, 7)}
-    if not num_threads:
-        # Thats default behaviour
-        num_threads = cpu_count()
-    iterator = ParallelSqsIterator(
-        structure, mole_fractions, weights, num_threads=num_threads
-    )
-    structures, decmp, iter_, cycle_time = iterator.iteration(
-        iterations=iterations, output_structures=output_structures, objective=objective
-    )
-    return [pymatgen_to_pyiron(s) for s in structures], decmp, iter_, cycle_time
+    def get_sqs_structures(
+        structure,
+        mole_fractions,
+        weights=None,
+        objective=0.0,
+        iterations=1e6,
+        output_structures=10,
+        num_threads=None,
+    ):
+        structure = pyiron_to_pymatgen(structure)
+        if not weights:
+            weights = {i: 1.0 / i for i in range(1, 7)}
+        if not num_threads:
+            # Thats default behaviour
+            num_threads = cpu_count()
+        iterator = ParallelSqsIterator(
+            structure, mole_fractions, weights, num_threads=num_threads
+        )
+        structures, decmp, iter_, cycle_time = iterator.iteration(
+            iterations=iterations, output_structures=output_structures, objective=objective
+        )
+        return [pymatgen_to_pyiron(s) for s in structures], decmp, iter_, cycle_time
+else:
+
+    def get_sqs_structures(
+            structure: Atoms,
+            mole_fractions: Dict[str, Union[float, int]],
+            weights: Optional[Dict[int, float]]=None,
+            objective: Union[float, np.ndarray]=0.0,
+            iterations: Union[float, int]= 1e6,
+            output_structures: int=10,
+            mode: IterationMode = IterationMode.random,
+            num_threads: Optional[int] = None,
+            prefactors: Optional[float, np.ndarray] = None,
+            pair_weights: Optional[np.ndarray] = None,
+            rtol: float=None,
+            atol: Optional[float]=None,
+            which: Optional[Iterable[int]] = None,
+            shell_distances: Optional[Iterable[int]] = None
+    ):
+
+        structure = pyiron_to_ase(structure)
+        composition = mole_fractions_to_composition(mole_fractions, len(structure))
+
+        settings = dict(
+            atol=atol,
+            rtol=rtol,
+            mode=mode,
+            structure=structure,
+            prefactors=prefactors,
+            shell_weights=weights,
+            iterations=iterations,
+            composition=composition,
+            pair_weights=pair_weights,
+            target_objective=objective,
+            shell_distances=shell_distances,
+            threads_per_rank=num_threads or cpu_count(),
+            max_output_configurations=output_structures
+        )
+        results, timings = sqs_optimize(
+
+        )
+
 
 
 class SQSJob(AtomisticGenericJob):
