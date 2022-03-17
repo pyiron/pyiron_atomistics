@@ -364,10 +364,10 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             raise ValueError("job must have more than one structure to animate!")
 
         traj = self.trajectory(
-                stride=stride,
-                center_of_mass=center_of_mass,
-                atom_indices=atom_indices,
-                snapshot_indices=snapshot_indices,
+            stride=stride,
+            center_of_mass=center_of_mass,
+            atom_indices=atom_indices,
+            snapshot_indices=snapshot_indices,
         )
         if repeat is not None:
             traj = traj.transform(lambda s: s.repeat(repeat))
@@ -980,9 +980,10 @@ class TransformTrajectory(HasStructure):
     Has to be compatible to ase.io.Trajectory.
     """
 
-    def __init__(self,
-            trajectory: Union["TransformTrajectory", Trajectory],
-            transform: Callable[[Atoms], Atoms] = lambda x: x
+    def __init__(
+        self,
+        trajectory: Union["TransformTrajectory", Trajectory],
+        transform: Callable[[Atoms], Atoms] = lambda x: x,
     ):
         self._trajectory = trajectory
         self._transform = transform
@@ -991,7 +992,9 @@ class TransformTrajectory(HasStructure):
         return self._trajectory.number_of_structures
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
-        return self._transform(self._trajectory.get_structure(frame=frame, wrap_atoms=wrap_atoms))
+        return self._transform(
+            self._trajectory.get_structure(frame=frame, wrap_atoms=wrap_atoms)
+        )
 
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):
@@ -1006,6 +1009,7 @@ class TransformTrajectory(HasStructure):
 
     def __iter__(self):
         yield from self.iter_structures()
+
 
 class GenericInput(GenericParameters):
     def __init__(self, input_file_name=None, table_name="generic"):
