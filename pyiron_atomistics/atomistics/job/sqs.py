@@ -8,6 +8,7 @@ import itertools
 from multiprocessing import cpu_count
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, DataContainer, GenericParameters, ImportAlarm
+from pyiron_atomistics.atomistics.structure.periodic_table import ChemicalElement
 from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
     ase_to_pyiron,
@@ -24,7 +25,7 @@ try:
     )
     DEPRECATED_SQS_API = True
 except ImportError:
-    pass
+    DEPRECATED_SQS_API = None
 
 try:
     from sqsgenerator.settings import BadSettings
@@ -37,11 +38,12 @@ except ImportError:
         "python environment contains the [sqsgenerator module](https://github.com/dgehringer/sqsgenerator), e.g. with "
         "`conda install -c conda-forge sqsgenerator`."
     )
-    DEPRECATED_SQS_API = None
+    DEPRECATED_SQS_API = DEPRECATED_SQS_API or None
+
 
 from typing import Dict, Optional, Union, Iterable
 
-if not DEPRECATED_SQS_API:
+if DEPRECATED_SQS_API:
     from pymatgen.io.ase import AseAtomsAdaptor
 
 __author__ = "Jan Janssen"
@@ -148,8 +150,8 @@ else:
             num_threads: Optional[int] = None,
             prefactors: Optional[Union[float, np.ndarray]] = None,
             pair_weights: Optional[np.ndarray] = None,
-            rtol: float=None,
-            atol: Optional[float]=None,
+            rtol: Optional[float] = None,
+            atol: Optional[float] = None,
             which: Optional[Iterable[int]] = None,
             shell_distances: Optional[Iterable[int]] = None,
             minimal: Optional[bool] = True,
