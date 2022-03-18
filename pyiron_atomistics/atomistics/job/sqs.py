@@ -205,7 +205,10 @@ else:
             structure_format='ase'
         )
 
-        print(results)
+        structures, sro_breakdown = transpose(map(remap_sqs_results, results.values()))
+        num_iterations = iterations
+        cycle_time = np.average(list(map_dict(np.average, timings).values()))
+        return structures, sro_breakdown, num_iterations, cycle_time
 
 
 
