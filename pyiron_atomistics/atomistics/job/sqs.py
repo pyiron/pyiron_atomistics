@@ -137,7 +137,24 @@ if DEPRECATED_SQS_API:
             iterations=iterations, output_structures=output_structures, objective=objective
         )
         return [pymatgen_to_pyiron(s) for s in structures], decmp, iter_, cycle_time
+
 else:
+
+    def remap_sro(species: Iterable[str], array: np.ndarray):
+        species = tuple(sorted(species, key=lambda abbr: ChemicalElement(abbr).atomic_number))
+        return \
+            {
+                '{}-{}'.format(si, sj): array[:, i, j].tolist()
+                for (i, si), (j, sj) in itertools.product(enumerate(species), enumerate(species))
+                if j >= i
+            }
+
+    def remap_sqs_results(result):
+        pyiron_structure = ase_to_pyiron(result['structure'])
+        return pyiron_structure, remap_sro(set(pyiron_structure.get_chemical_symbols()), result['parameters'])
+
+    def transpose(it):
+        return zip(*it)
 
     def get_sqs_structures(
             structure: Atoms,
