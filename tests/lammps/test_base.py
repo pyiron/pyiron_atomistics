@@ -684,8 +684,10 @@ class TestLammps(TestWithCleanProject):
                                   'Filename': [[]],
                                   'Model'   : ['Morse'],
                                   'Species' : [['Al']],
-                                  'Config'  : [['bond_coeff 1 0.1 1.5 2.856\n',
-                                                'bond_coeff 2 0.1 1.5 2.856']]})
+                                  'Config'  : [['atom_style bond\n',
+                                                'bond_style morse\n',
+                                                'bond_coeff 1 0.1 1.5 2.0\n',
+                                                'bond_coeff 2 0.1 1.5 2.0']]})
         cell = Atoms(elements=4*['Al'], positions=[[0., 0., 0.],
                                                    [0., 2., 2.],
                                                    [2., 0., 2.],
