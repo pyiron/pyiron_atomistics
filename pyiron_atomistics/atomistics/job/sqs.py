@@ -96,7 +96,7 @@ def mole_fractions_to_composition(mole_fractions: Dict[str, float], num_atoms: i
         removed_species = random.choice(tuple(composition))
         composition[removed_species] -= 1
         warnings.warn(
-            'It is not possible to distribute the species. Therefore one "{}" atom was removed. '
+            'It is not possible to distribute the species properly. Therefore one "{}" atom was removed. '
             'This changes the input mole-fraction specification. '
             '"{}" -> "{}"'.format(removed_species, mole_fractions, map_dict(lambda n: n/num_atoms, composition)))
     else:
@@ -130,6 +130,12 @@ if DEPRECATED_SQS_API:
         if not num_threads:
             # Thats default behaviour
             num_threads = cpu_count()
+
+        # preprocess mole-fractions, to print warnings is necessary
+        num_atoms = len(structure)
+        composition = mole_fractions_to_composition(mole_fractions, num_atoms)
+        mole_fractions = map_dict(lambda n: n/num_atoms, composition)
+
         iterator = ParallelSqsIterator(
             structure, mole_fractions, weights, num_threads=num_threads
         )
@@ -209,7 +215,6 @@ else:
         num_iterations = iterations
         cycle_time = np.average(list(map_dict(np.average, timings).values()))
         return structures, sro_breakdown, num_iterations, cycle_time
-
 
 
 class SQSJob(AtomisticGenericJob):
