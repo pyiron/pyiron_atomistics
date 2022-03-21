@@ -697,16 +697,12 @@ class TestLammps(TestWithCleanProject):
         self.job.structure.bonds = [[1, 2, 1], [1, 3, 2]]
         self.job.potential = potential
         self.job.calc_static()
-        file_directory = os.path.join(
-            self.execution_path, "..", "static", "lammps_test_files"
-        )
-        self.job.restart_file_list.append(
-            os.path.join(file_directory, "dump.out")
-        )
-        self.job.restart_file_list.append(
-            os.path.join(file_directory, "log.lammps")
-        )
         self.job.run(run_mode="manual")
-        self.job.status.collect = True
-        self.job.run()
+
+        bond_str = "2 bond types\n"
+        struct_file = open(self.job.get_workdir_file('structure.inp'), 'r')
+        struct_lines = struct_file.readlines()[4]
+        struct_file.close()
+        self.assertTrue(struct_lines[-1], bond_str)
+
 
