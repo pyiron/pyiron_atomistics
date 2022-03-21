@@ -34,7 +34,7 @@ try:
     import_alarm = ImportAlarm()
 except ImportError:
     import_alarm = ImportAlarm(
-        "SQSJob relies on the sqsgenerator, but this is unavailable. Please ensure your "
+        "SQSJob relies on the sqsgenerator module, but this is unavailable. Please ensure your "
         "python environment contains the [sqsgenerator module](https://github.com/dgehringer/sqsgenerator), e.g. with "
         "`conda install -c conda-forge sqsgenerator`."
     )
@@ -78,7 +78,7 @@ def mole_fractions_to_composition(mole_fractions: Dict[str, float], num_atoms: i
         raise ValueError('mole-fractions must sum up to one: {}'.format(sum(mole_fractions.values())))
 
     composition = map_dict(lambda x: x*num_atoms, mole_fractions)
-    # check to avoid partial occupation
+    # check to avoid partial occupation -> x_i * num_atoms is not an integer number
     if any(map(lambda occupation: not float.is_integer(round(occupation, 1)), composition.values())):
         # at least one of the specified species exhibits fractional occupation, we try to fix it by rounding
         composition_ = map_dict(lambda occ: int(round(occ)), composition)
@@ -88,6 +88,7 @@ def mole_fractions_to_composition(mole_fractions: Dict[str, float], num_atoms: i
             '"{}" -> "{}"'.format(num_atoms, mole_fractions, map_dict(lambda n: n/num_atoms, composition_)))
         composition = composition_
 
+    # due to rounding errors there might be a difference of one atom
     actual_atoms = sum(composition.values())
     diff = actual_atoms - num_atoms
     if abs(diff) == 1:
@@ -100,6 +101,7 @@ def mole_fractions_to_composition(mole_fractions: Dict[str, float], num_atoms: i
             'This changes the input mole-fraction specification. '
             '"{}" -> "{}"'.format(removed_species, mole_fractions, map_dict(lambda n: n/num_atoms, composition)))
     else:
+        # something else is wrong with the mole-fractions input
         raise ValueError('Cannot interpret mole-fraction dict {}'.format(mole_fractions))
 
     return composition
@@ -147,6 +149,7 @@ if DEPRECATED_SQS_API:
 else:
 
     def remap_sro(species: Iterable[str], array: np.ndarray):
+        # remaps computed short-range order parameters to style of sqsgenerator=v0.0.5
         species = tuple(sorted(species, key=lambda abbr: ChemicalElement(abbr).atomic_number))
         return \
             {
@@ -156,6 +159,7 @@ else:
             }
 
     def remap_sqs_results(result):
+        # makes new interface compatible with old one
         pyiron_structure = ase_to_pyiron(result['structure'])
         return pyiron_structure, remap_sro(set(pyiron_structure.get_chemical_symbols()), result['parameters'])
 
