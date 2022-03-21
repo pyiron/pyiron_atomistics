@@ -700,9 +700,6 @@ class TestLammps(TestWithCleanProject):
         self.job.run(run_mode="manual")
 
         bond_str = "2 bond types\n"
-        struct_file = open(self.job.get_workdir_file('structure.inp'), 'r')
-        struct_lines = struct_file.readlines()[4]
-        struct_file.close()
-        self.assertTrue(struct_lines[-1], bond_str)
+        self.assertTrue(self.job["structure.inp"][4][-1], bond_str)
 
 
