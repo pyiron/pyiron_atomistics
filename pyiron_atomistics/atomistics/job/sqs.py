@@ -18,6 +18,7 @@ import numpy as np
 
 try:
     from sqsgenerator.core.sqs import ParallelSqsIterator
+
     import_alarm = ImportAlarm(
         "SQSJob relies on the [sqsgenerator module](https://github.com/dgehringer/sqsgenerator) module. The package "
         "got a major update (0.0.5 -> 0.1) recently. Please consider to update the package, e. g. with "
@@ -30,6 +31,7 @@ except ImportError:
 try:
     from sqsgenerator.settings import BadSettings
     from sqsgenerator import sqs_optimize, process_settings, IterationMode
+
     DEPRECATED_SQS_API = False
     import_alarm = ImportAlarm()
 except ImportError:
@@ -59,33 +61,46 @@ __date__ = "Aug 14, 2020"
 
 
 def chemical_formula(atoms: Atoms) -> str:
-
     def group_symbols():
         for species, same in itertools.groupby(atoms.get_chemical_symbols()):
             num_same = len(list(same))
-            yield species if num_same == 1 else f'{species}{num_same}'
+            yield species if num_same == 1 else f"{species}{num_same}"
 
-    return ''.join(group_symbols())
+    return "".join(group_symbols())
 
 
 def map_dict(f, d: Dict) -> Dict:
     return {k: f(v) for k, v in d.items()}
 
 
-def mole_fractions_to_composition(mole_fractions: Dict[str, float], num_atoms: int) -> Dict[str, int]:
+def mole_fractions_to_composition(
+    mole_fractions: Dict[str, float], num_atoms: int
+) -> Dict[str, int]:
     # if the sum of x is less than 1 - 1/n then we are missing at least one atoms
-    if not (1.0 - 1/num_atoms) < sum(mole_fractions.values()) < (1.0 + 1/num_atoms):
-        raise ValueError('mole-fractions must sum up to one: {}'.format(sum(mole_fractions.values())))
+    if not (1.0 - 1 / num_atoms) < sum(mole_fractions.values()) < (1.0 + 1 / num_atoms):
+        raise ValueError(
+            "mole-fractions must sum up to one: {}".format(sum(mole_fractions.values()))
+        )
 
-    composition = map_dict(lambda x: x*num_atoms, mole_fractions)
+    composition = map_dict(lambda x: x * num_atoms, mole_fractions)
     # check to avoid partial occupation -> x_i * num_atoms is not an integer number
-    if any(map(lambda occupation: not float.is_integer(round(occupation, 1)), composition.values())):
+    if any(
+        map(
+            lambda occupation: not float.is_integer(round(occupation, 1)),
+            composition.values(),
+        )
+    ):
         # at least one of the specified species exhibits fractional occupation, we try to fix it by rounding
         composition_ = map_dict(lambda occ: int(round(occ)), composition)
         warnings.warn(
-            'The current mole-fraction specification cannot be applied to {} atoms, '
-            'as it would lead to fractional occupation. Hence, I have changed it from '
-            '"{}" -> "{}"'.format(num_atoms, mole_fractions, map_dict(lambda n: n/num_atoms, composition_)))
+            "The current mole-fraction specification cannot be applied to {} atoms, "
+            "as it would lead to fractional occupation. Hence, I have changed it from "
+            '"{}" -> "{}"'.format(
+                num_atoms,
+                mole_fractions,
+                map_dict(lambda n: n / num_atoms, composition_),
+            )
+        )
         composition = composition_
 
     # due to rounding errors there might be a difference of one atom
@@ -98,11 +113,18 @@ def mole_fractions_to_composition(mole_fractions: Dict[str, float], num_atoms: i
         composition[removed_species] -= 1
         warnings.warn(
             'It is not possible to distribute the species properly. Therefore one "{}" atom was removed. '
-            'This changes the input mole-fraction specification. '
-            '"{}" -> "{}"'.format(removed_species, mole_fractions, map_dict(lambda n: n/num_atoms, composition)))
+            "This changes the input mole-fraction specification. "
+            '"{}" -> "{}"'.format(
+                removed_species,
+                mole_fractions,
+                map_dict(lambda n: n / num_atoms, composition),
+            )
+        )
     else:
         # something else is wrong with the mole-fractions input
-        raise ValueError('Cannot interpret mole-fraction dict {}'.format(mole_fractions))
+        raise ValueError(
+            "Cannot interpret mole-fraction dict {}".format(mole_fractions)
+        )
 
     return composition
 
@@ -112,10 +134,8 @@ if DEPRECATED_SQS_API:
     def pyiron_to_pymatgen(structure):
         return AseAtomsAdaptor.get_structure(pyiron_to_ase(structure))
 
-
     def pymatgen_to_pyiron(structure):
         return ase_to_pyiron(AseAtomsAdaptor.get_atoms(structure))
-
 
     def get_sqs_structures(
         structure,
@@ -136,13 +156,15 @@ if DEPRECATED_SQS_API:
         # preprocess mole-fractions, to print warnings is necessary
         num_atoms = len(structure)
         composition = mole_fractions_to_composition(mole_fractions, num_atoms)
-        mole_fractions = map_dict(lambda n: n/num_atoms, composition)
+        mole_fractions = map_dict(lambda n: n / num_atoms, composition)
 
         iterator = ParallelSqsIterator(
             structure, mole_fractions, weights, num_threads=num_threads
         )
         structures, decmp, iter_, cycle_time = iterator.iteration(
-            iterations=iterations, output_structures=output_structures, objective=objective
+            iterations=iterations,
+            output_structures=output_structures,
+            objective=objective,
         )
         return [pymatgen_to_pyiron(s) for s in structures], decmp, iter_, cycle_time
 
@@ -150,39 +172,44 @@ else:
 
     def remap_sro(species: Iterable[str], array: np.ndarray):
         # remaps computed short-range order parameters to style of sqsgenerator=v0.0.5
-        species = tuple(sorted(species, key=lambda abbr: ChemicalElement(abbr).atomic_number))
-        return \
-            {
-                '{}-{}'.format(si, sj): array[:, i, j].tolist()
-                for (i, si), (j, sj) in itertools.product(enumerate(species), enumerate(species))
-                if j >= i
-            }
+        species = tuple(
+            sorted(species, key=lambda abbr: ChemicalElement(abbr).atomic_number)
+        )
+        return {
+            "{}-{}".format(si, sj): array[:, i, j].tolist()
+            for (i, si), (j, sj) in itertools.product(
+                enumerate(species), enumerate(species)
+            )
+            if j >= i
+        }
 
     def remap_sqs_results(result):
         # makes new interface compatible with old one
-        pyiron_structure = ase_to_pyiron(result['structure'])
-        return pyiron_structure, remap_sro(set(pyiron_structure.get_chemical_symbols()), result['parameters'])
+        pyiron_structure = ase_to_pyiron(result["structure"])
+        return pyiron_structure, remap_sro(
+            set(pyiron_structure.get_chemical_symbols()), result["parameters"]
+        )
 
     def transpose(it):
         return zip(*it)
 
     def get_sqs_structures(
-            structure: Atoms,
-            mole_fractions: Dict[str, Union[float, int]],
-            weights: Optional[Dict[int, float]] = None,
-            objective: Union[float, np.ndarray] = 0.0,
-            iterations: Union[float, int] = 1e6,
-            output_structures: int = 10,
-            mode: str = 'random',
-            num_threads: Optional[int] = None,
-            prefactors: Optional[Union[float, np.ndarray]] = None,
-            pair_weights: Optional[np.ndarray] = None,
-            rtol: Optional[float] = None,
-            atol: Optional[float] = None,
-            which: Optional[Iterable[int]] = None,
-            shell_distances: Optional[Iterable[int]] = None,
-            minimal: Optional[bool] = True,
-            similar: Optional[bool] = True
+        structure: Atoms,
+        mole_fractions: Dict[str, Union[float, int]],
+        weights: Optional[Dict[int, float]] = None,
+        objective: Union[float, np.ndarray] = 0.0,
+        iterations: Union[float, int] = 1e6,
+        output_structures: int = 10,
+        mode: str = "random",
+        num_threads: Optional[int] = None,
+        prefactors: Optional[Union[float, np.ndarray]] = None,
+        pair_weights: Optional[np.ndarray] = None,
+        rtol: Optional[float] = None,
+        atol: Optional[float] = None,
+        which: Optional[Iterable[int]] = None,
+        shell_distances: Optional[Iterable[int]] = None,
+        minimal: Optional[bool] = True,
+        similar: Optional[bool] = True,
     ):
 
         structure = pyiron_to_ase(structure)
@@ -202,7 +229,7 @@ else:
             target_objective=objective,
             shell_distances=shell_distances,
             threads_per_rank=num_threads or cpu_count(),
-            max_output_configurations=output_structures
+            max_output_configurations=output_structures,
         )
         # not specifying a parameter in settings causes sqsgenerator to choose a "sensible" default,
         # hence we remove all entries with a None value
@@ -212,7 +239,7 @@ else:
             minimal=minimal,
             similar=similar,
             make_structures=True,
-            structure_format='ase'
+            structure_format="ase",
         )
 
         structures, sro_breakdown = transpose(map(remap_sqs_results, results.values()))
