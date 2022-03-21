@@ -120,7 +120,7 @@ def mole_fractions_to_composition(
                 map_dict(lambda n: n / num_atoms, composition),
             )
         )
-    else:
+    elif abs(diff) > 1:
         # something else is wrong with the mole-fractions input
         raise ValueError(
             "Cannot interpret mole-fraction dict {}".format(mole_fractions)
