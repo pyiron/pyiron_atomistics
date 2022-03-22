@@ -117,7 +117,7 @@ class Hessian:
         dx=0.01,
         symprec=1.0e-2,
         include_zero_displacement=True,
-        second_order=True
+        second_order=True,
     ):
         """
 
@@ -263,11 +263,14 @@ class Hessian:
 
     @property
     def minimum_displacements(self):
-        return Displacements(
-            structure=self.structure,
-            include_zero=self.include_zero_displacement,
-            second_order=self.second_order
-        ).displacements * self.dx
+        return (
+            Displacements(
+                structure=self.structure,
+                include_zero=self.include_zero_displacement,
+                second_order=self.second_order,
+            ).displacements
+            * self.dx
+        )
 
     @property
     def displacements(self):
@@ -388,7 +391,7 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
             self._hessian = Hessian(
                 self.structure,
                 include_zero_displacement=self.input["include_zero_displacement"],
-                second_order=self.input["second_order"]
+                second_order=self.input["second_order"],
             )
         return self._hessian
 
@@ -484,12 +487,14 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
             temperature=temperature, strain=strain
         )
 
-    get_helmholtz_free_energy.__doc__ = thermo_doc.replace('INPUT_ONE', 'temperature').replace(
-        'INPUT_TWO', 'strain'
-    ).replace('OUTPUT', 'Helmholtz free energy')
-    get_helmholtz_free_energy.__doc__ = get_helmholtz_free_energy.__doc__.split('\n')
-    get_helmholtz_free_energy.__doc__[0] = 'Helmholtz free energy'
-    get_helmholtz_free_energy.__doc__ = '\n'.join(get_helmholtz_free_energy.__doc__)
+    get_helmholtz_free_energy.__doc__ = (
+        thermo_doc.replace("INPUT_ONE", "temperature")
+        .replace("INPUT_TWO", "strain")
+        .replace("OUTPUT", "Helmholtz free energy")
+    )
+    get_helmholtz_free_energy.__doc__ = get_helmholtz_free_energy.__doc__.split("\n")
+    get_helmholtz_free_energy.__doc__[0] = "Helmholtz free energy"
+    get_helmholtz_free_energy.__doc__ = "\n".join(get_helmholtz_free_energy.__doc__)
 
     def get_gibbs_free_energy(self, temperature, pressure):
         return self._thermo.get_gibbs_free_energy(
@@ -497,31 +502,37 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
         )
 
     get_gibbs_free_energy.__doc__ = get_helmholtz_free_energy.__doc__.replace(
-        'Helmholtz', 'Gibbs'
-    ).replace('strain', 'pressure')
+        "Helmholtz", "Gibbs"
+    ).replace("strain", "pressure")
 
     def get_volume(self, temperature, pressure):
         return self.hessian.volume * (
             1 + self.get_strain(temperature=temperature, pressure=pressure)
         )
 
-    get_volume.__doc__ = thermo_doc.replace('INPUT_ONE', 'temperature').replace(
-        'INPUT_TWO', 'pressure'
-    ).replace('OUTPUT', 'volume')
+    get_volume.__doc__ = (
+        thermo_doc.replace("INPUT_ONE", "temperature")
+        .replace("INPUT_TWO", "pressure")
+        .replace("OUTPUT", "volume")
+    )
 
     def get_strain(self, temperature, pressure):
         return self._thermo.get_strain(temperature=temperature, pressure=pressure)
 
-    get_strain.__doc__ = thermo_doc.replace('INPUT_ONE', 'temperature').replace(
-        'INPUT_TWO', 'pressure'
-    ).replace('OUTPUT', 'strain')
+    get_strain.__doc__ = (
+        thermo_doc.replace("INPUT_ONE", "temperature")
+        .replace("INPUT_TWO", "pressure")
+        .replace("OUTPUT", "strain")
+    )
 
     def get_pressure(self, temperature, strain):
         return self._thermo.get_pressure(temperature=temperature, strain=strain)
 
-    get_pressure.__doc__ = thermo_doc.replace('INPUT_ONE', 'temperature').replace(
-        'INPUT_TWO', 'strain'
-    ).replace('OUTPUT', 'pressure')
+    get_pressure.__doc__ = (
+        thermo_doc.replace("INPUT_ONE", "temperature")
+        .replace("INPUT_TWO", "strain")
+        .replace("OUTPUT", "pressure")
+    )
 
     def validate_ready_to_run(self):
         if self.ref_job._generic_input["calc_mode"] != "static":
@@ -530,8 +541,8 @@ class QuasiHarmonicApproximation(AtomisticParallelMaster):
                     self.ref_job._generic_input["calc_mode"]
                 )
             )
-        if self.input['num_points'] > 1 and self.input['num_points'] < 4:
-            raise ValueError('num_points must be 1 or larger than 3')
+        if self.input["num_points"] > 1 and self.input["num_points"] < 4:
+            raise ValueError("num_points must be 1 or larger than 3")
         super().validate_ready_to_run()
 
 
@@ -555,7 +566,7 @@ class Thermodynamics:
     @property
     def coeff(self):
         if len(self.free_energy) < 4:
-            raise ValueError('Volume dependence makes sense only when num_points > 5')
+            raise ValueError("Volume dependence makes sense only when num_points > 5")
         return np.einsum("ni,nj->ji", self.fit_mat, self.free_energy)
 
     @property
