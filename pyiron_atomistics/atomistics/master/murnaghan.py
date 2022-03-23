@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from typing import List, Optional
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -294,6 +294,17 @@ class DebyeModel(object):
         return atoms_per_cell * val
 
 
+def _strain_axes(structure: Atoms, axes: List[str], volume_strain: float):
+    """
+    Strain box along given axes to achieve given *volumetric* strain.
+
+    Returns a copy.
+    """
+    axes = np.array([a in axes for a in ("x", "y", "z")])
+    num_axes = sum(axes)
+    strains = axes * (volume_strain**(1.0/num_axes) - 1)
+    return structure.apply_strain(strains, return_box=True)
+
 class MurnaghanJobGenerator(JobGenerator):
     @property
     def parameter_list(self):
@@ -303,15 +314,12 @@ class MurnaghanJobGenerator(JobGenerator):
             (list)
         """
         parameter_lst = []
-        axes = np.array([a in self._master.input["axes"] for a in ("x", "y", "z")])
-        num_axes = sum(axes)
         for strain in np.linspace(
             1 - self._master.input["vol_range"],
             1 + self._master.input["vol_range"],
             int(self._master.input["num_points"]),
         ):
-            strains = axes * (strain**(1.0/num_axes) - 1)
-            basis = self._master.ref_job.structure.apply_strain(strains, return_box=True)
+            basis = _strain_axes(self._master.structure, self._master.input["axes"], strain)
             parameter_lst.append([np.round(strain, 7), basis])
         return parameter_lst
 
@@ -921,13 +929,10 @@ class Murnaghan(AtomisticParallelMaster):
             :class:`pyiron_atomistics.atomistics.structure.atoms.Atoms`: requested structure
         """
         if frame == 1:
-            snapshot = self.structure.copy()
-            old_vol = snapshot.get_volume()
+            old_vol = self.structure.get_volume()
             new_vol = self["output/equilibrium_volume"]
-            k = (new_vol / old_vol) ** (1.0 / 3.0)
-            new_cell = snapshot.cell * k
-            snapshot.set_cell(new_cell, scale_atoms=True)
-            return snapshot
+            vol_strain = new_vol / old_vol
+            return _strain_axes(self.structure, self.input["axes"], vol_strain)
         elif frame == 0:
             return self.structure
 
