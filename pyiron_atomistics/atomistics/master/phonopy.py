@@ -4,6 +4,7 @@
 
 import codecs
 import pickle
+from typing import Optional
 
 import numpy as np
 import posixpath
@@ -491,7 +492,7 @@ class PhonopyJob(AtomisticParallelMaster):
             ]
         return results
 
-    def plot_band_structure(self, axis=None):
+    def plot_band_structure(self, axis=None, label: Optional[str] = None, **kwargs):
         """
         Plot bandstructure calculated with :method:`.get_bandstructure`.
 
@@ -499,6 +500,8 @@ class PhonopyJob(AtomisticParallelMaster):
 
         Args:
             axis (matplotlib axis, optional): plot to this axis, if not given a new one is created.
+            label (str, optional): label for dispersion line
+            **kwargs: passed through to matplotlib.pyplot.plot when plotting the dispersion
 
         Returns:
             matplib axis: the axis the figure has been drawn to, if axis is given the same object is returned
@@ -523,16 +526,23 @@ class PhonopyJob(AtomisticParallelMaster):
         path_connections = self.phonopy._band_structure.path_connections
         labels = self.phonopy._band_structure.labels
 
+        plot_kws = kwargs
+        if "color" not in plot_kws:
+            plot_kws["color"] = "black"
+
         offset = 0
         tick_positions = [distances[0][0]]
         for di, fi, ci in zip(distances, frequencies, path_connections):
             axis.axvline(tick_positions[-1], color="black", linestyle="--")
-            axis.plot(offset + di, fi, color="black")
+            line, *_ = axis.plot(offset + di, fi, **plot_kws)
             tick_positions.append(di[-1] + offset)
             if not ci:
                 offset += 0.05
                 plt.axvline(tick_positions[-1], color="black", linestyle="--")
                 tick_positions.append(di[-1] + offset)
+        if label is not None:
+            line.set_label(label)
+            axis.legend()
         axis.set_xticks(tick_positions[:-1])
         axis.set_xticklabels(labels)
         axis.set_xlabel("Bandpath")
