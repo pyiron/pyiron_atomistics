@@ -533,12 +533,12 @@ class PhonopyJob(AtomisticParallelMaster):
         offset = 0
         tick_positions = [distances[0][0]]
         for di, fi, ci in zip(distances, frequencies, path_connections):
-            axis.axvline(tick_positions[-1], color="black", linestyle="--")
+            axis.axvline(tick_positions[-1], color="black", linestyle="dotted", alpha=0.5)
             line, *_ = axis.plot(offset + di, fi, **plot_kws)
             tick_positions.append(di[-1] + offset)
             if not ci:
                 offset += 0.05
-                plt.axvline(tick_positions[-1], color="black", linestyle="--")
+                plt.axvline(tick_positions[-1], color="black", linestyle="dotted", alpha=0.5)
                 tick_positions.append(di[-1] + offset)
         if label is not None:
             line.set_label(label)
