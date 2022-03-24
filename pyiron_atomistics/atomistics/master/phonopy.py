@@ -550,7 +550,7 @@ class PhonopyJob(AtomisticParallelMaster):
             tick_positions.append(di[-1] + offset)
             if not ci:
                 offset += 0.05
-                plt.axvline(
+                axis.axvline(
                     tick_positions[-1], color="black", linestyle="dotted", alpha=0.5
                 )
                 tick_positions.append(di[-1] + offset)
