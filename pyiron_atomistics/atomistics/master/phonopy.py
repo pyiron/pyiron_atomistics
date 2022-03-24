@@ -496,7 +496,9 @@ class PhonopyJob(AtomisticParallelMaster):
             ]
         return results
 
-    def plot_band_structure(self, axis=None, *args, label: Optional[str] = None, **kwargs):
+    def plot_band_structure(
+        self, axis=None, *args, label: Optional[str] = None, **kwargs
+    ):
         """
         Plot bandstructure calculated with :method:`.get_bandstructure`.
 
@@ -541,12 +543,16 @@ class PhonopyJob(AtomisticParallelMaster):
         offset = 0
         tick_positions = [distances[0][0]]
         for di, fi, ci in zip(distances, frequencies, path_connections):
-            axis.axvline(tick_positions[-1], color="black", linestyle="dotted", alpha=0.5)
+            axis.axvline(
+                tick_positions[-1], color="black", linestyle="dotted", alpha=0.5
+            )
             line, *_ = axis.plot(offset + di, fi, *args, **kwargs)
             tick_positions.append(di[-1] + offset)
             if not ci:
                 offset += 0.05
-                plt.axvline(tick_positions[-1], color="black", linestyle="dotted", alpha=0.5)
+                plt.axvline(
+                    tick_positions[-1], color="black", linestyle="dotted", alpha=0.5
+                )
                 tick_positions.append(di[-1] + offset)
         if label is not None:
             line.set_label(label)
