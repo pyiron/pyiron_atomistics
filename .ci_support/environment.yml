@@ -17,7 +17,7 @@ dependencies:
 - phonopy =2.13.1
 - pint =0.18
 - pyiron_base =0.5.8
-- pymatgen =2022.3.7
+- pymatgen =2022.3.24
 - pyscal =2.10.15
 - pytables =3.7.0
 - scipy =1.8.0
