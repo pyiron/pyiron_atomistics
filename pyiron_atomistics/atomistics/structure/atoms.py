@@ -3118,6 +3118,8 @@ def ase_to_pyiron(ase_obj):
             cell=cell,
             magmoms=spins,
         )
+    if "tags" in ase_obj.arrays:
+        pyiron_atoms.arrays["tags"] = ase_obj.get_tags()
     if hasattr(ase_obj, "constraints") and len(ase_obj.constraints) != 0:
         for constraint in ase_obj.constraints:
             constraint_dict = constraint.todict()
