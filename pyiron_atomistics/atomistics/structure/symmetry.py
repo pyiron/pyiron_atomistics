@@ -220,16 +220,12 @@ class Symmetry(dict):
         Returns:
             (np.ndarray) symmetrized vectors
         """
-        vectors = np.array(vectors).reshape(-1, 3)
-        if vectors.shape != self._structure.positions.shape:
-            raise ValueError(
-                "Vector must be a natom x 3 array: {} != {}".format(
-                    vectors.shape, self.positions.shape
-                )
-            )
+        v_reshaped = np.reshape(vectors, (-1,) + self._structure.positions.shape)
         return np.einsum(
-            "ijk,ink->nj", self["rotations"], vectors[self.permutations]
-        ) / len(self["rotations"])
+            "ijk,inkm->mnj",
+            self["rotations"],
+            np.einsum('ijk->jki', v_reshaped)[self.permutations],
+        ).reshape(np.shape(vectors)) / len(self["rotations"])
 
     def _get_spglib_cell(self, use_elements=None, use_magmoms=None):
         lattice = np.array(self._structure.get_cell(), dtype="double", order="C")
