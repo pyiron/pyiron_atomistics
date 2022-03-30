@@ -224,7 +224,7 @@ class Symmetry(dict):
         return np.einsum(
             "ijk,inkm->mnj",
             self["rotations"],
-            np.einsum('ijk->jki', v_reshaped)[self.permutations],
+            np.einsum("ijk->jki", v_reshaped)[self.permutations],
         ).reshape(np.shape(vectors)) / len(self["rotations"])
 
     def _get_spglib_cell(self, use_elements=None, use_magmoms=None):
