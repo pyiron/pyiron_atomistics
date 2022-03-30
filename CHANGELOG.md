@@ -1,5 +1,7 @@
 # Unreleased
 
+# pyiron_atomistics-0.2.41
+
 - Symmetrize vectors ([#576](https://github.com/pyiron/pyiron_atomistics/pull/576))
 - Rename unit test workflow ([#572](https://github.com/pyiron/pyiron_atomistics/pull/572))
 - Add cache to StructureStorage.get_elements ([#568](https://github.com/pyiron/pyiron_atomistics/pull/568))
