@@ -3,11 +3,10 @@
 - Symmetrize vectors ([#576](https://github.com/pyiron/pyiron_atomistics/pull/576))
 - Rename unit test workflow ([#572](https://github.com/pyiron/pyiron_atomistics/pull/572))
 - Add cache to StructureStorage.get_elements ([#568](https://github.com/pyiron/pyiron_atomistics/pull/568))
-- Update to pyiron_base-0.5.8 ([#562](https://github.com/pyiron/pyiron_atomistics/pull/562))
 - Modify where number of bond types is chosen from ([#561](https://github.com/pyiron/pyiron_atomistics/pull/561))
 - dont write kpoints file ([#558](https://github.com/pyiron/pyiron_atomistics/pull/558))
 - replace triu by triu_indices ([#539](https://github.com/pyiron/pyiron_atomistics/pull/539))
-- Dependency updates: [#573](https://github.com/pyiron/pyiron_atomistics/pull/573), [#560](https://github.com/pyiron/pyiron_atomistics/pull/560), [#559](https://github.com/pyiron/pyiron_atomistics/pull/559)
+- Dependency updates: [#573](https://github.com/pyiron/pyiron_atomistics/pull/573), [#560](https://github.com/pyiron/pyiron_atomistics/pull/560), [#559](https://github.com/pyiron/pyiron_atomistics/pull/559), [#562](https://github.com/pyiron/pyiron_atomistics/pull/562)
 
 # pyiron_atomistics-0.2.40
 - Vasp Outcar: elegant split of electronic and ionic steps [#556](https://github.com/pyiron/pyiron_atomistics/pull/556)
