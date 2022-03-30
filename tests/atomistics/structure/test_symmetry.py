@@ -42,8 +42,6 @@ class TestAtoms(unittest.TestCase):
         )
         cell = 2.2 * np.identity(3)
         Al = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell, pbc=True)
-        with self.assertRaises(ValueError):
-            Al.get_symmetry().symmetrize_vectors(1)
         v = np.random.rand(6).reshape(-1, 3)
         self.assertAlmostEqual(np.linalg.norm(Al.get_symmetry().symmetrize_vectors(v)), 0)
         Al.positions[0, 0] += 0.01
