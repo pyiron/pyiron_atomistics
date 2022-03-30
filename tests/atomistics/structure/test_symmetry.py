@@ -44,6 +44,9 @@ class TestAtoms(unittest.TestCase):
         Al = Atoms("AlAl", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=cell, pbc=True)
         v = np.random.rand(6).reshape(-1, 3)
         self.assertAlmostEqual(np.linalg.norm(Al.get_symmetry().symmetrize_vectors(v)), 0)
+        vv = np.random.rand(12).reshape(2, 2, 3)
+        for vvv in Al.get_symmetry().symmetrize_vectors(vv):
+            self.assertAlmostEqual(np.linalg.norm(vvv), 0)
         Al.positions[0, 0] += 0.01
         w = Al.get_symmetry().symmetrize_vectors(v)
         self.assertAlmostEqual(np.absolute(w[:, 0]).sum(), np.linalg.norm(w, axis=-1).sum())
