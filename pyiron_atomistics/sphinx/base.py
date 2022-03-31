@@ -460,8 +460,8 @@ class SphinxBase(GenericDFTJob):
             self.input.sphinx.main[optimizer] = Group(table_name="input")
             self.input.sphinx.main[optimizer]["maxSteps"] = str(self.input["Istep"])
             self.input.sphinx.main[optimizer]["maxStepLength"] = str(0.1/BOHR_TO_ANGSTROM)
-            if "dE" in self.input and "dF" in self.input:
-                self.input["dE"] = 1e-3
+            # if "dE" in self.input and "dF" in self.input:
+                # self.input["dE"] = 1e-3
             if "dE" in self.input:
                 self.input.sphinx.main[optimizer]["dEnergy"] = str(
                     self.input["dE"] / HARTREE_TO_EV
