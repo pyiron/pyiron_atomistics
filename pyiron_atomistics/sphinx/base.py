@@ -490,8 +490,6 @@ class SphinxBase(GenericDFTJob):
             self.input.sphinx.main[optimizer]["maxStepLength"] = str(
                 0.1 / BOHR_TO_ANGSTROM
             )
-            if "dE" in self.input and "dF" in self.input:
-                self.input["dE"] = 1e-3
             if "dE" in self.input:
                 self.input.sphinx.main[optimizer]["dEnergy"] = str(
                     self.input["dE"] / HARTREE_TO_EV
@@ -673,8 +671,8 @@ class SphinxBase(GenericDFTJob):
         retain_electrostatic_potential=False,
         ionic_energy=None,
         ionic_forces=None,
-        ionic_energy_tolerance=0.0,
-        ionic_force_tolerance=1.0e-2,
+        ionic_energy_tolerance=None,
+        ionic_force_tolerance=None,
         volume_only=False,
     ):
         """
@@ -1064,6 +1062,8 @@ class SphinxBase(GenericDFTJob):
             electronic_energy is None or electronic_energy > 0
         ), "electronic_energy must be a positive float"
         if ionic_energy_tolerance is not None or ionic_force_tolerance is not None:
+            # self.input["dE"] = ionic_energy_tolerance
+            # self.input["dF"] = ionic_force_tolerance
             print("Setting calc_minimize")
             self.calc_minimize(
                 ionic_energy_tolerance=ionic_energy_tolerance,
