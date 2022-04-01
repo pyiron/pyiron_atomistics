@@ -609,11 +609,11 @@ class TestSphinx(unittest.TestCase):
         job = self.project.create_job(job_type='Sphinx', job_name='energy_convergence')
         job.structure = self.project.create_ase_bulk('Al', 'fcc', 3.5)
         job.set_convergence_precision(ionic_energy_tolerance=1e-5, electronic_energy=1e-8)
-        job.calc_minimize(ionic_steps=250, electronic_steps=100)
+        job.calc_minimize(ionic_steps=250, electronic_steps=200)
         self.assertAlmostEqual(float(job.input.sphinx.main.ricQN.bornOppenheimer.scfDiag.dEnergy)*HARTREE_TO_EV, 1e-8)
         self.assertAlmostEqual(float(job.input.sphinx.main.ricQN.dEnergy)*HARTREE_TO_EV, 1e-5)
         self.assertEqual(int(job.input.sphinx.main.ricQN.maxSteps), 250)
-        self.assertEqual(int(job.input.sphinx.main.ricQN.bornOppenheimer.scfDiag.maxSteps), 100)
+        self.assertEqual(int(job.input.sphinx.main.ricQN.bornOppenheimer.scfDiag.maxSteps), 200)
 
 if __name__ == "__main__":
     unittest.main()
