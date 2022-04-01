@@ -3,13 +3,14 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from ast import literal_eval
-import numpy as np
 import pandas as pd
 import shutil
 import os
-from pyiron_base import Settings, GenericParameters
-from pyiron_atomistics.atomistics.job.potentials import PotentialAbstract, find_potential_file_base
+from pyiron_base import state, GenericParameters
+from pyiron_atomistics.atomistics.job.potentials import (
+    PotentialAbstract,
+    find_potential_file_base,
+)
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -21,8 +22,6 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class LammpsPotential(GenericParameters):
@@ -65,7 +64,9 @@ class LammpsPotential(GenericParameters):
 
     @property
     def files(self):
-        if len(self._df["Filename"].values[0]) > 0 and self._df["Filename"].values[0] != ['']:
+        if len(self._df["Filename"].values[0]) > 0 and self._df["Filename"].values[
+            0
+        ] != [""]:
             absolute_file_paths = [
                 files for files in list(self._df["Filename"])[0] if os.path.isabs(files)
             ]
@@ -75,16 +76,22 @@ class LammpsPotential(GenericParameters):
                 if not os.path.isabs(files)
             ]
             env = os.environ
-            resource_path_lst = s.resource_paths
+            resource_path_lst = state.settings.resource_paths
             for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
                 if conda_var in env.keys():  # support iprpy-data package
-                    resource_path_lst += [os.path.join(env[conda_var], "share", "iprpy")]
+                    path_to_add = state.settings.convert_path_to_abs_posix(
+                        os.path.join(env[conda_var], "share", "iprpy")
+                    )
+                    if path_to_add not in resource_path_lst:
+                        resource_path_lst.append(path_to_add)
             for path in relative_file_paths:
-                absolute_file_paths.append(find_potential_file_base(
-                    path=path,
-                    resource_path_lst=resource_path_lst,
-                    rel_path=os.path.join("lammps", "potentials")
-                ))
+                absolute_file_paths.append(
+                    find_potential_file_base(
+                        path=path,
+                        resource_path_lst=resource_path_lst,
+                        rel_path=os.path.join("lammps", "potentials"),
+                    )
+                )
             if len(absolute_file_paths) != len(list(self._df["Filename"])[0]):
                 raise ValueError("Was not able to locate the potentials.")
             else:
@@ -113,20 +120,19 @@ class LammpsPotential(GenericParameters):
         """
 
         def isprefix(prefix, lst):
-            if len(prefix) > len(lst): return False
+            if len(prefix) > len(lst):
+                return False
             return all(n == l for n, l in zip(prefix, lst))
 
         # compare the line word by word to also match lines that differ only in
         # whitespace
         prefix = prefix.split()
-        for parameter, value in zip(self._dataset["Parameter"],
-                                    self._dataset["Value"]):
+        for parameter, value in zip(self._dataset["Parameter"], self._dataset["Value"]):
             words = (parameter + " " + value).strip().split()
             if isprefix(prefix, words):
                 return words
 
-        raise ValueError("No line with prefix \"{}\" found.".format(
-                            " ".join(prefix)))
+        raise ValueError('No line with prefix "{}" found.'.format(" ".join(prefix)))
 
     def get_element_id(self, element_symbol):
         """
@@ -149,8 +155,7 @@ class LammpsPotential(GenericParameters):
             return int(self._find_line_by_prefix(line)[3])
 
         except ValueError:
-            msg = "potential does not contain element {}".format(
-                    element_symbol)
+            msg = "potential does not contain element {}".format(element_symbol)
             raise NameError(msg) from None
 
     def get_charge(self, element_symbol):
@@ -175,7 +180,8 @@ class LammpsPotential(GenericParameters):
 
         except ValueError:
             msg = "potential does not specify charge for element {}".format(
-                    element_symbol)
+                element_symbol
+            )
             raise NameError(msg) from None
 
     def to_hdf(self, hdf, group_name=None):
@@ -282,7 +288,8 @@ class LammpsPotentialFile(PotentialAbstract):
 class PotentialAvailable(object):
     def __init__(self, list_of_potentials):
         self._list_of_potentials = {
-            "pot_" + v.replace("-", "_").replace('.', '_'): v for v in list_of_potentials
+            "pot_" + v.replace("-", "_").replace(".", "_"): v
+            for v in list_of_potentials
         }
 
     def __getattr__(self, name):

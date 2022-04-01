@@ -13,7 +13,7 @@ from pyiron_atomistics.atomistics.structure.atoms import Atoms, pyiron_to_ase
 def _get_value_from_incar(job, key):
     value = job["input/incar/data_dict"]["Value"][
         job["input/incar/data_dict"]["Parameter"].index(key)
-    ]   
+    ]
     if isinstance(value, str):
         return ast.literal_eval(value)
     else:
@@ -58,7 +58,7 @@ def get_n_kpts(job):
 
 
 def get_n_equ_kpts(job):
-    return {"n_equ_kpts": len(job['output/generic/dft/bands/k_points'])}
+    return {"n_equ_kpts": len(job["output/generic/dft/bands/k_points"])}
 
 
 def get_total_number_of_atoms(job):
@@ -66,7 +66,8 @@ def get_total_number_of_atoms(job):
 
 
 def get_average_waves(job):
-    _, weights, planewaves = job["output/outcar/irreducible_kpoints"]
+    weights = job["output/outcar/irreducible_kpoint_weights"]
+    planewaves = job["output/outcar/number_plane_waves"]
     return {"avg. plane waves": sum(weights * planewaves) / sum(weights)}
 
 
@@ -76,7 +77,10 @@ def get_plane_waves(job):
 
 
 def get_ekin_error(job):
-    return {"energy_tot_wo_kin_corr": job["output/outcar/kin_energy_error"] + job["output/generic/energy_tot"][-1]}
+    return {
+        "energy_tot_wo_kin_corr": job["output/outcar/kin_energy_error"]
+        + job["output/generic/energy_tot"][-1]
+    }
 
 
 def get_volume(job):
@@ -84,7 +88,10 @@ def get_volume(job):
 
 
 def get_volume_per_atom(job):
-    return {"volume": job["output/generic/volume"][-1] / get_total_number_of_atoms(job=job)["Number_of_atoms"]}
+    return {
+        "volume": job["output/generic/volume"][-1]
+        / get_total_number_of_atoms(job=job)["Number_of_atoms"]
+    }
 
 
 def get_elements(job):
@@ -135,10 +142,11 @@ def get_majority_crystal_structure(job):
     majority_index = [
         ind for ind, el in enumerate(basis) if el.symbol == majority_element
     ]
-    type_list = list(basis[majority_index].analyse.pyscal_cna_adaptive(
-        mode="str",
-        ovito_compatibility=True
-    ))
+    type_list = list(
+        basis[majority_index].analyse.pyscal_cna_adaptive(
+            mode="str", ovito_compatibility=True
+        )
+    )
     return {"crystal_structure": get_majority(type_list, minority=False)}
 
 
@@ -147,7 +155,10 @@ def get_job_name(job):
 
 
 def get_energy_tot_per_atom(job):
-    return {"energy_tot": job["output/generic/energy_tot"][-1] / get_total_number_of_atoms(job=job)["Number_of_atoms"]}
+    return {
+        "energy_tot": job["output/generic/energy_tot"][-1]
+        / get_total_number_of_atoms(job=job)["Number_of_atoms"]
+    }
 
 
 def get_energy_tot(job):
@@ -155,7 +166,10 @@ def get_energy_tot(job):
 
 
 def get_energy_pot_per_atom(job):
-    return {"energy_pot": job["output/generic/energy_pot"][-1] / get_total_number_of_atoms(job=job)["Number_of_atoms"]}
+    return {
+        "energy_pot": job["output/generic/energy_pot"][-1]
+        / get_total_number_of_atoms(job=job)["Number_of_atoms"]
+    }
 
 
 def get_energy_pot(job):
@@ -163,7 +177,10 @@ def get_energy_pot(job):
 
 
 def get_energy_free_per_atom(job):
-    return {"energy_free": job["output/generic/dft/energy_free"][-1] / get_total_number_of_atoms(job=job)["Number_of_atoms"]}
+    return {
+        "energy_free": job["output/generic/dft/energy_free"][-1]
+        / get_total_number_of_atoms(job=job)["Number_of_atoms"]
+    }
 
 
 def get_energy_free(job):
@@ -171,7 +188,10 @@ def get_energy_free(job):
 
 
 def get_energy_int_per_atom(job):
-    return {"energy_int": job["output/generic/dft/energy_int"][-1] / get_total_number_of_atoms(job=job)["Number_of_atoms"]}
+    return {
+        "energy_int": job["output/generic/dft/energy_int"][-1]
+        / get_total_number_of_atoms(job=job)["Number_of_atoms"]
+    }
 
 
 def get_energy_int(job):
@@ -269,7 +289,11 @@ def get_magnetic_structure(job):
 
 
 def get_e_conv_level(job):
-    return {'el_conv': np.max(np.abs(
-        job['output/generic/dft/scf_energy_free'][0] -
-        job['output/generic/dft/scf_energy_free'][0][-1]
-    )[-10:])}
+    return {
+        "el_conv": np.max(
+            np.abs(
+                job["output/generic/dft/scf_energy_free"][0]
+                - job["output/generic/dft/scf_energy_free"][0][-1]
+            )[-10:]
+        )
+    }

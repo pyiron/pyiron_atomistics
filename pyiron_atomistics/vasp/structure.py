@@ -106,6 +106,7 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
         f.write(endline)
         if "selective_dynamics" in structure.get_tags():
             selec_dyn = True
+            cartesian = False
             f.write("Selective dynamics" + endline)
         sorted_coords = list()
         selec_dyn_lst = list()

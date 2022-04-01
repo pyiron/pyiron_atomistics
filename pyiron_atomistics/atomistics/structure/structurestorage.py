@@ -6,11 +6,15 @@
 Alternative structure container that stores them in flattened arrays.
 """
 
+from typing import List
+
 import numpy as np
 
 from pyiron_base import FlattenedStorage
+from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+
 
 class StructureStorage(FlattenedStorage, HasStructure):
     """
@@ -81,16 +85,20 @@ class StructureStorage(FlattenedStorage, HasStructure):
             num_structures (int): number of structures to pre-allocate
         """
         super().__init__(num_elements=num_atoms, num_chunks=num_structures)
+        self._element_cache = None
 
     def _init_arrays(self):
         super()._init_arrays()
         # 2 character unicode array for chemical symbols
-        self._per_element_arrays["symbols"] = np.full(self._num_elements_alloc, "XX", dtype=np.dtype("U2"))
+        self._per_element_arrays["symbols"] = np.full(
+            self._num_elements_alloc, "XX", dtype=np.dtype("U2")
+        )
         self._per_element_arrays["positions"] = np.empty((self._num_elements_alloc, 3))
 
         self._per_chunk_arrays["cell"] = np.empty((self._num_chunks_alloc, 3, 3))
-        self._per_chunk_arrays["pbc"] = np.empty((self._num_elements_alloc, 3), dtype=bool)
-
+        self._per_chunk_arrays["pbc"] = np.empty(
+            (self._num_elements_alloc, 3), dtype=bool
+        )
 
     @property
     def symbols(self):
@@ -127,15 +135,35 @@ class StructureStorage(FlattenedStorage, HasStructure):
         """:meta private:"""
         return self._per_chunk_arrays["pbc"]
 
-
-    def get_elements(self):
+    def set_array(self, name, frame, value):
         """
-        Return a list of chemical elements in the training set.
+        Add array for given structure.
+
+        Works for per chunk and per element arrays.
+
+        Args:
+            name (str): name of array to set
+            frame (int, str): selects structure to set, as in :method:`.get_strucure()`
+            value: value (for per chunk) or array of values (for per element); type and shape as per :meth:`.hasarray()`.
+
+        Raises:
+            `KeyError`: if array with name does not exists
+        """
+        super().set_array(name, frame, value)
+        # invalidate cache when writing to symbols; could be smarter by checking if value is not in in cache but w/e
+        if name == "symbols":
+            self._element_cache = None
+
+    def get_elements(self) -> List[str]:
+        """
+        Return a list of chemical elements present in the storage.
 
         Returns:
-            :class:`list`: list of unique elements in the training set as strings of their standard abbreviations
+            :class:`list`: list of unique elements as strings of chemical symbols
         """
-        return list(set(self._per_element_arrays["symbols"]))
+        if self._element_cache is None:
+            self._element_cache = list(np.unique(self._per_element_arrays["symbols"]))
+        return self._element_cache
 
     def add_structure(self, structure, identifier=None, **arrays):
         """
@@ -174,14 +202,15 @@ class StructureStorage(FlattenedStorage, HasStructure):
         if structure.spins is not None:
             arrays["spins"] = structure.spins
 
-        self.add_chunk(len(structure),
-                       identifier=identifier,
-                       symbols=np.array(structure.symbols),
-                       positions=structure.positions,
-                       cell=[structure.cell.array],
-                       pbc=[structure.pbc],
-                       **arrays)
-
+        self.add_chunk(
+            len(structure),
+            identifier=identifier,
+            symbols=np.array(structure.symbols),
+            positions=structure.positions,
+            cell=[structure.cell.array],
+            pbc=[structure.pbc],
+            **arrays,
+        )
 
     def _translate_frame(self, frame):
         try:
@@ -190,20 +219,25 @@ class StructureStorage(FlattenedStorage, HasStructure):
             raise KeyError(f"No structure named {frame}.") from None
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
+        elements = self.get_elements()
+        index_map = {e: i for i, e in enumerate(elements)}
         try:
             magmoms = self.get_array("spins", frame)
         except KeyError:
             # not all structures have spins saved on them
             magmoms = None
-        return Atoms(symbols=self.get_array("symbols", frame),
-                     positions=self.get_array("positions", frame),
-                     cell=self.get_array("cell", frame),
-                     pbc=self.get_array("pbc", frame),
-                     magmoms=magmoms)
+        symbols = self.get_array("symbols", frame)
+        return Atoms(
+            species=[Atom(e).element for e in elements],
+            indices=[index_map[e] for e in symbols],
+            positions=self.get_array("positions", frame),
+            cell=self.get_array("cell", frame),
+            pbc=self.get_array("pbc", frame),
+            magmoms=magmoms,
+        )
 
     def _number_of_structures(self):
         return len(self)
-
 
     def _get_hdf_group_name(self):
         return "structures"

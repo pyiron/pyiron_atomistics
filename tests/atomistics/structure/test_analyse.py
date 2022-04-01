@@ -174,6 +174,27 @@ class TestAtoms(unittest.TestCase):
         self.assertLess(np.absolute(eps_yz-strain[:, 1, 2]).max(), 0.01)
         self.assertLess(np.absolute(eps_xz-strain[:, 0, 2]).max(), 0.01)
 
+    def test_tessellations(self):
+        bulk = StructureFactory().ase.bulk('Fe', cubic=True)
+        a_0 = bulk.cell[0, 0]
+        structure = bulk.repeat(3)
+        self.assertAlmostEqual(np.linalg.norm(structure.find_mic(np.diff(
+            structure.positions[structure.analyse.get_delaunay_neighbors()], axis=-2
+        )), axis=-1).flatten().max(), a_0)
+        self.assertAlmostEqual(np.linalg.norm(structure.find_mic(np.diff(
+            structure.positions[structure.analyse.get_voronoi_neighbors()], axis=-2
+        )), axis=-1).flatten().max(), a_0)
+
+    def test_cluster_positions(self):
+        bulk = StructureFactory().ase.bulk('Fe', cubic=True)
+        self.assertEqual(len(bulk.analyse.cluster_positions()), len(bulk))
+        positions = np.append(bulk.positions, bulk.positions, axis=0)
+        self.assertEqual(len(bulk.analyse.cluster_positions(positions)), len(bulk))
+        self.assertEqual(
+            bulk.analyse.cluster_positions(np.zeros((2, 3)), return_labels=True)[1].tolist(),
+            [0, 0]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

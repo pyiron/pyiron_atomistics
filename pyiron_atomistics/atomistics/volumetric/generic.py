@@ -85,10 +85,12 @@ class VolumetricData(object):
         """
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         d2 = d * d
-        return np.exp(-1 / (2 * sigma ** 2) * d2)
+        return np.exp(-1 / (2 * sigma**2) * d2)
 
     @staticmethod
-    def dist_between_two_grid_points(target_grid_point, n_grid_at_center, lattice, grid_shape):
+    def dist_between_two_grid_points(
+        target_grid_point, n_grid_at_center, lattice, grid_shape
+    ):
         """
         Calculates the distance between a target grid point and another grid point
 
@@ -103,14 +105,20 @@ class VolumetricData(object):
             float: Distance between target grid and center of sphere in angstrom
 
         """
-        unit_dist_in_grid = [np.sqrt(np.dot(lattice[0], lattice[0])) / grid_shape[0],
-                             np.sqrt(np.dot(lattice[1], lattice[1])) / grid_shape[1],
-                             np.sqrt(np.dot(lattice[2], lattice[2])) / grid_shape[2]]
-        dn = np.multiply(np.subtract(target_grid_point, n_grid_at_center), unit_dist_in_grid)
+        unit_dist_in_grid = [
+            np.sqrt(np.dot(lattice[0], lattice[0])) / grid_shape[0],
+            np.sqrt(np.dot(lattice[1], lattice[1])) / grid_shape[1],
+            np.sqrt(np.dot(lattice[2], lattice[2])) / grid_shape[2],
+        ]
+        dn = np.multiply(
+            np.subtract(target_grid_point, n_grid_at_center), unit_dist_in_grid
+        )
         dist = np.linalg.norm(dn)
         return dist
 
-    def spherical_average_potential(self, structure, spherical_center, rad=2, fwhm=0.529177):
+    def spherical_average_potential(
+        self, structure, spherical_center, rad=2, fwhm=0.529177
+    ):
         """
         Calculates the spherical average about a given point in space
 
@@ -127,14 +135,18 @@ class VolumetricData(object):
         grid_shape = self._total_data.shape
 
         # Position of center of sphere at grid coordinates
-        n_grid_at_center = [int(np.ceil(spherical_center[0] * grid_shape[0])),
-                            int(np.ceil(spherical_center[1] * grid_shape[1])),
-                            int(np.ceil(spherical_center[2] * grid_shape[2]))]
+        n_grid_at_center = [
+            int(np.ceil(spherical_center[0] * grid_shape[0])),
+            int(np.ceil(spherical_center[1] * grid_shape[1])),
+            int(np.ceil(spherical_center[2] * grid_shape[2])),
+        ]
 
         # Unit distance between grids
-        dist_in_grid = [np.linalg.norm(structure.cell[0]) / grid_shape[0],
-                        np.linalg.norm(structure.cell[1]) / grid_shape[1],
-                        np.linalg.norm(structure.cell[2]) / grid_shape[2]]
+        dist_in_grid = [
+            np.linalg.norm(structure.cell[0]) / grid_shape[0],
+            np.linalg.norm(structure.cell[1]) / grid_shape[1],
+            np.linalg.norm(structure.cell[2]) / grid_shape[2],
+        ]
 
         # Range of grids to be considered within the provided radius w.r.t. center of sphere
         num_grid_in_sph = [[], []]
@@ -148,12 +160,16 @@ class VolumetricData(object):
             for l in range(num_grid_in_sph[0][1], num_grid_in_sph[1][1]):
                 for m in range(num_grid_in_sph[0][2], num_grid_in_sph[1][2]):
                     target_grid_point = [k, l, m]
-                    dist = self.dist_between_two_grid_points(target_grid_point,
-                                                             n_grid_at_center, structure.cell, grid_shape)
+                    dist = self.dist_between_two_grid_points(
+                        target_grid_point, n_grid_at_center, structure.cell, grid_shape
+                    )
                     if dist <= rad:
                         sph_avg_tmp.append(
-                            self._total_data[k % grid_shape[0], l % grid_shape[1], m % grid_shape[2]]
-                            * self.gauss_f(dist, fwhm))
+                            self._total_data[
+                                k % grid_shape[0], l % grid_shape[1], m % grid_shape[2]
+                            ]
+                            * self.gauss_f(dist, fwhm)
+                        )
                         weight += self.gauss_f(dist, fwhm)
                     else:
                         pass
@@ -162,7 +178,9 @@ class VolumetricData(object):
         return sph_avg
 
     @staticmethod
-    def dist_between_two_grid_points_cyl(target_grid_point, n_grid_at_center, lattice, grid_shape, direction_of_cyl):
+    def dist_between_two_grid_points_cyl(
+        target_grid_point, n_grid_at_center, lattice, grid_shape, direction_of_cyl
+    ):
         """
         Distance between a target grid point and the center of a cylinder
 
@@ -177,10 +195,14 @@ class VolumetricData(object):
             float: Distance between target grid and in-plane center of cylinder
 
         """
-        unit_dist_in_grid = [np.sqrt(np.dot(lattice[0], lattice[0])) / grid_shape[0],
-                             np.sqrt(np.dot(lattice[1], lattice[1])) / grid_shape[1],
-                             np.sqrt(np.dot(lattice[2], lattice[2])) / grid_shape[2]]
-        dn = np.multiply(np.subtract(target_grid_point, n_grid_at_center), unit_dist_in_grid)
+        unit_dist_in_grid = [
+            np.sqrt(np.dot(lattice[0], lattice[0])) / grid_shape[0],
+            np.sqrt(np.dot(lattice[1], lattice[1])) / grid_shape[1],
+            np.sqrt(np.dot(lattice[2], lattice[2])) / grid_shape[2],
+        ]
+        dn = np.multiply(
+            np.subtract(target_grid_point, n_grid_at_center), unit_dist_in_grid
+        )
         if direction_of_cyl == 0:
             dn[0] = 0
         elif direction_of_cyl == 1:
@@ -192,7 +214,9 @@ class VolumetricData(object):
         dist = np.linalg.norm(dn)
         return dist
 
-    def cylindrical_average_potential(self, structure, spherical_center, axis_of_cyl, rad=2, fwhm=0.529177):
+    def cylindrical_average_potential(
+        self, structure, spherical_center, axis_of_cyl, rad=2, fwhm=0.529177
+    ):
         """
         Calculates the cylindrical average about a given point in space
 
@@ -210,14 +234,18 @@ class VolumetricData(object):
         grid_shape = self._total_data.shape
 
         # Position of center of sphere at grid coordinates
-        n_grid_at_center = [int(np.ceil(spherical_center[0] * grid_shape[0])),
-                            int(np.ceil(spherical_center[1] * grid_shape[1])),
-                            int(np.ceil(spherical_center[2] * grid_shape[2]))]
+        n_grid_at_center = [
+            int(np.ceil(spherical_center[0] * grid_shape[0])),
+            int(np.ceil(spherical_center[1] * grid_shape[1])),
+            int(np.ceil(spherical_center[2] * grid_shape[2])),
+        ]
 
         # Unit distance between grids
-        dist_in_grid = [np.linalg.norm(structure.cell[0]) / grid_shape[0],
-                        np.linalg.norm(structure.cell[1]) / grid_shape[1],
-                        np.linalg.norm(structure.cell[2]) / grid_shape[2]]
+        dist_in_grid = [
+            np.linalg.norm(structure.cell[0]) / grid_shape[0],
+            np.linalg.norm(structure.cell[1]) / grid_shape[1],
+            np.linalg.norm(structure.cell[2]) / grid_shape[2],
+        ]
 
         # Range of grids to be considered within the provided radius w.r.t. center of sphere
         num_grid_in_cyl = [[], []]
@@ -227,8 +255,12 @@ class VolumetricData(object):
                 num_grid_in_cyl[0].append(0)
                 num_grid_in_cyl[1].append(grid_shape[i])
             else:
-                num_grid_in_cyl[0].append(n_grid_at_center[i] - int(np.ceil(rad / dist)))
-                num_grid_in_cyl[1].append(n_grid_at_center[i] + int(np.ceil(rad / dist)))
+                num_grid_in_cyl[0].append(
+                    n_grid_at_center[i] - int(np.ceil(rad / dist))
+                )
+                num_grid_in_cyl[1].append(
+                    n_grid_at_center[i] + int(np.ceil(rad / dist))
+                )
 
         cyl_avg_tmp = []
         weight = 0
@@ -236,12 +268,20 @@ class VolumetricData(object):
             for l in range(num_grid_in_cyl[0][1], num_grid_in_cyl[1][1]):
                 for m in range(num_grid_in_cyl[0][2], num_grid_in_cyl[1][2]):
                     target_grid_point = [k, l, m]
-                    dist = self.dist_between_two_grid_points_cyl(target_grid_point, n_grid_at_center, structure.cell,
-                                                                 grid_shape, axis_of_cyl)
+                    dist = self.dist_between_two_grid_points_cyl(
+                        target_grid_point,
+                        n_grid_at_center,
+                        structure.cell,
+                        grid_shape,
+                        axis_of_cyl,
+                    )
                     if dist <= rad:
                         cyl_avg_tmp.append(
-                            self._total_data[k % grid_shape[0], l % grid_shape[1], m % grid_shape[2]]
-                            * self.gauss_f(dist, fwhm))
+                            self._total_data[
+                                k % grid_shape[0], l % grid_shape[1], m % grid_shape[2]
+                            ]
+                            * self.gauss_f(dist, fwhm)
+                        )
                         weight += self.gauss_f(dist, fwhm)
                     else:
                         pass
@@ -353,14 +393,17 @@ class VolumetricData(object):
             grid_shape = np.array(cell_data[:, 0], dtype=int)
             # total_data = np.zeros(grid_shape)
             cell = np.array([val * grid_shape[i] for i, val in enumerate(cell_grid)])
-            pos_data = np.genfromtxt(lines[6: n_atoms + 6])
-            if n_atoms == 1:
-                pos_data = np.array([pos_data])
-            atomic_numbers = np.array(pos_data[:, 0], dtype=int)
-            positions = pos_data[:, 2:]
-            self._atoms = Atoms(numbers=atomic_numbers, positions=positions, cell=cell)
+            if n_atoms > 0:
+                pos_data = np.genfromtxt(lines[6 : n_atoms + 6])
+                if n_atoms == 1:
+                    pos_data = np.array([pos_data])
+                atomic_numbers = np.array(pos_data[:, 0], dtype=int)
+                positions = pos_data[:, 2:]
+                self._atoms = Atoms(
+                    numbers=atomic_numbers, positions=positions, cell=cell
+                )
             end_int = n_atoms + 6 + int(np.prod(grid_shape) / 6)
-            data = np.genfromtxt(lines[n_atoms+6: end_int])
+            data = np.genfromtxt(lines[n_atoms + 6 : end_int])
             data_flatten = np.hstack(data)
             if np.prod(grid_shape) % 6 > 0:
                 data_flatten = np.append(

@@ -9,6 +9,8 @@ from pyiron_base import GenericParameters, GenericJob, Logstatus
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.testing.executable import ExampleExecutable
 from collections import defaultdict
+import pint
+
 
 """
 Example Job class for testing the pyiron classes
@@ -267,14 +269,17 @@ class ExampleInput(GenericParameters):
         Loading the default settings for the input file.
         """
         input_str = """\
-alat  3.2     # lattice constant (would be in a more realistic example in the structure file)
-alpha 0.1     # noise amplitude
-a_0   3       # equilibrium lattice constant
-a_1   0
-a_2   1.0     # 2nd order in energy (corresponds to bulk modulus)
-a_3   0.0     # 3rd order
-a_4   0.0     # 4th order
-count 10      # number of calls (dummy)
+alat    3.2     # lattice constant (would be in a more realistic example in the structure file)
+alpha   0.1     # noise amplitude
+a_0     3       # equilibrium lattice constant
+a_1     0
+a_2     1.0     # 2nd order in energy (corresponds to bulk modulus)
+a_3     0.0     # 3rd order
+a_4     0.0     # 4th order
+count   10      # number of calls (dummy)
+epsilon 0.2     # energy prefactor of lennard jones
+sigma   2.4     # distance unit of lennard jones
+cutoff  4.0     # cutoff length (relative to sigma)
 write_restart True
 read_restart False
 """
@@ -377,8 +382,19 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         self.__name__ = "AtomisticExampleJob"
         self.input = ExampleInput()
         self.executable = "python -m pyiron_atomistics.testing.executable"
-        self._internal_energy = None
         self.interactive_cache = defaultdict(list)
+        self._velocity = None
+        self._neigh = None
+        self._unit = pint.UnitRegistry()
+
+    @property
+    def neigh(self):
+        if self._neigh is None:
+            self._neigh = self.structure.get_neighbors(
+                num_neighbors=None,
+                cutoff_radius=self.input["cutoff"] * self.input["sigma"],
+            )
+        return self._neigh
 
     @property
     def structure(self):
@@ -391,9 +407,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         try:
-            return super()._get_structure(
-                frame=frame, wrap_atoms=wrap_atoms
-            )
+            return super()._get_structure(frame=frame, wrap_atoms=wrap_atoms)
         except IndexError:
             return self.structure
 
@@ -448,20 +462,77 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
     def interactive_cells_getter(self):
         return self._structure.cell.copy()
 
+    @property
+    def _s_r(self):
+        return self.input["sigma"] / self.neigh.flattened.distances
+
     def interactive_energy_pot_getter(self):
-        return self._internal_energy
+        return self.input["epsilon"] * (
+            np.sum(self._s_r**12) - np.sum(self._s_r**6)
+        )
 
     def interactive_energy_tot_getter(self):
-        return self._internal_energy
+        return (
+            self.interactive_energy_pot_getter() + self.interadtive_energy_kin_getter()
+        )
+
+    def interadtive_energy_kin_getter(self):
+        v = np.einsum("ni,n->", self._velocity**2, self.structure.get_masses()) / 2
+        return (
+            (
+                v
+                * self._unit.angstrom**2
+                / self._unit.second**2
+                / 1e-30
+                * self._unit.amu
+            )
+            .to("eV")
+            .magnitude
+        )
 
     def interactive_forces_getter(self):
-        return np.random.random((len(self._structure), 3))
+        all_values = self.input["epsilon"] * np.einsum(
+            "ni,n,n->ni",
+            self.neigh.flattened.vecs,
+            1 / self.neigh.flattened.distances**2,
+            12 * self._s_r**12 - 6 * self._s_r**6,
+        )
+        forces = np.zeros_like(self.structure.positions)
+        np.add.at(forces, self.neigh.flattened.atom_numbers, all_values)
+        return forces
 
     def interactive_positions_getter(self):
         return self._structure.positions
 
     def interactive_pressures_getter(self):
-        return np.random.random((3, 3))
+        pot_part = (
+            self.input["epsilon"]
+            * np.einsum(
+                "ni,nj,n,n->ij",
+                self.neigh.flattened.vecs,
+                self.neigh.flattened.vecs,
+                1 / self.neigh.flattened.distances**2,
+                12 * self._s_r**12 - 6 * self._s_r**6,
+            )
+            * self._unit.electron_volt
+        )
+        kin_part = (
+            np.einsum(
+                "ni,nj,n->ij",
+                self._velocity,
+                self._velocity,
+                self.structure.get_masses(),
+            )
+            * self._unit.angstrom**2
+            / self._unit.second**2
+            / 1e-30
+            * self._unit.amu
+        )
+        return (
+            (pot_part + kin_part)
+            / self.structure.get_volume()
+            / self._unit.angstrom**3
+        ).to(self._unit.pascal).magnitude / 1e9
 
     def interactive_stress_getter(self):
         return np.random.random((len(self._structure), 3, 3))
@@ -470,7 +541,12 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         return len(self.interactive_cache["steps"])
 
     def interactive_temperatures_getter(self):
-        return np.random.random()
+        value = self.interadtive_energy_kin_getter() / len(self.structure)
+        return (
+            (value / self._unit.boltzmann_constant * self._unit.electron_volt)
+            .to("kelvin")
+            .magnitude
+        )
 
     def interactive_indices_getter(self):
         return self._structure.indices
@@ -484,9 +560,6 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
     def interactive_volume_getter(self):
         return self._structure.get_volume()
 
-    def interactive_execute(self):
-        _, _, self._internal_energy = ExampleExecutable().run_lib(self.input)
-
     def interactive_initialize_interface(self):
         self._interactive_library = True
 
@@ -497,6 +570,10 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         Returns:
             int: job ID
         """
+        self._neigh = None
+        if self._generic_input["calc_mode"] == "md":
+            self._velocity = np.random.randn(len(self._structure), 3) / 1000
+        elif self._velocity is None:
+            self._velocity = np.zeros((len(self._structure), 3))
         GenericInteractive.run_if_interactive(self)
-        self.interactive_execute()
         self.interactive_collect()

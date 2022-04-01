@@ -5,16 +5,24 @@
 import copy
 import warnings
 import numpy as np
+import os
 from ase.io import write as ase_write
+import posixpath
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
-from pyiron_base import GenericParameters, GenericMaster, GenericJob as GenericJobCore, deprecate
+from pyiron_base import (
+    GenericParameters,
+    GenericMaster,
+    GenericJob as GenericJobCore,
+    deprecate,
+)
 
 try:
     from pyiron_base import ProjectGUI
 except (ImportError, TypeError, AttributeError):
     pass
+from typing import Union
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -167,14 +175,23 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         Returns:
             FlexibleMaster:
         """
-        return self.project.create_pipeline(job=self, step_lst=step_lst, delete_existing_job=delete_existing_job)
+        return self.project.create_pipeline(
+            job=self, step_lst=step_lst, delete_existing_job=delete_existing_job
+        )
 
     def _after_generic_copy_to(self, original, new_database_entry, reloaded):
         if self._structure is None:
             self._structure = copy.copy(original._structure)
 
     def calc_minimize(
-        self, ionic_energy_tolerance=0, ionic_force_tolerance=1e-4, e_tol=None, f_tol=None, max_iter=1000, pressure=None, n_print=1
+        self,
+        ionic_energy_tolerance=0,
+        ionic_force_tolerance=1e-4,
+        e_tol=None,
+        f_tol=None,
+        max_iter=1000,
+        pressure=None,
+        n_print=1,
     ):
         """
 
@@ -241,7 +258,18 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         self._generic_input["temperature"] = temperature
         self._generic_input["n_ionic_steps"] = n_ionic_steps
         self._generic_input["n_print"] = n_print
-        self._generic_input.remove_keys(["max_iter", "pressure"])
+        self._generic_input[
+            "temperature_damping_timescale"
+        ] = temperature_damping_timescale
+        if pressure is not None:
+            self._generic_input["pressure"] = pressure
+        if pressure_damping_timescale is not None:
+            self._generic_input[
+                "pressure_damping_timescale"
+            ] = pressure_damping_timescale
+        if time_step is not None:
+            self._generic_input["time_step"] = time_step
+        self._generic_input.remove_keys(["max_iter"])
 
     def from_hdf(self, hdf=None, group_name=None):
         """
@@ -291,25 +319,31 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
 
     def animate_structure(
         self,
-        spacefill=True,
-        show_cell=True,
-        stride=1,
-        center_of_mass=False,
-        particle_size=0.5,
-        camera="orthographic",
+        spacefill: bool = True,
+        show_cell: bool = True,
+        stride: int = 1,
+        center_of_mass: bool = False,
+        particle_size: float = 0.5,
+        camera: str = "orthographic",
+        atom_indices: Union[list, np.ndarray] = None,
+        snapshot_indices: Union[list, np.ndarray] = None,
     ):
         """
         Animates the job if a trajectory is present
 
         Args:
-            spacefill (bool):
-            show_cell (bool):
+            spacefill (bool): If True, then atoms are visualized in spacefill stype
+            show_cell (bool): True if the cell boundaries of the structure is to be shown
             stride (int): show animation every stride [::stride]
                           use value >1 to make animation faster
                            default=1
-            center_of_mass (bool):
+            particle_size (float): Scaling factor for the spheres representing the atoms.
+                                    (The radius is determined by the atomic number)
+            center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
             camera (str):
                 camera perspective, choose from "orthographic" or "perspective"
+            atom_indices (list/numpy.ndarray): The atom indices for which the trajectory should be generated
+            snapshot_indices (list/numpy.ndarray): The snapshots for which the trajectory should be generated
 
         Returns:
             animation: nglview IPython widget
@@ -322,8 +356,16 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 "The animate() function requires the package nglview to be installed"
             )
 
+        if self.number_of_structures <= 1:
+            raise ValueError("job must have more than one structure to animate!")
+
         animation = nglview.show_asetraj(
-            self.trajectory(stride=stride, center_of_mass=center_of_mass)
+            self.trajectory(
+                stride=stride,
+                center_of_mass=center_of_mass,
+                atom_indices=atom_indices,
+                snapshot_indices=snapshot_indices,
+            )
         )
         if spacefill:
             animation.add_spacefill(radius_type="vdw", scale=0.5, radius=particle_size)
@@ -410,8 +452,30 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             new_ham.structure = self.get_structure(frame=-1)
         else:
             new_ham.structure = self.structure.copy()
-        new_ham._generic_input['structure'] = 'atoms'
+        new_ham._generic_input["structure"] = "atoms"
         return new_ham
+
+    def get_workdir_file(self, filename: str) -> None:
+        """
+        Checks if a given file exists within the job's working directory and returns the absolute path to it.
+
+        ToDo: Move this to pyiron_base since this is more generic.
+
+        Args:
+            filename (str): The name of the file
+
+        Returns:
+            str: The name absolute path of the file in the working directory
+
+        Raises:
+            FileNotFoundError: Raised if the given file does not exist.
+        """
+        appended_path = posixpath.join(self.working_directory, filename)
+        if not os.path.isfile(appended_path):
+            raise FileNotFoundError(
+                f"File {filename} not found in working directory: {self.working_directory}"
+            )
+        return appended_path
 
     # Required functions
     def continue_with_restart_files(self, job_type=None, job_name=None):
@@ -459,8 +523,13 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         return new_ham
 
     def trajectory(
-        self, stride=1, center_of_mass=False, atom_indices=None,
-            snapshot_indices=None, overwrite_positions=None, overwrite_cells=None
+        self,
+        stride=1,
+        center_of_mass=False,
+        atom_indices=None,
+        snapshot_indices=None,
+        overwrite_positions=None,
+        overwrite_cells=None,
     ):
         """
         Returns a `Trajectory` instance containing the necessary information to describe the evolution of the atomic
@@ -468,12 +537,12 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
 
         Args:
             stride (int): The trajectories are generated with every 'stride' steps
-            center_of_mass (list/numpy.ndarray): The center of mass
-            atom_indices (list/numpy.ndarray): The atom indices for which the trajectory should be generated
-            snapshot_indices (list/numpy.ndarray): The snapshots for which the trajectory should be generated
-            overwrite_positions (list/numpy.ndarray): List of positions that are meant to overwrite the existing
+            center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
+            atom_indices (list/ndarray): The atom indices for which the trajectory should be generated
+            snapshot_indices (list/ndarray): The snapshots for which the trajectory should be generated
+            overwrite_positions (list/ndarray): List of positions that are meant to overwrite the existing
                                                       trajectory. Useful to wrap coordinates for example
-            overwrite_cells(list/numpy.ndarray): List of cells that are meant to overwrite the existing
+            overwrite_cells(list/ndarray): List of cells that are meant to overwrite the existing
                                                  trajectory. Only used when `overwrite_positions` is defined. This must
                                                  have the same length of `overwrite_positions`
 
@@ -485,14 +554,18 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         if len(self.output.indices) != 0:
             indices = self.output.indices
         else:
-            indices = [self.structure.indices] * len(cells)  # Use the same indices throughout
+            indices = [self.structure.indices] * len(
+                cells
+            )  # Use the same indices throughout
         if overwrite_positions is not None:
             positions = np.array(overwrite_positions).copy()
             if overwrite_cells is not None:
                 if overwrite_cells.shape == (len(positions), 3, 3):
                     cells = np.array(overwrite_cells).copy()
                 else:
-                    raise ValueError("overwrite_cells must be compatible with the positions!")
+                    raise ValueError(
+                        "overwrite_cells must be compatible with the positions!"
+                    )
         else:
             positions = self.output.positions.copy()
         conditions = list()
@@ -520,17 +593,25 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 self.structure.get_parent_basis(),
                 center_of_mass=center_of_mass,
                 cells=cells[::stride],
-                indices=indices[::stride]
+                indices=indices[::stride],
             )
         else:
             sub_struct = self.structure.get_parent_basis()[atom_indices]
             if len(sub_struct.species) < len(self.structure.species):
                 # Then `sub_struct` has had its indices remapped so they run from 0 to the number of species - 1
                 # But the `indices` array is unaware of this and needs to be remapped to this new space
-                original_symbols = np.array([el.Abbreviation for el in self.structure.species])
+                original_symbols = np.array(
+                    [el.Abbreviation for el in self.structure.species]
+                )
                 sub_symbols = np.array([el.Abbreviation for el in sub_struct.species])
 
-                map_ = np.array([np.argwhere(original_symbols == symbol)[0, 0] for symbol in sub_symbols], dtype=int)
+                map_ = np.array(
+                    [
+                        np.argwhere(original_symbols == symbol)[0, 0]
+                        for symbol in sub_symbols
+                    ],
+                    dtype=int,
+                )
 
                 remapped_indices = np.array(indices)
                 for i_sub, i_original in enumerate(map_):
@@ -543,7 +624,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 sub_struct,
                 center_of_mass=center_of_mass,
                 cells=cells[::stride],
-                indices=remapped_indices[::stride, atom_indices]
+                indices=remapped_indices[::stride, atom_indices],
             )
 
     def write_traj(
@@ -558,7 +639,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         snapshot_indices=None,
         overwrite_positions=None,
         overwrite_cells=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Writes the trajectory in a given file file_format based on the `ase.io.write`_ function.
@@ -587,7 +668,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             atom_indices=atom_indices,
             snapshot_indices=snapshot_indices,
             overwrite_positions=overwrite_positions,
-            overwrite_cells=overwrite_cells
+            overwrite_cells=overwrite_cells,
         )
         # Using thr ASE output writer
         ase_write(
@@ -596,10 +677,12 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             format=file_format,
             parallel=parallel,
             append=append,
-            **kwargs
+            **kwargs,
         )
 
-    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+    def get_neighbors_snapshots(
+        self, snapshot_indices=None, num_neighbors=12, **kwargs
+    ):
         """
         Get the neighbors only for the required snapshots from the trajectory
 
@@ -614,8 +697,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
                                                                              containing the neighbor information.
         """
-        return self.trajectory().get_neighbors_snapshots(snapshot_indices=snapshot_indices,
-                                                         num_neighbors=num_neighbors, **kwargs)
+        return self.trajectory().get_neighbors_snapshots(
+            snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs
+        )
 
     def get_neighbors(self, start=0, stop=-1, stride=1, num_neighbors=12, **kwargs):
         """
@@ -633,8 +717,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             pyiron_atomistics.atomistics.structure.neighbors.NeighborsTrajectory: `NeighborsTraj` instances
                                                                              containing the neighbor information.
         """
-        return self.trajectory().get_neighbors(start=start, stop=stop, stride=stride,
-                                               num_neighbors=num_neighbors, **kwargs)
+        return self.trajectory().get_neighbors(
+            start=start, stop=stop, stride=stride, num_neighbors=num_neighbors, **kwargs
+        )
 
     # Compatibility functions
     @deprecate("Use get_structure()")
@@ -649,13 +734,13 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         if self.structure is None:
-            raise AssertionError('Structure not set')
+            raise AssertionError("Structure not set")
         if self.output.cells is not None:
             try:
                 cell = self.output.cells[frame]
             except IndexError:
                 if wrap_atoms:
-                    raise IndexError('cell at step ', frame, ' not found') from None
+                    raise IndexError("cell at step ", frame, " not found") from None
                 cell = None
         if self.output.indices is not None:
             try:
@@ -663,8 +748,13 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             except IndexError:
                 indices = None
         if indices is not None and len(indices) != len(self.structure):
-            snapshot = Atoms(species=self.structure.species, indices=indices,
-                             positions=np.zeros(indices.shape + (3,)), cell=cell, pbc=self.structure.pbc)
+            snapshot = Atoms(
+                species=self.structure.species,
+                indices=indices,
+                positions=np.zeros(indices.shape + (3,)),
+                cell=cell,
+                pbc=self.structure.pbc,
+            )
         else:
             snapshot = self.structure.copy()
             if cell is not None:
@@ -754,7 +844,9 @@ class Trajectory(HasStructure):
     A trajectory instance compatible with the ase.io class
     """
 
-    def __init__(self, positions, structure, center_of_mass=False, cells=None, indices=None):
+    def __init__(
+        self, positions, structure, center_of_mass=False, cells=None, indices=None
+    ):
         """
 
         Args:
@@ -794,11 +886,19 @@ class Trajectory(HasStructure):
         elif isinstance(item, (list, np.ndarray, slice)):
             snapshots = np.arange(len(self), dtype=int)[item]
             if self._cells is not None:
-                return Trajectory(positions=self._positions[snapshots], cells=self._cells[snapshots],
-                                  structure=self[snapshots[0]], indices=self._indices[snapshots])
+                return Trajectory(
+                    positions=self._positions[snapshots],
+                    cells=self._cells[snapshots],
+                    structure=self[snapshots[0]],
+                    indices=self._indices[snapshots],
+                )
             else:
-                return Trajectory(positions=self._positions[snapshots], cells=self._cells,
-                                  structure=self[snapshots[0]], indices=self._indices[snapshots])
+                return Trajectory(
+                    positions=self._positions[snapshots],
+                    cells=self._cells,
+                    structure=self[snapshots[0]],
+                    indices=self._indices[snapshots],
+                )
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
         return self[frame]
@@ -808,7 +908,9 @@ class Trajectory(HasStructure):
 
     _number_of_structures = __len__
 
-    def get_neighbors_snapshots(self, snapshot_indices=None, num_neighbors=12, **kwargs):
+    def get_neighbors_snapshots(
+        self, snapshot_indices=None, num_neighbors=12, **kwargs
+    ):
         """
         Get the neighbors only for the required snapshots from the trajectory
 
@@ -826,7 +928,9 @@ class Trajectory(HasStructure):
         if snapshot_indices is None:
             snapshot_indices = np.arange(len(self), dtype=int)
 
-        n_obj = NeighborsTrajectory(self[snapshot_indices], num_neighbors=num_neighbors, **kwargs)
+        n_obj = NeighborsTrajectory(
+            has_structure=self[snapshot_indices], num_neighbors=num_neighbors, **kwargs
+        )
         n_obj.compute_neighbors()
         return n_obj
 
@@ -847,7 +951,9 @@ class Trajectory(HasStructure):
                                                                              containing the neighbor information.
         """
         snapshot_indices = np.arange(len(self))[start:stop:stride]
-        return self.get_neighbors_snapshots(snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs)
+        return self.get_neighbors_snapshots(
+            snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs
+        )
 
 
 class GenericInput(GenericParameters):
@@ -893,8 +999,8 @@ class GenericOutput(object):
     @property
     def force_max(self):
         """
-            maximum force magnitude of each step which is used for
-            convergence criterion of structure optimizations
+        maximum force magnitude of each step which is used for
+        convergence criterion of structure optimizations
         """
         return np.linalg.norm(self.forces, axis=-1).max(axis=-1)
 
@@ -924,7 +1030,7 @@ class GenericOutput(object):
         if unwrapped_positions is not None:
             return unwrapped_positions
         else:
-            return self._job.structure.positions+self.total_displacements
+            return self._job.structure.positions + self.total_displacements
 
     @property
     def volume(self):
@@ -939,11 +1045,17 @@ class GenericOutput(object):
         """
         Output for 3-d displacements between successive snapshots, with minimum image convention.
         For the total displacements from the initial configuration, use total_displacements
-        This algorithm collapses if:
-        - the ID's are not consistent (i.e. you can also not change the number of atoms)
-        - there are atoms which move by more than half a box length in any direction within two snapshots (due to
-        periodic boundary conditions)
+        This algorithm collapses if (if `unwrapped_positions` is not available in output):
+            - the ID's are not consistent (i.e. you can also not change the number of atoms)
+            - there are atoms which move by more than half a box length in any direction within
+                two snapshots (due to periodic boundary conditions)
         """
+        unwrapped_positions = self._job["output/generic/unwrapped_positions"]
+        if unwrapped_positions is not None:
+            return np.diff(
+                np.append([self._job.structure.positions], unwrapped_positions, axis=0),
+                axis=0,
+            )
         return self.get_displacements(self._job.structure, self.positions, self.cells)
 
     @staticmethod
@@ -967,25 +1079,31 @@ class GenericOutput(object):
         """
         # Check if the cell changes in any snapshot
         c = cells.reshape(-1, 9)
-        if np.max(c.max(axis=0)-c.min(axis=0)) > 1e-5:
-            warnings.warn("You are computing displacements in a simulation with periodic boundary conditions \n"
-                          "and a varying cell shape.")
-        displacement = np.einsum('nki,nij->nkj', positions, np.linalg.inv(cells))
+        if np.max(c.max(axis=0) - c.min(axis=0)) > 1e-5:
+            warnings.warn(
+                "You are computing displacements in a simulation with periodic boundary conditions \n"
+                "and a varying cell shape."
+            )
+        displacement = np.einsum("nki,nij->nkj", positions, np.linalg.inv(cells))
         displacement[1:] -= displacement[:-1]
         displacement[0] -= structure.get_scaled_positions()
-        displacement[:,:,structure.pbc] -= np.rint(displacement)[:,:,structure.pbc]
-        displacement = np.einsum('nki,nij->nkj', displacement, cells)
+        displacement[:, :, structure.pbc] -= np.rint(displacement)[:, :, structure.pbc]
+        displacement = np.einsum("nki,nij->nkj", displacement, cells)
         return displacement
 
     @property
     def total_displacements(self):
         """
         Output for 3-d total displacements from the initial configuration, with minimum image convention.
-        For the diplacements for the successive snapshots, use displacements
-        This algorithm collapses if:
-        - the ID's are not consistent (i.e. you can also not change the number of atoms)
-        - there are atoms which move by more than half a box length in any direction within two snapshots (due to periodic boundary conditions)
+        For the displacements for the successive snapshots, use displacements
+        This algorithm collapses if (if `unwrapped_positions` is not available in the output):
+            - the ID's are not consistent (i.e. you can also not change the number of atoms)
+            - there are atoms which move by more than half a box length in any direction within
+                two snapshots (due to periodic boundary conditions)
         """
+        unwrapped_positions = self._job["output/generic/unwrapped_positions"]
+        if unwrapped_positions is not None:
+            return unwrapped_positions - self._job.structure.positions
         return np.cumsum(self.displacements, axis=0)
 
     def __dir__(self):
@@ -994,4 +1112,3 @@ class GenericOutput(object):
             return hdf5_path.list_nodes()
         else:
             return []
-

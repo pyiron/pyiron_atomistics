@@ -7,12 +7,14 @@ import os
 import posixpath
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_atomistics.vasp.base import Input, Output
-from pyiron_base import ProjectHDFio, Project
+from pyiron_atomistics import Project
+from pyiron_base import state, ProjectHDFio
 from pyiron_atomistics.vasp.potential import VaspPotentialSetter
 from pyiron_atomistics.vasp.vasp import Vasp
 from pyiron_atomistics.vasp.metadyn import VaspMetadyn
 from pyiron_atomistics.vasp.structure import read_atoms
 import numpy as np
+import warnings
 
 __author__ = "Sudarsan Surendralal"
 
@@ -24,6 +26,7 @@ class TestVasp(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        state.update({'resource_paths': os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")})
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.execution_path, "test_vasp"))
         cls.job = cls.project.create_job("Vasp", "trial")
@@ -52,11 +55,13 @@ class TestVasp(unittest.TestCase):
         project = Project(os.path.join(cls.execution_path, "test_vasp"))
         project.remove_jobs_silently(recursive=True)
         project.remove(enable=True)
+        state.update()
 
     def setUp(self):
         self.job.structure = None
 
     def test_list_potentials(self):
+        self.assertRaises(ValueError, self.job.list_potentials)
         self.assertEqual(sorted([
             'Fe', 'Fe_GW', 'Fe_pv', 'Fe_sv', 'Fe_sv_GW', 'Se', 'Se_GW',
             'O', 'O_GW', 'O_GW_new', 'O_h', 'O_s', 'O_s_GW'
@@ -255,6 +260,26 @@ class TestVasp(unittest.TestCase):
         self.job.set_empty_states(n_empty_states=10)
         self.assertEqual(self.job.input.incar["NBANDS"], 25)
 
+    def test_set_occpuancy_smearing(self):
+        job_smear = self.project.create_job("Vasp", "smearing")
+        self.assertIsNone(job_smear.input.incar["ISMEAR"])
+        self.assertIsNone(job_smear.input.incar["SIGMA"])
+        job_smear.set_occupancy_smearing(smearing="methfessel_paxton")
+        self.assertEqual(job_smear.input.incar["ISMEAR"], 1)
+        job_smear.set_occupancy_smearing(smearing="methfessel_paxton", order=2)
+        self.assertEqual(job_smear.input.incar["ISMEAR"], 2)
+        job_smear.set_occupancy_smearing(smearing="Fermi", width=0.1)
+        self.assertEqual(job_smear.input.incar["ISMEAR"], -1)
+        self.assertEqual(job_smear.input.incar["SIGMA"], 0.1)
+        job_smear.set_occupancy_smearing(smearing="Gaussian", width=0.1)
+        self.assertEqual(job_smear.input.incar["ISMEAR"], 0)
+        self.assertEqual(job_smear.input.incar["SIGMA"], 0.1)
+        with warnings.catch_warnings(record=True) as w:
+            job_smear.set_occupancy_smearing(smearing="Gaussian", ismear=10)
+            self.assertEqual(job_smear.input.incar["ISMEAR"], 10)
+            self.assertEqual(len(w), 1)
+        self.assertRaises(ValueError, job_smear.set_occupancy_smearing, smearing="gibberish")
+
     def test_calc_static(self):
         self.job.calc_static(
             electronic_steps=90,
@@ -276,9 +301,6 @@ class TestVasp(unittest.TestCase):
         self.job.structure = atoms
         self.assertEqual(self.job.structure, atoms)
 
-    def test_list_potenitals(self):
-        self.assertRaises(ValueError, self.job.list_potentials)
-
     def test_run_complete(self):
         self.job_complete.exchange_correlation_functional = "PBE"
         self.job_complete.set_occupancy_smearing(smearing="fermi", width=0.2)
@@ -296,6 +318,12 @@ class TestVasp(unittest.TestCase):
         )
         self.job_complete.restart_file_list.append(
             posixpath.join(file_directory, "OUTCAR")
+        )
+        self.job_complete.restart_file_list.append(
+            posixpath.join(file_directory, "CHGCAR")
+        )
+        self.job_complete.restart_file_list.append(
+            posixpath.join(file_directory, "WAVECAR")
         )
         self.job_complete.run(run_mode="manual")
         self.job_complete.status.collect = True
@@ -334,34 +362,18 @@ class TestVasp(unittest.TestCase):
         ) as h_dft:
             hdf_nodes = h_dft.list_nodes()
             self.assertTrue(all([node in hdf_nodes for node in nodes]))
-
         job_chg_den = self.job_complete.restart_from_charge_density(job_name="chg")
         self.assertEqual(job_chg_den.structure, self.job_complete.get_structure(-1))
         self.assertTrue(
             posixpath.join(self.job_complete.working_directory, "CHGCAR")
             in job_chg_den.restart_file_list
         )
-        with job_chg_den.project_hdf5.open("output") as h_out:
-            self.assertTrue(h_out.list_nodes() == [])
-            self.assertTrue(h_out.list_groups() == [])
 
-        with job_chg_den.project_hdf5.open("input") as h_in:
-            self.assertFalse(h_in.list_nodes() == [])
-            self.assertFalse(h_in.list_groups() == [])
-
-        job_wave = self.job_complete.restart_from_wave_functions(job_name="wave")
-        self.assertEqual(job_wave.structure, self.job_complete.get_structure(-1))
-        self.assertTrue(
-            posixpath.join(self.job_complete.working_directory, "WAVECAR")
-            in job_wave.restart_file_list
-        )
-        with job_wave.project_hdf5.open("output") as h_out:
-            self.assertTrue(h_out.list_nodes() == [])
-            self.assertTrue(h_out.list_groups() == [])
-
-        with job_wave.project_hdf5.open("input") as h_in:
-            self.assertFalse(h_in.list_nodes() == [])
-            self.assertFalse(h_in.list_groups() == [])
+        def check_group_is_empty(example_job, group_name):
+            with example_job.project_hdf5.open(group_name) as h_gr:
+                self.assertTrue(h_gr.list_nodes() == [])
+                self.assertTrue(h_gr.list_groups() == [])
+        check_group_is_empty(job_chg_den, "output")
 
         job_chg_wave = self.job_complete.restart_from_wave_and_charge(
             job_name="chg_wave"
@@ -377,13 +389,22 @@ class TestVasp(unittest.TestCase):
         )
         for key, val in job_chg_wave.restart_file_dict.items():
             self.assertTrue(key, val)
-        with job_chg_wave.project_hdf5.open("output") as h_out:
-            self.assertTrue(h_out.list_nodes() == [])
-            self.assertTrue(h_out.list_groups() == [])
+        check_group_is_empty(job_chg_wave, "output")
 
-        with job_chg_wave.project_hdf5.open("input") as h_in:
-            self.assertFalse(h_in.list_nodes() == [])
-            self.assertFalse(h_in.list_groups() == [])
+        job = self.job_complete.restart()
+        job.restart_file_list.append(
+            posixpath.join(file_directory, "vasprun.xml")
+        )
+        job.restart_file_list.append(
+            posixpath.join(file_directory, "OUTCAR")
+        )
+        job.run(run_mode="manual")
+        job.status.collect = True
+        job.run()
+        # Check if error raised if the files don't exist
+        self.assertRaises(FileNotFoundError, job.restart_from_wave_functions, "wave_restart")
+        self.assertRaises(FileNotFoundError, job.restart_from_charge_density, "chg_restart")
+        self.assertRaises(FileNotFoundError, job.restart_from_wave_and_charge, "wave_chg_restart")
 
     def test_vasp_metadyn(self):
         self.job_metadyn.set_primitive_constraint("bond_1", "bond", atom_indices=[0, 2], increment=1e-4)
@@ -413,6 +434,29 @@ class TestVasp(unittest.TestCase):
         self.assertEqual(job.input.incar['IMIX'], 4)
         with self.assertRaises(NotImplementedError):
             job.set_mixing_parameters(density_residual_scaling=0.1)
+
+    def test_potentials(self):
+        # Assert that no warnings are raised
+        with warnings.catch_warnings(record=True) as w:
+            structure = self.project.create_ase_bulk("Al", cubic=True)
+            element = self.project.create_element(new_element_name='Al_GW', parent_element="Al", potential_file='Al_GW')
+            structure[:] = element
+            job = self.project.create.job.Vasp("test")
+            job.structure = structure
+            job.run(run_mode="manual")
+            self.assertEqual(len(w), 0)
+
+    def test_kspacing(self):
+        job_kspace = self.project.create_job("Vasp", "job_kspacing")
+        job_kspace.structure = self.project.create_ase_bulk("Fe")
+        job_kspace.input.incar["KSPACING"] = 0.5
+        with warnings.catch_warnings(record=True) as w:
+            job_kspace.run(run_mode="manual")
+            self.assertNotIn("KPOINTS", job_kspace.list_files(), "'KPOINTS' file written even when "
+                                                                 "KPACING tag is present in INCAR")
+
+            self.assertEqual(len(w), 1)
+            self.assertEqual(str(w[0].message), "'KSPACING' found in INCAR, no KPOINTS file written")
 
 
 if __name__ == "__main__":

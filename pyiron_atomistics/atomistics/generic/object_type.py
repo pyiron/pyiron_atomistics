@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 import importlib
-from pyiron_base import Settings
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -18,9 +17,9 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
-s = Settings()
-
-OBJECT_CLASS_DICT = {"ThermoBulk": "pyiron_atomistics.atomistics.thermodynamics.thermo_bulk"}
+OBJECT_CLASS_DICT = {
+    "ThermoBulk": "pyiron_atomistics.atomistics.thermodynamics.thermo_bulk"
+}
 
 
 class ObjectTypeChoice(object):

@@ -1,12 +1,22 @@
 channels:
-  - conda-forge
+- conda-forge
 dependencies:
-  - sphinx
-  - nbsphinx
-  - ipywidgets
-  - sphinx_rtd_theme
-  - pylint
-  - Graphviz
-  - sphinxcontrib-applehelp
-  - seaborn
-  - jinja2 <3
+- nbsphinx
+- aimsgb
+- ase
+- defusedxml
+- future
+- h5py
+- matplotlib-base
+- mendeleev
+- numpy
+- pandas
+- phonopy
+- pyiron_base
+- pymatgen
+- pyscal
+- pytables
+- scipy
+- seekpath
+- scikit-learn
+- spglib

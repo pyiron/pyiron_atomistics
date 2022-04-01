@@ -29,6 +29,24 @@ class TestContainer(TestWithProject):
         """get_elements() should return all unique chemical elements stored in its structures."""
         self.assertEqual(sorted(self.elements), sorted(self.cont.get_elements()),
                          "Results from get_elements() do not match added elements.")
+        self.assertEqual(
+            sorted(self.cont.get_elements()),
+            sorted(self.elements),
+            "get_elements() returned wrong elements."
+        )
+        cont = self.cont.copy()
+        cont.add_structure(self.project.create.structure.bulk("Fe").repeat(2))
+        self.assertEqual(
+            sorted(cont.get_elements()),
+            sorted(self.elements),
+            "get_elements() returned wrong elements after adding same structure again."
+        )
+        cont.add_structure(self.project.create.structure.bulk("Ag"))
+        self.assertEqual(
+            sorted(cont.get_elements()),
+            sorted(self.elements + ("Ag",)),
+            "get_elements() returned wrong elements after adding new structure."
+        )
 
     def test_set_array(self):
         """set_array should set the arrays for the correct structures and only those."""

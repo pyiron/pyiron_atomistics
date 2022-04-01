@@ -4,13 +4,18 @@
 
 from multiprocessing import cpu_count
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
-from pyiron_base import DataContainer, GenericParameters, Settings, ImportAlarm
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron, pyiron_to_ase
+from pyiron_base import state, DataContainer, GenericParameters, ImportAlarm
+from pyiron_atomistics.atomistics.structure.atoms import (
+    Atoms,
+    ase_to_pyiron,
+    pyiron_to_ase,
+)
 from pymatgen.io.ase import AseAtomsAdaptor
 import numpy as np
 
 try:
     from sqsgenerator.core.sqs import ParallelSqsIterator
+
     import_alarm = ImportAlarm()
 except ImportError:
     import_alarm = ImportAlarm(
@@ -31,9 +36,6 @@ __status__ = "development"
 __date__ = "Aug 14, 2020"
 
 
-s = Settings()
-
-
 def pyiron_to_pymatgen(structure):
     return AseAtomsAdaptor.get_structure(pyiron_to_ase(structure))
 
@@ -42,15 +44,24 @@ def pymatgen_to_pyiron(structure):
     return ase_to_pyiron(AseAtomsAdaptor.get_atoms(structure))
 
 
-def get_sqs_structures(structure, mole_fractions, weights=None, objective=0.0, iterations=1e6, output_structures=10,
-                       num_threads=None):
+def get_sqs_structures(
+    structure,
+    mole_fractions,
+    weights=None,
+    objective=0.0,
+    iterations=1e6,
+    output_structures=10,
+    num_threads=None,
+):
     structure = pyiron_to_pymatgen(structure)
     if not weights:
-        weights = {i: 1.0/i for i in range(1, 7)}
+        weights = {i: 1.0 / i for i in range(1, 7)}
     if not num_threads:
         # Thats default behaviour
         num_threads = cpu_count()
-    iterator = ParallelSqsIterator(structure, mole_fractions, weights, num_threads=num_threads)
+    iterator = ParallelSqsIterator(
+        structure, mole_fractions, weights, num_threads=num_threads
+    )
     structures, decmp, iter_, cycle_time = iterator.iteration(
         iterations=iterations, output_structures=output_structures, objective=objective
     )
@@ -95,7 +106,7 @@ class SQSJob(AtomisticGenericJob):
         >>> job.structure = structure
         >>> job.input.mole_fractions = {'Al': 0.8, 'Ni':0.2}
         >>> job.run()
-        
+
         Case II: Get SQS for a given structure already containing at least 2 elements:
 
         >>> job = SQSJob(job_name='sqs')
@@ -109,7 +120,12 @@ class SQSJob(AtomisticGenericJob):
         "sqs": {
             "method": {
                 "title": "Special quasirandom structures",
-                "author": ["Zunger, A.", "Wei, S.-H.", "Ferreira, L.G.", "Bernard, J.E."],
+                "author": [
+                    "Zunger, A.",
+                    "Wei, S.-H.",
+                    "Ferreira, L.G.",
+                    "Bernard, J.E.",
+                ],
                 "journal": "Phys. Rev. Lett.",
                 "volume": "65",
                 "issue": "3",
@@ -127,7 +143,7 @@ class SQSJob(AtomisticGenericJob):
     def __init__(self, project, job_name):
         super(SQSJob, self).__init__(project, job_name)
         # self.input = InputList(table_name='input')
-        self.input = DataContainer(table_name='custom_dict')
+        self.input = DataContainer(table_name="custom_dict")
         self.input.mole_fractions = dict()
         self.input.weights = None
         self.input.objective = 0.0
@@ -137,7 +153,7 @@ class SQSJob(AtomisticGenericJob):
         self._lst_of_struct = []
         self.__hdf_version__ = "0.2.0"
         self.__name__ = "SQSJob"
-        s.publication_add(self.publication)
+        state.publications.add(self.publication)
 
     @property
     def list_of_structures(self):
@@ -147,9 +163,9 @@ class SQSJob(AtomisticGenericJob):
         super(SQSJob, self).validate_ready_to_run()
         if len(self.input.mole_fractions) == 0:
             chem = np.unique(self.structure.get_chemical_symbols(), return_counts=True)
-            self.input.mole_fractions = dict(zip(chem[0], chem[1]/np.sum(chem[1])))
+            self.input.mole_fractions = dict(zip(chem[0], chem[1] / np.sum(chem[1])))
         if len(self.input.mole_fractions) == 1:
-            raise ValueError('There must be at least two chemical elements')
+            raise ValueError("There must be at least two chemical elements")
 
     def db_entry(self):
         """
@@ -161,18 +177,14 @@ class SQSJob(AtomisticGenericJob):
         db_dict = super(SQSJob, self).db_entry()
         if self.structure:
             struct_len = len(self.structure)
-            mole_fractions = {
-                k: v for k, v in self.input.mole_fractions.items()
-            }
+            mole_fractions = {k: v for k, v in self.input.mole_fractions.items()}
             el_lst = sorted(mole_fractions.keys())
             atom_number_lst = [
-                int(np.round(mole_fractions[el]*struct_len))
-                for el in el_lst
+                int(np.round(mole_fractions[el] * struct_len)) for el in el_lst
             ]
-            db_dict["ChemicalFormula"] = "".join([
-                e + str(n)
-                for e, n in zip(el_lst, atom_number_lst)
-            ])
+            db_dict["ChemicalFormula"] = "".join(
+                [e + str(n) for e, n in zip(el_lst, atom_number_lst)]
+            )
         return db_dict
 
     def list_structures(self):
@@ -187,18 +199,16 @@ class SQSJob(AtomisticGenericJob):
     def _number_of_structures(self):
         return len(self.list_structures())
 
-    # This function is executed 
+    # This function is executed
     def run_static(self):
         self._lst_of_struct, decmp, iterations, cycle_time = get_sqs_structures(
-            structure=self.structure, 
-            mole_fractions={
-                k:v for k,v in self.input.mole_fractions.items()
-            },
+            structure=self.structure,
+            mole_fractions={k: v for k, v in self.input.mole_fractions.items()},
             weights=self.input.weights,
             objective=self.input.objective,
             iterations=self.input.iterations,
             output_structures=self.input.n_output_structures,
-            num_threads=self.server.cores
+            num_threads=self.server.cores,
         )
         for i, structure in enumerate(self._lst_of_struct):
             with self.project_hdf5.open("output/structures/structure_" + str(i)) as h5:
@@ -209,21 +219,15 @@ class SQSJob(AtomisticGenericJob):
             h5["iterations"] = iterations
         self.status.finished = True
         self.project.db.item_update(self._runtime(), self.job_id)
-        
+
     def to_hdf(self, hdf=None, group_name=None):
-        super().to_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
+        super().to_hdf(hdf=hdf, group_name=group_name)
         self._structure_to_hdf()
         with self.project_hdf5.open("input") as h5in:
             self.input.to_hdf(h5in)
 
     def from_hdf(self, hdf=None, group_name=None):
-        super().from_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
+        super().from_hdf(hdf=hdf, group_name=group_name)
         self._structure_from_hdf()
         self._backwards_compatible_input_from_hdf()
         with self.project_hdf5.open("output/structures") as hdf5_output:

@@ -3,8 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from aimsgb import GrainBoundary, Grain, GBInformation
-from pyiron_base import Settings
-from pyiron_atomistics.atomistics.structure.atoms import pyiron_to_pymatgen, pymatgen_to_pyiron
+from pyiron_atomistics.atomistics.structure.atoms import (
+    pyiron_to_pymatgen,
+    pymatgen_to_pyiron,
+)
 
 __author__ = "Ujjal Saikia"
 __copyright__ = (
@@ -16,8 +18,6 @@ __maintainer__ = "Liam Huber"
 __email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Feb 26, 2021"
-
-s = Settings()
 
 
 class AimsgbFactory:
@@ -46,15 +46,15 @@ class AimsgbFactory:
 
     @staticmethod
     def build(
-            axis,
-            sigma,
-            plane,
-            initial_struct,
-            to_primitive=False,
-            delete_layer='0b0t0b0t',
-            add_if_dist=0.0,
-            uc_a=1,
-            uc_b=1
+        axis,
+        sigma,
+        plane,
+        initial_struct,
+        to_primitive=False,
+        delete_layer="0b0t0b0t",
+        add_if_dist=0.0,
+        uc_a=1,
+        uc_b=1,
     ):
         """
         Generate a grain boundary structure based on the aimsgb.GrainBoundary module.
@@ -82,8 +82,22 @@ class AimsgbFactory:
             :class:`.Atoms`: final grain boundary structure
         """
         basis_pymatgen = pyiron_to_pymatgen(initial_struct)
-        grain_init = Grain(basis_pymatgen.lattice, basis_pymatgen.species, basis_pymatgen.frac_coords)
-        gb_obj = GrainBoundary(axis=axis, sigma=sigma, plane=plane, initial_struct=grain_init, uc_a=uc_a, uc_b=uc_b)
+        grain_init = Grain(
+            basis_pymatgen.lattice, basis_pymatgen.species, basis_pymatgen.frac_coords
+        )
+        gb_obj = GrainBoundary(
+            axis=axis,
+            sigma=sigma,
+            plane=plane,
+            initial_struct=grain_init,
+            uc_a=uc_a,
+            uc_b=uc_b,
+        )
 
-        return pymatgen_to_pyiron(gb_obj.build_gb(to_primitive=to_primitive, delete_layer=delete_layer,
-                                                  add_if_dist=add_if_dist))
+        return pymatgen_to_pyiron(
+            gb_obj.build_gb(
+                to_primitive=to_primitive,
+                delete_layer=delete_layer,
+                add_if_dist=add_if_dist,
+            )
+        )

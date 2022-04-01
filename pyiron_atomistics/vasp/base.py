@@ -9,10 +9,15 @@ import subprocess
 import numpy as np
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
-from pyiron_atomistics.vasp.potential import VaspPotential, VaspPotentialFile, VaspPotentialSetter, Potcar, \
-    strip_xc_from_potential_name
+from pyiron_atomistics.vasp.potential import (
+    VaspPotential,
+    VaspPotentialFile,
+    VaspPotentialSetter,
+    Potcar,
+    strip_xc_from_potential_name,
+)
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_base import Settings, GenericParameters, deprecate
+from pyiron_base import state, GenericParameters, deprecate
 from pyiron_atomistics.vasp.outcar import Outcar
 from pyiron_atomistics.vasp.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
@@ -36,8 +41,6 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class VaspBase(GenericDFTJob):
@@ -83,7 +86,7 @@ class VaspBase(GenericDFTJob):
         self._potential = VaspPotentialSetter([])
         self._compress_by_default = True
         self.get_enmax_among_species = get_enmax_among_potentials
-        s.publication_add(self.publication)
+        state.publications.add(self.publication)
 
     @property
     def structure(self):
@@ -147,7 +150,7 @@ class VaspBase(GenericDFTJob):
         Returns True if the calculation is spin constrained
         """
         if "I_CONSTRAINED_M" in self.input.incar._dataset["Parameter"]:
-            return (self.input.incar["I_CONSTRAINED_M"] >= 1)
+            return self.input.incar["I_CONSTRAINED_M"] >= 1
         else:
             return False
 
@@ -273,7 +276,9 @@ class VaspBase(GenericDFTJob):
                 self.structure.get_species_symbols().tolist()
             )
             if len(df) > 0:
-                df["Name"] = [strip_xc_from_potential_name(n) for n in df["Name"].values]
+                df["Name"] = [
+                    strip_xc_from_potential_name(n) for n in df["Name"].values
+                ]
             return df
 
     @property
@@ -392,13 +397,16 @@ class VaspBase(GenericDFTJob):
             return
         # Try getting high precision positions from CONTCAR
         try:
-            self._output_parser.structure = self.get_final_structure_from_file(filename="CONTCAR")
+            self._output_parser.structure = self.get_final_structure_from_file(
+                filename="CONTCAR"
+            )
         except (IOError, ValueError, FileNotFoundError):
             pass
 
         # Bader analysis
-        if os.path.isfile(os.path.join(self.working_directory, "AECCAR0")) and \
-                os.path.isfile(os.path.join(self.working_directory, "AECCAR2")):
+        if os.path.isfile(
+            os.path.join(self.working_directory, "AECCAR0")
+        ) and os.path.isfile(os.path.join(self.working_directory, "AECCAR2")):
             bader = Bader(self)
             try:
                 charges_orig, volumes_orig = bader.compute_bader_charges()
@@ -409,11 +417,20 @@ class VaspBase(GenericDFTJob):
                 charges, volumes = charges_orig.copy(), volumes_orig.copy()
                 charges[self.sorted_indices] = charges_orig
                 volumes[self.sorted_indices] = volumes_orig
-                if "valence_charges" in self._output_parser.generic_output.dft_log_dict.keys():
-                    valence_charges = self._output_parser.generic_output.dft_log_dict["valence_charges"]
+                if (
+                    "valence_charges"
+                    in self._output_parser.generic_output.dft_log_dict.keys()
+                ):
+                    valence_charges = self._output_parser.generic_output.dft_log_dict[
+                        "valence_charges"
+                    ]
                     # Positive values indicate electron depletion
-                    self._output_parser.generic_output.dft_log_dict["bader_charges"] = valence_charges - charges
-                self._output_parser.generic_output.dft_log_dict["bader_volumes"] = volumes
+                    self._output_parser.generic_output.dft_log_dict["bader_charges"] = (
+                        valence_charges - charges
+                    )
+                self._output_parser.generic_output.dft_log_dict[
+                    "bader_volumes"
+                ] = volumes
         self._output_parser.to_hdf(self._hdf5)
         if len(self._exclude_groups_hdf) > 0 or len(self._exclude_nodes_hdf) > 0:
             self.project_hdf5.rewrite_hdf5(
@@ -528,10 +545,16 @@ class VaspBase(GenericDFTJob):
             # EDDRMM
             # If the wrong convergence algorithm is chosen, we get the following error.
             # https://cms.mpi.univie.ac.at/vasp-forum/viewtopic.php?f=4&t=17071
-            lines_where_eddrmm = np.argwhere([eddrmm_error_str in l for l in lines]).flatten()
+            lines_where_eddrmm = np.argwhere(
+                [eddrmm_error_str in l for l in lines]
+            ).flatten()
             num_eddrmm = len(lines_where_eddrmm)
             if num_eddrmm > 0:
-                snap_eddrmm = len(np.argwhere(["E0=" in l for l in lines[:lines_where_eddrmm[0]]]).flatten())
+                snap_eddrmm = len(
+                    np.argwhere(
+                        ["E0=" in l for l in lines[: lines_where_eddrmm[0]]]
+                    ).flatten()
+                )
 
             # ZBRENT
             for l in lines:
@@ -548,16 +571,24 @@ class VaspBase(GenericDFTJob):
                 self._logger.warning(eddrmm_warning_str.format(num_eddrmm, snap_eddrmm))
             elif self.get_eddrmm_handling() == "warn":
                 self.status.warning = True
-                self._logger.warning(eddrmm_warning_str.format(num_eddrmm, snap_eddrmm) + warning_status_str)
+                self._logger.warning(
+                    eddrmm_warning_str.format(num_eddrmm, snap_eddrmm)
+                    + warning_status_str
+                )
             elif self.get_eddrmm_handling() == "restart":
                 self.status.warning = True
-                self._logger.warning(eddrmm_warning_str.format(num_eddrmm, snap_eddrmm) + warning_status_str)
+                self._logger.warning(
+                    eddrmm_warning_str.format(num_eddrmm, snap_eddrmm)
+                    + warning_status_str
+                )
                 if not self.input.incar["ALGO"].lower() == "normal":
                     ham_new = self.copy_hamiltonian(self.name + "_normal")
                     ham_new.input.incar["ALGO"] = "Normal"
                     ham_new.set_eddrmm_handling()
                     ham_new.run()
-                    self._logger.info("Job was restarted with 'ALGO' = 'Normal' to avoid EDDRMM warning.")
+                    self._logger.info(
+                        "Job was restarted with 'ALGO' = 'Normal' to avoid EDDRMM warning."
+                    )
 
     def copy_hamiltonian(self, job_name):
         """
@@ -629,7 +660,10 @@ class VaspBase(GenericDFTJob):
             if "POSCAR" in files:
                 if "POTCAR" in files:
                     try:
-                        structure = read_atoms(posixpath.join(directory, "POSCAR"), species_from_potcar=True)
+                        structure = read_atoms(
+                            posixpath.join(directory, "POSCAR"),
+                            species_from_potcar=True,
+                        )
                     # In order to handle cases where the species info. is corrputed in POTCAR files
                     except KeyError:
                         structure = read_atoms(posixpath.join(directory, "POSCAR"))
@@ -786,12 +820,13 @@ class VaspBase(GenericDFTJob):
                         ]
                     ]
                 )
-                s.logger.debug("Magnetic Moments are: {0}".format(final_cmd))
+                state.logger.debug("Magnetic Moments are: {0}".format(final_cmd))
                 if "MAGMOM" not in self.input.incar._dataset["Parameter"]:
                     self.input.incar["MAGMOM"] = final_cmd
                 if any(
                     [
-                        isinstance(spin, (list, np.ndarray)) for spin in self.structure.get_initial_magnetic_moments()
+                        isinstance(spin, (list, np.ndarray))
+                        for spin in self.structure.get_initial_magnetic_moments()
                     ]
                 ):
                     self.input.incar["LNONCOLLINEAR"] = True
@@ -825,11 +860,11 @@ class VaspBase(GenericDFTJob):
                         "Spin constraints are only avilable for non collinear calculations."
                     )
             else:
-                s.logger.debug(
+                state.logger.debug(
                     "Spin polarized calculation is switched off by the user. No magnetic moments are written."
                 )
         else:
-            s.logger.debug("No magnetic moments")
+            state.logger.debug("No magnetic moments")
 
     def set_eddrmm_handling(self, status="warn"):
         """
@@ -892,7 +927,7 @@ class VaspBase(GenericDFTJob):
             if ldau_print:
                 self.input.incar["LDAUPRINT"] = 2
         else:
-            s.logger.debug("No on site coulomb interactions")
+            state.logger.debug("No on site coulomb interactions")
 
     def set_algorithm(self, algorithm="Fast", ialgo=None):
         """
@@ -908,7 +943,7 @@ class VaspBase(GenericDFTJob):
         else:
             self.input.incar["ALGO"] = str(algorithm)
             if algorithm not in algorithm_list:
-                s.logger.warning(
+                state.logger.warning(
                     msg="Algorithm {} is unusual for VASP. "
                     "I hope you know what you are up to".format(algorithm)
                 )
@@ -927,6 +962,7 @@ class VaspBase(GenericDFTJob):
         ionic_energy_tolerance=None,
         ionic_force_tolerance=None,
         volume_only=False,
+        cell_only=False,
     ):
         """
         Function to setup the hamiltonian to perform ionic relaxations using DFT. The ISIF tag has to be supplied
@@ -944,7 +980,8 @@ class VaspBase(GenericDFTJob):
             ionic_force_tolerance (float): Ionic forces convergence criteria (overwrites ionic energy) (ev/A)
             ionic_energy (float): Same as ionic_energy_tolerance (deprecated)
             ionic_forces (float): Same as ionic_force_tolerance (deprecated)
-            volume_only (bool): Option to relax only the volume (keeping the relative coordinates fixed
+            volume_only (bool): Option to relax only the volume (keeping the relative coordinates fixed)
+            cell_only (bool): Option to relax only the cell parameters (keeping the relative coordinates fixed)
         """
         super(VaspBase, self).calc_minimize(
             electronic_steps=electronic_steps,
@@ -960,6 +997,8 @@ class VaspBase(GenericDFTJob):
         )
         if volume_only:
             self.input.incar["ISIF"] = 7
+        elif cell_only:
+            self.input.incar["ISIF"] = 6
         else:
             if pressure == 0.0:
                 self.input.incar["ISIF"] = 3
@@ -981,10 +1020,13 @@ class VaspBase(GenericDFTJob):
             self.write_charge_density = retain_charge_density
         if retain_electrostatic_potential:
             self.write_electrostatic_potential = retain_electrostatic_potential
-        self.set_convergence_precision(ionic_force_tolerance=ionic_force_tolerance,
-                                       ionic_energy_tolerance=ionic_energy_tolerance,
-                                       ionic_energy=ionic_energy, ionic_forces=ionic_forces,
-                                       electronic_energy=None)
+        self.set_convergence_precision(
+            ionic_force_tolerance=ionic_force_tolerance,
+            ionic_energy_tolerance=ionic_energy_tolerance,
+            ionic_energy=ionic_energy,
+            ionic_forces=ionic_forces,
+            electronic_energy=None,
+        )
 
     def calc_static(
         self,
@@ -1028,7 +1070,7 @@ class VaspBase(GenericDFTJob):
         time_step=1.0,
         retain_charge_density=False,
         retain_electrostatic_potential=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Sets appropriate tags for molecular dynamics in VASP
@@ -1048,7 +1090,7 @@ class VaspBase(GenericDFTJob):
             time_step=time_step,
             retain_charge_density=retain_charge_density,
             retain_electrostatic_potential=retain_electrostatic_potential,
-            **kwargs
+            **kwargs,
         )
         if temperature is not None:
             # NVT ensemble
@@ -1112,9 +1154,13 @@ class VaspBase(GenericDFTJob):
         if scheme == "GC":
             if mesh is None:
                 mesh = [int(val) for val in self.input.kpoints[3].split()]
-            self.input.kpoints.set_kpoints_file(size_of_mesh=mesh, shift=center_shift, method="Gamma centered")
+            self.input.kpoints.set_kpoints_file(
+                size_of_mesh=mesh, shift=center_shift, method="Gamma centered"
+            )
         if scheme == "GP":
-            self.input.kpoints.set_kpoints_file(size_of_mesh=[1, 1, 1], method="Gamma Point")
+            self.input.kpoints.set_kpoints_file(
+                size_of_mesh=[1, 1, 1], method="Gamma Point"
+            )
         if scheme == "Line":
             if n_path is None and self.input.kpoints._n_path is None:
                 raise ValueError("n_path has to be defined")
@@ -1135,7 +1181,7 @@ class VaspBase(GenericDFTJob):
             self.input.kpoints.set_kpoints_file(
                 method="Line",
                 n_path=self.input.kpoints._n_path,
-                path=self._get_path_for_kpoints(self.input.kpoints._path_name)
+                path=self._get_path_for_kpoints(self.input.kpoints._path_name),
             )
         if scheme == "Manual":
             if manual_kpoints is None:
@@ -1211,11 +1257,17 @@ class VaspBase(GenericDFTJob):
             reciprocal=False,
         )
 
-    @deprecate(ionic_forces="Use ionic_force_tolerance",
-               ionic_energy="use ionic_energy_tolerance")
+    @deprecate(
+        ionic_forces="Use ionic_force_tolerance",
+        ionic_energy="use ionic_energy_tolerance",
+    )
     def set_convergence_precision(
-        self, ionic_energy_tolerance=1.0e-3, electronic_energy=1.0e-7, ionic_force_tolerance=1.0e-2,
-        ionic_energy=None, ionic_forces=None
+        self,
+        ionic_energy_tolerance=1.0e-3,
+        electronic_energy=1.0e-7,
+        ionic_force_tolerance=1.0e-2,
+        ionic_energy=None,
+        ionic_forces=None,
     ):
         """
         Sets the electronic and ionic convergence precision. For ionic convergence either the energy or the force
@@ -1240,7 +1292,9 @@ class VaspBase(GenericDFTJob):
             self.input.incar["EDIFFG"] = abs(ionic_energy_tolerance)
         else:
             # Using default convergence criterion
-            self.input.incar["EDIFFG"] = -0.01 if self.input.incar["ISIF"] not in (5, 6, 7) else 0.01
+            self.input.incar["EDIFFG"] = (
+                -0.01 if self.input.incar["ISIF"] not in (5, 6, 7) else 0.01
+            )
         if electronic_energy is not None:
             self.input.incar["EDIFF"] = electronic_energy
 
@@ -1282,21 +1336,41 @@ class VaspBase(GenericDFTJob):
         if dipole_center is not None:
             self.input.incar["DIPOL"] = " ".join(str(val) for val in dipole_center)
 
-    def set_occupancy_smearing(self, smearing="fermi", width=0.2, ismear=None):
+    @deprecate(
+        ismear="Preferably use parameters `smearing` and `order` "
+        "to set the type of smearing you want"
+    )
+    def set_occupancy_smearing(
+        self,
+        smearing: str = None,
+        width: float = None,
+        order: int = 1,
+        ismear: int = None,
+    ) -> None:
         """
         Set how the finite temperature smearing is applied in determining partial occupancies
 
         Args:
-            smearing (str): Type of smearing (fermi/gaussian etc.)
+            smearing (str): Type of smearing (Fermi, Gaussian, or Methfessel-Paxton)
             width (float): Smearing width (eV)
-            ismear (int): Directly sets the ISMEAR tag. Overwrites the smearing tag
+            order (int): order (int): Smearing order (only for Methfessel-Paxton)
+            ismear (int): (Deprecated) Directly sets the ISMEAR tag. Overwrites the smearing tag
         """
-        ismear_dict = {"fermi": -1, "gaussian": 0, "MP": 1}
         if ismear is not None:
             self.input.incar["ISMEAR"] = int(ismear)
+        elif smearing.lower().startswith("meth") or smearing.lower().startswith("mp"):
+            self.input.incar["ISMEAR"] = int(order)
+        elif smearing.lower().startswith("fermi"):
+            self.input.incar["ISMEAR"] = -1
+        elif smearing.lower().startswith("gauss"):
+            self.input.incar["ISMEAR"] = 0
         else:
-            self.input.incar["ISMEAR"] = ismear_dict[smearing]
-        self.input.incar["SIGMA"] = width
+            raise ValueError(
+                f"Smearing scheme {smearing} is not available. Only types 'Fermi', 'Gaussian', "
+                f"and 'Methfessel-Paxton'"
+            )
+        if width is not None:
+            self.input.incar["SIGMA"] = width
 
     def set_fft_mesh(self, nx=None, ny=None, nz=None):
         """
@@ -1326,7 +1400,7 @@ class VaspBase(GenericDFTJob):
         spin_residual_scaling=None,
     ):
         if density_residual_scaling is not None or spin_residual_scaling is not None:
-            raise NotImplementedError('Residual scaling is not implemented in VASP')
+            raise NotImplementedError("Residual scaling is not implemented in VASP")
         if method is None:
             method = "PULAY"
         if method.upper() == "PULAY":
@@ -1337,6 +1411,7 @@ class VaspBase(GenericDFTJob):
             self.input.incar["MAXMIX"] = n_pulay_steps
         if density_mixing_parameter is not None:
             self.input.incar["AMIX"] = density_mixing_parameter
+
     set_mixing_parameters.__doc__ = GenericDFTJob.set_mixing_parameters.__doc__
 
     def set_empty_states(self, n_empty_states=None):
@@ -1446,9 +1521,7 @@ class VaspBase(GenericDFTJob):
         Returns:
             new_ham (vasp.vasp.Vasp instance): New job
         """
-        new_ham = super(VaspBase, self).restart(
-            job_name=job_name, job_type=job_type
-        )
+        new_ham = super(VaspBase, self).restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
             new_ham.input.potcar["xc"] = self.input.potcar["xc"]
         if new_ham.input.incar["MAGMOM"] is not None:
@@ -1471,10 +1544,7 @@ class VaspBase(GenericDFTJob):
             new_ham (vasp.vasp.Vasp instance): New job
         """
         return self.restart_from_charge_density(
-            job_name=job_name,
-            job_type=None,
-            icharg=11,
-            self_consistent_calc=None
+            job_name=job_name, job_type=None, icharg=11, self_consistent_calc=None
         )
 
     def get_icharg_value(self, icharg=None, self_consistent_calc=None):
@@ -1495,12 +1565,17 @@ class VaspBase(GenericDFTJob):
                 return 1
             if self_consistent_calc is False:
                 return 11
-            if ("ICHARG" in self.input.incar.keys() and int(self.input.incar["ICHARG"]) > 9):
+            if (
+                "ICHARG" in self.input.incar.keys()
+                and int(self.input.incar["ICHARG"]) > 9
+            ):
                 return 11
             return 1
         if icharg not in [0, 1, 2, 4, 10, 11, 12]:
             raise ValueError(
-                "The value '{}' is not a proper input for 'icharg'. Look at VASP manual.".format(icharg)
+                "The value '{}' is not a proper input for 'icharg'. Look at VASP manual.".format(
+                    icharg
+                )
             )
         return icharg
 
@@ -1525,17 +1600,9 @@ class VaspBase(GenericDFTJob):
             new_ham (vasp.vasp.Vasp instance): New job
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
+
         if new_ham.__name__ == self.__name__:
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "CHGCAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A CHGCAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
+            new_ham.restart_file_list.append(self.get_workdir_file("CHGCAR"))
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
                 self_consistent_calc=self_consistent_calc,
@@ -1584,28 +1651,9 @@ class VaspBase(GenericDFTJob):
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "CHGCAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A CHGCAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "WAVECAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A WAVECAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
+            new_ham.restart_file_list.append(self.get_workdir_file("CHGCAR"))
+            new_ham.restart_file_list.append(self.get_workdir_file("WAVECAR"))
             new_ham.input.incar["ISTART"] = istart
-
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
                 self_consistent_calc=self_consistent_calc,
@@ -1623,7 +1671,16 @@ class VaspBase(GenericDFTJob):
             files_to_compress = [
                 f
                 for f in list(self.list_files())
-                if f not in ["CHGCAR", "CONTCAR", "WAVECAR", "STOPCAR", "AECCAR0", "AECCAR1", "AECCAR2"]
+                if f
+                not in [
+                    "CHGCAR",
+                    "CONTCAR",
+                    "WAVECAR",
+                    "STOPCAR",
+                    "AECCAR0",
+                    "AECCAR1",
+                    "AECCAR2",
+                ]
             ]
         # delete empty files
         for f in list(self.list_files()):
@@ -1636,9 +1693,7 @@ class VaspBase(GenericDFTJob):
                 os.remove(filename)
         super(VaspBase, self).compress(files_to_compress=files_to_compress)
 
-    def restart_from_wave_functions(
-        self, job_name=None, job_type=None, istart=1
-    ):
+    def restart_from_wave_functions(self, job_name=None, job_type=None, istart=1):
 
         """
         Restart a new job created from an existing Vasp calculation by reading the wave functions.
@@ -1653,16 +1708,7 @@ class VaspBase(GenericDFTJob):
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "WAVECAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A WAVECAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
+            new_ham.restart_file_list.append(self.get_workdir_file("WAVECAR"))
             new_ham.input.incar["ISTART"] = istart
         return new_ham
 
@@ -1745,7 +1791,9 @@ class VaspBase(GenericDFTJob):
         elif norm:
             raise ValueError("Constraining norm only is not possible.")
         else:
-            raise ValueError("You have to constrain either direction or norm and direction.")
+            raise ValueError(
+                "You have to constrain either direction or norm and direction."
+            )
 
         self.input.incar["LAMBDA"] = lamb
         self.set_rwigs(rwigs_dict)
@@ -1808,7 +1856,10 @@ class Input:
             directory (str): The working directory for the VASP run
         """
         self.incar.write_file(file_name="INCAR", cwd=directory)
-        self.kpoints.write_file(file_name="KPOINTS", cwd=directory)
+        if "KSPACING" in self.incar.keys():
+            warnings.warn("'KSPACING' found in INCAR, no KPOINTS file written")
+        else:
+            self.kpoints.write_file(file_name="KPOINTS", cwd=directory)
         self.potcar.potcar_set_structure(structure, modified_elements)
         self.potcar.write_file(file_name="POTCAR", cwd=directory)
         # Write the species info in the POSCAR file only if there are no user defined species
@@ -1860,13 +1911,15 @@ class Input:
             if "vasp_dict" in hdf5_input.list_nodes():
                 vasp_dict = hdf5_input["vasp_dict"]
                 if "eddrmm_handling" in vasp_dict.keys():
-                    self._eddrmm = self._eddrmm_backwards_compatibility(vasp_dict["eddrmm_handling"])
+                    self._eddrmm = self._eddrmm_backwards_compatibility(
+                        vasp_dict["eddrmm_handling"]
+                    )
 
     @staticmethod
     def _eddrmm_backwards_compatibility(eddrmm_value):
         """On 9-03-2020, the EDDRMM flag 'not_converged' was switched to 'warn'."""
-        if eddrmm_value == 'not_converged':
-            return 'warn'
+        if eddrmm_value == "not_converged":
+            return "warn"
         else:
             return eddrmm_value
 
@@ -1933,19 +1986,29 @@ class Output:
             try:
                 with warnings.catch_warnings(record=True) as w:
                     warnings.simplefilter("always")
-                    self.vp_new.from_file(filename=posixpath.join(directory, "vasprun.xml"))
+                    self.vp_new.from_file(
+                        filename=posixpath.join(directory, "vasprun.xml")
+                    )
                     if any([isinstance(warn.category, VasprunWarning) for warn in w]):
-                        s.logger.warning("vasprun.xml parsed but with some inconsistencies. "
-                                         "Check vasp output to be sure")
-                        warnings.warn("vasprun.xml parsed but with some inconsistencies. "
-                                      "Check vasp output to be sure", VasprunWarning)
+                        state.logger.warning(
+                            "vasprun.xml parsed but with some inconsistencies. "
+                            "Check vasp output to be sure"
+                        )
+                        warnings.warn(
+                            "vasprun.xml parsed but with some inconsistencies. "
+                            "Check vasp output to be sure",
+                            VasprunWarning,
+                        )
             except VasprunError:
-                s.logger.warning("Unable to parse the vasprun.xml file. Will attempt to get data from OUTCAR")
+                state.logger.warning(
+                    "Unable to parse the vasprun.xml file. Will attempt to get data from OUTCAR"
+                )
             else:
                 # If parsing the vasprun file does not throw an error, then set to True
                 vasprun_working = True
         if outcar_working:
             log_dict["temperature"] = self.outcar.parse_dict["temperatures"]
+            log_dict["stresses"] = self.outcar.parse_dict["stresses"]
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
             log_dict["elastic_constants"] = self.outcar.parse_dict["elastic_constants"]
             self.generic_output.dft_log_dict["n_elect"] = self.outcar.parse_dict[
@@ -1966,16 +2029,20 @@ class Output:
                 self.generic_output.dft_log_dict[
                     "final_magmoms"
                 ] = final_magmoms.tolist()
-            self.generic_output.dft_log_dict["e_fermi_list"] = self.outcar.parse_dict["e_fermi_list"]
-            self.generic_output.dft_log_dict["vbm_list"] = self.outcar.parse_dict["vbm_list"]
-            self.generic_output.dft_log_dict["cbm_list"] = self.outcar.parse_dict["cbm_list"]
+            self.generic_output.dft_log_dict["e_fermi_list"] = self.outcar.parse_dict[
+                "e_fermi_list"
+            ]
+            self.generic_output.dft_log_dict["vbm_list"] = self.outcar.parse_dict[
+                "vbm_list"
+            ]
+            self.generic_output.dft_log_dict["cbm_list"] = self.outcar.parse_dict[
+                "cbm_list"
+            ]
 
         if vasprun_working:
             log_dict["forces"] = self.vp_new.vasprun_dict["forces"]
             log_dict["cells"] = self.vp_new.vasprun_dict["cells"]
-            log_dict["volume"] = [
-                np.linalg.det(cell) for cell in self.vp_new.vasprun_dict["cells"]
-            ]
+            log_dict["volume"] = np.linalg.det(self.vp_new.vasprun_dict["cells"])
             # log_dict["total_energies"] = self.vp_new.vasprun_dict["total_energies"]
             log_dict["energy_tot"] = self.vp_new.vasprun_dict["total_energies"]
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
@@ -1989,9 +2056,9 @@ class Output:
             log_dict["positions"] = self.vp_new.vasprun_dict["positions"]
             log_dict["forces"][:, sorted_indices] = log_dict["forces"].copy()
             log_dict["positions"][:, sorted_indices] = log_dict["positions"].copy()
-            log_dict["positions"] = np.einsum('nij,njk->nik',
-                                              log_dict["positions"],
-                                              log_dict["cells"])
+            log_dict["positions"] = np.einsum(
+                "nij,njk->nik", log_dict["positions"], log_dict["cells"]
+            )
             # log_dict["scf_energies"] = self.vp_new.vasprun_dict["scf_energies"]
             # log_dict["scf_dipole_moments"] = self.vp_new.vasprun_dict["scf_dipole_moments"]
             self.electronic_structure = self.vp_new.get_electronic_structure()
@@ -2005,7 +2072,9 @@ class Output:
                 ] = self.electronic_structure.resolved_densities[:, :, :, :].copy()
             self.structure.positions = log_dict["positions"][-1]
             self.structure.set_cell(log_dict["cells"][-1])
-            self.generic_output.dft_log_dict["potentiostat_output"] = self.vp_new.get_potentiostat_output()
+            self.generic_output.dft_log_dict[
+                "potentiostat_output"
+            ] = self.vp_new.get_potentiostat_output()
             valence_charges_orig = self.vp_new.get_valence_electrons_per_atom()
             valence_charges = valence_charges_orig.copy()
             valence_charges[sorted_indices] = valence_charges_orig
@@ -2017,6 +2086,7 @@ class Output:
                 raise VaspCollectError("Error in parsing OUTCAR")
             log_dict["energy_tot"] = self.outcar.parse_dict["energies"]
             log_dict["temperature"] = self.outcar.parse_dict["temperatures"]
+            log_dict["stresses"] = self.outcar.parse_dict["stresses"]
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
             log_dict["forces"] = self.outcar.parse_dict["forces"]
             log_dict["positions"] = self.outcar.parse_dict["positions"]
@@ -2114,9 +2184,13 @@ class Output:
             )
             # Overwrite energy_free with much better precision from the OSZICAR file
             if "energy_pot" in self.oszicar.parse_dict.keys():
-                if np.array_equal(self.generic_output.dft_log_dict["energy_free"],
-                                  np.round(self.oszicar.parse_dict["energy_pot"], 8)):
-                    self.generic_output.dft_log_dict["energy_free"] = self.oszicar.parse_dict["energy_pot"]
+                if np.array_equal(
+                    self.generic_output.dft_log_dict["energy_free"],
+                    np.round(self.oszicar.parse_dict["energy_pot"], 8),
+                ):
+                    self.generic_output.dft_log_dict[
+                        "energy_free"
+                    ] = self.oszicar.parse_dict["energy_pot"]
             self.generic_output.dft_log_dict["energy_zero"] = np.array(
                 [
                     e_zero[-1]
@@ -2181,7 +2255,7 @@ class Output:
                     hdf=hdf5_output, group_name="electronic_structure"
                 )
 
-            if self.outcar.parse_dict:
+            if len(self.outcar.parse_dict.keys()) > 0:
                 self.outcar.to_hdf_minimal(hdf=hdf5_output, group_name="outcar")
 
     def from_hdf(self, hdf):
@@ -2210,7 +2284,7 @@ class Output:
                 if "outcar" in hdf5_output.list_groups():
                     self.outcar.from_hdf(hdf=hdf5_output, group_name="outcar")
             except (TypeError, IOError, ValueError):
-                s.logger.warning("Routine from_hdf() not completely successful")
+                state.logger.warning("Routine from_hdf() not completely successful")
 
 
 class GenericOutput:
@@ -2372,7 +2446,9 @@ class Kpoints(GenericParameters):
         self._path_name = None
         self._n_path = None
 
-    def set_kpoints_file(self, method=None, size_of_mesh=None, shift=None, n_path=None, path=None):
+    def set_kpoints_file(
+        self, method=None, size_of_mesh=None, shift=None, n_path=None, path=None
+    ):
         """
         Sets appropriate tags and values in the KPOINTS file
         Args:
@@ -2435,13 +2511,9 @@ Monkhorst_Pack
             hdf (ProjectHDFio): HDF5 group object
             group_name (str): HDF5 subgroup name - optional
         """
-        super(Kpoints, self).to_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
+        super(Kpoints, self).to_hdf(hdf=hdf, group_name=group_name)
         if self._path_name is not None:
-            line_dict = {"path_name": self._path_name,
-                         "n_path": self._n_path}
+            line_dict = {"path_name": self._path_name, "n_path": self._n_path}
             with hdf.open("kpoints") as hdf_kpoints:
                 hdf_kpoints["line_dict"] = line_dict
 
@@ -2453,10 +2525,7 @@ Monkhorst_Pack
             hdf (ProjectHDFio): HDF5 group object
             group_name (str): HDF5 subgroup name - optional
         """
-        super(Kpoints, self).from_hdf(
-            hdf=hdf,
-            group_name=group_name
-        )
+        super(Kpoints, self).from_hdf(hdf=hdf, group_name=group_name)
         self._path_name = None
         self._n_path = None
         with hdf.open("kpoints") as hdf_kpoints:

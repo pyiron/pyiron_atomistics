@@ -26,8 +26,10 @@ __date__ = "Jun 30, 2021"
 
 _ATOMSK_EXISTS = shutil.which("atomsk") != None
 
+
 class AtomskError(Exception):
     pass
+
 
 class AtomskBuilder:
     """Class to build CLI arguments to Atomsk."""
@@ -52,8 +54,10 @@ class AtomskBuilder:
         a_and_c = str(a) if c is None else f"{a} {c}"
         line = f"--create {lattice} {a_and_c} {' '.join(species)}"
         if hkl is not None:
-            if np.asarray(hkl).shape not in ( (3, 3), (3, 4) ):
-                raise ValueError(f"hkl must have shape 3x3 or 3x4 if provided, not {hkl}!")
+            if np.asarray(hkl).shape not in ((3, 3), (3, 4)):
+                raise ValueError(
+                    f"hkl must have shape 3x3 or 3x4 if provided, not {hkl}!"
+                )
             line += "orient" + "  ".join("[" + "".join(map(str, a)) + "]" for a in hkl)
         # TODO: check len(species) etc. with the document list of supported phases
         self._options.append(line)
@@ -61,7 +65,7 @@ class AtomskBuilder:
 
     @classmethod
     def modify(cls, structure):
-        """"
+        """ "
         Instiate new builder to modify and existing structure.
 
         See :method:`.AtomskFactory.modify` for arguments.
@@ -86,8 +90,10 @@ class AtomskBuilder:
         Returns:
             :class:`.AtomskBuilder`: self
         """
-        if ny is None: ny = nx
-        if nz is None: nz = ny
+        if ny is None:
+            ny = nx
+        if nz is None:
+            nz = ny
         self._options.append(f"-duplicate {nx} {ny} {nz}")
         return self
 
@@ -98,12 +104,19 @@ class AtomskBuilder:
         Returns:
             :class:`.Atoms`: new structure
         """
-        self._options.append("- exyz") # output to stdout as exyz format
+        self._options.append("- exyz")  # output to stdout as exyz format
         with tempfile.TemporaryDirectory() as temp_dir:
             if self._structure is not None:
-                write(os.path.join(temp_dir, "input.exyz"), self._structure, format="extxyz")
-            proc = subprocess.run(["atomsk", *" ".join(self._options).split()],
-                                  capture_output=True, cwd=temp_dir)
+                write(
+                    os.path.join(temp_dir, "input.exyz"),
+                    self._structure,
+                    format="extxyz",
+                )
+            proc = subprocess.run(
+                ["atomsk", *" ".join(self._options).split()],
+                capture_output=True,
+                cwd=temp_dir,
+            )
             output = proc.stdout.decode("utf8")
             for l in output.split("\n"):
                 if l.strip().startswith("X!X ERROR:"):
@@ -118,7 +131,9 @@ class AtomskBuilder:
             kwargs_str = " ".join(f"{k} {v}" for k, v in kwargs.items())
             self._options.append(f"-{name.replace('_', '-')} {args_str} {kwargs_str}")
             return self
+
         return meth
+
 
 class AtomskFactory:
     """
@@ -142,7 +157,7 @@ class AtomskFactory:
     Cu: [3.6 1.8 1.8]
     Cu: [5.4 0.  1.8]
     pbc: [ True  True  True]
-    cell: 
+    cell:
     Cell([7.2, 3.6, 3.6])
     >>> s = pr.create.structure.atomsk.create("fcc", 3.6, "Cu").duplicate(2, 1, 1).build()
     >>> pr.create.structure.atomsk.modify(s).cell("add", 3, "x").build()
@@ -155,7 +170,7 @@ class AtomskFactory:
     Cu: [3.6 1.8 1.8]
     Cu: [5.4 0.  1.8]
     pbc: [ True  True  True]
-    cell: 
+    cell:
     Cell([10.2, 3.6, 3.6])
 
     Methods that you call on :class:`.AtomskBuilder` are automatically translated into options, translating '_' in the

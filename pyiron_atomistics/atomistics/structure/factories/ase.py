@@ -8,8 +8,10 @@ from ase.build import cut as ase_cut, stack as ase_stack, bulk as ase_bulk
 from ase.io import read as ase_read
 from ase.spacegroup import crystal as ase_crystal
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
-from pyiron_atomistics.atomistics.structure.pyironase import publication as publication_ase
-from pyiron_base import Settings
+from pyiron_atomistics.atomistics.structure.pyironase import (
+    publication as publication_ase,
+)
+from pyiron_base import state
 
 __author__ = "Ali Zendegani"
 __copyright__ = (
@@ -22,12 +24,10 @@ __email__ = "huber@mpie.de"
 __status__ = "production"
 __date__ = "Feb 26, 2021"
 
-s = Settings()
-
 
 def _ase_header(ase_func):
     chain = getmodule(ase_func).__name__
-    name = chain.split('.')[-1]
+    name = chain.split(".")[-1]
     return f"""
     Returns an ASE's {name} result as a `pyiron_atomistics.atomstic.structure.atoms.Atoms`.
 
@@ -40,10 +40,12 @@ def _ase_wraps(ase_func):
     def decorator(func):
         @wraps(ase_func)
         def wrapper(*args, **kwargs):
-            s.publication_add(publication_ase())
+            state.publications.add(publication_ase())
             return func(*args, **kwargs)
+
         wrapper.__doc__ = _ase_header(ase_func) + wrapper.__doc__
         return wrapper
+
     return decorator
 
 

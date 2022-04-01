@@ -5,9 +5,8 @@
 from __future__ import print_function, unicode_literals
 import numpy as np
 import os
-from pyiron_base import Settings
+from pyiron_base import state
 import mendeleev
-import sys
 import pandas
 from functools import lru_cache
 
@@ -22,7 +21,6 @@ __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-s = Settings()
 pandas.options.mode.chained_assignment = None
 
 
@@ -53,28 +51,30 @@ class ChemicalElement(object):
             self._init_mendeleev(self.sub.Abbreviation)
 
         self._mendeleev_translation_dict = {
-            'AtomicNumber': 'atomic_number',
-            'AtomicRadius': 'covalent_radius_cordero',
-            'AtomicMass': 'mass',
-            'Color': 'cpk_color',
-            'CovalentRadius': 'covalent_radius',
-            'CrystalStructure': 'lattice_structure',
-            'Density': 'density',
-            'DiscoveryYear': 'discovery_year',
-            'ElectronAffinity': 'electron_affinity',
-            'Electronegativity': 'electronegativity',
-            'Group': 'group_id',
-            'Name': 'name',
-            'Period': 'period',
-            'StandardName': 'name',
-            'VanDerWaalsRadius': 'vdw_radius',
-            'MeltingPoint': 'melting_point'
+            "AtomicNumber": "atomic_number",
+            "AtomicRadius": "covalent_radius_cordero",
+            "AtomicMass": "mass",
+            "Color": "cpk_color",
+            "CovalentRadius": "covalent_radius",
+            "CrystalStructure": "lattice_structure",
+            "Density": "density",
+            "DiscoveryYear": "discovery_year",
+            "ElectronAffinity": "electron_affinity",
+            "Electronegativity": "electronegativity",
+            "Group": "group_id",
+            "Name": "name",
+            "Period": "period",
+            "StandardName": "name",
+            "VanDerWaalsRadius": "vdw_radius",
+            "MeltingPoint": "melting_point",
         }
         self.el = None
 
     def _init_mendeleev(self, element_str):
         self._mendeleev_element = element(str(element_str))
-        self._mendeleev_property_lst = [s for s in dir(self._mendeleev_element) if not s.startswith('_')]
+        self._mendeleev_property_lst = [
+            s for s in dir(self._mendeleev_element) if not s.startswith("_")
+        ]
 
     def __getattr__(self, item):
         if item in ["__array_struct__", "__array_interface__", "__array__"]:
@@ -235,7 +235,7 @@ class PeriodicTable(object):
         """
         elements = hdf.list_groups()  # ["elements"]
         for el in elements:
-            sub = pandas.Series()
+            sub = pandas.Series(dtype=object)
             new_element = ChemicalElement(sub)
             new_element.sub.name = el
             new_element.from_hdf(hdf)
@@ -254,7 +254,9 @@ class PeriodicTable(object):
                     self.dataframe["tags"] = None
                 self.dataframe["tags"][el] = new_element.tags
             else:
-                self.dataframe = self.dataframe.append(new_element.sub)
+                self.dataframe = pandas.concat(
+                    [self.dataframe, new_element.sub.to_frame().T]
+                )
                 self.dataframe["tags"] = self.dataframe["tags"].apply(
                     lambda x: None if pandas.isnull(x) else x
                 )
@@ -350,7 +352,9 @@ class PeriodicTable(object):
         parent_element_data_series["Parent"] = parent_element
         parent_element_data_series.name = new_element
         if new_element not in self.dataframe.T.columns:
-            self.dataframe = self.dataframe.append(parent_element_data_series)
+            self.dataframe = pandas.concat(
+                [self.dataframe, parent_element_data_series.to_frame().T],
+            )
         else:
             self.dataframe.loc[new_element] = parent_element_data_series
         if use_parent_potential:
@@ -369,7 +373,7 @@ class PeriodicTable(object):
 
         """
         if not file_name:
-            for resource_path in s.resource_paths:
+            for resource_path in state.settings.resource_paths:
                 if os.path.exists(os.path.join(resource_path, "atomistics")):
                     resource_path = os.path.join(resource_path, "atomistics")
                 for path, folder_lst, file_lst in os.walk(resource_path):

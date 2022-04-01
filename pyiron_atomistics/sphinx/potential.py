@@ -4,8 +4,11 @@
 
 import os
 import pandas
-from pyiron_base import Settings
-from pyiron_atomistics.vasp.potential import VaspPotentialAbstract, find_potential_file_base
+from pyiron_base import state
+from pyiron_atomistics.vasp.potential import (
+    VaspPotentialAbstract,
+    find_potential_file_base,
+)
 
 __author__ = "Osamu Waseda"
 __copyright__ = (
@@ -18,8 +21,6 @@ __email__ = "waseda@mpie.de"
 __status__ = "development"
 __date__ = "Sep 20, 2019"
 
-s = Settings()
-
 
 class SphinxJTHPotentialFile(VaspPotentialAbstract):
     """
@@ -29,6 +30,7 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
     Args:
         xc (str): Exchange correlation functional ['PBE', 'LDA']
     """
+
     def __init__(self, xc=None, selected_atoms=None):
         potential_df = self._get_potential_df(
             plugin_name="sphinx",
@@ -78,7 +80,7 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
 
 def find_potential_file(path):
     env = os.environ
-    resource_path_lst = s.resource_paths
+    resource_path_lst = state.settings.resource_paths
     for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
         if conda_var in env.keys():  # support sphinx-data package
             path_to_add = os.path.join(env[conda_var], "share", "sphinxdft")
@@ -87,5 +89,5 @@ def find_potential_file(path):
     return find_potential_file_base(
         path=path,
         resource_path_lst=resource_path_lst,
-        rel_path=os.path.join("sphinx", "potentials")
+        rel_path=os.path.join("sphinx", "potentials"),
     )

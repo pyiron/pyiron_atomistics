@@ -15,8 +15,10 @@ from phonopy.file_IO import write_FORCE_CONSTANTS
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
-from pyiron_atomistics.atomistics.structure.phonopy import publication as phonopy_publication
-from pyiron_base import JobGenerator, Settings, ImportAlarm
+from pyiron_atomistics.atomistics.structure.phonopy import (
+    publication as phonopy_publication,
+)
+from pyiron_base import state, JobGenerator, ImportAlarm, deprecate
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"
 __copyright__ = (
@@ -28,8 +30,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class Thermal:
@@ -64,7 +64,8 @@ def phonopy_to_atoms(ph_atoms):
     return Atoms(
         symbols=list(ph_atoms.get_chemical_symbols()),
         positions=list(ph_atoms.get_positions()),
-        cell=list(ph_atoms.get_cell()), pbc=True
+        cell=list(ph_atoms.get_cell()),
+        pbc=True,
     )
 
 
@@ -95,7 +96,10 @@ class PhonopyJobGenerator(JobGenerator):
         """
         supercells = self._master.phonopy.get_supercells_with_displacements()
         return [
-            ["{}_{}".format(self._master.ref_job.job_name, ind), self._restore_magmoms(phonopy_to_atoms(sc))]
+            [
+                "{}_{}".format(self._master.ref_job.job_name, ind),
+                self._restore_magmoms(phonopy_to_atoms(sc)),
+            ]
             for ind, sc in enumerate(supercells)
         ]
 
@@ -109,7 +113,12 @@ class PhonopyJobGenerator(JobGenerator):
         """
         if any(self._master.structure.get_initial_magnetic_moments() != None):
             magmoms = self._master.structure.get_initial_magnetic_moments()
-            magmoms = np.tile(magmoms, np.prod(np.diagonal(self._master._phonopy_supercell_matrix())).astype(int))
+            magmoms = np.tile(
+                magmoms,
+                np.prod(np.diagonal(self._master._phonopy_supercell_matrix())).astype(
+                    int
+                ),
+            )
             structure.set_initial_magnetic_moments(magmoms)
         return structure
 
@@ -165,13 +174,13 @@ class PhonopyJob(AtomisticParallelMaster):
             "int or None, optional. Number of snapshots of supercells with random displacements. Random displacements "
             "are generated displacing all atoms in random directions with a fixed displacement distance specified by "
             "'distance' parameter, i.e., all atoms in supercell are displaced with the same displacement distance in "
-            "direct space. (Copied directly from phonopy docs. Requires the alm package to work.)"
+            "direct space. (Copied directly from phonopy docs. Requires the alm package to work.)",
         )
 
         self.phonopy = None
         self._job_generator = PhonopyJobGenerator(self)
         self._disable_phonopy_pickle = False
-        s.publication_add(phonopy_publication())
+        state.publications.add(phonopy_publication())
 
     @property
     def phonopy_pickling_disabled(self):
@@ -199,7 +208,7 @@ class PhonopyJob(AtomisticParallelMaster):
                 )
                 self.phonopy.generate_displacements(
                     distance=self.input["displacement"],
-                    number_of_snapshots=self.input["number_of_snapshots"]
+                    number_of_snapshots=self.input["number_of_snapshots"],
                 )
                 self.to_hdf()
             else:
@@ -295,9 +304,9 @@ class PhonopyJob(AtomisticParallelMaster):
         self.to_hdf()
 
         with self.project_hdf5.open("output") as hdf5_out:
-            hdf5_out["dos_total"] = dos_dict['total_dos']
-            hdf5_out["dos_energies"] = dos_dict['frequency_points']
-            hdf5_out["qpoints"] = mesh_dict['qpoints']
+            hdf5_out["dos_total"] = dos_dict["total_dos"]
+            hdf5_out["dos_energies"] = dos_dict["frequency_points"]
+            hdf5_out["qpoints"] = mesh_dict["qpoints"]
             hdf5_out["supercell_matrix"] = self._phonopy_supercell_matrix()
             hdf5_out["displacement_dataset"] = self.phonopy.get_displacement_dataset()
             hdf5_out[
@@ -330,7 +339,7 @@ class PhonopyJob(AtomisticParallelMaster):
         unit_conversion = (
             scipy.constants.physical_constants["Hartree energy in eV"][0]
             / scipy.constants.physical_constants["Bohr radius"][0] ** 2
-            * scipy.constants.angstrom ** 2
+            * scipy.constants.angstrom**2
         )
         force_shape = np.shape(self.phonopy.force_constants)
         force_reshape = force_shape[0] * force_shape[2]
@@ -360,27 +369,25 @@ class PhonopyJob(AtomisticParallelMaster):
             t_step=t_step, t_max=t_max, t_min=t_min, temperatures=temperatures
         )
         tp_dict = self.phonopy.get_thermal_properties_dict()
-        kJ_mol_to_eV = 1000/scipy.constants.Avogadro/scipy.constants.electron_volt
-        return Thermal(tp_dict['temperatures'],
-                       tp_dict['free_energy'] * kJ_mol_to_eV,
-                       tp_dict['entropy'],
-                       tp_dict['heat_capacity'])
+        kJ_mol_to_eV = 1000 / scipy.constants.Avogadro / scipy.constants.electron_volt
+        return Thermal(
+            tp_dict["temperatures"],
+            tp_dict["free_energy"] * kJ_mol_to_eV,
+            tp_dict["entropy"],
+            tp_dict["heat_capacity"],
+        )
 
     @property
     def dos_total(self):
         """
-
-        Returns:
-
+        ndarray of float: Value of the DOS.
         """
         return self["output/dos_total"]
 
     @property
     def dos_energies(self):
         """
-
-        Returns:
-
+        ndarray of float: Energies at which the DOS is sampled.
         """
         return self["output/dos_energies"]
 
@@ -406,30 +413,39 @@ class PhonopyJob(AtomisticParallelMaster):
         """
         return np.real_if_close(self.phonopy.get_dynamical_matrix_at_q(q))
 
-    def plot_dos(self, ax=None, *args, **qwargs):
+    @deprecate(ax="Use axis instead")
+    def plot_dos(self, ax=None, *args, axis=None, **kwargs):
         """
+        Plot the DOS.
 
         Args:
-            *args:
-            ax:
-            **qwargs:
+            axis (optional): matplotlib axis to use, if None create a new one
+            ax: deprecated alias for axis
+            *args: passed to `axis.plot`
+            **kwargs: passed to `axis.plot`
 
         Returns:
-
+            matplotlib.axes._subplots.AxesSubplot: axis with the plot
         """
         try:
             import pylab as plt
         except ImportError:
             import matplotlib.pyplot as plt
-        if ax is None:
-            fig, ax = plt.subplots(1, 1)
-        ax.plot(self["output/dos_energies"], self["output/dos_total"], *args, **qwargs)
-        ax.set_xlabel("Frequency [THz]")
-        ax.set_ylabel("DOS")
-        ax.set_title("Phonon DOS vs Energy")
+        if ax is not None and axis is None:
+            axis = ax
+        if axis is None:
+            _, axis = plt.subplots(1, 1)
+        axis.plot(
+            self["output/dos_energies"], self["output/dos_total"], *args, **kwargs
+        )
+        axis.set_xlabel("Frequency [THz]")
+        axis.set_ylabel("DOS")
+        axis.set_title("Phonon DOS vs Energy")
         return ax
 
-    def get_band_structure(self, npoints=101, with_eigenvectors=False, with_group_velocities=False):
+    def get_band_structure(
+        self, npoints=101, with_eigenvectors=False, with_group_velocities=False
+    ):
         """
         Calculate band structure with automatic path through reciprocal space.
 
@@ -456,16 +472,23 @@ class PhonopyJob(AtomisticParallelMaster):
             :exception:`ValueError`: method is called on a job that is not finished or aborted
         """
         if not self.status.finished:
-            raise ValueError("Job must be successfully run, before calling this method.")
+            raise ValueError(
+                "Job must be successfully run, before calling this method."
+            )
 
-        self.phonopy.auto_band_structure(npoints,
-                                        with_eigenvectors=with_eigenvectors,
-                                        with_group_velocities=with_group_velocities)
+        self.phonopy.auto_band_structure(
+            npoints,
+            with_eigenvectors=with_eigenvectors,
+            with_group_velocities=with_group_velocities,
+        )
         results = self.phonopy.get_band_structure_dict()
         if results["eigenvectors"] is not None:
             # see https://phonopy.github.io/phonopy/phonopy-module.html#eigenvectors for the way phonopy stores the
             # eigenvectors
-            results["eigenvectors"] = [e.transpose(0, 2, 1).reshape(*e.shape[:2], -1, 3) for e in results["eigenvectors"]]
+            results["eigenvectors"] = [
+                e.transpose(0, 2, 1).reshape(*e.shape[:2], -1, 3)
+                for e in results["eigenvectors"]
+            ]
         return results
 
     def plot_band_structure(self, axis=None):
@@ -507,7 +530,7 @@ class PhonopyJob(AtomisticParallelMaster):
             axis.plot(offset + di, fi, color="black")
             tick_positions.append(di[-1] + offset)
             if not ci:
-                offset+=.05
+                offset += 0.05
                 plt.axvline(tick_positions[-1], color="black", linestyle="--")
                 tick_positions.append(di[-1] + offset)
         axis.set_xticks(tick_positions[:-1])
@@ -519,14 +542,16 @@ class PhonopyJob(AtomisticParallelMaster):
 
     def validate_ready_to_run(self):
         if self.ref_job._generic_input["calc_mode"] != "static":
-            raise ValueError("Phonopy reference jobs should be static calculations, but got {}".format(
-                self.ref_job._generic_input["calc_mode"]
-            ))
+            raise ValueError(
+                "Phonopy reference jobs should be static calculations, but got {}".format(
+                    self.ref_job._generic_input["calc_mode"]
+                )
+            )
         if self.input["number_of_snapshots"] is not None:
             with ImportAlarm(
-                    "Phonopy with random snapshot displacement relies on the alm module but this unavailable. Please "
-                    "ensure your python environment contains alm, e.g. by running `conda install -c conda-forge alm`."
-                    "Note: at time of writing alm is only available for Linux and OSX systems."
+                "Phonopy with random snapshot displacement relies on the alm module but this unavailable. Please "
+                "ensure your python environment contains alm, e.g. by running `conda install -c conda-forge alm`."
+                "Note: at time of writing alm is only available for Linux and OSX systems."
             ) as import_alarm:
                 import alm
             import_alarm.warn_if_failed()

@@ -32,6 +32,10 @@ class TestOutcar(unittest.TestCase):
             filename = posixpath.join(direc, f)
             cls.file_list.append(filename)
 
+    def setUp(self):
+        self.addTypeEqualityFunc(np.ndarray, lambda a, b, msg=None: \
+                np.testing.assert_array_equal(a, b, err_msg=msg))
+
     def test_from_file(self):
         for filename in self.file_list:
             self.outcar_parser.from_file(filename=filename)
@@ -48,7 +52,7 @@ class TestOutcar(unittest.TestCase):
             type_dict["scf_dipole_moments"] = list
             type_dict["kin_energy_error"] = float
             type_dict["stresses"] = np.ndarray
-            type_dict["irreducible_kpoints"] = tuple
+            type_dict["irreducible_kpoints"] = np.ndarray
             type_dict["pressures"] = np.ndarray
             type_dict["energies_int"] = np.ndarray
             type_dict["energies_zero"] = np.ndarray
@@ -558,44 +562,71 @@ class TestOutcar(unittest.TestCase):
                 self.assertEqual(len(output[-1][-1]), 3)
 
     def test_get_stresses(self):
+        def from_vasp_voigt(stress):
+            sigma = np.diag(stress[:3])
+            sigma[1, 2] = sigma[2, 1] = stress[4]
+            sigma[0, 2] = sigma[2, 0] = stress[5]
+            sigma[0, 1] = sigma[1, 0] = stress[3]
+            return sigma.reshape(1, 3, 3)
+
+        test_data = {
+                'OUTCAR_1': (
+                    from_vasp_voigt([-14.41433, -14.41433, -14.41433, 0.00000, 0.00000, 0.00000]),
+                    from_vasp_voigt([-455.93181, -455.93181, -455.93181, 0.00000, 0.00000, 0.00000])
+                ),
+                'OUTCAR_2': (
+                    from_vasp_voigt([-5.38507, -5.38507, -5.38507, -0.00000, 0.00000, -0.00000]),
+                    from_vasp_voigt([-393.03200, -393.03200, -393.03200, -0.00000, 0.00000, -0.00000])
+                ),
+                'OUTCAR_3': (
+                    from_vasp_voigt([-3.29441, -3.29441, -3.29441, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-240.44384, -240.44384, -240.44384, 0.00000, -0.00000, 0.00000])
+                ),
+                'OUTCAR_4': (
+                    from_vasp_voigt([-3.29441, -3.29441, -3.29441, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-240.44384, -240.44384, -240.44384, 0.00000, -0.00000, 0.00000])
+                ),
+                'OUTCAR_5': (
+                    from_vasp_voigt([-3.30660, -3.30660, -3.30660, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-241.33405, -241.33409, -241.33405, 0.00000, -0.00000, 0.00000])
+                ),
+                'OUTCAR_6': (
+                    from_vasp_voigt([-3.30660, -3.30660, -3.30660, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-241.33405, -241.33409, -241.33405, 0.00000, -0.00000, 0.00000])
+                ),
+                'OUTCAR_7': (
+                    from_vasp_voigt([-11.88272, -11.88272, 1.40676, 0.10858, -1.27251, 1.27251]),
+                    from_vasp_voigt([-30.25634, -30.25634, 3.58195, 0.27646, -3.24012, 3.24012])
+                ),
+                'OUTCAR_8': (
+                    from_vasp_voigt([26.40677, 26.40677, 26.40677, 0.00000, 0.00000, 0.00000]),
+                    from_vasp_voigt([77.52482, 77.52482, 77.52482, 0.00000, 0.00000, 0.00000])
+                ),
+                'OUTCAR_9': (
+                    np.concatenate([from_vasp_voigt([-8.22615, -16.37087, -24.79610,
+                                                      0.00000, 0.00000, 0.00000]),
+                                    from_vasp_voigt([-0.51498, -5.95380, 3.02638,
+                                                      0.00000, 0.00000, 0.00000])]),
+                    np.concatenate([from_vasp_voigt([-13.17976, -26.22903, -39.72774,
+                                                       0.00000, 0.00000, 0.00000]),
+                                    from_vasp_voigt([-0.82508, -9.53905, 4.84880,
+                                                      0.00000, 0.00000, 0.00000])])
+                ),
+                'OUTCAR_10': (
+                    from_vasp_voigt([-0.01303, -0.01303, -0.01300, 0.00000, -0.00000, 0.00000]),
+                    from_vasp_voigt([-0.00619, -0.00619, -0.00617, 0.00000, -0.00000, 0.00000])
+                ),
+        }
         for filename in self.file_list:
             output_si = self.outcar_parser.get_stresses(filename, si_unit=True)
             output_kb = self.outcar_parser.get_stresses(filename, si_unit=False)
             self.assertIsInstance(output_si, np.ndarray)
             self.assertIsInstance(output_kb, np.ndarray)
-            if int(filename.split("/OUTCAR_")[-1]) == 1:
-                pullay_si = np.array([[-14.41433, -14.41433, -14.41433, 0.0, 0.0, 0.0]])
-                pullay_kb = np.array(
-                    [[-455.93181, -455.93181, -455.93181, 0.0, 0.0, 0.0]]
-                )
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
-            if int(filename.split("/OUTCAR_")[-1]) == 2:
-                pullay_si = np.array([[-5.38507, -5.38507, -5.38507, -0.0, 0.0, -0.0]])
-                pullay_kb = np.array([[-393.032, -393.032, -393.032, -0.0, 0.0, -0.0]])
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
-            if int(filename.split("/OUTCAR_")[-1]) == 3:
-                pullay_si = np.array([[-3.29441, -3.29441, -3.29441, 0.0, -0.0, 0.0]])
-                pullay_kb = np.array(
-                    [[-240.44384, -240.44384, -240.44384, 0.0, -0.0, 0.0]]
-                )
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
-            if int(filename.split("/OUTCAR_")[-1]) == 4:
-                pullay_si = np.array([[-3.29441, -3.29441, -3.29441, -0.0, -0.0, -0.0]])
-                pullay_kb = np.array(
-                    [[-240.44384, -240.44384, -240.44384, -0.0, -0.0, -0.0]]
-                )
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
-            if int(filename.split("/OUTCAR_")[-1]) in [5, 6]:
-                pullay_si = np.array([[-3.3066, -3.3066, -3.3066, 0.0, -0.0, 0.0]])
-                pullay_kb = np.array(
-                    [[-241.33405, -241.33409, -241.33405, 0.0, -0.0, 0.0]]
-                )
-                self.assertEqual(output_si.__str__(), pullay_si.__str__())
-                self.assertEqual(output_kb.__str__(), pullay_kb.__str__())
+            test_si, test_kb = test_data[filename.split('/')[-1]]
+            self.assertEqual(output_si, test_si,
+                            "Wrong pressures parsed (SI units)")
+            self.assertEqual(output_kb, test_kb,
+                            "Wrong pressures parsed (kb units)")
 
     def test_get_kinetic_energy_error(self):
         for filename in self.file_list:
@@ -652,7 +683,7 @@ class TestOutcar(unittest.TestCase):
                         ]
                     ),
                     np.array([8.0, 24.0, 24.0, 8.0]),
-                    np.array([452.0, 457.0, 451.0, 459.0]),
+                    np.array([452, 457, 451, 459]),
                 )
                 self.assertEqual(output_all.__str__(), output.__str__())
             if int(filename.split("/OUTCAR_")[-1]) in [2, 3, 4]:
@@ -666,7 +697,7 @@ class TestOutcar(unittest.TestCase):
                         ]
                     ),
                     np.array([8.0, 24.0, 24.0, 8.0]),
-                    np.array([196.0, 199.0, 196.0, 190.0]),
+                    np.array([196, 199, 196, 190]),
                 )
                 self.assertEqual(output_all.__str__(), output.__str__())
             if int(filename.split("/OUTCAR_")[-1]) in [5, 6]:
@@ -684,7 +715,7 @@ class TestOutcar(unittest.TestCase):
                         ]
                     ),
                     np.array([8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0]),
-                    np.array([392.0, 398.0, 398.0, 398.0, 392.0, 392.0, 392.0, 380.0]),
+                    np.array([392, 398, 398, 398, 392, 392, 392, 380]),
                 )
                 self.assertEqual(output_all.__str__(), output.__str__())
 

@@ -8,9 +8,11 @@ import posixpath
 import numpy as np
 import pandas
 import tables
-import warnings
-from pyiron_base import GenericParameters, Settings, deprecate
-from pyiron_atomistics.atomistics.job.potentials import PotentialAbstract, find_potential_file_base
+from pyiron_base import state, GenericParameters, deprecate
+from pyiron_atomistics.atomistics.job.potentials import (
+    PotentialAbstract,
+    find_potential_file_base,
+)
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -22,8 +24,6 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2017"
-
-s = Settings()
 
 
 class VaspPotentialAbstract(PotentialAbstract):
@@ -123,7 +123,7 @@ class VaspPotentialAbstract(PotentialAbstract):
 
     @staticmethod
     def _return_potential_file(file_name):
-        for resource_path in s.resource_paths:
+        for resource_path in state.settings.resource_paths:
             resource_path_potcar = os.path.join(
                 resource_path, "vasp", "potentials", file_name
             )
@@ -204,20 +204,23 @@ class VaspPotentialFile(VaspPotentialAbstract):
             new_element (str): Name of the new element (the name of the folder where the new POTCAR file exists
 
         """
-        ds = self.find_default(element=parent_element)
-        ds["Species"].values[0][0] = new_element
-        path_list = ds["Filename"].values[0][0].split("/")
+        df = self.find_default(element=parent_element)
+        df["Species"].values[0][0] = new_element
+        path_list = df["Filename"].values[0][0].split("/")
         path_list[-2] = new_element
-        name_list = ds["Name"].values[0].split("-")
+        name_list = df["Name"].values[0].split("-")
         name_list[0] = new_element
-        ds["Name"].values[0] = "-".join(name_list)
-        ds["Filename"].values[0][0] = "/".join(path_list)
-        self._potential_df = self._potential_df.append(ds)
+        df["Name"].values[0] = "-".join(name_list)
+        df["Filename"].values[0][0] = "/".join(path_list)
+        self._potential_df = pandas.concat([self._potential_df, df])
         if new_element not in self._default_df.index.values:
-            ds = pandas.Series()
-            ds.name = new_element
-            ds["Name"] = "-".join(name_list)
-            self._default_df = self._default_df.append(ds)
+            ds = pandas.Series(
+                ["-".join(name_list), "/".join(path_list)],
+                index=["Name", "Filename"],
+                dtype=str,
+                name=new_element,
+            )
+            self._default_df = pandas.concat([self._default_df, ds.to_frame().T])
         else:
             self._default_df.loc[new_element] = "-".join(name_list)
 
@@ -268,12 +271,14 @@ class VaspPotentialSetter(object):
 def find_potential_file(path):
     return find_potential_file_base(
         path=path,
-        resource_path_lst=s.resource_paths,
-        rel_path=os.path.join("vasp", "potentials")
+        resource_path_lst=state.settings.resource_paths,
+        rel_path=os.path.join("vasp", "potentials"),
     )
 
 
-@deprecate("use get_enmax_among_potentials and note the adjustment to the signature (*args instead of list)")
+@deprecate(
+    "use get_enmax_among_potentials and note the adjustment to the signature (*args instead of list)"
+)
 def get_enmax_among_species(symbol_lst, return_list=False, xc="PBE"):
     """
     DEPRECATED: Please use `get_enmax_among_potentials`.
@@ -311,20 +316,28 @@ def get_enmax_among_potentials(*names, return_list=False, xc="PBE"):
         (float): The largest ENMAX among the POTCAR files for all the requested names.
         [optional](list): The ENMAX value corresponding to each species.
     """
+
     def _get_just_element_from_name(name):
-        return name.split('_')[0]
+        return name.split("_")[0]
 
     def _get_index_of_exact_match(name, potential_names):
         try:
-            return np.argwhere([name == strip_xc_from_potential_name(pn) for pn in potential_names])[0, 0]
+            return np.argwhere(
+                [name == strip_xc_from_potential_name(pn) for pn in potential_names]
+            )[0, 0]
         except IndexError:
-            raise ValueError("Couldn't find {} among potential names for {}".format(name,
-                                                                                    _get_just_element_from_name(name)))
+            raise ValueError(
+                "Couldn't find {} among potential names for {}".format(
+                    name, _get_just_element_from_name(name)
+                )
+            )
 
     def _get_potcar_filename(name, exch_corr):
-        potcar_table = VaspPotentialFile(xc=exch_corr).find(_get_just_element_from_name(name))
-        return potcar_table['Filename'].values[
-            _get_index_of_exact_match(name, potcar_table['Name'].values)
+        potcar_table = VaspPotentialFile(xc=exch_corr).find(
+            _get_just_element_from_name(name)
+        )
+        return potcar_table["Filename"].values[
+            _get_index_of_exact_match(name, potcar_table["Name"].values)
         ][0]
 
     enmax_lst = []
@@ -343,7 +356,7 @@ def get_enmax_among_potentials(*names, return_list=False, xc="PBE"):
 
 
 def strip_xc_from_potential_name(name):
-    return name.split('-')[0]
+    return name.split("-")[0]
 
 
 class Potcar(GenericParameters):
@@ -404,13 +417,13 @@ class Potcar(GenericParameters):
             self._structure.get_species_symbols()
         )  # .ElementList.getSpecies()
         object_list = self._structure.get_species_objects()
-        s.logger.debug("element list: {0}".format(element_list))
+        state.logger.debug("element list: {0}".format(element_list))
         self.el_path_lst = list()
         try:
             xc = self.get("xc")
         except tables.exceptions.NoSuchNodeError:
             xc = self.get("xc")
-        s.logger.debug("XC: {0}".format(xc))
+        state.logger.debug("XC: {0}".format(xc))
         vasp_potentials = VaspPotentialFile(xc=xc)
         for i, el_obj in enumerate(object_list):
             if isinstance(el_obj.Parent, str):
@@ -441,9 +454,9 @@ class Potcar(GenericParameters):
                         parent_element=el, new_element=new_element
                     )
                     el_path = find_potential_file(
-                        path=vasp_potentials.find_default(new_element)["Filename"].values[
-                            0
-                        ][0]
+                        path=vasp_potentials.find_default(new_element)[
+                            "Filename"
+                        ].values[0][0]
                     )
             else:
                 el_path = find_potential_file(

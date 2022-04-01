@@ -6,7 +6,7 @@ import numpy as np
 import scipy
 from scipy.io.netcdf import netcdf_file
 import os
-from pyiron_base import Settings
+from pyiron_base import state
 from pyiron_atomistics.atomistics.volumetric.generic import VolumetricData
 
 __author__ = "Sudarsan Surendralal"
@@ -22,8 +22,7 @@ __date__ = "Sep 1, 2017"
 
 
 BOHR_TO_ANGSTROM = (
-    scipy.constants.physical_constants["Bohr radius"][0] /
-    scipy.constants.angstrom
+    scipy.constants.physical_constants["Bohr radius"][0] / scipy.constants.angstrom
 )
 
 
@@ -38,13 +37,11 @@ class SphinxVolumetricData(VolumetricData):
 
     """
 
-
     def __init__(self):
         super(SphinxVolumetricData, self).__init__()
         self.atoms = None
         self._diff_data = None
         self._total_data = None
-
 
     def from_file(self, filename, normalize=True):
         """
@@ -55,17 +52,13 @@ class SphinxVolumetricData(VolumetricData):
             normalize (boolean): Flag to normalize by the volume of the cell
         """
         try:
-            vol_data_list = self._read_vol_data(
-                filename=filename,
-                normalize=normalize
-            )
+            vol_data_list = self._read_vol_data(filename=filename, normalize=normalize)
         except (ValueError, IndexError, TypeError):
             raise ValueError("Unable to parse file: {}".format(filename))
         self._total_data = vol_data_list[0]
         if len(vol_data_list) == 2:
             self._total_data = vol_data_list[0] + vol_data_list[1]
             self._diff_data = vol_data_list[0] - vol_data_list[1]
-
 
     @staticmethod
     def _read_vol_data(filename, normalize=True):
@@ -83,8 +76,7 @@ class SphinxVolumetricData(VolumetricData):
 
         """
         if not os.path.getsize(filename) > 0:
-            s = Settings()
-            s.logger.warning("File:" + filename + "seems to be empty! ")
+            state.logger.warning("File:" + filename + "seems to be empty! ")
             return None, None
 
         with netcdf_file(filename, mmap=False) as f:
@@ -102,7 +94,7 @@ class SphinxVolumetricData(VolumetricData):
                 # spin-polarized
                 total_data_list = [
                     np.array(f.variables["mesh-0"][:]).reshape(dim) / volume,
-                    np.array(f.variables["mesh-1"][:]).reshape(dim) / volume
+                    np.array(f.variables["mesh-1"][:]).reshape(dim) / volume,
                 ]
             else:
                 raise ValueError(
@@ -111,16 +103,12 @@ class SphinxVolumetricData(VolumetricData):
                 )
 
         if len(total_data_list) == 0:
-            s = Settings()
-            s.logger.warning(
-                "File:"
-                + filename
-                + "seems to be corrupted/empty even after parsing!"
+            state.logger.warning(
+                "File:" + filename + "seems to be corrupted/empty even after parsing!"
             )
             return None
 
         return total_data_list
-
 
     @property
     def total_data(self):
@@ -129,11 +117,9 @@ class SphinxVolumetricData(VolumetricData):
         """
         return self._total_data
 
-
     @total_data.setter
     def total_data(self, val):
         self._total_data = val
-
 
     @property
     def diff_data(self):
@@ -141,7 +127,6 @@ class SphinxVolumetricData(VolumetricData):
         numpy.ndarray: Volumtric difference data (3D)
         """
         return self._diff_data
-
 
     @diff_data.setter
     def diff_data(self, val):
