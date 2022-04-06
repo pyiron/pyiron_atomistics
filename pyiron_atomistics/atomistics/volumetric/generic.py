@@ -393,12 +393,15 @@ class VolumetricData(object):
             grid_shape = np.array(cell_data[:, 0], dtype=int)
             # total_data = np.zeros(grid_shape)
             cell = np.array([val * grid_shape[i] for i, val in enumerate(cell_grid)])
-            pos_data = np.genfromtxt(lines[6 : n_atoms + 6])
-            if n_atoms == 1:
-                pos_data = np.array([pos_data])
-            atomic_numbers = np.array(pos_data[:, 0], dtype=int)
-            positions = pos_data[:, 2:]
-            self._atoms = Atoms(numbers=atomic_numbers, positions=positions, cell=cell)
+            if n_atoms > 0:
+                pos_data = np.genfromtxt(lines[6 : n_atoms + 6])
+                if n_atoms == 1:
+                    pos_data = np.array([pos_data])
+                atomic_numbers = np.array(pos_data[:, 0], dtype=int)
+                positions = pos_data[:, 2:]
+                self._atoms = Atoms(
+                    numbers=atomic_numbers, positions=positions, cell=cell
+                )
             end_int = n_atoms + 6 + int(np.prod(grid_shape) / 6)
             data = np.genfromtxt(lines[n_atoms + 6 : end_int])
             data_flatten = np.hstack(data)

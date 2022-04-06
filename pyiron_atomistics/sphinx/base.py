@@ -30,6 +30,7 @@ from pyiron_atomistics.sphinx.potential import (
 )
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
+from pyiron_base.interfaces.has_groups import HasGroups
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -489,8 +490,6 @@ class SphinxBase(GenericDFTJob):
             self.input.sphinx.main[optimizer]["maxStepLength"] = str(
                 0.1 / BOHR_TO_ANGSTROM
             )
-            if "dE" in self.input and "dF" in self.input:
-                self.input["dE"] = 1e-3
             if "dE" in self.input:
                 self.input.sphinx.main[optimizer]["dEnergy"] = str(
                     self.input["dE"] / HARTREE_TO_EV
@@ -672,8 +671,8 @@ class SphinxBase(GenericDFTJob):
         retain_electrostatic_potential=False,
         ionic_energy=None,
         ionic_forces=None,
-        ionic_energy_tolerance=0.0,
-        ionic_force_tolerance=1.0e-2,
+        ionic_energy_tolerance=None,
+        ionic_force_tolerance=None,
         volume_only=False,
     ):
         """
@@ -826,9 +825,13 @@ class SphinxBase(GenericDFTJob):
             with warnings.catch_warnings(record=True) as w:
                 try:
                     self.collect_output()
-                except AssertionError:
-                    from_charge_density = False
-                    from_wave_functions = False
+                except AssertionError as orig_error:
+                    if from_charge_density or from_wave_functions:
+                        raise AssertionError(
+                            orig_error.message
+                            + "\nCowardly refusing to use density or wavefunctions for restart.\n"
+                            + "Solution: set from_charge_density and from_wave_functions to False."
+                        )
                 if len(w) > 0:
                     self.status.not_converged = True
         new_job = super(SphinxBase, self).restart(job_name=job_name, job_type=job_type)
@@ -1059,6 +1062,8 @@ class SphinxBase(GenericDFTJob):
             electronic_energy is None or electronic_energy > 0
         ), "electronic_energy must be a positive float"
         if ionic_energy_tolerance is not None or ionic_force_tolerance is not None:
+            # self.input["dE"] = ionic_energy_tolerance
+            # self.input["dF"] = ionic_force_tolerance
             print("Setting calc_minimize")
             self.calc_minimize(
                 ionic_energy_tolerance=ionic_energy_tolerance,
@@ -2026,7 +2031,7 @@ class _SphinxLogParser:
         return (
             np.array([ll.split()[1:4] for ll in log_extract]).astype(float)
             / BOHR_TO_ANGSTROM
-        )
+        )[:3]
 
     def get_kpoints_cartesian(self):
         return np.einsum("ni,ij->nj", self.k_points, self._rec_cell)
@@ -2274,7 +2279,9 @@ class Output:
         """
         file_name = posixpath.join(cwd, file_name)
         if os.path.isfile(file_name):
-            self.generic.dft.energy_free = np.loadtxt(file_name)[:, 1] * HARTREE_TO_EV
+            self.generic.dft.energy_free = (
+                np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
+            )
 
     def collect_sphinx_log(
         self, file_name="sphinx.log", cwd=None, check_consistency=True

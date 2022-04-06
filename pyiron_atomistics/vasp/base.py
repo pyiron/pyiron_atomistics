@@ -1600,17 +1600,9 @@ class VaspBase(GenericDFTJob):
             new_ham (vasp.vasp.Vasp instance): New job
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
+
         if new_ham.__name__ == self.__name__:
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "CHGCAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A CHGCAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
+            new_ham.restart_file_list.append(self.get_workdir_file("CHGCAR"))
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
                 self_consistent_calc=self_consistent_calc,
@@ -1659,28 +1651,9 @@ class VaspBase(GenericDFTJob):
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "CHGCAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A CHGCAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "WAVECAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A WAVECAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
+            new_ham.restart_file_list.append(self.get_workdir_file("CHGCAR"))
+            new_ham.restart_file_list.append(self.get_workdir_file("WAVECAR"))
             new_ham.input.incar["ISTART"] = istart
-
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
                 self_consistent_calc=self_consistent_calc,
@@ -1735,16 +1708,7 @@ class VaspBase(GenericDFTJob):
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
-            try:
-                new_ham.restart_file_list.append(
-                    posixpath.join(self.working_directory, "WAVECAR")
-                )
-            except IOError:
-                self.logger.warning(
-                    msg="A WAVECAR from job: {} is not generated and therefore it can't be read.".format(
-                        self.job_name
-                    )
-                )
+            new_ham.restart_file_list.append(self.get_workdir_file("WAVECAR"))
             new_ham.input.incar["ISTART"] = istart
         return new_ham
 
@@ -1892,7 +1856,10 @@ class Input:
             directory (str): The working directory for the VASP run
         """
         self.incar.write_file(file_name="INCAR", cwd=directory)
-        self.kpoints.write_file(file_name="KPOINTS", cwd=directory)
+        if "KSPACING" in self.incar.keys():
+            warnings.warn("'KSPACING' found in INCAR, no KPOINTS file written")
+        else:
+            self.kpoints.write_file(file_name="KPOINTS", cwd=directory)
         self.potcar.potcar_set_structure(structure, modified_elements)
         self.potcar.write_file(file_name="POTCAR", cwd=directory)
         # Write the species info in the POSCAR file only if there are no user defined species
@@ -2075,9 +2042,7 @@ class Output:
         if vasprun_working:
             log_dict["forces"] = self.vp_new.vasprun_dict["forces"]
             log_dict["cells"] = self.vp_new.vasprun_dict["cells"]
-            log_dict["volume"] = [
-                np.linalg.det(cell) for cell in self.vp_new.vasprun_dict["cells"]
-            ]
+            log_dict["volume"] = np.linalg.det(self.vp_new.vasprun_dict["cells"])
             # log_dict["total_energies"] = self.vp_new.vasprun_dict["total_energies"]
             log_dict["energy_tot"] = self.vp_new.vasprun_dict["total_energies"]
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():

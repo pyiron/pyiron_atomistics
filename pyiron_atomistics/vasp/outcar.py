@@ -465,21 +465,27 @@ class Outcar(object):
         Returns:
             list: A list of energie for every electronic step at every ionic step
         """
-        ionic_trigger = "FREE ENERGIE OF THE ION-ELECTRON SYSTEM (eV)"
-        electronic_trigger = "free energy    TOTEN  ="
-        scf_energies = list()
-        lines = _get_lines_from_file(filename=filename, lines=lines)
-        istep_energies = list()
-        for i, line in enumerate(lines):
-            line = line.strip()
-            if ionic_trigger in line:
-                scf_energies.append(np.array(istep_energies))
-                istep_energies = list()
-            if electronic_trigger in line:
-                line = _clean_line(line)
-                ene = float(line.split()[-2])
-                istep_energies.append(ene)
-        return scf_energies
+        ind_ionic_lst, lines = _get_trigger(
+            trigger="FREE ENERGIE OF THE ION-ELECTRON SYSTEM (eV)",
+            filename=filename,
+            lines=lines,
+            return_lines=True,
+        )
+        ind_elec_lst = _get_trigger(
+            trigger="free energy    TOTEN  =",
+            filename=None,
+            lines=lines,
+            return_lines=False,
+        )
+        ind_combo_lst = _split_indices(
+            ind_ionic_lst=ind_ionic_lst, ind_elec_lst=ind_elec_lst
+        )
+        return [
+            np.array(
+                [float(_clean_line(lines[ind].strip()).split()[-2]) for ind in ind_lst]
+            )
+            for ind_lst in ind_combo_lst
+        ]
 
     @staticmethod
     def get_magnetization(filename="OUTCAR", lines=None):
@@ -990,6 +996,26 @@ def _get_trigger(trigger, filename=None, lines=None, return_lines=True):
         return trigger_indicies, lines
     else:
         return trigger_indicies
+
+
+def _split_indices(ind_ionic_lst, ind_elec_lst):
+    """
+    Combine ionic pattern matches and electronic pattern matches
+
+    Args:
+        ind_ionic_lst (list): indices of lines which matched the iconic pattern
+        ind_elec_lst (list): indices of lines which matched the electronic pattern
+
+    Returns:
+        list: nested list of electronic pattern matches within an ionic pattern match
+    """
+    ind_elec_array = np.array(ind_elec_lst)
+    return [
+        ind_elec_array[(ind_elec_array < j2) & (j1 < ind_elec_array)]
+        if j1 < j2
+        else ind_elec_array[(ind_elec_array < j2)]
+        for j1, j2 in zip(np.roll(ind_ionic_lst, 1), ind_ionic_lst)
+    ]
 
 
 def _get_lines_from_file(filename, lines=None):
