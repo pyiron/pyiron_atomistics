@@ -127,26 +127,28 @@ class CalphyBase(GenericJob):
         prism = UnfoldingPrism(self.input.structure.cell)
         lammps_structure = self.input.structure.copy()
         lammps_structure.set_cell(prism.A)
-        lammps_structure.positions = np.matmul(structure.positions, prism.R)
+        lammps_structure.positions = np.matmul(self.input.structure.positions, prism.R)
         return lammps_structure
     
     def write_structure(self, structure, file_name, working_directory):
         lmp_structure = LammpsStructure()
         lmp_structure.potential = self.input.potential
         lmp_structure.el_eam_lst = set(structure.get_chemical_symbols())
-        lmp_structure.structure = self.structure_to_lammps(structure)
+        lmp_structure.structure = self.structure_to_lammps()
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
 
     def determine_mode(self):
         if len(self.potential) == 2:
             self.input.mode = "alchemy"
             self.input.reference_phase = "alchemy"
-        elif len(self.input.pressure) == 2:
-            self.input.mode = "pscale"
-        elif len(self.input.temperature) == 1:
+        elif isinstance(self.input.pressure, list): 
+            if len(self.input.pressure) == 2:
+                self.input.mode = "pscale"
+        elif isinstance(self.input.temperature, list):
+            if len(self.input.temperature) == 2:
+                self.input.mode = "ts"
+        else:
             self.input.mode = "fe"
-        elif len(self.input.temperature) == 2:
-            self.input.mode = "ts"
         #if mode was not set, raise Error
         if self.input.mode is None:
             raise RuntimeError("Could not determine the mode")
@@ -156,18 +158,19 @@ class CalphyBase(GenericJob):
         calc = Calculation()
         for key in inputdict.keys():
             if key not in ["md", "tolerance"]:
-                settattr(calc, key, self.input[key])
+                setattr(calc, key, self.input[key])
         for key in inputdict["md"].keys():
-            settattr(calc, key, self.input["md"][key])
+            setattr(calc, key, self.input["md"][key])
         for key in inputdict["tolerance"].keys():
-            settattr(calc, key, self.input["tolerance"][key])
+            setattr(calc, key, self.input["tolerance"][key])
 
         file_name = "conf.data"
         self.write_structure(self.structure, file_name, self.working_directory)
-        calc.lattice = os.path.join(working_directory, "conf.data")
+        calc.lattice = os.path.join(self.working_directory, "conf.data")
 
         self.input.potential.copy_pot_files(self.working_directory)
         pair_style, pair_coeff = self.input.potential.prepare_pair_styles()
+        calc._fix_potential_path = False
         calc.pair_style = pair_style
         calc.pair_coeff = pair_coeff
 
@@ -251,7 +254,7 @@ class CalphyBase(GenericJob):
         self.input.n_switching_steps = n_switching_steps
         self.input.n_print_steps = n_print_steps
         self.input.n_iterations = n_iterations
-        self.input.determine_mode()
+        self.determine_mode()
     
     def run_static(self):
         self.status.running = True
@@ -324,12 +327,12 @@ class CalphyBase(GenericJob):
         f_ediff = []
         b_ediff = []
 
-        for i in range(1, self.input.n_cycles+1):            
+        for i in range(1, self.input.n_iterations+1):            
             fwdfilename = os.path.join(self.working_directory, "forward_%d.dat"%i)
             bkdfilename = os.path.join(self.working_directory, "backward_%d.dat"%i)
-            nelements = self.input.options["nelements"]
+            nelements = self.calc.n_elements
 
-            if self.input.reference_state == "solid":
+            if self.input.reference_phase == "solid":
                 fdui = np.loadtxt(fwdfilename, unpack=True, comments="#", usecols=(0,))
                 bdui = np.loadtxt(bkdfilename, unpack=True, comments="#", usecols=(0,))
 
