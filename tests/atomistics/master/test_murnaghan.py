@@ -7,7 +7,7 @@ import matplotlib
 import matplotlib.pylab as plt
 import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
-from pyiron_base._tests import TestWithProject
+from pyiron_base._tests import TestWithCleanProject
 
 
 def convergence_goal(self, **qwargs):
@@ -26,8 +26,7 @@ def convergence_goal(self, **qwargs):
     return job_next
 
 
-
-class TestMurnaghan(TestWithProject):
+class TestMurnaghan(TestWithCleanProject):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
