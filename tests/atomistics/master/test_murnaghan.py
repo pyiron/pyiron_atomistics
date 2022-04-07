@@ -26,6 +26,7 @@ def convergence_goal(self, **qwargs):
     return job_next
 
 
+
 class TestMurnaghan(TestWithProject):
     @classmethod
     def setUpClass(cls):
@@ -34,21 +35,32 @@ class TestMurnaghan(TestWithProject):
             element="Fe", bravais_basis="fcc", lattice_constant=3.5
         )
 
-    def test_interactive_run(self):
+    def setup_hessian_murn_job(self, num_points=5):
         job = self.project.create_job('HessianJob', 'hessian')
         job.set_reference_structure(self.basis)
         job.set_elastic_moduli(1, 1)
         job.set_force_constants(1)
         job.server.run_mode.interactive = True
         murn = job.create_job('Murnaghan', 'murn_hessian')
-        murn.input['num_points'] = 5
+        murn.input['num_points'] = num_points
         murn.input['vol_range'] = 1e-5
+        return murn
+
+    def test_interactive_run(self):
+        murn = self.setup_hessian_murn_job(num_points=5)
         murn.run()
         self.assertAlmostEqual(self.basis.get_volume(), murn['output/equilibrium_volume'])
 
         optimal = murn.get_structure()
         self.assertAlmostEqual(optimal.get_volume(), murn['output/equilibrium_volume'],
                                msg="Output of get_structure should have equilibrium volume")
+        self.assertTrue(murn.convergence_check())
+
+    def test_non_converged_run(self):
+        # Use only 2 points which means there would not be any convergence
+        murn = self.setup_hessian_murn_job(num_points=2)
+        murn.run()
+        self.assertTrue(murn.status.not_converged)
 
     def test_run(self):
         job = self.project.create_job(
