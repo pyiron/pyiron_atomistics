@@ -59,6 +59,7 @@ class TestMurnaghan(TestWithCleanProject):
         # Use only 2 points which means there would not be any convergence
         murn = self.setup_hessian_murn_job(num_points=2)
         murn.run()
+        self.assertFalse(murn.convergence_check())
         self.assertTrue(murn.status.not_converged)
 
     def test_run(self):
