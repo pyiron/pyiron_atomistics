@@ -637,6 +637,21 @@ class Murnaghan(AtomisticParallelMaster):
         self._debye_T = None
         self._job_generator = MurnaghanJobGenerator(self)
 
+    def convergence_check(self) -> bool:
+        """
+        Checks if the Murnaghan job has cnverged or not
+
+        Note: Currently, a 3rd order polynomial is fit to check if there is any convergence
+
+        Returns:
+            bool: True if the calculation is converged
+        """
+        if super().convergence_check():
+            fit_dict = self.fit_module.fit_polynomial(fit_order=3)
+            return fit_dict is not None
+        else:
+            return False
+
     @property
     def fit(self):
         return self.debye_model
