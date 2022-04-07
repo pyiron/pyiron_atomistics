@@ -288,39 +288,33 @@ class CalphyBase(GenericJob):
         self.run()
     
 
-    def collect_general_output(self):
-        
+    def collect_general_output(self):        
         if self._data is not None:
             if "spring_constant" in self._data["average"].keys():
                 self.output.spring_constant = self._data["average"]["spring_constant"]
-            with self.project_hdf5.open("output") as hdf5_out:
-                #hdf5_out["spring_constant"] = self._data["average"]["spring_constant"]
-                hdf5_out["energy_free"] = self._data['results']['free_energy']
-                hdf5_out["energy_free_error"] = self._data['results']['error']
-                hdf5_out["energy_free_reference"] = self._data['results']['reference_system']
-                hdf5_out["energy_work"] = self._data['results']['work']
-                hdf5_out["temperature"] = self.input.temperature
+            self.output.energy_free = self._data['results']['free_energy']
+            self.output.energy_free_error = self._data['results']['error']
+            self.output.energy_free_reference = self._data['results']['reference_system']
+            self.output.energy_work = self._data['results']['work']
+            self.output.temperature = self.input.temperature
+            f_ediff, b_ediff, flambda, blambda = self.collect_ediff()
+            self.output.forward_energy_diff = list(f_ediff)
+            self.output.backward_energy_diff = list(b_ediff)
+            self.output.forward_lambda = list(flambda)
+            self.output.backward_lambda = list(blambda)
+            if self.input.mode == "ts":
+                datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
+                t, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0,1,2))                
+                self.output.energy_free = np.array(fe)
+                self.output.energy_free_error = np.array(ferr)
+                self.output.temperature = np.array(t)
 
-                f_ediff, b_ediff, flambda, blambda = self.collect_ediff()
-
-                hdf5_out["forward/energy_diff"] = f_ediff
-                hdf5_out["backward/energy_diff"] = b_ediff
-                hdf5_out["forward/lambda"] = flambda
-                hdf5_out["backward/lambda"] = blambda
-
-                if self.input.mode == "ts":
-                        datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
-                        t, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0,1,2))                
-                        hdf5_out["energy_free"] = fe
-                        hdf5_out["energy_free_error"] = ferr
-                        hdf5_out["temperature"] = t
-                
-                elif self.input.mode == "pscale":
-                        datfile = os.path.join(self.working_directory, "pressure_sweep.dat")
-                        p, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0,1,2))                
-                        hdf5_out["energy_free"] = fe
-                        hdf5_out["energy_free_error"] = ferr
-                        hdf5_out["pressure"] = p
+            elif self.input.mode == "pscale":
+                datfile = os.path.join(self.working_directory, "pressure_sweep.dat")
+                p, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0,1,2))                
+                self.output.energy_free = np.array(fe)
+                self.output.energy_free_error = np.array(ferr)
+                self.output.pressure = np.array(p)
 
     def collect_ediff(self):
 
