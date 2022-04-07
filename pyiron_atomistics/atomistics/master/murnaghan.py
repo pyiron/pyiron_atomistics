@@ -647,8 +647,8 @@ class Murnaghan(AtomisticParallelMaster):
             bool: True if the calculation is converged
         """
         if super().convergence_check():
-            fit_dict = self.fit_module.fit_polynomial(fit_order=3)
-            return fit_dict is not None
+            e_vol = self["output/equilibrium_volume"]
+            return e_vol is not None
         else:
             return False
 
