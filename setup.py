@@ -39,7 +39,7 @@ setup(
         'numpy==1.22.3',
         'pandas==1.4.2',
         'phonopy==2.13.1',
-        'pint==0.18',
+        'pint==0.19.1',
         'pyiron_base==0.5.10',
         'pymatgen==2022.3.29',
         'scipy==1.8.0',
