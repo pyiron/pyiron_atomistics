@@ -92,7 +92,7 @@ class SphinxBase(GenericDFTJob):
 
         # keeps both the generic parameters as well as the sphinx specific
         # input groups
-        self.input = Group(table_name="parameters")
+        self.input = Group(table_name="parameters", lazy=True)
         self.load_default_input()
         self._save_memory = False
         self._output_parser = Output(self)
