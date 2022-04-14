@@ -7,7 +7,6 @@ from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_base import Project
 import unittest
 from pyiron_base._tests import TestWithCleanProject
-from .test_murnaghan_non_modal import run_modal_template
 
 
 def convergence_goal(self, **qwargs):
@@ -50,11 +49,20 @@ class TestMurnaghan(TestWithCleanProject):
         project.remove(enable=True, enforce=True)
 
     def test_run(self):
-        murn, ham = run_modal_template(self.project, self.basis, is_non_modal=False)
+        # Even though the test is completed successful
+        ham = self.project.create_job(
+            self.project.job_type.AtomisticExampleJob, "job_test"
+        )
+        ham.structure = self.basis
+        ham.server.run_mode.non_modal = True
+        murn = self.project.create_job("Murnaghan", "murnaghan")
+        murn.ref_job = ham
+        murn.input["num_points"] = 3
+        murn.server.run_mode.non_modal = True
         murn.run()
         self.assertFalse(ham.status.finished)
         self.project.wait_for_job(murn, interval_in_s=5, max_iterations=50)
-        self.assertTrue(murn.status.not_converged)
+        self.assertTrue(murn.not_converged)
 
 
 if __name__ == "__main__":
