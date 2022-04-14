@@ -13,7 +13,7 @@ def run_modal_template(project, basis, is_non_modal=True):
     ham = project.create_job(project.job_type.AtomisticExampleJob, "job_test")
     ham.structure = basis
     if is_non_modal:
-        ham.run_mode.non_modal = True
+        ham.server.run_mode.non_modal = True
     else:
         ham.server.run_mode.modal = True
     murn = project.create_job("Murnaghan", "murnaghan")
