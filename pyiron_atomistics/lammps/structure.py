@@ -587,8 +587,7 @@ class LammpsStructure(GenericParameters):
         atoms = "Atoms\n\n"
 
         coords = self.rotate_positions(self._structure)
-
-        el_charge_lst = self._structure.charge
+        el_charge_lst = self._structure.get_initial_charges()
         el_lst = self._structure.get_chemical_symbols()
         el_alphabet_dict = {}
         for ind, el in enumerate(self._structure.get_species_symbols()):
