@@ -12,16 +12,12 @@ from pyiron_base._tests import TestWithCleanProject
 def run_modal_template(project, basis, is_non_modal=True):
     ham = project.create_job(project.job_type.AtomisticExampleJob, "job_test")
     ham.structure = basis
-    ham.server.run_mode.non_modal = is_non_modal
-    job_ser = project.create_job(project.job_type.SerialMaster, "murn_iter")
-    job_ser.append(ham)
     if is_non_modal:
-        job_ser.server.run_mode.non_modal = True
+        ham.run_mode.non_modal = True
     else:
-        job_ser.server.run_mode.modal = True
-    job_ser.set_goal(convergence_goal, eps=0.4)
+        ham.server.run_mode.modal = True
     murn = project.create_job("Murnaghan", "murnaghan")
-    murn.ref_job = job_ser
+    murn.ref_job = ham
     murn.input["num_points"] = 3
     if is_non_modal:
         murn.server.run_mode.non_modal = True
