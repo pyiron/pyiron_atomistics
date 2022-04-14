@@ -92,6 +92,12 @@ class LammpsBase(AtomisticGenericJob):
         """
         return self.input.bond_dict
 
+    def clear_bonds(self) -> None:
+        """
+        Clears all pre-defined bonds
+        """
+        self.input.bond_dict = {}
+
     def define_bonds(
         self,
         species,
