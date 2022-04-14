@@ -64,6 +64,7 @@ class TestMurnaghan(TestWithCleanProject):
 
     def test_run(self):
         murn, ham = run_modal_template(self.project, self.basis, is_non_modal=True)
+        murn.run()
         self.assertFalse(ham.status.finished)
         self.project.wait_for_job(murn, interval_in_s=5, max_iterations=50)
         self.assertTrue(murn.status.not_converged)
