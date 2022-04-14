@@ -76,10 +76,8 @@ class TestMurnaghan(TestWithCleanProject):
         murn.ref_job = job_ser
         murn.input['num_points'] = 3
         murn.run()
-        self.assertTrue(murn.status.finished)
-
-        murn.remove()
-        job_ser.remove()
+        # This is not converged
+        self.assertTrue(murn.status.not_converged)
 
     def test_fitting_routines(self):
         ref_job = self.project.create.job.Lammps('ref')
