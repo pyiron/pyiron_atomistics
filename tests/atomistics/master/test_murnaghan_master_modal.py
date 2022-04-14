@@ -7,7 +7,7 @@ from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_base import Project
 import unittest
 from pyiron_base._tests import TestWithCleanProject
-from test_murnaghan_non_modal import run_modal_template
+from .test_murnaghan_non_modal import run_modal_template
 
 
 def convergence_goal(self, **qwargs):

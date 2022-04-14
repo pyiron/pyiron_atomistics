@@ -15,12 +15,18 @@ def run_modal_template(project, basis, is_non_modal=True):
     ham.server.run_mode.non_modal = is_non_modal
     job_ser = project.create_job(project.job_type.SerialMaster, "murn_iter")
     job_ser.append(ham)
-    job_ser.server.run_mode.non_modal = is_non_modal
+    if is_non_modal:
+        job_ser.server.run_mode.non_modal = True
+    else:
+        job_ser.server.run_mode.modal = True
     job_ser.set_goal(convergence_goal, eps=0.4)
     murn = project.create_job("Murnaghan", "murnaghan")
     murn.ref_job = job_ser
     murn.input["num_points"] = 3
-    murn.server.run_mode.non_modal = False
+    if is_non_modal:
+        murn.server.run_mode.non_modal = True
+    else:
+        murn.run_mode.modal = True
     return murn, ham
 
 
