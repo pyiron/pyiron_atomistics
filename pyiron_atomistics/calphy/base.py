@@ -1,4 +1,5 @@
 from pyiron_base import DataContainer
+from pyiron_base.interfaces.has_hdf import HasHDF
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile, PotentialAvailable
 from pyiron_base import GenericJob
@@ -11,7 +12,8 @@ import copy
 import os
 import numpy as np
 
-class Potential:
+
+class Potential(HasHDF):
     def __init__(self):
         pass
     
@@ -27,24 +29,24 @@ class Potential:
     def get_potentials(self):
         return [potential.df for potential in self.potentials]
     
-    def to_hdf(self, hdf=None, group_name=None):
-        with hdf.open("potentials") as mlevel:
-            mlevel["count"] = len(self.potentials)
-            for count, potential in enumerate(self.potentials):
-                with mlevel.open("p%d"%count) as hdf5_out:
-                    potential.to_hdf(hdf5_out)
+    def _to_hdf(self, hdf):
+        hdf["count"] = len(self.potentials)
+        for count, potential in enumerate(self.potentials):
+            #potential.to_hdf(hdf["p%d"%count])
+            potential.to_hdf(hdf, group_name="p%d"%count)
 
-    def from_hdf(self, hdf=None, group_name=None):
+    def _from_hdf(self, hdf, version=None):
         plist = []
-        with hdf.open("potentials") as mlevel:
-            count = mlevel["count"]
-            for x in range(count):
-                with mlevel.open("p%d"%count) as hdf5_out:
-                    potential = LammpsPotential()
-                    potential.from_hdf(hdf5_out)
-                    plist.append(potential)
+        count = hdf["count"]
+        for x in range(count):
+            potential = LammpsPotential()
+            potential.from_hdf(hdf, group_name="p%d"%count)
+            plist.append(potential)
         self.potentials = plist
-    
+
+    def _get_hdf_group_name(self):
+        return "potentials"
+        
     def copy_pot_files(self, working_directory):
         for potential in self.potentials:
             potential.copy_pot_files(working_directory)
@@ -87,7 +89,7 @@ class CalphyBase(GenericJob):
     def __init__(self, project, job_name):
         super(CalphyBase, self).__init__(project, job_name)
         self.__name__ = "CalphyJob"
-        self.input = DataContainer(inputdict, table_name="output")
+        self.input = DataContainer(inputdict, table_name="inputdata")
         self.input.potential = Potential()
         self.input.structure = None
         self.output = DataContainer(table_name="output")        
@@ -160,9 +162,9 @@ class CalphyBase(GenericJob):
             if key not in ["md", "tolerance"]:
                 setattr(calc, key, self.input[key])
         for key in inputdict["md"].keys():
-            setattr(calc, key, self.input["md"][key])
+            setattr(calc.md, key, self.input["md"][key])
         for key in inputdict["tolerance"].keys():
-            setattr(calc, key, self.input["tolerance"][key])
+            setattr(calc.tolerance, key, self.input["tolerance"][key])
 
         file_name = "conf.data"
         self.write_structure(self.structure, file_name, self.working_directory)
@@ -358,6 +360,15 @@ class CalphyBase(GenericJob):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self.input.to_hdf(self.project_hdf5)
         self.output.to_hdf(self.project_hdf5)
+
+        #self.structure.to_hdf(hdf)
+        #with self.project_hdf5.open("input") as hdf5_in:
+        #with self.project_hdf5.open("output") as hdf5_out:
+
+    def from_hdf(self, hdf=None, group_name=None):
+        super().from_hdf(hdf=hdf, group_name=group_name)
+        self.input.from_hdf(self.project_hdf5)
+        self.output.from_hdf(self.project_hdf5)
 
         #self.structure.to_hdf(hdf)
         #with self.project_hdf5.open("input") as hdf5_in:
