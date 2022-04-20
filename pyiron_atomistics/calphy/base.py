@@ -90,6 +90,14 @@ class CalphyBase(GenericJob):
             pair_coeff.append(" ".join(self._potential_final.df['Config'].to_list()[0][1].strip().split()[1:]))
         return pair_style, pair_coeff
 
+    def _potential_from_hdf(self):
+        filenames = []
+        if self.input.potential_initial_name is not None:
+            filenames.append(self.input.potential_initial_name)
+        if self.input.potential_final_name is not None:
+            filenames.append(self.input.potential_final_name)
+        self.set_potentials(filenames)
+            
     #we wrap some properties for easy access
     @property
     def potential(self):
@@ -364,6 +372,7 @@ class CalphyBase(GenericJob):
         super().from_hdf(hdf=hdf, group_name=group_name)
         self.input.from_hdf(self.project_hdf5)
         self.output.from_hdf(self.project_hdf5)
+        self._potential_from_hdf()
 
         #self.structure.to_hdf(hdf)
         #with self.project_hdf5.open("input") as hdf5_in:
