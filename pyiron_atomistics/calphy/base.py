@@ -1,12 +1,14 @@
 from pyiron_base import DataContainer
-from pyiron_base.interfaces.has_hdf import HasHDF
-from pyiron_atomistics.lammps.potential import LammpsPotential
-from pyiron_atomistics.lammps.potential import LammpsPotentialFile, PotentialAvailable
-from pyiron_base import GenericJob
+from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
+from pyiron_base import GenericJob, ImportAlarm
 from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
 
-from calphy import Calculation, Solid, Liquid, Alchemy
-from calphy.routines import routine_fe, routine_ts, routine_alchemy, routine_pscale
+with ImportAlarm(
+        'Calphy functionality requires the `calphy` module (and its dependencies) specified as extra'
+        'requirements. Please install it and try again.'
+) as calphy_alarm:    
+    from calphy import Calculation, Solid, Liquid, Alchemy
+    from calphy.routines import routine_fe, routine_ts, routine_alchemy, routine_pscale
 
 import copy
 import os
