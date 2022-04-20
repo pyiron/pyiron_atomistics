@@ -1,3 +1,8 @@
+import copy
+import os
+import numpy as np
+from typing import Union
+
 from pyiron_base import DataContainer
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
 from pyiron_base import GenericJob, ImportAlarm
@@ -10,9 +15,16 @@ with ImportAlarm(
     from calphy import Calculation, Solid, Liquid, Alchemy
     from calphy.routines import routine_fe, routine_ts, routine_alchemy, routine_pscale
 
-import copy
-import os
-import numpy as np
+__author__ = "Sarath Menon"
+__copyright__ = (
+    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Computational Materials Design (CM) Department"
+)
+__version__ = "1.0"
+__maintainer__ = "Sarath Menon"
+__email__ = "s.menon@mpie.de"
+__status__ = "development"
+__date__ = "April 1, 2022"
 
 inputdict = {
     "mode": None,
@@ -41,6 +53,72 @@ inputdict = {
 
 
 class CalphyBase(GenericJob):
+    """
+    Class to set up and run calphy jobs for calculation of free energies using LAMMPS.
+    
+    An input structure (:attr:`structure`) and interatomic potential (:attr:`potential`) are necessary input options. The additional input options such as the temperature and pressure are specified in the :meth:`.calc_free_energy` method. Depending on the input parameters, a corresponding calculation mode is selected. Further input options can be accessed through :attr:`input.md` and :attr:`input.tolerance`. 
+    
+    An example which calculates the free energy of Cu using an interatomic potential:
+    
+    ```python
+    job.structure = pr.create.structure.ase.bulk('Cu', cubic=True).repeat(5)
+    job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
+    job.calc_free_energy(temperature=1100, pressure=0, reference_phase="solid")
+    job.run()
+    ```
+    
+    In order to calculate the free energy of the liquid phase, the `reference_phase` should be set to `liquid`. 
+    
+    The different modes can be selected as follows:
+    
+    For free energy at a given temperature and pressure:
+
+    ```python
+    job.calc_free_energy(temperature=1100, pressure=0, reference_phase="solid")
+    ```
+    
+    To obtain the free energy between a given temperature range (temperature scaling):
+    
+    ```python
+    job.calc_free_energy(temperature=[1100, 1400], pressure=0, reference_phase="solid")
+    ```
+    
+    For free energy between a given pressure range (pressure scaling)
+    
+    ```python
+    job.calc_free_energy(temperature=1000, pressure=[0, 100000], reference_phase="solid")
+    ```
+    
+    To obtain the free energy difference between two interatomic potentials (alchemy/upsampling)
+    
+    ```python
+    job.potential = ["2001--Mishin-Y--Cu-1--LAMMPS--ipr1", "1986--Foiles-S-M--Cu--LAMMPS--ipr1"]
+    job.calc_free_energy(temperature=1100, pressure=0, reference_phase="solid")
+    job.run()
+    ```
+    
+    The way `pressure` is specified determines how the barostat affects the system. For isotropic pressure control:
+    
+    ```python
+    job.calc_free_energy(temperature=[1100, 1400], pressure=0, reference_phase="solid")
+    ```
+    
+    For anisotropic pressure control:
+
+    ```python
+    job.calc_free_energy(temperature=[1100, 1400], pressure=[0, 0, 0], reference_phase="solid")
+    ```
+    
+    To constrain the lattice:
+
+    ```python
+    job.calc_free_energy(temperature=[1100, 1400], pressure=None, reference_phase="solid")
+    ```
+    
+    In addition the boolean option :attr:`input.npt` can be used to determine the MD ensemble. If True, temperature integration and alchemy/upsampling are carried out in the NPT ensemble. If False, the NVT ensemble is employed.
+    
+    After the calculation is over, the various output options can be accessed through `job.output`.
+    """
     def __init__(self, project, job_name):
         super(CalphyBase, self).__init__(project, job_name)
         self.__name__ = "CalphyJob"
@@ -53,7 +131,16 @@ class CalphyBase(GenericJob):
         self.output = DataContainer(table_name="output")        
         self._data = None
 
-    def set_potentials(self, potential_filenames):
+    def set_potentials(self, potential_filenames: Union[list, str]):
+        """
+        Set the interatomic potential from a given name
+        
+        Args:
+            potential_filenames (list, str): list of filenames
+            
+        Returns:
+            None
+        """
         if not isinstance(potential_filenames, list):
             potential_filenames = [potential_filenames]            
         if len(potential_filenames) == 1:
@@ -69,7 +156,16 @@ class CalphyBase(GenericJob):
         if len(potential_filenames) > 2:
             raise ValueError("Maximum two potentials can be provided")
             
-    def get_potentials(self):
+    def get_potentials(self) -> list:
+        """
+        Return the interatomic potentials
+        
+        Args:
+            None
+            
+        Returns:
+            list: list of interatomic potentials
+        """
         if self._potential_final is None:
             return [self._potential_initial.df]
         else:
