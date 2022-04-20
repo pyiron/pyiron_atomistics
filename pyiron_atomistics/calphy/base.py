@@ -12,54 +12,6 @@ import copy
 import os
 import numpy as np
 
-
-class Potential(HasHDF):
-    def __init__(self):
-        pass
-    
-    def set_potentials(self, potential_filenames):
-        if not isinstance(potential_filenames, list):
-            potential_filenames = [potential_filenames]
-        potential_db = LammpsPotentialFile()
-        potentials = [potential_db.find_by_name(potential_filename) for potential_filename in potential_filenames]
-        self.potentials = [LammpsPotential() for x in range(len(potential_filenames))]
-        for x in range(len(potential_filenames)):
-            self.potentials[x].df = potentials[x]
-    
-    def get_potentials(self):
-        return [potential.df for potential in self.potentials]
-    
-    def _to_hdf(self, hdf):
-        hdf["count"] = len(self.potentials)
-        for count, potential in enumerate(self.potentials):
-            #potential.to_hdf(hdf["p%d"%count])
-            potential.to_hdf(hdf, group_name="p%d"%count)
-
-    def _from_hdf(self, hdf, version=None):
-        plist = []
-        count = hdf["count"]
-        for x in range(count):
-            potential = LammpsPotential()
-            potential.from_hdf(hdf, group_name="p%d"%count)
-            plist.append(potential)
-        self.potentials = plist
-
-    def _get_hdf_group_name(self):
-        return "potentials"
-        
-    def copy_pot_files(self, working_directory):
-        for potential in self.potentials:
-            potential.copy_pot_files(working_directory)
-
-    def prepare_pair_styles(self):
-        pair_style = []
-        pair_coeff = []
-        
-        for potential in self.potentials:
-            pair_style.append(potential.df['Config'].to_list()[0][0].strip().split()[1:][0])
-            pair_coeff.append(" ".join(potential.df['Config'].to_list()[0][1].strip().split()[1:]))
-        return pair_style, pair_coeff
-
 inputdict = {
     "mode": None,
     "pressure": None,
@@ -85,24 +37,63 @@ inputdict = {
          'pressure': 0.5}
 }
 
+
 class CalphyBase(GenericJob):
     def __init__(self, project, job_name):
         super(CalphyBase, self).__init__(project, job_name)
         self.__name__ = "CalphyJob"
         self.input = DataContainer(inputdict, table_name="inputdata")
-        self.input.potential = Potential()
+        self.input.potential_initial = None
+        self.input.potential_final = None
         self.input.structure = None
         self.output = DataContainer(table_name="output")        
         self._data = None
-    
+
+    def set_potentials(self, potential_filenames):
+        if not isinstance(potential_filenames, list):
+            potential_filenames = [potential_filenames]            
+        if len(potential_filenames) == 1:
+            potential = LammpsPotentialFile().find_by_name(potential_filenames[0])
+            self.input.potential_initial = LammpsPotential()
+            self.input.potential_initial.df = potential
+        if len(potential_filenames) == 2:
+            potential = LammpsPotentialFile().find_by_name(potential_filenames[1])
+            self.input.potential_final = LammpsPotential()
+            self.input.potential_final.df = potential
+        if len(potential_filenames) > 2:
+            raise ValueError("Maximum two potentials can be provided")
+            
+    def get_potentials(self):
+        if self.input.potential_final is None:
+            return [self.input.potential_initial.df]
+        else:
+            return [self.input.potential_initial.df, self.input.potential_final.df]
+        
+    def copy_pot_files(self):
+        if self.input.potential_initial is not None:
+            self.input.potential_initial.copy_pot_files(self.working_directory)
+        if self.input.potential_final is not None:
+            self.input.potential_final.copy_pot_files(self.working_directory)
+
+    def prepare_pair_styles(self):
+        pair_style = []
+        pair_coeff = []
+        if self.input.potential_initial is not None:
+            pair_style.append(self.input.potential_initial.df['Config'].to_list()[0][0].strip().split()[1:][0])
+            pair_coeff.append(" ".join(self.input.potential_initial.df['Config'].to_list()[0][1].strip().split()[1:]))
+        if self.input.potential_final is not None:
+            pair_style.append(self.input.potential_final.df['Config'].to_list()[0][0].strip().split()[1:][0])
+            pair_coeff.append(" ".join(self.input.potential_final.df['Config'].to_list()[0][1].strip().split()[1:]))
+        return pair_style, pair_coeff
+
     #we wrap some properties for easy access
     @property
     def potential(self):
-        return self.input.potential.get_potentials()
+        return self.get_potentials()
     
     @potential.setter
     def potential(self, potential_filenames):
-        self.input.potential.set_potentials(potential_filenames)
+        self.set_potentials(potential_filenames)
     
     @property
     def structure(self):
@@ -134,7 +125,7 @@ class CalphyBase(GenericJob):
     
     def write_structure(self, structure, file_name, working_directory):
         lmp_structure = LammpsStructure()
-        lmp_structure.potential = self.input.potential
+        lmp_structure.potential = self.input.potential_initial
         lmp_structure.el_eam_lst = set(structure.get_chemical_symbols())
         lmp_structure.structure = self.structure_to_lammps()
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
@@ -170,8 +161,8 @@ class CalphyBase(GenericJob):
         self.write_structure(self.structure, file_name, self.working_directory)
         calc.lattice = os.path.join(self.working_directory, "conf.data")
 
-        self.input.potential.copy_pot_files(self.working_directory)
-        pair_style, pair_coeff = self.input.potential.prepare_pair_styles()
+        self.copy_pot_files()
+        pair_style, pair_coeff = self.prepare_pair_styles()
         calc._fix_potential_path = False
         calc.pair_style = pair_style
         calc.pair_coeff = pair_coeff
