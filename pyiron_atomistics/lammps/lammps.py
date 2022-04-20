@@ -18,10 +18,28 @@ __date__ = "Sep 1, 2017"
 
 class Lammps(LammpsInteractive):
     """
-    Class to setup and run and analyze LAMMPS simulations which is a derivative of
-    atomistics.job.generic.GenericJob. The functions in these modules are written in such the function names and
-    attributes are very generic (get_structure(), molecular_dynamics(), version) but the functions are written to handle
-    LAMMPS specific input/output.
+    Class to setup and run and analyze LAMMPS simulations.
+
+    Example:
+
+    ```
+    job = pr.create.job.Lammps(job_name='lmp_example')
+    job.structure = pr.create.structure.bulk('Fe', cubic=True)
+    job.run()
+    ```
+
+    How to set potential: Look up potentials via `job.view_potentials()` (detailed data frame)
+    or via `job.list_potentials()` (potential names). Assign the potential e.g. via:
+
+    ```
+    job.potential = job.list_potentials()[0]
+    ```
+
+    Lammps has 3 modes: `static`, `md` and `minimize`. Set a mode e.g. via:
+
+    ```
+    job.calc_minimize()
+    ```
 
     Args:
         project (pyiron_atomistics.project.Project instance):  Specifies the project path among other attributes
