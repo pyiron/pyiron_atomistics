@@ -43,8 +43,10 @@ class CalphyBase(GenericJob):
         super(CalphyBase, self).__init__(project, job_name)
         self.__name__ = "CalphyJob"
         self.input = DataContainer(inputdict, table_name="inputdata")
-        self.input.potential_initial = None
-        self.input.potential_final = None
+        self._potential_initial = None
+        self._potential_final = None
+        self.input.potential_initial_name = None
+        self.input.potential_final_name = None
         self.input.structure = None
         self.output = DataContainer(table_name="output")        
         self._data = None
@@ -54,36 +56,38 @@ class CalphyBase(GenericJob):
             potential_filenames = [potential_filenames]            
         if len(potential_filenames) == 1:
             potential = LammpsPotentialFile().find_by_name(potential_filenames[0])
-            self.input.potential_initial = LammpsPotential()
-            self.input.potential_initial.df = potential
+            self._potential_initial = LammpsPotential()
+            self._potential_initial.df = potential
+            self.input.potential_initial_name = potential_filenames[0]
         if len(potential_filenames) == 2:
             potential = LammpsPotentialFile().find_by_name(potential_filenames[1])
-            self.input.potential_final = LammpsPotential()
-            self.input.potential_final.df = potential
+            self._potential_final = LammpsPotential()
+            self._potential_final.df = potential
+            self.input.potential_final_name = potential_filenames[0]
         if len(potential_filenames) > 2:
             raise ValueError("Maximum two potentials can be provided")
             
     def get_potentials(self):
-        if self.input.potential_final is None:
-            return [self.input.potential_initial.df]
+        if self._potential_final is None:
+            return [self._potential_initial.df]
         else:
-            return [self.input.potential_initial.df, self.input.potential_final.df]
+            return [self._potential_initial.df, self._potential_final.df]
         
     def copy_pot_files(self):
-        if self.input.potential_initial is not None:
-            self.input.potential_initial.copy_pot_files(self.working_directory)
-        if self.input.potential_final is not None:
-            self.input.potential_final.copy_pot_files(self.working_directory)
+        if self._potential_initial is not None:
+            self._potential_initial.copy_pot_files(self.working_directory)
+        if self._potential_final is not None:
+            self._potential_final.copy_pot_files(self.working_directory)
 
     def prepare_pair_styles(self):
         pair_style = []
         pair_coeff = []
-        if self.input.potential_initial is not None:
-            pair_style.append(self.input.potential_initial.df['Config'].to_list()[0][0].strip().split()[1:][0])
-            pair_coeff.append(" ".join(self.input.potential_initial.df['Config'].to_list()[0][1].strip().split()[1:]))
-        if self.input.potential_final is not None:
-            pair_style.append(self.input.potential_final.df['Config'].to_list()[0][0].strip().split()[1:][0])
-            pair_coeff.append(" ".join(self.input.potential_final.df['Config'].to_list()[0][1].strip().split()[1:]))
+        if self._potential_initial is not None:
+            pair_style.append(self._potential_initial.df['Config'].to_list()[0][0].strip().split()[1:][0])
+            pair_coeff.append(" ".join(self._potential_initial.df['Config'].to_list()[0][1].strip().split()[1:]))
+        if self._potential_final is not None:
+            pair_style.append(self._potential_final.df['Config'].to_list()[0][0].strip().split()[1:][0])
+            pair_coeff.append(" ".join(self._potential_final.df['Config'].to_list()[0][1].strip().split()[1:]))
         return pair_style, pair_coeff
 
     #we wrap some properties for easy access
@@ -125,7 +129,7 @@ class CalphyBase(GenericJob):
     
     def write_structure(self, structure, file_name, working_directory):
         lmp_structure = LammpsStructure()
-        lmp_structure.potential = self.input.potential_initial
+        lmp_structure.potential = self._potential_initial
         lmp_structure.el_eam_lst = set(structure.get_chemical_symbols())
         lmp_structure.structure = self.structure_to_lammps()
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
