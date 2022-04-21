@@ -173,3 +173,60 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
             entropy_lst.append(entropy[ind])
             cv_lst.append(cv[ind])
         return v0_lst, free_eng_lst, entropy_lst, cv_lst
+
+    def plot_free_energy_volume_temperature(self,
+                                            murnaghan_job,
+                                            temperature_start=None,
+                                            temperature_end=None,
+                                            temperature_steps=None):
+        """
+        Plot volume vs free energy curves for defined temperatures.
+
+        Args:
+            murnaghan_job: job_name or job_id of the Murnaghan job
+            temperature_start: if None, value will be used from job.input['temperature_start']
+            temperature_end: if None, value will be used from job.input['temperature_end']
+            temperature_steps: if None, value will be used from job.input['temperature_steps']
+
+        Returns:
+            Volume vs free energy curves for defined temperatures.
+        """
+        job_murn = project.load(murnaghan_job)
+
+        if not self.status.finished:
+            raise ValueError(
+                "QHA Job must be successfully run, before calling this method."
+            )
+
+        if not job_murn.status.finished:
+            raise ValueError(
+                "Murnaghan Job must be successfully run, before calling this method."
+            )
+
+        import matplotlib
+        cmap = matplotlib.cm.get_cmap('coolwarm')
+
+        if temperature_start != None:
+            self.input['temperature_start'] = temperature_start
+        if temperature_end != None:
+            self.input['temperature_end'] = temperature_end
+        if temperature_steps != None:
+            self.input['temperature_steps'] = temperature_steps
+        self.collect_output()
+
+        for i, [t, free_energy, v] in enumerate(
+                zip(self["output/temperatures"].T,
+                    self["output/free_energy"].T,
+                    self["output/volumes"].T)):
+            color = cmap(i / len(self["output/temperatures"].T))
+            matplotlib.pyplot.plot(v, free_energy + job_murn['output/energy'], color=color)
+
+        matplotlib.pyplot.xlabel("Volume")
+        matplotlib.pyplot.ylabel("Free Energy")
+
+        temperatures = self["output/temperatures"]
+        normalize = matplotlib.colors.Normalize(vmin=temperatures.min(), vmax=temperatures.max())
+        scalarmappaple = matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap)
+        scalarmappaple.set_array(temperatures)
+        cbar = matplotlib.pyplot.colorbar(scalarmappaple)
+        cbar.set_label("Temperature")
