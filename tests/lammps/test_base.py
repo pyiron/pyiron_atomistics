@@ -98,7 +98,7 @@ class TestLammps(TestWithCleanProject):
 
     def test_structure_charge(self):
         atoms = Atoms("Fe1", positions=np.zeros((1, 3)), cell=np.eye(3))
-        atoms.add_tag(charge=2.0)
+        atoms.set_initial_charges(charges=np.ones(len(atoms)) * 2.0)
         lmp_structure = LammpsStructure()
         lmp_structure.atom_type = "charge"
         lmp_structure._el_eam_lst = ["Fe"]
