@@ -30,7 +30,6 @@ inputdict = {
     "mode": None,
     "pressure": None,
     "temperature": None,
-    "temperature_high": None,
     "reference_phase": None,
     "npt": None,
     "n_equilibration_steps": 15000,
@@ -172,12 +171,30 @@ class CalphyBase(GenericJob):
             return [self._potential_initial.df, self._potential_final.df]
         
     def copy_pot_files(self):
+        """
+        Copy potential files to the working directory
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         if self._potential_initial is not None:
             self._potential_initial.copy_pot_files(self.working_directory)
         if self._potential_final is not None:
             self._potential_final.copy_pot_files(self.working_directory)
 
-    def prepare_pair_styles(self):
+    def prepare_pair_styles(self) -> tuple[list, list]:
+        """
+        Prepare pair style and pair coeff
+        
+        Args:
+            None
+        
+        Returns:
+            list: pair style and pair coeff
+        """
         pair_style = []
         pair_coeff = []
         if self._potential_initial is not None:
@@ -189,6 +206,15 @@ class CalphyBase(GenericJob):
         return pair_style, pair_coeff
 
     def _potential_from_hdf(self):
+        """
+        Recreate the potential from filename stored in hdf5
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         filenames = []
         if self.input.potential_initial_name is not None:
             filenames.append(self.input.potential_initial_name)
@@ -196,7 +222,6 @@ class CalphyBase(GenericJob):
             filenames.append(self.input.potential_final_name)
         self.set_potentials(filenames)
             
-    #we wrap some properties for easy access
     @property
     def potential(self):
         return self.get_potentials()
@@ -213,7 +238,16 @@ class CalphyBase(GenericJob):
     def structure(self, val):
         self.input.structure = val
 
-    def view_potentials(self):
+    def view_potentials(self) -> list:
+        """
+        View a list of available interatomic potentials
+        
+        Args:
+            None
+        
+        Returns:
+            list: list of available potentials
+        """
         if not self.structure:
             raise ValueError("please assign a structure first")
         else:    
@@ -227,13 +261,33 @@ class CalphyBase(GenericJob):
                 str(list_of_elements),)
 
     def structure_to_lammps(self):
+        """
+        Convert structure to LAMMPS structure
+        
+        Args:
+            None
+        
+        Returns:
+            list: pair style and pair coeff
+        """
         prism = UnfoldingPrism(self.input.structure.cell)
         lammps_structure = self.input.structure.copy()
         lammps_structure.set_cell(prism.A)
         lammps_structure.positions = np.matmul(self.input.structure.positions, prism.R)
         return lammps_structure
     
-    def write_structure(self, structure, file_name, working_directory):
+    def write_structure(self, structure, file_name: str, working_directory: str):
+        """
+        Write structure to file
+        
+        Args:
+            structure: input structure
+            file_name (str): output file name
+            working_directory (str): output working directory
+        
+        Returns:
+            None
+        """
         lmp_structure = LammpsStructure()
         lmp_structure.potential = self._potential_initial
         lmp_structure.el_eam_lst = set(structure.get_chemical_symbols())
@@ -241,6 +295,15 @@ class CalphyBase(GenericJob):
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
 
     def determine_mode(self):
+        """
+        Determine the calculation mode
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         if len(self.potential) == 2:
             self.input.mode = "alchemy"
             self.input.reference_phase = "alchemy"
@@ -257,6 +320,15 @@ class CalphyBase(GenericJob):
             raise RuntimeError("Could not determine the mode")
     
     def write_input(self):
+        """
+        Write input for calphy calculation
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         #now prepare the calculation
         calc = Calculation()
         for key in inputdict.keys():
@@ -284,10 +356,19 @@ class CalphyBase(GenericJob):
         self.calc = calc
 
     
-    def calc_mode_fe(self, temperature=None, pressure=None,
-        reference_phase=None, n_equilibration_steps=15000,
-        n_switching_steps=25000, n_print_steps=0, 
-        n_iterations=1):
+    def calc_mode_fe(self, temperature: float = None, pressure: Union[list, float, None]=None,
+        reference_phase: str = None, n_equilibration_steps: int = 15000,
+        n_switching_steps: int = 25000, n_print_steps: int = 0, 
+        n_iterations: int = 1):
+        """
+        Calculate free energy at given conditions
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         if temperature is None:
             raise ValueError("provide a temperature")
         self.input.temperature = temperature
@@ -299,10 +380,19 @@ class CalphyBase(GenericJob):
         self.input.n_iterations = n_iterations
         self.input.mode = "fe"
 
-    def calc_mode_ts(self, temperature=None, pressure=None,
-        reference_phase=None, n_equilibration_steps=15000,
-        n_switching_steps=25000, n_print_steps=0, 
-        n_iterations=1):
+    def calc_mode_ts(self, temperature: float = None, pressure: Union[list, float, None]=None,
+        reference_phase: str = None, n_equilibration_steps: int = 15000,
+        n_switching_steps: int = 25000, n_print_steps: int = 0, 
+        n_iterations: int = 1):
+        """
+        Calculate free energy between given temperatures
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         if temperature is None:
             raise ValueError("provide a temperature")
         self.input.temperature = temperature
@@ -314,10 +404,19 @@ class CalphyBase(GenericJob):
         self.input.n_iterations = n_iterations
         self.input.mode = "ts"
 
-    def calc_mode_alchemy(self, temperature=None, pressure=None,
-        reference_phase=None, n_equilibration_steps=15000,
-        n_switching_steps=25000, n_print_steps=0, 
-        n_iterations=1):
+    def calc_mode_alchemy(self, temperature: float = None, pressure: Union[list, float, None]=None,
+        reference_phase: str = None, n_equilibration_steps: int = 15000,
+        n_switching_steps: int = 25000, n_print_steps: int = 0, 
+        n_iterations: int = 1):
+        """
+        Perform upsampling/alchemy between two interatomic potentials 
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         if temperature is None:
             raise ValueError("provide a temperature")
         self.input.temperature = temperature
@@ -329,10 +428,19 @@ class CalphyBase(GenericJob):
         self.input.n_iterations = n_iterations
         self.input.mode = "alchemy"
 
-    def calc_mode_pscale(self, temperature=None, pressure=None,
-        reference_phase=None, n_equilibration_steps=15000,
-        n_switching_steps=25000, n_print_steps=0, 
-        n_iterations=1):
+    def calc_mode_pscale(self, temperature: float = None, pressure: Union[list, float, None]=None,
+        reference_phase: str = None, n_equilibration_steps: int = 15000,
+        n_switching_steps: int = 25000, n_print_steps: int = 0, 
+        n_iterations: int = 1):
+        """
+        Calculate free energy between two given pressures
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         if temperature is None:
             raise ValueError("provide a temperature")
         self.input.temperature = temperature
@@ -344,10 +452,19 @@ class CalphyBase(GenericJob):
         self.input.n_iterations = n_iterations
         self.input.mode = "pscale"
 
-    def calc_free_energy(self, temperature=None, pressure=None,
-        reference_phase=None, n_equilibration_steps=15000,
-        n_switching_steps=25000, n_print_steps=0, 
-        n_iterations=1):
+    def calc_free_energy(self, temperature: float = None, pressure: Union[list, float, None]=None,
+        reference_phase: str = None, n_equilibration_steps: int = 15000,
+        n_switching_steps: int = 25000, n_print_steps: int = 0, 
+        n_iterations: int = 1):
+        """
+        Calculate free energy at given conditions
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         if temperature is None:
             raise ValueError("provide a temperature")
         self.input.temperature = temperature
@@ -391,7 +508,16 @@ class CalphyBase(GenericJob):
         self.run()
     
 
-    def collect_general_output(self):        
+    def collect_general_output(self):
+        """
+        Collect the output from calphy
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         if self._data is not None:
             if "spring_constant" in self._data["average"].keys():
                 self.output.spring_constant = self._data["average"]["spring_constant"]
@@ -420,7 +546,15 @@ class CalphyBase(GenericJob):
                 self.output.pressure = np.array(p)
 
     def collect_ediff(self):
-
+        """
+        Calculate the energy difference between reference system and system of interest
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         f_ediff = []
         b_ediff = []
 
@@ -451,8 +585,6 @@ class CalphyBase(GenericJob):
 
         return f_ediff, b_ediff, flambda, blambda
 
-
-
     def collect_output(self):
         self.collect_general_output()
         self.to_hdf()
@@ -462,16 +594,9 @@ class CalphyBase(GenericJob):
         self.input.to_hdf(self.project_hdf5)
         self.output.to_hdf(self.project_hdf5)
 
-        #self.structure.to_hdf(hdf)
-        #with self.project_hdf5.open("input") as hdf5_in:
-        #with self.project_hdf5.open("output") as hdf5_out:
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(hdf=hdf, group_name=group_name)
         self.input.from_hdf(self.project_hdf5)
         self.output.from_hdf(self.project_hdf5)
         self._potential_from_hdf()
-
-        #self.structure.to_hdf(hdf)
-        #with self.project_hdf5.open("input") as hdf5_in:
-        #with self.project_hdf5.open("output") as hdf5_out:
