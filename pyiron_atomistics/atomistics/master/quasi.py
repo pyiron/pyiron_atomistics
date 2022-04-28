@@ -5,6 +5,7 @@
 import numpy as np
 from pyiron_atomistics.atomistics.master.murnaghan import MurnaghanJobGenerator
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+import matplotlib
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -175,23 +176,34 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         return v0_lst, free_eng_lst, entropy_lst, cv_lst
 
     def plot_free_energy_volume_temperature(self,
-                                            murnaghan_job,
+                                            murnaghan_job=None,
                                             temperature_start=None,
                                             temperature_end=None,
-                                            temperature_steps=None):
+                                            temperature_steps=None,
+                                            color_map='coolwarm',
+                                            axis=None,
+                                            *args,
+                                            **kwargs):
         """
-        Plot volume vs free energy curves for defined temperatures.
+        Plot volume vs free energy curves for defined temperatures. If no Murnaghan job is assigned, plots free energy without total electronic energy at T=0.
 
         Args:
-            murnaghan_job: job_name or job_id of the Murnaghan job
+            murnaghan_job: job_name or job_id of the Murnaghan job. if None, total electronic energy at T=0 is set to zero.
             temperature_start: if None, value will be used from job.input['temperature_start']
             temperature_end: if None, value will be used from job.input['temperature_end']
             temperature_steps: if None, value will be used from job.input['temperature_steps']
+            color_map: colormaps options accessible via matplotlib.cm.get_cmap. Default is 'coolwarm'.
+            axis (matplotlib axis, optional): plot to this axis, if not given a new one is created.
+            *args: passed through to matplotlib.pyplot.plot when plotting free energies.
+            **kwargs: passed through to matplotlib.pyplot.plot when plotting free energies.
 
         Returns:
-            Volume vs free energy curves for defined temperatures.
+            matplib axis: the axis the figure has been drawn to, if axis is given the same object is returned.
         """
-        job_murn = project.load(murnaghan_job)
+        energy_zero = 0
+        if murnaghan_job!=None:
+            job_murn = project.load(murnaghan_job)
+            energy_zero = job_murn['output/energy']         
 
         if not self.status.finished:
             raise ValueError(
@@ -202,9 +214,11 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
             raise ValueError(
                 "Murnaghan Job must be successfully run, before calling this method."
             )
+            
+        if axis is None:
+            _, axis = matplotlib.pyplot.subplots(1, 1)
 
-        import matplotlib
-        cmap = matplotlib.cm.get_cmap('coolwarm')
+        cmap = matplotlib.cm.get_cmap(color_map)
 
         if temperature_start != None:
             self.input['temperature_start'] = temperature_start
@@ -219,10 +233,10 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
                     self["output/free_energy"].T,
                     self["output/volumes"].T)):
             color = cmap(i / len(self["output/temperatures"].T))
-            matplotlib.pyplot.plot(v, free_energy + job_murn['output/energy'], color=color)
-
-        matplotlib.pyplot.xlabel("Volume")
-        matplotlib.pyplot.ylabel("Free Energy")
+            axis.plot(v, free_energy + energy_zero, color=color)
+            
+        axis.set_xlabel("Volume")
+        axis.set_ylabel("Free Energy")
 
         temperatures = self["output/temperatures"]
         normalize = matplotlib.colors.Normalize(vmin=temperatures.min(), vmax=temperatures.max())
@@ -230,3 +244,5 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         scalarmappaple.set_array(temperatures)
         cbar = matplotlib.pyplot.colorbar(scalarmappaple)
         cbar.set_label("Temperature")
+        return axis
+    
