@@ -142,12 +142,12 @@ class CalphyBase(GenericJob):
         """
         if not isinstance(potential_filenames, list):
             potential_filenames = [potential_filenames]            
-        if len(potential_filenames) == 1:
+        if len(potential_filenames) > 0:
             potential = LammpsPotentialFile().find_by_name(potential_filenames[0])
             self._potential_initial = LammpsPotential()
             self._potential_initial.df = potential
             self.input.potential_initial_name = potential_filenames[0]
-        if len(potential_filenames) == 2:
+        if len(potential_filenames) > 1:
             potential = LammpsPotentialFile().find_by_name(potential_filenames[1])
             self._potential_final = LammpsPotential()
             self._potential_final.df = potential
