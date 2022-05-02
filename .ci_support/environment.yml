@@ -14,9 +14,9 @@ dependencies:
 - mock =4.0.3
 - numpy =1.22.3
 - pandas =1.4.2
-- phonopy =2.13.1
-- pint =0.18
-- pyiron_base =0.5.9
+- phonopy =2.14.0
+- pint =0.19.1
+- pyiron_base =0.5.11
 - pymatgen =2022.3.29
 - pyscal =2.10.15
 - pytables =3.7.0
