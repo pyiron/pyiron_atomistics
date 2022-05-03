@@ -4,6 +4,7 @@
 
 import codecs
 import pickle
+from typing import Optional
 
 import numpy as np
 import posixpath
@@ -418,6 +419,8 @@ class PhonopyJob(AtomisticParallelMaster):
         """
         Plot the DOS.
 
+        If "label" is present in `kwargs` a legend is added to the plot automatically.
+
         Args:
             axis (optional): matplotlib axis to use, if None create a new one
             ax: deprecated alias for axis
@@ -441,6 +444,8 @@ class PhonopyJob(AtomisticParallelMaster):
         axis.set_xlabel("Frequency [THz]")
         axis.set_ylabel("DOS")
         axis.set_title("Phonon DOS vs Energy")
+        if "label" in kwargs:
+            axis.legend()
         return ax
 
     def get_band_structure(
@@ -491,18 +496,27 @@ class PhonopyJob(AtomisticParallelMaster):
             ]
         return results
 
-    def plot_band_structure(self, axis=None):
+    def plot_band_structure(
+        self, axis=None, *args, label: Optional[str] = None, **kwargs
+    ):
         """
         Plot bandstructure calculated with :method:`.get_bandstructure`.
 
         If :method:`.get_bandstructure` hasn't been called before, it is automatically called with the default arguments.
 
+        If `label` is passed a legend is added automatically.
+
         Args:
             axis (matplotlib axis, optional): plot to this axis, if not given a new one is created.
+            *args: passed through to matplotlib.pyplot.plot when plotting the dispersion
+            label (str, optional): label for dispersion line
+            **kwargs: passed through to matplotlib.pyplot.plot when plotting the dispersion
 
         Returns:
             matplib axis: the axis the figure has been drawn to, if axis is given the same object is returned
         """
+        # label is it's own argument because if you try to pass it via **kwargs every line would get the label giving a
+        # messy legend
         try:
             import pylab as plt
         except ImportError:
@@ -523,16 +537,26 @@ class PhonopyJob(AtomisticParallelMaster):
         path_connections = self.phonopy._band_structure.path_connections
         labels = self.phonopy._band_structure.labels
 
+        if "color" not in kwargs:
+            kwargs["color"] = "black"
+
         offset = 0
         tick_positions = [distances[0][0]]
         for di, fi, ci in zip(distances, frequencies, path_connections):
-            axis.axvline(tick_positions[-1], color="black", linestyle="--")
-            axis.plot(offset + di, fi, color="black")
+            axis.axvline(
+                tick_positions[-1], color="black", linestyle="dotted", alpha=0.5
+            )
+            line, *_ = axis.plot(offset + di, fi, *args, **kwargs)
             tick_positions.append(di[-1] + offset)
             if not ci:
                 offset += 0.05
-                plt.axvline(tick_positions[-1], color="black", linestyle="--")
+                axis.axvline(
+                    tick_positions[-1], color="black", linestyle="dotted", alpha=0.5
+                )
                 tick_positions.append(di[-1] + offset)
+        if label is not None:
+            line.set_label(label)
+            axis.legend()
         axis.set_xticks(tick_positions[:-1])
         axis.set_xticklabels(labels)
         axis.set_xlabel("Bandpath")
