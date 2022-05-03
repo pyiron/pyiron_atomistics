@@ -22,7 +22,7 @@ class HessianJob(GenericInteractive):
     def __init__(self, project, job_name):
         super(HessianJob, self).__init__(project, job_name)
         self.__version__ = "0.0.1"
-        self.__name__ = "HessianJob"
+
         self._python_only_job = True
         self._force_constants = None
         self._reference_structure = None

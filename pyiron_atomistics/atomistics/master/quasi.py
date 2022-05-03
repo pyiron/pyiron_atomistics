@@ -83,7 +83,7 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
             job_name:
         """
         super(QuasiHarmonicJob, self).__init__(project, job_name)
-        self.__name__ = "QuasiHarmonicJob"
+
         self.__version__ = "0.0.1"
 
         # define default input

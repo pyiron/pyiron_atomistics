@@ -80,7 +80,7 @@ class MapMaster(AtomisticParallelMaster):
             job_name:
         """
         super(MapMaster, self).__init__(project, job_name)
-        self.__name__ = "MapMaster"
+
         self.__version__ = "0.0.1"
         self._job_generator = MapJobGenerator(self)
         self._map_function = None

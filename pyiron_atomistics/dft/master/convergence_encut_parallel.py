@@ -64,7 +64,7 @@ class ConvEncutParallel(AtomisticParallelMaster):
             job_name:
         """
         super(ConvEncutParallel, self).__init__(project, job_name)
-        self.__name__ = "ConvEncutParallel"
+
         self.__version__ = "0.0.1"
 
         # define default input

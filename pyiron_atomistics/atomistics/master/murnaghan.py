@@ -613,7 +613,7 @@ class Murnaghan(AtomisticParallelMaster):
             job_name:
         """
         super(Murnaghan, self).__init__(project, job_name)
-        self.__name__ = "Murnaghan"
+
         self.__version__ = "0.3.0"
 
         # print ("h5_path: ", self.project_hdf5._h5_path)
