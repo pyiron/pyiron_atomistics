@@ -73,9 +73,9 @@ class TestCalphy(unittest.TestCase):
     def test_output(self):
         self.output_job.from_hdf()
         self.assertEqual(float(self.output_job.output.spring_constant), 1.51)    
-        self.assertEqual(sol.output.energy_free[0], -4.002465158959863)
-        self.assertEqual(int(sol.output.temperature[0]), 1100)
-        self.assertEqual(int(sol.output.temperature[-1]), 1400)
+        self.assertEqual(self.output_job.output.energy_free[0], -4.002465158959863)
+        self.assertEqual(int(self.output_job.output.temperature[0]), 1100)
+        self.assertEqual(int(self.output_job.output.temperature[-1]), 1400)
 
 
         
