@@ -54,13 +54,22 @@ class TestTransformTrajectory(TestWithCleanProject):
         shutil.copy(os.path.join(tests_loc, "static/lammps_test_files/get_structure_test.tar.gz"), cwd)
         shutil.copy(os.path.join(tests_loc, "static/lammps_test_files/export.csv"), cwd)
         self.project.unpack("get_structure_test")
-        job = self.project.load("inter_calculator")
-        traj = job.trajectory()
+        traj = self.job.trajectory()
         self.assertIsInstance(traj, Trajectory)
         self.assertEqual(len(traj), len(self.job.output.positions))
-        traj = traj.transform(lambda s: s.repeat(2))
+        traj = traj.transform(lambda s: s.repeat(1))
         self.assertIsInstance(traj, TransformTrajectory)
-        self.assertEqual(len(traj), 8*len(self.job.output.positions))
+        self.assertEqual(len(traj), 1*len(self.job.output.positions))
+        traj = self.job.trajectory()
+        traj = traj.transform(lambda s: s.repeat(2))
+        self.assertEqual(len(traj.get_structure()), 8*len(self.job.get_structure()))
+        traj = self.job.trajectory()
+        traj = traj.transform(lambda s: s.repeat(1))
+        self.assertEqual(len(traj.get_structure()), 1*len(self.job.get_structure()))
+        traj = self.job.trajectory()
+        traj = traj.transform(lambda s: s.repeat(2))
+        for i in traj.iter_structures():
+            self.assertEqual(len(i), 8*len(self.job.get_structure()))
 
 
 if __name__ == '__main__':
