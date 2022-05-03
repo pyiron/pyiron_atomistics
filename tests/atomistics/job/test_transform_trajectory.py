@@ -68,8 +68,6 @@ class TestTransformTrajectory(TestWithCleanProject):
         self.assertEqual(len(traj.get_structure()), 1*len(self.job.get_structure()))
         traj = self.job.trajectory()
         traj = traj.transform(lambda s: s.repeat(2))
-        traj = self.job.trajectory()
-        traj = traj.transform(lambda s: s.repeat(2))
         for s1, s2 in zip(traj.iter_structures(), self.job.iter_structures()):
             self.assertEqual(len(s1), 8 * len(s2))
 
