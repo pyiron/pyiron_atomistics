@@ -204,7 +204,7 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         """
         energy_zero = 0
         if murnaghan_job != None:
-            job_murn = project.load(murnaghan_job)
+            job_murn = self.project.load(murnaghan_job)
             energy_zero = job_murn["output/energy"]
 
         if not self.status.finished:
