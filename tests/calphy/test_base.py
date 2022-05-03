@@ -22,6 +22,12 @@ class TestCalphy(unittest.TestCase):
             project=ProjectHDFio(project=cls.project, file_name="test_calphy"),
             job_name="test_calphy",
         )
+        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static/")
+        cls.output_project = Project(os.path.join(filepath, "calphy_test_files"))
+        cls.output_job = Calphy(
+            project=ProjectHDFio(project=cls.output_project, file_name="tm_fcc"),
+            job_name="tm_fcc",
+        )
         #cls.job = cls.project.create_job("Calphy", "job_calphy")
 
     @classmethod
@@ -63,12 +69,13 @@ class TestCalphy(unittest.TestCase):
                                  reference_phase="solid")
         self.assertEqual(self.job.input.mode, "alchemy")
         
-    #def test_pressure(self):
-    #    self.job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
-    #    self.job.structure = self.project.create.structure.ase.bulk('Cu', cubic=True).repeat(5)
-    #    self.job.calc_free_energy(temperature=100, pressure=0,
-    #                             reference_phase="solid")
-    #    self.job.write_input()
+    
+    def test_output(self):
+        self.output_job.from_hdf()
+        self.assertEqual(float(self.output_job.output.spring_constant), 1.51)    
+        self.assertEqual(sol.output.energy_free[0], -4.002465158959863)
+        self.assertEqual(int(sol.output.temperature[0]), 1100)
+        self.assertEqual(int(sol.output.temperature[-1]), 1400)
 
 
         
