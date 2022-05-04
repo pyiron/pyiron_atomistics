@@ -56,10 +56,8 @@ class Project(ProjectCore):
 
     Your first steps in pyiron:
 
-    ```
-    pr = Project("EXAMPLE")
-    job = pr.create.job.Lammps(job_name="lmp_example")
-    ```
+    >>> pr = Project("EXAMPLE")
+    >>> job = pr.create.job.Lammps(job_name="lmp_example")
 
     Replace `Lammps` by the job type of your choice - you can look at the list of all available
     jobs in the list of auto-complete in `pr.create.job`. After you create a job, look up the

@@ -22,24 +22,18 @@ class Lammps(LammpsInteractive):
 
     Example:
 
-    ```
-    job = pr.create.job.Lammps(job_name='lmp_example')
-    job.structure = pr.create.structure.bulk('Fe', cubic=True)
-    job.run()
-    ```
+    >>> job = pr.create.job.Lammps(job_name='lmp_example')
+    >>> job.structure = pr.create.structure.bulk('Fe', cubic=True)
+    >>> job.run()
 
     How to set potential: Look up potentials via `job.view_potentials()` (detailed data frame)
     or via `job.list_potentials()` (potential names). Assign the potential e.g. via:
 
-    ```
-    job.potential = job.list_potentials()[0]
-    ```
+    >>> job.potential = job.list_potentials()[0]
 
     Lammps has 3 modes: `static`, `md` and `minimize`. Set a mode e.g. via:
 
-    ```
-    job.calc_minimize()
-    ```
+    >>> job.calc_minimize()
 
     Args:
         project (pyiron_atomistics.project.Project instance):  Specifies the project path among other attributes
