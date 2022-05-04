@@ -16,8 +16,6 @@ class ToyAtomisticJob(AtomisticGenericJob, ABC):
         return False
 
     def run_static(self):
-        self.save()
-        self.status.running = True
         self.status.finished = True
         self.to_hdf()
 
