@@ -1,34 +1,12 @@
 import os
 import shutil
 import unittest
-from abc import ABC
-import numpy as np
 from pathlib import Path
 from pyiron_base._tests import TestWithCleanProject
 from pyiron_base import ProjectHDFio
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob, Trajectory, TransformTrajectory
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-
-
-class ToyAtomisticJob(AtomisticGenericJob, ABC):
-
-    def _check_if_input_should_be_written(self):
-        return False
-
-    def run_static(self):
-        self.save()
-        self.status.running = True
-        self.status.finished = True
-        self.to_hdf()
-
-    def to_hdf(self, hdf=None, group_name=None):
-        super().to_hdf(hdf=hdf, group_name=group_name)
-        # create some dummy output
-        n_steps = 10
-        with self.project_hdf5.open("output/generic") as h_out:
-            h_out["positions"] = np.array([self.structure.positions + 0.5 * i for i in range(n_steps)])
-            h_out["cells"] = np.array([self.structure.cell] * n_steps)
-            h_out["indices"] = np.zeros((n_steps, len(self.structure)), dtype=int)
+from pyiron_atomistics.atomistics.job.atomistic import Trajectory
+from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
+from test_atomistic import ToyAtomisticJob
 
 
 class TestTransformTrajectory(TestWithCleanProject):
@@ -57,12 +35,6 @@ class TestTransformTrajectory(TestWithCleanProject):
         traj = self.job.trajectory()
         self.assertIsInstance(traj, Trajectory)
         self.assertEqual(len(traj), len(self.job.output.positions))
-        traj = traj.transform(lambda s: s.repeat(1))
-        self.assertIsInstance(traj, TransformTrajectory)
-        self.assertEqual(len(traj), 1*len(self.job.output.positions))
-        traj = self.job.trajectory()
-        traj = traj.transform(lambda s: s.repeat(2))
-        self.assertEqual(len(traj.get_structure()), 8*len(self.job.get_structure()))
         traj = self.job.trajectory()
         traj = traj.transform(lambda s: s.repeat(1))
         self.assertEqual(len(traj.get_structure()), 1*len(self.job.get_structure()))
