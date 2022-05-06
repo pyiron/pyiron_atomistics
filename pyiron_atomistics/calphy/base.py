@@ -155,7 +155,7 @@ class CalphyBase(GenericJob):
         if len(potential_filenames) > 2:
             raise ValueError("Maximum two potentials can be provided")
             
-    def get_potentials(self) -> list:
+    def get_potentials(self) -> List[str]:
         """
         Return the interatomic potentials
         
