@@ -163,7 +163,7 @@ class CalphyBase(GenericJob):
             None
             
         Returns:
-            list: list of interatomic potentials
+            list of str: list of interatomic potentials
         """
         if self._potential_final is None:
             return [self._potential_initial.df]
