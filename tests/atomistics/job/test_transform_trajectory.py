@@ -6,7 +6,7 @@ from pyiron_base._tests import TestWithCleanProject
 from pyiron_base import ProjectHDFio
 from pyiron_atomistics.atomistics.job.atomistic import Trajectory
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
-from test_atomistic import ToyAtomisticJob
+from .test_atomistic import ToyAtomisticJob
 
 
 class TestTransformTrajectory(TestWithCleanProject):
