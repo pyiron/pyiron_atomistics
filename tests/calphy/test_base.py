@@ -6,6 +6,7 @@ import os
 import numpy as np
 import unittest
 import warnings
+import shutil
 
 from pyiron_atomistics.project import Project
 from pyiron_atomistics.calphy.calphy import Calphy
@@ -24,11 +25,6 @@ class TestCalphy(unittest.TestCase):
         )
         filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static/")
         cls.output_project = Project(os.path.join(filepath, "calphy_test_files"))
-        cls.output_job = Calphy(
-            project=ProjectHDFio(project=cls.output_project, file_name="tm_fcc"),
-            job_name="tm_fcc",
-        )
-        #cls.job = cls.project.create_job("Calphy", "job_calphy")
 
     @classmethod
     def tearDownClass(cls):
@@ -71,11 +67,15 @@ class TestCalphy(unittest.TestCase):
         
     
     def test_output(self):
-        self.output_job.from_hdf()
-        self.assertEqual(float(self.output_job.output.spring_constant), 1.51)    
-        self.assertEqual(self.output_job.output.energy_free[0], -4.002465158959863)
-        self.assertEqual(int(self.output_job.output.temperature[0]), 1100)
-        self.assertEqual(int(self.output_job.output.temperature[-1]), 1400)
+        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static/")
+        shutil.copy(os.path.join(filepath, "calphy_test_files/tm_fcc.tar.gz"), cwd)
+        shutil.copy(os.path.join(filepath, "calphy_test_files/export.csv"), cwd)
+        self.output_project.unpack("tm_fcc")
+        self.output_project["copper_demo/tm_fcc"].output
+        self.assertEqual(float(self.output_project["copper_demo/tm_fcc"].output.spring_constant), 1.51)    
+        self.assertEqual(self.output_project["copper_demo/tm_fcc"].output.energy_free[0], -4.002465158959863)
+        self.assertEqual(int(self.output_project["copper_demo/tm_fcc"].output.temperature[0]), 1100)
+        self.assertEqual(int(self.output_project["copper_demo/tm_fcc"].output.temperature[-1]), 1400)
 
 
         
