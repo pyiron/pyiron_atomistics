@@ -183,13 +183,16 @@ class SparseList(object):
             if len(item) == 0:
                 ind_list = []
             else:
-                if isinstance(item[0], (int, np.integer)):
-                    ind_list = item
-                elif isinstance(item[0], (bool, np.bool_)):
+                # for some reason isinstance(True, int) == True, so check for bools first explicitly
+                if isinstance(item[0], (bool, np.bool_)):
+                    if len(item) != len(self):
+                        raise IndexError("Length of boolean index does not match indexed list!")
                     ind_list = []
                     for i, bo in enumerate(item):
                         if bo:
                             ind_list.append(i)
+                elif isinstance(item[0], (int, np.integer)):
+                    ind_list = item
         else:
             raise ValueError("Unknown item type: " + str(type(item)))
         sliced_dict = {
@@ -209,6 +212,8 @@ class SparseList(object):
 
         if max(key) > self._length:
             raise IndexError
+
+
         for i in key:
             self._dict[i] = value
 
