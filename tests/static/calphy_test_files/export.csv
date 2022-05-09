@@ -1,0 +1,4 @@
+,id,status,chemicalformula,job,subjob,project,timestart,timestop,totalcputime,computer,hamilton,hamversion,parentid,masterid
+0,0,finished,,tm_fcc,/tm_fcc,tm_fcc/copper_demo,2022-04-21 12:44:40.063174,2022-04-21 12:47:08.687532,148.0,pyiron@musashi#4,Calphy,0.4,,
+1,1,finished,,tm_lqd,/tm_lqd,tm_fcc/copper_demo,2022-04-21 12:57:10.202112,2022-04-21 13:00:11.914804,181.0,pyiron@musashi#4,Calphy,0.4,,
+2,2,finished,,press_fcc,/press_fcc,tm_fcc/copper_demo,2022-04-21 13:02:01.747268,2022-04-21 13:04:09.080143,127.0,pyiron@musashi#4,Calphy,0.4,,
