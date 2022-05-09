@@ -187,10 +187,7 @@ class SparseList(object):
                 if isinstance(item[0], (bool, np.bool_)):
                     if len(item) != len(self):
                         raise IndexError("Length of boolean index does not match indexed list!")
-                    ind_list = []
-                    for i, bo in enumerate(item):
-                        if bo:
-                            ind_list.append(i)
+                    ind_list = np.argwhere(item).flatten()
                 elif isinstance(item[0], (int, np.integer)):
                     ind_list = item
         else:
