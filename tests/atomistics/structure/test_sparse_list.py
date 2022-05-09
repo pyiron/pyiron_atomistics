@@ -44,6 +44,16 @@ class TestSparseList(unittest.TestCase):
         self.assertEqual(self.cList[-1], 0)
         self.assertTrue(isinstance(self.cList[2:4], SparseList))
 
+        self.assertEqual(self.aList[[False, True, False, False, True, False, False]].list(),
+                         [True, True],
+                         "Indexing with boolean mask returns wrong values!")
+        cListModified = self.cList.__copy__()
+        cListModified[[True, True, False, False, False]] = 0.1
+        self.assertEqual(cListModified[0], 0.1,
+                         "Indexing with boolean mask sets wrong values!")
+        self.assertEqual(cListModified[1], 0.1,
+                         "Indexing with boolean mask sets wrong values!")
+
     def test__setitem__(self):
         self.aList[::2] = True
         self.assertEqual(self.aList.list(), [True, True, True, None, True, None, True])
