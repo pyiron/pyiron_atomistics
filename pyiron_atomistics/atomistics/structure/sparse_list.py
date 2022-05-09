@@ -213,9 +213,14 @@ class SparseList(object):
         if max(key) > self._length:
             raise IndexError
 
-
-        for i in key:
-            self._dict[i] = value
+        keys = list(key)
+        if isinstance(keys[0], (bool, np.bool_)):
+            for i, bo in enumerate(keys):
+                if bo:
+                    self._dict[i] = value
+        else:
+            for i in key:
+                self._dict[i] = value
 
     def __delitem__(self, key):
         # programmed for simplicity, not for performance
