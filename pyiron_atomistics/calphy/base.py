@@ -75,6 +75,8 @@ class CalphyBase(GenericJob):
     ```python
     job.calc_free_energy(temperature=1100, pressure=0, reference_phase="solid")
     ```
+
+    Alternatively, :func:`calc_mode_fe` can be used. 
     
     To obtain the free energy between a given temperature range (temperature scaling):
     
@@ -82,11 +84,15 @@ class CalphyBase(GenericJob):
     job.calc_free_energy(temperature=[1100, 1400], pressure=0, reference_phase="solid")
     ```
     
+    Alternatively, :func:`calc_mode_ts` can be used.
+
     For free energy between a given pressure range (pressure scaling)
     
     ```python
     job.calc_free_energy(temperature=1000, pressure=[0, 100000], reference_phase="solid")
     ```
+
+    Alternatively, :func:`calc_mode_pscale` can be used.
     
     To obtain the free energy difference between two interatomic potentials (alchemy/upsampling)
     
@@ -95,6 +101,8 @@ class CalphyBase(GenericJob):
     job.calc_free_energy(temperature=1100, pressure=0, reference_phase="solid")
     job.run()
     ```
+
+    Alternatively, :func:`calc_mode_alchemy` can be used.
     
     The way `pressure` is specified determines how the barostat affects the system. For isotropic pressure control:
     
