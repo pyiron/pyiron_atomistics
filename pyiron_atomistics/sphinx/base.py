@@ -388,16 +388,16 @@ class SphinxBase(GenericDFTJob):
         sph.create_group("initialGuess")
         sph.create_group("main")
 
-        self.input.EnCut = 20 * RYDBERG_TO_EV
+        self.input.EnCut = 340
         self.input.KpointCoords = [0.5, 0.5, 0.5]
-        self.input.KpointFolding = [1, 1, 1]
+        self.input.KpointFolding = [4, 4, 4]
         self.input.EmptyStates = "auto"
         self.input.MethfesselPaxton = 1
         self.input.Sigma = 0.2
         self.input.Xcorr = "PBE"
         self.input.VaspPot = False
-        self.input.Estep = 50
-        self.input.Ediff = 1.0e-8 * HARTREE_TO_EV
+        self.input.Estep = 100
+        self.input.Ediff = 1.0e-4
         self.input.WriteWaves = True
         self.input.KJxc = False
         self.input.SaveMemory = True
