@@ -24,7 +24,6 @@ try:
     from pyiron_base import ProjectGUI
 except (ImportError, TypeError, AttributeError):
     pass
-from typing import Union
 
 __author__ = "Jan Janssen"
 __copyright__ = (
