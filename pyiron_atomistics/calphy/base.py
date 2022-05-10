@@ -193,7 +193,7 @@ class CalphyBase(GenericJob):
         if self._potential_final is not None:
             self._potential_final.copy_pot_files(self.working_directory)
 
-    def prepare_pair_styles(self) -> tuple[list, list]:
+    def _prepare_pair_styles(self) -> tuple[list, list]:
         """
         Prepare pair style and pair coeff
         
@@ -352,7 +352,7 @@ class CalphyBase(GenericJob):
         calc.lattice = os.path.join(self.working_directory, "conf.data")
 
         self.copy_pot_files()
-        pair_style, pair_coeff = self.prepare_pair_styles()
+        pair_style, pair_coeff = self._prepare_pair_styles()
         calc._fix_potential_path = False
         calc.pair_style = pair_style
         calc.pair_coeff = pair_coeff
