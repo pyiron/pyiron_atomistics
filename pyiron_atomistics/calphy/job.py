@@ -51,7 +51,7 @@ inputdict = {
 }
 
 
-class CalphyBase(GenericJob):
+class Calphy(GenericJob):
     """
     Class to set up and run calphy jobs for calculation of free energies using LAMMPS.
     
