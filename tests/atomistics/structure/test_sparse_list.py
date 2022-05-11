@@ -53,6 +53,12 @@ class TestSparseList(unittest.TestCase):
                          "Indexing with boolean mask sets wrong values!")
         self.assertEqual(cListModified[1], 0.1,
                          "Indexing with boolean mask sets wrong values!")
+        self.assertNotEqual(cListModified[2], 0.1,
+                         "Indexing with boolean mask sets wrong values!")
+        self.assertNotEqual(cListModified[3], 0.1,
+                         "Indexing with boolean mask sets wrong values!")
+        self.assertNotEqual(cListModified[4], 0.1,
+                         "Indexing with boolean mask sets wrong values!")
 
     def test__setitem__(self):
         self.aList[::2] = True
