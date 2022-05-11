@@ -212,9 +212,8 @@ class SparseList(object):
 
         keys = list(key)
         if isinstance(keys[0], (bool, np.bool_)):
-            for i, bo in enumerate(keys):
-                if bo:
-                    self._dict[i] = value
+            for i in np.argwhere(keys).flatten():
+                self._dict[i] = value
         else:
             for i in key:
                 self._dict[i] = value
