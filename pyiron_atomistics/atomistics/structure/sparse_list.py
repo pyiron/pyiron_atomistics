@@ -8,6 +8,7 @@ from __future__ import print_function
 import sys
 import copy
 import numpy as np
+from numbers import Integral
 from collections import OrderedDict
 from collections.abc import Sequence
 
@@ -172,7 +173,7 @@ class SparseList(object):
                 yield val
 
     def __getitem__(self, item):
-        if isinstance(item, (int, np.integer)):
+        if isinstance(item, Integral):
             if item in self._dict:
                 return self._dict[item]
             return self._default
@@ -188,7 +189,7 @@ class SparseList(object):
                     if len(item) != len(self):
                         raise IndexError("Length of boolean index does not match indexed list!")
                     ind_list = np.argwhere(item).flatten()
-                elif isinstance(item[0], (int, np.integer)):
+                elif isinstance(item[0], Integral):
                     ind_list = item
         else:
             raise ValueError("Unknown item type: " + str(type(item)))
@@ -199,7 +200,7 @@ class SparseList(object):
         return self.__class__(sliced_dict, default=self._default, length=len(ind_list))
 
     def __setitem__(self, key, value):
-        if isinstance(key, (int, np.integer)):
+        if isinstance(key, Integral):
             if key > len(self):
                 raise IndexError
             self._dict[key] = value
@@ -244,7 +245,7 @@ class SparseList(object):
         return new_list
 
     def __mul__(self, other):
-        if not isinstance(other, (int, np.integer)):
+        if not isinstance(other, Integral):
             raise ValueError("Multiplication defined only for SparseArray*integers")
         overall_list = other * np.arange(len(self)).tolist()
         new_dic = dict()
@@ -254,7 +255,7 @@ class SparseList(object):
         return self.__class__(new_dic, default=self._default, length=other * len(self))
 
     def __rmul__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, Integral):
             return self * other
 
     def __str__(self):
@@ -427,7 +428,7 @@ class SparseArray(object):
 
     def __getitem__(self, item):
         new_dict = {}
-        if isinstance(item, int):
+        if isinstance(item, Integral):
             for key, value in self._lists.items():
                 if value[item] is not None:
                     new_dict[key] = value[item]
@@ -540,7 +541,7 @@ class SparseArray(object):
         return new_array
 
     def __mul__(self, other):
-        if not isinstance(other, int):
+        if not isinstance(other, Integral):
             raise ValueError(
                 "Multiplication with SparseMatrix only implemented for integers"
             )
@@ -552,7 +553,7 @@ class SparseArray(object):
         return new_array
 
     def __rmul__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, Integral):
             return self * other
 
     def add_tag(self, *args, **qwargs):
