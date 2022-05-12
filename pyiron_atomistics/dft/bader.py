@@ -5,6 +5,7 @@
 import numpy as np
 import os
 import subprocess
+import pickle
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
@@ -86,9 +87,12 @@ class Bader:
 
         """
         filename = os.path.join(self._working_directory, "ACF.dat")
-        
         if os.path.isfile(filename):
             return parse_charge_vol_file(structure=self._structure, filename=filename)
+        filename = os.path.join(self._working_directory, "bader.p")
+        if os.path.isfile(filename):
+            return parse_charge_vol_pickle(filename=filename)
+        
 
 
 def call_bader(foldername):
@@ -124,3 +128,9 @@ def parse_charge_vol_file(structure, filename="ACF.dat"):
         charges = np.genfromtxt(lines[2:], max_rows=len(structure))[:, 4]
         volumes = np.genfromtxt(lines[2:], max_rows=len(structure))[:, 6]
     return charges, volumes
+
+
+def parse_charge_vol_pickle(filename="bader.p"):
+    with open(filename, 'rb') as f:
+        p_obj = pickle.load(f)
+    return p_obj.atoms_charge, p_obj.atoms_volume
