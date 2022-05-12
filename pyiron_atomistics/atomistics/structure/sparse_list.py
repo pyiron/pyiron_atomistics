@@ -187,7 +187,9 @@ class SparseList(object):
                 # for some reason isinstance(True, int) == True, so check for bools first explicitly
                 if isinstance(item[0], (bool, np.bool_)):
                     if len(item) != len(self):
-                        raise IndexError("Length of boolean index does not match indexed list!")
+                        raise IndexError(
+                            "Length of boolean index does not match indexed list!"
+                        )
                     ind_list = np.argwhere(item).flatten()
                 elif isinstance(item[0], Integral):
                     ind_list = item
