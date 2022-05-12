@@ -50,7 +50,7 @@ class Bader:
             filename=os.path.join(self._working_directory, "total_charge.CUBE")
         )
 
-    def compute_bader_charges(self, extra_arguments=None):
+    def compute_bader_charges(self):
         """
         Run Bader analysis on the output from the DFT job
 
@@ -62,13 +62,12 @@ class Bader:
 
         """
         self._create_cube_files()
-        error_code = call_bader(
-            foldername=self._working_directory, extra_arguments=extra_arguments
-        )
-        if error_code > 0:
+        compl_process = call_bader(
+            foldername=self._working_directory)
+        if compl_process.returncode > 0:
             # self._remove_cube_files()
             raise ValueError("Invoking Bader charge analysis failed!")
-        self._remove_cube_files()
+        # self._remove_cube_files()
         return self._parse_charge_vol()
 
     def _remove_cube_files(self):
@@ -87,10 +86,12 @@ class Bader:
 
         """
         filename = os.path.join(self._working_directory, "ACF.dat")
-        return parse_charge_vol_file(structure=self._structure, filename=filename)
+        
+        if os.path.isfile(filename):
+            return parse_charge_vol_file(structure=self._structure, filename=filename)
 
 
-def call_bader(foldername, extra_arguments=None):
+def call_bader(foldername):
     """
     Call the Bader program inside a given folder
 
@@ -102,10 +103,8 @@ def call_bader(foldername, extra_arguments=None):
         int: Result from the subprocess call (>0 if an error occurs)
 
     """
-    if extra_arguments is None:
-        extra_arguments = ""
-    cmd = "bader valence_charge.CUBE -ref total_charge.CUBE {0}".format(extra_arguments)
-    return subprocess.call(cmd, shell=True, cwd=foldername)
+    cmd = ["bader", "valence_charge.CUBE", "-ref", "total_charge.CUBE"]
+    return subprocess.run(cmd, cwd=foldername, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
 
 
 def parse_charge_vol_file(structure, filename="ACF.dat"):
