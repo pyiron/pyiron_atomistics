@@ -25,7 +25,7 @@ class Bader:
     Module to apply the Bader charge partitioning scheme to finished DFT jobs. This module is interfaced with the
     `Bader code`_ from the Greame Henkelmann group.
 
-    .. _Bader code: http://theory.cm.utexas.edu/henkelman/code/bader
+    .. _Bader code: https://theory.cm.utexas.edu/henkelman/code/bader
     """
 
     def __init__(self, job):
@@ -55,9 +55,6 @@ class Bader:
         """
         Run Bader analysis on the output from the DFT job
 
-        Args:
-            extra_arguments (str): Extra arguments to the Bader program
-
         Returns:
             tuple: Charges and volumes as numpy arrays
 
@@ -66,9 +63,9 @@ class Bader:
         compl_process = call_bader(
             foldername=self._working_directory)
         if compl_process.returncode > 0:
-            # self._remove_cube_files()
+            self._remove_cube_files()
             raise ValueError("Invoking Bader charge analysis failed!")
-        # self._remove_cube_files()
+        self._remove_cube_files()
         return self._parse_charge_vol()
 
     def _remove_cube_files(self):
@@ -94,21 +91,20 @@ class Bader:
             return parse_charge_vol_pickle(filename=filename)
         
 
-
 def call_bader(foldername):
     """
     Call the Bader program inside a given folder
 
     Args:
         foldername (str): Folder path
-        extra_arguments (str): Extra arguments to the Bader program
 
     Returns:
         int: Result from the subprocess call (>0 if an error occurs)
 
     """
     cmd = ["bader", "valence_charge.CUBE", "-ref", "total_charge.CUBE"]
-    return subprocess.run(cmd, cwd=foldername, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+    return subprocess.run(cmd, cwd=foldername, shell=False, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT, check=False)
 
 
 def parse_charge_vol_file(structure, filename="ACF.dat"):
