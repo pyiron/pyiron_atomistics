@@ -322,8 +322,9 @@ def _strain_axes(structure: Atoms, axes: List[str], volume_strain: float):
     """
     axes = np.array([a in axes for a in ("x", "y", "z")])
     num_axes = sum(axes)
-    strains = axes * (volume_strain**(1.0/num_axes) - 1)
+    strains = axes * (volume_strain ** (1.0 / num_axes) - 1)
     return structure.apply_strain(strains, return_box=True)
+
 
 class MurnaghanJobGenerator(JobGenerator):
     @property
@@ -339,7 +340,9 @@ class MurnaghanJobGenerator(JobGenerator):
             1 + self._master.input["vol_range"],
             int(self._master.input["num_points"]),
         ):
-            basis = _strain_axes(self._master.structure, self._master.input["axes"], strain)
+            basis = _strain_axes(
+                self._master.structure, self._master.input["axes"], strain
+            )
             parameter_lst.append([np.round(strain, 7), basis])
         return parameter_lst
 
@@ -661,7 +664,10 @@ class Murnaghan(AtomisticParallelMaster):
             0.1,
             "relative volume variation around volume defined by ref_ham",
         )
-        self.input["axes"] = (["x", "y", "z"], "Axes along which the strain will be applied")
+        self.input["axes"] = (
+            ["x", "y", "z"],
+            "Axes along which the strain will be applied",
+        )
 
         self.debye_model = DebyeModel(self)
         self.fit_module = EnergyVolumeFit()
@@ -781,11 +787,11 @@ class Murnaghan(AtomisticParallelMaster):
     def validate_ready_to_run(self):
         axes = self.input["axes"]
         if len(set(axes)) != len(axes):
-            raise ValueError("input[\"axes\"] may not contain duplicate entries!")
+            raise ValueError('input["axes"] may not contain duplicate entries!')
         if not (1 <= len(axes) <= 3):
-            raise ValueError("input[\"axes\"] must contain one to three entries!")
+            raise ValueError('input["axes"] must contain one to three entries!')
         if set(axes).union(["x", "y", "z"]) != {"x", "y", "z"}:
-            raise ValueError("input[\"axes\"] entries must be one of \"x\", \"y\" or \"z\"!")
+            raise ValueError('input["axes"] entries must be one of "x", "y" or "z"!')
 
     def collect_output(self):
         if self.ref_job.server.run_mode.interactive:
