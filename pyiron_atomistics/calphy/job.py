@@ -231,7 +231,10 @@ class Calphy(GenericJob):
             
     @property
     def potential(self):
-        return self.get_potentials()
+        potentials =  self.get_potentials()
+        if len(potentials) == 1:
+            return potentials[0]
+        return potentials
     
     @potential.setter
     def potential(self, potential_filenames):
@@ -311,7 +314,7 @@ class Calphy(GenericJob):
         Returns:
             None
         """
-        if len(self.potential) == 2:
+        if len(self.get_potentials()) == 2:
             self.input.mode = "alchemy"
             self.input.reference_phase = "alchemy"
         elif isinstance(self.input.pressure, list): 
