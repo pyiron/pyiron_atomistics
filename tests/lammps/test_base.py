@@ -98,7 +98,7 @@ class TestLammps(TestWithCleanProject):
 
     def test_structure_charge(self):
         atoms = Atoms("Fe1", positions=np.zeros((1, 3)), cell=np.eye(3))
-        atoms.add_tag(charge=2.0)
+        atoms.set_initial_charges(charges=np.ones(len(atoms)) * 2.0)
         lmp_structure = LammpsStructure()
         lmp_structure.atom_type = "charge"
         lmp_structure._el_eam_lst = ["Fe"]
@@ -678,3 +678,28 @@ class TestLammps(TestWithCleanProject):
         def setter(x):
             self.job.units = x
         self.assertRaises(ValueError, setter, "nonsense")
+
+    def test_bonds_input(self):
+        potential = pd.DataFrame({'Name': ['Morse'],
+                                  'Filename': [[]],
+                                  'Model'   : ['Morse'],
+                                  'Species' : [['Al']],
+                                  'Config'  : [['atom_style bond\n',
+                                                'bond_style morse\n',
+                                                'bond_coeff 1 0.1 1.5 2.0\n',
+                                                'bond_coeff 2 0.1 1.5 2.0']]})
+        cell = Atoms(elements=4*['Al'], positions=[[0., 0., 0.],
+                                                   [0., 2., 2.],
+                                                   [2., 0., 2.],
+                                                   [2., 2., 0.]],
+                     cell=4*np.eye(3))
+        self.job.structure = cell.repeat(2)
+        self.job.structure.bonds = [[1, 2, 1], [1, 3, 2]]
+        self.job.potential = potential
+        self.job.calc_static()
+        self.job.run(run_mode="manual")
+
+        bond_str = "2 bond types\n"
+        self.assertTrue(self.job["structure.inp"][4][-1], bond_str)
+
+

@@ -874,6 +874,12 @@ class Trajectory(HasStructure):
         self._structure = structure
         self._cells = cells
         self._indices = indices
+        # If the indices don't exist, we construct the indices based on the indices of the initial structure
+        if self._indices is None:
+            self._indices = np.broadcast_to(
+                self._structure.indices,
+                (len(self._positions), len(self._structure.indices)),
+            )
 
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):

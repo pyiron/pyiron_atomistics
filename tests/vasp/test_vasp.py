@@ -446,6 +446,18 @@ class TestVasp(unittest.TestCase):
             job.run(run_mode="manual")
             self.assertEqual(len(w), 0)
 
+    def test_kspacing(self):
+        job_kspace = self.project.create_job("Vasp", "job_kspacing")
+        job_kspace.structure = self.project.create_ase_bulk("Fe")
+        job_kspace.input.incar["KSPACING"] = 0.5
+        with warnings.catch_warnings(record=True) as w:
+            job_kspace.run(run_mode="manual")
+            self.assertNotIn("KPOINTS", job_kspace.list_files(), "'KPOINTS' file written even when "
+                                                                 "KPACING tag is present in INCAR")
+
+            self.assertEqual(len(w), 1)
+            self.assertEqual(str(w[0].message), "'KSPACING' found in INCAR, no KPOINTS file written")
+
 
 if __name__ == "__main__":
     unittest.main()

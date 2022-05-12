@@ -6,6 +6,24 @@ import os
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_base import Project
 import unittest
+from pyiron_base._tests import TestWithCleanProject
+
+
+def run_modal_template(project, basis, is_non_modal=True):
+    ham = project.create_job(project.job_type.AtomisticExampleJob, "job_test")
+    ham.structure = basis
+    if is_non_modal:
+        ham.server.run_mode.non_modal = True
+    else:
+        ham.server.run_mode.modal = True
+    murn = project.create_job("Murnaghan", "murnaghan")
+    murn.ref_job = ham
+    murn.input["num_points"] = 3
+    if is_non_modal:
+        murn.server.run_mode.non_modal = True
+    else:
+        murn.run_mode.modal = True
+    return murn, ham
 
 
 def convergence_goal(self, **qwargs):
@@ -25,7 +43,7 @@ def convergence_goal(self, **qwargs):
     return ham_next
 
 
-class TestMurnaghan(unittest.TestCase):
+class TestMurnaghan(TestWithCleanProject):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
@@ -47,29 +65,11 @@ class TestMurnaghan(unittest.TestCase):
         project.remove(enable=True, enforce=True)
 
     def test_run(self):
-        # Even though the test is completed successful
-        ham = self.project.create_job(
-            self.project.job_type.AtomisticExampleJob, "job_test"
-        )
-        ham.structure = self.basis
-        ham.server.run_mode.non_modal = True
-        job_ser = self.project.create_job(
-            self.project.job_type.SerialMaster, "murn_iter"
-        )
-        job_ser.append(ham)
-        job_ser.server.run_mode.non_modal = True
-        job_ser.set_goal(convergence_goal, eps=0.4)
-        murn = self.project.create_job("Murnaghan", "murnaghan")
-        murn.ref_job = job_ser
-        murn.input["num_points"] = 3
-        murn.server.run_mode.non_modal = True
+        murn, ham = run_modal_template(self.project, self.basis, is_non_modal=True)
         murn.run()
-        self.assertFalse(job_ser.status.finished)
+        self.assertFalse(ham.status.finished)
         self.project.wait_for_job(murn, interval_in_s=5, max_iterations=50)
-        self.assertTrue(murn.status.finished)
-        murn.remove()
-        job_ser.remove()
-        self.project.remove(enable=True, enforce=True)
+        self.assertTrue(murn.status.not_converged or murn.status.finished)
 
 
 if __name__ == "__main__":
