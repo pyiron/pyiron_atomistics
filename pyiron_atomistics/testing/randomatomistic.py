@@ -121,7 +121,7 @@ class ExampleJob(GenericJob):
     def __init__(self, project, job_name):
         super(ExampleJob, self).__init__(project, job_name)
         self.__version__ = "0.3"
-        self.__name__ = "ExampleJob"
+
         self.input = ExampleInput()
         self.executable = "python -m pyiron_atomistics.testing.executable"
         self.interactive_cache = {"alat": [], "count": [], "energy": []}
@@ -379,7 +379,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
     def __init__(self, project, job_name):
         super(AtomisticExampleJob, self).__init__(project, job_name)
         self.__version__ = "0.3"
-        self.__name__ = "AtomisticExampleJob"
+
         self.input = ExampleInput()
         self.executable = "python -m pyiron_atomistics.testing.executable"
         self.interactive_cache = defaultdict(list)

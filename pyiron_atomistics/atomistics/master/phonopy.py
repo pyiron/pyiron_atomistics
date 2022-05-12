@@ -160,7 +160,7 @@ class PhonopyJob(AtomisticParallelMaster):
 
     def __init__(self, project, job_name):
         super(PhonopyJob, self).__init__(project, job_name)
-        self.__name__ = "PhonopyJob"
+
         self.__version__ = "0.0.1"
         self.input["interaction_range"] = (10.0, "Minimal size of supercell, Ang")
         self.input["factor"] = (

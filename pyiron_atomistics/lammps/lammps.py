@@ -33,5 +33,5 @@ class Lammps(LammpsInteractive):
 
     def __init__(self, project, job_name):
         super(Lammps, self).__init__(project, job_name)
-        self.__name__ = "Lammps"
+
         self._executable_activate(enforce=True)

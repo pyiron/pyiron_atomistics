@@ -32,7 +32,7 @@ class Gpaw(AseJob, GenericDFTJob):
     @import_alarm
     def __init__(self, project, job_name):
         super(Gpaw, self).__init__(project, job_name)
-        self.__name__ = "GpawJob"
+
         self.input = GpawInput()
 
     @property

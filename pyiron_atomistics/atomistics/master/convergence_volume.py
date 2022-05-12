@@ -41,7 +41,7 @@ class ConvergenceVolume(SerialMaster):
 
     def __init__(self, project, job_name):
         super(ConvergenceVolume, self).__init__(project, job_name=job_name)
-        self.__name__ = "ConvergenceVolume"
+
         self.__version__ = "0.0.2"
         if not self["input/convergence_goal"]:
             self.set_goal(convergence_goal, eps=0.005)
