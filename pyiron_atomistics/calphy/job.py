@@ -126,7 +126,7 @@ class Calphy(GenericJob):
     After the calculation is over, the various output options can be accessed through `job.output`.
     """
     def __init__(self, project, job_name):
-        super(CalphyBase, self).__init__(project, job_name)
+        super().__init__(project, job_name)
         self.input = DataContainer(inputdict, table_name="inputdata")
         self._potential_initial = None
         self._potential_final = None
