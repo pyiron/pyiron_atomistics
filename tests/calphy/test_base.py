@@ -49,23 +49,23 @@ class TestCalphy(unittest.TestCase):
 
     def test_potentials(self):
         self.job.set_potentials(
-            ["2001--Mishin-Y--Cu-1--LAMMPS--ipr5", "2001--Mishin-Y--Cu-1--LAMMPS--ipr5"]
+            ["2001--Mishin-Y--Cu-1--LAMMPS--ipr1", "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"]
         )
         # print(self.job.input)
         # pint(self.job.input.potential_initial_name)
         self.assertEqual(
-            self.job.input.potential_initial_name, "2001--Mishin-Y--Cu-1--LAMMPS--ipr5"
+            self.job.input.potential_initial_name, "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
         )
         self.assertEqual(
-            self.job.input.potential_final_name, "2001--Mishin-Y--Cu-1--LAMMPS--ipr5"
+            self.job.input.potential_final_name, "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
         )
         self.assertRaises(
             ValueError,
             self.job.set_potentials,
             [
-                "2001--Mishin-Y--Cu-1--LAMMPS--ipr5",
-                "2001--Mishin-Y--Cu-1--LAMMPS--ipr5",
-                "2001--Mishin-Y--Cu-1--LAMMPS--ipr5",
+                "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
+                "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
+                "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
             ],
         )
 
@@ -74,7 +74,7 @@ class TestCalphy(unittest.TestCase):
         self.assertEqual(pair_style[0], "eam/alloy")
 
     def test_modes(self):
-        self.job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr5"
+        self.job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
         self.job.calc_free_energy(temperature=100, pressure=0, reference_phase="solid")
         self.assertEqual(self.job.input.mode, "fe")
 
@@ -89,8 +89,8 @@ class TestCalphy(unittest.TestCase):
         self.assertEqual(self.job.input.mode, "pscale")
 
         self.job.potential = [
-            "2001--Mishin-Y--Cu-1--LAMMPS--ipr5",
-            "2001--Mishin-Y--Cu-1--LAMMPS--ipr5",
+            "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
+            "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
         ]
         self.job.calc_free_energy(temperature=100, pressure=0, reference_phase="solid")
         self.assertEqual(self.job.input.mode, "alchemy")
