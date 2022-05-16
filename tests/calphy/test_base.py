@@ -3,9 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
-import numpy as np
 import unittest
-import warnings
 import shutil
 
 from pyiron_atomistics.project import Project
@@ -68,8 +66,8 @@ class TestCalphy(unittest.TestCase):
     
     def test_output(self):
         filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static/")
-        shutil.copy(os.path.join(filepath, "calphy_test_files/tm_fcc.tar.gz"), cwd)
-        shutil.copy(os.path.join(filepath, "calphy_test_files/export.csv"), cwd)
+        shutil.copy(os.path.join(filepath, "calphy_test_files/tm_fcc.tar.gz"), os.path.basename(__FILE__))
+        shutil.copy(os.path.join(filepath, "calphy_test_files/export.csv"), os.path.basename(__FILE__))
         self.output_project.unpack("tm_fcc")
         self.output_project["copper_demo/tm_fcc"].output
         self.assertEqual(float(self.output_project["copper_demo/tm_fcc"].output.spring_constant), 1.51)    
