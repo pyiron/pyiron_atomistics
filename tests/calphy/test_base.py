@@ -49,32 +49,32 @@ class TestCalphy(unittest.TestCase):
 
     def test_potentials(self):
         self.job.set_potentials(
-            ["2001--Mishin-Y--Cu-1--LAMMPS--ipr1", "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"]
+            ["Cu_Mendelev_eam", "Cu_Mendelev_eam"]
         )
         # print(self.job.input)
         # pint(self.job.input.potential_initial_name)
         self.assertEqual(
-            self.job.input.potential_initial_name, "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
+            self.job.input.potential_initial_name, "Cu_Mendelev_eam"
         )
         self.assertEqual(
-            self.job.input.potential_final_name, "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
+            self.job.input.potential_final_name, "Cu_Mendelev_eam"
         )
         self.assertRaises(
             ValueError,
             self.job.set_potentials,
             [
-                "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
-                "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
-                "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
+                "Cu_Mendelev_eam",
+                "Cu_Mendelev_eam",
+                "Cu_Mendelev_eam",
             ],
         )
 
     def test_prepare_pair_styles(self):
         pair_style, pair_coeff = self.job._prepare_pair_styles()
-        self.assertEqual(pair_style[0], "eam/alloy")
+        self.assertEqual(pair_style[0], "eam/fs")
 
     def test_modes(self):
-        self.job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
+        self.job.potential = "Cu_Mendelev_eam"
         self.job.calc_free_energy(temperature=100, pressure=0, reference_phase="solid")
         self.assertEqual(self.job.input.mode, "fe")
 
@@ -89,8 +89,8 @@ class TestCalphy(unittest.TestCase):
         self.assertEqual(self.job.input.mode, "pscale")
 
         self.job.potential = [
-            "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
-            "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
+            "Cu_Mendelev_eam",
+            "Cu_Mendelev_eam",
         ]
         self.job.calc_free_energy(temperature=100, pressure=0, reference_phase="solid")
         self.assertEqual(self.job.input.mode, "alchemy")
