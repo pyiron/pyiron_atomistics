@@ -67,14 +67,13 @@ class TestCalphy(unittest.TestCase):
     def test_output(self):
         filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static/")
         print(filepath)
-        shutil.copy(os.path.join(filepath, "calphy_test_files/tm_fcc.tar.gz"), os.getcwd())
+        shutil.copy(os.path.join(filepath, "calphy_test_files/test_files.tar.gz"), os.getcwd())
         shutil.copy(os.path.join(filepath, "calphy_test_files/export.csv"), os.getcwd())
-        self.output_project.unpack("tm_fcc")
-        self.output_project["copper_demo/tm_fcc"].output
-        self.assertEqual(float(self.output_project["copper_demo/tm_fcc"].output.spring_constant), 1.51)    
-        self.assertEqual(self.output_project["copper_demo/tm_fcc"].output.energy_free[0], -4.002465158959863)
-        self.assertEqual(int(self.output_project["copper_demo/tm_fcc"].output.temperature[0]), 1100)
-        self.assertEqual(int(self.output_project["copper_demo/tm_fcc"].output.temperature[-1]), 1400)
+        self.output_project.unpack("test_files")
+        self.assertEqual(float(self.output_project["calphy_unittest/solid_job"].output.spring_constant), 1.45)    
+        self.assertEqual(self.output_project["calphy_unittest/solid_job"].output.energy_free[0], -4.0002701274424295)
+        self.assertEqual(int(self.output_project["calphy_unittest/solid_job"].output.temperature[0]), 1100)
+        self.assertEqual(int(self.output_project["calphy_unittest/solid_job"].output.temperature[-1]), 1400)
 
 
         
