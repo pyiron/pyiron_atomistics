@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from typing import Union, List
+from typing import Union, List, Tuple, Float
 
 from pyiron_base import DataContainer
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
@@ -196,7 +196,7 @@ class Calphy(GenericJob):
         if self._potential_final is not None:
             self._potential_final.copy_pot_files(self.working_directory)
 
-    def _prepare_pair_styles(self) -> tuple[list, list]:
+    def _prepare_pair_styles(self) -> Tuple[List, List]:
         """
         Prepare pair style and pair coeff
 
@@ -276,7 +276,7 @@ class Calphy(GenericJob):
     def structure(self, val):
         self.input.structure = val
 
-    def view_potentials(self) -> list:
+    def view_potentials(self) -> List:
         """
         View a list of available interatomic potentials
 
