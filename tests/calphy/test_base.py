@@ -7,7 +7,7 @@ import unittest
 import shutil
 
 from pyiron_atomistics.project import Project
-from pyiron_atomistics.calphy.calphy import Calphy
+from pyiron_atomistics.calphy.job import Calphy
 from pyiron_base import state, ProjectHDFio
 
 class TestCalphy(unittest.TestCase):
@@ -41,7 +41,7 @@ class TestCalphy(unittest.TestCase):
         self.assertRaises(ValueError, self.job.set_potentials, ["2001--Mishin-Y--Cu-1--LAMMPS--ipr1", "2001--Mishin-Y--Cu-1--LAMMPS--ipr1", "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"])
         
     def test_prepare_pair_styles(self):
-        pair_style, pair_coeff = self.job.prepare_pair_styles()
+        pair_style, pair_coeff = self.job._prepare_pair_styles()
         self.assertEqual(pair_style[0], "eam/alloy")
         
     def test_modes(self):
@@ -66,8 +66,9 @@ class TestCalphy(unittest.TestCase):
     
     def test_output(self):
         filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static/")
-        shutil.copy(os.path.join(filepath, "calphy_test_files/tm_fcc.tar.gz"), os.path.basename(__FILE__))
-        shutil.copy(os.path.join(filepath, "calphy_test_files/export.csv"), os.path.basename(__FILE__))
+        print(filepath)
+        shutil.copy(os.path.join(filepath, "calphy_test_files/tm_fcc.tar.gz"), os.getcwd())
+        shutil.copy(os.path.join(filepath, "calphy_test_files/export.csv"), os.getcwd())
         self.output_project.unpack("tm_fcc")
         self.output_project["copper_demo/tm_fcc"].output
         self.assertEqual(float(self.output_project["copper_demo/tm_fcc"].output.spring_constant), 1.51)    
