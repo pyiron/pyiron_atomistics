@@ -22,7 +22,7 @@ class TestCalphy(unittest.TestCase):
             job_name="test_calphy",
         )
         filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static/")
-        cls.output_project = Project(os.path.join(filepath, "calphy_test_files"))
+        cls.output_project = Project(os.path.join(filepath, "test_files"))
 
     @classmethod
     def tearDownClass(cls):
@@ -30,6 +30,10 @@ class TestCalphy(unittest.TestCase):
         project = Project(os.path.join(cls.execution_path, "test_calphy"))
         project.remove_jobs(silently=True, recursive=True)
         project.remove(enable=True)
+        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static/")
+        out_project = Project(os.path.join(filepath, "test_files"))
+        out_project.remove_jobs(silently=True, recursive=True)
+        out_project.remove(enable=True)        
         state.update()
     
     def test_potentials(self):
