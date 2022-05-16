@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from typing import Union, List, Tuple, Float
+from typing import Union, List, Tuple
 
 from pyiron_base import DataContainer
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
