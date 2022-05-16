@@ -70,7 +70,7 @@ class ScipyMinimizer(InteractiveWrapper):
 
     def __init__(self, project, job_name):
         super(ScipyMinimizer, self).__init__(project, job_name)
-        self.__name__ = "ScipyMinimizer"
+
         self._ref_job = None
         self.input = Input()
         self.output = ScipyMinimizerOutput(job=self)

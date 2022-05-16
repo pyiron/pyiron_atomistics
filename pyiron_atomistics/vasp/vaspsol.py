@@ -19,7 +19,7 @@ __date__ = "Sep 1, 2018"
 class VaspSol(Vasp):
     def __init__(self, project, job_name):
         super(VaspSol, self).__init__(project, job_name)
-        self.__name__ = "VaspSol"
+
         self.__version__ = (
             None  # Reset the version number to the executable is set automatically
         )

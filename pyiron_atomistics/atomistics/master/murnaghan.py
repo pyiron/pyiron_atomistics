@@ -613,7 +613,7 @@ class Murnaghan(AtomisticParallelMaster):
             job_name:
         """
         super(Murnaghan, self).__init__(project, job_name)
-        self.__name__ = "Murnaghan"
+
         self.__version__ = "0.3.0"
 
         # print ("h5_path: ", self.project_hdf5._h5_path)
@@ -636,6 +636,21 @@ class Murnaghan(AtomisticParallelMaster):
         self.fit_dict = None
         self._debye_T = None
         self._job_generator = MurnaghanJobGenerator(self)
+
+    def convergence_check(self) -> bool:
+        """
+        Checks if the Murnaghan job has cnverged or not
+
+        Note: Currently, a 3rd order polynomial is fit to check if there is any convergence
+
+        Returns:
+            bool: True if the calculation is converged
+        """
+        if super().convergence_check():
+            e_vol = self["output/equilibrium_volume"]
+            return e_vol is not None
+        else:
+            return False
 
     @property
     def fit(self):

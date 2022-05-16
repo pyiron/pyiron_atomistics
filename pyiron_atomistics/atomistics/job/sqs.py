@@ -332,7 +332,7 @@ class SQSJob(AtomisticGenericJob):
         self._python_only_job = True
         self._lst_of_struct = []
         self.__hdf_version__ = "0.2.0"
-        self.__name__ = "SQSJob"
+
         state.publications.add(self.publication)
 
     @property

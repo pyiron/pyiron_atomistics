@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
+from abc import ABC
 import numpy as np
 import os
 import shutil
@@ -14,14 +15,12 @@ from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 import warnings
 
 
-class ToyAtomisticJob(AtomisticGenericJob):
+class ToyAtomisticJob(AtomisticGenericJob, ABC):
 
     def _check_if_input_should_be_written(self):
         return False
 
     def run_static(self):
-        self.save()
-        self.status.running = True
         self.status.finished = True
         self.to_hdf()
 

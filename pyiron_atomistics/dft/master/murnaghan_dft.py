@@ -22,7 +22,7 @@ class MurnaghanDFT(Murnaghan):
     @deprecate("use standard Murnaghan instead")
     def __init__(self, project, job_name="murnaghan"):
         super(MurnaghanDFT, self).__init__(project, job_name)
-        self.__name__ = "MurnaghanDFT"
+
         self.__version__ = "0.3.0"
 
     def set_kpoints(
