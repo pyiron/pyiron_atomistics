@@ -337,7 +337,7 @@ class SxExtOptInteractive(InteractiveWrapper):
         self.status.running = True
         self._logger.info("job status: %s", self.status)
         new_positions = self.ref_job.structure.positions
-        self.ref_job_initialize()
+        # self.ref_job_initialize()
         while (
             self._interactive_number_of_steps < self.input["ionic_steps"]
             and not self._interactive_interface.converged
