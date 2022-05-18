@@ -318,8 +318,8 @@ class SxExtOptInteractive(InteractiveWrapper):
 
     def run_static(self):
         """
-        The run if modal function is called by run to execute the simulation, while waiting for the output. For this we
-        use subprocess.check_output()
+        The run if modal function is called by run to execute the simulation,
+        while waiting for the output. For this we use subprocess.check_output()
         """
         self._create_working_directory()
         self._interactive_interface = SxExtOpt(
@@ -337,6 +337,7 @@ class SxExtOptInteractive(InteractiveWrapper):
         self.status.running = True
         self._logger.info("job status: %s", self.status)
         new_positions = self.ref_job.structure.positions
+        self.ref_job_initialize()
         while (
             self._interactive_number_of_steps < self.input["ionic_steps"]
             and not self._interactive_interface.converged
@@ -358,6 +359,16 @@ class SxExtOptInteractive(InteractiveWrapper):
             self.ref_job.interactive_close()
         self._interactive_interface.interactive_close()
         self.run()
+
+    def ref_job_initialize(self):
+        if len(self._job_name_lst) > 0:
+            self._ref_job = self[0]
+            del self._job_name_lst[0]
+            with self.project_hdf5.open("input") as hdf5_input:
+                hdf5_input["job_list"] = self._job_name_lst
+            if self._job_id is not None and self._ref_job._master_id is None:
+                self._ref_job.master_id = self.job_id
+                self._ref_job.server.cores = self.server.cores
 
     def get_forces(self):
         ff = np.array(self.ref_job.output.forces[-1])
