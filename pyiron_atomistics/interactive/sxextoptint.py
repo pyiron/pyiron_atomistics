@@ -360,16 +360,6 @@ class SxExtOptInteractive(InteractiveWrapper):
         self._interactive_interface.interactive_close()
         self.run()
 
-    def ref_job_initialize(self):
-        if len(self._job_name_lst) > 0:
-            self._ref_job = self[0]
-            del self._job_name_lst[0]
-            with self.project_hdf5.open("input") as hdf5_input:
-                hdf5_input["job_list"] = self._job_name_lst
-            if self._job_id is not None and self._ref_job._master_id is None:
-                self._ref_job.master_id = self.job_id
-                self._ref_job.server.cores = self.server.cores
-
     def get_forces(self):
         ff = np.array(self.ref_job.output.forces[-1])
         if hasattr(self.ref_job.structure, "selective_dynamics"):
