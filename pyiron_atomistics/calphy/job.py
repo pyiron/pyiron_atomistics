@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from typing import Union, List, Tuple
+import pandas as pd
 
 from pyiron_base import DataContainer
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
@@ -140,6 +141,8 @@ class Calphy(GenericJob):
         self.input.structure = None
         self.output = DataContainer(table_name="output")
         self._data = None
+        self.input._pot_dict_initial = None
+        self.input._pot_dict_final = None
 
     def set_potentials(self, potential_filenames: Union[list, str]):
         """
@@ -154,15 +157,24 @@ class Calphy(GenericJob):
         if not isinstance(potential_filenames, list):
             potential_filenames = [potential_filenames]
         if len(potential_filenames) > 0:
-            potential = LammpsPotentialFile().find_by_name(potential_filenames[0])
+            if isinstance(potential_filenames[0], pd.DataFrame):
+                potential = potential_filenames[0]
+                self.input._pot_dict_initial = potential#.to_dict()
+            else:
+                potential = LammpsPotentialFile().find_by_name(potential_filenames[0])
+                self.input.potential_initial_name = potential_filenames[0]
             self._potential_initial = LammpsPotential()
             self._potential_initial.df = potential
-            self.input.potential_initial_name = potential_filenames[0]
+            
         if len(potential_filenames) > 1:
-            potential = LammpsPotentialFile().find_by_name(potential_filenames[1])
+            if isinstance(potential_filenames[1], pd.DataFrame):
+                potential = potential_filenames[1]
+                self.input._pot_dict_final = potential#.to_dict()
+            else:
+                potential = LammpsPotentialFile().find_by_name(potential_filenames[1])
+                self.input.potential_final_name = potential_filenames[1]
             self._potential_final = LammpsPotential()
             self._potential_final.df = potential
-            self.input.potential_final_name = potential_filenames[0]
         if len(potential_filenames) > 2:
             raise ValueError("Maximum two potentials can be provided")
 
@@ -253,8 +265,14 @@ class Calphy(GenericJob):
         filenames = []
         if self.input.potential_initial_name is not None:
             filenames.append(self.input.potential_initial_name)
+        elif self.input._pot_dict_initial is not None:
+            filenames.append(pd.DataFrame(data=self.input._pot_dict_initial))
         if self.input.potential_final_name is not None:
             filenames.append(self.input.potential_final_name)
+        elif self.input._pot_dict_final is not None:
+            filenames.append(pd.DataFrame(data=self.input._pot_dict_final))
+
+
         self.set_potentials(filenames)
 
     @property
