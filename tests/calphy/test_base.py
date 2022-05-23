@@ -109,11 +109,11 @@ class TestCalphy(unittest.TestCase):
             float(
                 self.output_project["calphy_unittest/solid_job"].output.spring_constant
             ),
-            1.45,
+            1.53,
         )
         self.assertEqual(
             self.output_project["calphy_unittest/solid_job"].output.energy_free[0],
-            -4.0002701274424295,
+            -4.0005525053419815,
         )
         self.assertEqual(
             int(self.output_project["calphy_unittest/solid_job"].output.temperature[0]),
