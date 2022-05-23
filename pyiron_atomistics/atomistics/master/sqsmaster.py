@@ -33,7 +33,7 @@ class SQSMaster(AtomisticParallelMaster):
 
     def __init__(self, project, job_name):
         super(SQSMaster, self).__init__(project, job_name)
-        self.__name__ = "SQSMaster"
+
         self.__version__ = "0.0.1"
         self.input["fraction_lst"] = []
         self.input["species_one"] = ""

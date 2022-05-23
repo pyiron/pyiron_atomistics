@@ -113,7 +113,7 @@ class ART(InteractiveWrapper):
 
     def __init__(self, project, job_name):
         super(ART, self).__init__(project, job_name)
-        self.__name__ = "ART"
+
         self.input = DataContainer(table_name="custom_dict")
         self.input.gamma = 0.1
         self.input.fix_layer = False

@@ -35,7 +35,7 @@ class SxUniqDispl(AtomisticGenericJob):
     def __init__(self, project, job_name):
         super(SxUniqDispl, self).__init__(project, job_name)
         self.__version__ = "0.1"
-        self.__name__ = "SxUniqDispl"
+
         self.input = GenericParameters(table_name="displacement")
         self.input["displacement"] = 0.01
         self.structure_lst = []
@@ -162,7 +162,7 @@ class SxDynMat(GenericJob):
     def __init__(self, project, job_name):
         super(SxDynMat, self).__init__(project, job_name)
         self.__version__ = "0.1"
-        self.__name__ = "SxDynMat"
+
         self._child_lst = []
         self._child_id_lst = []
 
@@ -324,7 +324,7 @@ class SxPhonons(AtomisticParallelMaster):
     def __init__(self, project, job_name):
         super(SxPhonons, self).__init__(project, job_name)
         self.__version__ = "0.1"
-        self.__name__ = "SxPhonons"
+
         self.input["displacement"] = (0.01, "atoms displacement, Ang")
         self._displacement_job = None
         self._dynmat_job = None
@@ -363,7 +363,7 @@ class SxHarmPotTst(AtomisticGenericJob):
     def __init__(self, project, job_name):
         super(SxHarmPotTst, self).__init__(project, job_name)
         self.__version__ = "0.1"
-        self.__name__ = "SxHarmPotTst"
+
         self.input = GenericParameters(table_name="interaction")
         self.input["interaction_radius"] = 4.0
         self.input["maximum_noise"] = 0.26

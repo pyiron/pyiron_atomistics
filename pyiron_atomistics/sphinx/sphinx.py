@@ -31,7 +31,7 @@ class Sphinx(SphinxInteractive):
 
     def __init__(self, project, job_name):
         super(Sphinx, self).__init__(project, job_name)
-        self.__name__ = "Sphinx"
+
         self.__version__ = (
             None  # Reset the version number to the executable is set automatically
         )

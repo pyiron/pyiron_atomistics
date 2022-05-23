@@ -59,7 +59,7 @@ class VaspMetadyn(Vasp):
 
     def __init__(self, project, job_name):
         super(VaspMetadyn, self).__init__(project, job_name)
-        self.__name__ = "VaspMetadyn"
+
         self.input = MetadynInput()
         self._output_parser = MetadynOutput()
         self.supported_primitive_constraints = [

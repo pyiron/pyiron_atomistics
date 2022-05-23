@@ -427,7 +427,7 @@ class ElasticTensor(AtomisticParallelMaster):
             job_name: job_name
         """
         super().__init__(project, job_name)
-        self.__name__ = "ElasticTensor"
+
         self.__version__ = "0.1.0"
         self.input["min_num_measurements"] = (
             11,

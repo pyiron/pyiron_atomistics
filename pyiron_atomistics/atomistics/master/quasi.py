@@ -5,6 +5,7 @@
 import numpy as np
 from pyiron_atomistics.atomistics.master.murnaghan import MurnaghanJobGenerator
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+import matplotlib
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -82,7 +83,7 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
             job_name:
         """
         super(QuasiHarmonicJob, self).__init__(project, job_name)
-        self.__name__ = "QuasiHarmonicJob"
+
         self.__version__ = "0.0.1"
 
         # define default input
@@ -173,3 +174,81 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
             entropy_lst.append(entropy[ind])
             cv_lst.append(cv[ind])
         return v0_lst, free_eng_lst, entropy_lst, cv_lst
+
+    def plot_free_energy_volume_temperature(
+        self,
+        murnaghan_job=None,
+        temperature_start=None,
+        temperature_end=None,
+        temperature_steps=None,
+        color_map="coolwarm",
+        axis=None,
+        *args,
+        **kwargs
+    ):
+        """
+        Plot volume vs free energy curves for defined temperatures. If no Murnaghan job is assigned, plots free energy without total electronic energy at T=0.
+
+        Args:
+            murnaghan_job: job_name or job_id of the Murnaghan job. if None, total electronic energy at T=0 is set to zero.
+            temperature_start: if None, value will be used from job.input['temperature_start']
+            temperature_end: if None, value will be used from job.input['temperature_end']
+            temperature_steps: if None, value will be used from job.input['temperature_steps']
+            color_map: colormaps options accessible via matplotlib.cm.get_cmap. Default is 'coolwarm'.
+            axis (matplotlib axis, optional): plot to this axis, if not given a new one is created.
+            *args: passed through to matplotlib.pyplot.plot when plotting free energies.
+            **kwargs: passed through to matplotlib.pyplot.plot when plotting free energies.
+
+        Returns:
+            matplib axis: the axis the figure has been drawn to, if axis is given the same object is returned.
+        """
+        energy_zero = 0
+        if murnaghan_job != None:
+            job_murn = self.project.load(murnaghan_job)
+            energy_zero = job_murn["output/energy"]
+
+        if not self.status.finished:
+            raise ValueError(
+                "QHA Job must be successfully run, before calling this method."
+            )
+
+        if not job_murn.status.finished:
+            raise ValueError(
+                "Murnaghan Job must be successfully run, before calling this method."
+            )
+
+        if axis is None:
+            _, axis = matplotlib.pyplot.subplots(1, 1)
+
+        cmap = matplotlib.cm.get_cmap(color_map)
+
+        if temperature_start != None:
+            self.input["temperature_start"] = temperature_start
+        if temperature_end != None:
+            self.input["temperature_end"] = temperature_end
+        if temperature_steps != None:
+            self.input["temperature_steps"] = temperature_steps
+        self.collect_output()
+
+        for i, [t, free_energy, v] in enumerate(
+            zip(
+                self["output/temperatures"].T,
+                self["output/free_energy"].T,
+                self["output/volumes"].T,
+            )
+        ):
+            color = cmap(i / len(self["output/temperatures"].T))
+            axis.plot(v, free_energy + energy_zero, color=color)
+
+        axis.set_xlabel("Volume")
+        axis.set_ylabel("Free Energy")
+
+        temperatures = self["output/temperatures"]
+        normalize = matplotlib.colors.Normalize(
+            vmin=temperatures.min(), vmax=temperatures.max()
+        )
+        scalarmappaple = matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap)
+        scalarmappaple.set_array(temperatures)
+        cbar = matplotlib.pyplot.colorbar(scalarmappaple)
+        cbar.set_label("Temperature")
+        return axis
