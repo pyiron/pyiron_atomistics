@@ -1,2 +1,2 @@
 ,id,status,chemicalformula,job,subjob,project,timestart,timestop,totalcputime,computer,hamilton,hamversion,parentid,masterid
-0,0,finished,,solid_job,/solid_job,test_files/calphy_unittest,2022-05-16 11:28:36.775698,2022-05-16 11:30:45.159852,128.0,pyiron@musashi#4,Calphy,0.4,,
+0,0,finished,,solid_job,/solid_job,test_files/calphy_unittest,2022-05-23 16:20:40.722452,2022-05-23 16:22:37.347313,116.0,pyiron@musashi#4,Calphy,0.4,,
