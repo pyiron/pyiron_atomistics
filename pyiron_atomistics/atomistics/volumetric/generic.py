@@ -354,7 +354,8 @@ class VolumetricData(object):
                 "The volumetric data object must have a valid structure assigned to it before writing "
                 "to the cube format"
             )
-        write_cube(filename, self._atoms, data=self.total_data)
+        with open(filename, "w") as f:
+            write_cube(f, self._atoms, data=self.total_data)
         #
         # data = self.total_data
         # n_x, n_y, _ = data.shape
