@@ -159,17 +159,17 @@ class Calphy(GenericJob):
         if len(potential_filenames) > 0:
             if isinstance(potential_filenames[0], pd.DataFrame):
                 potential = potential_filenames[0]
-                self.input._pot_dict_initial = potential#.to_dict()
+                self.input._pot_dict_initial = potential  # .to_dict()
             else:
                 potential = LammpsPotentialFile().find_by_name(potential_filenames[0])
                 self.input.potential_initial_name = potential_filenames[0]
             self._potential_initial = LammpsPotential()
             self._potential_initial.df = potential
-            
+
         if len(potential_filenames) > 1:
             if isinstance(potential_filenames[1], pd.DataFrame):
                 potential = potential_filenames[1]
-                self.input._pot_dict_final = potential#.to_dict()
+                self.input._pot_dict_final = potential  # .to_dict()
             else:
                 potential = LammpsPotentialFile().find_by_name(potential_filenames[1])
                 self.input.potential_final_name = potential_filenames[1]
@@ -271,7 +271,6 @@ class Calphy(GenericJob):
             filenames.append(self.input.potential_final_name)
         elif self.input._pot_dict_final is not None:
             filenames.append(pd.DataFrame(data=self.input._pot_dict_final))
-
 
         self.set_potentials(filenames)
 
