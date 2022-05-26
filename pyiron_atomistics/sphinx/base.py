@@ -112,6 +112,8 @@ class SphinxBase(GenericDFTJob):
         if not isinstance(item, str):
             return super().__getitem__(item)
         result = None
+        if item[-1] == "/":
+            item = item[:-1]
         for tag in item.split("/"):
             try:  # horrible workaround to be removed when hdf output becomes consistent
                 if result is None:
