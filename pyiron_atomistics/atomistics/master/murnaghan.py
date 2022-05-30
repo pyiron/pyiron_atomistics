@@ -3,7 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
+from typing import List, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
 import scipy.integrate
@@ -788,15 +790,26 @@ class Murnaghan(AtomisticParallelMaster):
         else:
             self._fit_eos_general(fittype=self.input["fit_type"])
 
-    def plot(self, num_steps=100, plt_show=True, ax=None, plot_kwargs=None):
+    def plot(self, num_steps: int = 100, plt_show: bool = True, ax=None, plot_kwargs: Optional[dict] = None):
+        """
+        Plot E-V curve.
+
+        Args:
+            num_steps (optional, int): number of sample points to interpolate the calculated values on
+            plt_show (optional, bool): call `matplotlib.pyplot.show()` after plotting (only necessary when running pyiron from scripts)
+            ax (optional, plt.Axes): if given plot onto this axis, otherwise create new figure for the plot
+            plot_kwargs (optional, dict): arguments passed verbatim to `matplotlib.pyplot.plot()`
+
+        Returns:
+            ax: The axis plotted onto
+
+        Raises:
+            ValueError: if job is not finished when calling this method
+        """
         if not self.status.finished:
             raise ValueError(
                 "Job must be successfully run, before calling this method."
             )
-        try:
-            import matplotlib.pylab as plt
-        except ImportError:
-            import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.subplot(111)
