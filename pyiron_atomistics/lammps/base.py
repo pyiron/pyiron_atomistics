@@ -498,7 +498,7 @@ class LammpsBase(AtomisticGenericJob):
         """
         uc = UnitConverter(self.units)
         prism = UnfoldingPrism(self.structure.cell, digits=15)
-        if np.matrix.trace(prism.R) != 3.0:
+        if np.isclose(prism.R, np.eye(3)).all():
             raise RuntimeError(
                 "The Lammps output will not be mapped back to pyiron correctly."
             )
@@ -672,7 +672,7 @@ class LammpsBase(AtomisticGenericJob):
                 )
                 # Rotate pressures from Lammps frame to pyiron frame if necessary
                 rotation_matrix = self._prism.R.T
-                if np.matrix.trace(rotation_matrix) != 3.0:
+                if np.isclose(rotation_matrix, np.eye(3)).all():
                     pressures = rotation_matrix.T @ pressures @ rotation_matrix
 
                 df = df.drop(
@@ -704,7 +704,7 @@ class LammpsBase(AtomisticGenericJob):
                     .reshape(-1, 3, 3)
                     .astype("float64")
                 )
-                if np.matrix.trace(rotation_matrix) != 3.0:
+                if np.isclose(rotation_matrix, np.eye(3)).all():
                     pressures = rotation_matrix.T @ pressures @ rotation_matrix
                 df = df.drop(
                     columns=df.columns[
