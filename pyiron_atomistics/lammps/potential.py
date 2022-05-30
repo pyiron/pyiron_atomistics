@@ -38,11 +38,12 @@ class LammpsPotential(GenericParameters):
             table_name="potential_inp",
             comment_char="#",
 
-            self._use_symlink=use_symlink,
+            
         )
         self._potential = None
         self._attributes = {}
         self._df = None
+        self._use_symlink=use_symlink,
 
     @property
     def df(self):
