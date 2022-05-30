@@ -6,6 +6,7 @@ from __future__ import print_function
 import pandas as pd
 import shutil
 import os
+from pathlib import Path
 from pyiron_base import state, GenericParameters
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
@@ -31,11 +32,13 @@ class LammpsPotential(GenericParameters):
     simulations
     """
 
-    def __init__(self, input_file_name=None):
+    def __init__(self, input_file_name=None, use_symlink=True,):
         super(LammpsPotential, self).__init__(
             input_file_name=input_file_name,
             table_name="potential_inp",
             comment_char="#",
+
+            self._use_symlink=use_symlink,
         )
         self._potential = None
         self._attributes = {}
@@ -100,6 +103,10 @@ class LammpsPotential(GenericParameters):
     def copy_pot_files(self, working_directory):
         if self.files is not None:
             _ = [shutil.copy(path_pot, working_directory) for path_pot in self.files]
+
+    def link_pot_files(self, working_directory):
+        if self.files is not None:
+            _ = [os.symlink(path_pot, working_directory+"/"+Path(path_pot).name) for path_pot in self.files]
 
     def get_element_lst(self):
         return list(self._df["Species"])[0]
