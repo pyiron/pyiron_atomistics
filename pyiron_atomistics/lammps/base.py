@@ -401,7 +401,10 @@ class LammpsBase(AtomisticGenericJob):
         self.input.potential.write_file(
             file_name="potential.inp", cwd=self.working_directory
         )
-        self.input.potential.copy_pot_files(self.working_directory)
+        if self.input.potential._use_symlink:
+            self.input.potential.link_pot_files(self.working_directory)
+        else:
+            self.input.potential.copy_pot_files(self.working_directory)
 
     def _get_executable_version_number(self):
         """
