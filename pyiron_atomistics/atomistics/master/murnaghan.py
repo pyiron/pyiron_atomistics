@@ -790,11 +790,18 @@ class Murnaghan(AtomisticParallelMaster):
         else:
             self._fit_eos_general(fittype=self.input["fit_type"])
 
-    def plot(self, num_steps: int = 100, plt_show: bool = True, ax=None, plot_kwargs: Optional[dict] = None):
+    def plot(self,
+            per_atom: bool = False,
+            num_steps: int = 100,
+            plt_show: bool = True,
+            ax=None,
+            plot_kwargs: Optional[dict] = None
+    ):
         """
         Plot E-V curve.
 
         Args:
+            per_atom (optional, bool): normalize energy and volume by number of atoms in structure before plotting
             num_steps (optional, int): number of sample points to interpolate the calculated values on
             plt_show (optional, bool): call `matplotlib.pyplot.show()` after plotting (only necessary when running pyiron from scripts)
             ax (optional, plt.Axes): if given plot onto this axis, otherwise create new figure for the plot
@@ -842,14 +849,15 @@ class Murnaghan(AtomisticParallelMaster):
         else:
             label = self.input["fit_type"]
 
+        normalization = 1 if not per_atom else len(self.structure)
         if self.fit_dict is not None:
             if self.input["fit_type"] == "polynomial":
                 p_fit = np.poly1d(self.fit_dict["poly_fit"])
                 least_square_error = self.fit_module.get_error(vol_lst, erg_lst, p_fit)
                 ax.set_title("Murnaghan: error: " + str(least_square_error))
                 ax.plot(
-                    x_i,
-                    p_fit(x_i),
+                    x_i / normalization,
+                    p_fit(x_i) / normalization,
                     "-",
                     label=label,
                     color=color,
@@ -865,8 +873,8 @@ class Murnaghan(AtomisticParallelMaster):
                     parameters=[E0, B0, BP, V0], vol=x_i, fittype=self.input["fit_type"]
                 )
                 ax.plot(
-                    x_i,
-                    eng_fit_lst,
+                    x_i / normalization,
+                    eng_fit_lst / normalization,
                     "-",
                     label=label,
                     color=color,
@@ -874,7 +882,7 @@ class Murnaghan(AtomisticParallelMaster):
                     **plot_kwargs,
                 )
 
-        ax.plot(vol_lst, erg_lst, "x", color=color, markersize=20, **plot_kwargs)
+        ax.plot(vol_lst / normalization, erg_lst / normalization, "x", color=color, markersize=20, **plot_kwargs)
         ax.legend()
         ax.set_xlabel("Volume ($\AA^3$)")
         ax.set_ylabel("energy (eV)")
