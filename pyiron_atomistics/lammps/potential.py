@@ -32,7 +32,7 @@ class LammpsPotential(GenericParameters):
     simulations
     """
 
-    def __init__(self, input_file_name=None, use_symlink=True,):
+    def __init__(self, input_file_name=None, use_symlink=False,):
         super(LammpsPotential, self).__init__(
             input_file_name=input_file_name,
             table_name="potential_inp",
