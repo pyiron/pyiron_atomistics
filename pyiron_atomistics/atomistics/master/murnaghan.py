@@ -790,12 +790,13 @@ class Murnaghan(AtomisticParallelMaster):
         else:
             self._fit_eos_general(fittype=self.input["fit_type"])
 
-    def plot(self,
-            per_atom: bool = False,
-            num_steps: int = 100,
-            plt_show: bool = True,
-            ax=None,
-            plot_kwargs: Optional[dict] = None
+    def plot(
+        self,
+        per_atom: bool = False,
+        num_steps: int = 100,
+        plt_show: bool = True,
+        ax=None,
+        plot_kwargs: Optional[dict] = None,
     ):
         """
         Plot E-V curve.
@@ -882,7 +883,14 @@ class Murnaghan(AtomisticParallelMaster):
                     **plot_kwargs,
                 )
 
-        ax.plot(vol_lst / normalization, erg_lst / normalization, "x", color=color, markersize=20, **plot_kwargs)
+        ax.plot(
+            vol_lst / normalization,
+            erg_lst / normalization,
+            "x",
+            color=color,
+            markersize=20,
+            **plot_kwargs,
+        )
         ax.legend()
         ax.set_xlabel("Volume ($\AA^3$)")
         ax.set_ylabel("energy (eV)")
