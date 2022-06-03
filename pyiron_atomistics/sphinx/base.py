@@ -629,7 +629,6 @@ class SphinxBase(GenericDFTJob):
         if "noWavesStorage" not in guess:
             guess["noWavesStorage"] = not self.input["WriteWaves"]
 
-
     def calc_static(
         self,
         electronic_steps=100,
