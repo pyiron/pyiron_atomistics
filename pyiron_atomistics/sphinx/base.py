@@ -580,22 +580,27 @@ class SphinxBase(GenericDFTJob):
             if "waves.sxb" in ff.split("/")[-1]:
                 wave_function_file = ff
 
-        self.input.sphinx.initialGuess.setdefault("waves", Group())
-        self.input.sphinx.initialGuess.waves.setdefault("lcao", Group())
-        self.input.sphinx.initialGuess.waves.setdefault("pawBasis", True)
-        if wave_function_file is not None:
-            self.input.sphinx.initialGuess.setdefault("exchange", Group())
-            self.input.sphinx.initialGuess.exchange.setdefault(
-                "file", '"' + wave_function_file + '"'
-            )
-        if charge_density_file is None:
-            self.input.sphinx.initialGuess.setdefault(
-                "rho", Group({"atomicOrbitals": True})
-            )
+        # introduce short alias for initialGuess group
+        guess = self.input.sphinx.initialGuess
+
+        guess.setdefault("waves", Group())
+        guess.waves.setdefault("pawBasis", True)
+        if wave_function_file is None:
+            guess.waves.setdefault("lcao", Group())
         else:
-            self.input.sphinx.initialGuess.setdefault(
-                "rho", Group({"file": '"' + charge_density_file + '"'})
-            )
+            guess.waves.setdefault("file", '"' + wave_function_file + '"')
+            # TODO: only for hybrid functionals
+            guess.setdefault("exchange", Group())
+            guess.exchange.setdefault("file", '"' + wave_function_file + '"')
+
+        guess.setdefault("rho", Group())
+        if charge_density_file is None:
+            if wave_function_file is None:
+                guess.rho.setdefault("atomicOrbitals", True)
+            else:
+                guess.rho.setdefault("fromWaves", True)
+        else:
+            guess.setdefault("file", '"' + charge_density_file + '"')
         if self._spin_enabled:
             if any(
                 [
@@ -607,7 +612,7 @@ class SphinxBase(GenericDFTJob):
             ):
                 raise ValueError("SPHInX only supports collinear spins.")
             else:
-                rho = self.input.sphinx.initialGuess.rho
+                rho = guess.rho
                 rho.get("atomicSpin", create=True)
                 if update_spins:
                     rho.atomicSpin.clear()
@@ -621,10 +626,9 @@ class SphinxBase(GenericDFTJob):
                             )
                         )
 
-        if "noWavesStorage" not in self.input.sphinx.initialGuess:
-            self.input.sphinx.initialGuess["noWavesStorage"] = not self.input[
-                "WriteWaves"
-            ]
+        if "noWavesStorage" not in guess:
+            guess["noWavesStorage"] = not self.input["WriteWaves"]
+
 
     def calc_static(
         self,
@@ -836,14 +840,17 @@ class SphinxBase(GenericDFTJob):
                     self.status.not_converged = True
         new_job = super(SphinxBase, self).restart(job_name=job_name, job_type=job_type)
 
-        new_job.input = self.input
+        new_job.input = self.input.copy()
 
+        recreate_guess = False
         if from_charge_density and os.path.isfile(
             posixpath.join(self.working_directory, "rho.sxb")
         ):
             new_job.restart_file_list.append(
                 posixpath.join(self.working_directory, "rho.sxb")
             )
+            del new_job.input.sphinx.initialGuess["rho"]
+            recreate_guess = True
 
         elif from_charge_density:
             self._logger.warning(
@@ -856,11 +863,20 @@ class SphinxBase(GenericDFTJob):
             new_job.restart_file_list.append(
                 posixpath.join(self.working_directory, "waves.sxb")
             )
+            try:
+                del new_job.input.sphinx.initialGuess["rho"]
+            except KeyError:
+                pass
+            del new_job.input.sphinx.initialGuess["waves"]
+            recreate_guess = True
+
         elif from_wave_functions:
             self._logger.warning(
                 msg="No wavefunction file (waves.sxb) was found for "
                 + f"job {self.job_name} in {self.working_directory}."
             )
+        if recreate_guess:
+            new_job.load_guess_group()
         return new_job
 
     def to_hdf(self, hdf=None, group_name=None):
