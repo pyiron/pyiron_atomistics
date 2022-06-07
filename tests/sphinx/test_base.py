@@ -400,31 +400,32 @@ class TestSphinx(unittest.TestCase):
         self.sphinx_band_structure.structure = backup
 
     def test_load_default_groups(self):
-        def reload(filelist):
+        guess = self.sphinx_band_structure.input.sphinx.initialGuess
+
+        def reload_guess(filelist):
             try:
                 self.sphinx_band_structure.restart_file_list = filelist
             except IOError:
                 # proposed restart files won't exist - never mind.
                 pass
-            del self.sphinx_band_structure.input.sphinx["initialGuess"]
+            del guess["rho"]
+            del guess["waves"]
             self.sphinx_band_structure.load_guess_group ()
 
-        sxinput = self.sphinx_band_structure.input.sphinx
+        reload_guess (["rho.sxb"])
+        self.assertEqual (guess.rho.file, "\"rho.sxb\"")
 
-        reload (["rho.sxb"])
-        self.assertEqual (sxinput.initialGuess.rho.file, "\"rho.sxb\"")
+        reload_guess (["waves.sxb"])
+        self.assertEqual (guess.waves.file, "\"waves.sxb\"")
+        self.assertEqual (guess.rho.fromWaves, True)
 
-        reload (["waves.sxb"])
-        self.assertEqual (sxinput.initialGuess.waves.file, "\"waves.sxb\"")
-        self.assertEqual (sxinput.initialGuess.rho.fromWaves, True)
+        reload_guess (["rho.sxb", "waves.sxb"])
+        self.assertEqual (guess.waves.file, "\"waves.sxb\"")
+        self.assertEqual (guess.rho.file, "\"rho.sxb\"")
 
-        reload (["rho.sxb", "waves.sxb"])
-        self.assertEqual (sxinput.initialGuess.waves.file, "\"waves.sxb\"")
-        self.assertEqual (sxinput.initialGuess.rho.file, "\"rho.sxb\"")
-
-        reload ([])
-        self.assertEqual (sxinput.initialGuess.rho.atomicOrbitals, True)
-        self.assertTrue ('lcao' in sxinput.initialGuess.waves)
+        reload_guess ([])
+        self.assertEqual (guess.rho.atomicOrbitals, True)
+        self.assertTrue ('lcao' in guess.waves)
 
     def test_validate_ready_to_run(self):
 
