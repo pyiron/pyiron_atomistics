@@ -424,7 +424,7 @@ class TestSphinx(unittest.TestCase):
 
         reload ([])
         self.assertEqual (sxinput.initialGuess.rho.atomicOrbitals, True)
-        self.assert ('lcao' in sxinput.initialGuess.waves)
+        self.assertTrue ('lcao' in sxinput.initialGuess.waves)
 
     def test_validate_ready_to_run(self):
 
