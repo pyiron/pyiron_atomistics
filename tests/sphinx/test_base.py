@@ -412,16 +412,16 @@ class TestSphinx(unittest.TestCase):
             del guess["waves"]
             self.sphinx_band_structure.load_guess_group ()
 
-        reload_guess (["rho.sxb"])
-        self.assertEqual (guess.rho.file, "\"rho.sxb\"")
+        reload_guess (["./rho.sxb"])
+        self.assertEqual (guess.rho.file, "\"./rho.sxb\"")
 
-        reload_guess (["waves.sxb"])
-        self.assertEqual (guess.waves.file, "\"waves.sxb\"")
+        reload_guess (["./waves.sxb"])
+        self.assertEqual (guess.waves.file, "\"./waves.sxb\"")
         self.assertEqual (guess.rho.fromWaves, True)
 
-        reload_guess (["rho.sxb", "waves.sxb"])
-        self.assertEqual (guess.waves.file, "\"waves.sxb\"")
-        self.assertEqual (guess.rho.file, "\"rho.sxb\"")
+        reload_guess (["./rho.sxb", "./waves.sxb"])
+        self.assertEqual (guess.waves.file, "\"./waves.sxb\"")
+        self.assertEqual (guess.rho.file, "\"./rho.sxb\"")
 
         reload_guess ([])
         self.assertEqual (guess.rho.atomicOrbitals, True)
