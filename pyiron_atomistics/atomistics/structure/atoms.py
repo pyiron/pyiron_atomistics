@@ -1378,10 +1378,7 @@ class Atoms(ASEAtoms):
                 other than norm_order=2, there is no guarantee that this works flawlessly.
 
         Returns:
-
-            pyiron.atomistics.structure.atoms.Neighbors: Neighbors instances with the neighbor
-                indices, distances and vectors
-
+            :class:`~.Neighbors`: Neighbors instances with the neighbor indices, distances and vectors
         """
         neigh = self._get_neighbors(
             num_neighbors=num_neighbors,
