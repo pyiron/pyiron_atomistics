@@ -600,7 +600,7 @@ class SphinxBase(GenericDFTJob):
             else:
                 guess.rho.setdefault("fromWaves", True)
         else:
-            guess.setdefault("file", '"' + charge_density_file + '"')
+            guess.rho.setdefault("file", '"' + charge_density_file + '"')
         if self._spin_enabled:
             if any(
                 [
