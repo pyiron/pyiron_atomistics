@@ -399,6 +399,31 @@ class TestSphinx(unittest.TestCase):
         )
         self.sphinx_band_structure.structure = backup
 
+    def test_load_default_groups(self):
+        self.sphinx_band_structure.restart_file_list = ["rho.sxb"]
+        del self.sphinx_band_structure.input.sphinx["initialGuess"]
+        self.sphinx_band_structure.load_guess_group ()
+        self.assertEqual (sxinput.initialGuess.rho.file, "\"rho.sxb\"")
+
+        self.sphinx_band_structure.restart_file_list = ["waves.sxb"]
+        del self.sphinx_band_structure.input.sphinx["initialGuess"]
+        self.sphinx_band_structure.load_guess_group ()
+        self.assertEqual (sxinput.initialGuess.waves.file, "\"waves.sxb\"")
+        self.assertEqual (sxinput.initialGuess.rho.fromWaves, True)
+
+        self.sphinx_band_structure.restart_file_list = ["rho.sxb", "waves.sxb"]
+        del self.sphinx_band_structure.input.sphinx["initialGuess"]
+        self.sphinx_band_structure.load_guess_group ()
+        self.assertEqual (sxinput.initialGuess.waves.file, "\"waves.sxb\"")
+        self.assertEqual (sxinput.initialGuess.rho.file, "\"rho.sxb\"")
+
+        self.sphinx_band_structure.restart_file_list = []
+        sxinput = self.sphinx_band_structure.input.sphinx
+        del sxinput["initialGuess"]
+        self.sphinx_band_structure.load_guess_group ()
+        self.assertEqual (sxinput.initialGuess.rho.atomicOrbitals, True)
+        self.assertEqual ('lcao' in sxinput.initialGuess.waves, True)
+
     def test_validate_ready_to_run(self):
 
         backup = self.sphinx_band_structure.structure.copy()
