@@ -5,6 +5,9 @@
 import os
 import numpy as np
 import unittest
+import tempfile
+import posixpath
+from pathlib import Path
 import warnings
 import scipy.constants
 from pyiron_atomistics.project import Project
@@ -399,33 +402,42 @@ class TestSphinx(unittest.TestCase):
         )
         self.sphinx_band_structure.structure = backup
 
-    def test_load_default_groups(self):
+    def test_load_guess_group(self):
         guess = self.sphinx_band_structure.input.sphinx.initialGuess
 
         def reload_guess(filelist):
-            try:
-                self.sphinx_band_structure.restart_file_list = filelist
-            except IOError:
-                # proposed restart files won't exist - never mind.
-                pass
+            # ugly hack: restart_file_list cannot be emptied otherwise
+            self.sphinx_band_structure._restart_file_list = list ()
+            self.sphinx_band_structure.restart_file_list = filelist
             del guess["rho"]
             del guess["waves"]
             self.sphinx_band_structure.load_guess_group ()
 
-        reload_guess (["./rho.sxb"])
-        self.assertEqual (guess.rho.file, "\"./rho.sxb\"")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # create temporary files to pass file existence checks
+            rho_file = posixpath.join (tmpdir, "rho.sxb")
+            waves_file = posixpath.join (tmpdir, "waves.sxb")
+            Path(rho_file).touch ()
+            Path(waves_file).touch ()
 
-        reload_guess (["./waves.sxb"])
-        self.assertEqual (guess.waves.file, "\"./waves.sxb\"")
-        self.assertEqual (guess.rho.fromWaves, True)
+            # test loading rho
+            reload_guess ([rho_file])
+            self.assertEqual (guess.rho.file, '"' + rho_file + '"')
 
-        reload_guess (["./rho.sxb", "./waves.sxb"])
-        self.assertEqual (guess.waves.file, "\"./waves.sxb\"")
-        self.assertEqual (guess.rho.file, "\"./rho.sxb\"")
+            # test loading waves
+            reload_guess ([waves_file])
+            self.assertEqual (guess.waves.file, '"' + waves_file + '"')
+            self.assertEqual (guess.rho.fromWaves, True)
 
-        reload_guess ([])
-        self.assertEqual (guess.rho.atomicOrbitals, True)
-        self.assertTrue ('lcao' in guess.waves)
+            # test loading rho + waves
+            reload_guess ([rho_file, waves_file])
+            self.assertEqual (guess.waves.file, '"' + waves_file + '"')
+            self.assertEqual (guess.rho.file, '"' + rho_file + '"')
+
+            # test default
+            reload_guess ([])
+            self.assertEqual (guess.rho.atomicOrbitals, True)
+            self.assertTrue ('lcao' in guess.waves)
 
     def test_validate_ready_to_run(self):
 
