@@ -15,6 +15,7 @@ from pyiron_base import (
     JobTypeChoice,
     Project as ProjectCore,
     Creator as CreatorCore,
+    deprecate
 )
 
 try:
@@ -449,6 +450,7 @@ class Project(ProjectCore):
 
     # Deprecated methods
 
+    @deprecate("Use create.struture.bulk instead")
     def create_ase_bulk(
         self,
         name,
@@ -493,6 +495,7 @@ class Project(ProjectCore):
             cubic=cubic,
         )
 
+    @deprecate("Use create.struture.* methods instead")
     def create_structure(self, element, bravais_basis, lattice_constant):
         """
         Create a crystal structure using pyiron's native crystal structure generator
@@ -516,6 +519,7 @@ class Project(ProjectCore):
             lattice_constant=lattice_constant,
         )
 
+    @deprecate("Use create.struture.surface instead")
     def create_surface(
         self,
         element,
@@ -559,6 +563,7 @@ class Project(ProjectCore):
             **kwargs
         )
 
+    @deprecate("Use create.struture.atoms instead")
     def create_atoms(
         self,
         symbols=None,
@@ -637,6 +642,7 @@ class Project(ProjectCore):
             **qwargs
         )
 
+    @deprecate("Use create.struture.element instead")
     def create_element(
         self, parent_element, new_element_name=None, spin=None, potential_file=None
     ):
