@@ -839,11 +839,7 @@ class SphinxBase(GenericDFTJob):
                     self.status.not_converged = True
         new_job = super(SphinxBase, self).restart(job_name=job_name, job_type=job_type)
 
-        try:
-            new_job.input = self.input.copy()
-        except RecursionError:
-            _ = self.input
-            new_job.input = self.input.copy()
+        new_job.input = self.input.copy()
 
         recreate_guess = False
         if from_charge_density and os.path.isfile(
