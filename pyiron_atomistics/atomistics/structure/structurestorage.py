@@ -199,7 +199,7 @@ class StructureStorage(FlattenedStorage, HasStructure):
             **kwargs: additional arrays to store for structure
         """
 
-        if structure.spins is not None:
+        if structure.has("spins"):
             arrays["spins"] = structure.spins
 
         self.add_chunk(
