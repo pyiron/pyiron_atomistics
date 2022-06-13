@@ -446,6 +446,9 @@ class Calphy(GenericJob):
         """
         if temperature is None:
             raise ValueError("provide a temperature")
+        if reference_phase is None:
+            raise ValueError("provide a reference_phase")
+
         self.input.temperature = temperature
         self.input.pressure = pressure
         self.input.reference_phase = reference_phase
@@ -476,6 +479,9 @@ class Calphy(GenericJob):
         """
         if temperature is None:
             raise ValueError("provide a temperature")
+        if reference_phase is None:
+            raise ValueError("provide a reference_phase")
+
         self.input.temperature = temperature
         self.input.pressure = pressure
         self.input.reference_phase = reference_phase
@@ -536,6 +542,9 @@ class Calphy(GenericJob):
         """
         if temperature is None:
             raise ValueError("provide a temperature")
+        if reference_phase is None:
+            raise ValueError("provide a reference_phase")
+
         self.input.temperature = temperature
         self.input.pressure = pressure
         self.input.reference_phase = reference_phase
@@ -574,6 +583,10 @@ class Calphy(GenericJob):
         self.input.n_print_steps = n_print_steps
         self.input.n_iterations = n_iterations
         self.determine_mode()
+        if self.input.mode != "alchemy":
+            if reference_phase is None:
+                raise ValueError("provide a reference_phase")
+
 
     def run_static(self):
         self.status.running = True
@@ -726,3 +739,4 @@ class Calphy(GenericJob):
                 }
             }
         }
+
