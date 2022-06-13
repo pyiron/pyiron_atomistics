@@ -316,6 +316,20 @@ class Calphy(GenericJob):
                 str(list_of_elements),
             )
 
+    def list_potentials(self):
+        """
+        List of interatomic potentials suitable for the current atomic structure.
+
+        use self.potentials_view() to get more details.
+
+        Args:
+            None
+
+        Returns:
+            list: potential names
+        """
+        return list(self.view_potentials()["Name"].values)    
+
     def structure_to_lammps(self):
         """
         Convert structure to LAMMPS structure
