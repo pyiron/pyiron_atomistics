@@ -708,3 +708,21 @@ class Calphy(GenericJob):
         self.input.from_hdf(self.project_hdf5)
         self.output.from_hdf(self.project_hdf5)
         self._potential_from_hdf()
+
+    @property
+    def publication(self):
+        return {
+            "calphy": {
+                "calphy": {
+                    "title": "Automated free-energy calculation from atomistic simulations",
+                    "journal": "Physical Review Materials",
+                    "volume": "5",
+                    "number": "10",
+                    "pages": "103801",
+                    "year": "2021",
+                    "doi": "10.1103/PhysRevMaterials.5.103801",
+                    "url": "https://journals.aps.org/prmaterials/abstract/10.1103/PhysRevMaterials.5.103801",
+                    "author": ["Menon, Sarath and Lysogorskiy, Yury and Rogal, Jutta and Drautz, Ralf"],
+                }
+            }
+        }
