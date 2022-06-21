@@ -29,7 +29,7 @@ setup(
     keywords='pyiron',
     packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
     install_requires=[
-        'aimsgb==0.1.0',
+        'aimsgb==0.1.1',
         'ase==3.22.1',
         'defusedxml==0.7.1',
         'future==0.18.2',
