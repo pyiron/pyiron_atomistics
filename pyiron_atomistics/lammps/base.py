@@ -639,14 +639,13 @@ class LammpsBase(AtomisticGenericJob):
                             read_thermo = False
                             continue
                         thermo_lines += l
-                
+
                     if l.startswith("Step"):
                         read_thermo = True
                         thermo_lines += l
 
-                dfs.append(pd.read_csv(
-                        StringIO(thermo_lines), delim_whitespace=True
-                    ))
+                dfs.append(pd.read_csv(StringIO(thermo_lines), delim_whitespace=True))
+
             if len(dfs) == 1:
                 df = dfs[0]
             else:
