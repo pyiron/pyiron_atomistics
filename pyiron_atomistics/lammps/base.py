@@ -648,7 +648,7 @@ class LammpsBase(AtomisticGenericJob):
                         StringIO(thermo_lines), delim_whitespace=True
                     ))
             if len(dfs) == 1:
-                df = dfs[1]
+                df = dfs[0]
             else:
                 df = pd.concat[dfs]
 
