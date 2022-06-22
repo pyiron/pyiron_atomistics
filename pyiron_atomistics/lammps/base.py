@@ -607,6 +607,7 @@ class LammpsBase(AtomisticGenericJob):
         if os.path.exists(file_name):
             with open(file_name, "r") as f:
                 f = f.readlines()
+                f = [l.lstrip() for l in f]
                 l_start = np.where([line.startswith("Step") for line in f])[0]
                 l_end = np.where([line.startswith("Loop") for line in f])[0]
                 if len(l_start) > len(l_end):
