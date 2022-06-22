@@ -628,22 +628,29 @@ class LammpsBase(AtomisticGenericJob):
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
         if os.path.exists(file_name):
             with open(file_name, "r") as f:
-                f = f.readlines()
-                f = [l.lstrip() for l in f]
-                l_start = np.where([line.startswith("Step") for line in f])[0]
-                l_end = np.where([line.startswith("Loop") for line in f])[0]
-                if len(l_start) > len(l_end):
-                    l_end = np.append(l_end, [None])
-                df = [
-                    pd.read_csv(
-                        StringIO("\n".join(f[llst:llen])), delim_whitespace=True
-                    )
-                    for llst, llen in zip(l_start, l_end)
-                ]
-            if len(df) == 1:
-                df = df[-1]
+                read_thermo = False
+                thermo_lines = ""
+                dfs = []
+                for l in f:
+                    l = l.lstrip()
+
+                    if read_thermo:
+                        if l.startswith("Loop"):
+                            read_thermo = False
+                            continue
+                        thermo_lines += l
+                
+                    if l.startswith("Step"):
+                        read_thermo = True
+                        thermo_lines += l
+
+                dfs.append(pd.read_csv(
+                        StringIO(thermo_lines), delim_whitespace=True
+                    ))
+            if len(dfs) == 1:
+                df = dfs[1]
             else:
-                df = pd.concat(df)
+                df = pd.concat[dfs]
 
             h5_dict = {
                 "Step": "steps",
