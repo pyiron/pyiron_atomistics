@@ -1,7 +1,7 @@
 channels:
 - conda-forge
 dependencies:
-- aimsgb =0.1.0
+- aimsgb =0.1.1
 - ase =3.22.1
 - coveralls
 - coverage
@@ -16,7 +16,7 @@ dependencies:
 - pandas =1.4.2
 - phonopy =2.15.1
 - pint =0.19.2
-- pyiron_base =0.5.13
+- pyiron_base =0.5.14
 - pymatgen =2022.5.26
 - pyscal =2.10.15
 - pytables =3.7.0
