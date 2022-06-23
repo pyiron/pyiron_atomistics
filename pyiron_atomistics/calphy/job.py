@@ -328,7 +328,7 @@ class Calphy(GenericJob):
         Returns:
             list: potential names
         """
-        return list(self.view_potentials()["Name"].values)    
+        return list(self.view_potentials()["Name"].values)
 
     def structure_to_lammps(self):
         """
@@ -587,7 +587,6 @@ class Calphy(GenericJob):
             if reference_phase is None:
                 raise ValueError("provide a reference_phase")
 
-
     def run_static(self):
         self.status.running = True
         if self.input.reference_phase == "alchemy":
@@ -735,8 +734,9 @@ class Calphy(GenericJob):
                     "year": "2021",
                     "doi": "10.1103/PhysRevMaterials.5.103801",
                     "url": "https://journals.aps.org/prmaterials/abstract/10.1103/PhysRevMaterials.5.103801",
-                    "author": ["Menon, Sarath and Lysogorskiy, Yury and Rogal, Jutta and Drautz, Ralf"],
+                    "author": [
+                        "Menon, Sarath and Lysogorskiy, Yury and Rogal, Jutta and Drautz, Ralf"
+                    ],
                 }
             }
         }
-
