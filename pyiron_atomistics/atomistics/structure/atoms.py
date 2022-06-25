@@ -215,6 +215,12 @@ class Atoms(ASEAtoms):
             self.dimension = 0
         self._visualize = Visualize(self)
         self._analyse = Analyse(self)
+        # Velocities were not handled at all during file writing
+        self._velocities = None
+
+    @property
+    def velocities(self):
+        return self._velocities
 
     @property
     def spins(self):
@@ -2056,6 +2062,46 @@ class Atoms(ASEAtoms):
             if not len(set(sum_atoms.indices)) == len(sum_atoms.species):
                 raise ValueError("Adding the atom instances went wrong!")
         return self
+
+    def get_momenta(self):
+        """
+        Velocity and momenta functions are currently not supported.
+        For lammps jobs intial velocities can be set using job.structure.velocities = array
+
+        Raises:
+            NotImplementedError: 
+        """        
+        raise NotImplementedError("Currently not used on pyiron atoms")
+    
+    def set_momenta(self):
+        """
+        Velocity and momenta functions are currently not supported.
+        For lammps jobs intial velocities can be set using job.structure.velocities = array
+
+        Raises:
+            NotImplementedError: 
+        """        
+        raise NotImplementedError("Currently not used on pyiron atoms")
+
+    def get_velocities(self):
+        """
+        Velocity and momenta functions are currently not supported.
+        For lammps jobs intial velocities can be set using job.structure.velocities = array
+
+        Raises:
+            NotImplementedError: 
+        """        
+        raise NotImplementedError("Currently not used on pyiron atoms")
+
+    def set_velocities(self):
+        """
+        Velocity and momenta functions are currently not supported.
+        For lammps jobs intial velocities can be set using job.structure.velocities = array
+
+        Raises:
+            NotImplementedError: 
+        """        
+        raise NotImplementedError("Currently not used on pyiron atoms")
 
     __iadd__ = extend
 
