@@ -2063,46 +2063,6 @@ class Atoms(ASEAtoms):
                 raise ValueError("Adding the atom instances went wrong!")
         return self
 
-    def get_momenta(self):
-        """
-        Velocity and momenta functions are currently not supported.
-        For lammps jobs intial velocities can be set using job.structure.velocities = array
-
-        Raises:
-            NotImplementedError: 
-        """        
-        raise NotImplementedError("Currently not used on pyiron atoms")
-    
-    def set_momenta(self):
-        """
-        Velocity and momenta functions are currently not supported.
-        For lammps jobs intial velocities can be set using job.structure.velocities = array
-
-        Raises:
-            NotImplementedError: 
-        """        
-        raise NotImplementedError("Currently not used on pyiron atoms")
-
-    def get_velocities(self):
-        """
-        Velocity and momenta functions are currently not supported.
-        For lammps jobs intial velocities can be set using job.structure.velocities = array
-
-        Raises:
-            NotImplementedError: 
-        """        
-        raise NotImplementedError("Currently not used on pyiron atoms")
-
-    def set_velocities(self):
-        """
-        Velocity and momenta functions are currently not supported.
-        For lammps jobs intial velocities can be set using job.structure.velocities = array
-
-        Raises:
-            NotImplementedError: 
-        """        
-        raise NotImplementedError("Currently not used on pyiron atoms")
-
     __iadd__ = extend
 
     def __copy__(self):
