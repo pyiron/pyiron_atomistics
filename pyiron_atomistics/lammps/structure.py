@@ -243,12 +243,11 @@ class LammpsStructure(GenericParameters):
             uc = UnitConverter("metal")
             self._structure.velocities *= uc.pyiron_to_lammps("velocity")
             vels = self.rotate_velocities(self._structure)
-            input_str += "\nVelocities\n"
+            input_str += "Velocities\n"
             format_str = "{0:d} {1:f} {2:f} {3:f}\n"
             for id_atom, (x, y, z) in enumerate(vels, start=1):
                 input_str += (
                     format_str.format(id_atom, x, y, z)
-                    + "\n"
                 )
 
         self.load_string(input_str)
