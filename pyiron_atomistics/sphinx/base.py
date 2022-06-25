@@ -1855,10 +1855,11 @@ class InputWriter(object):
                     )
                 else:
                     constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
-                    spins = self.structure.get_initial_magnetic_moments()[self.id_pyi_to_spx]
-                    spins_list = np.array([str(v) for v in spins])
-                    spins_list[~constraint] = "X"
-                    spins_str = "\n".join(spins_list) + "\n"
+                    spins = self.structure.get_initial_magnetic_moments()[
+                        self.id_pyi_to_spx
+                    ].astype(str)
+                    spins[~np.asarray(constraint)] = "X"
+                    spins_str = "\n".join(spins) + "\n"
         if spins_str is not None:
             if cwd is not None:
                 file_name = posixpath.join(cwd, file_name)
