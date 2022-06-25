@@ -244,7 +244,7 @@ class LammpsStructure(GenericParameters):
             self._structure.velocities *= uc.pyiron_to_lammps("velocity")
             vels = self.rotate_velocities(self._structure)
             input_str += "\nVelocities\n"
-            format_str = "{0:d} {1:d} {2:d} {3:f} {4:f}"
+            format_str = "{0:d} {1:f} {2:f} {3:f}\n"
             for id_atom, (x, y, z) in enumerate(vels, start=1):
                 input_str += (
                     format_str.format(id_atom, x, y, z)
