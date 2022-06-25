@@ -1854,7 +1854,7 @@ class InputWriter(object):
                         "SPHInX only supports collinear spins at the moment."
                     )
                 else:
-                    constraint = np.asarray(self.structure.spin_constraint)[self.id_pyi_to_spx]
+                    constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
                     spins = self.structure.get_initial_magnetic_moments()[self.id_pyi_to_spx]
                     spins_list = np.array([str(v) for v in spins])
                     spins_list[~constraint] = "X"
