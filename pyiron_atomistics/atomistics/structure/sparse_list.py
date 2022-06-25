@@ -174,6 +174,9 @@ class SparseList(object):
 
     def __getitem__(self, item):
         if isinstance(item, Integral):
+            if item > len(self):
+                raise IndexError
+            item = item % len(self)
             if item in self._dict:
                 return self._dict[item]
             return self._default
@@ -205,6 +208,7 @@ class SparseList(object):
         if isinstance(key, Integral):
             if key > len(self):
                 raise IndexError
+            key = key % len(self)
             self._dict[key] = value
             return
         elif isinstance(key, slice):

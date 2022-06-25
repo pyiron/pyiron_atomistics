@@ -633,5 +633,16 @@ class TestSphinx(unittest.TestCase):
         self.assertEqual(int(job.input.sphinx.main.ricQN.maxSteps), 250)
         self.assertEqual(int(job.input.sphinx.main.ricQN.bornOppenheimer.scfDiag.maxSteps), 200)
 
+    def test_partial_constraint(self):
+        spx = self.project.create.job.Sphinx('spx_partial_constraint')
+        spx.structure = self.project.create.structure.bulk('Fe', cubic=True)
+        spx.structure.set_initial_magnetic_moments(2 * [2])
+        spx.fix_spin_constraint = True
+        spx.structure.spin_constraint[-1] = False
+        spx.calc_static()
+        spx.server.run_mode.manual = True
+        spx.run()
+        self.assertEqual(spx['spins.in'], ['2\n', 'X\n'])
+
 if __name__ == "__main__":
     unittest.main()
