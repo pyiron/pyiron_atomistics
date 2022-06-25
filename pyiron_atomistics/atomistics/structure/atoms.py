@@ -8,6 +8,7 @@ from ase.symbols import Symbols as ASESymbols
 import ast
 from copy import copy
 from collections import OrderedDict
+from idna import valid_contextj
 import numpy as np
 import warnings
 import seekpath
@@ -221,6 +222,13 @@ class Atoms(ASEAtoms):
     @property
     def velocities(self):
         return self._velocities
+
+    @velocities.setter
+    def velocities(self, val):
+        if self.positions.shape == val.shape:
+            self._velocities = val
+        else:
+            raise ValueError("Shape of velocities and positions has to match")
 
     @property
     def spins(self):
