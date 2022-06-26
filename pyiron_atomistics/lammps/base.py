@@ -1266,7 +1266,8 @@ class LammpsBase(AtomisticGenericJob):
             lammps_structure = structure.copy()
             lammps_structure.set_cell(prism.A)
             lammps_structure.positions = np.matmul(structure.positions, prism.R)
-            lammps_structure.velocities = np.matmul(structure.velocities, prism.R)
+            if lammps_structure.velocities is not None:
+                lammps_structure.velocities = np.matmul(structure.velocities, prism.R)
             return lammps_structure
 
         if structure is not None:

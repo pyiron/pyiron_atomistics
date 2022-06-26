@@ -237,19 +237,22 @@ class LammpsStructure(GenericParameters):
             input_str = self.structure_charge()
         else:  # self.atom_type == 'atomic'
             input_str = self.structure_atomic()
-        
+
         if self._structure.velocities is not None:
-            # Always assume metal units for now.
             uc = UnitConverter("metal")
             self._structure.velocities *= uc.pyiron_to_lammps("velocity")
             vels = self.rotate_velocities(self._structure)
             input_str += "Velocities\n\n"
-            format_str = "{0:d} {1:f} {2:f} {3:f}\n"
-            for id_atom, (x, y, z) in enumerate(vels, start=1):
-                input_str += (
-                    format_str.format(id_atom, x, y, z)
-                )
-
+            if self._structure.dimension == 3:
+                # Always assume metal units for now.
+                format_str = "{0:d} {1:f} {2:f} {3:f}\n"
+                for id_atom, (x, y, z) in enumerate(vels, start=1):
+                    input_str += format_str.format(id_atom, x, y, z)
+            if self._structure.dimension == 2:
+                # Always assume metal units for now.
+                format_str = "{0:d} {1:f} {2:f}\n"
+                for id_atom, (x, y) in enumerate(vels, start=1):
+                    input_str += format_str.format(id_atom, x, y)
         self.load_string(input_str)
 
     @property
