@@ -8,7 +8,6 @@ from ase.symbols import Symbols as ASESymbols
 import ast
 from copy import copy
 from collections import OrderedDict
-from idna import valid_contextj
 import numpy as np
 import warnings
 import seekpath
