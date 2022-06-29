@@ -552,8 +552,8 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._interactive_library.create_atoms(
                 n=len(structure),
                 id=None,
-                type=(len(elem_all) * ctypes.c_int)(*elem_all),
-                x=(len(positions) * ctypes.c_double)(*positions),
+                type=(len(elem_all) * c_int)(*elem_all),
+                x=(len(positions) * c_double)(*positions),
                 v=None,
                 image=None,
                 shrinkexceed=False
