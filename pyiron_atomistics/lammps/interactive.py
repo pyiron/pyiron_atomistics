@@ -556,7 +556,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 x=(len(positions) * c_double)(*positions),
                 v=None,
                 image=None,
-                shrinkexceed=False
+                shrinkexceed=False,
             )
         else:
             self._interactive_library.create_atoms(
@@ -566,7 +566,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 x=positions,
                 v=None,
                 image=None,
-                shrinkexceed=False
+                shrinkexceed=False,
             )
         self._interactive_lib_command("change_box all remap")
         self._interactive_lammps_input()
