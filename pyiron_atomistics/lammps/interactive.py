@@ -542,9 +542,6 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 self._interactive_lib_command(
                     "mass {0:3d} {1:f}".format(id_eam + 1, 1.00)
                 )
-        self._interactive_lib_command(
-            "create_atoms 1 random " + str(len(structure)) + " 12345 1"
-        )
         positions = structure.positions.flatten()
         if np.matrix.trace(self._prism.R) != 3:
             positions = np.array(positions).reshape(-1, 3)
@@ -552,15 +549,25 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         positions = positions.flatten()
         elem_all = np.array([el_dict[el] for el in structure.get_chemical_elements()])
         if self.server.run_mode.interactive and self.server.cores == 1:
-            self._interactive_library.scatter_atoms(
-                "x", 1, 3, (len(positions) * c_double)(*positions)
-            )
-            self._interactive_library.scatter_atoms(
-                "type", 0, 1, (len(elem_all) * c_int)(*elem_all)
+            self._interactive_library.create_atoms(
+                n=len(structure),
+                id=None,
+                type=(len(elem_all) * ctypes.c_int)(*elem_all),
+                x=(len(positions) * ctypes.c_double)(*positions),
+                v=None,
+                image=None,
+                shrinkexceed=False
             )
         else:
-            self._interactive_library.scatter_atoms("x", positions)
-            self._interactive_library.scatter_atoms("type", elem_all)
+            self._interactive_library.create_atoms(
+                n=len(structure),
+                id=None,
+                type=elem_all,
+                x=positions,
+                v=None,
+                image=None,
+                shrinkexceed=False
+            )
         self._interactive_lib_command("change_box all remap")
         self._interactive_lammps_input()
         self._interactive_set_potential()
