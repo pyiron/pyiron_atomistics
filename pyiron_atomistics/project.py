@@ -15,7 +15,7 @@ from pyiron_base import (
     JobTypeChoice,
     Project as ProjectCore,
     Creator as CreatorCore,
-    deprecate
+    deprecate,
 )
 
 try:
