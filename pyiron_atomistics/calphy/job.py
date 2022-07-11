@@ -223,12 +223,12 @@ class Calphy(GenericJob):
         pair_coeff = []
         if self._potential_initial is not None:
             pair_lst = self._potential_initial.get_string_lst()
-            pair_style.append(pair_lst[0].strip())
-            pair_coeff.append(pair_lst[1].strip())
+            pair_style.append(" ".join(pair_lst[0].strip().split()[1:]))
+            pair_coeff.append(" ".join(pair_lst[1].strip().split()[1:]))
         if self._potential_final is not None:
             pair_lst = self._potential_final.get_string_lst()
-            pair_style.append(pair_lst[0].strip())
-            pair_coeff.append(pair_lst[1].strip())
+            pair_style.append(" ".join(pair_lst[0].strip().split()[1:]))
+            pair_coeff.append(" ".join(pair_lst[1].strip().split()[1:]))
         return pair_style, pair_coeff
 
     def _get_masses(self) -> List[float]:
