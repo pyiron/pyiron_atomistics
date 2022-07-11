@@ -231,6 +231,28 @@ class Calphy(GenericJob):
             pair_coeff.append(pair_lst[1].strip())
         return pair_style, pair_coeff
 
+    def _get_masses(self) -> List[float]:
+        """
+        Get masses as defined in pair style
+
+        Args:
+            None
+
+        Returns:
+            list: masses of the elements
+        """
+        elements_from_pot = self._potential_initial.get_element_lst()
+        elements_object_lst = self.structure.get_species_objects()
+        elements_struct_lst = self.structure.get_species_symbols()
+        
+        masses = []
+        for element_id, element_name in enumerate(elements_from_pot):
+            if element_name in elements_struct_lst:
+                index = list(elements_struct_lst).index(element_name)
+                masses.append(elements_object_lst[index].AtomicMass)
+
+        return masses
+
     def _potential_from_hdf(self):
         """
         Recreate the potential from filename stored in hdf5
@@ -397,8 +419,8 @@ class Calphy(GenericJob):
         calc.pair_style = pair_style
         calc.pair_coeff = pair_coeff
 
-        calc.element = list(np.unique(self.structure.get_chemical_symbols()))
-        calc.mass = list(np.unique(self.structure.get_masses()))
+        calc.element = self._potential_initial.get_element_lst()
+        calc.mass = self._get_masses()
 
         calc.queue.cores = self.server.cores
         self.calc = calc
