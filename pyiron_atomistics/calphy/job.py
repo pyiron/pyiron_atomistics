@@ -218,38 +218,17 @@ class Calphy(GenericJob):
         Returns:
             list: pair style and pair coeff
         """
+
         pair_style = []
         pair_coeff = []
         if self._potential_initial is not None:
-            pair_style.append(
-                self._potential_initial.df["Config"]
-                .to_list()[0][0]
-                .strip()
-                .split()[1:][0]
-            )
-            pair_coeff.append(
-                " ".join(
-                    self._potential_initial.df["Config"]
-                    .to_list()[0][1]
-                    .strip()
-                    .split()[1:]
-                )
-            )
+            pair_lst = self._potential_initial.get_string_lst()
+            pair_style.append(pair_lst[0].strip())
+            pair_coeff.append(pair_lst[1].strip())
         if self._potential_final is not None:
-            pair_style.append(
-                self._potential_final.df["Config"]
-                .to_list()[0][0]
-                .strip()
-                .split()[1:][0]
-            )
-            pair_coeff.append(
-                " ".join(
-                    self._potential_final.df["Config"]
-                    .to_list()[0][1]
-                    .strip()
-                    .split()[1:]
-                )
-            )
+            pair_lst = self._potential_final.get_string_lst()
+            pair_style.append(pair_lst[0].strip())
+            pair_coeff.append(pair_lst[1].strip())
         return pair_style, pair_coeff
 
     def _potential_from_hdf(self):
@@ -399,7 +378,6 @@ class Calphy(GenericJob):
         Returns:
             None
         """
-        # now prepare the calculation
         calc = Calculation()
         for key in inputdict.keys():
             if key not in ["md", "tolerance"]:
