@@ -10,7 +10,7 @@ import pandas as pd
 import warnings
 from scipy import constants
 
-from pyiron_atomistics.lammps.base import LammpsBase
+from pyiron_atomistics.lammps.base import LammpsBase, _check_ortho_prism
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
@@ -75,13 +75,13 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             np.array(self._interactive_library.gather_atoms("x", 1, 3)),
             (len(self.structure), 3),
         )
-        if np.isclose(self._prism.R, np.eye(3)).all():
+        if _check_ortho_prism(prism=self._prism):
             positions = np.matmul(positions, self._prism.R.T)
         positions = uc.convert_array_to_pyiron_units(positions, label="positions")
         return positions.tolist()
 
     def interactive_positions_setter(self, positions):
-        if np.isclose(self._prism.R, np.eye(3)).all():
+        if _check_ortho_prism(prism=self._prism):
             positions = np.array(positions).reshape(-1, 3)
             positions = np.matmul(positions, self._prism.R)
         positions = np.array(positions).flatten()
@@ -117,7 +117,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
     def interactive_cells_setter(self, cell):
         self._prism = UnfoldingPrism(cell)
         lx, ly, lz, xy, xz, yz = self._prism.get_lammps_prism()
-        if np.isclose(self._prism.R, np.eye(3)).all():
+        if _check_ortho_prism(prism=self._prism):
             warnings.warn(
                 "Warning: setting upper trangular matrix might slow down the calculation"
             )
@@ -158,7 +158,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             np.array(self._interactive_library.gather_atoms("f", 1, 3)),
             (len(self.structure), 3),
         )
-        if np.isclose(self._prism.R, np.eye(3)).all():
+        if _check_ortho_prism(prism=self._prism):
             ff = np.matmul(ff, self._prism.R.T)
         ff = uc.convert_array_to_pyiron_units(ff, label="forces")
         return ff.tolist()
@@ -481,7 +481,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
         self._interactive_lib_command("atom_modify map array")
         self._prism = UnfoldingPrism(structure.cell)
-        if np.isclose(self._prism.R, np.eye(3)).all():
+        if _check_ortho_prism(prism=self._prism):
             warnings.warn(
                 "Warning: setting upper trangular matrix might slow down the calculation"
             )
@@ -543,7 +543,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                     "mass {0:3d} {1:f}".format(id_eam + 1, 1.00)
                 )
         positions = structure.positions.flatten()
-        if np.isclose(self._prism.R, np.eye(3)).all():
+        if _check_ortho_prism(prism=self._prism):
             positions = np.array(positions).reshape(-1, 3)
             positions = np.matmul(positions, self._prism.R)
         positions = positions.flatten()
@@ -731,7 +731,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             * constants.bar
             * constants.angstrom**3
         )
-        if np.isclose(self._prism.R, np.eye(3)).all():
+        if _check_ortho_prism(prism=self._prism):
             ss = np.einsum("ij,njk->nik", self._prism.R, ss)
             ss = np.einsum("nij,kj->nik", ss, self._prism.R)
         return ss
@@ -758,7 +758,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             ]
         )
         rotation_matrix = self._prism.R.T
-        if np.isclose(self._prism.R, np.eye(3)).all():
+        if _check_ortho_prism(prism=self._prism):
             pp = rotation_matrix.T @ pp @ rotation_matrix
         return uc.convert_array_to_pyiron_units(pp, label="pressure")
 
