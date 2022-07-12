@@ -757,8 +757,8 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 ],
             ]
         )
-        rotation_matrix = self._prism.R.T
         if _check_ortho_prism(prism=self._prism):
+            rotation_matrix = self._prism.R.T
             pp = rotation_matrix.T @ pp @ rotation_matrix
         return uc.convert_array_to_pyiron_units(pp, label="pressure")
 
