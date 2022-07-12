@@ -221,13 +221,10 @@ class Calphy(GenericJob):
 
         pair_style = []
         pair_coeff = []
-        
+
         if self._potential_initial is not None:
             pair_style.append(
-                self._potential_initial.df["Config"]
-                .to_list()[0][0]
-                .strip()
-                .split()[1:]
+                self._potential_initial.df["Config"].to_list()[0][0].strip().split()[1:]
             )
             pair_coeff.append(
                 " ".join(
@@ -239,10 +236,7 @@ class Calphy(GenericJob):
             )
         if self._potential_final is not None:
             pair_style.append(
-                self._potential_final.df["Config"]
-                .to_list()[0][0]
-                .strip()
-                .split()[1:]
+                self._potential_final.df["Config"].to_list()[0][0].strip().split()[1:]
             )
             pair_coeff.append(
                 " ".join(
@@ -252,7 +246,7 @@ class Calphy(GenericJob):
                     .split()[1:]
                 )
             )
-        
+
         return pair_style, pair_coeff
 
     def _get_masses(self) -> List[float]:
@@ -268,7 +262,7 @@ class Calphy(GenericJob):
         elements_from_pot = self._potential_initial.get_element_lst()
         elements_object_lst = self.structure.get_species_objects()
         elements_struct_lst = self.structure.get_species_symbols()
-        
+
         masses = []
         for element_id, element_name in enumerate(elements_from_pot):
             if element_name in elements_struct_lst:
@@ -396,7 +390,6 @@ class Calphy(GenericJob):
                 "The selected potentials do not support the given combination of elements."
             )
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
-
 
     def determine_mode(self):
         """
