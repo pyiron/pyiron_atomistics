@@ -6,7 +6,7 @@ import pandas as pd
 from pyiron_base import DataContainer
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
 from pyiron_base import GenericJob, ImportAlarm
-from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism, structure_to_lammps
 
 with ImportAlarm(
     "Calphy functionality requires the `calphy` module (and its dependencies) specified as extra"
@@ -330,22 +330,6 @@ class Calphy(GenericJob):
         """
         return list(self.view_potentials()["Name"].values)
 
-    def structure_to_lammps(self):
-        """
-        Convert structure to LAMMPS structure
-
-        Args:
-            None
-
-        Returns:
-            list: pair style and pair coeff
-        """
-        prism = UnfoldingPrism(self.input.structure.cell)
-        lammps_structure = self.input.structure.copy()
-        lammps_structure.set_cell(prism.A)
-        lammps_structure.positions = np.matmul(self.input.structure.positions, prism.R)
-        return lammps_structure
-
     def write_structure(self, structure, file_name: str, working_directory: str):
         """
         Write structure to file
@@ -361,7 +345,7 @@ class Calphy(GenericJob):
         lmp_structure = LammpsStructure()
         lmp_structure.potential = self._potential_initial
         lmp_structure.el_eam_lst = set(structure.get_chemical_symbols())
-        lmp_structure.structure = self.structure_to_lammps()
+        lmp_structure.structure = structure_to_lammps(structure=self.input.structure)
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
 
     def determine_mode(self):

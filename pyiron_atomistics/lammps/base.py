@@ -18,7 +18,7 @@ from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
-from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism, structure_to_lammps
 from pyiron_atomistics.lammps.units import UnitConverter, LAMMPS_UNIT_CONVERSIONS
 
 
@@ -1215,7 +1215,7 @@ class LammpsBase(AtomisticGenericJob):
             job_type (str): Job type. If not specified a Lammps job type is assumed
 
         Returns:
-            new_ham (lammps.lammps.Lammps instance): New job
+            lammps.lammps.Lammps instance: New job
         """
         new_ham = super(LammpsBase, self).restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
@@ -1223,6 +1223,18 @@ class LammpsBase(AtomisticGenericJob):
             new_ham.read_restart_file(filename="restart.out")
             new_ham.restart_file_list.append(self.get_workdir_file("restart.out"))
         return new_ham
+
+    @staticmethod
+    def _structure_to_lammps(structure):
+        """
+        Convert structure to LAMMPS compatible lower triangle format
+        Args:
+            structure (pyiron_atomistics.atomistics.structure.atoms.Atoms): Current structure
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.atoms.Atoms: Converted structure
+        """
+        return structure_to_lammps(structure=structure)
 
     def _get_lammps_structure(self, structure=None, cutoff_radius=None):
         lmp_structure = LammpsStructure(bond_dict=self.input.bond_dict)
@@ -1234,22 +1246,6 @@ class LammpsBase(AtomisticGenericJob):
         else:
             lmp_structure.cutoff_radius = self.cutoff_radius
         lmp_structure.el_eam_lst = self.input.potential.get_element_lst()
-
-        def structure_to_lammps(structure):
-            """
-            Converts a structure to the Lammps coordinate frame
-
-            Args:
-                structure (pyiron.atomistics.structure.atoms.Atoms): Structure to convert.
-
-            Returns:
-                pyiron.atomistics.structure.atoms.Atoms: Structure with the LAMMPS coordinate frame.
-            """
-            prism = UnfoldingPrism(structure.cell)
-            lammps_structure = structure.copy()
-            lammps_structure.set_cell(prism.A)
-            lammps_structure.positions = np.matmul(structure.positions, prism.R)
-            return lammps_structure
 
         if structure is not None:
             lmp_structure.structure = structure_to_lammps(structure)
