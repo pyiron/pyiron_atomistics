@@ -18,7 +18,11 @@ from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
-from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism, structure_to_lammps
+from pyiron_atomistics.lammps.structure import (
+    LammpsStructure,
+    UnfoldingPrism,
+    structure_to_lammps,
+)
 from pyiron_atomistics.lammps.units import UnitConverter, LAMMPS_UNIT_CONVERSIONS
 
 
