@@ -224,7 +224,9 @@ class Calphy(GenericJob):
 
         if self._potential_initial is not None:
             pair_style.append(
-                self._potential_initial.df["Config"].to_list()[0][0].strip().split()[1:]
+                " ".join(
+                    self._potential_initial.df["Config"].to_list()[0][0].strip().split()[1:]
+                    )
             )
             pair_coeff.append(
                 " ".join(
@@ -236,7 +238,9 @@ class Calphy(GenericJob):
             )
         if self._potential_final is not None:
             pair_style.append(
-                self._potential_final.df["Config"].to_list()[0][0].strip().split()[1:]
+                " ".join(
+                    self._potential_final.df["Config"].to_list()[0][0].strip().split()[1:]
+                    )
             )
             pair_coeff.append(
                 " ".join(
