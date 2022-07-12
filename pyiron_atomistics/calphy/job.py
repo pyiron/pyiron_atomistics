@@ -387,7 +387,7 @@ class Calphy(GenericJob):
         lmp_structure.potential = self._potential_initial
         lmp_structure.atom_type = "atomic"
         lmp_structure.el_eam_lst = self._potential_initial.get_element_lst()
-        lmp_structure.structure = structure_to_lammps(structure)
+        lmp_structure.structure = self.structure_to_lammps(structure)
 
         if not set(lmp_structure.structure.get_species_symbols()).issubset(
             set(lmp_structure.el_eam_lst)
