@@ -221,14 +221,38 @@ class Calphy(GenericJob):
 
         pair_style = []
         pair_coeff = []
+        
         if self._potential_initial is not None:
-            pair_lst = self._potential_initial.get_string_lst()
-            pair_style.append(" ".join(pair_lst[0].strip().split()[1:]))
-            pair_coeff.append(" ".join(pair_lst[1].strip().split()[1:]))
+            pair_style.append(
+                self._potential_initial.df["Config"]
+                .to_list()[0][0]
+                .strip()
+                .split()[1:]
+            )
+            pair_coeff.append(
+                " ".join(
+                    self._potential_initial.df["Config"]
+                    .to_list()[0][1]
+                    .strip()
+                    .split()[1:]
+                )
+            )
         if self._potential_final is not None:
-            pair_lst = self._potential_final.get_string_lst()
-            pair_style.append(" ".join(pair_lst[0].strip().split()[1:]))
-            pair_coeff.append(" ".join(pair_lst[1].strip().split()[1:]))
+            pair_style.append(
+                self._potential_final.df["Config"]
+                .to_list()[0][0]
+                .strip()
+                .split()[1:]
+            )
+            pair_coeff.append(
+                " ".join(
+                    self._potential_final.df["Config"]
+                    .to_list()[0][1]
+                    .strip()
+                    .split()[1:]
+                )
+            )
+        
         return pair_style, pair_coeff
 
     def _get_masses(self) -> List[float]:
@@ -331,7 +355,7 @@ class Calphy(GenericJob):
         """
         return list(self.view_potentials()["Name"].values)
 
-    def structure_to_lammps(self):
+    def structure_to_lammps(self, structure):
         """
         Convert structure to LAMMPS structure
 
@@ -341,10 +365,10 @@ class Calphy(GenericJob):
         Returns:
             list: pair style and pair coeff
         """
-        prism = UnfoldingPrism(self.input.structure.cell)
-        lammps_structure = self.input.structure.copy()
+        prism = UnfoldingPrism(structure.cell)
+        lammps_structure = structure.copy()
         lammps_structure.set_cell(prism.A)
-        lammps_structure.positions = np.matmul(self.input.structure.positions, prism.R)
+        lammps_structure.positions = np.matmul(structure.positions, prism.R)
         return lammps_structure
 
     def write_structure(self, structure, file_name: str, working_directory: str):
@@ -361,9 +385,18 @@ class Calphy(GenericJob):
         """
         lmp_structure = LammpsStructure()
         lmp_structure.potential = self._potential_initial
-        lmp_structure.el_eam_lst = set(structure.get_chemical_symbols())
-        lmp_structure.structure = self.structure_to_lammps()
+        lmp_structure.atom_type = "atomic"
+        lmp_structure.el_eam_lst = self._potential_initial.get_element_lst()
+        lmp_structure.structure = structure_to_lammps(structure)
+
+        if not set(lmp_structure.structure.get_species_symbols()).issubset(
+            set(lmp_structure.el_eam_lst)
+        ):
+            raise ValueError(
+                "The selected potentials do not support the given combination of elements."
+            )
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
+
 
     def determine_mode(self):
         """
