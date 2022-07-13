@@ -65,7 +65,6 @@ JobType.register("pyiron_atomistics.interactive.sxextoptint", "SxExtOptInteracti
 JobType.register("pyiron_atomistics.thermodynamics.sxphonons", "SxHarmPotTst")
 JobType.register("pyiron_atomistics.thermodynamics.sxphonons", "SxPhonons")
 JobType.register("pyiron_atomistics.thermodynamics.sxphonons", "SxUniqDispl")
-JobType.register("pyiron_atomistics.table.datamining", "TableJob")
 JobType.register("pyiron_atomistics.vasp.vasp", "Vasp")
 JobType.register("pyiron_atomistics.vasp.metadyn", "VaspMetadyn")
 JobType.register("pyiron_atomistics.vasp.vaspsol", "VaspSol")
