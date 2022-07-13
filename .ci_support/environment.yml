@@ -8,16 +8,16 @@ dependencies:
 - codacy-coverage
 - defusedxml =0.7.1
 - future =0.18.2
-- h5py =3.6.0
+- h5py =3.7.0
 - matplotlib-base =3.5.2
 - mendeleev =0.9.0
 - mock =4.0.3
-- numpy =1.22.4
-- pandas =1.4.2
+- numpy =1.23.1
+- pandas =1.4.3
 - phonopy =2.15.1
 - pint =0.19.2
-- pyiron_base =0.5.14
-- pymatgen =2022.5.26
+- pyiron_base =0.5.17
+- pymatgen =2022.7.8
 - pyscal =2.10.15
 - pytables =3.7.0
 - scipy =1.8.1
