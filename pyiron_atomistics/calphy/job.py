@@ -268,7 +268,7 @@ class Calphy(GenericJob):
         elements_struct_lst = self.structure.get_species_symbols()
 
         masses = []
-        for element_id, element_name in enumerate(elements_from_pot):
+        for element_name in elements_from_pot:
             if element_name in elements_struct_lst:
                 index = list(elements_struct_lst).index(element_name)
                 masses.append(elements_object_lst[index].AtomicMass)
