@@ -69,6 +69,9 @@ JobType.register("pyiron_atomistics.vasp.vasp", "Vasp")
 JobType.register("pyiron_atomistics.vasp.metadyn", "VaspMetadyn")
 JobType.register("pyiron_atomistics.vasp.vaspsol", "VaspSol")
 
+JobType.unregister("TableJob")
+JobType.register("pyiron_atomistics.table.datamining", "TableJob")
+
 from ._version import get_versions
 
 __version__ = get_versions()["version"]
