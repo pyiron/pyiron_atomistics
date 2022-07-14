@@ -65,7 +65,7 @@ class TestLammpsStructure(TestWithCleanProject):
                     [3.0, 2.0, -1.0],
                 ],
             )
-        vels = np.array([1.0, 1.0, 1.0])
+        vels = np.array([[1.0, 1.0, 1.0]])
         self.job.structure.velocities = vels
         self.assertAlmostEqual(
             self.job.structure.velocities,
