@@ -55,13 +55,15 @@ class TestLammpsStructure(TestWithCleanProject):
             self.job.structure.velocities is None,
             msg="Initial velocties of structure are not None",
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(
+            ValueError,
+            msg="Setting velocities with a different shape than positions should raise",
+        ):
             self.structure.velocities = np.array(
                 [
                     [1.0, 1.0, -1.0],
                     [3.0, 2.0, -1.0],
                 ],
-                msg="Setting velocities with a different shape than positions should raise",
             )
         vels = np.array([1.0, 1.0, 1.0])
         self.structure.velocities = vels
