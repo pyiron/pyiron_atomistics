@@ -49,7 +49,7 @@ class TestLammpsStructure(TestWithCleanProject):
         self.ref_project.remove_jobs_silently(recursive=True)  # cf. comment in setUp
 
     def test_velocity_basics(self):
-        creator = Creator()
+        creator = Creator(self.project)
         self.job.structure = creator.structure.ase.bulk("Cu")
         self.assertTrue(
             self.job.structure.velocities is None,
