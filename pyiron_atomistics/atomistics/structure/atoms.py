@@ -227,7 +227,8 @@ class Atoms(ASEAtoms):
         if self.positions.shape == val.shape:
             self._velocities = val
         else:
-            raise ValueError("Shape of velocities and positions has to match")
+            raise ValueError(
+                f"Shape of velocities and positions has to match. Velocities shape: {val.shape}, positions shape: {self.positions.shape}")
 
     @property
     def spins(self):
