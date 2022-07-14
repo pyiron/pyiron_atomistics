@@ -5,7 +5,6 @@
 import numpy as np
 import os
 from pyiron_base import state, ProjectHDFio
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_base._tests import TestWithCleanProject
 
