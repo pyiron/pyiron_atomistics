@@ -89,7 +89,7 @@ class Atoms(ASEAtoms):
         elements=None,
         dimension=None,
         species=None,
-        **qwargs
+        **qwargs,
     ):
         if symbols is not None:
             if elements is None:
@@ -228,7 +228,8 @@ class Atoms(ASEAtoms):
             self._velocities = val
         else:
             raise ValueError(
-                f"Shape of velocities and positions has to match. Velocities shape: {val.shape}, positions shape: {self.positions.shape}")
+                f"Shape of velocities and positions has to match. Velocities shape: {val.shape}, positions shape: {self.positions.shape}"
+            )
 
     @property
     def spins(self):
@@ -2139,7 +2140,7 @@ class Atoms(ASEAtoms):
                 pse=self._pse,
                 index=index,
                 atoms=self,
-                **new_dict
+                **new_dict,
             )
 
         new_array = super(Atoms, self).__getitem__(item)
@@ -2645,7 +2646,7 @@ class _CrystalStructure(Atoms):
         dimension=3,
         rel_coords=True,
         pse=None,
-        **kwargs
+        **kwargs,
     ):
 
         # print "basis0"

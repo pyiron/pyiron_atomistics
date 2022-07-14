@@ -15,7 +15,13 @@ class TestLammpsStructure(TestWithCleanProject):
     def setUpClass(cls):
         super().setUpClass()
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
-        state.update({'resource_paths': os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")})
+        state.update(
+            {
+                "resource_paths": os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), "../static"
+                )
+            }
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -40,18 +46,26 @@ class TestLammpsStructure(TestWithCleanProject):
 
     def tearDown(self) -> None:
         super().tearDown()
-        self.ref_project.remove_jobs_silently(recursive=True)    # cf. comment in setUp
+        self.ref_project.remove_jobs_silently(recursive=True)  # cf. comment in setUp
 
     def test__velocity_basics(self):
         self.job.structure = self.project.create.structure.ase.bulk("Cu")
-        self.assertTrue(self.job.structure.velocities is None, msg="Initial velocties of structure are not None")
+        self.assertTrue(
+            self.job.structure.velocities is None,
+            msg="Initial velocties of structure are not None",
+        )
         with self.assertRaises(ValueError):
-            self.structure.velocities = np.array([
-                [1.0, 1.0, -1.0],
-                [3.0, 2.0, -1.0],
-            ],
-            msg = "Setting velocities with a different shape than positions should raise"
+            self.structure.velocities = np.array(
+                [
+                    [1.0, 1.0, -1.0],
+                    [3.0, 2.0, -1.0],
+                ],
+                msg="Setting velocities with a different shape than positions should raise",
             )
         vels = np.array([1.0, 1.0, 1.0])
         self.structure.velocities = vels
-        self.assertAlmostEqual(self.structure.velocities, vels, msg="Velocties of structure are not correctly set")
+        self.assertAlmostEqual(
+            self.structure.velocities,
+            vels,
+            msg="Velocties of structure are not correctly set",
+        )
