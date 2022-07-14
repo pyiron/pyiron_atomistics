@@ -59,16 +59,16 @@ class TestLammpsStructure(TestWithCleanProject):
             ValueError,
             msg="Setting velocities with a different shape than positions should raise",
         ):
-            self.structure.velocities = np.array(
+            self.job.structure.velocities = np.array(
                 [
                     [1.0, 1.0, -1.0],
                     [3.0, 2.0, -1.0],
                 ],
             )
         vels = np.array([1.0, 1.0, 1.0])
-        self.structure.velocities = vels
+        self.job.structure.velocities = vels
         self.assertAlmostEqual(
-            self.structure.velocities,
+            self.job.structure.velocities,
             vels,
             msg="Velocties of structure are not correctly set",
         )
