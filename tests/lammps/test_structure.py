@@ -67,8 +67,10 @@ class TestLammpsStructure(TestWithCleanProject):
             )
         vels = np.array([[1.0, 1.0, 1.0]])
         self.job.structure.velocities = vels
-        self.assertAlmostEqual(
-            self.job.structure.velocities,
-            vels,
+        self.assertTrue(
+            np.allclose(
+                self.job.structure.velocities,
+                vels
+            ),
             msg="Velocties of structure are not correctly set",
         )
