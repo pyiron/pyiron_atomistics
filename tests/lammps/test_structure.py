@@ -7,6 +7,7 @@ import os
 from pyiron_base import state, ProjectHDFio
 from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_base._tests import TestWithCleanProject
+from pyiron_atomistics.project import Creator
 
 # Lammps and pyiron structure clearly require more tests
 class TestLammpsStructure(TestWithCleanProject):
@@ -47,8 +48,9 @@ class TestLammpsStructure(TestWithCleanProject):
         super().tearDown()
         self.ref_project.remove_jobs_silently(recursive=True)  # cf. comment in setUp
 
-    def test__velocity_basics(self):
-        self.job.structure = self.project.create.structure.ase.bulk("Cu")
+    def test_velocity_basics(self):
+        creator = Creator()
+        self.job.structure = creator.structure.ase.bulk("Cu")
         self.assertTrue(
             self.job.structure.velocities is None,
             msg="Initial velocties of structure are not None",
