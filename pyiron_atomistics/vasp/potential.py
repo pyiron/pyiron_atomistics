@@ -411,11 +411,11 @@ class Potcar(GenericParameters):
             if isinstance(el_obj.tags, dict):
                 if "pseudo_potcar_file" in el_obj.tags.keys():
                     new_element = el_obj.tags["pseudo_potcar_file"]
-                    vasp_potentials.add_new_element(
+                    self.vasp_potentials.add_new_element(
                         parent_element=el, new_element=new_element
                     )
-            key = vasp_potentials.find_default(el).Species.values[0][0]
-            val = vasp_potentials.find_default(el).Name.values[0]
+            key = self.vasp_potentials.find_default(el).Species.values[0][0]
+            val = self.vasp_potentials.find_default(el).Name.values[0]
             self[key] = val
 
     def _set_potential_paths(self):
