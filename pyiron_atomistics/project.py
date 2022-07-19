@@ -480,10 +480,6 @@ class Project(ProjectCore):
 
             pyiron.atomistics.structure.atoms.Atoms: Required bulk structure
         """
-        # warnings.warn(
-        #     "Project.create_ase_bulk is deprecated as of v0.3. Please use Project.create.structure.ase_bulk.",
-        #     DeprecationWarning
-        # )
         return self.create.structure.ase.bulk(
             name=name,
             crystalstructure=crystalstructure,
