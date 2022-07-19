@@ -6,7 +6,11 @@ import pandas as pd
 from pyiron_base import DataContainer
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
 from pyiron_base import GenericJob, ImportAlarm
-from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.structure import (
+    LammpsStructure,
+    UnfoldingPrism,
+    structure_to_lammps,
+)
 
 with ImportAlarm(
     "Calphy functionality requires the `calphy` module (and its dependencies) specified as extra"
