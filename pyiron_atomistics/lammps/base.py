@@ -502,7 +502,7 @@ class LammpsBase(AtomisticGenericJob):
         """
         uc = UnitConverter(self.units)
         prism = UnfoldingPrism(self.structure.cell, digits=15)
-        if np.matrix.trace(prism.R) != 3:
+        if _check_ortho_prism(prism=prism):
             raise RuntimeError(
                 "The Lammps output will not be mapped back to pyiron correctly."
             )
@@ -675,8 +675,8 @@ class LammpsBase(AtomisticGenericJob):
                     .astype("float64")
                 )
                 # Rotate pressures from Lammps frame to pyiron frame if necessary
-                rotation_matrix = self._prism.R.T
-                if np.matrix.trace(rotation_matrix) != 3:
+                if _check_ortho_prism(prism=self._prism):
+                    rotation_matrix = self._prism.R.T
                     pressures = rotation_matrix.T @ pressures @ rotation_matrix
 
                 df = df.drop(
@@ -708,7 +708,8 @@ class LammpsBase(AtomisticGenericJob):
                     .reshape(-1, 3, 3)
                     .astype("float64")
                 )
-                if np.matrix.trace(rotation_matrix) != 3:
+                if _check_ortho_prism(prism=self._prism):
+                    rotation_matrix = self._prism.R.T
                     pressures = rotation_matrix.T @ pressures @ rotation_matrix
                 df = df.drop(
                     columns=df.columns[
@@ -1523,3 +1524,18 @@ def to_amat(l_list):
 
     cell = [[xhilo, 0, 0], [xy, yhilo, 0], [xz, yz, zhilo]]
     return cell
+
+
+def _check_ortho_prism(prism, rtol=0.0, atol=1e-08):
+    """
+    Check if the rotation matrix of the UnfoldingPrism object is sufficiently close to a unit matrix
+
+    Args:
+        prism (pyiron_atomistics.lammps.structure.UnfoldingPrism): UnfoldingPrism object to check
+        rtol (float): relative precision for numpy.isclose()
+        atol (float): absolute precision for numpy.isclose()
+
+    Returns:
+        boolean: True or False
+    """
+    return np.isclose(prism.R, np.eye(3), rtol=rtol, atol=atol).all()
