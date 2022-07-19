@@ -229,8 +229,11 @@ class Calphy(GenericJob):
         if self._potential_initial is not None:
             pair_style.append(
                 " ".join(
-                    self._potential_initial.df["Config"].to_list()[0][0].strip().split()[1:]
-                    )
+                    self._potential_initial.df["Config"]
+                    .to_list()[0][0]
+                    .strip()
+                    .split()[1:]
+                )
             )
             pair_coeff.append(
                 " ".join(
@@ -243,8 +246,11 @@ class Calphy(GenericJob):
         if self._potential_final is not None:
             pair_style.append(
                 " ".join(
-                    self._potential_final.df["Config"].to_list()[0][0].strip().split()[1:]
-                    )
+                    self._potential_final.df["Config"]
+                    .to_list()[0][0]
+                    .strip()
+                    .split()[1:]
+                )
             )
             pair_coeff.append(
                 " ".join(
@@ -357,22 +363,6 @@ class Calphy(GenericJob):
         """
         return list(self.view_potentials()["Name"].values)
 
-    def structure_to_lammps(self, structure):
-        """
-        Convert structure to LAMMPS structure
-
-        Args:
-            None
-
-        Returns:
-            list: pair style and pair coeff
-        """
-        prism = UnfoldingPrism(structure.cell)
-        lammps_structure = structure.copy()
-        lammps_structure.set_cell(prism.A)
-        lammps_structure.positions = np.matmul(structure.positions, prism.R)
-        return lammps_structure
-
     def write_structure(self, structure, file_name: str, working_directory: str):
         """
         Write structure to file
@@ -389,7 +379,7 @@ class Calphy(GenericJob):
         lmp_structure.potential = self._potential_initial
         lmp_structure.atom_type = "atomic"
         lmp_structure.el_eam_lst = self._potential_initial.get_element_lst()
-        lmp_structure.structure = self.structure_to_lammps(structure)
+        lmp_structure.structure = structure_to_lammps(structure)
 
         if not set(lmp_structure.structure.get_species_symbols()).issubset(
             set(lmp_structure.el_eam_lst)
