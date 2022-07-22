@@ -684,3 +684,20 @@ def write_lammps_datafile(structure, file_name="lammps.data", cwd=None):
     lammps_str.el_eam_lst = structure.get_species_symbols()
     lammps_str.structure = structure
     lammps_str.write_file(file_name=file_name, cwd=cwd)
+
+
+def structure_to_lammps(structure):
+    """
+    Converts a structure to the Lammps coordinate frame
+
+    Args:
+        structure (pyiron.atomistics.structure.atoms.Atoms): Structure to convert.
+
+    Returns:
+        pyiron.atomistics.structure.atoms.Atoms: Structure with the LAMMPS coordinate frame.
+    """
+    prism = UnfoldingPrism(structure.cell)
+    lammps_structure = structure.copy()
+    lammps_structure.set_cell(prism.A)
+    lammps_structure.positions = np.matmul(structure.positions, prism.R)
+    return lammps_structure
