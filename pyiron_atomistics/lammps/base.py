@@ -1252,24 +1252,6 @@ class LammpsBase(AtomisticGenericJob):
             lmp_structure.cutoff_radius = self.cutoff_radius
         lmp_structure.el_eam_lst = self.input.potential.get_element_lst()
 
-        def structure_to_lammps(structure):
-            """
-            Converts a structure to the Lammps coordinate frame
-
-            Args:
-                structure (pyiron.atomistics.structure.atoms.Atoms): Structure to convert.
-
-            Returns:
-                pyiron.atomistics.structure.atoms.Atoms: Structure with the LAMMPS coordinate frame.
-            """
-            prism = UnfoldingPrism(structure.cell)
-            lammps_structure = structure.copy()
-            lammps_structure.set_cell(prism.A)
-            lammps_structure.positions = np.matmul(structure.positions, prism.R)
-            if lammps_structure.velocities is not None:
-                lammps_structure.velocities = np.matmul(structure.velocities, prism.R)
-            return lammps_structure
-
         if structure is not None:
             lmp_structure.structure = structure_to_lammps(structure)
         else:
