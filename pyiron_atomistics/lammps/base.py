@@ -1032,7 +1032,28 @@ class LammpsBase(AtomisticGenericJob):
         if os.path.exists(file_name):
             buf = StringIO()
             with open(file_name, "r") as f:
+                timesteps = []
 
+                for l in f:
+                    if "ITEM: TIMESTEP" in l:
+                        timesteps.append(int(f.readline()))
+                    elif "ITEM: BOX BOUNDS":
+                        # Parse cell
+                    elif "ITEM: NUMBER OF ATOMS" in l:
+                        pass
+                    elif "ITEM: ATOMS" in l:
+                        # Parse columns from l
+                        TODO
+                        # Read lines to buffer
+                        # Than parse using pandas read_csv with c backend
+                        buf = StringIO()
+                        l = f.readline()
+                        while l.strip():
+                            buf.write(l)
+                            l = f.readline()
+                        buf.seek(0)
+                        df = pd.read_csv(buf, nrows=3, sep=" ", header=None, engine="c")
+                        # Coordinate transform lammps->pyiron
 
     def collect_dump_file(self, file_name="dump.out", cwd=None):
         """
