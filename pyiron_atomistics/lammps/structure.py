@@ -185,7 +185,7 @@ class LammpsStructure(GenericParameters):
         input_file_name:
     """
 
-    def __init__(self, input_file_name=None, bond_dict=None):
+    def __init__(self, input_file_name=None, bond_dict=None, job=None):
         super(LammpsStructure, self).__init__(
             input_file_name=input_file_name,
             table_name="structure_inp",
@@ -200,7 +200,7 @@ class LammpsStructure(GenericParameters):
         self.digits = 10
         self._bond_dict = bond_dict
         self._force_skewed = False
-        self._job = None
+        self._job = job
 
     @property
     def potential(self):
