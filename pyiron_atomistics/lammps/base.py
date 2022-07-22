@@ -1016,6 +1016,24 @@ class LammpsBase(AtomisticGenericJob):
             ["dimension", "read_data", "boundary", "atom_style", "velocity"]
         )
 
+    def collect_dump_file_new(self, file_name="dump.out", cwd=None):
+        """
+        general purpose routine to extract static from a lammps dump file
+
+        Args:
+            file_name:
+            cwd:
+
+        Returns:
+
+        """
+        uc = UnitConverter(self.units)
+        file_name = self.job_file_name(file_name=file_name, cwd=cwd)
+        if os.path.exists(file_name):
+            buf = StringIO()
+            with open(file_name, "r") as f:
+
+
     def collect_dump_file(self, file_name="dump.out", cwd=None):
         """
         general purpose routine to extract static from a lammps dump file
