@@ -7,7 +7,7 @@ from pyiron_base import state
 import pyiron_atomistics.atomistics.structure.atoms
 import pyscal.core as pc
 from sklearn import cluster
-from pyiron_base.generic.util import Deprecator
+from pyiron_base import Deprecator
 
 deprecate = Deprecator()
 
