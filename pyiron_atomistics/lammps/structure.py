@@ -730,6 +730,6 @@ def structure_to_lammps(structure):
     lammps_structure = structure.copy()
     lammps_structure.set_cell(prism.A)
     lammps_structure.positions = np.matmul(structure.positions, prism.R)
-    if structure.velocitiies is not None:
+    if structure.velocities is not None:
         lammps_structure.velocities = np.matmul(structure.velocities, prism.R)
     return lammps_structure
