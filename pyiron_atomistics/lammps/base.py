@@ -1242,7 +1242,7 @@ class LammpsBase(AtomisticGenericJob):
         return structure_to_lammps(structure=structure)
 
     def _get_lammps_structure(self, structure=None, cutoff_radius=None):
-        lmp_structure = LammpsStructure(bond_dict=self.input.bond_dict)
+        lmp_structure = LammpsStructure(bond_dict=self.input.bond_dict, job=self)
         lmp_structure._force_skewed = self.input.control._force_skewed
         lmp_structure.potential = self.input.potential
         lmp_structure.atom_type = self.input.control["atom_style"]

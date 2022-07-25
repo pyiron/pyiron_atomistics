@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import numpy as np
+from pyiron_atomistics.lammps.units import UnitConverter
 from pyiron_base import GenericParameters
 import decimal as dec
 import warnings
@@ -184,7 +185,7 @@ class LammpsStructure(GenericParameters):
         input_file_name:
     """
 
-    def __init__(self, input_file_name=None, bond_dict=None):
+    def __init__(self, input_file_name=None, bond_dict=None, job=None):
         super(LammpsStructure, self).__init__(
             input_file_name=input_file_name,
             table_name="structure_inp",
@@ -199,6 +200,7 @@ class LammpsStructure(GenericParameters):
         self.digits = 10
         self._bond_dict = bond_dict
         self._force_skewed = False
+        self._job = job
 
     @property
     def potential(self):
@@ -236,6 +238,20 @@ class LammpsStructure(GenericParameters):
             input_str = self.structure_charge()
         else:  # self.atom_type == 'atomic'
             input_str = self.structure_atomic()
+
+        if self._structure.velocities is not None:
+            uc = UnitConverter(self._job.units)
+            self._structure.velocities *= uc.pyiron_to_lammps("velocity")
+            vels = self.rotate_velocities(self._structure)
+            input_str += "Velocities\n\n"
+            if self._structure.dimension == 3:
+                format_str = "{0:d} {1:f} {2:f} {3:f}\n"
+                for id_atom, (x, y, z) in enumerate(vels, start=1):
+                    input_str += format_str.format(id_atom, x, y, z)
+            if self._structure.dimension == 2:
+                format_str = "{0:d} {1:f} {2:f}\n"
+                for id_atom, (x, y) in enumerate(vels, start=1):
+                    input_str += format_str.format(id_atom, x, y)
         self.load_string(input_str)
 
     @property
@@ -678,6 +694,20 @@ class LammpsStructure(GenericParameters):
         coords = [prism.pos_to_lammps(position) for position in structure.positions]
         return coords
 
+    def rotate_velocities(self, structure):
+        """
+        Rotate all atomic velocities in given structure according to new Prism cell
+
+        Args:
+            structure: Atoms-like object. Should have .velocities attribute.
+
+        Returns:
+            (list): List of rotated velocities
+        """
+        prism = UnfoldingPrism(self._structure.cell)
+        vels = [prism.pos_to_lammps(vel) for vel in structure.velocities]
+        return vels
+
 
 def write_lammps_datafile(structure, file_name="lammps.data", cwd=None):
     lammps_str = LammpsStructure()
@@ -700,4 +730,6 @@ def structure_to_lammps(structure):
     lammps_structure = structure.copy()
     lammps_structure.set_cell(prism.A)
     lammps_structure.positions = np.matmul(structure.positions, prism.R)
+    if structure.velocities is not None:
+        lammps_structure.velocities = np.matmul(structure.velocities, prism.R)
     return lammps_structure
