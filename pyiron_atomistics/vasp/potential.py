@@ -381,7 +381,7 @@ class Potcar(GenericParameters):
     @property
     def vasp_potentials(self):
         if self._vasp_potentials is None:
-            self._vasp_potentials =  VaspPotentialFile(self.get("xc"))
+            self._vasp_potentials = VaspPotentialFile(self.get("xc"))
         return self._vasp_potentials
 
     def potcar_set_structure(self, structure, modified_elements):
@@ -444,9 +444,9 @@ class Potcar(GenericParameters):
                     parent_element=el, new_element=new_element
                 )
                 el_path = find_potential_file(
-                    path=self.vasp_potentials.find_default(new_element)["Filename"].values[
-                        0
-                    ][0]
+                    path=self.vasp_potentials.find_default(new_element)[
+                        "Filename"
+                    ].values[0][0]
                 )
                 if not (os.path.isfile(el_path)):
                     raise ValueError("such a file does not exist in the pp directory")
