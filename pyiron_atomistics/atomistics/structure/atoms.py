@@ -2547,7 +2547,7 @@ class Atoms(ASEAtoms):
         self.spins = magmoms
 
     def rotate(
-        self, a=0.0, v=None, center=(0, 0, 0), rotate_cell=False, index_list=None
+        self, a, v, center=(0, 0, 0), rotate_cell=False, index_list=None
     ):
         """
         Rotate atoms based on a vector and an angle, or two vectors. This function is completely adopted from ASE code
@@ -2555,7 +2555,7 @@ class Atoms(ASEAtoms):
 
         Args:
 
-            a (float/list) in degrees = None:
+            a (float/list) in degrees:
                 Angle that the atoms is rotated around the vecor 'v'. If an angle
                 is not specified, the length of 'v' is used as the angle
                 (default). The angle can also be a vector and then 'v' is rotated
