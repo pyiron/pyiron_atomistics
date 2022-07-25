@@ -376,6 +376,13 @@ class Potcar(GenericParameters):
         self.el_path_lst = list()
         self.el_path_dict = dict()
         self.modified_elements = dict()
+        self._vasp_potentials = None
+
+    @property
+    def vasp_potentials(self):
+        if self._vasp_potentials is None:
+            self._vasp_potentials = VaspPotentialFile(self.get("xc"))
+        return self._vasp_potentials
 
     def potcar_set_structure(self, structure, modified_elements):
         self._structure = structure
@@ -396,7 +403,6 @@ class Potcar(GenericParameters):
     def _set_default_path_dict(self):
         if self._structure is None:
             return
-        vasp_potentials = VaspPotentialFile(xc=self.get("xc"))
         for i, el_obj in enumerate(self._structure.get_species_objects()):
             if isinstance(el_obj.Parent, str):
                 el = el_obj.Parent
@@ -405,11 +411,11 @@ class Potcar(GenericParameters):
             if isinstance(el_obj.tags, dict):
                 if "pseudo_potcar_file" in el_obj.tags.keys():
                     new_element = el_obj.tags["pseudo_potcar_file"]
-                    vasp_potentials.add_new_element(
+                    self.vasp_potentials.add_new_element(
                         parent_element=el, new_element=new_element
                     )
-            key = vasp_potentials.find_default(el).Species.values[0][0]
-            val = vasp_potentials.find_default(el).Name.values[0]
+            key = self.vasp_potentials.find_default(el).Species.values[0][0]
+            val = self.vasp_potentials.find_default(el).Name.values[0]
             self[key] = val
 
     def _set_potential_paths(self):
@@ -424,7 +430,6 @@ class Potcar(GenericParameters):
         except tables.exceptions.NoSuchNodeError:
             xc = self.get("xc")
         state.logger.debug("XC: {0}".format(xc))
-        vasp_potentials = VaspPotentialFile(xc=xc)
         for i, el_obj in enumerate(object_list):
             if isinstance(el_obj.Parent, str):
                 el = el_obj.Parent
@@ -435,13 +440,13 @@ class Potcar(GenericParameters):
                 and "pseudo_potcar_file" in el_obj.tags.keys()
             ):
                 new_element = el_obj.tags["pseudo_potcar_file"]
-                vasp_potentials.add_new_element(
+                self.vasp_potentials.add_new_element(
                     parent_element=el, new_element=new_element
                 )
                 el_path = find_potential_file(
-                    path=vasp_potentials.find_default(new_element)["Filename"].values[
-                        0
-                    ][0]
+                    path=self.vasp_potentials.find_default(new_element)[
+                        "Filename"
+                    ].values[0][0]
                 )
                 if not (os.path.isfile(el_path)):
                     raise ValueError("such a file does not exist in the pp directory")
@@ -450,17 +455,17 @@ class Potcar(GenericParameters):
                 if os.path.isabs(new_element):
                     el_path = new_element
                 else:
-                    vasp_potentials.add_new_element(
+                    self.vasp_potentials.add_new_element(
                         parent_element=el, new_element=new_element
                     )
                     el_path = find_potential_file(
-                        path=vasp_potentials.find_default(new_element)[
+                        path=self.vasp_potentials.find_default(new_element)[
                             "Filename"
                         ].values[0][0]
                     )
             else:
                 el_path = find_potential_file(
-                    path=vasp_potentials.find_default(el)["Filename"].values[0][0]
+                    path=self.vasp_potentials.find_default(el)["Filename"].values[0][0]
                 )
 
             if not (os.path.isfile(el_path)):
