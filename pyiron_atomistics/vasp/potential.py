@@ -420,9 +420,13 @@ class Potcar(GenericParameters):
 
     def _set_potential_paths(self):
         element_list = (
-            self._structure.get_species_symbols()
+            el for el in self._structure.get_species_symbols()
+                if el in self._structure.get_chemical_symbols()
         )  # .ElementList.getSpecies()
-        object_list = self._structure.get_species_objects()
+        object_list = [
+            el for el in self._structure.get_species_objects()
+                if el in self._structure.get_chemical_elements()
+        ]
         state.logger.debug("element list: {0}".format(element_list))
         self.el_path_lst = list()
         try:

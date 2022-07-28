@@ -109,8 +109,10 @@ class VaspBase(GenericDFTJob):
         """
         GenericDFTJob.structure.fset(self, structure)
         if structure is not None:
+            elements = structure.get_species_symbols().tolist()
+            elements = [el for el in elements if el in structure.get_chemical_symbols()]
             self._potential = VaspPotentialSetter(
-                element_lst=structure.get_species_symbols().tolist()
+                element_lst=elements
             )
 
     @property
