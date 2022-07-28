@@ -8,7 +8,7 @@ import copy
 import importlib
 import numpy as np
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
-from pyiron_atomistics.atomistics.structure.atoms import pyiron_to_ase, Atoms as PAtoms
+from pyiron_atomistics.atomistics.structure.atoms import pyiron_to_ase, ase_to_pyiron, Atoms as PAtoms
 
 try:
     from ase.cell import Cell
@@ -103,7 +103,7 @@ class AseJob(GenericInteractive):
 
     @property
     def structure(self):
-        return GenericInteractive.structure.fget(self)
+        return ase_to_pyiron(GenericInteractive.structure.fget(self))
 
     @structure.setter
     def structure(self, structure):
@@ -244,7 +244,7 @@ class AseJob(GenericInteractive):
                             self.output.positions[frame]
                             + self.output.total_displacements[frame]
                         )
-                atoms = Atoms(
+                atoms = PAtoms(
                     symbols=np.array([el_lst[el] for el in indices]),
                     positions=positions,
                     cell=self.output.cells[frame],
