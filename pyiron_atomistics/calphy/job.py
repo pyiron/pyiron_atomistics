@@ -6,7 +6,11 @@ import pandas as pd
 from pyiron_base import DataContainer
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
 from pyiron_base import GenericJob, ImportAlarm
-from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.structure import (
+    LammpsStructure,
+    UnfoldingPrism,
+    structure_to_lammps,
+)
 
 with ImportAlarm(
     "Calphy functionality requires the `calphy` module (and its dependencies) specified as extra"
@@ -218,14 +222,18 @@ class Calphy(GenericJob):
         Returns:
             list: pair style and pair coeff
         """
+
         pair_style = []
         pair_coeff = []
+
         if self._potential_initial is not None:
             pair_style.append(
-                self._potential_initial.df["Config"]
-                .to_list()[0][0]
-                .strip()
-                .split()[1:][0]
+                " ".join(
+                    self._potential_initial.df["Config"]
+                    .to_list()[0][0]
+                    .strip()
+                    .split()[1:]
+                )
             )
             pair_coeff.append(
                 " ".join(
@@ -237,10 +245,12 @@ class Calphy(GenericJob):
             )
         if self._potential_final is not None:
             pair_style.append(
-                self._potential_final.df["Config"]
-                .to_list()[0][0]
-                .strip()
-                .split()[1:][0]
+                " ".join(
+                    self._potential_final.df["Config"]
+                    .to_list()[0][0]
+                    .strip()
+                    .split()[1:]
+                )
             )
             pair_coeff.append(
                 " ".join(
@@ -250,7 +260,30 @@ class Calphy(GenericJob):
                     .split()[1:]
                 )
             )
+
         return pair_style, pair_coeff
+
+    def _get_masses(self) -> List[float]:
+        """
+        Get masses as defined in pair style
+
+        Args:
+            None
+
+        Returns:
+            list: masses of the elements
+        """
+        elements_from_pot = self._potential_initial.get_element_lst()
+        elements_object_lst = self.structure.get_species_objects()
+        elements_struct_lst = self.structure.get_species_symbols()
+
+        masses = []
+        for element_name in elements_from_pot:
+            if element_name in elements_struct_lst:
+                index = list(elements_struct_lst).index(element_name)
+                masses.append(elements_object_lst[index].AtomicMass)
+
+        return masses
 
     def _potential_from_hdf(self):
         """
@@ -330,22 +363,6 @@ class Calphy(GenericJob):
         """
         return list(self.view_potentials()["Name"].values)
 
-    def structure_to_lammps(self):
-        """
-        Convert structure to LAMMPS structure
-
-        Args:
-            None
-
-        Returns:
-            list: pair style and pair coeff
-        """
-        prism = UnfoldingPrism(self.input.structure.cell)
-        lammps_structure = self.input.structure.copy()
-        lammps_structure.set_cell(prism.A)
-        lammps_structure.positions = np.matmul(self.input.structure.positions, prism.R)
-        return lammps_structure
-
     def write_structure(self, structure, file_name: str, working_directory: str):
         """
         Write structure to file
@@ -360,8 +377,16 @@ class Calphy(GenericJob):
         """
         lmp_structure = LammpsStructure()
         lmp_structure.potential = self._potential_initial
-        lmp_structure.el_eam_lst = set(structure.get_chemical_symbols())
-        lmp_structure.structure = self.structure_to_lammps()
+        lmp_structure.atom_type = "atomic"
+        lmp_structure.el_eam_lst = self._potential_initial.get_element_lst()
+        lmp_structure.structure = structure_to_lammps(structure)
+
+        if not set(lmp_structure.structure.get_species_symbols()).issubset(
+            set(lmp_structure.el_eam_lst)
+        ):
+            raise ValueError(
+                "The selected potentials do not support the given combination of elements."
+            )
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
 
     def determine_mode(self):
@@ -399,7 +424,6 @@ class Calphy(GenericJob):
         Returns:
             None
         """
-        # now prepare the calculation
         calc = Calculation()
         for key in inputdict.keys():
             if key not in ["md", "tolerance"]:
@@ -419,8 +443,8 @@ class Calphy(GenericJob):
         calc.pair_style = pair_style
         calc.pair_coeff = pair_coeff
 
-        calc.element = list(np.unique(self.structure.get_chemical_symbols()))
-        calc.mass = list(np.unique(self.structure.get_masses()))
+        calc.element = self._potential_initial.get_element_lst()
+        calc.mass = self._get_masses()
 
         calc.queue.cores = self.server.cores
         self.calc = calc
