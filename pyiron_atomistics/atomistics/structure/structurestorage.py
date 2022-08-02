@@ -334,3 +334,72 @@ class StructurePlots:
         plt.xlabel(label)
 
         return df
+
+    def _calc_spacegroups(self, symprec=1e-3):
+        """
+        Calculate space groups of all structures.
+
+        Args:
+            symprec (float): symmetry precision given to spglib
+
+        Returns:
+            DataFrame: contains columns 'crystal_system' (str) and 'space_group' (int) for each structure
+        """
+
+        def get_crystal_system(num):
+            if num in range(1, 3):
+                return "triclinic"
+            elif num in range(3, 16):
+                return "monoclinic"
+            elif num in range(16, 75):
+                return "orthorombic"
+            elif num in range(75, 143):
+                return "trigonal"
+            elif num in range(143, 168):
+                return "tetragonal"
+            elif num in range(168, 195):
+                return "hexagonal"
+            elif num in range(195, 230):
+                return "cubic"
+
+        def extract(s):
+            spg = s.get_symmetry(symprec=symprec).spacegroup["Number"]
+            return {"space_group": spg, "crystal_system": get_crystal_system(spg)}
+
+        return pd.DataFrame(map(extract, self._store.iter_structures()))
+
+    def spacegroups(self, symprec=1e-3):
+        """
+        Plot histograms of space groups and crystal systems.
+
+        Spacegroups and crystal systems are plotted in separate subplots.
+
+        Args:
+            symprec (float): precision of the symmetry search (passed to spglib)
+
+        Returns:
+            DataFrame: contains two columns "space_group", "crystal_system"
+                       for each structure
+        """
+
+        df = self._calc_spacegroups(symprec=symprec)
+        plt.subplot(1, 2, 1)
+        plt.hist(df.space_group, bins=230)
+        plt.xlabel("Space Group")
+
+        plt.subplot(1, 2, 2)
+        l, h = np.unique(df.crystal_system, return_counts=True)
+        sort_key = {
+            "triclinic": 1,
+            "monoclinic": 3,
+            "orthorombic": 16,
+            "trigonal": 75,
+            "tetragonal": 143,
+            "hexagonal": 168,
+            "cubic": 195,
+        }
+        I = np.argsort([sort_key[ll] for ll in l])
+        plt.bar(l[I], h[I])
+        plt.xlabel("Crystal System")
+        plt.xticks(rotation=35)
+        return df
