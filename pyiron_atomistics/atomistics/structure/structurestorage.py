@@ -11,10 +11,12 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 from pyiron_base import FlattenedStorage
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 
 
@@ -259,6 +261,7 @@ class StructurePlots:
 
     def __init__(self, store: StructureStorage):
         self._store = store
+        self._neigh = None
 
     def cell(self, angle_in_degrees=True):
         """
@@ -403,3 +406,95 @@ class StructurePlots:
         plt.xlabel("Crystal System")
         plt.xticks(rotation=35)
         return df
+
+    def _calc_neighbors(self, num_neighbors):
+        if self._store.has_array("distances") and self._store.has_array("shells"):
+            return {
+                    'distances': self._store['distances'],
+                    'shells': self._store['shells'],
+            }
+        # check that _store and _neigh are still consistent
+        if self._neigh is None \
+                or len(self._store) != len(self._neigh) \
+                or self._neigh.has_array("distances")["shape"][0] != num_neighbors:
+            self._neigh = FlattenedStorage()
+            neigh_traj = NeighborsTrajectory(
+                    has_structure=self._store,
+                    num_neighbors=num_neighbors,
+                    store=self._neigh,
+            )
+        return {
+                'distances': self._neigh['distances'],
+                'shells': self._neigh['shells'],
+        }
+
+    def coordination(self, num_shells=4, num_neighbors=36, log=True):
+        """
+        Plot histogram of coordination in neighbor shells.
+
+        Computes one histogram of the number of neighbors in each neighbor shell up to `num_shells` and then plots them
+        together.
+
+        If the underlying :class:`.StructureStorage` has a 'shells' array defined it is used, if not it is calculated on
+        the fly.
+
+        Args:
+            num_shells (int): maximum shell to plot
+            num_neighbors (int): maximum number of neighbors to calculate, when 'shells' is not defined in storage
+            log (float): plot histogram values on a log scale
+        """
+        neigh = self._calc_neighbors(num_neighbors=num_neighbors)
+        shells = neigh["shells"]
+
+        shell_index = (
+            shells[np.newaxis, :, :]
+            == np.arange(1, num_shells + 1)[:, np.newaxis, np.newaxis]
+        )
+        neigh_count = shell_index.sum(axis=-1)
+        ticks = np.arange(neigh_count.min(), neigh_count.max() + 1)
+        plt.hist(
+            neigh_count.T,
+            bins=ticks - 0.5,
+            log=True,
+            label=[f"{i}." for i in range(1, num_shells + 1)],
+        )
+        plt.xticks(ticks)
+        plt.xlabel("Number of Neighbors")
+        plt.legend(title="Shell")
+        plt.title("Neighbor Coordination in Shells")
+
+    def distances(self, num_neighbors=36, bins=50):
+        """
+        Plot a histogram of the neighbor distances.
+
+        Args:
+            num_neighbors (int): maximum number of neighbors to calculate, when 'shells' or 'distances' are not defined in storage
+            bins (int): number of bins
+        """
+        neigh = self._calc_neighbors(num_neighbors=num_neighbors)
+        distances = neigh["distances"]
+
+        plt.hist(distances.flatten(), bins=bins)
+        plt.xlabel(r"Distance [$\AA$]")
+        plt.ylabel("Neighbor count")
+
+    def shell_distances(self, num_shells=4, num_neighbors=36):
+        """
+        Plot a violin plot of the neighbor distances in shells up to `num_shells`.
+
+        Args:
+            num_shells (int): maximum shell to plot
+            num_neighbors (int): maximum number of neighbors to calculate, when 'shells' or 'distances' are not defined in storage
+        """
+        neigh = self._calc_neighbors(num_neighbors=num_neighbors)
+        shells = neigh["shells"]
+        distances = neigh["distances"]
+
+        R = distances.flatten()
+        S = shells.ravel()
+        d = pd.DataFrame(
+            {"distance": R[S < num_shells + 1], "shells": S[S < num_shells + 1]}
+        )
+        sns.violinplot(y=d.shells, x=d.distance, scale="width", orient="h")
+        plt.xlabel(r"Distance [$\AA$]")
+        plt.ylabel("Shell")
