@@ -106,11 +106,7 @@ class StructureContainer(GenericJob, HasStructure):
             identifier (str, optional): optional identifier for the structure
             **kwargs: passed through to the underlying :meth:`.StructureStorage.add_structure`
         """
-        self._container.add_structure(
-                structure,
-                identifier=identifier,
-                **kwargs
-        )
+        self._container.add_structure(structure, identifier=identifier, **kwargs)
 
     def run_static(self):
         self.status.finished = True
