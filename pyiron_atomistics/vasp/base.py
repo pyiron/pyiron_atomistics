@@ -2046,7 +2046,7 @@ class Output:
             # log_dict["total_energies"] = self.vp_new.vasprun_dict["total_energies"]
             log_dict["energy_tot"] = self.vp_new.vasprun_dict["total_energies"]
             log_dict["energy_kin"] = self.vp_new.vasprun_dict["kinetic_energies"]
-            if self.vp_new.vasprun_dict["kinetic_energies"]:
+            if np.any(self.vp_new.vasprun_dict["kinetic_energies"]):
                 log_dict["energy_pot"] = (
                     log_dict["energy_tot"]
                     - self.vp_new.vasprun_dict["kinetic_energies"]
