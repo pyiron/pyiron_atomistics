@@ -148,6 +148,7 @@ class Calphy(GenericJob):
         self._data = None
         self.input._pot_dict_initial = None
         self.input._pot_dict_final = None
+        self.input._calc = None
 
     def set_potentials(self, potential_filenames: Union[list, str]):
         """
@@ -448,7 +449,8 @@ class Calphy(GenericJob):
         calc.mass = self._get_masses()
 
         calc.queue.cores = self.server.cores
-        self.calc = calc
+        self.input._calc = calc
+        print(calc)
 
     def calc_mode_fe(
         self,
@@ -615,11 +617,11 @@ class Calphy(GenericJob):
     def run_static(self):
         self.status.running = True
         if self.input.reference_phase == "alchemy":
-            job = Alchemy(calculation=self.calc, simfolder=self.working_directory)
+            job = Alchemy(calculation=self.input._calc, simfolder=self.working_directory)
         elif self.input.reference_phase == "solid":
-            job = Solid(calculation=self.calc, simfolder=self.working_directory)
+            job = Solid(calculation=self.input._calc, simfolder=self.working_directory)
         elif self.input.reference_phase == "liquid":
-            job = Liquid(calculation=self.calc, simfolder=self.working_directory)
+            job = Liquid(calculation=self.input._calc, simfolder=self.working_directory)
         else:
             raise ValueError("Unknown reference state")
 
@@ -695,7 +697,7 @@ class Calphy(GenericJob):
         for i in range(1, self.input.n_iterations + 1):
             fwdfilename = os.path.join(self.working_directory, "forward_%d.dat" % i)
             bkdfilename = os.path.join(self.working_directory, "backward_%d.dat" % i)
-            nelements = self.calc.n_elements
+            nelements = self.input._calc.n_elements
 
             if self.input.reference_phase == "solid":
                 fdui = np.loadtxt(fwdfilename, unpack=True, comments="#", usecols=(0,))
