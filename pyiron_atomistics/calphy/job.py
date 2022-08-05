@@ -284,6 +284,12 @@ class Calphy(GenericJob):
                 index = list(elements_struct_lst).index(element_name)
                 masses.append(elements_object_lst[index].AtomicMass)
 
+        #this picks the actual masses, now we should pad with 1s to match length
+        length_diff = len(elements_from_pot)-len(masses)
+        if length_diff>0:
+            for x in range(length_diff):
+                masses.append(1.0)
+
         return masses
 
     def _potential_from_hdf(self):
