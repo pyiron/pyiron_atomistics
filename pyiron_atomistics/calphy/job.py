@@ -63,76 +63,51 @@ inputdict = {
 class Calphy(GenericJob):
     """
     Class to set up and run calphy jobs for calculation of free energies using LAMMPS.
-
     An input structure (:attr:`structure`) and interatomic potential (:attr:`potential`) are necessary input options. The additional input options such as the temperature and pressure are specified in the :meth:`.calc_free_energy` method. Depending on the input parameters, a corresponding calculation mode is selected. Further input options can be accessed through :attr:`input.md` and :attr:`input.tolerance`.
-
     An example which calculates the free energy of Cu using an interatomic potential:
-
     ```python
     job.structure = pr.create.structure.ase.bulk('Cu', cubic=True).repeat(5)
     job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
     job.calc_free_energy(temperature=1100, pressure=0, reference_phase="solid")
     job.run()
     ```
-
     In order to calculate the free energy of the liquid phase, the `reference_phase` should be set to `liquid`.
-
     The different modes can be selected as follows:
-
     For free energy at a given temperature and pressure:
-
     ```python
     job.calc_free_energy(temperature=1100, pressure=0, reference_phase="solid")
     ```
-
     Alternatively, :func:`calc_mode_fe` can be used.
-
     To obtain the free energy between a given temperature range (temperature scaling):
-
     ```python
     job.calc_free_energy(temperature=[1100, 1400], pressure=0, reference_phase="solid")
     ```
-
     Alternatively, :func:`calc_mode_ts` can be used.
-
     For free energy between a given pressure range (pressure scaling)
-
     ```python
     job.calc_free_energy(temperature=1000, pressure=[0, 100000], reference_phase="solid")
     ```
-
     Alternatively, :func:`calc_mode_pscale` can be used.
-
     To obtain the free energy difference between two interatomic potentials (alchemy/upsampling)
-
     ```python
     job.potential = ["2001--Mishin-Y--Cu-1--LAMMPS--ipr1", "1986--Foiles-S-M--Cu--LAMMPS--ipr1"]
     job.calc_free_energy(temperature=1100, pressure=0, reference_phase="solid")
     job.run()
     ```
-
     Alternatively, :func:`calc_mode_alchemy` can be used.
-
     The way `pressure` is specified determines how the barostat affects the system. For isotropic pressure control:
-
     ```python
     job.calc_free_energy(temperature=[1100, 1400], pressure=0, reference_phase="solid")
     ```
-
     For anisotropic pressure control:
-
     ```python
     job.calc_free_energy(temperature=[1100, 1400], pressure=[0, 0, 0], reference_phase="solid")
     ```
-
     To constrain the lattice:
-
     ```python
     job.calc_free_energy(temperature=[1100, 1400], pressure=None, reference_phase="solid")
     ```
-
     In addition the boolean option :attr:`input.npt` can be used to determine the MD ensemble. If True, temperature integration and alchemy/upsampling are carried out in the NPT ensemble. If False, the NVT ensemble is employed.
-
     After the calculation is over, the various output options can be accessed through `job.output`.
     """
 
@@ -148,15 +123,12 @@ class Calphy(GenericJob):
         self._data = None
         self.input._pot_dict_initial = None
         self.input._pot_dict_final = None
-        self.input._calc = None
 
     def set_potentials(self, potential_filenames: Union[list, str]):
         """
         Set the interatomic potential from a given name
-
         Args:
             potential_filenames (list, str): list of filenames
-
         Returns:
             None
         """
@@ -187,10 +159,8 @@ class Calphy(GenericJob):
     def get_potentials(self) -> List[str]:
         """
         Return the interatomic potentials
-
         Args:
             None
-
         Returns:
             list of str: list of interatomic potentials
         """
@@ -202,10 +172,8 @@ class Calphy(GenericJob):
     def copy_pot_files(self):
         """
         Copy potential files to the working directory
-
         Args:
             None
-
         Returns:
             None
         """
@@ -217,10 +185,8 @@ class Calphy(GenericJob):
     def _prepare_pair_styles(self) -> Tuple[List, List]:
         """
         Prepare pair style and pair coeff
-
         Args:
             None
-
         Returns:
             list: pair style and pair coeff
         """
@@ -268,10 +234,8 @@ class Calphy(GenericJob):
     def _get_masses(self) -> List[float]:
         """
         Get masses as defined in pair style
-
         Args:
             None
-
         Returns:
             list: masses of the elements
         """
@@ -290,10 +254,8 @@ class Calphy(GenericJob):
     def _potential_from_hdf(self):
         """
         Recreate the potential from filename stored in hdf5
-
         Args:
             None
-
         Returns:
             None
         """
@@ -331,10 +293,8 @@ class Calphy(GenericJob):
     def view_potentials(self) -> List:
         """
         View a list of available interatomic potentials
-
         Args:
             None
-
         Returns:
             list: list of available potentials
         """
@@ -354,12 +314,9 @@ class Calphy(GenericJob):
     def list_potentials(self):
         """
         List of interatomic potentials suitable for the current atomic structure.
-
         use self.potentials_view() to get more details.
-
         Args:
             None
-
         Returns:
             list: potential names
         """
@@ -368,12 +325,10 @@ class Calphy(GenericJob):
     def write_structure(self, structure, file_name: str, working_directory: str):
         """
         Write structure to file
-
         Args:
             structure: input structure
             file_name (str): output file name
             working_directory (str): output working directory
-
         Returns:
             None
         """
@@ -394,10 +349,8 @@ class Calphy(GenericJob):
     def determine_mode(self):
         """
         Determine the calculation mode
-
         Args:
             None
-
         Returns:
             None
         """
@@ -419,10 +372,8 @@ class Calphy(GenericJob):
     def write_input(self):
         """
         Write input for calphy calculation
-
         Args:
             None
-
         Returns:
             None
         """
@@ -449,8 +400,7 @@ class Calphy(GenericJob):
         calc.mass = self._get_masses()
 
         calc.queue.cores = self.server.cores
-        self.input._calc = calc
-        print(calc)
+        self.calc = calc
 
     def calc_mode_fe(
         self,
@@ -464,10 +414,8 @@ class Calphy(GenericJob):
     ):
         """
         Calculate free energy at given conditions
-
         Args:
             None
-
         Returns:
             None
         """
@@ -497,10 +445,8 @@ class Calphy(GenericJob):
     ):
         """
         Calculate free energy between given temperatures
-
         Args:
             None
-
         Returns:
             None
         """
@@ -530,10 +476,8 @@ class Calphy(GenericJob):
     ):
         """
         Perform upsampling/alchemy between two interatomic potentials
-
         Args:
             None
-
         Returns:
             None
         """
@@ -560,10 +504,8 @@ class Calphy(GenericJob):
     ):
         """
         Calculate free energy between two given pressures
-
         Args:
             None
-
         Returns:
             None
         """
@@ -593,10 +535,8 @@ class Calphy(GenericJob):
     ):
         """
         Calculate free energy at given conditions
-
         Args:
             None
-
         Returns:
             None
         """
@@ -617,11 +557,11 @@ class Calphy(GenericJob):
     def run_static(self):
         self.status.running = True
         if self.input.reference_phase == "alchemy":
-            job = Alchemy(calculation=self.input._calc, simfolder=self.working_directory)
+            job = Alchemy(calculation=self.calc, simfolder=self.working_directory)
         elif self.input.reference_phase == "solid":
-            job = Solid(calculation=self.input._calc, simfolder=self.working_directory)
+            job = Solid(calculation=self.calc, simfolder=self.working_directory)
         elif self.input.reference_phase == "liquid":
-            job = Liquid(calculation=self.input._calc, simfolder=self.working_directory)
+            job = Liquid(calculation=self.calc, simfolder=self.working_directory)
         else:
             raise ValueError("Unknown reference state")
 
@@ -645,10 +585,8 @@ class Calphy(GenericJob):
     def collect_general_output(self):
         """
         Collect the output from calphy
-
         Args:
             None
-
         Returns:
             None
         """
@@ -684,10 +622,8 @@ class Calphy(GenericJob):
     def collect_ediff(self):
         """
         Calculate the energy difference between reference system and system of interest
-
         Args:
             None
-
         Returns:
             None
         """
@@ -697,7 +633,7 @@ class Calphy(GenericJob):
         for i in range(1, self.input.n_iterations + 1):
             fwdfilename = os.path.join(self.working_directory, "forward_%d.dat" % i)
             bkdfilename = os.path.join(self.working_directory, "backward_%d.dat" % i)
-            nelements = self.input._calc.n_elements
+            nelements = self.calc.n_elements
 
             if self.input.reference_phase == "solid":
                 fdui = np.loadtxt(fwdfilename, unpack=True, comments="#", usecols=(0,))
