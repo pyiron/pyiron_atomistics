@@ -787,7 +787,7 @@ class Outcar(object):
     @staticmethod
     def get_cpu_time(filename="OUTCAR", lines=None):
         """
-        Returns the total CPU time in seconds 
+        Returns the total CPU time in seconds
 
         Args:
             filename (str): OUTCAR filename
@@ -803,11 +803,11 @@ class Outcar(object):
             line = line.strip()
             if nelect_trigger in line:
                 return float(l.split()[-1])
-    
+
     @staticmethod
     def get_user_time(filename="OUTCAR", lines=None):
         """
-        Returns the User time in seconds 
+        Returns the User time in seconds
 
         Args:
             filename (str): OUTCAR filename
@@ -827,7 +827,7 @@ class Outcar(object):
     @staticmethod
     def get_system_time(filename="OUTCAR", lines=None):
         """
-        Returns the system time in seconds 
+        Returns the system time in seconds
 
         Args:
             filename (str): OUTCAR filename
@@ -847,7 +847,7 @@ class Outcar(object):
     @staticmethod
     def get_elapsed_time(filename="OUTCAR", lines=None):
         """
-        Returns the elapsed time in seconds 
+        Returns the elapsed time in seconds
 
         Args:
             filename (str): OUTCAR filename
@@ -883,7 +883,7 @@ class Outcar(object):
             line = line.strip()
             if nelect_trigger in line:
                 return float(l.split()[-1])
-            
+
     @staticmethod
     def get_number_of_atoms(filename="OUTCAR", lines=None):
         """
