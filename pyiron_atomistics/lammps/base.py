@@ -1212,7 +1212,9 @@ class LammpsBase(AtomisticGenericJob):
                     )
 
                 for k, v in computes.items():
-                    hdf_output[k] = uc.convert_array_to_pyiron_units(v, label=k)
+                    hdf_output[k] = uc.convert_array_to_pyiron_units(
+                        np.array(v), label=k
+                    )
 
         else:
             warnings.warn("LAMMPS warning: No dump.out output file found.")
