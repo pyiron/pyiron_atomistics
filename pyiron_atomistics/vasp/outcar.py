@@ -785,6 +785,106 @@ class Outcar(object):
                 return float(line.split()[2])
 
     @staticmethod
+    def get_cpu_time(filename="OUTCAR", lines=None):
+        """
+        Returns the total CPU time in seconds 
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: CPU time in seconds
+
+        """
+        nelect_trigger = "Total CPU time used (sec):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(l.split()[-1])
+    
+    @staticmethod
+    def get_user_time(filename="OUTCAR", lines=None):
+        """
+        Returns the User time in seconds 
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: User time in seconds
+
+        """
+        nelect_trigger = "User time (sec):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(l.split()[-1])
+
+    @staticmethod
+    def get_system_time(filename="OUTCAR", lines=None):
+        """
+        Returns the system time in seconds 
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: system time in seconds
+
+        """
+        nelect_trigger = "System time (sec):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(l.split()[-1])
+
+    @staticmethod
+    def get_elapsed_time(filename="OUTCAR", lines=None):
+        """
+        Returns the elapsed time in seconds 
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: elapsed time in seconds
+
+        """
+        nelect_trigger = "Elapsed time (sec):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(l.split()[-1])
+
+    @staticmethod
+    def get_memory_used(filename="OUTCAR", lines=None):
+        """
+        Returns the maximum memory used during the simulation in kB
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: Maximum memory used in kB
+
+        """
+        nelect_trigger = "Maximum memory used (kb):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(l.split()[-1])
+            
+    @staticmethod
     def get_number_of_atoms(filename="OUTCAR", lines=None):
         """
         Returns the number of ions in the simulation
