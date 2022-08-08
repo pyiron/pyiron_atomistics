@@ -30,7 +30,7 @@ from pyiron_atomistics.sphinx.potential import (
 )
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
-from pyiron_base.interfaces.has_groups import HasGroups
+from pyiron_base import HasGroups
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -112,6 +112,8 @@ class SphinxBase(GenericDFTJob):
         if not isinstance(item, str):
             return super().__getitem__(item)
         result = None
+        if item[-1] == "/":
+            item = item[:-1]
         for tag in item.split("/"):
             try:  # horrible workaround to be removed when hdf output becomes consistent
                 if result is None:
@@ -490,8 +492,6 @@ class SphinxBase(GenericDFTJob):
             self.input.sphinx.main[optimizer]["maxStepLength"] = str(
                 0.1 / BOHR_TO_ANGSTROM
             )
-            if "dE" in self.input and "dF" in self.input:
-                self.input["dE"] = 1e-3
             if "dE" in self.input:
                 self.input.sphinx.main[optimizer]["dEnergy"] = str(
                     self.input["dE"] / HARTREE_TO_EV
@@ -582,22 +582,27 @@ class SphinxBase(GenericDFTJob):
             if "waves.sxb" in ff.split("/")[-1]:
                 wave_function_file = ff
 
-        self.input.sphinx.initialGuess.setdefault("waves", Group())
-        self.input.sphinx.initialGuess.waves.setdefault("lcao", Group())
-        self.input.sphinx.initialGuess.waves.setdefault("pawBasis", True)
-        if wave_function_file is not None:
-            self.input.sphinx.initialGuess.setdefault("exchange", Group())
-            self.input.sphinx.initialGuess.exchange.setdefault(
-                "file", '"' + wave_function_file + '"'
-            )
-        if charge_density_file is None:
-            self.input.sphinx.initialGuess.setdefault(
-                "rho", Group({"atomicOrbitals": True})
-            )
+        # introduce short alias for initialGuess group
+        guess = self.input.sphinx.initialGuess
+
+        guess.setdefault("waves", Group())
+        guess.waves.setdefault("pawBasis", True)
+        if wave_function_file is None:
+            guess.waves.setdefault("lcao", Group())
         else:
-            self.input.sphinx.initialGuess.setdefault(
-                "rho", Group({"file": '"' + charge_density_file + '"'})
-            )
+            guess.waves.setdefault("file", '"' + wave_function_file + '"')
+            # TODO: only for hybrid functionals
+            guess.setdefault("exchange", Group())
+            guess.exchange.setdefault("file", '"' + wave_function_file + '"')
+
+        guess.setdefault("rho", Group())
+        if charge_density_file is None:
+            if wave_function_file is None:
+                guess.rho.setdefault("atomicOrbitals", True)
+            else:
+                guess.rho.setdefault("fromWaves", True)
+        else:
+            guess.rho.setdefault("file", '"' + charge_density_file + '"')
         if self._spin_enabled:
             if any(
                 [
@@ -609,7 +614,7 @@ class SphinxBase(GenericDFTJob):
             ):
                 raise ValueError("SPHInX only supports collinear spins.")
             else:
-                rho = self.input.sphinx.initialGuess.rho
+                rho = guess.rho
                 rho.get("atomicSpin", create=True)
                 if update_spins:
                     rho.atomicSpin.clear()
@@ -623,10 +628,8 @@ class SphinxBase(GenericDFTJob):
                             )
                         )
 
-        if "noWavesStorage" not in self.input.sphinx.initialGuess:
-            self.input.sphinx.initialGuess["noWavesStorage"] = not self.input[
-                "WriteWaves"
-            ]
+        if "noWavesStorage" not in guess:
+            guess["noWavesStorage"] = not self.input["WriteWaves"]
 
     def calc_static(
         self,
@@ -673,8 +676,8 @@ class SphinxBase(GenericDFTJob):
         retain_electrostatic_potential=False,
         ionic_energy=None,
         ionic_forces=None,
-        ionic_energy_tolerance=0.0,
-        ionic_force_tolerance=1.0e-2,
+        ionic_energy_tolerance=None,
+        ionic_force_tolerance=None,
         volume_only=False,
     ):
         """
@@ -838,14 +841,17 @@ class SphinxBase(GenericDFTJob):
                     self.status.not_converged = True
         new_job = super(SphinxBase, self).restart(job_name=job_name, job_type=job_type)
 
-        new_job.input = self.input
+        new_job.input = self.input.copy()
 
+        recreate_guess = False
         if from_charge_density and os.path.isfile(
             posixpath.join(self.working_directory, "rho.sxb")
         ):
             new_job.restart_file_list.append(
                 posixpath.join(self.working_directory, "rho.sxb")
             )
+            del new_job.input.sphinx.initialGuess["rho"]
+            recreate_guess = True
 
         elif from_charge_density:
             self._logger.warning(
@@ -858,11 +864,20 @@ class SphinxBase(GenericDFTJob):
             new_job.restart_file_list.append(
                 posixpath.join(self.working_directory, "waves.sxb")
             )
+            try:
+                del new_job.input.sphinx.initialGuess["rho"]
+            except KeyError:
+                pass
+            del new_job.input.sphinx.initialGuess["waves"]
+            recreate_guess = True
+
         elif from_wave_functions:
             self._logger.warning(
                 msg="No wavefunction file (waves.sxb) was found for "
                 + f"job {self.job_name} in {self.working_directory}."
             )
+        if recreate_guess:
+            new_job.load_guess_group()
         return new_job
 
     def to_hdf(self, hdf=None, group_name=None):
@@ -1064,6 +1079,8 @@ class SphinxBase(GenericDFTJob):
             electronic_energy is None or electronic_energy > 0
         ), "electronic_energy must be a positive float"
         if ionic_energy_tolerance is not None or ionic_force_tolerance is not None:
+            # self.input["dE"] = ionic_energy_tolerance
+            # self.input["dF"] = ionic_force_tolerance
             print("Setting calc_minimize")
             self.calc_minimize(
                 ionic_energy_tolerance=ionic_energy_tolerance,
@@ -1817,7 +1834,6 @@ class InputWriter(object):
         """
         state.logger.debug(f"Writing {file_name}")
         if spins_list is None or len(spins_list) == 0:
-            spins_list = []
             state.logger.debug(
                 "Getting magnetic moments via \
                 get_initial_magnetic_moments"
@@ -1840,17 +1856,12 @@ class InputWriter(object):
                         "SPHInX only supports collinear spins at the moment."
                     )
                 else:
-                    for spin, value in zip(
-                        self.structure.spin_constraint[self.id_pyi_to_spx],
-                        self.structure.get_initial_magnetic_moments()[
-                            self.id_pyi_to_spx
-                        ],
-                    ):
-                        if spin:
-                            spins_list.append(str(value))
-                        else:
-                            spins_list.append("X")
-                    spins_str = "\n".join(spins_list) + "\n"
+                    constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
+                    spins = self.structure.get_initial_magnetic_moments()[
+                        self.id_pyi_to_spx
+                    ].astype(str)
+                    spins[~np.asarray(constraint)] = "X"
+                    spins_str = "\n".join(spins) + "\n"
         if spins_str is not None:
             if cwd is not None:
                 file_name = posixpath.join(cwd, file_name)

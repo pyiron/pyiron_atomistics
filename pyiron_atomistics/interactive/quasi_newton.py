@@ -303,7 +303,7 @@ class QuasiNewton(InteractiveWrapper):
 
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
-        self.__name__ = "QuasiNewton"
+
         self.__version__ = None
         self.input = Input()
         self.output = Output(self)

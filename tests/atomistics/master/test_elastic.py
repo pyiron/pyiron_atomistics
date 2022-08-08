@@ -6,8 +6,13 @@ import os
 import unittest
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_base import Project
-from pyiron_atomistics.atomistics.master.elastic import (calc_elastic_tensor, _get_higher_order_strains,
-    calc_elastic_constants, get_elastic_tensor_by_orientation)
+from pyiron_atomistics.atomistics.master.elastic import (
+    calc_elastic_tensor,
+    _get_higher_order_strains,
+    calc_elastic_constants,
+    get_elastic_tensor_by_orientation,
+    _convert_to_voigt,
+)
 import numpy as np
 
 
@@ -87,6 +92,11 @@ class TestElasticTensor(unittest.TestCase):
         self.assertAlmostEqual(
             np.linalg.norm(C-get_elastic_tensor_by_orientation([[1, 0, 0], [0, 0, -1], [0, 1, 0]], C)), 0
         )
+
+    def test_convert_to_voigt(self):
+        voigt = _convert_to_voigt(np.arange(3**4).reshape(*4 * (3,)))
+        self.assertTrue(np.array_equal(voigt[0], [ 0,  4,  8,  5,  2,  1]))
+        self.assertTrue(np.all(np.diff(voigt, axis=0) == 9))
 
 
 if __name__ == "__main__":

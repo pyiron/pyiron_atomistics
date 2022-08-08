@@ -15,7 +15,7 @@ from pyiron_atomistics.atomistics.structure.pyscal import (
     analyse_find_solids,
 )
 from pyiron_atomistics.atomistics.structure.strain import Strain
-from pyiron_base.generic.util import Deprecator
+from pyiron_base import Deprecator
 from scipy.spatial import ConvexHull
 
 deprecate = Deprecator()

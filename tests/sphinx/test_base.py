@@ -5,6 +5,9 @@
 import os
 import numpy as np
 import unittest
+import tempfile
+import posixpath
+from pathlib import Path
 import warnings
 import scipy.constants
 from pyiron_atomistics.project import Project
@@ -174,8 +177,8 @@ class TestSphinx(unittest.TestCase):
             '}\n',
             'initialGuess {\n',
             '\twaves {\n',
-            '\t\tlcao {}\n',
             '\t\tpawBasis;\n',
+            '\t\tlcao {}\n',
             '\t}\n',
             '\trho {\n',
             '\t\tatomicOrbitals;\n',
@@ -399,6 +402,43 @@ class TestSphinx(unittest.TestCase):
         )
         self.sphinx_band_structure.structure = backup
 
+    def test_load_guess_group(self):
+        guess = self.sphinx_band_structure.input.sphinx.initialGuess
+
+        def reload_guess(filelist):
+            # ugly hack: restart_file_list cannot be emptied otherwise
+            self.sphinx_band_structure._restart_file_list = list ()
+            self.sphinx_band_structure.restart_file_list = filelist
+            del guess["rho"]
+            del guess["waves"]
+            self.sphinx_band_structure.load_guess_group ()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # create temporary files to pass file existence checks
+            rho_file = posixpath.join (tmpdir, "rho.sxb")
+            waves_file = posixpath.join (tmpdir, "waves.sxb")
+            Path(rho_file).touch ()
+            Path(waves_file).touch ()
+
+            # test loading rho
+            reload_guess ([rho_file])
+            self.assertEqual (guess.rho.file, '"' + rho_file + '"')
+
+            # test loading waves
+            reload_guess ([waves_file])
+            self.assertEqual (guess.waves.file, '"' + waves_file + '"')
+            self.assertEqual (guess.rho.fromWaves, True)
+
+            # test loading rho + waves
+            reload_guess ([rho_file, waves_file])
+            self.assertEqual (guess.waves.file, '"' + waves_file + '"')
+            self.assertEqual (guess.rho.file, '"' + rho_file + '"')
+
+            # test default
+            reload_guess ([])
+            self.assertEqual (guess.rho.atomicOrbitals, True)
+            self.assertTrue ('lcao' in guess.waves)
+
     def test_validate_ready_to_run(self):
 
         backup = self.sphinx_band_structure.structure.copy()
@@ -583,6 +623,26 @@ class TestSphinx(unittest.TestCase):
         dos = self.sphinx_2_5.get_density_of_states()
         self.assertLess(dos['grid'][dos['dos'][0].argmax()], 0)
 
+    def test_convergence_precision(self):
+        job = self.project.create_job(job_type='Sphinx', job_name='energy_convergence')
+        job.structure = self.project.create_ase_bulk('Al', 'fcc', 3.5)
+        job.set_convergence_precision(ionic_energy_tolerance=1e-5, electronic_energy=1e-8)
+        job.calc_minimize(ionic_steps=250, electronic_steps=200)
+        self.assertAlmostEqual(float(job.input.sphinx.main.ricQN.bornOppenheimer.scfDiag.dEnergy)*HARTREE_TO_EV, 1e-8)
+        self.assertAlmostEqual(float(job.input.sphinx.main.ricQN.dEnergy)*HARTREE_TO_EV, 1e-5)
+        self.assertEqual(int(job.input.sphinx.main.ricQN.maxSteps), 250)
+        self.assertEqual(int(job.input.sphinx.main.ricQN.bornOppenheimer.scfDiag.maxSteps), 200)
+
+    def test_partial_constraint(self):
+        spx = self.project.create.job.Sphinx('spx_partial_constraint')
+        spx.structure = self.project.create.structure.bulk('Fe', cubic=True)
+        spx.structure.set_initial_magnetic_moments(2 * [2])
+        spx.fix_spin_constraint = True
+        spx.structure.spin_constraint[-1] = False
+        spx.calc_static()
+        spx.server.run_mode.manual = True
+        spx.run()
+        self.assertEqual(spx['spins.in'], ['2\n', 'X\n'])
 
 if __name__ == "__main__":
     unittest.main()

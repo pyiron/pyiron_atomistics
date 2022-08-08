@@ -96,7 +96,7 @@ def ase_structure_fromdict(atoms_dict):
 class AseJob(GenericInteractive):
     def __init__(self, project, job_name):
         super(AseJob, self).__init__(project, job_name)
-        self.__name__ = "AseJob"
+
         self.__version__ = (
             None  # Reset the version number to the executable is set automatically
         )

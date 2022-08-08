@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import numpy as np
+from pyiron_atomistics.lammps.units import UnitConverter
 from pyiron_base import GenericParameters
 import decimal as dec
 import warnings
@@ -184,7 +185,7 @@ class LammpsStructure(GenericParameters):
         input_file_name:
     """
 
-    def __init__(self, input_file_name=None, bond_dict=None):
+    def __init__(self, input_file_name=None, bond_dict=None, job=None):
         super(LammpsStructure, self).__init__(
             input_file_name=input_file_name,
             table_name="structure_inp",
@@ -199,6 +200,7 @@ class LammpsStructure(GenericParameters):
         self.digits = 10
         self._bond_dict = bond_dict
         self._force_skewed = False
+        self._job = job
 
     @property
     def potential(self):
@@ -236,6 +238,20 @@ class LammpsStructure(GenericParameters):
             input_str = self.structure_charge()
         else:  # self.atom_type == 'atomic'
             input_str = self.structure_atomic()
+
+        if self._structure.velocities is not None:
+            uc = UnitConverter(self._job.units)
+            self._structure.velocities *= uc.pyiron_to_lammps("velocity")
+            vels = self.rotate_velocities(self._structure)
+            input_str += "Velocities\n\n"
+            if self._structure.dimension == 3:
+                format_str = "{0:d} {1:f} {2:f} {3:f}\n"
+                for id_atom, (x, y, z) in enumerate(vels, start=1):
+                    input_str += format_str.format(id_atom, x, y, z)
+            if self._structure.dimension == 2:
+                format_str = "{0:d} {1:f} {2:f}\n"
+                for id_atom, (x, y) in enumerate(vels, start=1):
+                    input_str += format_str.format(id_atom, x, y)
         self.load_string(input_str)
 
     @property
@@ -341,7 +357,7 @@ class LammpsStructure(GenericParameters):
             + " \n"
             + "{0} atom types".format(self._structure.get_number_of_species())
             + " \n"
-            + "{0} bond types".format(np.max(bond_type))
+            + "{0} bond types".format(np.max(np.array(bonds)[:, 2]))
             + " \n"
         )
 
@@ -413,67 +429,71 @@ class LammpsStructure(GenericParameters):
         molecule_lst, bonds_lst, angles_lst = [], [], []
         bond_type_lst, angle_type_lst = [], []
         # Using a cutoff distance to draw the bonds instead of the number of neighbors
-        cutoff_list = list()
-        for val in self._bond_dict.values():
-            cutoff_list.append(np.max(val["cutoff_list"]))
-        max_cutoff = np.max(cutoff_list)
-        # Calculate neighbors only once
-        neighbors = self._structure.get_neighbors_by_distance(cutoff_radius=max_cutoff)
-        id_mol = 0
-        indices = self._structure.indices
-        for id_el, id_species in enumerate(indices):
-            id_mol += 1
-            molecule_lst.append([id_el, id_mol, species_translate_list[id_species]])
-        # Draw bonds between atoms is defined in self._bond_dict
-        # Go through all elements for which bonds are defined
-        for element, val in self._bond_dict.items():
-            el_1_list = self._structure.select_index(element)
-            if el_1_list is not None:
-                if len(el_1_list) > 0:
-                    for i, v in enumerate(val["element_list"]):
-                        el_2_list = self._structure.select_index(v)
-                        cutoff_dist = val["cutoff_list"][i]
-                        for j, ind in enumerate(
-                            np.array(neighbors.indices, dtype=object)[el_1_list]
-                        ):
-                            # Only chose those indices within the cutoff distance and which belong
-                            # to the species defined in the element_list
-                            # i is the index of each bond type, and j is the element index
-                            id_el = el_1_list[j]
-                            bool_1 = (
-                                np.array(neighbors.distances, dtype=object)[id_el]
-                                <= cutoff_dist
-                            )
-                            act_ind = ind[bool_1]
-                            bool_2 = np.in1d(act_ind, el_2_list)
-                            final_ind = act_ind[bool_2]
-                            # Get the bond and angle type
-                            bond_type = val["bond_type_list"][i]
-                            angle_type = val["angle_type_list"][i]
-                            # Draw only maximum allowed bonds
-                            final_ind = final_ind[: val["max_bond_list"][i]]
-                            for fi in final_ind:
-                                bonds_lst.append([id_el + 1, fi + 1])
-                                bond_type_lst.append(bond_type)
-                            # Draw angles if at least 2 bonds are present and if an angle type is defined for this
-                            # particular set of bonds
-                            if (
-                                len(final_ind) >= 2
-                                and val["angle_type_list"][i] is not None
+        # Only if any bonds are defined
+        if len(self._bond_dict.keys()) > 0:
+            cutoff_list = list()
+            for val in self._bond_dict.values():
+                cutoff_list.append(np.max(val["cutoff_list"]))
+            max_cutoff = np.max(cutoff_list)
+            # Calculate neighbors only once
+            neighbors = self._structure.get_neighbors_by_distance(
+                cutoff_radius=max_cutoff
+            )
+            id_mol = 0
+            indices = self._structure.indices
+            for id_el, id_species in enumerate(indices):
+                id_mol += 1
+                molecule_lst.append([id_el, id_mol, species_translate_list[id_species]])
+            # Draw bonds between atoms is defined in self._bond_dict
+            # Go through all elements for which bonds are defined
+            for element, val in self._bond_dict.items():
+                el_1_list = self._structure.select_index(element)
+                if el_1_list is not None:
+                    if len(el_1_list) > 0:
+                        for i, v in enumerate(val["element_list"]):
+                            el_2_list = self._structure.select_index(v)
+                            cutoff_dist = val["cutoff_list"][i]
+                            for j, ind in enumerate(
+                                np.array(neighbors.indices, dtype=object)[el_1_list]
                             ):
-                                angles_lst.append(
-                                    [final_ind[0] + 1, id_el + 1, final_ind[1] + 1]
+                                # Only chose those indices within the cutoff distance and which belong
+                                # to the species defined in the element_list
+                                # i is the index of each bond type, and j is the element index
+                                id_el = el_1_list[j]
+                                bool_1 = (
+                                    np.array(neighbors.distances, dtype=object)[id_el]
+                                    <= cutoff_dist
                                 )
-                                angle_type_lst.append(angle_type)
-        m_lst = np.array(molecule_lst)
-        molecule_lst = m_lst[m_lst[:, 0].argsort()]
+                                act_ind = ind[bool_1]
+                                bool_2 = np.in1d(act_ind, el_2_list)
+                                final_ind = act_ind[bool_2]
+                                # Get the bond and angle type
+                                bond_type = val["bond_type_list"][i]
+                                angle_type = val["angle_type_list"][i]
+                                # Draw only maximum allowed bonds
+                                final_ind = final_ind[: val["max_bond_list"][i]]
+                                for fi in final_ind:
+                                    bonds_lst.append([id_el + 1, fi + 1])
+                                    bond_type_lst.append(bond_type)
+                                # Draw angles if at least 2 bonds are present and if an angle type is defined for this
+                                # particular set of bonds
+                                if (
+                                    len(final_ind) >= 2
+                                    and val["angle_type_list"][i] is not None
+                                ):
+                                    angles_lst.append(
+                                        [final_ind[0] + 1, id_el + 1, final_ind[1] + 1]
+                                    )
+                                    angle_type_lst.append(angle_type)
+            m_lst = np.array(molecule_lst)
+            molecule_lst = m_lst[m_lst[:, 0].argsort()]
 
         if len(bond_type_lst) == 0:
-            num_bond_types = 1
+            num_bond_types = 0
         else:
             num_bond_types = int(np.max(bond_type_lst))
         if len(angle_type_lst) == 0:
-            num_angle_types = 1
+            num_angle_types = 0
         else:
             num_angle_types = int(np.max(angle_type_lst))
 
@@ -587,8 +607,7 @@ class LammpsStructure(GenericParameters):
         atoms = "Atoms\n\n"
 
         coords = self.rotate_positions(self._structure)
-
-        el_charge_lst = self._structure.charge
+        el_charge_lst = self._structure.get_initial_charges()
         el_lst = self._structure.get_chemical_symbols()
         el_alphabet_dict = {}
         for ind, el in enumerate(self._structure.get_species_symbols()):
@@ -675,9 +694,42 @@ class LammpsStructure(GenericParameters):
         coords = [prism.pos_to_lammps(position) for position in structure.positions]
         return coords
 
+    def rotate_velocities(self, structure):
+        """
+        Rotate all atomic velocities in given structure according to new Prism cell
+
+        Args:
+            structure: Atoms-like object. Should have .velocities attribute.
+
+        Returns:
+            (list): List of rotated velocities
+        """
+        prism = UnfoldingPrism(self._structure.cell)
+        vels = [prism.pos_to_lammps(vel) for vel in structure.velocities]
+        return vels
+
 
 def write_lammps_datafile(structure, file_name="lammps.data", cwd=None):
     lammps_str = LammpsStructure()
     lammps_str.el_eam_lst = structure.get_species_symbols()
     lammps_str.structure = structure
     lammps_str.write_file(file_name=file_name, cwd=cwd)
+
+
+def structure_to_lammps(structure):
+    """
+    Converts a structure to the Lammps coordinate frame
+
+    Args:
+        structure (pyiron.atomistics.structure.atoms.Atoms): Structure to convert.
+
+    Returns:
+        pyiron.atomistics.structure.atoms.Atoms: Structure with the LAMMPS coordinate frame.
+    """
+    prism = UnfoldingPrism(structure.cell)
+    lammps_structure = structure.copy()
+    lammps_structure.set_cell(prism.A)
+    lammps_structure.positions = np.matmul(structure.positions, prism.R)
+    if structure.velocities is not None:
+        lammps_structure.velocities = np.matmul(structure.velocities, prism.R)
+    return lammps_structure

@@ -53,7 +53,7 @@ class SxExtOpt(InteractiveInterface):
         if ionic_energy is not None:
             ionic_energy_tolerance = ionic_energy
         super().__init__()
-        self.__name__ = "SxExtOpt"
+
         if working_directory is None:
             warnings.warn("WARNING: working_directory not set; current folder is used")
             working_directory = os.getcwd()
@@ -295,7 +295,7 @@ class SxExtOpt(InteractiveInterface):
 class SxExtOptInteractive(InteractiveWrapper):
     def __init__(self, project, job_name):
         super(SxExtOptInteractive, self).__init__(project, job_name)
-        self.__name__ = "SxExtOptInteractive"
+
         self.__version__ = (
             None  # Reset the version number to the executable is set automatically
         )
