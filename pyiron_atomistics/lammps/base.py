@@ -1082,7 +1082,7 @@ class LammpsBase(AtomisticGenericJob):
                             engine="c",
                         )
                         # Coordinate transform lammps->pyiron
-                        indices.append(self.remap_indices(df["type"].array))
+                        indices.append(self.remap_indices(df["type"].array.astype(int)))
                         f = np.stack(
                             [df["fx"].array, df["fy"].array, df["fx"].array], axis=1
                         )
@@ -1170,7 +1170,7 @@ class LammpsBase(AtomisticGenericJob):
             # Write to hdf
             with self.project_hdf5.open("output/generic") as hdf_output:
                 hdf_output["steps"] = uc.convert_array_to_pyiron_units(
-                    np.array(steps), label="steps"
+                    np.array(steps, dtype=int), label="steps"
                 )
                 hdf_output["cells"] = uc.convert_array_to_pyiron_units(
                     np.array(cells), label="cells"
