@@ -1016,7 +1016,7 @@ class LammpsBase(AtomisticGenericJob):
             ["dimension", "read_data", "boundary", "atom_style", "velocity"]
         )
 
-    def collect_dump_file_new(self, file_name="dump.out", cwd=None):
+    def collect_dump_file(self, file_name="dump.out", cwd=None):
         """
         general purpose routine to extract static from a lammps dump file
 
@@ -1030,34 +1030,193 @@ class LammpsBase(AtomisticGenericJob):
         uc = UnitConverter(self.units)
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
         if os.path.exists(file_name):
-            buf = StringIO()
+            prism = self._prism
+            rotation_lammps2orig = self._prism.R.T
             with open(file_name, "r") as f:
-                timesteps = []
+                steps = []
                 natoms = []
                 cells = []
-                
+                indices = []
+                forces = []
+                mean_forces = []
+                velocities = []
+                mean_velocities = []
+                unwrapped_positions = []
+                mean_unwrapped_positions = []
+                positions = []
+                computes = {}
+
                 for l in f:
                     if "ITEM: TIMESTEP" in l:
-                        timesteps.append(int(f.readline()))
+                        steps.append(int(f.readline()))
+
                     elif "ITEM: BOX BOUNDS" in l:
-                        # Parse cell
-                        pass
+                        c1 = np.fromstring(f.readline(), dtype=float, count=3, sep=" ")
+                        c2 = np.fromstring(f.readline(), dtype=float, count=3, sep=" ")
+                        c3 = np.fromstring(f.readline(), dtype=float, count=3, sep=" ")
+                        cell = np.concatenate([c1, c2, c3])
+                        lammps_cell = to_amat(cell)
+                        unfolded_cell = prism.unfold_cell(lammps_cell)
+                        cells.append(unfolded_cell)
+
                     elif "ITEM: NUMBER OF ATOMS" in l:
                         n = int(f.readline())
                         natoms.append(n)
-                    elif "ITEM: ATOMS" in l:
-                        # Parse column names from l
-                        # Do some stuff to find predefined columns and others
-                        # Simular to old collect_dump
 
+                    elif "ITEM: ATOMS" in l:
+                        # get column names from l
+                        columns = l.lstrip("ITEM: ATOMS").split()
+
+                        # Read line by line of snapshot into a string buffer
+                        # Than parse using pandas for speed and column acces
                         buf = StringIO()
                         for i in range(n):
                             buf.write(f.readline())
                         buf.seek(0)
-                        df = pd.read_csv(buf, nrows=3, sep=" ", header=None, engine="c")
+                        df = pd.read_csv(
+                            buf,
+                            nrows=3,
+                            sep=" ",
+                            header=None,
+                            names=columns,
+                            engine="c",
+                        )
                         # Coordinate transform lammps->pyiron
+                        indices.append(self.remap_indices(df["type"].array))
+                        f = np.stack(
+                            [df["fx"].array, df["fy"].array, df["fx"].array], axis=1
+                        )
+                        forces.append(np.matmul(forces, rotation_lammps2orig))
+                        if "f_mean_forces[1]" in columns:
+                            f = np.stack(
+                                [
+                                    df["f_mean_forces[1]"].array,
+                                    df["f_mean_forces[2]"].array,
+                                    df["f_mean_forces[3]"].array,
+                                ],
+                                axis=1,
+                            )
+                            mean_forces.append(np.matmul(f, rotation_lammps2orig))
+                        if "vx" in columns and "vy" in columns and "vz" in columns:
+                            v = np.stack(
+                                [
+                                    df["vx"].array,
+                                    df["vy"].array,
+                                    df["vz"].array,
+                                ],
+                                axis=1,
+                            )
+                            velocities.append(v, rotation_lammps2orig)
 
-    def collect_dump_file(self, file_name="dump.out", cwd=None):
+                        if "f_mean_velocities[1]" in columns:
+                            v = np.stack(
+                                [
+                                    df["f_mean_velocities[1]"].array,
+                                    df["f_mean_velocities[2]"].array,
+                                    df["f_mean_velocities[3]"].array,
+                                ],
+                                axis=1,
+                            )
+                            mean_velocities.append(v, rotation_lammps2orig)
+
+                        if "xsu" in columns:
+                            direct_unwrapped_positions = np.stack(
+                                [
+                                    df["xsu"].array,
+                                    df["ysu"].array,
+                                    df["zsu"].array,
+                                ],
+                                axis=1,
+                            )
+                            unwrapped_positions.append(
+                                np.matmul(
+                                    np.matmul(direct_unwrapped_positions, lammps_cell),
+                                    rotation_lammps2orig,
+                                )
+                            )
+
+                            direct_positions = direct_unwrapped_positions - np.floor(
+                                direct_unwrapped_positions
+                            )
+                            positions.append(
+                                np.matmul(
+                                    np.matmul(direct_positions, lammps_cell),
+                                    rotation_lammps2orig,
+                                )
+                            )
+
+                        if "f_mean_positions[1]" in columns:
+                            pos = np.stack(
+                                [
+                                    df["f_mean_positions[1]"].array,
+                                    df["f_mean_positions[2]"].array,
+                                    df["f_mean_positions[3]"].array,
+                                ],
+                                axis=1,
+                            )
+                            mean_unwrapped_positions.append(
+                                np.matmul(
+                                    np.matmul(pos, lammps_cell),
+                                    rotation_lammps2orig,
+                                )
+                            )
+                        for k in columns:
+                            if k.startswith("c_"):
+                                kk = k.replace("c_")
+                                if kk not in computes.keys():
+                                    computes[kk] = []
+                                computes[kk].append(df[k].array)
+
+            # Write to hdf
+            with self.project_hdf5.open("output/generic") as hdf_output:
+                hdf_output["steps"] = uc.convert_array_to_pyiron_units(
+                    np.array(steps), label="steps"
+                )
+                hdf_output["cells"] = uc.convert_array_to_pyiron_units(
+                    np.array(cells), label="cells"
+                )
+                hdf_output["indices"] = uc.convert_array_to_pyiron_units(
+                    np.array(indices), label="indices"
+                )
+                hdf_output["positions"] = uc.convert_array_to_pyiron_units(
+                    np.array(positions), label="positions"
+                )
+                hdf_output["forces"] = uc.convert_array_to_pyiron_units(
+                    np.array(forces), label="forces"
+                )
+                if len(mean_forces) > 0:
+                    hdf_output["mean_forces"] = uc.convert_array_to_pyiron_units(
+                        np.array(mean_forces), label="mean_forces"
+                    )
+                if len(velocities) > 0:
+                    hdf_output["velocities"] = uc.convert_array_to_pyiron_units(
+                        np.array(velocities), label="velocities"
+                    )
+                if len(mean_velocities) > 0:
+                    hdf_output["mean_velocities"] = uc.convert_array_to_pyiron_units(
+                        np.array(mean_velocities), label="mean_velocities"
+                    )
+                if len(unwrapped_positions) > 0:
+                    hdf_output[
+                        "unwrapped_positions"
+                    ] = uc.convert_array_to_pyiron_units(
+                        np.array(unwrapped_positions), label="unwrapped_positions"
+                    )
+                if len(mean_unwrapped_positions) > 0:
+                    hdf_output[
+                        "mean_unwrapped_positions"
+                    ] = uc.convert_array_to_pyiron_units(
+                        np.array(mean_unwrapped_positions),
+                        label="mean_unwrapped_positions",
+                    )
+
+                for k, v in computes.items():
+                    hdf_output[k] = uc.convert_array_to_pyiron_units(v, label=k)
+
+        else:
+            warnings.warn("LAMMPS warning: No dump.out output file found.")
+
+    def collect_dump_file_old(self, file_name="dump.out", cwd=None):
         """
         general purpose routine to extract static from a lammps dump file
 
