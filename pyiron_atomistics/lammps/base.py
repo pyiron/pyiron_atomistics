@@ -1089,7 +1089,7 @@ class LammpsBase(AtomisticGenericJob):
                         )
                         forces.append(np.matmul(force, rotation_lammps2orig))
                         if "f_mean_forces[1]" in columns:
-                            f = np.stack(
+                            force = np.stack(
                                 [
                                     df["f_mean_forces[1]"].array,
                                     df["f_mean_forces[2]"].array,
@@ -1097,7 +1097,7 @@ class LammpsBase(AtomisticGenericJob):
                                 ],
                                 axis=1,
                             )
-                            mean_forces.append(np.matmul(f, rotation_lammps2orig))
+                            mean_forces.append(np.matmul(force, rotation_lammps2orig))
                         if "vx" in columns and "vy" in columns and "vz" in columns:
                             v = np.stack(
                                 [
