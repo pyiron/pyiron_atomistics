@@ -1163,7 +1163,7 @@ class LammpsBase(AtomisticGenericJob):
                             )
                         for k in columns:
                             if k.startswith("c_"):
-                                kk = k.replace("c_")
+                                kk = k.replace("c_", "")
                                 if kk not in computes.keys():
                                     computes[kk] = []
                                 computes[kk].append(df[k].array)
