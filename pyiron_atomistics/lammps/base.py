@@ -18,7 +18,11 @@ from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
-from pyiron_atomistics.lammps.structure import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.structure import (
+    LammpsStructure,
+    UnfoldingPrism,
+    structure_to_lammps,
+)
 from pyiron_atomistics.lammps.units import UnitConverter, LAMMPS_UNIT_CONVERSIONS
 
 
@@ -498,7 +502,7 @@ class LammpsBase(AtomisticGenericJob):
         """
         uc = UnitConverter(self.units)
         prism = UnfoldingPrism(self.structure.cell, digits=15)
-        if np.matrix.trace(prism.R) != 3:
+        if _check_ortho_prism(prism=prism):
             raise RuntimeError(
                 "The Lammps output will not be mapped back to pyiron correctly."
             )
@@ -607,6 +611,7 @@ class LammpsBase(AtomisticGenericJob):
         if os.path.exists(file_name):
             with open(file_name, "r") as f:
                 f = f.readlines()
+                f = [l.lstrip() for l in f]
                 l_start = np.where([line.startswith("Step") for line in f])[0]
                 l_end = np.where([line.startswith("Loop") for line in f])[0]
                 if len(l_start) > len(l_end):
@@ -670,8 +675,8 @@ class LammpsBase(AtomisticGenericJob):
                     .astype("float64")
                 )
                 # Rotate pressures from Lammps frame to pyiron frame if necessary
-                rotation_matrix = self._prism.R.T
-                if np.matrix.trace(rotation_matrix) != 3:
+                if _check_ortho_prism(prism=self._prism):
+                    rotation_matrix = self._prism.R.T
                     pressures = rotation_matrix.T @ pressures @ rotation_matrix
 
                 df = df.drop(
@@ -703,7 +708,8 @@ class LammpsBase(AtomisticGenericJob):
                     .reshape(-1, 3, 3)
                     .astype("float64")
                 )
-                if np.matrix.trace(rotation_matrix) != 3:
+                if _check_ortho_prism(prism=self._prism):
+                    rotation_matrix = self._prism.R.T
                     pressures = rotation_matrix.T @ pressures @ rotation_matrix
                 df = df.drop(
                     columns=df.columns[
@@ -1214,7 +1220,7 @@ class LammpsBase(AtomisticGenericJob):
             job_type (str): Job type. If not specified a Lammps job type is assumed
 
         Returns:
-            new_ham (lammps.lammps.Lammps instance): New job
+            lammps.lammps.Lammps instance: New job
         """
         new_ham = super(LammpsBase, self).restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
@@ -1223,8 +1229,20 @@ class LammpsBase(AtomisticGenericJob):
             new_ham.restart_file_list.append(self.get_workdir_file("restart.out"))
         return new_ham
 
+    @staticmethod
+    def _structure_to_lammps(structure):
+        """
+        Convert structure to LAMMPS compatible lower triangle format
+        Args:
+            structure (pyiron_atomistics.atomistics.structure.atoms.Atoms): Current structure
+
+        Returns:
+            pyiron_atomistics.atomistics.structure.atoms.Atoms: Converted structure
+        """
+        return structure_to_lammps(structure=structure)
+
     def _get_lammps_structure(self, structure=None, cutoff_radius=None):
-        lmp_structure = LammpsStructure(bond_dict=self.input.bond_dict)
+        lmp_structure = LammpsStructure(bond_dict=self.input.bond_dict, job=self)
         lmp_structure._force_skewed = self.input.control._force_skewed
         lmp_structure.potential = self.input.potential
         lmp_structure.atom_type = self.input.control["atom_style"]
@@ -1233,22 +1251,6 @@ class LammpsBase(AtomisticGenericJob):
         else:
             lmp_structure.cutoff_radius = self.cutoff_radius
         lmp_structure.el_eam_lst = self.input.potential.get_element_lst()
-
-        def structure_to_lammps(structure):
-            """
-            Converts a structure to the Lammps coordinate frame
-
-            Args:
-                structure (pyiron.atomistics.structure.atoms.Atoms): Structure to convert.
-
-            Returns:
-                pyiron.atomistics.structure.atoms.Atoms: Structure with the LAMMPS coordinate frame.
-            """
-            prism = UnfoldingPrism(structure.cell)
-            lammps_structure = structure.copy()
-            lammps_structure.set_cell(prism.A)
-            lammps_structure.positions = np.matmul(structure.positions, prism.R)
-            return lammps_structure
 
         if structure is not None:
             lmp_structure.structure = structure_to_lammps(structure)
@@ -1522,3 +1524,18 @@ def to_amat(l_list):
 
     cell = [[xhilo, 0, 0], [xy, yhilo, 0], [xz, yz, zhilo]]
     return cell
+
+
+def _check_ortho_prism(prism, rtol=0.0, atol=1e-08):
+    """
+    Check if the rotation matrix of the UnfoldingPrism object is sufficiently close to a unit matrix
+
+    Args:
+        prism (pyiron_atomistics.lammps.structure.UnfoldingPrism): UnfoldingPrism object to check
+        rtol (float): relative precision for numpy.isclose()
+        atol (float): absolute precision for numpy.isclose()
+
+    Returns:
+        boolean: True or False
+    """
+    return np.isclose(prism.R, np.eye(3), rtol=rtol, atol=atol).all()

@@ -97,6 +97,17 @@ class StructureContainer(GenericJob, HasStructure):
         self._container.add_structure(struct)
         return struct
 
+    def add_structure(self, structure: Atoms, identifier: str = None, **kwargs):
+        """
+        Add a new structure.
+
+        Args:
+            structure (:class:`~.Atoms`): structure to add
+            identifier (str, optional): optional identifier for the structure
+            **kwargs: passed through to the underlying :meth:`.StructureStorage.add_structure`
+        """
+        self._container.add_structure(structure, identifier=identifier, **kwargs)
+
     def run_static(self):
         self.status.finished = True
 
