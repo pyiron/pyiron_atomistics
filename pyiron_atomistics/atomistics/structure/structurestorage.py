@@ -90,6 +90,7 @@ class StructureStorage(FlattenedStorage, HasStructure):
         """
         super().__init__(num_elements=num_atoms, num_chunks=num_structures)
         self._element_cache = None
+        self._plots = None
 
     def _init_arrays(self):
         super()._init_arrays()
@@ -251,7 +252,9 @@ class StructureStorage(FlattenedStorage, HasStructure):
         """
         Accessor for :class:`.StructurePlots` instance using these structures.
         """
-        return StructurePlots(self)
+        if self._plots is None:
+            self._plots =  StructurePlots(self)
+        return self._plots
 
 
 class StructurePlots:
