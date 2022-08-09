@@ -18,7 +18,9 @@ from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 
-with ImportAlarm("Some plotting functionality requires the seaborn library.") as seaborn_alarm:
+with ImportAlarm(
+    "Some plotting functionality requires the seaborn library."
+) as seaborn_alarm:
     import seaborn as sns
 
 
