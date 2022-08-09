@@ -40,7 +40,7 @@ setup(
         'pandas==1.4.3',
         'phonopy==2.15.1',
         'pint==0.19.2',
-        'pyiron_base==0.5.20',
+        'pyiron_base==0.5.21',
         'pymatgen==2022.7.25',
         'scipy==1.9.0',
         'seekpath==2.0.1',
