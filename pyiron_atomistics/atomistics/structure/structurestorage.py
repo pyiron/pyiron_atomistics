@@ -411,15 +411,34 @@ class StructurePlots:
         return df
 
     def _calc_neighbors(self, num_neighbors):
+        """
+        Calculate the neighbor information with additional caching.
+
+        If 'distances' and 'shells' are provided in the underlying store, they are returned directly without checking
+        `num_neighbors`.
+
+        If they are not provided there, they are calculated here and cached.
+        Recalculation happens when a different `num_neighbors` is provided than in a previous call or the underlying
+        store changes.
+
+        If `num_neighbors` is `None` on the first call, the default is 36.
+
+        Returns:
+            dict: with keys 'distances' and 'shells' containing the respective flattened arrays from
+            :meth:`.Atoms.get_neighbors`.
+        """
         if self._store.has_array("distances") and self._store.has_array("shells"):
             return {
                     'distances': self._store['distances'],
                     'shells': self._store['shells'],
             }
         # check that _store and _neigh are still consistent
+        cur_neighbors = self._neigh.has_array("distances")["shape"][0]
         if self._neigh is None \
                 or len(self._store) != len(self._neigh) \
-                or self._neigh.has_array("distances")["shape"][0] != num_neighbors:
+                or (num_neighbors is None or cur_neighbors != num_neighbors):
+            if num_neighbors is None:
+                num_neighbors = 36
             self._neigh = FlattenedStorage()
             neigh_traj = NeighborsTrajectory(
                     has_structure=self._store,
@@ -431,7 +450,7 @@ class StructurePlots:
                 'shells': self._neigh['shells'],
         }
 
-    def coordination(self, num_shells=4, num_neighbors=36, log=True):
+    def coordination(self, num_shells=4, log=True, num_neighbors=None):
         """
         Plot histogram of coordination in neighbor shells.
 
@@ -443,7 +462,8 @@ class StructurePlots:
 
         Args:
             num_shells (int): maximum shell to plot
-            num_neighbors (int): maximum number of neighbors to calculate, when 'shells' is not defined in storage
+            num_neighbors (int): maximum number of neighbors to calculate, when 'shells' is not defined in storage,
+                                 default is the value from the previous call or 36
             log (float): plot histogram values on a log scale
         """
         neigh = self._calc_neighbors(num_neighbors=num_neighbors)
@@ -466,13 +486,14 @@ class StructurePlots:
         plt.legend(title="Shell")
         plt.title("Neighbor Coordination in Shells")
 
-    def distances(self, num_neighbors=36, bins=50):
+    def distances(self, bins=50, num_neighbors=None):
         """
         Plot a histogram of the neighbor distances.
 
         Args:
-            num_neighbors (int): maximum number of neighbors to calculate, when 'shells' or 'distances' are not defined in storage
             bins (int): number of bins
+            num_neighbors (int): maximum number of neighbors to calculate, when 'shells' or 'distances' are not defined in storage
+                                 default is the value from the previous call or 36
         """
         neigh = self._calc_neighbors(num_neighbors=num_neighbors)
         distances = neigh["distances"]
@@ -481,13 +502,14 @@ class StructurePlots:
         plt.xlabel(r"Distance [$\AA$]")
         plt.ylabel("Neighbor count")
 
-    def shell_distances(self, num_shells=4, num_neighbors=36):
+    def shell_distances(self, num_shells=4, num_neighbors=None):
         """
         Plot a violin plot of the neighbor distances in shells up to `num_shells`.
 
         Args:
             num_shells (int): maximum shell to plot
             num_neighbors (int): maximum number of neighbors to calculate, when 'shells' or 'distances' are not defined in storage
+                                 default is the value from the previous call or 36
         """
         neigh = self._calc_neighbors(num_neighbors=num_neighbors)
         shells = neigh["shells"]
