@@ -253,7 +253,7 @@ class StructureStorage(FlattenedStorage, HasStructure):
         Accessor for :class:`.StructurePlots` instance using these structures.
         """
         if self._plots is None:
-            self._plots =  StructurePlots(self)
+            self._plots = StructurePlots(self)
         return self._plots
 
 
@@ -429,25 +429,27 @@ class StructurePlots:
         """
         if self._store.has_array("distances") and self._store.has_array("shells"):
             return {
-                    'distances': self._store['distances'],
-                    'shells': self._store['shells'],
+                "distances": self._store["distances"],
+                "shells": self._store["shells"],
             }
         # check that _store and _neigh are still consistent
         cur_neighbors = self._neigh.has_array("distances")["shape"][0]
-        if self._neigh is None \
-                or len(self._store) != len(self._neigh) \
-                or (num_neighbors is None or cur_neighbors != num_neighbors):
+        if (
+            self._neigh is None
+            or len(self._store) != len(self._neigh)
+            or (num_neighbors is None or cur_neighbors != num_neighbors)
+        ):
             if num_neighbors is None:
                 num_neighbors = 36
             self._neigh = FlattenedStorage()
             neigh_traj = NeighborsTrajectory(
-                    has_structure=self._store,
-                    num_neighbors=num_neighbors,
-                    store=self._neigh,
+                has_structure=self._store,
+                num_neighbors=num_neighbors,
+                store=self._neigh,
             )
         return {
-                'distances': self._neigh['distances'],
-                'shells': self._neigh['shells'],
+            "distances": self._neigh["distances"],
+            "shells": self._neigh["shells"],
         }
 
     def coordination(self, num_shells=4, log=True, num_neighbors=None):
