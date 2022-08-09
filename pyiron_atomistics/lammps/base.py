@@ -1081,6 +1081,7 @@ class LammpsBase(AtomisticGenericJob):
                             names=columns,
                             engine="c",
                         )
+                        df.sort_values(by="id", ignore_index=True, inplace=True)
                         # Coordinate transform lammps->pyiron
                         indices.append(self.remap_indices(df["type"].array.astype(int)))
 
