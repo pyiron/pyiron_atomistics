@@ -40,6 +40,7 @@ inputdict = {
     "n_switching_steps": 25000,
     "n_print_steps": 0,
     "n_iterations": 1,
+    "spring_constants": None,
     "md": {
         "timestep": 0.001,
         "n_small_steps": 10000,

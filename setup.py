@@ -40,11 +40,11 @@ setup(
         'pandas==1.4.3',
         'phonopy==2.15.1',
         'pint==0.19.2',
-        'pyiron_base==0.5.19',
+        'pyiron_base==0.5.20',
         'pymatgen==2022.7.25',
         'scipy==1.9.0',
         'seekpath==2.0.1',
-        'scikit-learn==1.1.1',
+        'scikit-learn==1.1.2',
         'spglib==1.16.5',
         'tables==3.7.0'
     ],
