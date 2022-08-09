@@ -1085,7 +1085,7 @@ class LammpsBase(AtomisticGenericJob):
                         indices.append(self.remap_indices(df["type"].array.astype(int)))
 
                         force = np.stack(
-                            [df["fx"].array, df["fy"].array, df["fx"].array], axis=1
+                            [df["fx"].array, df["fy"].array, df["fz"].array], axis=1
                         )
                         forces.append(np.matmul(force, rotation_lammps2orig))
                         if "f_mean_forces[1]" in columns:

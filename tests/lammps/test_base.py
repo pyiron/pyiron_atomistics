@@ -263,8 +263,12 @@ class TestLammps(TestWithCleanProject):
         )
         uc = UnitConverter(self.job.input.control["units"])
         self.assertTrue(
-            np.allclose(self.job["output/generic/forces"], uc.convert_array_to_pyiron_units(forces,
-                                                                                                       "forces"))
+            np.allclose(
+                self.job["output/generic/forces"],
+                uc.convert_array_to_pyiron_units(
+                    forces, "forces"
+                )
+            )
         )
         self.assertEqual(self.job["output/generic/energy_tot"][-1], -5906.46836142123 *
                          uc.lammps_to_pyiron("energy"))
