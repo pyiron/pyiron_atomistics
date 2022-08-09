@@ -433,11 +433,7 @@ class VaspBase(GenericDFTJob):
                 ] = volumes
         self._output_parser.to_hdf(self._hdf5)
         if len(self._exclude_groups_hdf) > 0 or len(self._exclude_nodes_hdf) > 0:
-            self.project_hdf5.rewrite_hdf5(
-                job_name=self.job_name,
-                exclude_groups=self._exclude_groups_hdf,
-                exclude_nodes=self._exclude_nodes_hdf,
-            )
+            self.project_hdf5.rewrite_hdf5()
 
     def convergence_check(self):
         """
