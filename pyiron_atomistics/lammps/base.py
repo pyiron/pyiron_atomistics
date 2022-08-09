@@ -1051,9 +1051,9 @@ class LammpsBase(AtomisticGenericJob):
                         steps.append(int(f.readline()))
 
                     elif "ITEM: BOX BOUNDS" in line:
-                        c1 = np.fromstring(f.readline(), dtype=float, count=3, sep=" ")
-                        c2 = np.fromstring(f.readline(), dtype=float, count=3, sep=" ")
-                        c3 = np.fromstring(f.readline(), dtype=float, count=3, sep=" ")
+                        c1 = np.fromstring(f.readline(), dtype=float, sep=" ")
+                        c2 = np.fromstring(f.readline(), dtype=float, sep=" ")
+                        c3 = np.fromstring(f.readline(), dtype=float, sep=" ")
                         cell = np.concatenate([c1, c2, c3])
                         lammps_cell = to_amat(cell)
                         unfolded_cell = prism.unfold_cell(lammps_cell)
