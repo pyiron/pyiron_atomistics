@@ -11,13 +11,15 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
-from pyiron_base import FlattenedStorage
+from pyiron_base import FlattenedStorage, ImportAlarm
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+
+with ImportAlarm("Some plotting functionality requires the seaborn library.") as seaborn_alarm:
+    import seaborn as sns
 
 
 class StructureStorage(FlattenedStorage, HasStructure):
@@ -262,6 +264,7 @@ class StructurePlots:
     Simple interface to plot various properties of structures.
     """
 
+    @seaborn_alarm
     def __init__(self, store: StructureStorage):
         self._store = store
         self._neigh = None
