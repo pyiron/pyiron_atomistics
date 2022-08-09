@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import warnings
 from io import StringIO
+from dataclasses import dataclass, field, asdict
+from typing import List, Dict
 
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile, PotentialAvailable
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
@@ -36,6 +38,22 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
+
+
+@dataclass
+class DumpData:
+    steps: List = field(default_factory=lambda: [])
+    natoms: List = field(default_factory=lambda: [])
+    cells: List = field(default_factory=lambda: [])
+    indices: List = field(default_factory=lambda: [])
+    forces: List = field(default_factory=lambda: [])
+    mean_forces: List = field(default_factory=lambda: [])
+    velocities: List = field(default_factory=lambda: [])
+    mean_velocities: List = field(default_factory=lambda: [])
+    unwrapped_positions: List = field(default_factory=lambda: [])
+    mean_unwrapped_positions: List = field(default_factory=lambda: [])
+    positions: List = field(default_factory=lambda: [])
+    computes: List = field(default_factory=lambda: {})
 
 
 class LammpsBase(AtomisticGenericJob):
@@ -1033,22 +1051,11 @@ class LammpsBase(AtomisticGenericJob):
             prism = self._prism
             rotation_lammps2orig = self._prism.R.T
             with open(file_name, "r") as f:
-                steps = []
-                natoms = []
-                cells = []
-                indices = []
-                forces = []
-                mean_forces = []
-                velocities = []
-                mean_velocities = []
-                unwrapped_positions = []
-                mean_unwrapped_positions = []
-                positions = []
-                computes = {}
+                dump = DumpData()
 
                 for line in f:
                     if "ITEM: TIMESTEP" in line:
-                        steps.append(int(f.readline()))
+                        dump.steps.append(int(f.readline()))
 
                     elif "ITEM: BOX BOUNDS" in line:
                         c1 = np.fromstring(f.readline(), dtype=float, sep=" ")
@@ -1057,11 +1064,11 @@ class LammpsBase(AtomisticGenericJob):
                         cell = np.concatenate([c1, c2, c3])
                         lammps_cell = to_amat(cell)
                         unfolded_cell = prism.unfold_cell(lammps_cell)
-                        cells.append(unfolded_cell)
+                        dump.cells.append(unfolded_cell)
 
                     elif "ITEM: NUMBER OF ATOMS" in line:
                         n = int(f.readline())
-                        natoms.append(n)
+                        dump.natoms.append(n)
 
                     elif "ITEM: ATOMS" in line:
                         # get column names from line
@@ -1083,12 +1090,12 @@ class LammpsBase(AtomisticGenericJob):
                         )
                         df.sort_values(by="id", ignore_index=True, inplace=True)
                         # Coordinate transform lammps->pyiron
-                        indices.append(self.remap_indices(df["type"].array.astype(int)))
+                        dump.indices.append(self.remap_indices(df["type"].array.astype(int)))
 
                         force = np.stack(
                             [df["fx"].array, df["fy"].array, df["fz"].array], axis=1
                         )
-                        forces.append(np.matmul(force, rotation_lammps2orig))
+                        dump.forces.append(np.matmul(force, rotation_lammps2orig))
                         if "f_mean_forces[1]" in columns:
                             force = np.stack(
                                 [
@@ -1098,7 +1105,7 @@ class LammpsBase(AtomisticGenericJob):
                                 ],
                                 axis=1,
                             )
-                            mean_forces.append(np.matmul(force, rotation_lammps2orig))
+                            dump.mean_forces.append(np.matmul(force, rotation_lammps2orig))
                         if "vx" in columns and "vy" in columns and "vz" in columns:
                             v = np.stack(
                                 [
@@ -1108,7 +1115,7 @@ class LammpsBase(AtomisticGenericJob):
                                 ],
                                 axis=1,
                             )
-                            velocities.append(np.matmul(v, rotation_lammps2orig))
+                            dump.velocities.append(np.matmul(v, rotation_lammps2orig))
 
                         if "f_mean_velocities[1]" in columns:
                             v = np.stack(
@@ -1119,7 +1126,7 @@ class LammpsBase(AtomisticGenericJob):
                                 ],
                                 axis=1,
                             )
-                            mean_velocities.append(np.matmul(v, rotation_lammps2orig))
+                            dump.mean_velocities.append(np.matmul(v, rotation_lammps2orig))
 
                         if "xsu" in columns:
                             direct_unwrapped_positions = np.stack(
@@ -1130,7 +1137,7 @@ class LammpsBase(AtomisticGenericJob):
                                 ],
                                 axis=1,
                             )
-                            unwrapped_positions.append(
+                            dump.unwrapped_positions.append(
                                 np.matmul(
                                     np.matmul(direct_unwrapped_positions, lammps_cell),
                                     rotation_lammps2orig,
@@ -1140,7 +1147,7 @@ class LammpsBase(AtomisticGenericJob):
                             direct_positions = direct_unwrapped_positions - np.floor(
                                 direct_unwrapped_positions
                             )
-                            positions.append(
+                            dump.positions.append(
                                 np.matmul(
                                     np.matmul(direct_positions, lammps_cell),
                                     rotation_lammps2orig,
@@ -1156,7 +1163,7 @@ class LammpsBase(AtomisticGenericJob):
                                 ],
                                 axis=1,
                             )
-                            mean_unwrapped_positions.append(
+                            dump.mean_unwrapped_positions.append(
                                 np.matmul(
                                     np.matmul(pos, lammps_cell),
                                     rotation_lammps2orig,
@@ -1165,57 +1172,28 @@ class LammpsBase(AtomisticGenericJob):
                         for k in columns:
                             if k.startswith("c_"):
                                 kk = k.replace("c_", "")
-                                if kk not in computes.keys():
-                                    computes[kk] = []
-                                computes[kk].append(df[k].array)
+                                if kk not in dump.computes.keys():
+                                    dump.computes[kk] = []
+                                dump.computes[kk].append(df[k].array)
 
             # Write to hdf
             with self.project_hdf5.open("output/generic") as hdf_output:
-                hdf_output["steps"] = uc.convert_array_to_pyiron_units(
-                    np.array(steps, dtype=int), label="steps"
-                )
-                hdf_output["cells"] = uc.convert_array_to_pyiron_units(
-                    np.array(cells), label="cells"
-                )
-                hdf_output["indices"] = uc.convert_array_to_pyiron_units(
-                    np.array(indices), label="indices"
-                )
-                hdf_output["positions"] = uc.convert_array_to_pyiron_units(
-                    np.array(positions), label="positions"
-                )
-                hdf_output["forces"] = uc.convert_array_to_pyiron_units(
-                    np.array(forces), label="forces"
-                )
-                if len(mean_forces) > 0:
-                    hdf_output["mean_forces"] = uc.convert_array_to_pyiron_units(
-                        np.array(mean_forces), label="mean_forces"
-                    )
-                if len(velocities) > 0:
-                    hdf_output["velocities"] = uc.convert_array_to_pyiron_units(
-                        np.array(velocities), label="velocities"
-                    )
-                if len(mean_velocities) > 0:
-                    hdf_output["mean_velocities"] = uc.convert_array_to_pyiron_units(
-                        np.array(mean_velocities), label="mean_velocities"
-                    )
-                if len(unwrapped_positions) > 0:
-                    hdf_output[
-                        "unwrapped_positions"
-                    ] = uc.convert_array_to_pyiron_units(
-                        np.array(unwrapped_positions), label="unwrapped_positions"
-                    )
-                if len(mean_unwrapped_positions) > 0:
-                    hdf_output[
-                        "mean_unwrapped_positions"
-                    ] = uc.convert_array_to_pyiron_units(
-                        np.array(mean_unwrapped_positions),
-                        label="mean_unwrapped_positions",
-                    )
+                dump_dict = asdict(dump)
 
-                for k, v in computes.items():
+                for k, v in dump_dict.pop("computes").items():
                     hdf_output[k] = uc.convert_array_to_pyiron_units(
                         np.array(v), label=k
                     )
+
+                hdf_output["steps"] = uc.convert_array_to_pyiron_units(
+                    np.array(dump_dict.pop("steps"), dtype=int), label="steps"
+                )
+
+                for k, v in dump_dict.items():
+                    if len(v) > 0:
+                        hdf_output[k] = uc.convert_array_to_pyiron_units(
+                            np.array(v), label=k
+                        )
 
         else:
             warnings.warn("LAMMPS warning: No dump.out output file found.")
