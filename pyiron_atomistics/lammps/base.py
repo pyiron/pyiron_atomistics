@@ -1046,11 +1046,11 @@ class LammpsBase(AtomisticGenericJob):
                 positions = []
                 computes = {}
 
-                for l in f:
-                    if "ITEM: TIMESTEP" in l:
+                for line in f:
+                    if "ITEM: TIMESTEP" in line:
                         steps.append(int(f.readline()))
 
-                    elif "ITEM: BOX BOUNDS" in l:
+                    elif "ITEM: BOX BOUNDS" in line:
                         c1 = np.fromstring(f.readline(), dtype=float, count=3, sep=" ")
                         c2 = np.fromstring(f.readline(), dtype=float, count=3, sep=" ")
                         c3 = np.fromstring(f.readline(), dtype=float, count=3, sep=" ")
@@ -1059,18 +1059,18 @@ class LammpsBase(AtomisticGenericJob):
                         unfolded_cell = prism.unfold_cell(lammps_cell)
                         cells.append(unfolded_cell)
 
-                    elif "ITEM: NUMBER OF ATOMS" in l:
+                    elif "ITEM: NUMBER OF ATOMS" in line:
                         n = int(f.readline())
                         natoms.append(n)
 
-                    elif "ITEM: ATOMS" in l:
-                        # get column names from l
-                        columns = l.lstrip("ITEM: ATOMS").split()
+                    elif "ITEM: ATOMS" in line:
+                        # get column names from line
+                        columns = line.lstrip("ITEM: ATOMS").split()
 
                         # Read line by line of snapshot into a string buffer
                         # Than parse using pandas for speed and column acces
                         buf = StringIO()
-                        for i in range(n):
+                        for _ in range(n):
                             buf.write(f.readline())
                         buf.seek(0)
                         df = pd.read_csv(
