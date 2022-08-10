@@ -292,7 +292,7 @@ class DebyeModel(object):
             )
         atoms_per_cell = len(self._murnaghan.structure)
         return atoms_per_cell * val
-    
+
     @property
     def publication(self):
         return {
