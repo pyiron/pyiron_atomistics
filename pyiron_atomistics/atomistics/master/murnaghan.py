@@ -293,6 +293,26 @@ class DebyeModel(object):
         atoms_per_cell = len(self._murnaghan.structure)
         return atoms_per_cell * val
 
+    @property
+    def publication(self):
+        return {
+            "debye_model": {
+                "Moruzzi1988": {
+                    "title": "Calculated thermal properties of metals",
+                    "author": ["Moruzzi, V. L.", "Janak, J. F.", "Schwarz, K"],
+                    "journal": "Phys. Rev. B",
+                    "volume": "37",
+                    "issue": "2",
+                    "pages": "790--799",
+                    "numpages": "0",
+                    "month": "jan",
+                    "publisher": "American Physical Society",
+                    "doi": "10.1103/PhysRevB.37.790",
+                    "url": "https://link.aps.org/doi/10.1103/PhysRevB.37.790",
+                }
+            }
+        }
+
 
 class MurnaghanJobGenerator(JobGenerator):
     @property
