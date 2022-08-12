@@ -53,7 +53,7 @@ class DumpData:
     unwrapped_positions: List = field(default_factory=lambda: [])
     mean_unwrapped_positions: List = field(default_factory=lambda: [])
     positions: List = field(default_factory=lambda: [])
-    computes: List = field(default_factory=lambda: {})
+    computes: Dict = field(default_factory=lambda: {})
 
 
 class LammpsBase(AtomisticGenericJob):
