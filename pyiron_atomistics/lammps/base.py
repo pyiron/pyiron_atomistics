@@ -1090,7 +1090,9 @@ class LammpsBase(AtomisticGenericJob):
                         )
                         df.sort_values(by="id", ignore_index=True, inplace=True)
                         # Coordinate transform lammps->pyiron
-                        dump.indices.append(self.remap_indices(df["type"].array.astype(int)))
+                        dump.indices.append(
+                            self.remap_indices(df["type"].array.astype(int))
+                        )
 
                         force = np.stack(
                             [df["fx"].array, df["fy"].array, df["fz"].array], axis=1
@@ -1105,7 +1107,9 @@ class LammpsBase(AtomisticGenericJob):
                                 ],
                                 axis=1,
                             )
-                            dump.mean_forces.append(np.matmul(force, rotation_lammps2orig))
+                            dump.mean_forces.append(
+                                np.matmul(force, rotation_lammps2orig)
+                            )
                         if "vx" in columns and "vy" in columns and "vz" in columns:
                             v = np.stack(
                                 [
@@ -1126,7 +1130,9 @@ class LammpsBase(AtomisticGenericJob):
                                 ],
                                 axis=1,
                             )
-                            dump.mean_velocities.append(np.matmul(v, rotation_lammps2orig))
+                            dump.mean_velocities.append(
+                                np.matmul(v, rotation_lammps2orig)
+                            )
 
                         if "xsu" in columns:
                             direct_unwrapped_positions = np.stack(
