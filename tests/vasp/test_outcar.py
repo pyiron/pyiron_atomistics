@@ -554,6 +554,101 @@ class TestOutcar(unittest.TestCase):
                 self.assertEqual(positions.__str__(), output[0].__str__())
                 self.assertEqual(forces.__str__(), output[1].__str__())
 
+    def test_get_memory_used(self):
+        memory_usage_dict = {
+            1: 29757440.0,
+            2: 39524.0,
+            3: 42936.0,
+            4: 24162304.0,
+            5: 54948.0,
+            6: None,
+            7: 463144.0,
+            8: 0.0,
+            9: 787952.0,
+            10: 1036056.0,
+        }
+        for filename in self.file_list:
+            self.assertEqual(
+                self.outcar_parser.get_memory_used(filename),
+                memory_usage_dict[int(filename.split("/OUTCAR_")[-1])]
+            )
+
+    def test_get_cpu_time(self):
+        cpu_time_dict = {
+            1: 3.543,
+            2: 0.426,
+            3: 0.761,
+            4: 1.98,
+            5: 1.7,
+            6: None,
+            7: 2705.081,
+            8: 11374.639,
+            9: 20.894,
+            10: 225.942,
+        }
+        for filename in self.file_list:
+            self.assertEqual(
+                self.outcar_parser.get_cpu_time(filename),
+                cpu_time_dict[int(filename.split("/OUTCAR_")[-1])]
+            )
+
+    def test_get_user_time(self):
+        user_time_dict = {
+            1: 3.439,
+            2: 0.336,
+            3: 0.68,
+            4: 1.902,
+            5: 1.591,
+            6: None,
+            7: 2679.4,
+            8: 11373.883,
+            9: 20.347,
+            10: 222.991,
+        }
+        for filename in self.file_list:
+            self.assertEqual(
+                self.outcar_parser.get_user_time(filename),
+                user_time_dict[int(filename.split("/OUTCAR_")[-1])]
+            )
+
+    def test_get_system_time(self):
+        system_time_dict = {
+            1: 0.104,
+            2: 0.089,
+            3: 0.081,
+            4: 0.078,
+            5: 0.108,
+            6: None,
+            7: 25.68,
+            8: 0.756,
+            9: 0.548,
+            10: 2.952,
+        }
+        for filename in self.file_list:
+            self.assertEqual(
+                self.outcar_parser.get_system_time(filename),
+                system_time_dict[int(filename.split("/OUTCAR_")[-1])]
+            )
+
+    def test_get_elapsed_time(self):
+        elapsed_time_dict = {
+            1: 2.117,
+            2: 2.136,
+            3: 3.314,
+            4: 1.19,
+            5: 3.512,
+            6: None,
+            7: 2716.647,
+            8: 11382.323,
+            9: 21.06,
+            10: 226.501,
+        }
+        for filename in self.file_list:
+            self.assertEqual(
+                self.outcar_parser.get_elapsed_time(filename),
+                elapsed_time_dict[int(filename.split("/OUTCAR_")[-1])]
+            )
+
     def test_get_positions(self):
         for filename in self.file_list:
             output = self.outcar_parser.get_positions(filename)
