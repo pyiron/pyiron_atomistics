@@ -41,5 +41,4 @@ jobs:
     - name: Tests
       shell: bash -l {0}
       run: |
-        export PYTHONWARNINGS=default,error::DeprecationWarning:pyiron_atomistics,error::DeprecationWarning:pyiron_base
-        python -Wdefault -Werror::DeprecationWarning:pyiron_atomistics -Werror::DeprecationWarning:pyiron_base -m unittest discover tests
+        python -Wdefault -Werror::DeprecationWarning -m unittest discover tests
