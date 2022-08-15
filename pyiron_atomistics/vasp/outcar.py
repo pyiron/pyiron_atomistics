@@ -68,6 +68,7 @@ class Outcar(object):
             filename=filename, lines=lines
         )
         elastic_constants = self.get_elastic_constants(filename=filename, lines=lines)
+        energy_components = self.get_energy_components(filename=filename, lines=lines)
         try:
             (
                 irreducible_kpoints,
@@ -109,6 +110,7 @@ class Outcar(object):
         self.parse_dict["vbm_list"] = vbm_list
         self.parse_dict["cbm_list"] = cbm_list
         self.parse_dict["elastic_constants"] = elastic_constants
+        self.parse_dict["energy_components"] = energy_components
         try:
             self.parse_dict["pressures"] = (
                 np.average(stresses[:, 0:3], axis=1) * KBAR_TO_EVA
