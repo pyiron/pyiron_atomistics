@@ -68,6 +68,11 @@ class Outcar(object):
             filename=filename, lines=lines
         )
         elastic_constants = self.get_elastic_constants(filename=filename, lines=lines)
+        cpu_time = self.get_cpu_time(filename=filename, lines=lines)
+        user_time = self.get_user_time(filename=filename, lines=lines)
+        system_time = self.get_system_time(filename=filename, lines=lines)
+        elapsed_time = self.get_elapsed_time(filename=filename, lines=lines)
+        memory_used = self.get_memory_used(filename=filename, lines=lines)
         try:
             (
                 irreducible_kpoints,
@@ -109,6 +114,13 @@ class Outcar(object):
         self.parse_dict["vbm_list"] = vbm_list
         self.parse_dict["cbm_list"] = cbm_list
         self.parse_dict["elastic_constants"] = elastic_constants
+        self.parse_dict["resources"] = {
+            "cpu_time": cpu_time,
+            "user_time": user_time,
+            "system_time": system_time,
+            "elapsed_time": elapsed_time,
+            "memory_used": memory_used
+        }
         try:
             self.parse_dict["pressures"] = (
                 np.average(stresses[:, 0:3], axis=1) * KBAR_TO_EVA
@@ -802,7 +814,7 @@ class Outcar(object):
         for i, line in enumerate(lines):
             line = line.strip()
             if nelect_trigger in line:
-                return float(l.split()[-1])
+                return float(line.split()[-1])
 
     @staticmethod
     def get_user_time(filename="OUTCAR", lines=None):
@@ -822,7 +834,7 @@ class Outcar(object):
         for i, line in enumerate(lines):
             line = line.strip()
             if nelect_trigger in line:
-                return float(l.split()[-1])
+                return float(line.split()[-1])
 
     @staticmethod
     def get_system_time(filename="OUTCAR", lines=None):
@@ -842,7 +854,7 @@ class Outcar(object):
         for i, line in enumerate(lines):
             line = line.strip()
             if nelect_trigger in line:
-                return float(l.split()[-1])
+                return float(line.split()[-1])
 
     @staticmethod
     def get_elapsed_time(filename="OUTCAR", lines=None):
@@ -862,7 +874,7 @@ class Outcar(object):
         for i, line in enumerate(lines):
             line = line.strip()
             if nelect_trigger in line:
-                return float(l.split()[-1])
+                return float(line.split()[-1])
 
     @staticmethod
     def get_memory_used(filename="OUTCAR", lines=None):
@@ -882,7 +894,7 @@ class Outcar(object):
         for i, line in enumerate(lines):
             line = line.strip()
             if nelect_trigger in line:
-                return float(l.split()[-1])
+                return float(line.split()[-1])
 
     @staticmethod
     def get_number_of_atoms(filename="OUTCAR", lines=None):
