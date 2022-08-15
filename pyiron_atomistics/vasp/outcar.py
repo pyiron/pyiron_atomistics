@@ -119,7 +119,7 @@ class Outcar(object):
             "user_time": user_time,
             "system_time": system_time,
             "elapsed_time": elapsed_time,
-            "memory_used": memory_used
+            "memory_used": memory_used,
         }
         try:
             self.parse_dict["pressures"] = (
