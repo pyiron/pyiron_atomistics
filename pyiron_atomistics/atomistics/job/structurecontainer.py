@@ -165,3 +165,10 @@ class StructureContainer(GenericJob, HasStructure):
         else:
             super().from_hdf(hdf=hdf, group_name=group_name)
             self._container.from_hdf(hdf=self.project_hdf5, group_name="structures")
+
+    @property
+    def plot(self):
+        """
+        Accessor for :class:`~.StructurePlots` instance using these structures.
+        """
+        return self._container.plot

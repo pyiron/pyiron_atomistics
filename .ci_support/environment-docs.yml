@@ -15,7 +15,6 @@ dependencies:
 - pyiron_base
 - pymatgen
 - pyscal
-- pytables
 - scipy
 - seekpath
 - scikit-learn

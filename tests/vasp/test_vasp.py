@@ -438,13 +438,13 @@ class TestVasp(unittest.TestCase):
     def test_potentials(self):
         # Assert that no warnings are raised
         with warnings.catch_warnings(record=True) as w:
-            structure = self.project.create_ase_bulk("Al", cubic=True)
-            element = self.project.create_element(new_element_name='Al_GW', parent_element="Al", potential_file='Al_GW')
+            structure = self.project.create.structure.bulk("Al", cubic=True)
+            element = self.project.create.structure.element(new_element_name='Al_GW', parent_element="Al", potential_file='Al_GW')
             structure[:] = element
             job = self.project.create.job.Vasp("test")
             job.structure = structure
             job.run(run_mode="manual")
-            self.assertEqual(len(w), 0)
+            self.assertEqual(len(w), 0, msg=f'Expected no warnings but got {[warn.message for warn in w]}.')
 
     def test_kspacing(self):
         job_kspace = self.project.create_job("Vasp", "job_kspacing")
