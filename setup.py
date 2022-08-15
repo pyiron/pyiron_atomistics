@@ -32,7 +32,6 @@ setup(
         'aimsgb==0.1.1',
         'ase==3.22.1',
         'defusedxml==0.7.1',
-        'future==0.18.2',
         'h5py==3.7.0',
         'matplotlib==3.5.2',
         'mendeleev==0.10.0',
@@ -40,13 +39,12 @@ setup(
         'pandas==1.4.3',
         'phonopy==2.15.1',
         'pint==0.19.2',
-        'pyiron_base==0.5.20',
+        'pyiron_base==0.5.21',
         'pymatgen==2022.7.25',
         'scipy==1.9.0',
         'seekpath==2.0.1',
         'scikit-learn==1.1.2',
         'spglib==1.16.5',
-        'tables==3.7.0'
     ],
     cmdclass=versioneer.get_cmdclass(),
 

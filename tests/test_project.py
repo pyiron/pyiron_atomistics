@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import unittest
-import mock
+import unittest.mock
 import os
 from pyiron_atomistics import Project
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
@@ -36,10 +36,10 @@ class TestProject(unittest.TestCase):
     def test_remove_jobs(self):
         sample_job = self.project.create_job("ScriptJob", "Sample")
         sample_job.save()
-        with mock.patch('builtins.input', return_value="n"):
+        with unittest.mock.patch('builtins.input', return_value="n"):
             self.project.remove_jobs(recursive=True)
         self.assertEqual(len(self.project.list_nodes()), 1)
-        with mock.patch('builtins.input', return_value="y"):
+        with unittest.mock.patch('builtins.input', return_value="y"):
             self.project.remove_jobs(recursive=True)
         self.assertEqual(len(self.project.list_nodes()), 0)
 

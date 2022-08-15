@@ -1,5 +1,7 @@
 # Unreleased
 
+- Add ploting functions from pyiron_contrib to StructureContainer ([#710](https://github.com/pyiron/pyiron_atomistics/pull/710))
+
 # pyiron_atomistics-0.2.41
 
 - Symmetrize vectors ([#576](https://github.com/pyiron/pyiron_atomistics/pull/576))
