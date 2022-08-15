@@ -1013,25 +1013,28 @@ class Outcar(object):
         ind_combo_lst = _split_indices(
             ind_ionic_lst=ind_ionic_lst, ind_elec_lst=ind_elec_lst
         )
-        return [
-            np.array(
-                [
-                    np.hstack(
-                        [
-                            float(lines[ind + i].split()[-1])
-                            if i != 7
-                            else [
-                                float(lines[ind_lst[-1] + 7].split()[-2]),
-                                float(lines[ind_lst[-1] + 7].split()[-1]),
+        try:
+            return [
+                np.array(
+                    [
+                        np.hstack(
+                            [
+                                float(lines[ind + i].split()[-1])
+                                if i != 7
+                                else [
+                                    float(lines[ind_lst[-1] + 7].split()[-2]),
+                                    float(lines[ind_lst[-1] + 7].split()[-1]),
+                                ]
+                                for i in range(2, 12)
                             ]
-                            for i in range(2, 12)
-                        ]
-                    )
-                    for ind in ind_lst
-                ]
-            ).T
-            for ind_lst in ind_combo_lst
-        ]
+                        )
+                        for ind in ind_lst
+                    ]
+                ).T
+                for ind_lst in ind_combo_lst
+            ]
+        except ValueError:
+            return []
 
 
 def _clean_line(line):
