@@ -157,6 +157,7 @@ class Outcar(object):
             "irreducible_kpoints",
             "irreducible_kpoint_weights",
             "number_plane_waves",
+            "resources",
         ]
         with hdf.open(group_name) as hdf5_output:
             for key in self.parse_dict.keys():
