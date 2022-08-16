@@ -525,7 +525,6 @@ class LammpsControl(GenericParameters):
             if langevin:
                 warnings.warn("Temperature not set; Langevin ignored.")
             fix_ensemble_str = "all nve"
-            initial_temperature = 0
 
         if tloop is not None:
             fix_ensemble_str += " tloop " + str(tloop)
