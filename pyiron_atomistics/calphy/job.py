@@ -19,6 +19,7 @@ with ImportAlarm(
 ) as calphy_alarm:
     from calphy import Calculation, Solid, Liquid, Alchemy
     from calphy.routines import routine_fe, routine_ts, routine_alchemy, routine_pscale
+    from calphy import __version__ as calphy_version
 
 __author__ = "Sarath Menon"
 __copyright__ = (
@@ -161,6 +162,7 @@ class Calphy(GenericJob):
         self._data = None
         self.input._pot_dict_initial = None
         self.input._pot_dict_final = None
+        self.__version__ = calphy_version
 
     def set_potentials(self, potential_filenames: Union[list, str]):
         """
@@ -803,6 +805,8 @@ class Calphy(GenericJob):
             else:
                 parent_structure = self.structure.copy()
             db_dict["ChemicalFormula"] = parent_structure.get_chemical_formula()
+
+        db_dict["projectpath"] = self.project_hdf5.project_path
         return db_dict
 
     def to_hdf(self, hdf=None, group_name=None):
