@@ -12,6 +12,7 @@ from pyiron_atomistics.lammps.structure import (
     structure_to_lammps,
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 with ImportAlarm(
     "Calphy functionality requires the `calphy` module (and its dependencies) specified as extra"
@@ -20,6 +21,7 @@ with ImportAlarm(
     from calphy import Calculation, Solid, Liquid, Alchemy
     from calphy.routines import routine_fe, routine_ts, routine_alchemy, routine_pscale
     from calphy import __version__ as calphy_version
+    from pyscal.trajectory import Trajectory
 
 __author__ = "Sarath Menon"
 __copyright__ = (
@@ -40,7 +42,7 @@ inputdict = {
     "npt": None,
     "n_equilibration_steps": 15000,
     "n_switching_steps": 25000,
-    "n_print_steps": 0,
+    "n_print_steps": 1000,
     "n_iterations": 1,
     "spring_constants": None,
     "equilibration_control": None,
@@ -697,6 +699,17 @@ class Calphy(GenericJob):
         self.status.collect = True
         self.run()
 
+    def get_structure(self, iteration_step=-1):
+        """
+        """
+        if not iteration_step in [0, -1]:
+            raise ValueError("get_structure for calphy can only give frame 0 or -1")
+        if iteration_step == 0:
+            return self.structure
+        elif iteration_step == -1:
+            return self.output.structure_final
+
+
     def collect_general_output(self):
         """
         Collect the output from calphy
@@ -708,26 +721,64 @@ class Calphy(GenericJob):
             None
         """
         if self._data is not None:
+            #solid liquid specific outputs
             if "spring_constant" in self._data["average"].keys():
                 self.output.spring_constant = self._data["average"]["spring_constant"]
+            if "density" in self._data["average"].keys():
+                self.output.equilibrium_density = self._data["average"]["density"]
+            self.output.equilibrium_volume_atom = self._data["average"]["vol_atom"]
+
+
+            #main results from mode fe
+            self.output.temperature = self.input.temperature
+            self.output.pressure = self.input.pressure
             self.output.energy_free = self._data["results"]["free_energy"]
             self.output.energy_free_error = self._data["results"]["error"]
             self.output.energy_free_reference = self._data["results"][
                 "reference_system"
             ]
             self.output.energy_work = self._data["results"]["work"]
-            self.output.temperature = self.input.temperature
+            self.output.energy_pressure = self._data["results"]["pv"]
+
+            #collect ediffs and so on
             f_ediff, b_ediff, flambda, blambda = self.collect_ediff()
             self.output.forward_energy_diff = list(f_ediff)
             self.output.backward_energy_diff = list(b_ediff)
             self.output.forward_lambda = list(flambda)
             self.output.backward_lambda = list(blambda)
+
+            #get final structure
+            traj = Trajectory(os.path.join(self.working_directory, "conf.equilibration.dump"))
+            aseobj = traj[0].to_ase(species=self.calc.element)[0]
+            pyiron_atoms = ase_to_pyiron(aseobj)
+            self.output.structure_final = pyiron_atoms
+
             if self.input.mode == "ts":
                 datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
                 t, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0, 1, 2))
+                
+                #replace the quantities with updates ones
                 self.output.energy_free = np.array(fe)
                 self.output.energy_free_error = np.array(ferr)
                 self.output.temperature = np.array(t)
+
+                #collect diffs
+                f_ediff, b_ediff, f_vol, b_vol, f_press, b_press, flambda, blambda = self.collect_thermo(mode="ts")
+                self.output.ts_forward_energy_diff = list(f_ediff)
+                self.output.ts_backward_energy_diff = list(b_ediff)
+                self.output.ts_forward_lambda = list(flambda)
+                self.output.ts_backward_lambda = list(blambda)
+                self.output.ts_forward_volume = list(f_vol)
+                self.output.ts_backward_volume = list(b_vol)
+                self.output.ts_forward_pressure = list(f_press)
+                self.output.ts_backward_pressure = list(b_press)
+
+                #populate structures
+                fwd_positions, bkd_positions, fwd_cells, bkd_cells = self.get_positions()
+                self.output.ts_forward_positions = fwd_positions
+                self.output.ts_backward_positions = bkd_positions
+                self.output.ts_forward_cells = fwd_cells
+                self.output.ts_backward_cells = bkd_cells
 
             elif self.input.mode == "pscale":
                 datfile = os.path.join(self.working_directory, "pressure_sweep.dat")
@@ -735,6 +786,16 @@ class Calphy(GenericJob):
                 self.output.energy_free = np.array(fe)
                 self.output.energy_free_error = np.array(ferr)
                 self.output.pressure = np.array(p)
+
+                f_ediff, b_ediff, f_vol, b_vol, f_press, b_press, flambda, blambda = self.collect_thermo(mode="ts")
+                self.output.ps_forward_energy_diff = list(f_ediff)
+                self.output.ps_backward_energy_diff = list(b_ediff)
+                self.output.ps_forward_lambda = list(flambda)
+                self.output.ps_backward_lambda = list(blambda)
+                self.output.ps_forward_volume = list(f_vol)
+                self.output.ps_backward_volume = list(b_vol)
+                self.output.ps_forward_pressure = list(f_press)
+                self.output.ps_backward_pressure = list(b_press)
 
     def collect_ediff(self):
         """
@@ -787,6 +848,76 @@ class Calphy(GenericJob):
             b_ediff.append(bdui - bdur)
 
         return f_ediff, b_ediff, flambda, blambda
+
+    def collect_thermo(self, mode="ts"):
+        """
+        Collect thermo quantities after ts run
+        """
+        f_ediff = []
+        b_ediff = []
+        f_vol = []
+        b_vol = []
+        f_press = []
+        b_press = []
+
+        for i in range(1, self.input.n_iterations + 1):
+            fwdfilename = os.path.join(self.working_directory, "%s.forward_%d.dat" % (mode, i))
+            bkdfilename = os.path.join(self.working_directory, "%s.backward_%d.dat" % (mode, i))
+
+            fdx, fp, fvol, flambda = np.loadtxt(fwdfilename, unpack=True, comments="#")
+            bdx, bp, bvol, blambda = np.loadtxt(bkdfilename, unpack=True, comments="#")
+
+            fdx /= flambda
+            bdx /= blambda
+
+            f_ediff.append(fdx)
+            b_ediff.append(bdx)
+
+            f_vol.append(fvol)
+            b_vol.append(bvol)
+
+            f_press.append(fp)
+            b_press.append(bp)
+
+        return f_ediff, b_ediff, f_vol, b_vol, f_press, b_press, flambda, blambda
+
+    def get_positions(self):
+        """
+        Collect positions and cells
+        """
+        fwd_positions = []
+        bkd_positions = []
+        fwd_cells = []
+        bkd_cells = []
+
+        for i in range(1, self.input.n_iterations + 1):
+            fwdfilename = os.path.join(self.working_directory, "traj.ts.forward_%d.dat" % (i))
+            bkdfilename = os.path.join(self.working_directory, "traj.ts.backward_%d.dat" % (i))
+            
+            fp = []
+            fc = []
+            bp = []
+            bc = []
+
+            if os.path.exists(fwdfilename):
+                traj = Trajectory(fwdfilename)
+                for x in traj.nblocks:
+                    aseobj = traj[x].to_ase(species=self.calc.element)
+                    fp.append(aseobj.positions)
+                    fc.append(list(aseobj.cell))
+            if os.path.exists(bkdfilename):
+                traj = Trajectory(bkdfilename)
+                for x in traj.nblocks:
+                    aseobj = traj[x].to_ase(species=self.calc.element)
+                    bp.append(aseobj.positions)
+                    bc.append(list(aseobj.cell))
+
+            fwd_positions.append(fp)
+            bkd_positions.append(bp)
+            fwd_cells.append(fc)
+            bkd_positions.append(bc)
+
+        return fwd_positions, bkd_positions, fwd_cells, bkd_cells
 
     def collect_output(self):
         self.collect_general_output()
