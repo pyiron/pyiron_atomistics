@@ -11,6 +11,7 @@ from pyiron_atomistics.lammps.structure import (
     UnfoldingPrism,
     structure_to_lammps,
 )
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 with ImportAlarm(
     "Calphy functionality requires the `calphy` module (and its dependencies) specified as extra"
@@ -67,6 +68,8 @@ inputdict = {
         "thermostat_damping": 100.0,
         "barostat_damping": 100.0,    
     },
+    "calc": {},
+
 }
 
 
@@ -452,6 +455,38 @@ class Calphy(GenericJob):
         if self.input.mode is None:
             raise RuntimeError("Could not determine the mode")
 
+    def create_calc(self):
+        """
+        Create a calc object
+        """
+        calc = Calculation()
+        for key in inputdict.keys():
+            if key not in ["md", "tolerance", "nose_hoover", "berendsen"]:
+                setattr(calc, key, self.input[key])
+        for key in inputdict["md"].keys():
+            setattr(calc.md, key, self.input["md"][key])
+        for key in inputdict["tolerance"].keys():
+            setattr(calc.tolerance, key, self.input["tolerance"][key])
+        for key in inputdict["nose_hoover"].keys():
+            setattr(calc.nose_hoover, key, self.input["nose_hoover"][key])
+        for key in inputdict["berendsen"].keys():
+            setattr(calc.berendsen, key, self.input["berendsen"][key])
+
+        calc.lattice = os.path.join(self.working_directory, "conf.data")
+
+        pair_style, pair_coeff = self._prepare_pair_styles()
+        calc._fix_potential_path = False
+        calc.pair_style = pair_style
+        calc.pair_coeff = pair_coeff
+
+        calc.element = self._get_element_list()
+        calc.mass, ghost_elements = self._get_masses()
+        calc._ghost_element_count = ghost_elements
+
+        calc.queue.cores = self.server.cores
+        self.calc = calc
+
+
     def write_input(self):
         """
         Write input for calphy calculation
@@ -462,35 +497,13 @@ class Calphy(GenericJob):
         Returns:
             None
         """
-        calc = Calculation()
-        for key in inputdict.keys():
-            if key not in ["md", "tolerance"]:
-                setattr(calc, key, self.input[key])
-        for key in inputdict["md"].keys():
-            setattr(calc.md, key, self.input["md"][key])
-        for key in inputdict["tolerance"].keys():
-            setattr(calc.tolerance, key, self.input["tolerance"][key])
-        for key in inputdict["nose_hoover"].keys():
-            setattr(calc.tolerance, key, self.input["nose_hoover"][key])
-        for key in inputdict["berendsen"].keys():
-            setattr(calc.tolerance, key, self.input["berendsen"][key])
+
+        self.create_calc()
 
         file_name = "conf.data"
         self.write_structure(self.structure, file_name, self.working_directory)
-        calc.lattice = os.path.join(self.working_directory, "conf.data")
-
         self.copy_pot_files()
-        pair_style, pair_coeff = self._prepare_pair_styles()
-        calc._fix_potential_path = False
-        calc.pair_style = pair_style
-        calc.pair_coeff = pair_coeff
 
-        calc.element = self._get_element_list()
-        calc.mass, ghost_elements = self._get_masses()
-        calc._ghost_element_count = ghost_elements
-        
-        calc.queue.cores = self.server.cores
-        self.calc = calc
 
     def calc_mode_fe(
         self,
@@ -777,6 +790,21 @@ class Calphy(GenericJob):
         self.collect_general_output()
         self.to_hdf()
 
+    def db_entry(self):
+        """
+        Generate the initial database entry
+        Returns:
+            (dict): db_dict
+        """
+        db_dict = super(Calphy, self).db_entry()
+        if self.structure:
+            if isinstance(self.structure, Atoms):
+                parent_structure = self.structure.get_parent_basis()
+            else:
+                parent_structure = self.structure.copy()
+            db_dict["ChemicalFormula"] = parent_structure.get_chemical_formula()
+        return db_dict
+
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self.input.to_hdf(self.project_hdf5)
@@ -787,6 +815,7 @@ class Calphy(GenericJob):
         self.input.from_hdf(self.project_hdf5)
         self.output.from_hdf(self.project_hdf5)
         self._potential_from_hdf()
+        self.create_calc()
 
     @property
     def publication(self):
