@@ -41,6 +41,8 @@ inputdict = {
     "n_print_steps": 0,
     "n_iterations": 1,
     "spring_constants": None,
+    "equilibration_control": None,
+    "melting_cycle": True,
     "md": {
         "timestep": 0.001,
         "n_small_steps": 10000,
@@ -56,6 +58,14 @@ inputdict = {
         "solid_fraction": 0.7,
         "liquid_fraction": 0.05,
         "pressure": 0.5,
+    },
+    "nose_hoover": {
+        "thermostat_damping": 0.1,
+        "barostat_damping": 0.1,    
+    },
+    "berendsen": {
+        "thermostat_damping": 100.0,
+        "barostat_damping": 100.0,    
     },
 }
 
@@ -264,6 +274,27 @@ class Calphy(GenericJob):
 
         return pair_style, pair_coeff
 
+    def _get_element_list(self) -> List[str]:
+        """
+        Get masses as defined in pair style
+
+        Args:
+            None
+
+        Returns:
+            list: symbols of the elements
+        """
+        elements_from_pot = self._potential_initial.get_element_lst()
+        elements_struct_lst = self.structure.get_species_symbols()
+
+        elements = []
+        for element_name in elements_from_pot:
+            if element_name in elements_struct_lst:
+                elements.append(element_name)
+
+        return elements
+
+
     def _get_masses(self) -> List[float]:
         """
         Get masses as defined in pair style
@@ -286,11 +317,11 @@ class Calphy(GenericJob):
 
         #this picks the actual masses, now we should pad with 1s to match length
         length_diff = len(elements_from_pot)-len(masses)
-        if length_diff>0:
-            for x in range(length_diff):
-                masses.append(1.0)
+        #if length_diff>0:
+        #    for x in range(length_diff):
+        #        masses.append(1.0)
 
-        return masses
+        return masses, length_diff
 
     def _potential_from_hdf(self):
         """
@@ -439,6 +470,10 @@ class Calphy(GenericJob):
             setattr(calc.md, key, self.input["md"][key])
         for key in inputdict["tolerance"].keys():
             setattr(calc.tolerance, key, self.input["tolerance"][key])
+        for key in inputdict["nose_hoover"].keys():
+            setattr(calc.tolerance, key, self.input["nose_hoover"][key])
+        for key in inputdict["berendsen"].keys():
+            setattr(calc.tolerance, key, self.input["berendsen"][key])
 
         file_name = "conf.data"
         self.write_structure(self.structure, file_name, self.working_directory)
@@ -450,9 +485,10 @@ class Calphy(GenericJob):
         calc.pair_style = pair_style
         calc.pair_coeff = pair_coeff
 
-        calc.element = self._potential_initial.get_element_lst()
-        calc.mass = self._get_masses()
-
+        calc.element = self._get_element_list()
+        calc.mass, ghost_elements = self._get_masses()
+        calc._ghost_element_count = ghost_elements
+        
         calc.queue.cores = self.server.cores
         self.calc = calc
 
