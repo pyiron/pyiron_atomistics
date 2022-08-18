@@ -21,7 +21,7 @@ with ImportAlarm(
     from calphy import Calculation, Solid, Liquid, Alchemy
     from calphy.routines import routine_fe, routine_ts, routine_alchemy, routine_pscale
     from calphy import __version__ as calphy_version
-    from pyscal.trajectory import Trajectory
+    from pyscal.trajectory import Trajectory as PyscalTrajectory
 
 __author__ = "Sarath Menon"
 __copyright__ = (
@@ -744,7 +744,7 @@ class Calphy(GenericJob):
             self.output["fe/backward/lambda"] = list(blambda)
 
             #get final structure
-            traj = Trajectory(os.path.join(self.working_directory, "conf.equilibration.dump"))
+            traj = PyscalTrajectory(os.path.join(self.working_directory, "conf.equilibration.dump"))
             aseobj = traj[0].to_ase(species=self.calc.element)[0]
             pyiron_atoms = ase_to_pyiron(aseobj)
             self.output["structure_final"] = pyiron_atoms
@@ -896,13 +896,13 @@ class Calphy(GenericJob):
             bc = []
 
             if os.path.exists(fwdfilename):
-                traj = Trajectory(fwdfilename)
+                traj = PyscalTrajectory(fwdfilename)
                 for x in traj.nblocks:
                     aseobj = traj[x].to_ase(species=self.calc.element)
                     fp.append(aseobj.positions)
                     fc.append(list(aseobj.cell))
             if os.path.exists(bkdfilename):
-                traj = Trajectory(bkdfilename)
+                traj = PyscalTrajectory(bkdfilename)
                 for x in traj.nblocks:
                     aseobj = traj[x].to_ase(species=self.calc.element)
                     bp.append(aseobj.positions)
