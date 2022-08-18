@@ -73,7 +73,7 @@ class ScipyMinimizer(InteractiveWrapper):
         super(ScipyMinimizer, self).__init__(project, job_name)
 
         self._ref_job = None
-        self.input = Input()
+        self.input = ScipyMinimizerInput()
         self.output = ScipyMinimizerOutput(job=self)
         self.interactive_cache = {}
         self._delete_existing_job = True
@@ -292,7 +292,7 @@ class ScipyMinimizer(InteractiveWrapper):
         self.input.pressure_tolerance = pressure_tolerance
 
 
-class Input(HasStorage):
+class ScipyMinimizerInput(HasStorage):
 
     def __init__(self):
         super().__init__()
