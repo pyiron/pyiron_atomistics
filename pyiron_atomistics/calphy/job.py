@@ -933,7 +933,6 @@ class Calphy(GenericJob):
                 parent_structure = self.structure.copy()
             db_dict["ChemicalFormula"] = parent_structure.get_chemical_formula()
 
-        db_dict["projectpath"] = self.project_hdf5.project_path
         return db_dict
 
     def to_hdf(self, hdf=None, group_name=None):
