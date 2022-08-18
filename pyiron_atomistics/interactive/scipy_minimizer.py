@@ -358,8 +358,6 @@ class ScipyMinimizerInput(HasStorage):
     @pressure.setter
     def pressure(self, value: Iterable[float]):
         value = list(value)
-        if len(value) != 6:
-            raise ValueError(f"value must be length 3 iterable not: {value}!")
         self.storage.pressure = value
 
     @property
