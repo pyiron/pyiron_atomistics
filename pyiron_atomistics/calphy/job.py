@@ -723,79 +723,79 @@ class Calphy(GenericJob):
         if self._data is not None:
             #solid liquid specific outputs
             if "spring_constant" in self._data["average"].keys():
-                self.output.spring_constant = self._data["average"]["spring_constant"]
+                self.output["spring_constant"] = self._data["average"]["spring_constant"]
             if "density" in self._data["average"].keys():
-                self.output.equilibrium_density = self._data["average"]["density"]
-            self.output.equilibrium_volume_atom = self._data["average"]["vol_atom"]
+                self.output["atomic_density"] = self._data["average"]["density"]
+            self.output["atomic_volume"] = self._data["average"]["vol_atom"]
 
 
             #main results from mode fe
-            self.output.temperature = self.input.temperature
-            self.output.pressure = self.input.pressure
-            self.output.energy_free = self._data["results"]["free_energy"]
-            self.output.energy_free_error = self._data["results"]["error"]
-            self.output.energy_free_reference = self._data["results"][
+            self.output["temperature"] = self.input.temperature
+            self.output["pressure"] = self.input.pressure
+            self.output["energy_free"] = self._data["results"]["free_energy"]
+            self.output["energy_free_error"] = self._data["results"]["error"]
+            self.output["energy_free_harmonic_reference"] = self._data["results"][
                 "reference_system"
             ]
-            self.output.energy_work = self._data["results"]["work"]
-            self.output.energy_pressure = self._data["results"]["pv"]
+            self.output["energy_work"] = self._data["results"]["work"]
+            self.output["energy_pressure"] = self._data["results"]["pv"]
 
             #collect ediffs and so on
             f_ediff, b_ediff, flambda, blambda = self.collect_ediff()
-            self.output.forward_energy_diff = list(f_ediff)
-            self.output.backward_energy_diff = list(b_ediff)
-            self.output.forward_lambda = list(flambda)
-            self.output.backward_lambda = list(blambda)
+            self.output["fe/forward/energy_diff"] = list(f_ediff)
+            self.output["fe/backward/energy_diff"] = list(b_ediff)
+            self.output["fe/forward/lambda"] = list(flambda)
+            self.output["fe/backward/lambda"] = list(blambda)
 
             #get final structure
             traj = Trajectory(os.path.join(self.working_directory, "conf.equilibration.dump"))
             aseobj = traj[0].to_ase(species=self.calc.element)[0]
             pyiron_atoms = ase_to_pyiron(aseobj)
-            self.output.structure_final = pyiron_atoms
+            self.output["structure_final"] = pyiron_atoms
 
             if self.input.mode == "ts":
                 datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
                 t, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0, 1, 2))
                 
                 #replace the quantities with updates ones
-                self.output.energy_free = np.array(fe)
-                self.output.energy_free_error = np.array(ferr)
-                self.output.temperature = np.array(t)
+                self.output["energy_free"] = np.array(fe)
+                self.output["energy_free_error"] = np.array(ferr)
+                self.output["temperature"] = np.array(t)
 
                 #collect diffs
                 f_ediff, b_ediff, f_vol, b_vol, f_press, b_press, flambda, blambda = self.collect_thermo(mode="ts")
-                self.output.ts_forward_energy_diff = list(f_ediff)
-                self.output.ts_backward_energy_diff = list(b_ediff)
-                self.output.ts_forward_lambda = list(flambda)
-                self.output.ts_backward_lambda = list(blambda)
-                self.output.ts_forward_volume = list(f_vol)
-                self.output.ts_backward_volume = list(b_vol)
-                self.output.ts_forward_pressure = list(f_press)
-                self.output.ts_backward_pressure = list(b_press)
+                self.output["ts/forward/energy_diff"] = list(f_ediff)
+                self.output["ts/backward/energy_diff"] = list(b_ediff)
+                self.output["ts/forward/lambda"] = list(flambda)
+                self.output["ts/backward/lambda"] = list(blambda)
+                self.output["ts/forward/volume"] = list(f_vol)
+                self.output["ts/backward/volume"] = list(b_vol)
+                self.output["ts/forward/pressure"] = list(f_press)
+                self.output["ts/backward/pressure"] = list(b_press)
 
                 #populate structures
                 fwd_positions, bkd_positions, fwd_cells, bkd_cells = self.get_positions()
-                self.output.ts_forward_positions = fwd_positions
-                self.output.ts_backward_positions = bkd_positions
-                self.output.ts_forward_cells = fwd_cells
-                self.output.ts_backward_cells = bkd_cells
+                self.output["ts/forward/positions"] = fwd_positions
+                self.output["ts/backward/positions"] = bkd_positions
+                self.output["ts/forward/cells"] = fwd_cells
+                self.output["ts/backward/cells"] = bkd_cells
 
             elif self.input.mode == "pscale":
                 datfile = os.path.join(self.working_directory, "pressure_sweep.dat")
                 p, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0, 1, 2))
-                self.output.energy_free = np.array(fe)
-                self.output.energy_free_error = np.array(ferr)
-                self.output.pressure = np.array(p)
+                self.output["energy_free"] = np.array(fe)
+                self.output["energy_free_error"] = np.array(ferr)
+                self.output["pressure"] = np.array(p)
 
-                f_ediff, b_ediff, f_vol, b_vol, f_press, b_press, flambda, blambda = self.collect_thermo(mode="ts")
-                self.output.ps_forward_energy_diff = list(f_ediff)
-                self.output.ps_backward_energy_diff = list(b_ediff)
-                self.output.ps_forward_lambda = list(flambda)
-                self.output.ps_backward_lambda = list(blambda)
-                self.output.ps_forward_volume = list(f_vol)
-                self.output.ps_backward_volume = list(b_vol)
-                self.output.ps_forward_pressure = list(f_press)
-                self.output.ps_backward_pressure = list(b_press)
+                f_ediff, b_ediff, f_vol, b_vol, f_press, b_press, flambda, blambda = self.collect_thermo(mode="pscale")
+                self.output["ps/forward/energy_diff"] = list(f_ediff)
+                self.output["ps/backward/energy_diff"] = list(b_ediff)
+                self.output["ps/forward/lambda"] = list(flambda)
+                self.output["ps/backward/lambda"] = list(blambda)
+                self.output["ps/forward/volume"] = list(f_vol)
+                self.output["ps/backward/volume"] = list(b_vol)
+                self.output["ps/forward/pressure"] = list(f_press)
+                self.output["ps/backward/pressure"] = list(b_press)
 
     def collect_ediff(self):
         """
