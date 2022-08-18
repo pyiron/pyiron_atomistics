@@ -60,7 +60,6 @@ LAMMPS_UNIT_CONVERSIONS = {
         "temperature": 1.0,
         "pressure": GPA_TO_BAR,
         "charge": 1.0,
-        "natoms": 1,
     },
     "si": {
         "mass": AMU_TO_KG,
@@ -72,7 +71,6 @@ LAMMPS_UNIT_CONVERSIONS = {
         "temperature": 1.0,
         "pressure": GPA_TO_PA,
         "charge": EL_TO_COUL,
-        "natoms": 1,
     },
     "cgs": {
         "mass": AMU_TO_G,
@@ -84,7 +82,6 @@ LAMMPS_UNIT_CONVERSIONS = {
         "temperature": 1.0,
         "pressure": GPA_TO_BARYE,
         "charge": 4.8032044e-10,  # In statCoulombs, but these are deprecated and thus not in scipt.constants
-        "natoms": 1,
     },
     "real": {
         "mass": 1.0,
@@ -96,7 +93,6 @@ LAMMPS_UNIT_CONVERSIONS = {
         "temperature": 1.0,
         "pressure": GPA_TO_ATM,
         "charge": 1.0,
-        "natoms": 1,
     },
     "electron": {
         "mass": 1.0,
@@ -108,7 +104,6 @@ LAMMPS_UNIT_CONVERSIONS = {
         "temperature": 1.0,
         "pressure": GPA_TO_PA,
         "charge": 1.0,
-        "natoms": 1,
     },
 }
 
@@ -141,7 +136,6 @@ _conversion_dict["mass"] = ["mass"]
 _conversion_dict["charge"] = ["charges", "charge"]
 _conversion_dict["force"] = ["forces", "force", "mean_forces"]
 _conversion_dict["dimensionless_integer_quantity"] = ["steps", "indices"]
-_conversion_dict["natoms"] = ["natoms"]
 
 # Reverse _conversion_dict
 quantity_dict = dict()
@@ -227,9 +221,18 @@ class UnitConverter:
 
         """
         if label in quantity_dict.keys():
-            return np.array(
-                array * self.lammps_to_pyiron(quantity_dict[label]), dtype_dict[label]
-            )
+            try:
+                return np.array(
+                    array * self.lammps_to_pyiron(quantity_dict[label]), dtype_dict[label]
+                )
+            except ValueError:
+                a = np.array(
+                    array * self.lammps_to_pyiron(quantity_dict[label]), dtype=object
+                )
+                warnings.warn(
+                    message="Warning: {} required conversion to dtype object. Something is probably wrong".format(label)
+                )
+                return a     
         else:
             warnings.warn(
                 message="Warning: Couldn't determine the LAMMPS to pyiron unit conversion type of quantity "
