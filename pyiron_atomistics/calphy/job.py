@@ -283,7 +283,7 @@ class Calphy(GenericJob):
 
     def _get_element_list(self) -> List[str]:
         """
-        Get masses as defined in pair style
+        Get elements as defined in pair style
 
         Args:
             None
@@ -324,10 +324,6 @@ class Calphy(GenericJob):
 
         #this picks the actual masses, now we should pad with 1s to match length
         length_diff = len(elements_from_pot)-len(masses)
-        #if length_diff>0:
-        #    for x in range(length_diff):
-        #        masses.append(1.0)
-
         return masses, length_diff
 
     def _potential_from_hdf(self):
