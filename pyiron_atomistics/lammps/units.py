@@ -221,18 +221,9 @@ class UnitConverter:
 
         """
         if label in quantity_dict.keys():
-            try:
-                return np.array(
-                    array * self.lammps_to_pyiron(quantity_dict[label]), dtype_dict[label]
-                )
-            except ValueError:
-                a = np.array(
-                    array * self.lammps_to_pyiron(quantity_dict[label]), dtype=object
-                )
-                warnings.warn(
-                    message="Warning: {} required conversion to dtype object. Something is probably wrong".format(label)
-                )
-                return a     
+            return np.array(
+                array * self.lammps_to_pyiron(quantity_dict[label]), dtype_dict[label]
+            ) 
         else:
             warnings.warn(
                 message="Warning: Couldn't determine the LAMMPS to pyiron unit conversion type of quantity "
