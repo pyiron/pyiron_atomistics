@@ -859,8 +859,8 @@ class Calphy(GenericJob):
         b_press = []
 
         for i in range(1, self.input.n_iterations + 1):
-            fwdfilename = os.path.join(self.working_directory, "%s.forward_%d.dat" % (mode, i))
-            bkdfilename = os.path.join(self.working_directory, "%s.backward_%d.dat" % (mode, i))
+            fwdfilename = os.path.join(self.working_directory, f"{mode}.forward_{i}.dat")
+            bkdfilename = os.path.join(self.working_directory, f"{mode}.backward_{i}.dat")
 
             fdx, fp, fvol, flambda = np.loadtxt(fwdfilename, unpack=True, comments="#")
             bdx, bp, bvol, blambda = np.loadtxt(bkdfilename, unpack=True, comments="#")
@@ -889,8 +889,8 @@ class Calphy(GenericJob):
         bkd_cells = []
 
         for i in range(1, self.input.n_iterations + 1):
-            fwdfilename = os.path.join(self.working_directory, "traj.ts.forward_%d.dat" % (i))
-            bkdfilename = os.path.join(self.working_directory, "traj.ts.backward_%d.dat" % (i))
+            fwdfilename = os.path.join(self.working_directory, f"traj.ts.forward_{i}.dat")
+            bkdfilename = os.path.join(self.working_directory, f"traj.ts.backward_{i}.dat")
             
             fp = []
             fc = []
