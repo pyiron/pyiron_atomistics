@@ -11,8 +11,10 @@ from pyiron_atomistics.lammps.structure import (
     UnfoldingPrism,
     structure_to_lammps,
 )
+
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 
 calphy_version = "1.0.0"
 
@@ -78,7 +80,7 @@ inputdict = {
 }
 
 
-class Calphy(GenericJob):
+class Calphy(GenericJob, HasStructure):
     """
     Class to set up and run calphy jobs for calculation of free energies using LAMMPS.
 
@@ -697,16 +699,13 @@ class Calphy(GenericJob):
         self.status.collect = True
         self.run()
 
-    def get_structure(self, iteration_step=-1):
+    def _get_structure(self, frame=-1, wrap_atoms=False):
         """
         """
-        if not iteration_step in [0, -1]:
-            raise ValueError("get_structure for calphy can only give frame 0 or -1")
-        if iteration_step == 0:
-            return self.structure
-        elif iteration_step == -1:
-            return self.output.structure_final
+        return [self.structure, self.output.structure_final][frame]
 
+    def _number_of_structures(self):
+        return 2
 
     def collect_general_output(self):
         """
