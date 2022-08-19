@@ -14,6 +14,8 @@ from pyiron_atomistics.lammps.structure import (
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
+calphy_version = "1.0.0"
+
 with ImportAlarm(
     "Calphy functionality requires the `calphy` module (and its dependencies) specified as extra"
     "requirements. Please install it and try again."
