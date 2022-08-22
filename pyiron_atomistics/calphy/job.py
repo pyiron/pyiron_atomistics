@@ -501,7 +501,7 @@ class Calphy(GenericJob, HasStructure):
         Returns:
             None
         """
-        self.input.calc = self.calc
+        #self.input.calc = self.calc
         file_name = "conf.data"
         self.write_structure(self.structure, file_name, self.working_directory)
         self.copy_pot_files()
