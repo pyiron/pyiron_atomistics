@@ -945,7 +945,7 @@ class Calphy(GenericJob, HasStructure):
         self.input.from_hdf(self.project_hdf5)
         self.output.from_hdf(self.project_hdf5)
         self._potential_from_hdf()
-        self.create_calc()
+        #self.create_calc()
 
     @property
     def publication(self):
