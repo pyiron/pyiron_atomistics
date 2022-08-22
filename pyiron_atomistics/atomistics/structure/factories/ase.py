@@ -4,7 +4,12 @@
 
 from functools import wraps
 from inspect import getmodule
-from ase.build import cut as ase_cut, stack as ase_stack, bulk as ase_bulk, molecule as ase_molecule
+from ase.build import (
+    cut as ase_cut,
+    stack as ase_stack,
+    bulk as ase_bulk,
+    molecule as ase_molecule,
+)
 from ase.io import read as ase_read
 from ase.spacegroup import crystal as ase_crystal
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
