@@ -95,6 +95,16 @@ class TestCalphy(unittest.TestCase):
         self.job.calc_free_energy(temperature=100, pressure=0, reference_phase="solid")
         self.assertEqual(self.job.input.mode, "alchemy")
 
+    def test_get_element_list(self):
+        structure = self.project.create.structure.ase.bulk('Cu', cubic=True).repeat(5)
+        structure[0] = 'Li'
+        self.job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
+        self.job.structure = structure
+        self.assertEqual(self.job._get_element_list(), ['Cu'])
+        pm, pl = self.job._get_masses()
+        self.assertEqual(pm, [63.546])
+        self.assertEqual(pl, 0)
+
     def test_output(self):
         filepath = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "../static/"
