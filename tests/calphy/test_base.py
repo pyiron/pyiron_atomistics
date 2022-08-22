@@ -105,6 +105,13 @@ class TestCalphy(unittest.TestCase):
         self.assertEqual(pm, [63.546])
         self.assertEqual(pl, 0)
 
+    def test_write_structure(self):
+        structure = self.project.create.structure.ase.bulk('Cu', cubic=True).repeat(5)
+        self.job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
+        self.job.structure = structure
+        self.job.write_structure(structure, "test.dump", ".")
+        self.assertEqual(os.path.exists("test.dump"), True)
+
     def test_output(self):
         filepath = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "../static/"
