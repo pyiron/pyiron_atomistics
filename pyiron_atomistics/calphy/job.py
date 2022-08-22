@@ -501,9 +501,7 @@ class Calphy(GenericJob, HasStructure):
         Returns:
             None
         """
-
-        self.create_calc()
-
+        self.input.calc = self.calc
         file_name = "conf.data"
         self.write_structure(self.structure, file_name, self.working_directory)
         self.copy_pot_files()
@@ -672,6 +670,7 @@ class Calphy(GenericJob, HasStructure):
                 raise ValueError("provide a reference_phase")
 
     def run_static(self):
+        self.create_calc()
         self.status.running = True
         if self.input.reference_phase == "alchemy":
             job = Alchemy(calculation=self.calc, simfolder=self.working_directory)
