@@ -38,7 +38,7 @@ __email__ = "s.menon@mpie.de"
 __status__ = "development"
 __date__ = "April 1, 2022"
 
-inputdict = {
+_inputdict = {
     "mode": None,
     "pressure": None,
     "temperature": None,
@@ -157,7 +157,7 @@ class Calphy(GenericJob, HasStructure):
 
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
-        self.input = DataContainer(inputdict, table_name="inputdata")
+        self.input = DataContainer(_inputdict, table_name="inputdata")
         self._potential_initial = None
         self._potential_final = None
         self.input.potential_initial_name = None
@@ -457,21 +457,21 @@ class Calphy(GenericJob, HasStructure):
         if self.input.mode is None:
             raise RuntimeError("Could not determine the mode")
 
-    def create_calc(self):
+    def _create_calc(self):
         """
         Create a calc object
         """
         calc = Calculation()
-        for key in inputdict.keys():
+        for key in _inputdict.keys():
             if key not in ["md", "tolerance", "nose_hoover", "berendsen"]:
                 setattr(calc, key, self.input[key])
-        for key in inputdict["md"].keys():
+        for key in _inputdict["md"].keys():
             setattr(calc.md, key, self.input["md"][key])
-        for key in inputdict["tolerance"].keys():
+        for key in _inputdict["tolerance"].keys():
             setattr(calc.tolerance, key, self.input["tolerance"][key])
-        for key in inputdict["nose_hoover"].keys():
+        for key in _inputdict["nose_hoover"].keys():
             setattr(calc.nose_hoover, key, self.input["nose_hoover"][key])
-        for key in inputdict["berendsen"].keys():
+        for key in _inputdict["berendsen"].keys():
             setattr(calc.berendsen, key, self.input["berendsen"][key])
 
         calc.lattice = os.path.join(self.working_directory, "conf.data")
@@ -486,7 +486,7 @@ class Calphy(GenericJob, HasStructure):
         calc._ghost_element_count = ghost_elements
 
         calc.queue.cores = self.server.cores
-        self.calc = calc
+        return calc
 
     def write_input(self):
         """
@@ -666,14 +666,14 @@ class Calphy(GenericJob, HasStructure):
                 raise ValueError("provide a reference_phase")
 
     def run_static(self):
-        self.create_calc()
+        calc = self._create_calc()
         self.status.running = True
         if self.input.reference_phase == "alchemy":
-            job = Alchemy(calculation=self.calc, simfolder=self.working_directory)
+            job = Alchemy(calculation=calc, simfolder=self.working_directory)
         elif self.input.reference_phase == "solid":
-            job = Solid(calculation=self.calc, simfolder=self.working_directory)
+            job = Solid(calculation=calc, simfolder=self.working_directory)
         elif self.input.reference_phase == "liquid":
-            job = Liquid(calculation=self.calc, simfolder=self.working_directory)
+            job = Liquid(calculation=calc, simfolder=self.working_directory)
         else:
             raise ValueError("Unknown reference state")
 
