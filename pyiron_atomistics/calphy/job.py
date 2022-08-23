@@ -116,7 +116,7 @@ class Calphy(GenericJob, HasStructure):
 
     Specialised output depending on the selected mode is also available. For example the energy difference between the system of
     interest and the reference system for mode `fe` (free energy calculation), is available under `job.output.fe`. Similarly other output
-    corresponding to modes such as temperature scaling and pressure scaling can be found under `job.output.ts` and `job.output.ps`. 
+    corresponding to modes such as temperature scaling and pressure scaling can be found under `job.output.ts` and `job.output.ps`.
     """
 
     def __init__(self, project, job_name):
@@ -136,43 +136,43 @@ class Calphy(GenericJob, HasStructure):
     @property
     def _default_input(self):
         return {
-                    "mode": None,
-                    "pressure": None,
-                    "temperature": None,
-                    "reference_phase": None,
-                    "npt": None,
-                    "n_equilibration_steps": 15000,
-                    "n_switching_steps": 25000,
-                    "n_print_steps": 1000,
-                    "n_iterations": 1,
-                    "spring_constants": None,
-                    "equilibration_control": None,
-                    "melting_cycle": True,
-                    "md": {
-                        "timestep": 0.001,
-                        "n_small_steps": 10000,
-                        "n_every_steps": 10,
-                        "n_repeat_steps": 10,
-                        "n_cycles": 100,
-                        "thermostat_damping": 0.5,
-                        "barostat_damping": 0.1,
-                    },
-                    "tolerance": {
-                        "lattice_constant": 0.0002,
-                        "spring_constant": 0.01,
-                        "solid_fraction": 0.7,
-                        "liquid_fraction": 0.05,
-                        "pressure": 0.5,
-                    },
-                    "nose_hoover": {
-                        "thermostat_damping": 0.1,
-                        "barostat_damping": 0.1,
-                    },
-                    "berendsen": {
-                        "thermostat_damping": 100.0,
-                        "barostat_damping": 100.0,
-                    },
-                }
+            "mode": None,
+            "pressure": None,
+            "temperature": None,
+            "reference_phase": None,
+            "npt": None,
+            "n_equilibration_steps": 15000,
+            "n_switching_steps": 25000,
+            "n_print_steps": 1000,
+            "n_iterations": 1,
+            "spring_constants": None,
+            "equilibration_control": None,
+            "melting_cycle": True,
+            "md": {
+                "timestep": 0.001,
+                "n_small_steps": 10000,
+                "n_every_steps": 10,
+                "n_repeat_steps": 10,
+                "n_cycles": 100,
+                "thermostat_damping": 0.5,
+                "barostat_damping": 0.1,
+            },
+            "tolerance": {
+                "lattice_constant": 0.0002,
+                "spring_constant": 0.01,
+                "solid_fraction": 0.7,
+                "liquid_fraction": 0.05,
+                "pressure": 0.5,
+            },
+            "nose_hoover": {
+                "thermostat_damping": 0.1,
+                "barostat_damping": 0.1,
+            },
+            "berendsen": {
+                "thermostat_damping": 100.0,
+                "barostat_damping": 100.0,
+            },
+        }
 
     def set_potentials(self, potential_filenames: Union[list, str]):
         """
