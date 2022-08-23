@@ -113,6 +113,10 @@ class Calphy(GenericJob, HasStructure):
     In addition the boolean option :attr:`input.npt` can be used to determine the MD ensemble. If True, temperature integration and alchemy/upsampling are carried out in the NPT ensemble. If False, the NVT ensemble is employed.
 
     After the calculation is over, the various output options can be accessed through `job.output`.
+
+    Specialised output depending on the selected mode is also available. For example the energy difference between the system of
+    interest and the reference system for mode `fe` (free energy calculation), is available under `job.output.fe`. Similarly other output
+    corresponding to modes such as temperature scaling and pressure scaling can be found under `job.output.ts` and `job.output.ps`. 
     """
 
     def __init__(self, project, job_name):
