@@ -5,6 +5,7 @@
 import os
 import unittest
 import shutil
+import pandas as pd
 
 from pyiron_atomistics.project import Project
 from pyiron_atomistics.calphy.job import Calphy
@@ -68,6 +69,36 @@ class TestCalphy(unittest.TestCase):
                 "2001--Mishin-Y--Cu-1--LAMMPS--ipr1",
             ],
         )
+        self.assertEqual(len(self.job.potential), 2)
+
+    def test_potentials_df(self):
+        filepath = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "../static/calphy_test_files/lammps/2001--Mishin-Y--Cu-1--LAMMPS--ipr1/Cu01.eam.alloy"
+        )
+        pot_eam = pd.DataFrame({
+            'Name': ['2001--Mishin-Y--Cu-1--LAMMPS--ipr1'],
+            'Filename': [[filepath]],
+            'Model': ["EAM"],
+            'Species': [['Cu']],
+            'Config': [['pair_style eam/alloy\n', 'pair_coeff * * Cu01.eam.alloy Cu\n']]
+        })
+        self.job.set_potentials(
+            [pot_eam, pot_eam]
+        )
+        # print(self.job.input)
+        # pint(self.job.input.potential_initial_name)
+        self.assertEqual(
+            self.job.input.potential_initial_name, "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
+        )
+        self.assertEqual(
+            self.job.input.potential_final_name, "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
+        )        
+
+    def test_view_potentials(self):
+        structure = self.project.create.structure.ase.bulk('Cu', cubic=True).repeat(5)
+        self.job.structure = structure
+        self.assertEqual(type(self.job.view_potentials())==pd.DataFrame, True)
+        self.assertEqual(type(self.job.list_potentials())==list, True)
 
     def test_prepare_pair_styles(self):
         pair_style, pair_coeff = self.job._prepare_pair_styles()
@@ -111,7 +142,11 @@ class TestCalphy(unittest.TestCase):
         self.job.structure = structure
         self.job.write_structure(structure, "test.dump", ".")
         self.assertEqual(os.path.exists("test.dump"), True)
+        self.assertEqual(self.job._number_of_structures(), 2)
 
+    def test_publication(self):
+        self.assertEqual(self.job.publication["calphy"]["calphy"]["number"], "10")
+    
     def test_output(self):
         filepath = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "../static/"
