@@ -38,46 +38,6 @@ __email__ = "s.menon@mpie.de"
 __status__ = "development"
 __date__ = "April 1, 2022"
 
-_inputdict = {
-    "mode": None,
-    "pressure": None,
-    "temperature": None,
-    "reference_phase": None,
-    "npt": None,
-    "n_equilibration_steps": 15000,
-    "n_switching_steps": 25000,
-    "n_print_steps": 1000,
-    "n_iterations": 1,
-    "spring_constants": None,
-    "equilibration_control": None,
-    "melting_cycle": True,
-    "md": {
-        "timestep": 0.001,
-        "n_small_steps": 10000,
-        "n_every_steps": 10,
-        "n_repeat_steps": 10,
-        "n_cycles": 100,
-        "thermostat_damping": 0.5,
-        "barostat_damping": 0.1,
-    },
-    "tolerance": {
-        "lattice_constant": 0.0002,
-        "spring_constant": 0.01,
-        "solid_fraction": 0.7,
-        "liquid_fraction": 0.05,
-        "pressure": 0.5,
-    },
-    "nose_hoover": {
-        "thermostat_damping": 0.1,
-        "barostat_damping": 0.1,
-    },
-    "berendsen": {
-        "thermostat_damping": 100.0,
-        "barostat_damping": 100.0,
-    },
-    "calc": {},
-}
-
 
 class Calphy(GenericJob, HasStructure):
     """
@@ -157,7 +117,7 @@ class Calphy(GenericJob, HasStructure):
 
     def __init__(self, project, job_name):
         super().__init__(project, job_name)
-        self.input = DataContainer(_inputdict, table_name="inputdata")
+        self.input = DataContainer(self._default_input, table_name="inputdata")
         self._potential_initial = None
         self._potential_final = None
         self.input.potential_initial_name = None
@@ -168,6 +128,47 @@ class Calphy(GenericJob, HasStructure):
         self.input._pot_dict_initial = None
         self.input._pot_dict_final = None
         self.__version__ = calphy_version
+
+    @property
+    def _default_input(self):
+        return {
+                    "mode": None,
+                    "pressure": None,
+                    "temperature": None,
+                    "reference_phase": None,
+                    "npt": None,
+                    "n_equilibration_steps": 15000,
+                    "n_switching_steps": 25000,
+                    "n_print_steps": 1000,
+                    "n_iterations": 1,
+                    "spring_constants": None,
+                    "equilibration_control": None,
+                    "melting_cycle": True,
+                    "md": {
+                        "timestep": 0.001,
+                        "n_small_steps": 10000,
+                        "n_every_steps": 10,
+                        "n_repeat_steps": 10,
+                        "n_cycles": 100,
+                        "thermostat_damping": 0.5,
+                        "barostat_damping": 0.1,
+                    },
+                    "tolerance": {
+                        "lattice_constant": 0.0002,
+                        "spring_constant": 0.01,
+                        "solid_fraction": 0.7,
+                        "liquid_fraction": 0.05,
+                        "pressure": 0.5,
+                    },
+                    "nose_hoover": {
+                        "thermostat_damping": 0.1,
+                        "barostat_damping": 0.1,
+                    },
+                    "berendsen": {
+                        "thermostat_damping": 100.0,
+                        "barostat_damping": 100.0,
+                    },
+                }
 
     def set_potentials(self, potential_filenames: Union[list, str]):
         """
@@ -462,16 +463,16 @@ class Calphy(GenericJob, HasStructure):
         Create a calc object
         """
         calc = Calculation()
-        for key in _inputdict.keys():
+        for key in self._default_input.keys():
             if key not in ["md", "tolerance", "nose_hoover", "berendsen"]:
                 setattr(calc, key, self.input[key])
-        for key in _inputdict["md"].keys():
+        for key in self._default_input["md"].keys():
             setattr(calc.md, key, self.input["md"][key])
-        for key in _inputdict["tolerance"].keys():
+        for key in self._default_input["tolerance"].keys():
             setattr(calc.tolerance, key, self.input["tolerance"][key])
-        for key in _inputdict["nose_hoover"].keys():
+        for key in self._default_input["nose_hoover"].keys():
             setattr(calc.nose_hoover, key, self.input["nose_hoover"][key])
-        for key in _inputdict["berendsen"].keys():
+        for key in self._default_input["berendsen"].keys():
             setattr(calc.berendsen, key, self.input["berendsen"][key])
 
         calc.lattice = os.path.join(self.working_directory, "conf.data")
