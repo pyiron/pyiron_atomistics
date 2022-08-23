@@ -219,7 +219,7 @@ class Calphy(GenericJob, HasStructure):
         else:
             return [self._potential_initial.df, self._potential_final.df]
 
-    def copy_pot_files(self):
+    def _copy_pot_files(self):
         """
         Copy potential files to the working directory
 
@@ -433,7 +433,7 @@ class Calphy(GenericJob, HasStructure):
             )
         lmp_structure.write_file(file_name=file_name, cwd=working_directory)
 
-    def determine_mode(self):
+    def _determine_mode(self):
         """
         Determine the calculation mode
 
@@ -502,7 +502,7 @@ class Calphy(GenericJob, HasStructure):
         # self.input.calc = self.calc
         file_name = "conf.data"
         self.write_structure(self.structure, file_name, self.working_directory)
-        self.copy_pot_files()
+        self._copy_pot_files()
 
     def calc_mode_fe(
         self,
@@ -661,7 +661,7 @@ class Calphy(GenericJob, HasStructure):
         self.input.n_switching_steps = n_switching_steps
         self.input.n_print_steps = n_print_steps
         self.input.n_iterations = n_iterations
-        self.determine_mode()
+        self._determine_mode()
         if self.input.mode != "alchemy":
             if reference_phase is None:
                 raise ValueError("provide a reference_phase")
@@ -734,7 +734,7 @@ class Calphy(GenericJob, HasStructure):
             self.output["energy_pressure"] = self._data["results"]["pv"]
 
             # collect ediffs and so on
-            f_ediff, b_ediff, flambda, blambda = self.collect_ediff()
+            f_ediff, b_ediff, flambda, blambda = self._collect_ediff()
             self.output["fe/forward/energy_diff"] = list(f_ediff)
             self.output["fe/backward/energy_diff"] = list(b_ediff)
             self.output["fe/forward/lambda"] = list(flambda)
@@ -767,7 +767,7 @@ class Calphy(GenericJob, HasStructure):
                     b_press,
                     flambda,
                     blambda,
-                ) = self.collect_thermo(mode="ts")
+                ) = self._collect_thermo(mode="ts")
                 self.output["ts/forward/energy_diff"] = list(f_ediff)
                 self.output["ts/backward/energy_diff"] = list(b_ediff)
                 self.output["ts/forward/lambda"] = list(flambda)
@@ -783,7 +783,7 @@ class Calphy(GenericJob, HasStructure):
                     bkd_positions,
                     fwd_cells,
                     bkd_cells,
-                ) = self.get_positions()
+                ) = self._get_positions()
                 self.output["ts/forward/positions"] = fwd_positions
                 self.output["ts/backward/positions"] = bkd_positions
                 self.output["ts/forward/cells"] = fwd_cells
@@ -805,7 +805,7 @@ class Calphy(GenericJob, HasStructure):
                     b_press,
                     flambda,
                     blambda,
-                ) = self.collect_thermo(mode="pscale")
+                ) = self._collect_thermo(mode="pscale")
                 self.output["ps/forward/energy_diff"] = list(f_ediff)
                 self.output["ps/backward/energy_diff"] = list(b_ediff)
                 self.output["ps/forward/lambda"] = list(flambda)
@@ -815,7 +815,7 @@ class Calphy(GenericJob, HasStructure):
                 self.output["ps/forward/pressure"] = list(f_press)
                 self.output["ps/backward/pressure"] = list(b_press)
 
-    def collect_ediff(self):
+    def _collect_ediff(self):
         """
         Calculate the energy difference between reference system and system of interest
 
@@ -867,7 +867,7 @@ class Calphy(GenericJob, HasStructure):
 
         return f_ediff, b_ediff, flambda, blambda
 
-    def collect_thermo(self, mode="ts"):
+    def _collect_thermo(self, mode="ts"):
         """
         Collect thermo quantities after ts run
         """
@@ -903,7 +903,7 @@ class Calphy(GenericJob, HasStructure):
 
         return f_ediff, b_ediff, f_vol, b_vol, f_press, b_press, flambda, blambda
 
-    def get_positions(self):
+    def _get_positions(self):
         """
         Collect positions and cells
         """
