@@ -18,7 +18,8 @@ class TestCalphy(unittest.TestCase):
         state.update(
             {
                 "resource_paths": os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), "../static/calphy_test_files"
+                    os.path.dirname(os.path.abspath(__file__)),
+                    "../static/calphy_test_files",
                 )
             }
         )
@@ -73,18 +74,21 @@ class TestCalphy(unittest.TestCase):
 
     def test_potentials_df(self):
         filepath = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "../static/calphy_test_files/lammps/2001--Mishin-Y--Cu-1--LAMMPS--ipr1/Cu01.eam.alloy"
+            os.path.dirname(os.path.abspath(__file__)),
+            "../static/calphy_test_files/lammps/2001--Mishin-Y--Cu-1--LAMMPS--ipr1/Cu01.eam.alloy",
         )
-        pot_eam = pd.DataFrame({
-            'Name': ['2001--Mishin-Y--Cu-1--LAMMPS--ipr1'],
-            'Filename': [[filepath]],
-            'Model': ["EAM"],
-            'Species': [['Cu']],
-            'Config': [['pair_style eam/alloy\n', 'pair_coeff * * Cu01.eam.alloy Cu\n']]
-        })
-        self.job.set_potentials(
-            [pot_eam, pot_eam]
+        pot_eam = pd.DataFrame(
+            {
+                "Name": ["2001--Mishin-Y--Cu-1--LAMMPS--ipr1"],
+                "Filename": [[filepath]],
+                "Model": ["EAM"],
+                "Species": [["Cu"]],
+                "Config": [
+                    ["pair_style eam/alloy\n", "pair_coeff * * Cu01.eam.alloy Cu\n"]
+                ],
+            }
         )
+        self.job.set_potentials([pot_eam, pot_eam])
         # print(self.job.input)
         # pint(self.job.input.potential_initial_name)
         self.assertEqual(
@@ -92,13 +96,13 @@ class TestCalphy(unittest.TestCase):
         )
         self.assertEqual(
             self.job.input.potential_final_name, "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
-        )        
+        )
 
     def test_view_potentials(self):
-        structure = self.project.create.structure.ase.bulk('Cu', cubic=True).repeat(5)
+        structure = self.project.create.structure.ase.bulk("Cu", cubic=True).repeat(5)
         self.job.structure = structure
-        self.assertEqual(type(self.job.view_potentials())==pd.DataFrame, True)
-        self.assertEqual(type(self.job.list_potentials())==list, True)
+        self.assertEqual(isinstance(self.job.view_potentials(), pd.DataFrame), True)
+        self.assertEqual(isinstance(self.job.list_potentials(), list), True)
 
     def test_prepare_pair_styles(self):
         pair_style, pair_coeff = self.job._prepare_pair_styles()
@@ -127,17 +131,17 @@ class TestCalphy(unittest.TestCase):
         self.assertEqual(self.job.input.mode, "alchemy")
 
     def test_get_element_list(self):
-        structure = self.project.create.structure.ase.bulk('Cu', cubic=True).repeat(5)
-        structure[0] = 'Li'
+        structure = self.project.create.structure.ase.bulk("Cu", cubic=True).repeat(5)
+        structure[0] = "Li"
         self.job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
         self.job.structure = structure
-        self.assertEqual(self.job._get_element_list(), ['Cu'])
+        self.assertEqual(self.job._get_element_list(), ["Cu"])
         pm, pl = self.job._get_masses()
         self.assertEqual(pm, [63.546])
         self.assertEqual(pl, 0)
 
     def test_write_structure(self):
-        structure = self.project.create.structure.ase.bulk('Cu', cubic=True).repeat(5)
+        structure = self.project.create.structure.ase.bulk("Cu", cubic=True).repeat(5)
         self.job.potential = "2001--Mishin-Y--Cu-1--LAMMPS--ipr1"
         self.job.structure = structure
         self.job.write_structure(structure, "test.dump", ".")
@@ -146,7 +150,7 @@ class TestCalphy(unittest.TestCase):
 
     def test_publication(self):
         self.assertEqual(self.job.publication["calphy"]["calphy"]["number"], "10")
-    
+
     def test_output(self):
         filepath = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "../static/"
