@@ -211,7 +211,9 @@ class StructureStorage(FlattenedStorage, HasStructure):
         if structure.spins is not None:
             arrays["spins"] = structure.spins
         if "selective_dynamics" in structure.get_tags():
-            arrays["selective_dynamics"] = getattr(structure, "selective_dynamics").list()
+            arrays["selective_dynamics"] = getattr(
+                structure, "selective_dynamics"
+            ).list()
 
         self.add_chunk(
             len(structure),
@@ -252,7 +254,6 @@ class StructureStorage(FlattenedStorage, HasStructure):
             for i, d in enumerate(selective_dynamics):
                 structure.selective_dynamics[i] = d.tolist()
         return structure
-
 
     def _number_of_structures(self):
         return len(self)
