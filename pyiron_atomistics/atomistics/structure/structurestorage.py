@@ -210,6 +210,10 @@ class StructureStorage(FlattenedStorage, HasStructure):
 
         if structure.spins is not None:
             arrays["spins"] = structure.spins
+        if "selective_dynamics" in structure.get_tags():
+            arrays["selective_dynamics"] = getattr(
+                structure, "selective_dynamics"
+            ).list()
 
         self.add_chunk(
             len(structure),
@@ -236,7 +240,7 @@ class StructureStorage(FlattenedStorage, HasStructure):
             # not all structures have spins saved on them
             magmoms = None
         symbols = self.get_array("symbols", frame)
-        return Atoms(
+        structure = Atoms(
             species=[Atom(e).element for e in elements],
             indices=[index_map[e] for e in symbols],
             positions=self.get_array("positions", frame),
@@ -244,6 +248,12 @@ class StructureStorage(FlattenedStorage, HasStructure):
             pbc=self.get_array("pbc", frame),
             magmoms=magmoms,
         )
+        if self.has_array("selective_dynamics"):
+            structure.add_tag(selective_dynamics=[True, True, True])
+            selective_dynamics = self.get_array("selective_dynamics", frame)
+            for i, d in enumerate(selective_dynamics):
+                structure.selective_dynamics[i] = d.tolist()
+        return structure
 
     def _number_of_structures(self):
         return len(self)

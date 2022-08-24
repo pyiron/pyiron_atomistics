@@ -194,3 +194,16 @@ class TestContainer(TestWithProject):
         for n in self.cont._per_chunk_arrays:
             self.assertTrue((self.cont._per_chunk_arrays[n] == cont_read._per_chunk_arrays[n]).all(),
                             f"per structure array {n} read is not the same as writen")
+
+    def test_selective_dynamics(self):
+        """Any selective_dynamics tags defined on the structure should be saved and restored as well."""
+        cont = StructureStorage()
+        structure = self.project.create.structure.bulk('Fe', cubic=True)
+        structure.add_tag(selective_dynamics=[True, True, True])
+        structure.selective_dynamics[0] = [False, False, False]
+        cont.add_structure(structure)
+        structure_read = cont.get_structure()
+        self.assertIn("selective_dynamics", structure_read.get_tags(),
+                      "Selective dynamics not defined on read structure!")
+        self.assertListEqual(structure.selective_dynamics.list(), structure_read.selective_dynamics.list(),
+                             "Selective dynamics not correctly restored!")
