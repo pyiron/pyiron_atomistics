@@ -223,7 +223,7 @@ class UnitConverter:
         if label in quantity_dict.keys():
             return np.array(
                 array * self.lammps_to_pyiron(quantity_dict[label]), dtype_dict[label]
-            ) 
+            )
         else:
             warnings.warn(
                 message="Warning: Couldn't determine the LAMMPS to pyiron unit conversion type of quantity "
