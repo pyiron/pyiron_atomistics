@@ -1017,4 +1017,7 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
     for kk in keys[keys.str.startswith("c_")]:
         output[kk.replace("c_", "")] = np.array([cc[kk] for cc in content], dtype=float)
 
+    for k, v in output.items():
+        output[k] = uc.convert_array_to_pyiron_units(array=v, label=k)
+
     return output
