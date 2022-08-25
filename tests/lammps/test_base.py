@@ -853,7 +853,7 @@ class TestLammps(TestWithCleanProject):
         self.assertTrue(self.job["structure.inp"][4][-1], bond_str)
 
 
-def collect_dump_file_old(self, file_name="dump.out", cwd=None):
+def collect_dump_file_old(job, file_name="dump.out", cwd=None):
     """
     general purpose routine to extract static from a lammps dump file
 
@@ -864,8 +864,8 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
     Returns:
 
     """
-    uc = UnitConverter(self.units)
-    file_name = self.job_file_name(file_name=file_name, cwd=cwd)
+    uc = UnitConverter(job.units)
+    file_name = job.job_file_name(file_name=file_name, cwd=cwd)
     output = {}
     with open(file_name, "r") as ff:
         dump = ff.readlines()
@@ -892,8 +892,8 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
     )
     natoms = np.array([natoms]).flatten()
 
-    prism = self._prism
-    rotation_lammps2orig = self._prism.R.T
+    prism = job._prism
+    rotation_lammps2orig = job._prism.R.T
     cells = np.genfromtxt(
         " ".join(
             (
@@ -922,7 +922,7 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
     ]
 
     indices = np.array([cc["type"] for cc in content], dtype=int)
-    output["indices"] = self.remap_indices(indices)
+    output["indices"] = job.remap_indices(indices)
 
     forces = np.array(
         [np.stack((cc["fx"], cc["fy"], cc["fz"]), axis=-1) for cc in content]
