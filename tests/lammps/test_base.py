@@ -847,7 +847,7 @@ class TestLammps(TestWithCleanProject):
         self.assertTrue(self.job["structure.inp"][4][-1], bond_str)
 
     def test_dump_parsing(self):
-        self.job.structure = Atoms("Al1", positions=[3 * [0]], cell=np.eye(3)).repeat(2)
+        self.job.structure = Atoms("Al1", positions=[3 * [0]], cell=np.eye(3)*2.5).repeat(2)
         potential = pd.DataFrame(
             {
                 "Name": ["Al Morse"],
@@ -856,8 +856,8 @@ class TestLammps(TestWithCleanProject):
                 "Species": [["Al"]],
                 "Config": [
                     [
-                        "atom_style full\n",
-                        "pair_coeff 1 2 morse 0.019623 1.8860 3.32833\n",
+                        "atom_style atomic \n",
+                        "pair_coeff 1 1 100.0 2.0 1.5 3.0\n",
                     ]
                 ],
             }
