@@ -1204,7 +1204,6 @@ class LammpsBase(AtomisticGenericJob):
         else:
             warnings.warn("LAMMPS warning: No dump.out output file found.")
 
-
     # Outdated functions:
     def set_potential(self, file_name):
         """

@@ -82,7 +82,7 @@ class TestLammps(TestWithCleanProject):
         lmp_structure = LammpsStructure()
         lmp_structure._el_eam_lst = ["Fe"]
         lmp_structure.structure = atoms
-        self.assertEqual( 
+        self.assertEqual(
             lmp_structure._dataset["Value"],
             [
                 "Start File for LAMMPS",
@@ -862,16 +862,14 @@ class TestLammps(TestWithCleanProject):
                 ],
             }
         )
-        self.job.potential = potential 
+        self.job.potential = potential
         self.job.calc_md(n_ionic_steps=3, n_print=1)
         self.job.run()
         self.job.decompress()
         old_output = collect_dump_file_old(self.job.working_directory)
         with open(self.job.project_hdf5.open("output/generic")) as hdf_out:
             for k, v in old_output.items():
-                self.assertTrue(
-                    np.all(v==hdf_out[k])
-                )
+                self.assertTrue(np.all(v == hdf_out[k]))
 
 
 def collect_dump_file_old(self, file_name="dump.out", cwd=None):
@@ -894,10 +892,7 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
     steps = np.genfromtxt(
         [
             dump[nn]
-            for nn in np.where(
-                [ll.startswith("ITEM: TIMESTEP") for ll in dump]
-            )[0]
-            + 1
+            for nn in np.where([ll.startswith("ITEM: TIMESTEP") for ll in dump])[0] + 1
         ],
         dtype=int,
     )
@@ -907,9 +902,9 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
     natoms = np.genfromtxt(
         [
             dump[nn]
-            for nn in np.where(
-                [ll.startswith("ITEM: NUMBER OF ATOMS") for ll in dump]
-            )[0]
+            for nn in np.where([ll.startswith("ITEM: NUMBER OF ATOMS") for ll in dump])[
+                0
+            ]
             + 1
         ],
         dtype=int,
@@ -932,9 +927,7 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
         ).split()
     ).reshape(len(natoms), -1)
     lammps_cells = np.array([to_amat(cc) for cc in cells])
-    unfolded_cells = np.array(
-        [prism.unfold_cell(cell) for cell in lammps_cells]
-    )
+    unfolded_cells = np.array([prism.unfold_cell(cell) for cell in lammps_cells])
     output["cells"] = unfolded_cells
 
     l_start = np.where([ll.startswith("ITEM: ATOMS") for ll in dump])[0]
@@ -971,14 +964,9 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
         )
         output["mean_forces"] = np.matmul(forces, rotation_lammps2orig)
 
-    if np.all(
-        [flag in content[0].columns.values for flag in ["vx", "vy", "vz"]]
-    ):
+    if np.all([flag in content[0].columns.values for flag in ["vx", "vy", "vz"]]):
         velocities = np.array(
-            [
-                np.stack((cc["vx"], cc["vy"], cc["vz"]), axis=-1)
-                for cc in content
-            ]
+            [np.stack((cc["vx"], cc["vy"], cc["vz"]), axis=-1) for cc in content]
         )
         output["velocities"] = np.matmul(velocities, rotation_lammps2orig)
 
@@ -1001,9 +989,7 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
         [np.stack((cc["xsu"], cc["ysu"], cc["zsu"]), axis=-1) for cc in content]
     )
     unwrapped_positions = np.matmul(direct_unwrapped_positions, lammps_cells)
-    output["unwrapped_positions"] = np.matmul(
-        unwrapped_positions, rotation_lammps2orig
-    )
+    output["unwrapped_positions"] = np.matmul(unwrapped_positions, rotation_lammps2orig)
     if "f_mean_positions[1]" in content[0].keys():
         direct_unwrapped_positions = np.array(
             [
@@ -1018,23 +1004,17 @@ def collect_dump_file_old(self, file_name="dump.out", cwd=None):
                 for cc in content
             ]
         )
-        unwrapped_positions = np.matmul(
-            direct_unwrapped_positions, lammps_cells
-        )
+        unwrapped_positions = np.matmul(direct_unwrapped_positions, lammps_cells)
         output["mean_unwrapped_positions"] = np.matmul(
             unwrapped_positions, rotation_lammps2orig
         )
 
-    direct_positions = direct_unwrapped_positions - np.floor(
-        direct_unwrapped_positions
-    )
+    direct_positions = direct_unwrapped_positions - np.floor(direct_unwrapped_positions)
     positions = np.matmul(direct_positions, lammps_cells)
     output["positions"] = np.matmul(positions, rotation_lammps2orig)
 
     keys = content[0].keys()
     for kk in keys[keys.str.startswith("c_")]:
-        output[kk.replace("c_", "")] = np.array(
-            [cc[kk] for cc in content], dtype=float
-        )
-    
+        output[kk.replace("c_", "")] = np.array([cc[kk] for cc in content], dtype=float)
+
     return output
