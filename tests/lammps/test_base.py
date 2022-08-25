@@ -461,6 +461,12 @@ class TestLammps(TestWithCleanProject):
         self.assertTrue(
             np.array_equal(self.job["output/generic/indices"].shape, (1, 2))
         )
+        # compare to old dump parser
+        old_output = collect_dump_file_old(cwd=file_directory, file_name="dump_static.out")
+        with open(self.job.project_hdf5.open("output/generic")) as hdf_out:
+            for k, v in old_output.items():
+                self.assertTrue(np.all(v == hdf_out[k]))
+
 
     def test_vcsgc_input(self):
         unit_cell = Atoms(
@@ -845,31 +851,6 @@ class TestLammps(TestWithCleanProject):
 
         bond_str = "2 bond types\n"
         self.assertTrue(self.job["structure.inp"][4][-1], bond_str)
-
-    def test_dump_parsing(self):
-        self.job.structure = Atoms("Al1", positions=[3 * [0]], cell=np.eye(3)*2.5).repeat(2)
-        potential = pd.DataFrame(
-            {
-                "Name": ["Al Morse"],
-                "Filename": [[]],
-                "Model": ["Morse"],
-                "Species": [["Al"]],
-                "Config": [
-                    [
-                        "atom_style atomic \n",
-                        "pair_coeff 1 1 100.0 2.0 1.5 3.0\n",
-                    ]
-                ],
-            }
-        )
-        self.job.potential = potential
-        self.job.calc_md(n_ionic_steps=3, n_print=1)
-        self.job.run()
-        self.job.decompress()
-        old_output = collect_dump_file_old(self.job.working_directory)
-        with open(self.job.project_hdf5.open("output/generic")) as hdf_out:
-            for k, v in old_output.items():
-                self.assertTrue(np.all(v == hdf_out[k]))
 
 
 def collect_dump_file_old(self, file_name="dump.out", cwd=None):
