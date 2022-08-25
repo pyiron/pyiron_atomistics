@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import os
 import re
+from io import StringIO
 from pyiron_base import state, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
