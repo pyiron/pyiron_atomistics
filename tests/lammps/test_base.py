@@ -463,7 +463,7 @@ class TestLammps(TestWithCleanProject):
         )
         # compare to old dump parser
         old_output = collect_dump_file_old(job=self.job, cwd=file_directory, file_name="dump_static.out")
-        with open(self.job.project_hdf5.open("output/generic")) as hdf_out:
+        with self.job.project_hdf5.open("output/generic") as hdf_out:
             for k, v in old_output.items():
                 self.assertTrue(np.all(v == hdf_out[k]))
 
