@@ -33,7 +33,7 @@ setup(
         'ase==3.22.1',
         'defusedxml==0.7.1',
         'h5py==3.7.0',
-        'matplotlib==3.5.2',
+        'matplotlib==3.5.3',
         'mendeleev==0.10.0',
         'numpy==1.23.2',
         'pandas==1.4.3',
