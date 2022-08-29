@@ -473,7 +473,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         old_symbols = self.structure.get_species_symbols()
         new_symbols = structure.get_species_symbols()
         if old_symbols != new_symbols:
-            raise ValueError(f"structure has different chemical symbols than old one: {new_symbols} != {old_symbols}")
+            raise ValueError(
+                f"structure has different chemical symbols than old one: {new_symbols} != {old_symbols}"
+            )
         self._interactive_lib_command("clear")
         self._set_selective_dynamics()
         self._interactive_lib_command("units " + self.input.control["units"])
