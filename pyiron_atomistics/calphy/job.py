@@ -172,6 +172,11 @@ class Calphy(GenericJob, HasStructure):
                 "thermostat_damping": 100.0,
                 "barostat_damping": 100.0,
             },
+            "composition_scaling": {
+                "input_chemical_composition": None,
+                "output_chemical_composition": None,
+                "restrictions": None
+            }
         }
 
     def set_potentials(self, potential_filenames: Union[list, str]):
@@ -333,6 +338,22 @@ class Calphy(GenericJob, HasStructure):
         length_diff = len(elements_from_pot) - len(masses)
         return masses, length_diff
 
+    def _get_input_chemical_composition(self, element_list) -> dict:
+        """
+        Get the input chemical composition
+        """
+
+        compdict = {}
+        chemsymbols = self.structure.get_chemical_symbols()
+        names, counts = np.unique(chemsymbols, return_counts=True)
+
+        for element_name in element_list:
+            index = list(names).index(element_name)
+            compdict[element_name] = counts[index]
+
+        return compdict      
+
+
     def _potential_from_hdf(self):
         """
         Recreate the potential from filename stored in hdf5
@@ -372,7 +393,7 @@ class Calphy(GenericJob, HasStructure):
 
     @structure.setter
     def structure(self, val):
-        self.input.structure = val
+        self.input.structure = val 
 
     def view_potentials(self) -> List:
         """
@@ -450,6 +471,9 @@ class Calphy(GenericJob, HasStructure):
         if len(self.get_potentials()) == 2:
             self.input.mode = "alchemy"
             self.input.reference_phase = "alchemy"
+        elif self.input.composition_scaling.input_chemical_composition is not None:
+            self.input.mode = "composition_scaling"
+            self.input.reference_phase = "alchemy"            
         elif isinstance(self.input.pressure, list):
             if len(self.input.pressure) == 2:
                 self.input.mode = "pscale"
@@ -466,10 +490,12 @@ class Calphy(GenericJob, HasStructure):
         """
         Create a calc object
         """
+        keylist = ["md", "tolerance", "nose_hoover", "berendsen", "composition_scaling"]
         calc = Calculation()
         for key in self._default_input.keys():
-            if key not in ["md", "tolerance", "nose_hoover", "berendsen"]:
+            if key not in keylist:
                 setattr(calc, key, self.input[key])
+        
         for key in self._default_input["md"].keys():
             setattr(calc.md, key, self.input["md"][key])
         for key in self._default_input["tolerance"].keys():
@@ -478,6 +504,8 @@ class Calphy(GenericJob, HasStructure):
             setattr(calc.nose_hoover, key, self.input["nose_hoover"][key])
         for key in self._default_input["berendsen"].keys():
             setattr(calc.berendsen, key, self.input["berendsen"][key])
+        for key in self._default_input["composition_scaling"].keys():
+            setattr(calc.composition_scaling, key, self.input["composition_scaling"][key])
 
         calc.lattice = os.path.join(self.working_directory, "conf.data")
 
@@ -491,6 +519,10 @@ class Calphy(GenericJob, HasStructure):
         calc._ghost_element_count = ghost_elements
 
         calc.queue.cores = self.server.cores
+
+        if calc.mode == "composition_scaling":
+            calc.composition_scaling.input_chemical_composition = self._get_input_chemical_composition(calc.element)
+
         return calc
 
     def write_input(self):
@@ -578,7 +610,6 @@ class Calphy(GenericJob, HasStructure):
         self,
         temperature: float = None,
         pressure: Union[list, float, None] = None,
-        reference_phase: str = None,
         n_equilibration_steps: int = 15000,
         n_switching_steps: int = 25000,
         n_print_steps: int = 0,
@@ -603,6 +634,39 @@ class Calphy(GenericJob, HasStructure):
         self.input.n_print_steps = n_print_steps
         self.input.n_iterations = n_iterations
         self.input.mode = "alchemy"
+
+    def calc_mode_composition_scaling(
+        self,
+        temperature: float = None,
+        pressure: Union[list, float, None] = None,
+        output_chemical_composition: dict = None,
+        n_equilibration_steps: int = 15000,
+        n_switching_steps: int = 25000,
+        n_print_steps: int = 0,
+        n_iterations: int = 1,
+    ):
+        """
+        Perform upsampling/alchemy between two interatomic potentials
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        if temperature is None:
+            raise ValueError("provide a temperature")
+        if output_chemical_composition is None:
+            raise ValueError("provide an output chemical composition")
+        self.input.temperature = temperature
+        self.input.pressure = pressure
+        self.input.reference_phase = reference_phase
+        self.input.n_equilibration_steps = n_equilibration_steps
+        self.input.n_switching_steps = n_switching_steps
+        self.input.n_print_steps = n_print_steps
+        self.input.n_iterations = n_iterations
+        self.input.composition_scaling.output_chemical_composition = output_chemical_composition
+        self.input.mode = "composition_scaling"
 
     def calc_mode_pscale(
         self,
@@ -665,8 +729,9 @@ class Calphy(GenericJob, HasStructure):
         self.input.n_switching_steps = n_switching_steps
         self.input.n_print_steps = n_print_steps
         self.input.n_iterations = n_iterations
+        self.input.composition_scaling.output_chemical_composition = output_chemical_composition
         self._determine_mode()
-        if self.input.mode != "alchemy":
+        if not self.input.mode in ["alchemy", "composition_scaling"]:
             if reference_phase is None:
                 raise ValueError("provide a reference_phase")
 
@@ -724,6 +789,8 @@ class Calphy(GenericJob, HasStructure):
                 ]
             if "density" in self._data["average"].keys():
                 self.output["atomic_density"] = self._data["average"]["density"]
+            if "mass_correction" in self._data["results"].keys():
+                self.output["mass_correction"] = self._data["results"]["mass_correction"]
             self.output["atomic_volume"] = self._data["average"]["vol_atom"]
 
             # main results from mode fe
@@ -818,6 +885,15 @@ class Calphy(GenericJob, HasStructure):
                 self.output["ps/backward/volume"] = list(b_vol)
                 self.output["ps/forward/pressure"] = list(f_press)
                 self.output["ps/backward/pressure"] = list(b_press)
+
+            elif self.input.mode == "composition_scaling":
+                datfile = os.path.join(self.working_directory, "composition_sweep.dat")
+                fl, netfe, warr, mcorrarr = np.loadtxt(datfile, unpack=True, usecols=(0, 1, 2, 3))
+                self.output["composition_scaling/lambda"] = list(fl)
+                self.output["composition_scaling/energy_free"] = list(netfe)
+                self.output["composition_scaling/energy_work"] = list(warr)
+                self.output["composition_scaling/mass_correction"] = list(mcorrarr)
+
 
     def _collect_ediff(self):
         """
