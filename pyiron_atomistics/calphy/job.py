@@ -360,8 +360,11 @@ class Calphy(GenericJob, HasStructure):
         names, counts = np.unique(chemsymbols, return_counts=True)
 
         for element_name in element_list:
-            index = list(names).index(element_name)
-            compdict[element_name] = counts[index]
+            if element_name in names:
+                index = list(names).index(element_name)
+                compdict[element_name] = counts[index]
+            else:
+                compdict[element_name] = 0
 
         return compdict      
 
@@ -539,7 +542,6 @@ class Calphy(GenericJob, HasStructure):
 
         calc.queue.cores = self.server.cores
 
-        self.calc = calc
         return calc
 
     def write_input(self):
