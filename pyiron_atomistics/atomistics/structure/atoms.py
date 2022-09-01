@@ -8,6 +8,7 @@ from ase.symbols import Symbols as ASESymbols
 import ast
 from copy import copy
 from collections import OrderedDict
+from typing import Iterable
 import numpy as np
 import warnings
 import seekpath
@@ -655,24 +656,31 @@ class Atoms(ASEAtoms):
 
     def select_index(self, el):
         """
-        Returns the indices of a given element in the structure
+        Returns the indices of a given element in the structure.
+
+        If el is not in this structure, returns the empty array.
+
+        If el is an Iterable, return indices of all the elements inside it.
 
         Args:
-            el (str/atomistics.structures.periodic_table.ChemicalElement/list): Element for which the indices should
+            el (str/atomistics.structures.periodic_table.ChemicalElement/Iterable): Element for which the indices should
                                                                                   be returned
         Returns:
             numpy.ndarray: An array of indices of the atoms of the given element
-
         """
-        if isinstance(el, str):
-            return np.where(self.get_chemical_symbols() == el)[0]
-        elif isinstance(el, ChemicalElement):
-            return np.where([e == el for e in self.get_chemical_elements()])[0]
-        if isinstance(el, (list, np.ndarray)):
-            if isinstance(el[0], str):
-                return np.where(np.isin(self.get_chemical_symbols(), el))[0]
-            elif isinstance(el[0], ChemicalElement):
-                return np.where([e in el for e in self.get_chemical_elements()])[0]
+        if not isinstance(el, Iterable):
+            el = (el,)
+
+        element_indices = []
+        for element in el:
+            if isinstance(element, str):
+                element_object = self._store_elements[element]
+            elif isinstance(element, ChemicalElement):
+                element_object = element
+            else:
+                raise ValueError(f"el must be str, ChemicalElement or an Iterable thereof, not {el}")
+            element_indices.append(self._species_to_index_dict[element_object])
+        return np.where(np.isin(self.indices, element_indices))[0]
 
     def select_parent_index(self, el):
         """
