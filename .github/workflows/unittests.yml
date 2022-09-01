@@ -1,7 +1,6 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+# This workflow is used to run the unittest of pyiron
 
-name: Unit Tests
+name: Unittests
 
 on:
   push:
@@ -9,35 +8,82 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
 jobs:
   build:
 
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.10']
         include:
-        - operating-system: ubuntu-latest
-          python-version: 3.8
-        - operating-system: ubuntu-latest
-          python-version: 3.9
+          - operating-system: macos-latest
+            python-version: '3.10'
+            label: osx-64-py-3-10
+            prefix: /Users/runner/miniconda3/envs/my-env
+
+          - operating-system: windows-latest
+            python-version: '3.10'
+            label: win-64-py-3-10
+            prefix: C:\Miniconda3\envs\my-env
+
+          - operating-system: ubuntu-latest
+            python-version: '3.10'
+            label: linux-64-py-3-10
+            prefix: /usr/share/miniconda3/envs/my-env
+
+          - operating-system: ubuntu-latest
+            python-version: 3.9
+            label: linux-64-py-3-9
+            prefix: /usr/share/miniconda3/envs/my-env
+
+          - operating-system: ubuntu-latest
+            python-version: 3.8
+            label: linux-64-py-3-8
+            prefix: /usr/share/miniconda3/envs/my-env
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        mamba-version: "*"
-        channels: conda-forge
-        channel-priority: strict
-        auto-update-conda: true  
-        environment-file: .ci_support/environment.yml
-    - name: Setup
-      shell: bash -l {0}
-      run: |
-        python .ci_support/pyironconfig.py
-        pip install --no-deps .
-    - name: Tests
-      shell: bash -l {0}
-      run: coverage run --omit pyiron_atomistics/_version.py -m unittest discover tests
+      - uses: actions/checkout@v2
+      - name: Setup environment
+        run: cp .ci_support/environment.yml environment.yml
+      - name: Setup Mambaforge
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          miniforge-variant: Mambaforge
+          channels: conda-forge
+          channel-priority: strict
+          activate-environment: my-env
+          use-mamba: true
+      - name: Set cache date and number
+        run: |
+          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+          cat .github/variables/cache_number.env >> $GITHUB_ENV
+      - uses: actions/cache@v2
+        with:
+          path: ${{ matrix.prefix }}
+          key: ${{ matrix.label }}-conda-${{ hashFiles('environment.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
+        id: cache
+      - name: Update environment
+        run: mamba env update -n my-env -f environment.yml
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Setup
+        shell: bash -l {0}
+        run: |
+          python .ci_support/pyironconfig.py
+          pip install --no-deps .
+      - name: Test
+        shell: bash -l {0}
+        timeout-minutes: 30
+        run: coverage run --omit pyiron_atomistics/_version.py -m unittest discover tests
+      - name: Coverage
+        if: matrix.label == 'linux-64-py-3-10'
+        shell: bash -l {0}
+        run: |
+          coverage combine
+          coveralls
+          coverage xml
+          python-codacy-coverage -r coverage.xml
+
