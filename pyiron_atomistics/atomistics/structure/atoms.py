@@ -674,13 +674,22 @@ class Atoms(ASEAtoms):
         element_indices = []
         for element in el:
             if isinstance(element, str):
-                element_object = self._store_elements[element]
+                try:
+                    element_object = self._store_elements[element]
+                except KeyError:
+                    pass
             elif isinstance(element, ChemicalElement):
                 element_object = element
             else:
                 raise ValueError(f"el must be str, ChemicalElement or an Iterable thereof, not {el}")
-            element_indices.append(self._species_to_index_dict[element_object])
-        return np.where(np.isin(self.indices, element_indices))[0]
+            try:
+                element_indices.append(self._species_to_index_dict[element_object])
+            except KeyError:
+                pass
+        if len(element_indices) > 0:
+            return np.where(np.isin(self.indices, element_indices))[0]
+        else:
+            return np.array([], dtype=int)
 
     def select_parent_index(self, el):
         """
