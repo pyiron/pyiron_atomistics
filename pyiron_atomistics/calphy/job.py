@@ -471,7 +471,7 @@ class Calphy(GenericJob, HasStructure):
         if len(self.get_potentials()) == 2:
             self.input.mode = "alchemy"
             self.input.reference_phase = "alchemy"
-        elif self.input.composition_scaling.input_chemical_composition is not None:
+        elif self.input.composition_scaling.output_chemical_composition is not None:
             self.input.mode = "composition_scaling"
             self.input.reference_phase = "alchemy"            
         elif isinstance(self.input.pressure, list):
@@ -710,6 +710,7 @@ class Calphy(GenericJob, HasStructure):
         n_switching_steps: int = 25000,
         n_print_steps: int = 0,
         n_iterations: int = 1,
+        output_chemical_composition: dict = None,
     ):
         """
         Calculate free energy at given conditions
