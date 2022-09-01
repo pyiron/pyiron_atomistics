@@ -668,7 +668,7 @@ class Atoms(ASEAtoms):
         Returns:
             numpy.ndarray: An array of indices of the atoms of the given element
         """
-        if not isinstance(el, Iterable):
+        if not isinstance(el, Iterable) or isinstance(el, str):
             el = (el,)
 
         element_indices = []
