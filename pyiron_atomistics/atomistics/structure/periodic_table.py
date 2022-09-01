@@ -90,7 +90,9 @@ class ChemicalElement(object):
             return self.sub[item]
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
+        if self is other:
+            return True
+        elif isinstance(other, self.__class__):
             conditions = list()
             conditions.append(self.sub.to_dict() == other.sub.to_dict())
             return all(conditions)
