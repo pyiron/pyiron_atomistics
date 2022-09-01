@@ -15,6 +15,7 @@ from pyiron_atomistics.lammps.structure import (
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+from pyiron_atomistics.atomistics.structure.periodic_table import ChemicalElement
 
 calphy_version = "1.0.0"
 
@@ -294,12 +295,12 @@ class Calphy(GenericJob, HasStructure):
 
         return pair_style, pair_coeff
 
-    def _get_element_list(self) -> List[str]:
+    def _get_element_list(self, structure_check=True) -> List[str]:
         """
         Get elements as defined in pair style
 
         Args:
-            None
+            structure_check: bool, optional
 
         Returns:
             list: symbols of the elements
@@ -307,19 +308,21 @@ class Calphy(GenericJob, HasStructure):
         elements_from_pot = self._potential_initial.get_element_lst()
         elements_struct_lst = self.structure.get_species_symbols()
 
-        elements = []
-        for element_name in elements_from_pot:
-            if element_name in elements_struct_lst:
-                elements.append(element_name)
+        if structure_check:
+            elements = []
+            for element_name in elements_from_pot:
+                if element_name in elements_struct_lst:
+                    elements.append(element_name)
+            return elements
+        else:
+            return elements_from_pot
 
-        return elements
-
-    def _get_masses(self) -> List[float]:
+    def _get_masses(self, structure_check=True) -> List[float]:
         """
         Get masses as defined in pair style
 
         Args:
-            None
+            structure_check: bool, optional
 
         Returns:
             list: masses of the elements
@@ -328,15 +331,24 @@ class Calphy(GenericJob, HasStructure):
         elements_object_lst = self.structure.get_species_objects()
         elements_struct_lst = self.structure.get_species_symbols()
 
-        masses = []
-        for element_name in elements_from_pot:
-            if element_name in elements_struct_lst:
-                index = list(elements_struct_lst).index(element_name)
-                masses.append(elements_object_lst[index].AtomicMass)
+        if structure_check:
+            masses = []
+            for element_name in elements_from_pot:
+                if element_name in elements_struct_lst:
+                    el = ChemicalElement(element_name)
+                    masses.append(el.AtomicMass)
 
-        # this picks the actual masses, now we should pad with 1s to match length
-        length_diff = len(elements_from_pot) - len(masses)
-        return masses, length_diff
+            # this picks the actual masses, now we should pad with 1s to match length
+            length_diff = len(elements_from_pot) - len(masses)
+            return masses, length_diff
+
+        else:
+            masses = []
+            for element_name in elements_from_pot:
+                el = ChemicalElement(element_name)
+                masses.append(el.AtomicMass)
+            return masses, 0
+
 
     def _get_input_chemical_composition(self, element_list) -> dict:
         """
@@ -509,20 +521,25 @@ class Calphy(GenericJob, HasStructure):
 
         calc.lattice = os.path.join(self.working_directory, "conf.data")
 
+        structure_check = True
+        
+        if calc.mode == "composition_scaling":
+            structure_check = False
+
         pair_style, pair_coeff = self._prepare_pair_styles()
         calc._fix_potential_path = False
         calc.pair_style = pair_style
         calc.pair_coeff = pair_coeff
 
-        calc.element = self._get_element_list()
-        calc.mass, ghost_elements = self._get_masses()
+        calc.element = self._get_element_list(structure_check=structure_check)
+        calc.mass, ghost_elements = self._get_masses(structure_check=structure_check)
         calc._ghost_element_count = ghost_elements
-
-        calc.queue.cores = self.server.cores
-
         if calc.mode == "composition_scaling":
             calc.composition_scaling.input_chemical_composition = self._get_input_chemical_composition(calc.element)
 
+        calc.queue.cores = self.server.cores
+
+        self.calc = calc
         return calc
 
     def write_input(self):
