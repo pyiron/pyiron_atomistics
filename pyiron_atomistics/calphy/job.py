@@ -23,7 +23,7 @@ with ImportAlarm(
     "requirements. Please install it and try again."
 ) as calphy_alarm:
     from calphy import Calculation, Solid, Liquid, Alchemy
-    from calphy.routines import routine_fe, routine_ts, routine_alchemy, routine_pscale
+    from calphy.routines import routine_fe, routine_ts, routine_alchemy, routine_pscale, routine_composition_scaling
     from calphy import __version__ as calphy_version
     from pyscal.trajectory import Trajectory as PyscalTrajectory
 
@@ -756,6 +756,8 @@ class Calphy(GenericJob, HasStructure):
             routine_ts(job)
         elif self.input.mode == "pscale":
             routine_pscale(job)
+        elif self.input.mode == "composition_scaling":
+            routine_composition_scaling(job)
         else:
             raise ValueError("Unknown mode")
         self._data = job.report
