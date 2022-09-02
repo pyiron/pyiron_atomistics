@@ -7,9 +7,13 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+    types: [labeled, opened, synchronize, reopened]
 
 jobs:
   build:
+    if: |
+      github.event_name == 'push' ||
+      ( github.event_name == 'pull_request'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
 
     runs-on: ubuntu-latest
 
