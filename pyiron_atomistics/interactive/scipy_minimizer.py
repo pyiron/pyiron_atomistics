@@ -293,7 +293,6 @@ class ScipyMinimizer(InteractiveWrapper):
 
 
 class ScipyMinimizerInput(HasStorage):
-
     def __init__(self):
         super().__init__()
         self.storage.table_name = "parameters"
@@ -368,6 +367,7 @@ class ScipyMinimizerInput(HasStorage):
     @volume_only.setter
     def volume_only(self, value: bool):
         self.storage.volume_only = value
+
 
 class ScipyMinimizerOutput(GenericInteractiveOutput):
     def __init__(self, job):
