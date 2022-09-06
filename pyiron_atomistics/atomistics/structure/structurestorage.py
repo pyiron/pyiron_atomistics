@@ -375,9 +375,9 @@ class StructurePlots:
             elif num in range(16, 75):
                 return "orthorombic"
             elif num in range(75, 143):
-                return "trigonal"
-            elif num in range(143, 168):
                 return "tetragonal"
+            elif num in range(143, 168):
+                return "trigonal"
             elif num in range(168, 195):
                 return "hexagonal"
             elif num in range(195, 230):
