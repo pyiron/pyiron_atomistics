@@ -14,7 +14,7 @@ dependencies:
 - pandas =1.4.4
 - phonopy =2.15.1
 - pint =0.19.2
-- pyiron_base =0.5.22
+- pyiron_base =0.5.23
 - pymatgen =2022.8.23
 - pyscal =2.10.15
 - scipy =1.9.1
