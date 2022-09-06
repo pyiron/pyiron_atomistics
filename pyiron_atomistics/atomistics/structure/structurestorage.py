@@ -373,7 +373,7 @@ class StructurePlots:
             elif num in range(3, 16):
                 return "monoclinic"
             elif num in range(16, 75):
-                return "orthorombic"
+                return "orthorhombic"
             elif num in range(75, 143):
                 return "tetragonal"
             elif num in range(143, 168):
