@@ -329,7 +329,7 @@ class ScipyMinimizerInput(HasStorage):
 
     @ionic_force_tolerance.setter
     def ionic_force_tolerance(self, value: float):
-        return self.storage.ionic_force_tolerance
+        self.storage.ionic_force_tolerance = value
 
     @property
     def ionic_energy_tolerance(self) -> float:
