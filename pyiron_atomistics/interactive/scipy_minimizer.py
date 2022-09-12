@@ -102,7 +102,7 @@ class ScipyMinimizer(InteractiveWrapper):
         self.ref_job.run(delete_existing_job=self._delete_existing_job)
         self.status.running = True
         if self.input.pressure is not None:
-            x0 = np.zeros(sum(np.asarray(self.input.pressure) != None))
+            x0 = np.zeros(sum(self.input.pressure != None))
             if not self.input.volume_only:
                 x0 = np.append(
                     x0, self.ref_job.structure.get_scaled_positions().flatten()
@@ -350,9 +350,12 @@ class ScipyMinimizerInput(HasStorage):
         self.storage.pressure_tolerance = value
 
     @property
-    def pressure(self) -> List[float]:
+    def pressure(self):
         """float: target pressure"""
-        return self.storage.pressure
+        if isinstance(self.storage.pressure, Iterable):
+            return np.asarray(self.storage.pressure)
+        else:
+            return self.storage.pressure
 
     @pressure.setter
     def pressure(self, value: Iterable[float]):
