@@ -52,7 +52,7 @@ class TestLammps(TestWithCleanProject):
 
     def tearDown(self) -> None:
         super().tearDown()
-        self.ref_project.remove_jobs_silently(recursive=True)  # cf. comment in setUp
+        self.ref_project.remove_jobs(recursive=True, silently=True)  # cf. comment in setUp
 
     def test_selective_dynamics(self):
         atoms = Atoms("Fe8", positions=np.zeros((8, 3)), cell=np.eye(3))

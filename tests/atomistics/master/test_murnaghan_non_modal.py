@@ -53,7 +53,7 @@ class TestMurnaghan(TestWithCleanProject):
         cls.basis = CrystalStructure(
             element="Fe", bravais_basis="bcc", lattice_constant=2.8
         )
-        cls.project.remove_jobs_silently(recursive=True)
+        cls.project.remove_jobs(recursive=True, silently=True)
         # cls.project.remove_jobs(recursive=True)
         # self.project.set_logging_level('INFO')
 
@@ -61,7 +61,7 @@ class TestMurnaghan(TestWithCleanProject):
     def tearDownClass(cls):
         file_location = os.path.dirname(os.path.abspath(__file__))
         project = Project(os.path.join(file_location, "testing_murnaghan_non_modal"))
-        project.remove_jobs_silently(recursive=True)
+        project.remove_jobs(recursive=True, silently=True)
         project.remove(enable=True, enforce=True)
 
     def test_run(self):
