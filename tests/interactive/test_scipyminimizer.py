@@ -16,7 +16,7 @@ class TestSxExtOptInteractive(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.project.remove_jobs_silently(recursive=True)
+        cls.project.remove_jobs(recursive=True, silently=True)
         cls.project.remove(enable=True, enforce=True)
 
     def test_run(self):
