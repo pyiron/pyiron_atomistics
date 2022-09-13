@@ -21,29 +21,46 @@ class TestSphinx(unittest.TestCase):
         job.structure = self.project.create_structure('Fe', 'bcc', self.a_Fe)
         job.calc_static()
         job.run()
-        if np.linalg.norm(job['output/generic/forces'])>1.0e-4:
-            raise ValueError('Forces wrong')
-        if np.linalg.norm(job.structure.positions-job['output/generic/positions'][-1])>1.0e-4:
-            raise ValueError('Positions not correctly parsed')
-        if np.linalg.norm(job.structure.cell-job['output/generic/cells'][-1])>1.0e-4:
-            raise ValueError('Cells not correctly parsed')
-        if 'atom_spins' in job['output/generic/dft'].list_nodes():
-            raise AssertionError('spins present')
-        if np.abs(job['output/generic/volume']-np.linalg.det(job.structure.cell)) > 1.0e-4:
-            raise ValueError('Volume wrong')
-        if np.linalg.norm(job.structure.positions-job['output/generic/positions'][0])>1.0e-4:
-            raise ValueError('Positions not parsed properly')
+        self.assertLess(
+            np.linalg.norm(job['output/generic/forces']),
+            1.0e-4,
+            'Forces wrong'
+        )
+        self.assertTrue(
+            np.allclose(
+                job.structure.positions,
+                job['output/generic/positions'][-1],
+            ),
+            'Positions not correctly parsed'
+        )
+        self.assertTrue(
+            np.allclose(
+                job.structure.cell,
+                job['output/generic/cells'][-1]
+            ),
+            'Cells not correctly parsed'
+        )
+        self.assertFalse(
+            'atom_spins' in job['output/generic/dft'].list_nodes(),
+            'spins present'
+        )
+        self.assertAlmostEqual(
+            job['output/generic/volume'][-1], np.linalg.det(job.structure.cell), 4, msg='Volume wrong'
+        )
+        self.assertTrue(
+            np.allclose(
+                job.structure.positions, job['output/generic/positions'][0]
+            ),
+            'Positions not parsed properly'
+        )
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Fe_ferro')
         job.structure = self.project.create_structure('Fe', 'bcc', self.a_Fe)
         job.structure.set_initial_magnetic_moments([2, 2])
         job.calc_static()
         job.run()
-        self.assertGreater(
-            np.diff([
-                self.project.load(job_name)['output/generic/energy_tot'][0]
-                for job_name in ['spx_Fe_ferro', 'spx_Fe_nonmag']]
-            )[0],
-            0,
+        self.assertLess(
+            self.project.load('spx_Fe_ferro')['output/generic/energy_tot'][0],
+            self.project.load('spx_Fe_nonmag')['output/generic/energy_tot'][0],
             'BCC Fe erromagnetic state has lower energy than nonmagnetic state'
         )
 
@@ -51,31 +68,38 @@ class TestSphinx(unittest.TestCase):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Fe_ferro_C')
         job.structure = self.project.create_structure('Fe', 'bcc', self.a_Fe)
         job.structure.set_initial_magnetic_moments([2, 2])
-        job.structure += self.project.create_atoms(elements=['C'], positions=[[0, 0, 0.5*self.a_Fe]], magmoms=[0])
+        job.structure += self.project.create_atoms(
+            elements=['C'], positions=[[0, 0, 0.5 * self.a_Fe]], magmoms=[0]
+        )
         job.calc_static()
         job.run()
-        if np.linalg.norm(job.structure.positions-job['output/generic/positions'][-1])>1.0e-4:
-            raise ValueError('Positions not correctly parsed')
+        self.assertTrue(
+            np.allclose(job.structure.positions, job['output/generic/positions'][-1]),
+            'Positions not correctly parsed'
+        )
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Al')
         job.structure = self.project.create_structure('Al', 'fcc', self.a_Al)
         job.calc_static()
         job.run()
         job = job.restart(from_charge_density=False, from_wave_functions=False)
         job.run()
-        if 'spx_Al_restart' not in list(self.project.job_table().job):
-            raise AssertionError('restart job not found')
-        if np.abs(self.project.load('spx_Al')['output/generic/energy_tot'][-1]-self.project.load('spx_Al_restart')['output/generic/energy_tot'][-1])>1.0e-3:
-            raise ValueError('Energy value after restart too different')
+        self.assertTrue(
+            'spx_Al_restart' in list(self.project.job_table().job), 'restart job not found'
+        )
+        self.assertAlmostEqual(
+            self.project.load('spx_Al')['output/generic/energy_tot'][-1],
+            self.project.load('spx_Al_restart')['output/generic/energy_tot'][-1],
+            msg='Energy value after restart too different'
+        )
 
     def test_Al_minimize(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Al_minimize')
         job.structure = self.project.create_structure('Al', 'fcc', self.a_Al)
-        job.structure.positions[0,0] += 0.01
+        job.structure.positions[0, 0] += 0.01
         job.calc_minimize()
         job.run()
         E = job['output/generic/energy_tot']
-        if E[0]-E[1]<0:
-            raise AssertionError('Energy not decreased')
+        self.assertGreater(E[0], E[1], 'Energy not decreased')
 
     def test_check_overlap(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_check_overlap')
@@ -83,19 +107,28 @@ class TestSphinx(unittest.TestCase):
         job.set_check_overlap(False)
         job.calc_static()
         job.run()
+
+    def test_symmetry(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_symmetry')
         job.structure = self.project.create_structure('Fe', 'bcc', 2.832)
         job.fix_symmetry = False
         job.calc_static()
         job.run()
+
+    def test_Fe_ferro_constraint(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Fe_ferro_constraint')
         job.structure = self.project.create_structure('Fe', 'bcc', self.a_Fe)
         job.structure.set_initial_magnetic_moments([2, 2])
         job.fix_spin_constraint = True
         job.calc_static()
         job.run()
-        if np.linalg.norm(job['output/generic/dft/atom_spins']-job.structure.get_initial_magnetic_moments())>1.0e-4:
-            raise AssertionError('Magnetic moments either not properly parsed or constraining not working')
+        self.assertTrue(
+            np.allclose(
+                job['output/generic/dft/atom_spins'],
+                job.structure.get_initial_magnetic_moments()
+            ),
+            'Magnetic moments either not properly parsed or constraining not working'
+        )
 
     def test_Al_save_memory(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Al_save_memory')
@@ -107,7 +140,7 @@ class TestSphinx(unittest.TestCase):
     def test_Al_interactive(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Al_interactive')
         job.structure = self.project.create_structure('Al', 'fcc', self.a_Al)
-        job.structure.positions[0,0] += 0.01
+        job.structure.positions[0, 0] += 0.01
         job.server.run_mode.interactive = True
         job.calc_static()
         minim = job.create_job(self.project.job_type.SxExtOptInteractive, 'sxextopt_Al')
@@ -134,6 +167,7 @@ class TestSphinx(unittest.TestCase):
         sxextopt.save()
         sxextopt = self.project.load('sxextopt_Fe')
         sxextopt.run()
+
 
 if __name__ == "__main__":
     unittest.main()
