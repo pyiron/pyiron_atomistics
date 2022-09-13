@@ -7,7 +7,6 @@ import posixpath
 
 import numpy as np
 import pandas
-import tables
 from pyiron_base import state, GenericParameters, deprecate
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
@@ -425,10 +424,7 @@ class Potcar(GenericParameters):
         object_list = self._structure.get_species_objects()
         state.logger.debug("element list: {0}".format(element_list))
         self.el_path_lst = list()
-        try:
-            xc = self.get("xc")
-        except tables.exceptions.NoSuchNodeError:
-            xc = self.get("xc")
+        xc = self.get("xc")
         state.logger.debug("XC: {0}".format(xc))
         for i, el_obj in enumerate(object_list):
             if isinstance(el_obj.Parent, str):

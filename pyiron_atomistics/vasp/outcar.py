@@ -68,6 +68,12 @@ class Outcar(object):
             filename=filename, lines=lines
         )
         elastic_constants = self.get_elastic_constants(filename=filename, lines=lines)
+        energy_components = self.get_energy_components(filename=filename, lines=lines)
+        cpu_time = self.get_cpu_time(filename=filename, lines=lines)
+        user_time = self.get_user_time(filename=filename, lines=lines)
+        system_time = self.get_system_time(filename=filename, lines=lines)
+        elapsed_time = self.get_elapsed_time(filename=filename, lines=lines)
+        memory_used = self.get_memory_used(filename=filename, lines=lines)
         try:
             (
                 irreducible_kpoints,
@@ -109,6 +115,14 @@ class Outcar(object):
         self.parse_dict["vbm_list"] = vbm_list
         self.parse_dict["cbm_list"] = cbm_list
         self.parse_dict["elastic_constants"] = elastic_constants
+        self.parse_dict["energy_components"] = energy_components
+        self.parse_dict["resources"] = {
+            "cpu_time": cpu_time,
+            "user_time": user_time,
+            "system_time": system_time,
+            "elapsed_time": elapsed_time,
+            "memory_used": memory_used,
+        }
         try:
             self.parse_dict["pressures"] = (
                 np.average(stresses[:, 0:3], axis=1) * KBAR_TO_EVA
@@ -143,6 +157,8 @@ class Outcar(object):
             "irreducible_kpoints",
             "irreducible_kpoint_weights",
             "number_plane_waves",
+            "energy_components",
+            "resources",
         ]
         with hdf.open(group_name) as hdf5_output:
             for key in self.parse_dict.keys():
@@ -785,6 +801,106 @@ class Outcar(object):
                 return float(line.split()[2])
 
     @staticmethod
+    def get_cpu_time(filename="OUTCAR", lines=None):
+        """
+        Returns the total CPU time in seconds
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: CPU time in seconds
+
+        """
+        nelect_trigger = "Total CPU time used (sec):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(line.split()[-1])
+
+    @staticmethod
+    def get_user_time(filename="OUTCAR", lines=None):
+        """
+        Returns the User time in seconds
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: User time in seconds
+
+        """
+        nelect_trigger = "User time (sec):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(line.split()[-1])
+
+    @staticmethod
+    def get_system_time(filename="OUTCAR", lines=None):
+        """
+        Returns the system time in seconds
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: system time in seconds
+
+        """
+        nelect_trigger = "System time (sec):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(line.split()[-1])
+
+    @staticmethod
+    def get_elapsed_time(filename="OUTCAR", lines=None):
+        """
+        Returns the elapsed time in seconds
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: elapsed time in seconds
+
+        """
+        nelect_trigger = "Elapsed time (sec):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(line.split()[-1])
+
+    @staticmethod
+    def get_memory_used(filename="OUTCAR", lines=None):
+        """
+        Returns the maximum memory used during the simulation in kB
+
+        Args:
+            filename (str): OUTCAR filename
+            lines (list/None): lines read from the file
+
+        Returns:
+            float: Maximum memory used in kB
+
+        """
+        nelect_trigger = "Maximum memory used (kb):"
+        lines = _get_lines_from_file(filename=filename, lines=lines)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if nelect_trigger in line:
+                return float(line.split()[-1])
+
+    @staticmethod
     def get_number_of_atoms(filename="OUTCAR", lines=None):
         """
         Returns the number of ions in the simulation
@@ -972,6 +1088,67 @@ class Outcar(object):
         except ValueError:
             warnings.warn("Unable to parse the cells from the OUTCAR file")
             return
+
+    @staticmethod
+    def get_energy_components(filename="OUTCAR", lines=None):
+        """
+        Gets the individual components of the free energy energy for every electronic step from the OUTCAR file
+
+        alpha Z        PSCENC =        -0.19957337
+        Ewald energy   TEWEN  =       -73.03212173
+        -Hartree energ DENC   =        -0.10933240
+        -exchange      EXHF   =         0.00000000
+        -V(xc)+E(xc)   XCENC  =       -26.17018410
+        PAW double counting   =       168.82497547     -136.88269783
+        entropy T*S    EENTRO =        -0.00827174
+        eigenvalues    EBANDS =        10.35379785
+        atomic energy  EATOM  =        53.53616173
+        Solvation  Ediel_sol  =         0.00000000
+
+        Args:
+            filename (str): Filename of the OUTCAR file to parse
+            lines (list/None): lines read from the file
+        Returns:
+            numpy.ndarray: A 1xM array of the total energies in $eV$
+            where M is the number of time steps
+        """
+        ind_ionic_lst, lines = _get_trigger(
+            trigger="FREE ENERGIE OF THE ION-ELECTRON SYSTEM (eV)",
+            filename=filename,
+            lines=lines,
+            return_lines=True,
+        )
+        ind_elec_lst = _get_trigger(
+            trigger="Free energy of the ion-electron system (eV)",
+            filename=None,
+            lines=lines,
+            return_lines=False,
+        )
+        ind_combo_lst = _split_indices(
+            ind_ionic_lst=ind_ionic_lst, ind_elec_lst=ind_elec_lst
+        )
+        try:
+            return [
+                np.array(
+                    [
+                        np.hstack(
+                            [
+                                float(lines[ind + i].split()[-1])
+                                if i != 7
+                                else [
+                                    float(lines[ind_lst[-1] + 7].split()[-2]),
+                                    float(lines[ind_lst[-1] + 7].split()[-1]),
+                                ]
+                                for i in range(2, 12)
+                            ]
+                        )
+                        for ind in ind_lst
+                    ]
+                ).T
+                for ind_lst in ind_combo_lst
+            ]
+        except ValueError:
+            return []
 
 
 def _clean_line(line):
