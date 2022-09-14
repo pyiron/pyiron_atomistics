@@ -45,7 +45,10 @@ class TestSphinx(unittest.TestCase):
             'spins present'
         )
         self.assertAlmostEqual(
-            job['output/generic/volume'][-1], np.linalg.det(job.structure.cell), 4, msg='Volume wrong'
+            job['output/generic/volume'][-1],
+            np.linalg.det(job.structure.cell),
+            4,
+            msg='Volume wrong'
         )
         self.assertTrue(
             np.allclose(
@@ -89,6 +92,7 @@ class TestSphinx(unittest.TestCase):
         self.assertAlmostEqual(
             self.project.load('spx_Al')['output/generic/energy_tot'][-1],
             self.project.load('spx_Al_restart')['output/generic/energy_tot'][-1],
+            4,
             msg='Energy value after restart too different'
         )
 
