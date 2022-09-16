@@ -1,7 +1,7 @@
 from typing import Union, List
 from mp_api import MPRester
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
-from pyiron_atomistics.atomistics.structure.atoms import pymatgen_to_pyiron
+from pyiron_atomistics.atomistics.structure.atoms import pymatgen_to_pyiron, Atoms
 
 class MPQueryResults(HasStructure):
 
@@ -41,7 +41,7 @@ class MaterialsProjectFactory:
     """
 
     @staticmethod
-    def search(chemsys: Union[str, List[str]], api_key=None, **kwargs):
+    def search(chemsys: Union[str, List[str]], api_key=None, **kwargs) -> MPQueryResults:
         """
         Search the database for all structures matching the given query.
 
@@ -76,6 +76,9 @@ class MaterialsProjectFactory:
             symbols seperated by dashes; if a list of strings is given return structures matching either of them
             api_key (str, optional): if your API key is not exported in the environment flag MP_API_KEY, pass it here
             **kwargs: passed verbatim to :meth:`mp_api.MPRester.summary.search` to further filter the results
+
+        Returns:
+            :class:`~.MPQueryResults`: resulting structures from the query
         """
         rest_kwargs = {
                 "use_document_model": False, # returns results as dictionaries
@@ -88,7 +91,7 @@ class MaterialsProjectFactory:
         return MPQueryResults(results)
 
     @staticmethod
-    def by_id(material_id: Union[str, int], api_key=None):
+    def by_id(material_id: Union[str, int], api_key=None) -> Atoms:
         """
         Retrieve a structure by material id.
 
