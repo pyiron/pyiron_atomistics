@@ -1809,7 +1809,7 @@ class Atoms(ASEAtoms):
             symprec=symprec, angle_tolerance=angle_tolerance
         ).refine_cell()
 
-    @deprecate("Use structure.get_symmetry().primitive_cell instead")
+    @deprecate("Use structure.get_symmetry().get_primitive_cell(standardize=False) instead")
     def get_primitive_cell(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
