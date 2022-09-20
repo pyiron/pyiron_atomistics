@@ -1,7 +1,8 @@
 from typing import Union, List
-from mp_api import MPRester
+from mp_api.client import MPRester
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_atomistics.atomistics.structure.atoms import pymatgen_to_pyiron, Atoms
+
 
 class MPQueryResults(HasStructure):
 
@@ -28,6 +29,7 @@ class MPQueryResults(HasStructure):
 
     def _number_of_structures(self):
         return len(self._results)
+
 
 class MaterialsProjectFactory:
     """
