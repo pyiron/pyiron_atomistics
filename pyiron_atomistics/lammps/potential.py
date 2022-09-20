@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from __future__ import print_function
+from __future__ import print_function, annotations
 import pandas as pd
 import shutil
 import os
@@ -11,6 +11,8 @@ from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
     find_potential_file_base,
 )
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from typing import List
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -303,3 +305,41 @@ class PotentialAvailable(object):
 
     def __repr__(self):
         return str(dir(self))
+
+
+def view_potentials(structure: Atoms) -> pd.DataFrame:
+    """
+    List all interatomic potentials for the given atomistic structure including all potential parameters.
+
+    To quickly get only the names of the potentials you can use `list_potentials()` instead.
+
+    Args:
+        structure (Atoms): The structure for which to get potentials.
+
+    Returns:
+        pandas.Dataframe: Dataframe including all potential parameters.
+    """
+    list_of_elements = set(structure.get_chemical_symbols())
+    list_of_potentials = LammpsPotentialFile().find(list_of_elements)
+    if list_of_potentials is not None:
+        return list_of_potentials
+    else:
+        raise TypeError(
+            "No potentials found for this kind of structure: ",
+            str(list_of_elements),
+        )
+
+
+def list_potentials(structure: Atoms) -> List[str]:
+    """
+    List of interatomic potentials suitable for the given atomic structure.
+
+    See `view_potentials` to get more details.
+
+    Args:
+        structure (Atoms): The structure for which to get potentials.
+
+    Returns:
+        list: potential names
+    """
+    return list(view_potentials(structure)["Name"].values)

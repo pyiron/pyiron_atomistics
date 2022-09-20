@@ -345,19 +345,9 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
             pandas.Dataframe: Dataframe including all potential parameters.
         """
-        from pyiron_atomistics.lammps.potential import LammpsPotentialFile
-
         if not self.structure:
             raise ValueError("No structure set.")
-        list_of_elements = set(self.structure.get_chemical_symbols())
-        list_of_potentials = LammpsPotentialFile().find(list_of_elements)
-        if list_of_potentials is not None:
-            return list_of_potentials
-        else:
-            raise TypeError(
-                "No potentials found for this kind of structure: ",
-                str(list_of_elements),
-            )
+        return view_potentials(self.structure)
 
     def list_potentials(self):
         """
@@ -368,7 +358,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
             list: potential names
         """
-        return list(self.view_potentials()["Name"].values)
+        return list_potentials(self.structure)
 
     def enable_h5md(self):
         """
