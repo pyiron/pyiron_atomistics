@@ -32,7 +32,9 @@ from pyiron_atomistics.atomistics.structure.factories.atomsk import (
 )
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
 from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
-from pyiron_atomistics.atomistics.structure.factories.materialsproject import MaterialsProjectFactory
+from pyiron_atomistics.atomistics.structure.factories.materialsproject import (
+    MaterialsProjectFactory,
+)
 from pyiron_atomistics.atomistics.structure.pyironase import (
     publication as publication_ase,
 )

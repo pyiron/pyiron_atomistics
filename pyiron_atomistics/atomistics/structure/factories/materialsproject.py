@@ -5,7 +5,6 @@ from pyiron_atomistics.atomistics.structure.atoms import pymatgen_to_pyiron, Ato
 
 
 class MPQueryResults(HasStructure):
-
     def __init__(self, results):
         """
 
@@ -43,7 +42,9 @@ class MaterialsProjectFactory:
     """
 
     @staticmethod
-    def search(chemsys: Union[str, List[str]], api_key=None, **kwargs) -> MPQueryResults:
+    def search(
+        chemsys: Union[str, List[str]], api_key=None, **kwargs
+    ) -> MPQueryResults:
         """
         Search the database for all structures matching the given query.
 
@@ -83,13 +84,15 @@ class MaterialsProjectFactory:
             :class:`~.MPQueryResults`: resulting structures from the query
         """
         rest_kwargs = {
-                "use_document_model": False, # returns results as dictionaries
-                "include_user_agent": True,  # send some additional software version info to MP
+            "use_document_model": False,  # returns results as dictionaries
+            "include_user_agent": True,  # send some additional software version info to MP
         }
         if api_key is not None:
             rest_kwargs["api_key"] = api_key
         with MPRester(**rest_kwargs) as mpr:
-            results = mpr.summary.search(chemsys=chemsys, **kwargs, fields=["structure", "material_id"])
+            results = mpr.summary.search(
+                chemsys=chemsys, **kwargs, fields=["structure", "material_id"]
+            )
         return MPQueryResults(results)
 
     @staticmethod
@@ -120,7 +123,7 @@ class MaterialsProjectFactory:
             ValueError: material id does not exist
         """
         rest_kwargs = {
-                "include_user_agent": True,  # send some additional software version info to MP
+            "include_user_agent": True,  # send some additional software version info to MP
         }
         if api_key is not None:
             rest_kwargs["api_key"] = api_key
