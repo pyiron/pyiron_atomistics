@@ -86,6 +86,7 @@ class VaspBase(GenericDFTJob):
         self._potential = VaspPotentialSetter([])
         self._compress_by_default = True
         self.get_enmax_among_species = get_enmax_among_potentials
+        self._allow_structure_reordering = True
         state.publications.add(self.publication)
 
     @property
@@ -112,6 +113,23 @@ class VaspBase(GenericDFTJob):
             self._potential = VaspPotentialSetter(
                 element_lst=structure.get_species_symbols().tolist()
             )
+
+    @property
+    def allow_structure_reordering(self) -> bool:
+        """
+        True if the POSCAR file input is allowed to have its atomic order optimised by pyiron to minimise POTCAR sizing
+        e.g. Pyiron default behaviour is to do (Fe 37 Al 1 Fe 38) -> (Fe 75 Al 1), minimising input POTCAR size
+        Set False when OUTCAR output which is not parsed is important for your workflow,
+        or atomic ordering in the intermediate project output is important to your workflow.
+
+        Returns:
+            bool
+        """
+        return self.input.allow_structure_reordering
+
+    @allow_structure_reordering.setter
+    def allow_structure_reordering(self, val: bool):
+        self.input.allow_structure_reordering = val
 
     @property
     def potential(self):
@@ -1842,6 +1860,20 @@ class Input:
         self.potcar = Potcar(table_name="potcar")
 
         self._eddrmm = "warn"
+        self._allow_structure_reordering = True
+
+    @property
+    def allow_structure_reordering(self) -> bool:
+        """
+
+        Returns:
+            bool
+        """
+        return self.input.allow_structure_reordering
+
+    @allow_structure_reordering.setter
+    def allow_structure_reordering(self, val: bool):
+        self.input.allow_structure_reordering = val
 
     def write(self, structure, modified_elements, directory=None):
         """
@@ -1867,6 +1899,7 @@ class Input:
             structure,
             filename=posixpath.join(directory, "POSCAR"),
             write_species=not do_not_write_species,
+            allow_reordering=not self.allow_structure_reordering
         )
 
     def to_hdf(self, hdf):
