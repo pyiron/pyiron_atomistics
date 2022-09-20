@@ -380,7 +380,7 @@ class StructurePlots:
                 return "trigonal"
             elif num in range(168, 195):
                 return "hexagonal"
-            elif num in range(195, 230):
+            elif num in range(195, 231):
                 return "cubic"
 
         def extract(s):
