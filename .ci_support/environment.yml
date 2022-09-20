@@ -22,3 +22,4 @@ dependencies:
 - scikit-learn =1.1.2
 - spglib =2.0.1
 - ipywidgets < 8
+- mp-api =0.27.3
