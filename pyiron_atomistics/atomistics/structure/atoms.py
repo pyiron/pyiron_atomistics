@@ -1809,7 +1809,9 @@ class Atoms(ASEAtoms):
             symprec=symprec, angle_tolerance=angle_tolerance
         ).refine_cell()
 
-    @deprecate("Use structure.get_symmetry().get_primitive_cell(standardize=False) instead")
+    @deprecate(
+        "Use structure.get_symmetry().get_primitive_cell(standardize=False) instead"
+    )
     def get_primitive_cell(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1822,7 +1824,7 @@ class Atoms(ASEAtoms):
         """
         return self.get_symmetry(
             symprec=symprec, angle_tolerance=angle_tolerance
-        ).primitive_cell
+        ).get_primitive_cell(standardize=False)
 
     @deprecate("Use structure.get_symmetry().get_ir_reciprocal_mesh() instead")
     def get_ir_reciprocal_mesh(
@@ -1954,7 +1956,7 @@ class Atoms(ASEAtoms):
         if mic:
             distance, d_len = find_mic(distance, self.cell, self.pbc)
         else:
-            d_len = np.array([np.sqrt((distance**2).sum())])
+            d_len = np.array([np.sqrt((distance ** 2).sum())])
         if vector:
             return distance[0]
 
