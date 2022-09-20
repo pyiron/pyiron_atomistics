@@ -1956,7 +1956,7 @@ class Atoms(ASEAtoms):
         if mic:
             distance, d_len = find_mic(distance, self.cell, self.pbc)
         else:
-            d_len = np.array([np.sqrt((distance ** 2).sum())])
+            d_len = np.array([np.sqrt((distance**2).sum())])
         if vector:
             return distance[0]
 
