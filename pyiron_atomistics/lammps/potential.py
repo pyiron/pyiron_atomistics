@@ -320,14 +320,7 @@ def view_potentials(structure: Atoms) -> pd.DataFrame:
         pandas.Dataframe: Dataframe including all potential parameters.
     """
     list_of_elements = set(structure.get_chemical_symbols())
-    list_of_potentials = LammpsPotentialFile().find(list_of_elements)
-    if list_of_potentials is not None:
-        return list_of_potentials
-    else:
-        raise TypeError(
-            "No potentials found for this kind of structure: ",
-            str(list_of_elements),
-        )
+    return LammpsPotentialFile().find(list_of_elements)
 
 
 def list_potentials(structure: Atoms) -> List[str]:
