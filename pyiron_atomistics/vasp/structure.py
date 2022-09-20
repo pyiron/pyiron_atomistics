@@ -79,7 +79,7 @@ def get_species_list_from_potcar(filename="POTCAR"):
     return species_list
 
 
-def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=True):
+def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=True, allow_reordering=True):
     """
     Writes a POSCAR type file from a structure object
 
@@ -108,23 +108,31 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
             selec_dyn = True
             cartesian = False
             f.write("Selective dynamics" + endline)
-        sorted_coords = list()
+        coords = list()
         selec_dyn_lst = list()
-        for species in atom_numbers.keys():
-            indices = structure.select_index(species)
-            for i in indices:
-                if cartesian:
-                    sorted_coords.append(structure.positions[i])
-                else:
-                    sorted_coords.append(structure.get_scaled_positions()[i])
-                if selec_dyn:
-                    selec_dyn_lst.append(structure.selective_dynamics[i])
+        if allow_reordering:
+            for species in atom_numbers.keys():
+                indices = structure.select_index(species)
+                for i in indices:
+                    if cartesian:
+                        coords.append(structure.positions[i])
+                    else:
+                        coords.append(structure.get_scaled_positions()[i])
+                    if selec_dyn:
+                        selec_dyn_lst.append(structure.selective_dynamics[i])
+        else:
+            if cartesian:
+                coords = structure.positions
+            else:
+                coords = structure.get_scaled_positions()
+            if selec_dyn:
+                selec_dyn_lst = structure.selective_dynamics
         if cartesian:
             f.write("Cartesian" + endline)
         else:
             f.write("Direct" + endline)
         if selec_dyn:
-            for i, vec in enumerate(sorted_coords):
+            for i, vec in enumerate(coords):
                 x, y, z = vec
                 sd_string = " ".join(["T" if sd else "F" for sd in selec_dyn_lst[i]])
                 f.write(
@@ -134,7 +142,7 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
                     + endline
                 )
         else:
-            for i, vec in enumerate(sorted_coords):
+            for i, vec in enumerate(coords):
                 x, y, z = vec
                 f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
 
