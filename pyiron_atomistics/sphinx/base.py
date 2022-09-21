@@ -1860,7 +1860,7 @@ class InputWriter(object):
                     spins = self.structure.get_initial_magnetic_moments()[
                         self.id_pyi_to_spx
                     ].astype(str)
-                    spins[~np.asarray(constraint)] = "X"
+                    spins[~np.asarray([bool(c) for c in constraint])] = "X"
                     spins_str = "\n".join(spins) + "\n"
         if spins_str is not None:
             if cwd is not None:
