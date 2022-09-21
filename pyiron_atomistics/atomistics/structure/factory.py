@@ -32,6 +32,9 @@ from pyiron_atomistics.atomistics.structure.factories.atomsk import (
 )
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
 from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
+from pyiron_atomistics.atomistics.structure.factories.materialsproject import (
+    MaterialsProjectFactory,
+)
 from pyiron_atomistics.atomistics.structure.pyironase import (
     publication as publication_ase,
 )
@@ -67,6 +70,7 @@ class StructureFactory(PyironFactory):
         if _ATOMSK_EXISTS:
             self._atomsk = AtomskFactory()
         self._aimsgb = AimsgbFactory()
+        self._materialsproject = MaterialsProjectFactory()
         self._compound = CompoundFactory()
 
     @property
@@ -595,3 +599,7 @@ class StructureFactory(PyironFactory):
         slab.positions[:, 2] = slab.positions[:, 2] - np.min(slab.positions[:, 2])
         slab.set_pbc(True)
         return slab
+
+    @property
+    def materialsproject(self):
+        return self._materialsproject
