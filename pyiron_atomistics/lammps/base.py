@@ -15,7 +15,12 @@ from io import StringIO
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict
 
-from pyiron_atomistics.lammps.potential import LammpsPotentialFile, PotentialAvailable, view_potentials, list_potentials
+from pyiron_atomistics.lammps.potential import (
+    LammpsPotentialFile,
+    PotentialAvailable,
+    view_potentials,
+    list_potentials,
+)
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
