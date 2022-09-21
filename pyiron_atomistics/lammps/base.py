@@ -644,7 +644,13 @@ class LammpsBase(AtomisticGenericJob):
                         read_thermo = True
                         thermo_lines += l
 
-                dfs.append(pd.read_csv(StringIO(thermo_lines), delim_whitespace=True))
+                dfs.append(
+                    pd.read_csv(
+                        StringIO(thermo_lines),
+                        sep="\s+",
+                        engine="c",
+                    )
+                )
 
             if len(dfs) == 1:
                 df = dfs[0]
