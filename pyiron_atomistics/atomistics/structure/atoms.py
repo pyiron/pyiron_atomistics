@@ -483,7 +483,8 @@ class Atoms(ASEAtoms):
 
             # hdf_structure["coordinates"] = self.positions  # "Atomic coordinates"
             hdf_structure["positions"] = self.positions  # "Atomic coordinates"
-            hdf_structure["spins"] = self.spins
+            if self.has("initial_magmoms"):
+                hdf_structure["spins"] = self.spins
             # potentials with explicit bonds (TIP3P, harmonic, etc.)
             if self.bonds is not None:
                 hdf_structure["explicit_bonds"] = self.bonds
