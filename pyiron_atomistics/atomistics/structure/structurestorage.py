@@ -208,7 +208,7 @@ class StructureStorage(FlattenedStorage, HasStructure):
             **kwargs: additional arrays to store for structure
         """
 
-        if structure.spins is not None:
+        if structure.has("initial_magmoms"):
             arrays["spins"] = structure.spins
         if "selective_dynamics" in structure.get_tags():
             arrays["selective_dynamics"] = getattr(

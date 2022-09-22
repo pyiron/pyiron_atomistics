@@ -71,7 +71,8 @@ class TestAtoms(unittest.TestCase):
         self.assertIsInstance(basis, Atoms)
         self.assertEqual(basis.get_spacegroup()["Number"], 225)
         basis = Atoms(elements="Al", positions=pos, cell=cell)
-        self.assertIsNone(basis.spins)
+        with self.assertRaises(AttributeError):
+            basis.spins
         self.assertIsInstance(basis, Atoms)
         basis = Atoms(elements=["Al"], positions=pos, cell=cell, magmoms=[4])
         self.assertTrue(np.array_equal(basis.arrays["initial_magmoms"], [4]))
@@ -514,8 +515,6 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(np.allclose(basis.spins, np.ones((len(basis), 3))))
         basis = basis[10: 30]
         self.assertTrue(np.allclose(basis.spins, np.ones((len(basis), 3))))
-        basis.spins = None
-        self.assertIsNone(basis.spins)
         basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2, pbc=True)
         basis.spins = [4]
         self.assertTrue(np.allclose(basis.arrays["initial_magmoms"], [4]))
