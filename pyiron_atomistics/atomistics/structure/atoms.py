@@ -11,6 +11,7 @@ from collections import OrderedDict
 import numpy as np
 import warnings
 import seekpath
+import importlib
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
@@ -597,7 +598,7 @@ class Atoms(ASEAtoms):
                     class_path = calc_dict.pop("class")
                     calc_module = importlib.import_module(".".join(class_path.split(".")[:-1]))
                     calc_class = getattr(calc_module, class_path.split(".")[-1])
-                    self.calc = calc_module(**calc_dict)
+                    self.calc = calc_class(**calc_dict)
                 return self
 
         else:
