@@ -137,8 +137,10 @@ class TestContainer(TestWithProject):
         fe.set_initial_magnetic_moments(spins)
         cont.add_structure(fe, "iron_spins")
         fe_read = cont.get_structure("iron_spins")
-        self.assertTrue(fe_read.spins is not None,
-                        "Spins not restored on added structure.")
+        try:
+            fe_read.spins
+        except AttributeError:
+            self.fail("Spins not restored on added structure.")
         self.assertTrue(np.allclose(spins, fe_read.spins),
                         f"Spins restored on added structure not equal to original spins: {spins} {fe_read.spins}.")
 
@@ -148,8 +150,10 @@ class TestContainer(TestWithProject):
         fe.set_initial_magnetic_moments(spins)
         cont.add_structure(fe, "iron_spins")
         fe_read = cont.get_structure("iron_spins")
-        self.assertTrue(fe_read.spins is not None,
-                        "Spins not restored on added structure.")
+        try:
+            fe_read.spins
+        except AttributeError:
+            self.fail("Spins not restored on added structure.")
         self.assertTrue(np.allclose(spins, fe_read.spins),
                         f"Spins restored on added structure not equal to original spins: {spins} {fe_read.spins}.")
 
