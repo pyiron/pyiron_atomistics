@@ -17,6 +17,7 @@ from pyiron_base import ProjectHDFio, Project
 from ase.cell import Cell as ASECell
 from ase.atoms import Atoms as ASEAtoms
 from ase.build import molecule
+from ase.calculators.morse import MorsePotential
 
 
 class TestAtoms(unittest.TestCase):
@@ -1605,6 +1606,21 @@ class TestAtoms(unittest.TestCase):
         # check that again with three elements
         self.assertGreater(dt65 / dt76, expected_speedup_factor,
                             "Atom creation not speed up to the required level by caches!")
+
+    def test_calc_to_hdf(self):
+        """Calculators set on the structure should be properly reloaded after reading from HDF."""
+        structure = self.CO2.copy()
+        structure.calc = MorsePotential(epsilon=2, r0=2)
+        structure.to_hdf(hdf=self.hdf_obj, group_name="structure_w_calc")
+        read_structure = self.hdf_obj["structure_w_calc"].to_object()
+        for k in structure.calc.parameters:
+            self.assertEqual(
+                    structure.calc.parameters[k],
+                    read_structure.calc.parameters[k],
+                    msg=f"Calculator parameter {k} not correctly restored from HDF!"
+            )
+
+
 
 
 def generate_fcc_lattice(a=4.2):

@@ -501,9 +501,9 @@ class Atoms(ASEAtoms):
                 calc_dict = self.calc.todict()
                 calc_dict["label"] = self.calc.label
                 calc_dict["class"] = (
-                    self.calc.__class__.__module__ + self.calc.__clas__.__name__
+                    self.calc.__class__.__module__ + "." + self.calc.__class__.__name__
                 )
-                hdf_structure["calculator"]
+                hdf_structure["calculator"] = calc_dict
 
     def from_hdf(self, hdf, group_name="structure"):
         """
