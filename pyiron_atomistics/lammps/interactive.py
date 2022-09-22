@@ -554,11 +554,15 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             positions = np.matmul(positions, self._prism.R)
         positions = positions.flatten()
         try:
-            elem_all = np.array([el_dict[el] for el in structure.get_chemical_elements()])
+            elem_all = np.array(
+                [el_dict[el] for el in structure.get_chemical_elements()]
+            )
         except KeyError:
             missing = set(structure.get_chemical_elements()).difference(el_dict.keys())
-            missing = ', '.join([el.Abbreviation for el in missing])
-            raise ValueError(f"Structure contains elements [{missing}], that are not present in the potential!")
+            missing = ", ".join([el.Abbreviation for el in missing])
+            raise ValueError(
+                f"Structure contains elements [{missing}], that are not present in the potential!"
+            )
         if self.server.run_mode.interactive and self.server.cores == 1:
             self._interactive_library.create_atoms(
                 n=len(structure),
