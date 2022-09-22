@@ -458,7 +458,6 @@ class Atoms(ASEAtoms):
         """
         # import time
         with hdf.open(group_name) as hdf_structure:
-            # time_start = time.time()
             hdf_structure["TYPE"] = str(type(self))
             for el in self.species:
                 if isinstance(el.tags, dict):
@@ -488,8 +487,6 @@ class Atoms(ASEAtoms):
             # potentials with explicit bonds (TIP3P, harmonic, etc.)
             if self.bonds is not None:
                 hdf_structure["explicit_bonds"] = self.bonds
-
-            # print ('time in atoms.to_hdf: ', time.time() - time_start)
 
             if self._high_symmetry_points is not None:
                 hdf_structure["high_symmetry_points"] = self._high_symmetry_points
