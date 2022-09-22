@@ -13,7 +13,7 @@ from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import element, PeriodicTable, ChemicalElement
-from pyiron_base import FileHDFio, ProjectHDFio, Project
+from pyiron_base import ProjectHDFio, Project
 from ase.cell import Cell as ASECell
 from ase.atoms import Atoms as ASEAtoms
 from ase.build import molecule
@@ -42,6 +42,16 @@ class TestAtoms(unittest.TestCase):
         cls.C3 = Atoms([C, C, C], positions=[[0, 0, 0], [0, 0, 2], [0, 2, 0]])
         cls.C2 = Atoms(2 * [Atom("C")])
         cls.struct_factory = StructureFactory()
+
+        filename = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "../../static/atomistics",
+        )
+        abs_filename = os.path.abspath(filename)
+        cls.hdf_obj = ProjectHDFio(
+            project=Project(abs_filename),
+            file_name="test.h5"
+        )
 
     def setUp(self):
         # These atoms are reset before every test.
@@ -206,38 +216,26 @@ class TestAtoms(unittest.TestCase):
         )
 
     def test_to_hdf(self):
-        filename = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "../../static/atomistics/test_hdf",
-        )
-        abs_filename = os.path.abspath(filename)
-        hdf_obj = FileHDFio(abs_filename)
         pos, cell = generate_fcc_lattice()
         basis = Atoms(symbols="Al", positions=pos, cell=cell, magmoms=[4])
         basis.set_repeat([2, 2, 2])
         self.assertTrue(np.array_equal(basis.spins, [4] * len(basis)))
-        basis.to_hdf(hdf_obj, "test_structure")
+        basis.to_hdf(self.hdf_obj, "test_structure")
         self.assertTrue(
-            np.array_equal(hdf_obj["test_structure/positions"], basis.positions)
+            np.array_equal(self.hdf_obj["test_structure/positions"], basis.positions)
         )
-        basis_new = Atoms().from_hdf(hdf_obj, "test_structure")
+        basis_new = Atoms().from_hdf(self.hdf_obj, "test_structure")
         self.assertTrue(np.array_equal(basis_new.spins, [4] * len(basis_new)))
         self.assertEqual(basis, basis_new)
 
     def test_from_hdf(self):
-        filename = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "../../static/atomistics/test_hdf",
-        )
-        abs_filename = os.path.abspath(filename)
-        hdf_obj = FileHDFio(abs_filename)
         pos, cell = generate_fcc_lattice()
         basis_store = Atoms(symbols="Al", positions=pos, cell=cell)
         basis_store.set_repeat([2, 2, 2])
         basis_store.add_tag(selective_dynamics=[False, False, False])
         basis_store.selective_dynamics[7] = [True, True, True]
-        basis_store.to_hdf(hdf_obj, "simple_structure")
-        basis = Atoms().from_hdf(hdf_obj, group_name="simple_structure")
+        basis_store.to_hdf(self.hdf_obj, "simple_structure")
+        basis = Atoms().from_hdf(self.hdf_obj, group_name="simple_structure")
         self.assertEqual(len(basis), 8)
         self.assertEqual(basis.get_majority_species()["symbol"], "Al")
         self.assertEqual(basis.get_spacegroup()["Number"], 225)
@@ -249,20 +247,11 @@ class TestAtoms(unittest.TestCase):
         self.assertFalse(basis.selective_dynamics[5][0])
 
     def test_to_object(self):
-        filename = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "../../static/atomistics",
-        )
-        abs_filename = os.path.abspath(filename)
-        hdf_obj = ProjectHDFio(
-            project=Project(abs_filename),
-            file_name="test.h5"
-        )
         pos, cell = generate_fcc_lattice()
         basis_store = Atoms(symbols="Al", positions=pos, cell=cell)
         basis_store.set_repeat([2, 2, 2])
-        basis_store.to_hdf(hdf_obj, "simple_structure")
-        basis = hdf_obj["simple_structure"].to_object()
+        basis_store.to_hdf(self.hdf_obj, "simple_structure")
+        basis = self.hdf_obj["simple_structure"].to_object()
         self.assertEqual(len(basis), 8)
         self.assertEqual(basis.get_majority_species()["symbol"], "Al")
         self.assertEqual(basis.get_spacegroup()["Number"], 225)
