@@ -18,8 +18,8 @@ __status__ = "development"
 __date__ = "Sep 1, 2018"
 
 with ImportAlarm(
-        "Gpaw relies on the gpaw module but this is unavailable. Please ensure your python environment contains gpaw, "
-        "e.g. by running `conda install -c conda-forge gpaw`."
+    "Gpaw relies on the gpaw module but this is unavailable. Please ensure your python environment contains gpaw, "
+    "e.g. by running `conda install -c conda-forge gpaw`."
 ) as import_alarm:
     from gpaw import GPAW as GPAWcode, PW, MethfesselPaxton
 
