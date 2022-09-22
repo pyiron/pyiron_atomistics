@@ -243,7 +243,7 @@ class Atoms(ASEAtoms):
         if self.has("initial_magmoms"):
             return self.arrays["initial_magmoms"]
         else:
-            return
+            raise AttributeError("'Atoms' object has no attribute 'spins'")
 
     @spins.setter
     def spins(self, val):
@@ -2544,7 +2544,7 @@ class Atoms(ASEAtoms):
                 else:
                     return np.array([float(spin) if spin else 0.0 for spin in spin_lst])
             else:
-                return np.array([None] * len(self))
+                return np.zeros(len(self))
 
     def set_initial_magnetic_moments(self, magmoms=None):
         """
