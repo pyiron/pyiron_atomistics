@@ -448,11 +448,10 @@ class StructurePlots:
                 "shells": self._store["shells"],
             }
         # check that _store and _neigh are still consistent
-        cur_neighbors = self._neigh.has_array("distances")["shape"][0]
         if (
             self._neigh is None
             or len(self._store) != len(self._neigh)
-            or (num_neighbors is None or cur_neighbors != num_neighbors)
+            or (num_neighbors is None or self._neigh.has_array("distances")["shape"][0] != num_neighbors)
         ):
             if num_neighbors is None:
                 num_neighbors = 36
