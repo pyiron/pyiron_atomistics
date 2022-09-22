@@ -1827,36 +1827,33 @@ class InputWriter(object):
                 given the default input will be written. (optional)
         """
         state.logger.debug(f"Writing {file_name}")
-        spins_str = None
-        if spins_list is None or len(spins_list) == 0:
-            state.logger.debug(
-                "Getting magnetic moments via \
-                get_initial_magnetic_moments"
-            )
-            if self.structure.has("initial_magmoms"):
-                if any(
-                    [
-                        True
-                        if isinstance(spin, list) or isinstance(spin, np.ndarray)
-                        else False
-                        for spin in self.structure.get_initial_magnetic_moments()
-                    ]
-                ):
-                    raise ValueError(
-                        "SPHInX only supports collinear spins at the moment."
-                    )
-                else:
-                    constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
-                    spins = self.structure.get_initial_magnetic_moments()[
-                        self.id_pyi_to_spx
-                    ].astype(str)
-                    spins[~np.asarray([bool(c) for c in constraint])] = "X"
-                    spins_str = "\n".join(spins) + "\n"
-        if spins_str is not None:
-            if cwd is not None:
-                file_name = posixpath.join(cwd, file_name)
-            with open(file_name, "w") as f:
-                f.write(spins_str)
+        state.logger.debug(
+            "Getting magnetic moments via \
+            get_initial_magnetic_moments"
+        )
+        if self.structure.has("initial_magmoms"):
+            if any(
+                [
+                    True
+                    if isinstance(spin, list) or isinstance(spin, np.ndarray)
+                    else False
+                    for spin in self.structure.get_initial_magnetic_moments()
+                ]
+            ):
+                raise ValueError(
+                    "SPHInX only supports collinear spins at the moment."
+                )
+            else:
+                constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
+                if spins_list is None or len(spins_list) == 0:
+                    spins_list = self.structure.get_initial_magnetic_moments()
+                spins = spins_list[self.id_pyi_to_spx].astype(str)
+                spins[~np.asarray(constraint)] = "X"
+                spins_str = "\n".join(spins) + "\n"
+                if cwd is not None:
+                    file_name = posixpath.join(cwd, file_name)
+                with open(file_name, "w") as f:
+                    f.write(spins_str)
         else:
             state.logger.debug("No magnetic moments")
 
