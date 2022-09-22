@@ -1827,6 +1827,7 @@ class InputWriter(object):
                 given the default input will be written. (optional)
         """
         state.logger.debug(f"Writing {file_name}")
+        spins_str = None
         if spins_list is None or len(spins_list) == 0:
             state.logger.debug(
                 "Getting magnetic moments via \
