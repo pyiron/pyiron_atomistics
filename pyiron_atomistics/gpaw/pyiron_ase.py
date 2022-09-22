@@ -8,7 +8,7 @@ import copy
 import importlib
 import numpy as np
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
-from pyiron_atomistics.atomistics.structure.atoms import pyiron_to_ase, ase_to_pyiron, Atoms as PAtoms
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron, Atoms as PAtoms
 
 try:
     from ase.cell import Cell
@@ -96,6 +96,7 @@ def ase_structure_fromdict(atoms_dict):
 class AseJob(GenericInteractive):
     def __init__(self, project, job_name):
         super(AseJob, self).__init__(project, job_name)
+        self._ase_structure = None
 
         self.__version__ = (
             None  # Reset the version number to the executable is set automatically
@@ -103,18 +104,34 @@ class AseJob(GenericInteractive):
 
     @property
     def structure(self):
-        return ase_to_pyiron(GenericInteractive.structure.fget(self))
+        return GenericInteractive.structure.fget(self)
 
     @structure.setter
     def structure(self, structure):
+        if isinstance(structure, Atoms) and not isinstance(structure, PAtoms):
+            self._ase_structure = structure
+            structure = ase_to_pyiron(structure)
         if isinstance(structure, PAtoms):
-            structure = pyiron_to_ase(structure)
+            self._ase_structure = structure.to_ase()
+        GenericInteractive.structure.fset(self, structure)
+
+    @property
+    def ase_structure(self):
+        return self._ase_structure
+
+    @ase_structure.setter
+    def ase_structure(self, structure):
+        if isinstance(structure, Atoms) and not isinstance(structure, PAtoms):
+            self._ase_structure = structure
+            structure = ase_to_pyiron(structure)
+        if isinstance(structure, PAtoms):
+            self._ase_structure = structure.to_ase()
         GenericInteractive.structure.fset(self, structure)
 
     def to_hdf(self, hdf=None, group_name=None):
         super(AseJob, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf_input:
-            hdf_input["structure"] = ase_structure_todict(self._structure)
+            hdf_input["structure"] = ase_structure_todict(self.ase_structure)
 
     def from_hdf(self, hdf=None, group_name=None):
         super(AseJob, self).from_hdf(hdf=hdf, group_name=group_name)
@@ -129,7 +146,7 @@ class AseJob(GenericInteractive):
         self.server.run_mode = pre_run_mode
 
     def run_if_interactive(self):
-        if self.structure.calc is None:
+        if self.ase_structure.calc is None:
             self.set_calculator()
         super(AseJob, self).run_if_interactive()
         self.interactive_collect()
@@ -140,14 +157,15 @@ class AseJob(GenericInteractive):
         )
 
     def interactive_structure_setter(self, structure):
-        self.structure.calc.calculate(structure)
+        self.ase_structure.calc.calculate(structure)
 
     def interactive_positions_setter(self, positions):
         self.structure.positions = positions
+        self.ase_structure.positions = positions
 
     def interactive_initialize_interface(self):
         self.status.running = True
-        self._structure.calc.set_label(self.working_directory + "/")
+        self.ase_structure.calc.set_label(self.working_directory + "/")
         self._interactive_library = True
 
     def interactive_close(self):
@@ -159,16 +177,16 @@ class AseJob(GenericInteractive):
                         h5["generic/" + key] = h5["interactive/" + key]
 
     def interactive_forces_getter(self):
-        return self.structure.get_forces()
+        return self.ase_structure.get_forces()
 
     def interactive_pressures_getter(self):
-        return -self.structure.get_stress(voigt=False)
+        return -self.ase_structure.get_stress(voigt=False)
 
     def interactive_energy_pot_getter(self):
-        return self.structure.get_potential_energy()
+        return self.ase_structure.get_potential_energy()
 
     def interactive_energy_tot_getter(self):
-        return self.structure.get_potential_energy()
+        return self.ase_structure.get_potential_energy()
 
     def interactive_indices_getter(self):
         element_lst = sorted(list(set(self.structure.get_chemical_symbols())))
