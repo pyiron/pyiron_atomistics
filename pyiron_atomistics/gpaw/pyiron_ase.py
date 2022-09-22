@@ -2,13 +2,12 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from ase import Atoms
 from ase.constraints import dict2constraint
 import copy
 import importlib
 import numpy as np
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
-from pyiron_atomistics.atomistics.structure.atoms import pyiron_to_ase, Atoms as PAtoms
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 try:
     from ase.cell import Cell
