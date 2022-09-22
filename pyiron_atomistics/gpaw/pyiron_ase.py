@@ -26,72 +26,6 @@ __status__ = "development"
 __date__ = "Sep 1, 2018"
 
 
-def ase_structure_todict(structure):
-    atoms_dict = {
-        "symbols": structure.get_chemical_symbols(),
-        "positions": structure.get_positions(),
-        "pbc": structure.get_pbc(),
-        "celldisp": structure.get_celldisp(),
-        "constraint": [c.todict() for c in structure.constraints],
-        "info": copy.deepcopy(structure.info),
-    }
-    if Cell is not None:
-        atoms_dict["cell"] = structure.get_cell().todict()
-    else:
-        atoms_dict["cell"] = structure.get_cell()
-    if structure.has("tags"):
-        atoms_dict["tags"] = structure.get_tags()
-    if structure.has("masses"):
-        atoms_dict["masses"] = structure.get_masses()
-    if structure.has("momenta"):
-        atoms_dict["momenta"] = structure.get_momenta()
-    if structure.has("initial_magmoms"):
-        atoms_dict["magmoms"] = structure.get_initial_magnetic_moments()
-    if structure.has("initial_charges"):
-        atoms_dict["charges"] = structure.get_initial_charges()
-    if structure.calc is not None:
-        calculator_dict = structure.calc.todict()
-        calculator_dict["calculator_class"] = (
-            str(structure.calc.__class__).replace("'", " ").split()[1]
-        )
-        calculator_dict["label"] = structure.calc.label
-        atoms_dict["calculator"] = calculator_dict
-    return atoms_dict
-
-
-def ase_calculator_fromdict(class_path, class_dict):
-    module_loaded = importlib.import_module(".".join(class_path.split(".")[:-1]))
-    module_class = getattr(module_loaded, class_path.split(".")[-1])
-    return module_class(**class_dict)
-
-
-def ase_structure_fromdict(atoms_dict):
-    def cell_fromdict(celldict):
-        celldict.pop("pbc", None)
-        if Cell is not None:
-            return Cell(**celldict)
-        else:
-            return celldict
-
-    atoms_dict_copy = copy.deepcopy(atoms_dict)
-    if "calculator" in atoms_dict_copy.keys():
-        calculator_dict = atoms_dict_copy["calculator"]
-        calculator_class = calculator_dict["calculator_class"]
-        del calculator_dict["calculator_class"]
-        atoms_dict_copy["calculator"] = ase_calculator_fromdict(
-            calculator_class, calculator_dict
-        )
-    if "constraint" in atoms_dict_copy.keys():
-        atoms_dict_copy["constraint"] = [
-            dict2constraint(const_dict) for const_dict in atoms_dict_copy["constraint"]
-        ]
-    atoms_dict_copy["cell"] = cell_fromdict(celldict=atoms_dict_copy["cell"])
-    atoms = Atoms(**atoms_dict_copy)
-    if atoms.calc is not None:
-        atoms.calc.read(atoms.calc.label)
-    return atoms
-
-
 class AseJob(GenericInteractive):
     def __init__(self, project, job_name):
         super(AseJob, self).__init__(project, job_name)
@@ -102,13 +36,11 @@ class AseJob(GenericInteractive):
 
     def to_hdf(self, hdf=None, group_name=None):
         super(AseJob, self).to_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf_input:
-            hdf_input["structure"] = ase_structure_todict(self._structure)
+        self._structure_to_hdf()
 
     def from_hdf(self, hdf=None, group_name=None):
         super(AseJob, self).from_hdf(hdf=hdf, group_name=group_name)
-        with self.project_hdf5.open("input") as hdf_input:
-            self.structure = ase_structure_fromdict(hdf_input["structure"])
+        self._structure_from_hdf()
 
     def run_static(self):
         pre_run_mode = self.server.run_mode
