@@ -1383,14 +1383,7 @@ class SphinxBase(GenericDFTJob):
 
     @property
     def _spin_enabled(self):
-        if np.any(
-            [
-                m is not None
-                for m in self.structure.get_initial_magnetic_moments().flatten()
-            ]
-        ):
-            return True
-        return False
+        return self.structure.has("initial_magmoms")
 
     def get_charge_density(self):
         """
@@ -1475,9 +1468,10 @@ class SphinxBase(GenericDFTJob):
         lattice = self.structure.cell
         positions = self.structure.get_scaled_positions()
         numbers = self.structure.get_atomic_numbers()
-        magmoms = self.structure.get_initial_magnetic_moments()
-        if np.all([m is None for m in magmoms]) or ignore_magmoms:
+        if ignore_magmoms:
             magmoms = np.zeros(len(magmoms))
+        else:
+            magmoms = self.structure.get_initial_magnetic_moments()
         mag_num = np.array(list(zip(magmoms, numbers)))
         satz = np.unique(mag_num, axis=0)
         numbers = []
@@ -1838,12 +1832,7 @@ class InputWriter(object):
                 "Getting magnetic moments via \
                 get_initial_magnetic_moments"
             )
-            if any(
-                [
-                    m is not None
-                    for m in self.structure.get_initial_magnetic_moments().flatten()
-                ]
-            ):
+            if self.structure.has("initial_magmoms"):
                 if any(
                     [
                         True
