@@ -92,7 +92,7 @@ class Gpaw(AseJob, GenericDFTJob):
             kpts=kpoints,
             txt=self.working_directory + "/" + self.job_name + ".txt",
         )
-        self.structure.set_calculator(calc)
+        self.structure.calc = calc
 
     def to_hdf(self, hdf=None, group_name=None):
         """
