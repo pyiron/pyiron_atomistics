@@ -17,15 +17,11 @@ __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2018"
 
-try:
-    from gpaw import GPAW as GPAWcode, PW, MethfesselPaxton
-
-    import_alarm = ImportAlarm()
-except ImportError:
-    import_alarm = ImportAlarm(
-        "Gpaw relies on the gpaw module but th is unavailable. Please ensure your python environment contains gpaw, "
+with ImportAlarm(
+        "Gpaw relies on the gpaw module but this is unavailable. Please ensure your python environment contains gpaw, "
         "e.g. by running `conda install -c conda-forge gpaw`."
-    )
+) as import_alarm:
+    from gpaw import GPAW as GPAWcode, PW, MethfesselPaxton
 
 
 class Gpaw(AseJob, GenericDFTJob):
