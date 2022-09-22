@@ -500,7 +500,9 @@ class Atoms(ASEAtoms):
             if self.calc is not None:
                 calc_dict = self.calc.todict()
                 calc_dict["label"] = self.calc.label
-                calc_dict["class"] = self.calc.__class__.__module__ + self.calc.__clas__.__name__
+                calc_dict["class"] = (
+                    self.calc.__class__.__module__ + self.calc.__clas__.__name__
+                )
                 hdf_structure["calculator"]
 
     def from_hdf(self, hdf, group_name="structure"):
@@ -596,7 +598,9 @@ class Atoms(ASEAtoms):
                 if "calculator" in hdf_atoms:
                     calc_dict = hdf_atoms["calculator"]
                     class_path = calc_dict.pop("class")
-                    calc_module = importlib.import_module(".".join(class_path.split(".")[:-1]))
+                    calc_module = importlib.import_module(
+                        ".".join(class_path.split(".")[:-1])
+                    )
                     calc_class = getattr(calc_module, class_path.split(".")[-1])
                     self.calc = calc_class(**calc_dict)
                 return self
