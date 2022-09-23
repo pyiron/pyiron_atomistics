@@ -3,6 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+import shutil
+
 import numpy as np
 import unittest
 import warnings
@@ -56,12 +58,11 @@ class TestSphinx(unittest.TestCase):
                 "../static/sphinx/job_sphinx_hdf5/job_sphinx/Fe_GGA.atomicdata",
             )
         )
-        os.rmdir(
+        shutil.rmtree(
             os.path.join(
-                cls.file_location, "../static/sphinx/job_sphinx_hdf5/job_sphinx"
+                cls.file_location, "../static/sphinx/job_sphinx_hdf5"
             )
         )
-        os.rmdir(os.path.join(cls.file_location, "../static/sphinx/job_sphinx_hdf5"))
 
     def test_interactive_cells_setter(self):
         with self.assertRaises(NotImplementedError):
