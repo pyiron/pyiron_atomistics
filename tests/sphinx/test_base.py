@@ -3,6 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+import shutil
+
 import numpy as np
 import unittest
 import tempfile
@@ -98,12 +100,7 @@ class TestSphinx(unittest.TestCase):
                 "../static/sphinx/job_sphinx_hdf5/job_sphinx/Fe_GGA.atomicdata",
             )
         )
-        os.rmdir(
-            os.path.join(
-                cls.file_location, "../static/sphinx/job_sphinx_hdf5/job_sphinx"
-            )
-        )
-        os.rmdir(os.path.join(cls.file_location, "../static/sphinx/job_sphinx_hdf5"))
+        shutil.rmtree(os.path.join(cls.file_location, "../static/sphinx/job_sphinx_hdf5"))
         os.remove(
             os.path.join(cls.file_location, "../static/sphinx/sphinx_test_2_3.h5")
         )
