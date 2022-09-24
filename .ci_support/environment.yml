@@ -7,20 +7,19 @@ dependencies:
 - coverage
 - codacy-coverage
 - defusedxml =0.7.1
-- future =0.18.2
 - h5py =3.7.0
-- matplotlib-base =3.5.2
+- matplotlib-base =3.6.0
 - mendeleev =0.10.0
-- mock =4.0.3
-- numpy =1.23.1
-- pandas =1.4.3
+- numpy =1.23.3
+- pandas =1.4.4
 - phonopy =2.15.1
 - pint =0.19.2
-- pyiron_base =0.5.20
-- pymatgen =2022.7.25
+- pyiron_base =0.5.23
+- pymatgen =2022.9.8
 - pyscal =2.10.15
-- pytables =3.7.0
-- scipy =1.9.0
+- scipy =1.9.1
 - seekpath =2.0.1
 - scikit-learn =1.1.2
-- spglib =1.16.5
+- spglib =2.0.1
+- ipywidgets < 8
+- mp-api =0.27.3
