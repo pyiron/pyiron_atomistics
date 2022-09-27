@@ -503,7 +503,6 @@ class Calphy(GenericJob, HasStructure):
         Returns:
             None
         """
-        # self.input.calc = self.calc
         file_name = "conf.data"
         self.write_structure(self.structure, file_name, self.working_directory)
         self._copy_pot_files()
@@ -748,7 +747,7 @@ class Calphy(GenericJob, HasStructure):
             traj = PyscalTrajectory(
                 os.path.join(self.working_directory, "conf.equilibration.dump")
             )
-            aseobj = traj[0].to_ase(species=self.calc.element)[0]
+            aseobj = traj[0].to_ase(species=self._get_element_list())[0]
             pyiron_atoms = ase_to_pyiron(aseobj)
             self.output["structure_final"] = pyiron_atoms
 
@@ -835,7 +834,7 @@ class Calphy(GenericJob, HasStructure):
         for i in range(1, self.input.n_iterations + 1):
             fwdfilename = os.path.join(self.working_directory, "forward_%d.dat" % i)
             bkdfilename = os.path.join(self.working_directory, "backward_%d.dat" % i)
-            nelements = self.calc.n_elements
+            nelements = len(self._get_element_list())
 
             if self.input.reference_phase == "solid":
                 fdui = np.loadtxt(fwdfilename, unpack=True, comments="#", usecols=(0,))
@@ -932,13 +931,13 @@ class Calphy(GenericJob, HasStructure):
             if os.path.exists(fwdfilename):
                 traj = PyscalTrajectory(fwdfilename)
                 for x in traj.nblocks:
-                    aseobj = traj[x].to_ase(species=self.calc.element)
+                    aseobj = traj[x].to_ase(species=self._get_element_list())
                     fp.append(aseobj.positions)
                     fc.append(list(aseobj.cell))
             if os.path.exists(bkdfilename):
                 traj = PyscalTrajectory(bkdfilename)
                 for x in traj.nblocks:
-                    aseobj = traj[x].to_ase(species=self.calc.element)
+                    aseobj = traj[x].to_ase(species=self._get_element_list())
                     bp.append(aseobj.positions)
                     bc.append(list(aseobj.cell))
 
