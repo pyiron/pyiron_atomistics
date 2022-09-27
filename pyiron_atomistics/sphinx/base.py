@@ -103,6 +103,7 @@ class SphinxBase(GenericDFTJob):
         self._generic_input["restart_for_band_structure"] = False
         self._generic_input["path_name"] = None
         self._generic_input["n_path"] = None
+        self._generic_input["fix_spin_constraint"] = False
 
     def update_sphinx(self):
         if self._output_parser.old_version:
