@@ -38,7 +38,7 @@ setup(
         'mp-api==0.27.3',
         'numpy==1.23.3',
         'pandas==1.5.0',
-        'phonopy==2.15.1',
+        'phonopy==2.16.2',
         'pint==0.19.2',
         'pyiron_base==0.5.24',
         'pymatgen==2022.9.21',
