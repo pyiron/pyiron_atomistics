@@ -15,7 +15,12 @@ from io import StringIO
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict
 
-from pyiron_atomistics.lammps.potential import LammpsPotentialFile, PotentialAvailable
+from pyiron_atomistics.lammps.potential import (
+    LammpsPotentialFile,
+    PotentialAvailable,
+    view_potentials,
+    list_potentials,
+)
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, extract_data_from_file, deprecate
 from pyiron_atomistics.lammps.control import LammpsControl
@@ -338,37 +343,27 @@ class LammpsBase(AtomisticGenericJob):
 
     def view_potentials(self):
         """
-        List all interatomic potentials for the current atomistic sturcture including all potential parameters.
+        List all interatomic potentials for the current atomistic structure including all potential parameters.
 
-        To quickly get only the names of the potentials you can use: self.potentials_list()
+        To quickly get only the names of the potentials you can use: self.list_potentials()
 
         Returns:
             pandas.Dataframe: Dataframe including all potential parameters.
         """
-        from pyiron_atomistics.lammps.potential import LammpsPotentialFile
-
         if not self.structure:
             raise ValueError("No structure set.")
-        list_of_elements = set(self.structure.get_chemical_symbols())
-        list_of_potentials = LammpsPotentialFile().find(list_of_elements)
-        if list_of_potentials is not None:
-            return list_of_potentials
-        else:
-            raise TypeError(
-                "No potentials found for this kind of structure: ",
-                str(list_of_elements),
-            )
+        return view_potentials(self.structure)
 
     def list_potentials(self):
         """
         List of interatomic potentials suitable for the current atomic structure.
 
-        use self.potentials_view() to get more details.
+        use self.view_potentials() to get more details.
 
         Returns:
             list: potential names
         """
-        return list(self.view_potentials()["Name"].values)
+        return list_potentials(self.structure)
 
     def enable_h5md(self):
         """

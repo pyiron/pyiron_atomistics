@@ -1841,9 +1841,7 @@ class InputWriter(object):
                     for spin in self.structure.get_initial_magnetic_moments()
                 ]
             ):
-                raise ValueError(
-                    "SPHInX only supports collinear spins at the moment."
-                )
+                raise ValueError("SPHInX only supports collinear spins at the moment.")
             else:
                 constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
                 if spins_list is None or len(spins_list) == 0:
