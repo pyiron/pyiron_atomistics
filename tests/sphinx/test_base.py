@@ -27,20 +27,18 @@ class TestSphinx(unittest.TestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "../static/sphinx"))
-        pt = PeriodicTable()
-        pt.add_element(parent_element="Fe", new_element="Fe_up", spin="0.5")
-        Fe_up = pt.element("Fe_up")
-        cls.basis = Atoms(
-            elements=[Fe_up, Fe_up],
-            scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
-            cell=2.6 * np.eye(3),
-        )
         cls.sphinx = cls.project.create_job("Sphinx", "job_sphinx")
         cls.sphinx_band_structure = cls.project.create_job("Sphinx", "sphinx_test_bs")
         cls.sphinx_2_3 = cls.project.create_job("Sphinx", "sphinx_test_2_3")
         cls.sphinx_2_5 = cls.project.create_job("Sphinx", "sphinx_test_2_5")
         cls.sphinx_aborted = cls.project.create_job("Sphinx", "sphinx_test_aborted")
-        cls.sphinx.structure = cls.basis
+        basis = Atoms(
+            elements=2 * ['Fe'],
+            scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+            cell=2.6 * np.eye(3),
+        )
+        basis.set_initial_magnetic_moments(2 * [0.5])
+        cls.sphinx.structure = basis
         cls.sphinx.fix_spin_constraint = True
         cls.sphinx_band_structure.structure = cls.project.create_structure("Fe", "bcc", 2.81)
         cls.sphinx_band_structure.structure = cls.sphinx_band_structure.structure.create_line_mode_structure()
