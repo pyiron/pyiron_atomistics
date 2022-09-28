@@ -17,7 +17,7 @@ from pyiron_atomistics.vasp.potential import (
     strip_xc_from_potential_name,
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_base import state, GenericParameters, deprecate
+from pyiron_base import state, GenericParameters, deprecate, DataContainer
 from pyiron_atomistics.vasp.outcar import Outcar
 from pyiron_atomistics.vasp.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
@@ -1817,7 +1817,7 @@ class VaspBase(GenericDFTJob):
         pass
 
 
-class Input:
+class Input(DataContainer):
     """
     Handles setting the input parameters for a VASP job.
 
@@ -1839,11 +1839,11 @@ class Input:
         >>> assert(ham.input.incar["ISIF"]==-1)
     """
 
-    def __init__(self):
+    def __init__(self, *args, **argv):
+        super().__init__(*args, **argv)
         self.incar = Incar(table_name="incar")
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
-
         self._eddrmm = "warn"
 
     def write(self, structure, modified_elements, directory=None):

@@ -22,7 +22,7 @@ from pyiron_atomistics.lammps.potential import (
     list_potentials,
 )
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
-from pyiron_base import state, extract_data_from_file, deprecate
+from pyiron_base import state, extract_data_from_file, deprecate, DataContainer
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import (
@@ -1443,8 +1443,9 @@ class LammpsBase(AtomisticGenericJob):
         return rotation_matrix
 
 
-class Input:
-    def __init__(self):
+class Input(DataContainer):
+    def __init__(self, *args, **argv):
+        super().__init__(*args, **argv)
         self.control = LammpsControl()
         self.potential = LammpsPotential()
         self.bond_dict = dict()
