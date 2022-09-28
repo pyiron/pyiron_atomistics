@@ -135,9 +135,14 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         self.__version__ = "0.1"
         self._structure = None
         self.input = DataContainer(table_name="input")
-        self._generic_input = GenericInput()
         self.output = GenericOutput(job=self)
         self.map_functions = MapFunctions()
+
+    @property
+    def _generic_input(self):
+        if 'generic' not in self.input.list_nodes():
+            self.input.generic = GenericInput()
+        return self.input.generic
 
     @property
     def structure(self):

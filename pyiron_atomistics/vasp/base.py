@@ -81,6 +81,9 @@ class VaspBase(GenericDFTJob):
         super(VaspBase, self).__init__(project, job_name)
         self._sorted_indices = None
         self.input = Input()
+        self.input.incar = Incar(table_name="incar")
+        self.input.kpoints = Kpoints(table_name="kpoints")
+        self.input.potcar = Potcar(table_name="potcar")
         self.input.incar["SYSTEM"] = self.job_name
         self._output_parser = Output()
         self._potential = VaspPotentialSetter([])
@@ -1910,14 +1913,6 @@ class Input:
                     self._eddrmm = self._eddrmm_backwards_compatibility(
                         vasp_dict["eddrmm_handling"]
                     )
-
-    @staticmethod
-    def _eddrmm_backwards_compatibility(eddrmm_value):
-        """On 9-03-2020, the EDDRMM flag 'not_converged' was switched to 'warn'."""
-        if eddrmm_value == "not_converged":
-            return "warn"
-        else:
-            return eddrmm_value
 
 
 class Output:
