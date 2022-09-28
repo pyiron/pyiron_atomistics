@@ -18,6 +18,7 @@ from pyiron_base import (
     GenericMaster,
     GenericJob as GenericJobCore,
     deprecate,
+    DataContainer,
 )
 
 try:
@@ -133,6 +134,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         super(AtomisticGenericJob, self).__init__(project, job_name)
         self.__version__ = "0.1"
         self._structure = None
+        self.input = DataContainer(table_name="input")
         self._generic_input = GenericInput()
         self.output = GenericOutput(job=self)
         self.map_functions = MapFunctions()
