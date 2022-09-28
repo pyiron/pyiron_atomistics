@@ -5,7 +5,7 @@
 from __future__ import print_function
 import numpy as np
 import posixpath
-from pyiron_base import GenericParameters, GenericJob, Logstatus
+from pyiron_base import GenericParameters, GenericJob, Logstatus, DataContainer
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.testing.executable import ExampleExecutable
 from collections import defaultdict
@@ -122,6 +122,7 @@ class ExampleJob(GenericJob):
         super(ExampleJob, self).__init__(project, job_name)
         self.__version__ = "0.3"
 
+        self.input = DataContainer(table_name="input")
         self.input.parameter = ExampleInput()
         self.executable = "python -m pyiron_atomistics.testing.executable"
         self.interactive_cache = {"alat": [], "count": [], "energy": []}
