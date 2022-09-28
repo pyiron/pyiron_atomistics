@@ -122,7 +122,7 @@ class ExampleJob(GenericJob):
         super(ExampleJob, self).__init__(project, job_name)
         self.__version__ = "0.3"
 
-        self.input = ExampleInput()
+        self.input.parameter = ExampleInput()
         self.executable = "python -m pyiron_atomistics.testing.executable"
         self.interactive_cache = {"alat": [], "count": [], "energy": []}
 
@@ -131,14 +131,14 @@ class ExampleJob(GenericJob):
         This function enforces read-only mode for the input classes, but it has to be implement in the individual
         classes.
         """
-        self.input.read_only = True
+        self.input.parameter.read_only = True
 
     # define routines that create all necessary input files
     def write_input(self):
         """
         Call routines that generate the codespecifc input files
         """
-        self.input.write_file(file_name="input.inp", cwd=self.working_directory)
+        self.input.parameter.write_file(file_name="input.inp", cwd=self.working_directory)
 
     # define routines that collect all output files
     def collect_output(self):
@@ -213,7 +213,7 @@ class ExampleJob(GenericJob):
         """
         super(ExampleJob, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self.input.to_hdf(hdf5_input)
+            self.input.parameter.to_hdf(hdf5_input)
 
     def from_hdf(self, hdf=None, group_name=None):
         """
@@ -225,7 +225,7 @@ class ExampleJob(GenericJob):
         """
         super(ExampleJob, self).from_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("input") as hdf5_input:
-            self.input.from_hdf(hdf5_input)
+            self.input.parameter.from_hdf(hdf5_input)
 
     def run_if_interactive(self):
         """
@@ -236,7 +236,7 @@ class ExampleJob(GenericJob):
         """
         self._interactive_library = True
         self.status.running = True
-        alat, count, energy = ExampleExecutable().run_lib(self.input)
+        alat, count, energy = ExampleExecutable().run_lib(self.input.parameter)
         self.interactive_cache["alat"].append(alat)
         self.interactive_cache["count"].append(count)
         self.interactive_cache["energy"].append(energy)
@@ -380,7 +380,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         super(AtomisticExampleJob, self).__init__(project, job_name)
         self.__version__ = "0.3"
 
-        self.input = ExampleInput()
+        self.input.parameter = ExampleInput()
         self.executable = "python -m pyiron_atomistics.testing.executable"
         self.interactive_cache = defaultdict(list)
         self._velocity = None
@@ -392,7 +392,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         if self._neigh is None:
             self._neigh = self.structure.get_neighbors(
                 num_neighbors=None,
-                cutoff_radius=self.input["cutoff"] * self.input["sigma"],
+                cutoff_radius=self.input.parameter["cutoff"] * self.input.parameter["sigma"],
             )
         return self._neigh
 
@@ -426,8 +426,8 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         """
         self._structure = structure
         if structure is not None:
-            self.input["alat"] = self._structure.cell[0, 0]
-            # print("set alat: {}".format(self.input["alat"]))
+            self.input.parameter["alat"] = self._structure.cell[0, 0]
+            # print("set alat: {}".format(self.input.parameter["alat"]))
 
     def set_input_to_read_only(self):
         """
@@ -435,7 +435,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         classes.
         """
         super(AtomisticExampleJob, self).set_input_to_read_only()
-        self.input.read_only = True
+        self.input.parameter.read_only = True
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -464,10 +464,10 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
 
     @property
     def _s_r(self):
-        return self.input["sigma"] / self.neigh.flattened.distances
+        return self.input.parameter["sigma"] / self.neigh.flattened.distances
 
     def interactive_energy_pot_getter(self):
-        return self.input["epsilon"] * (
+        return self.input.parameter["epsilon"] * (
             np.sum(self._s_r**12) - np.sum(self._s_r**6)
         )
 
@@ -491,7 +491,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
         )
 
     def interactive_forces_getter(self):
-        all_values = self.input["epsilon"] * np.einsum(
+        all_values = self.input.parameter["epsilon"] * np.einsum(
             "ni,n,n->ni",
             self.neigh.flattened.vecs,
             1 / self.neigh.flattened.distances**2,
@@ -506,7 +506,7 @@ class AtomisticExampleJob(ExampleJob, GenericInteractive):
 
     def interactive_pressures_getter(self):
         pot_part = (
-            self.input["epsilon"]
+            self.input.parameter["epsilon"]
             * np.einsum(
                 "ni,nj,n,n->ij",
                 self.neigh.flattened.vecs,
