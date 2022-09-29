@@ -5,7 +5,7 @@
 import os
 import unittest
 import numpy as np
-from pyiron_base import Project
+from pyiron_atomistics import Project
 import warnings
 
 
