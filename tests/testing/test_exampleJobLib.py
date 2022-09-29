@@ -4,7 +4,7 @@
 
 import os
 import unittest
-from pyiron_base import Project
+from pyiron_atomistics import Project
 
 
 class TestExampleJob(unittest.TestCase):
