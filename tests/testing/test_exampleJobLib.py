@@ -15,10 +15,10 @@ class TestExampleJob(unittest.TestCase):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "random_testing_lib"))
         cls.ham = cls.project.create_job("ExampleJob", "job_test_run")
-        cls.ham.input["count"] = cls.count_run_one
+        cls.ham.input.parameter["count"] = cls.count_run_one
         cls.ham.server.run_mode.interactive = True
         cls.ham.run()
-        cls.ham.input["count"] = cls.count_run_two
+        cls.ham.input.parameter["count"] = cls.count_run_two
         cls.ham.run()
         cls.ham.interactive_close()
 
