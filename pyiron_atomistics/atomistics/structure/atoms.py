@@ -3219,17 +3219,30 @@ def _check_if_simple_atoms(atoms):
         warnings.warn("Info is not empty: " + str(atoms.__dict__["info"]))
 
 
-def pymatgen_to_pyiron(pymatgen_obj):
+def pymatgen_to_pyiron(pymatgen):
     """
-    Convert pymatgen atoms object to pyiron atoms object (pymatgen->ASE->pyiron)
+        Convert pymatgen Structure object to pyiron atoms object (pymatgen->ASE->pyiron)
 
     Args:
-        pymatgen_obj: pymatgen atoms object
+        pymatgen_obj: pymatgen Structure object
 
     Returns:
         pyiron atoms object
     """
-    return ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=pymatgen_obj))
+    # This workaround is necessary because ASE refuses to accept limited degrees of freedom in their atoms object
+    # e.g. only accepts [T T T] or [F F F] but rejects [T, T, F] etc.
+    # Have to check for the property explicitly otherwise it just straight crashes
+    # Let's just implement this workaround if any selective dynamics are present
+    if "selective_dynamics" in pymatgen_obj.site_properties.keys():
+        sel_dyn_list = pymatgen_obj.site_properties['selective_dynamics']
+        pymatgen_obj.remove_site_property("selective_dynamics")
+        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure = pymatgen_obj))
+        pyiron_atoms.add_tag(selective_dynamics = [True, True, True])
+        for i, _ in enumerate(pyiron_atoms):
+            pyiron_atoms.selective_dynamics[i] = sel_dyn_list[i]
+    else:
+        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure = pymatgen_obj))
+    return pyiron_atoms
 
 
 def pyiron_to_pymatgen(pyiron_obj):
@@ -3240,11 +3253,25 @@ def pyiron_to_pymatgen(pyiron_obj):
         pyiron_obj: pyiron atoms object
 
     Returns:
-        pymatgen atoms object
+        pymatgen Structure object
     """
-    ase_atoms = pyiron_to_ase(pyiron_obj)
-    _check_if_simple_atoms(atoms=ase_atoms)
-    return AseAtomsAdaptor().get_structure(atoms=ase_atoms, cls=None)
+    # This workaround is necessary because ASE refuses to accept limited degrees of freedom in their atoms object
+    # e.g. only accepts [T T T] or [F F F] but rejects [T, T, F] etc.
+    # Let's just implement this workaround if any selective dynamics are present
+    if hasattr(pyiron_obj, "selective_dynamics"):
+        sel_dyn_list = pyiron_obj.selective_dynamics
+        pyiron_obj.selective_dynamics = [True, True, True]
+        ase_obj = pyiron_to_ase(pyiron_obj)
+
+        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+        new_site_properties = pymatgen_obj.site_properties
+        new_site_properties['selective_dynamics'] = sel_dyn_list
+        pymatgen_obj = pymatgen_obj.copy(site_properties = new_site_properties)
+    else:
+        ase_obj = pyiron_to_ase(pyiron_obj)
+        _check_if_simple_atoms(atoms=ase_obj)
+        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+    return pymatgen_obj
 
 
 def ovito_to_pyiron(ovito_obj):
