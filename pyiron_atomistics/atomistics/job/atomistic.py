@@ -628,7 +628,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 sub_struct,
                 center_of_mass=center_of_mass,
                 cells=cells[::stride],
-                indices=remapped_indices[::stride, atom_indices],
+                indices=np.asarray(remapped_indices)[::stride, atom_indices],
             )
 
     def write_traj(
