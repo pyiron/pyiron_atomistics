@@ -29,20 +29,18 @@ class TestSphinx(unittest.TestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "../static/sphinx"))
-        pt = PeriodicTable()
-        pt.add_element(parent_element="Fe", new_element="Fe_up", spin="0.5")
-        Fe_up = pt.element("Fe_up")
-        cls.basis = Atoms(
-            elements=[Fe_up, Fe_up],
-            scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
-            cell=2.6 * np.eye(3),
-        )
         cls.sphinx = cls.project.create_job("Sphinx", "job_sphinx")
         cls.sphinx_band_structure = cls.project.create_job("Sphinx", "sphinx_test_bs")
         cls.sphinx_2_3 = cls.project.create_job("Sphinx", "sphinx_test_2_3")
         cls.sphinx_2_5 = cls.project.create_job("Sphinx", "sphinx_test_2_5")
         cls.sphinx_aborted = cls.project.create_job("Sphinx", "sphinx_test_aborted")
-        cls.sphinx.structure = cls.basis
+        basis = Atoms(
+            elements=2 * ['Fe'],
+            scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+            cell=2.6 * np.eye(3),
+        )
+        basis.set_initial_magnetic_moments(2 * [0.5])
+        cls.sphinx.structure = basis
         cls.sphinx.fix_spin_constraint = True
         cls.sphinx_band_structure.structure = cls.project.create_structure(
             "Fe", "bcc", 2.81
@@ -116,17 +114,13 @@ class TestSphinx(unittest.TestCase):
         self.assertEqual(len(self.sphinx.id_spx_to_pyi), len(self.sphinx.structure))
 
     def test_potential(self):
-        self.assertEqual([], self.sphinx.list_potentials())
-        self.assertEqual(["Fe_GGA"], self.sphinx_2_3.list_potentials())
-        self.assertEqual(["Fe_GGA"], self.sphinx_2_5.list_potentials())
-        self.sphinx_2_3.potential.Fe = "Fe_GGA"
-        self.sphinx_2_5.potential["Fe"] = "Fe_GGA"
-        self.assertEqual(
-            "Fe_GGA", list(self.sphinx_2_3.potential.to_dict().values())[0]
-        )
-        self.assertEqual(
-            "Fe_GGA", list(self.sphinx_2_5.potential.to_dict().values())[0]
-        )
+        self.assertEqual(['Fe_GGA'], self.sphinx.list_potentials())
+        self.assertEqual(['Fe_GGA'], self.sphinx_2_3.list_potentials())
+        self.assertEqual(['Fe_GGA'], self.sphinx_2_5.list_potentials())
+        self.sphinx_2_3.potential.Fe = 'Fe_GGA'
+        self.sphinx_2_5.potential["Fe"] = 'Fe_GGA'
+        self.assertEqual('Fe_GGA', list(self.sphinx_2_3.potential.to_dict().values())[0])
+        self.assertEqual('Fe_GGA', list(self.sphinx_2_5.potential.to_dict().values())[0])
 
     def test_write_input(self):
 
