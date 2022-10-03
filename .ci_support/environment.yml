@@ -9,7 +9,7 @@ dependencies:
 - defusedxml =0.7.1
 - h5py =3.7.0
 - matplotlib-base =3.6.0
-- mendeleev =0.10.0
+- mendeleev =0.11.0
 - numpy =1.23.3
 - pandas =1.5.0
 - phonopy =2.15.1
