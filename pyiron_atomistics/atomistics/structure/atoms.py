@@ -3219,7 +3219,7 @@ def _check_if_simple_atoms(atoms):
         warnings.warn("Info is not empty: " + str(atoms.__dict__["info"]))
 
 
-def pymatgen_to_pyiron(pymatgen):
+def pymatgen_to_pyiron(structure):
     """
         Convert pymatgen Structure object to pyiron atoms object (pymatgen->ASE->pyiron)
 
@@ -3233,21 +3233,22 @@ def pymatgen_to_pyiron(pymatgen):
     # e.g. only accepts [T T T] or [F F F] but rejects [T, T, F] etc.
     # Have to check for the property explicitly otherwise it just straight crashes
     # Let's just implement this workaround if any selective dynamics are present
-    if "selective_dynamics" in pymatgen_obj.site_properties.keys():
-        sel_dyn_list = pymatgen_obj.site_properties['selective_dynamics']
-        pymatgen_obj.remove_site_property("selective_dynamics")
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure = pymatgen_obj))
+    if "selective_dynamics" in structure.site_properties.keys():
+        sel_dyn_list = structure.site_properties['selective_dynamics']
+        struct = structure.copy()
+        struct.remove_site_property("selective_dynamics")
+        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure = struct))
         pyiron_atoms.add_tag(selective_dynamics = [True, True, True])
         for i, _ in enumerate(pyiron_atoms):
             pyiron_atoms.selective_dynamics[i] = sel_dyn_list[i]
     else:
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure = pymatgen_obj))
+        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure = structure))
     return pyiron_atoms
 
 
 def pyiron_to_pymatgen(pyiron_obj):
     """
-    Convert pyiron atoms object to pymatgen atoms object
+    Convert pyiron atoms object to pymatgen Structure object
 
     Args:
         pyiron_obj: pyiron atoms object
@@ -3259,10 +3260,9 @@ def pyiron_to_pymatgen(pyiron_obj):
     # e.g. only accepts [T T T] or [F F F] but rejects [T, T, F] etc.
     # Let's just implement this workaround if any selective dynamics are present
     if hasattr(pyiron_obj, "selective_dynamics"):
-        sel_dyn_list = pyiron_obj.selective_dynamics
+        sel_dyn_list = pyiron_obj.copy().selective_dynamics
         pyiron_obj.selective_dynamics = [True, True, True]
         ase_obj = pyiron_to_ase(pyiron_obj)
-
         pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
         new_site_properties = pymatgen_obj.site_properties
         new_site_properties['selective_dynamics'] = sel_dyn_list
