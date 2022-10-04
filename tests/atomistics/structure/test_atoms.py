@@ -1673,7 +1673,7 @@ class TestAtoms(unittest.TestCase):
         )
         # Make sure no sel dyn tags are added unnecessarily
         self.assertFalse(
-            hasattr(pyiron_atoms_magmom, "selective_dynamics")
+            hasattr(pyiron_atoms_magmom, "selective_dynamics"), "selective dynamics are added when there was none in original pymatgen Structure"
         )
 
     def test_pyiron_to_pymatgen_conversion(self):
@@ -1732,7 +1732,7 @@ class TestAtoms(unittest.TestCase):
             "Failed to produce equivalent magmom when both magmom + sel_dyn are present!"
         )
         self.assertTrue(
-            struct_sd_magmom.site_properties["selective_dynamics"] == [x.spin for x in pyiron_atoms_sd_magmom],\
+            struct_sd_magmom.site_properties["selective_dynamics"] == [x.selective_dynamics for x in pyiron_atoms_sd_magmom],\
             "Failed to produce equivalent sel_dyn when both magmom + sel_dyn are present!"
         )
 
