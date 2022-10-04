@@ -180,7 +180,7 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
         )
         self._logger.debug("interactive interface is opened!")
         if (
-            np.all(self.structure.get_initial_magnetic_moments() == None)
+            not self.structure.has("initial_magmoms")
             and "atom_spins" in self.interactive_cache.keys()
         ):
             del self.interactive_cache["atom_spins"]
