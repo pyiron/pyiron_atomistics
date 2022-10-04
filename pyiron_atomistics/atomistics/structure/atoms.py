@@ -3268,7 +3268,7 @@ def pyiron_to_pymatgen(pyiron_obj):
         new_site_properties['selective_dynamics'] = sel_dyn_list
         pymatgen_obj = pymatgen_obj.copy(site_properties = new_site_properties)
     else:
-        ase_obj = pyiron_to_ase(pyiron_obj)
+        ase_obj = pyiron_to_ase(pyiron_obj.copy())
         _check_if_simple_atoms(atoms=ase_obj)
         pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
     return pymatgen_obj
