@@ -1736,18 +1736,18 @@ class TestAtoms(unittest.TestCase):
             "Failed to produce equivalent sel_dyn when both magmom + sel_dyn are present!"
         )
 
-    # def test_calc_to_hdf(self):
-    #     """Calculators set on the structure should be properly reloaded after reading from HDF."""
-    #     structure = self.CO2.copy()
-    #     structure.calc = MorsePotential(epsilon=2, r0=2)
-    #     structure.to_hdf(hdf=self.hdf_obj, group_name="structure_w_calc")
-    #     read_structure = self.hdf_obj["structure_w_calc"].to_object()
-    #     for k in structure.calc.parameters:
-    #         self.assertEqual(
-    #                 structure.calc.parameters[k],
-    #                 read_structure.calc.parameters[k],
-    #                 msg=f"Calculator parameter {k} not correctly restored from HDF!"
-    #         )
+    def test_calc_to_hdf(self):
+        """Calculators set on the structure should be properly reloaded after reading from HDF."""
+        structure = self.CO2.copy()
+        structure.calc = MorsePotential(epsilon=2, r0=2)
+        structure.to_hdf(hdf=self.hdf_obj, group_name="structure_w_calc")
+        read_structure = self.hdf_obj["structure_w_calc"].to_object()
+        for k in structure.calc.parameters:
+            self.assertEqual(
+                    structure.calc.parameters[k],
+                    read_structure.calc.parameters[k],
+                    msg=f"Calculator parameter {k} not correctly restored from HDF!"
+            )
 
 def generate_fcc_lattice(a=4.2):
     positions = [[0, 0, 0]]
