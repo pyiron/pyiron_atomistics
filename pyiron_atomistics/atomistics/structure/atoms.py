@@ -3234,15 +3234,15 @@ def pymatgen_to_pyiron(structure):
     # Have to check for the property explicitly otherwise it just straight crashes
     # Let's just implement this workaround if any selective dynamics are present
     if "selective_dynamics" in structure.site_properties.keys():
-        sel_dyn_list = structure.site_properties['selective_dynamics']
+        sel_dyn_list = structure.site_properties["selective_dynamics"]
         struct = structure.copy()
         struct.remove_site_property("selective_dynamics")
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure = struct))
-        pyiron_atoms.add_tag(selective_dynamics = [True, True, True])
+        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=struct))
+        pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
         for i, _ in enumerate(pyiron_atoms):
             pyiron_atoms.selective_dynamics[i] = sel_dyn_list[i]
     else:
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure = structure))
+        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=structure))
     return pyiron_atoms
 
 
@@ -3256,7 +3256,7 @@ def pyiron_to_pymatgen(pyiron_obj):
     Returns:
         pymatgen Structure object
     """
-    pyiron_obj_conv = pyiron_obj.copy() # necessary to avoid changing original object
+    pyiron_obj_conv = pyiron_obj.copy()  # necessary to avoid changing original object
     # This workaround is necessary because ASE refuses to accept limited degrees of freedom in their atoms object
     # e.g. only accepts [T T T] or [F F F] but rejects [T, T, F] etc.
     # Let's just implement this workaround if any selective dynamics are present
@@ -3267,8 +3267,8 @@ def pyiron_to_pymatgen(pyiron_obj):
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
         pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
         new_site_properties = pymatgen_obj_conv.site_properties
-        new_site_properties['selective_dynamics'] = sel_dyn_list
-        pymatgen_obj = pymatgen_obj_conv.copy(site_properties = new_site_properties)
+        new_site_properties["selective_dynamics"] = sel_dyn_list
+        pymatgen_obj = pymatgen_obj_conv.copy(site_properties=new_site_properties)
     else:
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
         _check_if_simple_atoms(atoms=ase_obj)
