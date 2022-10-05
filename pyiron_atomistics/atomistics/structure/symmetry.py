@@ -202,7 +202,7 @@ class Symmetry(dict):
             )
             positions -= np.floor(positions + self.epsilon)
             distances, self._permutations = tree.query(positions)
-            if not np.allclose(distances, 0):
+            if np.ptp(distances) > self._symprec:
                 raise AssertionError("Neighbor search failed")
             self._permutations = self._permutations.argsort(axis=-1)
         return self._permutations
