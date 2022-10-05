@@ -114,23 +114,6 @@ class VaspBase(GenericDFTJob):
             )
 
     @property
-    def allow_structure_reordering(self) -> bool:
-        """
-        True if the POSCAR file input is allowed to have its atomic order optimised by pyiron to minimise POTCAR sizing
-        e.g. Pyiron default behaviour is to do (Fe 37 Al 1 Fe 38) -> (Fe 75 Al 1), minimising input POTCAR size
-        Set False when OUTCAR output which is not parsed is important for your workflow,
-        or atomic ordering in the intermediate project output is important to your workflow.
-
-        Returns:
-            bool
-        """
-        return self.input.allow_structure_reordering
-
-    @allow_structure_reordering.setter
-    def allow_structure_reordering(self, val: bool):
-        self.input.allow_structure_reordering = val
-
-    @property
     def potential(self):
         return self._potential
 
