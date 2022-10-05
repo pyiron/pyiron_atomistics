@@ -86,7 +86,6 @@ class VaspBase(GenericDFTJob):
         self._potential = VaspPotentialSetter([])
         self._compress_by_default = True
         self.get_enmax_among_species = get_enmax_among_potentials
-        self._allow_structure_reordering = True
         state.publications.add(self.publication)
 
     @property
@@ -1858,22 +1857,9 @@ class Input:
         self.incar = Incar(table_name="incar")
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
+        self.allow_structure_reordering = True
 
         self._eddrmm = "warn"
-        self._allow_structure_reordering = True
-
-    @property
-    def allow_structure_reordering(self) -> bool:
-        """
-
-        Returns:
-            bool
-        """
-        return self.input.allow_structure_reordering
-
-    @allow_structure_reordering.setter
-    def allow_structure_reordering(self, val: bool):
-        self.input.allow_structure_reordering = val
 
     def write(self, structure, modified_elements, directory=None):
         """
@@ -1899,7 +1885,7 @@ class Input:
             structure,
             filename=posixpath.join(directory, "POSCAR"),
             write_species=not do_not_write_species,
-            allow_reordering=not self.allow_structure_reordering
+            allow_reordering=self.allow_structure_reordering
         )
 
     def to_hdf(self, hdf):

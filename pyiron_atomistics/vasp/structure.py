@@ -108,23 +108,23 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
             selec_dyn = True
             cartesian = False
             f.write("Selective dynamics" + endline)
-        coords = list()
+        positions = list()
         selec_dyn_lst = list()
         if allow_reordering:
             for species in atom_numbers.keys():
                 indices = structure.select_index(species)
                 for i in indices:
                     if cartesian:
-                        coords.append(structure.positions[i])
+                        positions.append(structure.positions[i])
                     else:
-                        coords.append(structure.get_scaled_positions()[i])
+                        positions.append(structure.get_scaled_positions()[i])
                     if selec_dyn:
                         selec_dyn_lst.append(structure.selective_dynamics[i])
         else:
             if cartesian:
-                coords = structure.positions
+                positions = structure.positions
             else:
-                coords = structure.get_scaled_positions()
+                positions = structure.get_scaled_positions()
             if selec_dyn:
                 selec_dyn_lst = structure.selective_dynamics
         if cartesian:
@@ -132,7 +132,7 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
         else:
             f.write("Direct" + endline)
         if selec_dyn:
-            for i, vec in enumerate(coords):
+            for i, vec in enumerate(positions):
                 x, y, z = vec
                 sd_string = " ".join(["T" if sd else "F" for sd in selec_dyn_lst[i]])
                 f.write(
@@ -142,7 +142,7 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
                     + endline
                 )
         else:
-            for i, vec in enumerate(coords):
+            for i, vec in enumerate(positions):
                 x, y, z = vec
                 f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
 
