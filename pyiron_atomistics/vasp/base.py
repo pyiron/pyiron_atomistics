@@ -1853,7 +1853,7 @@ class Input:
         self.incar = Incar(table_name="incar")
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
-        self.allow_structure_reordering = True
+        self.code_specific_options = VaspSpecificOptions()
 
         self._eddrmm = "warn"
 
@@ -1881,7 +1881,7 @@ class Input:
             structure,
             filename=posixpath.join(directory, "POSCAR"),
             write_species=not do_not_write_species,
-            allow_reordering=self.allow_structure_reordering
+            allow_reordering=self.code_specific_options.allow_structure_reordering
         )
 
     def to_hdf(self, hdf):
