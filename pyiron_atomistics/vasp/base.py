@@ -17,7 +17,7 @@ from pyiron_atomistics.vasp.potential import (
     strip_xc_from_potential_name,
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_base import state, GenericParameters, deprecate
+from pyiron_base import state, GenericParameters, deprecate, DataContainer
 from pyiron_atomistics.vasp.outcar import Outcar
 from pyiron_atomistics.vasp.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
@@ -1812,6 +1812,19 @@ class VaspBase(GenericDFTJob):
 
     def __del__(self):
         pass
+
+
+class VaspSpecificOptions(DataContainer):
+    """
+    A `pyiron_base.DataContainer` for input that is specific to VASP.
+
+    Attributes:
+        allow_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
+            (e.g. Fe37 P1 Fe35 -> Fe72 P1 reduces POTCAR by one Fe POTCAR filesize. (Default is True.)
+    """
+    def __init__(self, init=None, table_name='vasp_specific_options', lazy=False, wrap_blacklist=()):
+        super().__init__(init=init, table_name=table_name, lazy=lazy, wrap_blacklist=wrap_blacklist)
+        self.allow_structure_reordering = True
 
 
 class Input:
