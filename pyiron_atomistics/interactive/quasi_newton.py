@@ -163,8 +163,9 @@ class QuasiNewtonInteractive:
         )
 
     @staticmethod
-    def _get_BFGS(dx, dg, H_tmp):
-        return np.outer(dg, dg) / dg.dot(dx) - np.outer(H_tmp, H_tmp) / dx.dot(H_tmp)
+    def _get_BFGS(dx, dg, H):
+        Hx = H.dot(dx)
+        return np.outer(dg, dg) / dg.dot(dx) - np.outer(Hx, Hx) / dx.dot(Hx)
 
     def update_hessian(self, g, threshold=1e-4, mode="PSB"):
         if self.g_old is None:
@@ -178,7 +179,7 @@ class QuasiNewtonInteractive:
         elif mode == "PSB":
             self.hessian = self._get_PSB(dx, dg, H_tmp) + self.hessian
         elif mode == "BFGS":
-            self.hessian = self._get_BFGS(dx, dg, H_tmp) + self.hessian
+            self.hessian = self._get_BFGS(dx, dg, self.hessian) + self.hessian
         else:
             raise ValueError(
                 "Mode not recognized: {}. Choose from `SR`, `PSB` and `BFGS`".format(
