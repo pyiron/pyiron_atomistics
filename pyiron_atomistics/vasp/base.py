@@ -1528,6 +1528,12 @@ class VaspBase(GenericDFTJob):
             del new_ham.input.incar["LNONCOLLINEAR"]
         return new_ham
 
+    def restart_from_contcar(self, job_name=None)
+        new_ham = self.restart(job_name=job_name, job_type=job_type)
+        if new_ham.__name__ == self.__name__:
+            new_ham.structure = self.get_final_structure_from_file(filename="CONTCAR")
+        return new_ham
+        
     def restart_for_band_structure_calculations(self, job_name=None):
         """
         Restart a new job created from an existing Vasp calculation by reading the charge density
