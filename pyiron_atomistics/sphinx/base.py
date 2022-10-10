@@ -1548,13 +1548,8 @@ class SphinxBase(GenericDFTJob):
                         + "3+NIONS for non-magnetic systems"
                     )
 
-            if len(w) > 0:
-                print("WARNING:")
-                for ww in w:
-                    print(ww.message)
-                return False
-            else:
-                return True
+            return len(w) == 0
+
 
     def validate_ready_to_run(self):
         """
