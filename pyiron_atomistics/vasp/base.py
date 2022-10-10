@@ -1881,7 +1881,7 @@ class Input:
             structure,
             filename=posixpath.join(directory, "POSCAR"),
             write_species=not do_not_write_species,
-            allow_reordering=self.code_specific_options.allow_structure_reordering
+            allow_reordering=self.options.allow_structure_reordering
         )
 
     def to_hdf(self, hdf):
