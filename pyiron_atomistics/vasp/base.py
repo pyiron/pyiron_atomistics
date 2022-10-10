@@ -1918,7 +1918,7 @@ class Input:
             self.incar.from_hdf(hdf5_input)
             self.kpoints.from_hdf(hdf5_input)
             self.potcar.from_hdf(hdf5_input)
-            self.code_specific_options.from_hdf(hdf5_input)
+            self.options.from_hdf(hdf5_input)
 
             self._eddrmm = "ignore"
             if "vasp_dict" in hdf5_input.list_nodes():
