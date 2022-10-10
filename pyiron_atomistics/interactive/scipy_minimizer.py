@@ -295,7 +295,6 @@ class ScipyMinimizer(InteractiveWrapper):
 class ScipyMinimizerInput(HasStorage):
     def __init__(self):
         super().__init__()
-        self.storage.table_name = "parameters"
         self.storage.minimizer = "CG"
         self.storage.ionic_steps = 100
         self.storage.ionic_energy_tolerance = 0
@@ -303,6 +302,9 @@ class ScipyMinimizerInput(HasStorage):
         self.storage.pressure_tolerance = 1.0e-3
         self.storage.pressure = None
         self.storage.volume_only = False
+
+    def _get_hdf_group_name(self) -> str:
+        return "parameters"
 
     @property
     def minimizer(self) -> str:

@@ -103,6 +103,7 @@ class SphinxBase(GenericDFTJob):
         self._generic_input["restart_for_band_structure"] = False
         self._generic_input["path_name"] = None
         self._generic_input["n_path"] = None
+        self._generic_input["fix_spin_constraint"] = False
 
     def update_sphinx(self):
         if self._output_parser.old_version:
@@ -1383,14 +1384,7 @@ class SphinxBase(GenericDFTJob):
 
     @property
     def _spin_enabled(self):
-        if np.any(
-            [
-                m is not None
-                for m in self.structure.get_initial_magnetic_moments().flatten()
-            ]
-        ):
-            return True
-        return False
+        return self.structure.has("initial_magmoms")
 
     def get_charge_density(self):
         """
@@ -1475,9 +1469,10 @@ class SphinxBase(GenericDFTJob):
         lattice = self.structure.cell
         positions = self.structure.get_scaled_positions()
         numbers = self.structure.get_atomic_numbers()
-        magmoms = self.structure.get_initial_magnetic_moments()
-        if np.all([m is None for m in magmoms]) or ignore_magmoms:
+        if ignore_magmoms:
             magmoms = np.zeros(len(magmoms))
+        else:
+            magmoms = self.structure.get_initial_magnetic_moments()
         mag_num = np.array(list(zip(magmoms, numbers)))
         satz = np.unique(mag_num, axis=0)
         numbers = []
@@ -1833,40 +1828,31 @@ class InputWriter(object):
                 given the default input will be written. (optional)
         """
         state.logger.debug(f"Writing {file_name}")
-        if spins_list is None or len(spins_list) == 0:
-            state.logger.debug(
-                "Getting magnetic moments via \
-                get_initial_magnetic_moments"
-            )
+        state.logger.debug(
+            "Getting magnetic moments via \
+            get_initial_magnetic_moments"
+        )
+        if self.structure.has("initial_magmoms"):
             if any(
                 [
-                    m is not None
-                    for m in self.structure.get_initial_magnetic_moments().flatten()
+                    True
+                    if isinstance(spin, list) or isinstance(spin, np.ndarray)
+                    else False
+                    for spin in self.structure.get_initial_magnetic_moments()
                 ]
             ):
-                if any(
-                    [
-                        True
-                        if isinstance(spin, list) or isinstance(spin, np.ndarray)
-                        else False
-                        for spin in self.structure.get_initial_magnetic_moments()
-                    ]
-                ):
-                    raise ValueError(
-                        "SPHInX only supports collinear spins at the moment."
-                    )
-                else:
-                    constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
-                    spins = self.structure.get_initial_magnetic_moments()[
-                        self.id_pyi_to_spx
-                    ].astype(str)
-                    spins[~np.asarray(constraint)] = "X"
-                    spins_str = "\n".join(spins) + "\n"
-        if spins_str is not None:
-            if cwd is not None:
-                file_name = posixpath.join(cwd, file_name)
-            with open(file_name, "w") as f:
-                f.write(spins_str)
+                raise ValueError("SPHInX only supports collinear spins at the moment.")
+            else:
+                constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
+                if spins_list is None or len(spins_list) == 0:
+                    spins_list = self.structure.get_initial_magnetic_moments()
+                spins = spins_list[self.id_pyi_to_spx].astype(str)
+                spins[~np.asarray(constraint)] = "X"
+                spins_str = "\n".join(spins) + "\n"
+                if cwd is not None:
+                    file_name = posixpath.join(cwd, file_name)
+                with open(file_name, "w") as f:
+                    f.write(spins_str)
         else:
             state.logger.debug("No magnetic moments")
 

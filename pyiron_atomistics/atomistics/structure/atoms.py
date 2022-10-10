@@ -11,6 +11,7 @@ from collections import OrderedDict
 import numpy as np
 import warnings
 import seekpath
+import importlib
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
@@ -243,7 +244,7 @@ class Atoms(ASEAtoms):
         if self.has("initial_magmoms"):
             return self.arrays["initial_magmoms"]
         else:
-            return
+            raise AttributeError("'Atoms' object has no attribute 'spins'")
 
     @spins.setter
     def spins(self, val):
@@ -458,7 +459,6 @@ class Atoms(ASEAtoms):
         """
         # import time
         with hdf.open(group_name) as hdf_structure:
-            # time_start = time.time()
             hdf_structure["TYPE"] = str(type(self))
             for el in self.species:
                 if isinstance(el.tags, dict):
@@ -483,12 +483,11 @@ class Atoms(ASEAtoms):
 
             # hdf_structure["coordinates"] = self.positions  # "Atomic coordinates"
             hdf_structure["positions"] = self.positions  # "Atomic coordinates"
-            hdf_structure["spins"] = self.spins
+            if self.has("initial_magmoms"):
+                hdf_structure["spins"] = self.spins
             # potentials with explicit bonds (TIP3P, harmonic, etc.)
             if self.bonds is not None:
                 hdf_structure["explicit_bonds"] = self.bonds
-
-            # print ('time in atoms.to_hdf: ', time.time() - time_start)
 
             if self._high_symmetry_points is not None:
                 hdf_structure["high_symmetry_points"] = self._high_symmetry_points
@@ -497,6 +496,14 @@ class Atoms(ASEAtoms):
                 hdf_structure["high_symmetry_path"] = self._high_symmetry_path
 
             hdf_structure["info"] = self.info
+
+            if self.calc is not None:
+                calc_dict = self.calc.todict()
+                calc_dict["label"] = self.calc.label
+                calc_dict["class"] = (
+                    self.calc.__class__.__module__ + "." + self.calc.__class__.__name__
+                )
+                hdf_structure["calculator"] = calc_dict
 
     def from_hdf(self, hdf, group_name="structure"):
         """
@@ -588,6 +595,14 @@ class Atoms(ASEAtoms):
                     self._high_symmetry_path = hdf_atoms["high_symmetry_path"]
                 if "info" in hdf_atoms.list_nodes():
                     self.info = hdf_atoms["info"]
+                if "calculator" in hdf_atoms:
+                    calc_dict = hdf_atoms["calculator"]
+                    class_path = calc_dict.pop("class")
+                    calc_module = importlib.import_module(
+                        ".".join(class_path.split(".")[:-1])
+                    )
+                    calc_class = getattr(calc_module, class_path.split(".")[-1])
+                    self.calc = calc_class(**calc_dict)
                 return self
 
         else:
@@ -1809,7 +1824,9 @@ class Atoms(ASEAtoms):
             symprec=symprec, angle_tolerance=angle_tolerance
         ).refine_cell()
 
-    @deprecate("Use structure.get_symmetry().primitive_cell instead")
+    @deprecate(
+        "Use structure.get_symmetry().get_primitive_cell(standardize=False) instead"
+    )
     def get_primitive_cell(self, symprec=1e-5, angle_tolerance=-1.0):
         """
 
@@ -1822,7 +1839,7 @@ class Atoms(ASEAtoms):
         """
         return self.get_symmetry(
             symprec=symprec, angle_tolerance=angle_tolerance
-        ).primitive_cell
+        ).get_primitive_cell(standardize=False)
 
     @deprecate("Use structure.get_symmetry().get_ir_reciprocal_mesh() instead")
     def get_ir_reciprocal_mesh(
@@ -2542,7 +2559,7 @@ class Atoms(ASEAtoms):
                 else:
                     return np.array([float(spin) if spin else 0.0 for spin in spin_lst])
             else:
-                return np.array([None] * len(self))
+                return np.zeros(len(self))
 
     def set_initial_magnetic_moments(self, magmoms=None):
         """
