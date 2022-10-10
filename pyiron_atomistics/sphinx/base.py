@@ -1550,7 +1550,6 @@ class SphinxBase(GenericDFTJob):
 
             return len(w) == 0
 
-
     def validate_ready_to_run(self):
         """
         Checks whether parameters are set appropriately. It does not
