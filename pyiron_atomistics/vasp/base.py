@@ -1853,7 +1853,7 @@ class Input:
         self.incar = Incar(table_name="incar")
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
-        self.code_specific_options = VaspSpecificOptions()
+        self.options = VaspSpecificOptions()
 
         self._eddrmm = "warn"
 
