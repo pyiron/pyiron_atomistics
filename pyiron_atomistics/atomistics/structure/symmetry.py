@@ -19,6 +19,8 @@ __email__ = "waseda@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+class SymmetryError(Exception):
+    pass
 
 class Symmetry(dict):
 
@@ -260,11 +262,14 @@ class Symmetry(dict):
 
 
         """
-        return spglib.get_symmetry(
+        sym = spglib.get_symmetry(
             cell=self._get_spglib_cell(),
             symprec=symprec,
             angle_tolerance=angle_tolerance,
         )
+        if sym is None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
+        return sym
 
     @property
     def info(self):
