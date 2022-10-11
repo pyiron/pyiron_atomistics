@@ -278,11 +278,14 @@ class Symmetry(dict):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        return spglib.get_symmetry_dataset(
+        info = spglib.get_symmetry_dataset(
             cell=self._get_spglib_cell(use_magmoms=False),
             symprec=self._symprec,
             angle_tolerance=self._angle_tolerance,
         )
+        if info is None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
+        return info
 
     @property
     def spacegroup(self):
@@ -300,7 +303,10 @@ class Symmetry(dict):
             cell=self._get_spglib_cell(use_magmoms=False),
             symprec=self._symprec,
             angle_tolerance=self._angle_tolerance,
-        ).split()
+        )
+        if space_group is None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
+        space_group = space_group.split()
         if len(space_group) == 1:
             return {"Number": ast.literal_eval(space_group[0])}
         return {
@@ -330,10 +336,13 @@ class Symmetry(dict):
         >>> len(symmetry.get_primitive_cell()) == len(basis)
         True
         """
-        cell, positions, indices = spglib.standardize_cell(
+        ret = spglib.standardize_cell(
             self._get_spglib_cell(use_elements=use_elements, use_magmoms=use_magmoms),
             to_primitive=not standardize,
         )
+        if ret is None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
+        cell, positions, indices = ret
         positions = (cell.T @ positions.T).T
         new_structure = self._structure.copy()
         new_structure.cell = cell
@@ -357,10 +366,12 @@ class Symmetry(dict):
         is_shift=np.zeros(3, dtype="intc"),
         is_time_reversal=True,
     ):
-        return spglib.get_ir_reciprocal_mesh(
+        mesh = spglib.get_ir_reciprocal_mesh(
             mesh=mesh,
             cell=self._get_spglib_cell(),
             is_shift=is_shift,
             is_time_reversal=is_time_reversal,
             symprec=self._symprec,
         )
+        if mesh is not None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
