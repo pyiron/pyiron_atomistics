@@ -113,7 +113,7 @@ class ScipyMinimizer(InteractiveWrapper):
             method=self.input.minimizer,
             fun=self._get_value,
             x0=x0,
-            jac=self._get_gradient,
+            jac=self._get_gradient if self.input.use_pressure else None,
             tol=1.0e-20,
             options={"maxiter": self.input.ionic_steps, "return_all": True},
         )
@@ -190,7 +190,7 @@ class ScipyMinimizer(InteractiveWrapper):
             if max_force > self.input.ionic_force_tolerance:
                 return False
         elif self.input.volume_only:
-            if (
+            if self.input.use_pressure and (
                 np.absolute(self._get_pressure() - self.input.pressure).max()
                 > self.input.pressure_tolerance
             ):
@@ -198,7 +198,7 @@ class ScipyMinimizer(InteractiveWrapper):
         else:
             if max_force > self.input.ionic_force_tolerance:
                 return False
-            if (
+            if self.input.use_pressure and (
                 np.absolute(self._get_pressure() - self.input.pressure).max()
                 > self.input.pressure_tolerance
             ):
@@ -301,6 +301,7 @@ class ScipyMinimizerInput(HasStorage):
         self.storage.ionic_force_tolerance = 1.0e-2
         self.storage.pressure_tolerance = 1.0e-3
         self.storage.pressure = None
+        self.storage.use_pressure = True
         self.storage.volume_only = False
 
     def _get_hdf_group_name(self) -> str:
@@ -363,6 +364,15 @@ class ScipyMinimizerInput(HasStorage):
     def pressure(self, value: Iterable[float]):
         value = list(value)
         self.storage.pressure = value
+
+    @property
+    def use_pressure(self) -> bool:
+        """bool: rely on pressures computed by reference job or not"""
+        return self.storage.use_pressure
+
+    @use_pressure.setter
+    def use_pressure(self, value: bool):
+        self.storage.use_pressure = value
 
     @property
     def volume_only(self) -> bool:
