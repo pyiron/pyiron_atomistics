@@ -414,8 +414,8 @@ class StructurePlots:
             "triclinic": 1,
             "monoclinic": 3,
             "orthorhombic": 16,
-            "trigonal": 75,
-            "tetragonal": 143,
+            "tetragonal": 75,
+            "trigonal": 143,
             "hexagonal": 168,
             "cubic": 195,
         }
