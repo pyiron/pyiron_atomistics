@@ -384,7 +384,10 @@ class StructurePlots:
                 return "cubic"
 
         def extract(s):
-            spg = s.get_symmetry(symprec=symprec).spacegroup["Number"]
+            try:
+                spg = s.get_symmetry(symprec=symprec).spacegroup["Number"]
+            except:
+                spg = 1
             return {"space_group": spg, "crystal_system": get_crystal_system(spg)}
 
         return pd.DataFrame(map(extract, self._store.iter_structures()))

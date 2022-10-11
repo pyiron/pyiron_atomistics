@@ -373,5 +373,6 @@ class Symmetry(dict):
             is_time_reversal=is_time_reversal,
             symprec=self._symprec,
         )
-        if mesh is not None:
+        if mesh is None:
             raise SymmetryError(spglib.spglib.spglib_error.message)
+        return mesh
