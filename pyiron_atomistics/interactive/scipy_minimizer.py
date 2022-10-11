@@ -114,7 +114,7 @@ class ScipyMinimizer(InteractiveWrapper):
             fun=self._get_value,
             x0=x0,
             jac=self._get_gradient if self.input.use_pressure else None,
-            tol=1.0e-20,
+            tol=self.input.ionic_energy_tolerance,
             options={"maxiter": self.input.ionic_steps, "return_all": True},
         )
         self.status.collect = True
