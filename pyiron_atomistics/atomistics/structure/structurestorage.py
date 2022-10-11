@@ -413,7 +413,7 @@ class StructurePlots:
         sort_key = {
             "triclinic": 1,
             "monoclinic": 3,
-            "orthorombic": 16,
+            "orthorhombic": 16,
             "trigonal": 75,
             "tetragonal": 143,
             "hexagonal": 168,
