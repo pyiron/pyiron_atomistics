@@ -8,7 +8,7 @@ dependencies:
 - codacy-coverage
 - defusedxml =0.7.1
 - h5py =3.7.0
-- matplotlib-base =3.6.0
+- matplotlib-base =3.6.1
 - mendeleev =0.11.0
 - numpy =1.23.3
 - pandas =1.5.0
