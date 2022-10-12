@@ -418,7 +418,7 @@ class Potcar(GenericParameters):
             self[key] = val
 
     def _set_potential_paths(self):
-        
+
         prev_element = self._structure.elements[0]
         object_list = [prev_element]
         element_list = [prev_element.Abbreviation]
