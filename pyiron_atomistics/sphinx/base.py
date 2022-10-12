@@ -691,6 +691,10 @@ class SphinxBase(GenericDFTJob):
         Loads defaults for all SPHInX input groups, including a
         ricQN-based main Group.
 
+        .. warning::
+            Sphinx does not support volume minimizations!  Calling this method with `pressure` or `volume_only` results
+            in an error.
+
         Args:
             retain_electrostatic_potential:
             retain_charge_density:
@@ -710,7 +714,7 @@ class SphinxBase(GenericDFTJob):
                                   forces (optional)
             volume_only (bool):
         """
-        if pressure is not None:
+        if pressure is not None or volume_only:
             raise NotImplementedError(
                 "pressure minimization is not implemented in SPHInX"
             )
