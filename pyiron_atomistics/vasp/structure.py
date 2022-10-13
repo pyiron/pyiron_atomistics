@@ -4,7 +4,7 @@
 
 from collections import OrderedDict
 import numpy as np
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, pyiron_to_pymatgen
 import warnings
 
 __author__ = "Sudarsan Surendralal"
@@ -79,7 +79,7 @@ def get_species_list_from_potcar(filename="POTCAR"):
     return species_list
 
 
-def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=True, allow_reordering=True):
+def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=True):
     """
     Writes a POSCAR type file from a structure object
 
@@ -111,23 +111,15 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
             f.write("Selective dynamics" + endline)
         positions = list()
         selec_dyn_lst = list()
-        if allow_reordering:
-            for species in atom_numbers.keys():
-                indices = structure.select_index(species)
-                for i in indices:
-                    if cartesian:
-                        positions.append(structure.positions[i])
-                    else:
-                        positions.append(structure.get_scaled_positions()[i])
-                    if selec_dyn:
-                        selec_dyn_lst.append(structure.selective_dynamics[i])
-        else:
-            if cartesian:
-                positions = structure.positions
-            else:
-                positions = structure.get_scaled_positions()
-            if selec_dyn:
-                selec_dyn_lst = structure.selective_dynamics
+        for species in atom_numbers.keys():
+            indices = structure.select_index(species)
+            for i in indices:
+                if cartesian:
+                    positions.append(structure.positions[i])
+                else:
+                    positions.append(structure.get_scaled_positions()[i])
+                if selec_dyn:
+                    selec_dyn_lst.append(structure.selective_dynamics[i])
         if cartesian:
             f.write("Cartesian" + endline)
         else:
@@ -327,24 +319,24 @@ def _dict_to_atoms(atoms_dict, species_list=None, read_from_first_line=False):
     return atoms
 
 
-def vasp_sorter(structure):
-    """
-    Routine to sort the indices of a structure as it would be when written to a POSCAR file
+# def vasp_sorter(structure):
+#     """
+#     Routine to sort the indices of a structure as it would be when written to a POSCAR file
 
-    Args:
-        structure (pyiron.atomistics.structure.atoms.Atoms): The structure whose indices need to be sorted
+#     Args:
+#         structure (pyiron.atomistics.structure.atoms.Atoms): The structure whose indices need to be sorted
 
-    Returns:
-        list: A list of indices which is sorted by the corresponding species for writing to POSCAR
+#     Returns:
+#         list: A list of indices which is sorted by the corresponding species for writing to POSCAR
 
-    """
-    atom_numbers = structure.get_number_species_atoms()
-    sorted_indices = list()
-    for species in atom_numbers.keys():
-        indices = structure.select_index(species)
-        for i in indices:
-            sorted_indices.append(i)
-    return np.array(sorted_indices)
+#     """
+#     atom_numbers = structure.get_number_species_atoms()
+#     sorted_indices = list()
+#     for species in atom_numbers.keys():
+#         indices = structure.select_index(species)
+#         for i in indices:
+#             sorted_indices.append(i)
+#     return np.array(sorted_indices)
 
 
 def manip_contcar(filename, new_filename, add_pos):

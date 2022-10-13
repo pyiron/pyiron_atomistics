@@ -1876,12 +1876,12 @@ class Input:
     def _map_pyiron_to_user_idx(self):
         """
         This writes the indices maps for user->pyiron (idx_user_to_pyiron), and pyiron->user (idx_pyiron_to_user)
-        This looks in Input.options for the allow_reordering boolean value, and decides to return either 
+        This looks in Input.options for the allow_structure_reordering boolean value, and decides to return either 
         1. Sorting map when species-based reordering is allowed (default behaviour of pyiron)
         or 
         2. Sorting map when sorting is forbidden, in which case naive map (1:1, 2:2 etc.) is returned.
         """
-        if self.options.allow_reordering:
+        if self.options.allow_structure_reordering:
             atom_numbers = self.structure.get_number_species_atoms()
 
             idx_user_to_pyiron = list()
