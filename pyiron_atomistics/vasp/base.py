@@ -2129,7 +2129,7 @@ class Output:
             ] = self.vp_new.get_potentiostat_output()
             valence_charges_orig = self.vp_new.get_valence_electrons_per_atom()
             valence_charges = valence_charges_orig.copy()
-            valence_charges[self._idx_pyiron_to_user] = valence_charges_orig
+            valence_charges[self._job._idx_pyiron_to_user] = valence_charges_orig
             self.generic_output.dft_log_dict["valence_charges"] = valence_charges
 
         elif outcar_working:
