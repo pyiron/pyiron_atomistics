@@ -79,8 +79,6 @@ class VaspBase(GenericDFTJob):
 
     def __init__(self, project, job_name):
         super(VaspBase, self).__init__(project, job_name)
-        self._idx_pyiron_to_user = None
-        self._idx_user_to_pyiron = None
         self.input = Input()
         self.input.incar["SYSTEM"] = self.job_name
         self._output_parser = Output(self)
@@ -367,8 +365,10 @@ class VaspBase(GenericDFTJob):
                     self.logger.info(
                         "The POSCAR file will be overwritten by the CONTCAR file specified in restart_file_list."
                     )
+        # Structure being fed into the .write() function is sorted, that's why write()'s structure input is not sorted
+        # i.e. write() in write_input() has the sorted structure, so a second sorting in write() is not required
         self.input.write(
-            structure=self.structure,
+            structure=self.structure[self.idx_user_to_pyiron],
             directory=self.working_directory,
             modified_elements=modified_elements,
         )
@@ -761,7 +761,7 @@ class VaspBase(GenericDFTJob):
         """
         Resets the output instance
         """
-        self._output_parser = Output()
+        self._output_parser = Output(self)
 
     def get_final_structure_from_file(self, filename="CONTCAR"):
         """
@@ -1447,7 +1447,7 @@ class VaspBase(GenericDFTJob):
             iteration_step (int): Step for which the structure is requested
 
         Returns:
-            numpy.ndarray/None: array of final magmetic moments or None if no magnetic moment is given
+            numpy.ndarray/None: array of final magnetic moments or None if no magnetic moment is given
         """
         spins = self["output/generic/dft/final_magmoms"]
         if spins is not None and len(spins) > 0:
@@ -1889,22 +1889,31 @@ class Input:
                 indices = self.structure.select_index(species)
                 for i in indices:
                     idx_user_to_pyiron.append(i)
-            self._idx_user_to_pyiron(np.array(idx_user_to_pyiron))
+            self._idx_user_to_pyiron = np.array(idx_user_to_pyiron)
 
-            idx_pyiron_to_user = np.array([0] * len(idx_pyiron_to_user))
+            idx_pyiron_to_user = np.array([0] * len(idx_user_to_pyiron))
             for i, p in enumerate(idx_user_to_pyiron):
                 idx_pyiron_to_user[p] = i
-            self._idx_pyiron_to_user(idx_pyiron_to_user)
+            self._idx_pyiron_to_user = idx_pyiron_to_user
         else:
-            idx_user_to_pyiron = np.arange(len(self.structure))
-            idx_pyiron_to_user = np.arange(len(self.structure))
+            self._idx_user_to_pyiron = np.arange(len(self.structure))
+            self._idx_pyiron_to_user = np.arange(len(self.structure))
 
     def write(self, structure, modified_elements, directory=None):
         """
         Writes all the input files to a specified directory
 
         Args:
-            structure (atomistics.structure.atoms.Atoms instance): Structure to be written
+            structure (atomistics.structure.atoms.Atoms instance): Structure (unsorted) to be written 
+
+            The structure obj being fed into this fn at .write_input() function is sorted;
+            this fn's structure doesn't need to be a sorted structure (if generating the job normally)
+            If using this manually (for whatever reason), to generate consistent input with what is generated with 
+            write_input(), which calls this fn to write the actual files to the job directory,
+            you should feed the job structure like so:
+            
+            job.input.write(job.structure[job.idx_user_to_pyiron],...)
+
             directory (str): The working directory for the VASP run
         """
         self.incar.write_file(file_name="INCAR", cwd=directory)
@@ -1923,7 +1932,6 @@ class Input:
             structure,
             filename=posixpath.join(directory, "POSCAR"),
             write_species=not do_not_write_species,
-            allow_reordering=self.options.allow_structure_reordering
         )
 
     def to_hdf(self, hdf):
@@ -2129,7 +2137,7 @@ class Output:
             ] = self.vp_new.get_potentiostat_output()
             valence_charges_orig = self.vp_new.get_valence_electrons_per_atom()
             valence_charges = valence_charges_orig.copy()
-            valence_charges[self._job._idx_pyiron_to_user] = valence_charges_orig
+            valence_charges[self._job.idx_pyiron_to_user] = valence_charges_orig
             self.generic_output.dft_log_dict["valence_charges"] = valence_charges
 
         elif outcar_working:
