@@ -314,7 +314,9 @@ class DebyeModel(object):
         }
 
 
-def _strain_axes(structure: Atoms, axes: Literal["x", "y", "z"], volume_strain: float) -> Atoms:
+def _strain_axes(
+    structure: Atoms, axes: Literal["x", "y", "z"], volume_strain: float
+) -> Atoms:
     """
     Strain box along given axes to achieve given *volumetric* strain.
 
@@ -324,7 +326,7 @@ def _strain_axes(structure: Atoms, axes: Literal["x", "y", "z"], volume_strain: 
     num_axes = sum(axes)
     # formula calculates the strain along each axis to achieve the overall volumetric strain
     # beware that: (1+e)**x - 1 != e**x
-    strains = axes * ( (1+volume_strain) ** (1.0 / num_axes) - 1 )
+    strains = axes * ((1 + volume_strain) ** (1.0 / num_axes) - 1)
     return structure.apply_strain(strains, return_box=True)
 
 
@@ -337,18 +339,18 @@ class MurnaghanJobGenerator(JobGenerator):
             (list)
         """
         parameter_lst = []
-        strains = self._master.input.get('strains')
+        strains = self._master.input.get("strains")
         if strains is None:
             strains = np.linspace(
-                    -self._master.input["vol_range"],
-                     self._master.input["vol_range"],
-                     int(self._master.input["num_points"])
+                -self._master.input["vol_range"],
+                self._master.input["vol_range"],
+                int(self._master.input["num_points"]),
             )
         for strain in strains:
             basis = _strain_axes(
                 self._master.structure, self._master.input["axes"], strain
             )
-            parameter_lst.append([1+np.round(strain, 7), basis])
+            parameter_lst.append([1 + np.round(strain, 7), basis])
         return parameter_lst
 
     def job_name(self, parameter):
@@ -675,7 +677,7 @@ class Murnaghan(AtomisticParallelMaster):
         )
         self.input["strains"] = (
             None,
-            "List of strains that should be calculated.  If given vol_range and num_points take no effect."
+            "List of strains that should be calculated.  If given vol_range and num_points take no effect.",
         )
 
         self.debye_model = DebyeModel(self)
