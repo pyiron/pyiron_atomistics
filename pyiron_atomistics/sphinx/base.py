@@ -1732,7 +1732,7 @@ class SphinxBase(GenericDFTJob):
         sxversion = 'sphinx'
         if (isinstance(module_version,str) and not "sphinx" in module_version):
             sxversion += '/' + module_version
-        elif (isinstance(module_version,_auto_sxversion)):
+        elif (isinstance(module_version,Automatic)):
             # TODO: find a way to determine from self.executable
             out = subprocess.run ("module load sphinx", cwd=self.working_directory, shell=True)
             if (out.returncode != 0):
