@@ -9,12 +9,15 @@ import os
 import posixpath
 import re
 import stat
-from shutil import copyfile
+from shutil import copyfile, move as movefile
 import scipy.constants
 import warnings
 import json
 import spglib
 import subprocess
+from subprocess import PIPE
+import tarfile
+from tempfile import TemporaryDirectory
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
@@ -33,8 +36,6 @@ from pyiron_atomistics.sphinx.util import _Auto_sxversion as Automatic
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
 from pyiron_base import HasGroups
-
-from subprocess import PIPE
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -1764,7 +1765,7 @@ class SphinxBase(GenericDFTJob):
 
         if self.is_compressed () and isinstance(from_tar,list):
             # run addon in temporary directory
-            with tempfile.TemporaryDirectory() as tempd:
+            with TemporaryDirectory() as tempd:
                 if not silent:
                     print ("Running {} in temporary directory {}".format(
                            addon, tempd))
@@ -1801,8 +1802,8 @@ class SphinxBase(GenericDFTJob):
                 # move output to working directory for successful runs
                 if out.returncode == 0:
                     for file in os.listdir(tempd):
-                        shutil.move (os.path.join (tempd, file),
-                                     self.working_directory)
+                        movefile (os.path.join (tempd, file),
+                                  self.working_directory)
                         if not silent:
                             print ("Copying " + file + " to "
                                    + self.working_directory)
