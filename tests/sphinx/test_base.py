@@ -700,6 +700,26 @@ class TestSphinx(unittest.TestCase):
         spx.run()
         self.assertEqual(spx["spins.in"], ["2\n", "X\n"])
 
+    def test_run_addon(self):
+        # test module_version=None if doable (installation may need module)
+        try:
+            out = self.sphinx.run_addon("sxcheckinput","--version",module_version=None,debug=True)
+            self.assertEqual(out.args, "sxcheckinput --version --log")
+        except:
+            pass
+
+        # test addons from compressed job
+        self.sphinx.compress ()
+        out = self.sphinx.run_addon("sxcheckinput",from_tar=["input.sx"],log=False,debug=True)
+        self.assert(out.returncode == 0)
+
+        # test addon from decompressed job (with log file)
+        self.sphinx.decompress ()
+        self.sphinx.run_addon("sxcheckinput")
+        with open(os.path.join (self.sphinx.working_directory, "sxcheckinput.log") ) as logfile:
+            lines = [ logfile.readlines() ]
+        self.assert("Checking for dublets...ok\n" in lines)
+
 
 if __name__ == "__main__":
     unittest.main()

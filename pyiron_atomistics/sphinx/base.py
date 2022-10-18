@@ -14,6 +14,7 @@ import scipy.constants
 import warnings
 import json
 import spglib
+import subprocess
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
@@ -28,9 +29,12 @@ from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
+from pyiron_atomistics.sphinx.util import _Auto_sxversion as Automatic
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
 from pyiron_base import HasGroups
+
+from subprocess import PIPE
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -1701,6 +1705,121 @@ class SphinxBase(GenericDFTJob):
                 for p in state.settings.resource_paths
             ]
         )
+
+    def run_addon(self, addon, args=None, from_tar=None,
+                  silent=False, log=True,
+                  module_version=Automatic,
+                  debug=False):
+        """ Run a SPHInX addon
+
+            addon          - name of addon (str)
+            args           - arguments (str or list)
+            from_tar       - if job is compressed, extract these files (list)
+            silent         - do not print output for successful runs?
+            log            - produce log file?
+            module_version - which sphinx version to load (str or None)
+            debug          - return subprocess.CompletedProcess ?
+
+        """
+        if self.is_compressed () and from_tar is None:
+            raise FileNotFoundError (
+                "Cannot run add-on on compressed job without 'from_tar' parameter.\n"
+               +"   Solution 1: Run .decompress () first.\n"
+               +"   Solution 2: specify from_tar list to run in temporary directory\n"
+               +"   Solution 3: run with from_tar=[] if no files from tar are needed\n"
+                )
+
+        sxversion = 'sphinx'
+        if (isinstance(module_version,str) and not "sphinx" in module_version):
+            sxversion += '/' + module_version
+        elif (isinstance(module_version,_auto_sxversion)):
+            # TODO: find a way to determine from self.executable
+            out = subprocess.run ("module load sphinx", cwd=self.working_directory, shell=True)
+            if (out.returncode != 0):
+                module_version=None
+                # Check that addon can be called without any module
+                out = subprocess.run (addon + " --version", cwd=self.working_directory, shell=True,
+                                      text=True, stdout=PIPE, stderr=PIPE)
+                if (out.returncode != 0):
+                    print(out.stdout)
+                    print(out.stderr)
+                    if (debug): return out
+                    raise RuntimeError (addon + " cannot be called with default PATH.\n" +
+                                        "Try specifying module_version or setting PATH.")
+            else:
+                module_version = sxversion
+
+        # prepare argument list
+        if (args is None):
+            args = ""
+        elif (isinstance(args,list)):
+            args=' '.join (args)
+        if (log):
+            args += ' --log'
+
+        if module_version is None:
+            cmd = addon + ' ' + args
+        else:
+            cmd = ' '.join (['module load', sxversion, '&&', addon, args])
+
+        if self.is_compressed () and isinstance(from_tar,list):
+            # run addon in temporary directory
+            with tempfile.TemporaryDirectory() as tempd:
+                if not silent:
+                    print ("Running {} in temporary directory {}".format(
+                           addon, tempd))
+
+                # extract files from list
+                tarfilename = os.path.join (job.working_directory, job.job_name + '.tar.bz2')
+                with tarfile.open (tarfilename,'r:bz2') as tf:
+                    for file in from_tar:
+                        try:
+                            tf.extract(file,path=tempd)
+                        except:
+                            print ("Cannot extract " + file + " from " + tarfilename)
+                # link other files
+                linkfiles=[]
+                for file in job.list_files ():
+                    linkfile=os.path.join(tempd, file)
+                    if not os.path.isfile (linkfile):
+                        os.symlink(os.path.join (self.working_directory, file),
+                                   linkfile, target_is_directory=True)
+                        linkfiles.append (linkfile)
+                # now run
+                out = subprocess.run (cmd, cwd=tempd, shell=True,
+                                      stdout=PIPE, stderr=PIPE, text=True)
+
+                # now clean tempdir
+                for file in from_tar:
+                    try:
+                        os.remove (os.path.join (tempd, file))
+                    except FileNotFoundError:
+                        pass
+                for linkfile in linkfiles:
+                    if os.path.islink: os.remove (linkfile)
+
+                # move output to working directory for successful runs
+                if out.returncode == 0:
+                    for file in os.listdir(tempd):
+                        shutil.move (os.path.join (tempd, file),
+                                     self.working_directory)
+                        if not silent:
+                            print ("Copying " + file + " to "
+                                   + self.working_directory)
+                else:
+                    print (addon + " crashed - potential output files are not kept.")
+
+        else:
+            out = subprocess.run (cmd, cwd=self.working_directory, shell=True,\
+                                  stdout=PIPE, stderr=PIPE, text=True)
+            if (out.returncode != 0): print (addon + " crashed.")
+
+        # print output
+        if not silent or out.returncode != 0:
+            if (out.returncode != 0): print (addon + " output:\n\n")
+            print (out.stdout)
+            if (out.returncode != 0): print (out.stderr)
+        return out if debug else None
 
 
 class InputWriter(object):
