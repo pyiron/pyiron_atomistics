@@ -66,15 +66,15 @@ class SphinxBase(GenericDFTJob):
 
     ```python
     # Modify/add a new parameter via
-    job.input.PAWHamiltonian.nEmptyStates = 15
-    job.input.PAWHamiltonian.dipoleCorrection = True
+    job.input.sphinx.PAWHamiltonian.nEmptyStates = 15
+    job.input.sphinx.PAWHamiltonian.dipoleCorrection = True
     # or
-    job.input.PAWHamiltonian.set("nEmptyStates", 15)
-    job.input.PAWHamiltonian.set("dipoleCorrection", True)
+    job.input.sphinx.PAWHamiltonian.set("nEmptyStates", 15)
+    job.input.sphinx.PAWHamiltonian.set("dipoleCorrection", True)
     # Modify/add a sub-group via
-    job.input.initialGuess.rho.charged = {"charge": 2, "z": 25}
+    job.input.sphinx.initialGuess.rho.charged = {"charge": 2, "z": 25}
     # or
-    job.input.initialGuess.rho.set("charged", {"charge": 2, "z": 25})
+    job.input.sphinx.initialGuess.rho.set("charged", {"charge": 2, "z": 25})
     ```
 
     Args:
