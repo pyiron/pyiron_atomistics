@@ -11,7 +11,6 @@ __date__ = "Oct 15, 2022"
 
 
 class _Auto_sxversion():
-    """ Empty class to signal automatic version finding
-    """
+    """ Empty class to signal automatic version finding"""
     def __init__(self): pass
 

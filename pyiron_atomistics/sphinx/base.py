@@ -1734,7 +1734,7 @@ class SphinxBase(GenericDFTJob):
         if isinstance(module_version,str):
             if "sphinx" not in module_version:
                 sxversion += '/' + module_version
-            else
+            else:
                 sxversion = module_version
         elif module_version is Automatic:
             # TODO: find a way to determine from self.executable
