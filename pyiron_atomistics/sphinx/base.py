@@ -1733,9 +1733,11 @@ class SphinxBase(GenericDFTJob):
         sxversion = 'sphinx'
         if (isinstance(module_version,str) and not "sphinx" in module_version):
             sxversion += '/' + module_version
-        elif (isinstance(module_version,Automatic)):
+        elif (module_version is Automatic):
             # TODO: find a way to determine from self.executable
-            out = subprocess.run ("module load sphinx", cwd=self.working_directory, shell=True)
+            out = subprocess.run ("module load sphinx",
+                                  cwd=self.working_directory,
+                                  shell=True, stdout=PIPE, stderr=PIPE)
             if (out.returncode != 0):
                 module_version=None
                 # Check that addon can be called without any module
@@ -1771,7 +1773,7 @@ class SphinxBase(GenericDFTJob):
                            addon, tempd))
 
                 # extract files from list
-                tarfilename = os.path.join (job.working_directory, job.job_name + '.tar.bz2')
+                tarfilename = os.path.join (self.working_directory, self.job_name + '.tar.bz2')
                 with tarfile.open (tarfilename,'r:bz2') as tf:
                     for file in from_tar:
                         try:
@@ -1780,7 +1782,7 @@ class SphinxBase(GenericDFTJob):
                             print ("Cannot extract " + file + " from " + tarfilename)
                 # link other files
                 linkfiles=[]
-                for file in job.list_files ():
+                for file in self.list_files ():
                     linkfile=os.path.join(tempd, file)
                     if not os.path.isfile (linkfile):
                         os.symlink(os.path.join (self.working_directory, file),
