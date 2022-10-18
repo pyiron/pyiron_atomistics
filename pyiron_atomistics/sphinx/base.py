@@ -1731,33 +1731,36 @@ class SphinxBase(GenericDFTJob):
                 )
 
         sxversion = 'sphinx'
-        if (isinstance(module_version,str) and not "sphinx" in module_version):
-            sxversion += '/' + module_version
-        elif (module_version is Automatic):
+        if isinstance(module_version,str):
+            if "sphinx" not in module_version:
+                sxversion += '/' + module_version
+            else
+                sxversion = module_version
+        elif module_version is Automatic:
             # TODO: find a way to determine from self.executable
             out = subprocess.run ("module load sphinx",
                                   cwd=self.working_directory,
                                   shell=True, stdout=PIPE, stderr=PIPE)
-            if (out.returncode != 0):
+            if out.returncode != 0:
                 module_version=None
                 # Check that addon can be called without any module
                 out = subprocess.run (addon + " --version", cwd=self.working_directory, shell=True,
                                       text=True, stdout=PIPE, stderr=PIPE)
-                if (out.returncode != 0):
+                if out.returncode != 0:
                     print(out.stdout)
                     print(out.stderr)
-                    if (debug): return out
+                    if debug: return out
                     raise RuntimeError (addon + " cannot be called with default PATH.\n" +
                                         "Try specifying module_version or setting PATH.")
             else:
                 module_version = sxversion
 
         # prepare argument list
-        if (args is None):
+        if args is None:
             args = ""
-        elif (isinstance(args,list)):
+        elif isinstance(args,list):
             args=' '.join (args)
-        if (log):
+        if log:
             args += ' --log'
 
         if module_version is None:
@@ -1815,13 +1818,13 @@ class SphinxBase(GenericDFTJob):
         else:
             out = subprocess.run (cmd, cwd=self.working_directory, shell=True,\
                                   stdout=PIPE, stderr=PIPE, text=True)
-            if (out.returncode != 0): print (addon + " crashed.")
+            if out.returncode != 0: print (addon + " crashed.")
 
         # print output
         if not silent or out.returncode != 0:
-            if (out.returncode != 0): print (addon + " output:\n\n")
+            if out.returncode != 0: print (addon + " output:\n\n")
             print (out.stdout)
-            if (out.returncode != 0): print (out.stderr)
+            if out.returncode != 0: print (out.stderr)
         return out if debug else None
 
 
