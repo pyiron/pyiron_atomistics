@@ -1750,9 +1750,12 @@ class SphinxBase(GenericDFTJob):
         if isinstance(version,str):
             if version in sxv.keys ():
                 cmd = sxv[version] + " && " + cmd
-            elif version != ":
-                raise "version '" + version + "' not found. Available versions are\n" \
-                      + "\n".join (sxv.keys ())
+            elif version != "":
+                raise KeyError(
+                    "version '" + version
+                    + "' not found. Available versions are: '" \
+                    + "', '".join (sxv.keys ()) + "'."
+                )
             # version="" overrides job.executable_version
         elif version is not None:
             raise TypeError("version must be str or None")
