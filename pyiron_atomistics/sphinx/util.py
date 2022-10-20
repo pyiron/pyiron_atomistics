@@ -45,7 +45,8 @@ def sxversions(refresh=False):
             for p in Settings ().resource_paths:
                 jsonfile=os.path.join (p, "sphinx", "sxversions.json")
                 if os.path.exists (jsonfile):
-                    sxv = json.load (open(jsonfile))
+                    with open(jsonfile) as f:
+                        sxv = json.load (f)
                     if isinstance(sxv, dict):
                         do_update(jsonfile)
                     else:

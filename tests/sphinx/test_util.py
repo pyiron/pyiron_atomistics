@@ -28,7 +28,9 @@ class TestSphinxUtil(unittest.TestCase):
                 # add tempd to resource_paths
                 rp.append (tempd)
                 # create .json file
-                with open(os.path.join (tempd, "sxversions.json"),'w') as jsonfile:
+                sxdir = os.path.join (tempd, "sphinx")
+                os.mkdir (sxdir)
+                with open(os.path.join (sxdir, "sxversions.json"),'w') as jsonfile:
                     jsonfile.write ('{ "sxv_json_tst" : "echo json", "sxv_json_tst2" : "echo json" }\n')
                 # test that this is parsed correctly
                 sxv = sxversions (True)
@@ -37,11 +39,14 @@ class TestSphinxUtil(unittest.TestCase):
                 self.assertEqual (sxv['sxv_json_tst'],'echo json')
 
                 # create json-writing script
-                with open(os.path.join (tempd, "sxversions.sh"),'w') as jsonscript:
+                scriptname = os.path.join (sxdir, "sxversions.sh")
+                with open(scriptname,'w') as jsonscript:
                     jsonscript.writelines ([
                         '#!/bin/sh\n',
                         'echo \'{ "sxv_json_tst" : "echo script" }\'\n'
                     ])
+                # make script executable
+                os.chmod (scriptname, 0o700)
                 # test that sxversions is unchanged without refresh
                 sxv = sxversions ()
                 self.assertEqual (sxv['sxv_json_tst'],'echo json')
@@ -58,7 +63,7 @@ class TestSphinxUtil(unittest.TestCase):
                 self.assertEqual (sxv['sxv_json_tst2'],'echo json')
 
                 # test that cleaning works as well
-                os.remove (os.path.join(tempd, "sxversions.json"))
+                os.remove (os.path.join(sxdir, "sxversions.json"))
                 sxv = sxversions (True)
                 self.assertEqual (sxv['sxv_json_tst'],'echo script')
                 self.assertNotIn ('sxv_json_tst2',sxv.keys ())
