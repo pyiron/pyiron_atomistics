@@ -28,7 +28,6 @@ def sxversions(refresh=False):
     if not refresh and _sxversions is dict:
         return _sxversions
 
-    _sxversion_lock.acquire ()
     def do_update(newfile):
         for v in sxv.keys ():
             if v in version_origin.keys () and _sxversions[v] != sxv[v]:
@@ -37,6 +36,7 @@ def sxversions(refresh=False):
             version_origin[v] = newfile
         _sxversions.update (sxv)
 
+    _sxversion_lock.acquire ()
     try:
         if refresh: _sxversions = None
         if _sxversions is None:
@@ -63,8 +63,6 @@ def sxversions(refresh=False):
                         do_update(jsonscript)
                     else:
                         warnings.warn ("Failed to parse output from ".jsonscript)
-    except:
+    finally:
         _sxversion_lock.release ()
-        raise
-    _sxversion_lock.release ()
     return _sxversions
