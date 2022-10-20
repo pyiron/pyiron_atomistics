@@ -32,7 +32,7 @@ from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
-from pyiron_atomistics.sphinx.util import _Auto_sxversion as Automatic
+from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
 from pyiron_base import HasGroups
@@ -54,7 +54,6 @@ BOHR_TO_ANGSTROM = (
 HARTREE_TO_EV = scipy.constants.physical_constants["Hartree energy in eV"][0]
 RYDBERG_TO_EV = HARTREE_TO_EV / 2
 HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM = HARTREE_TO_EV / BOHR_TO_ANGSTROM
-
 
 class SphinxBase(GenericDFTJob):
     """
@@ -1709,7 +1708,7 @@ class SphinxBase(GenericDFTJob):
 
     def run_addon(self, addon, args=None, from_tar=None,
                   silent=False, log=True,
-                  module_version=Automatic,
+                  version=None,
                   debug=False):
         """ Run a SPHInX addon
 
@@ -1718,7 +1717,7 @@ class SphinxBase(GenericDFTJob):
             from_tar       - if job is compressed, extract these files (list)
             silent         - do not print output for successful runs?
             log            - produce log file?
-            module_version - which sphinx version to load (str or None)
+            version        - which sphinx version to load (str or None)
             debug          - return subprocess.CompletedProcess ?
 
         """
@@ -1730,31 +1729,6 @@ class SphinxBase(GenericDFTJob):
                +"   Solution 3: run with from_tar=[] if no files from tar are needed\n"
                 )
 
-        sxversion = 'sphinx'
-        if isinstance(module_version,str):
-            if "sphinx" not in module_version:
-                sxversion += '/' + module_version
-            else:
-                sxversion = module_version
-        elif module_version is Automatic:
-            # TODO: find a way to determine from self.executable
-            out = subprocess.run ("module load sphinx",
-                                  cwd=self.working_directory,
-                                  shell=True, stdout=PIPE, stderr=PIPE)
-            if out.returncode != 0:
-                module_version=None
-                # Check that addon can be called without any module
-                out = subprocess.run (addon + " --version", cwd=self.working_directory, shell=True,
-                                      text=True, stdout=PIPE, stderr=PIPE)
-                if out.returncode != 0:
-                    print(out.stdout)
-                    print(out.stderr)
-                    if debug: return out
-                    raise RuntimeError (addon + " cannot be called with default PATH.\n" +
-                                        "Try specifying module_version or setting PATH.")
-            else:
-                module_version = sxversion
-
         # prepare argument list
         if args is None:
             args = ""
@@ -1763,11 +1737,28 @@ class SphinxBase(GenericDFTJob):
         if log:
             args += ' --log'
 
-        if module_version is None:
-            cmd = addon + ' ' + args
-        else:
-            cmd = ' '.join (['module load', sxversion, '&&', addon, args])
+        cmd = addon + ' ' + args
 
+        # --- handle versions
+        sxv = sxversions ()
+        if version is None \
+           and self.executable.version is not None \
+           and self.executable.version in sxv.keys ():
+            version = self.executable.version
+            if not silent:
+                print ("Taking version '" + version + "' from job._executable version")
+        if isinstance(version,str):
+            if version in sxv.keys ():
+                cmd = sxv[version] + " && " + cmd
+            elif version != ":
+                raise "version '" + version + "' not found. Available versions are\n" \
+                      + "\n".join (sxv.keys ())
+            # version="" overrides job.executable_version
+        elif version is not None:
+            raise TypeError("version must be str or None")
+
+        if isinstance(from_tar,str):
+            from_tar = [ from_tar ]
         if self.is_compressed () and isinstance(from_tar,list):
             # run addon in temporary directory
             with TemporaryDirectory() as tempd:
@@ -1775,7 +1766,8 @@ class SphinxBase(GenericDFTJob):
                     print ("Running {} in temporary directory {}".format(
                            addon, tempd))
 
-                # extract files from list
+                # --- extract files from list
+                # note: tf should be obtained from JobCore to ensure encapsulation
                 tarfilename = os.path.join (self.working_directory, self.job_name + '.tar.bz2')
                 with tarfile.open (tarfilename,'r:bz2') as tf:
                     for file in from_tar:
@@ -1783,7 +1775,8 @@ class SphinxBase(GenericDFTJob):
                             tf.extract(file,path=tempd)
                         except:
                             print ("Cannot extract " + file + " from " + tarfilename)
-                # link other files
+
+                # --- link other files
                 linkfiles=[]
                 for file in self.list_files ():
                     linkfile=os.path.join(tempd, file)
