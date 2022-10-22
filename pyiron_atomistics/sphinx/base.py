@@ -2124,7 +2124,7 @@ class _SphinxLogParser:
     def _parse_band(self, term):
         fa = re.findall(term, self.log_main, re.MULTILINE)
         arr = (
-            np.array(re.sub("[^0-9\. ]", "", "".join(fa)).split())
+            np.array(re.sub("[^-0-9\. ]", "", "".join(fa)).split())
             .astype(float)
             .reshape(len(fa), -1)
         )
