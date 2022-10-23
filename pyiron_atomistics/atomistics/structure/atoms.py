@@ -69,6 +69,14 @@ class Atoms(ASEAtoms):
 
     """
 
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls)
+        # the tag list is used in the attribute lookup and may therefore also be called before instance creation is
+        # finished, i.e. between __new__ and __init__.
+        # To avoid inifite regression it must be defined as early as possible
+        instance._tag_list = SparseArray()
+        return instance
+
     def __init__(
         self,
         symbols=None,
@@ -117,7 +125,6 @@ class Atoms(ASEAtoms):
         self.indices = np.array([])
         self.constraints = None
         self._pse = PeriodicTable()
-        self._tag_list = SparseArray()
 
         el_index_lst = list()
         element_list = None
@@ -182,7 +189,7 @@ class Atoms(ASEAtoms):
         self.indices = np.array(el_index_lst, dtype=int)
 
         el_lst = [
-            el.Abbreviation if el.Parent is None else el.Parent for el in self.species
+            el.get("Parent", el["Abbreviation"]) for el in self.species
         ]
         symbols = np.array([el_lst[el] for el in self.indices])
         self._tag_list._length = len(symbols)
@@ -294,7 +301,7 @@ class Atoms(ASEAtoms):
         value = list(value)
         self._species_to_index_dict = {el: i for i, el in enumerate(value)}
         self._species = value[:]
-        self._store_elements = {el.Abbreviation: el for el in value}
+        self._store_elements = {el["Abbreviation"]: el for el in value}
 
     @property
     def symbols(self):
@@ -464,7 +471,7 @@ class Atoms(ASEAtoms):
                 if isinstance(el.tags, dict):
                     with hdf_structure.open("new_species") as hdf_species:
                         el.to_hdf(hdf_species)
-            hdf_structure["species"] = [el.Abbreviation for el in self.species]
+            hdf_structure["species"] = [el["Abbreviation"] for el in self.species]
             hdf_structure["indices"] = self.indices
 
             with hdf_structure.open("tags") as hdf_tags:
@@ -735,10 +742,10 @@ class Atoms(ASEAtoms):
             element = Atom(el, pse=pse).element
         elif isinstance(el, Atom):
             element = el.element
-            el = el.element.Abbreviation
+            el = el.element["Abbreviation"]
         elif isinstance(el, ChemicalElement):
             element = el
-            el = el.Abbreviation
+            el = el["Abbreviation"]
         else:
             raise ValueError("Unknown static type to specify a element")
 
@@ -795,7 +802,7 @@ class Atoms(ASEAtoms):
             numpy.ndarray: A list of chemical symbols
 
         """
-        el_lst = [el.Abbreviation for el in self.species]
+        el_lst = [el["Abbreviation"] for el in self.species]
         return np.array([el_lst[el] for el in self.indices])
 
     def get_parent_symbols(self):
@@ -808,10 +815,9 @@ class Atoms(ASEAtoms):
         """
         sp_parent_list = list()
         for sp in self.species:
-            if isinstance(sp.Parent, (float, type(None))):
-                sp_parent_list.append(sp.Abbreviation)
-            else:
-                sp_parent_list.append(sp.Parent)
+            if isinstance(sp['Parent'], (float, type(None))):
+                name = sp["Abbreviation"]
+            sp_parent_list.append(name)
         return np.array([sp_parent_list[i] for i in self.indices])
 
     def get_parent_basis(self):
@@ -825,10 +831,10 @@ class Atoms(ASEAtoms):
         parent_basis = copy(self)
         new_species = np.array(parent_basis.species)
         for i, sp in enumerate(new_species):
-            if not isinstance(sp.Parent, (float, type(None))):
+            if not isinstance(sp['Parent'], (float, type(None))):
                 pse = PeriodicTable()
-                new_species[i] = pse.element(sp.Parent)
-        sym_list = [el.Abbreviation for el in new_species]
+                new_species[i] = pse.element(parent)
+        sym_list = [el["Abbreviation"] for el in new_species]
         if len(sym_list) != len(np.unique(sym_list)):
             uni, ind, inv_ind = np.unique(
                 sym_list, return_index=True, return_inverse=True
@@ -878,7 +884,7 @@ class Atoms(ASEAtoms):
             numpy.ndarray: List of the symbols of the species
 
         """
-        return np.array(sorted([el.Abbreviation for el in self.species]))
+        return np.array(sorted([el["Abbreviation"] for el in self.species]))
 
     def get_species_objects(self):
         """
@@ -888,7 +894,7 @@ class Atoms(ASEAtoms):
 
         """
         el_set = self.species
-        el_sym_lst = {el.Abbreviation: i for i, el in enumerate(el_set)}
+        el_sym_lst = {el["Abbreviation"]: i for i, el in enumerate(el_set)}
         el_sorted = self.get_species_symbols()
         return [el_set[el_sym_lst[el]] for el in el_sorted]
 
@@ -1061,7 +1067,7 @@ class Atoms(ASEAtoms):
             angle_tolerance=angle_tolerance,
         )
 
-        original_element_list = [el.Abbreviation for el in self.species]
+        original_element_list = [el["Abbreviation"] for el in self.species]
         element_list = [original_element_list[l] for l in sp_dict["primitive_types"]]
         positions = sp_dict["primitive_positions"]
         pbc = self.pbc
@@ -1590,7 +1596,7 @@ class Atoms(ASEAtoms):
         new_indices = np.array(self.indices.copy())
         for key, i_list in qwargs.items():
             el = self._pse.element(key)
-            if el.Abbreviation not in [spec.Abbreviation for spec in new_species]:
+            if el["Abbreviation"] not in [spec["Abbreviation"] for spec in new_species]:
                 new_species.append(el)
                 new_indices[i_list] = len(new_species) - 1
             else:
@@ -2070,9 +2076,9 @@ class Atoms(ASEAtoms):
             new_species_lst = copy(sum_atoms.species)
             ind_conv = {}
             for ind_old, el in enumerate(other.species):
-                if el.Abbreviation in sum_atoms._store_elements.keys():
+                if el["Abbreviation"] in sum_atoms._store_elements.keys():
                     ind_new = sum_atoms._species_to_index_dict[
-                        sum_atoms._store_elements[el.Abbreviation]
+                        sum_atoms._store_elements[el["Abbreviation"]]
                     ]
                     ind_conv[ind_old] = ind_new
                 else:
@@ -2229,14 +2235,14 @@ class Atoms(ASEAtoms):
             if el != old_el:
                 new_species = np.array(self.species).copy()
                 if len(self.select_index(old_el)) == 1:
-                    if el.Abbreviation not in [
-                        spec.Abbreviation for spec in new_species
+                    if el["Abbreviation"] not in [
+                        spec["Abbreviation"] for spec in new_species
                     ]:
                         new_species[self.indices[key]] = el
                         self.set_species(list(new_species))
                     else:
-                        el_list = np.array([sp.Abbreviation for sp in new_species])
-                        ind = np.argwhere(el_list == el.Abbreviation).flatten()[-1]
+                        el_list = np.array([sp["Abbreviation"] for sp in new_species])
+                        ind = np.argwhere(el_list == el["Abbreviation"]).flatten()[-1]
                         remove_index = self.indices[key]
                         new_species = list(new_species)
                         del new_species[remove_index]
@@ -2244,16 +2250,16 @@ class Atoms(ASEAtoms):
                         self.indices[self.indices > remove_index] -= 1
                         self.set_species(new_species)
                 else:
-                    if el.Abbreviation not in [
-                        spec.Abbreviation for spec in new_species
+                    if el["Abbreviation"] not in [
+                        spec["Abbreviation"] for spec in new_species
                     ]:
                         new_species = list(new_species)
                         new_species.append(el)
                         self.set_species(new_species)
                         self.indices[key] = len(new_species) - 1
                     else:
-                        el_list = np.array([sp.Abbreviation for sp in new_species])
-                        ind = np.argwhere(el_list == el.Abbreviation).flatten()[-1]
+                        el_list = np.array([sp["Abbreviation"] for sp in new_species])
+                        ind = np.argwhere(el_list == el["Abbreviation"]).flatten()[-1]
                         self.indices[key] = ind
         elif isinstance(key, slice) or isinstance(key, (list, tuple, np.ndarray)):
             if not isinstance(key, slice):
@@ -2297,7 +2303,7 @@ class Atoms(ASEAtoms):
                         np.sort(np.intersect1d(self.select_index(sp), key)),
                     )
                 )
-            if el.Abbreviation not in [spec.Abbreviation for spec in new_species]:
+            if el["Abbreviation"] not in [spec["Abbreviation"] for spec in new_species]:
                 if not any(replace_list):
                     new_species.append(el)
                     self.set_species(new_species)
@@ -2311,8 +2317,8 @@ class Atoms(ASEAtoms):
                     self.set_species(new_species)
                     self.indices[key] = replace_ind
             else:
-                el_list = np.array([sp.Abbreviation for sp in new_species])
-                ind = np.argwhere(el_list == el.Abbreviation).flatten()[-1]
+                el_list = np.array([sp["Abbreviation"] for sp in new_species])
+                ind = np.argwhere(el_list == el["Abbreviation"]).flatten()[-1]
                 if not any(replace_list):
                     self.set_species(new_species)
                     self.indices[key] = ind

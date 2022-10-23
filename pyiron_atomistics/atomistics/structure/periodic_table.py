@@ -76,11 +76,6 @@ class ChemicalElement(object):
             s for s in dir(self._mendeleev_element) if not s.startswith("_")
         ]
 
-    def __getattr__(self, item):
-        if item in ["__array_struct__", "__array_interface__", "__array__"]:
-            raise AttributeError
-        return self[item]
-
     def __getitem__(self, item):
         if item in self._mendeleev_translation_dict.keys():
             item = self._mendeleev_translation_dict[item]
@@ -88,6 +83,12 @@ class ChemicalElement(object):
             return getattr(self._mendeleev_element, item)
         if item in self.sub.index:
             return self.sub[item]
+
+    def get(self, item, default=None):
+        value = self[item]
+        if value is None:
+            value = default
+        return value
 
     def __eq__(self, other):
         if self is other:
@@ -214,14 +215,17 @@ class PeriodicTable(object):
         self._parent_element = None
         self.el = None
 
-    def __getattr__(self, item):
-        return self[item]
-
     def __getitem__(self, item):
         if item in self.dataframe.columns.values:
             return self.dataframe[item]
         if item in self.dataframe.index.values:
             return self.dataframe.loc[item]
+
+    def get(self, item, default=None):
+        value = self[item]
+        if value is None:
+            value = default
+        return value
 
     def from_hdf(self, hdf):
         """
