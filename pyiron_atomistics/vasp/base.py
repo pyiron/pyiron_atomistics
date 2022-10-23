@@ -1555,10 +1555,10 @@ class VaspBase(GenericDFTJob):
 
     def restart(self, job_name=None, job_type=None):
         """
-        Creates a "restart" job from an existing Vasp calculation. 
+        Creates a "restart" job from an existing Vasp calculation.
         (Default behaviour is to copy CONTCAR -> POSCAR, all other job inputs are copied from original job)
 
-        Usage: job.restart().run() restarts the job with job_name: "$(original_job_name)_restart"  
+        Usage: job.restart().run() restarts the job with job_name: "$(original_job_name)_restart"
 
         Args:
             job_name (str): Job name
