@@ -740,7 +740,7 @@ class TestSphinx(unittest.TestCase):
                self.sphinx.run_addon("sxcheckinput", from_tar=[], version="inexistent")
             with self.assertRaises (TypeError):
                self.sphinx.run_addon("sxcheckinput", from_tar=[], version=3.14)
-            try_remove (log_filename)
+            try_remove (logfile_name)
             self.sphinx.run_addon(
                   "sxcheckinput",
                   ["", "", ""], # fake arguments
@@ -748,7 +748,7 @@ class TestSphinx(unittest.TestCase):
                   silent=True,
                   version="fake_addon"
             )
-            self.assertTrue (os.path.exists (log_filename))
+            self.assertTrue (os.path.exists (logfile_name))
             # check that addon doesn't run without input.sx
             out = self.sphinx.run_addon(
                 "sxcheckinput",
@@ -760,7 +760,7 @@ class TestSphinx(unittest.TestCase):
             self.assertTrue (out.return_code != 0)
         finally:
             self.sphinx.decompress()
-            try_remove (log_filename)
+            try_remove (logfile_name)
 
         # test addon from decompressed job (with log file)
         self.sphinx.run_addon("sxcheckinput", silent=True, version="fake_addon")
