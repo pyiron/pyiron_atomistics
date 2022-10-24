@@ -716,7 +716,7 @@ class TestSphinx(unittest.TestCase):
             out = self.sphinx.run_addon(
                 "sxcheckinput", from_tar="input.sx", log=False, debug=True
             )
-            self.assertTrue(out.returncode == 0)
+            self.assertTrue(out.returncode == 0, msg=out.stdout + out.stderr)
             self.assertIn("Checking for dublets...ok\n", out.stdout)
         finally:
             self.sphinx.decompress()
