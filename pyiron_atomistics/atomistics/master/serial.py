@@ -46,15 +46,15 @@ class SerialMaster(SerialMasterBase, AtomisticGenericJob):
 
     @property
     def structure(self):
-        if self.start_job is not None:
-            return self._start_job.structure
+        if self.ref_job is not None:
+            return self.ref_job.structure
         else:
             return None
 
     @structure.setter
     def structure(self, basis):
-        if self.start_job is not None:
-            self._start_job.structure = basis
+        if self.ref_job is not None:
+            self.ref_job.structure = basis
         else:
             raise ValueError(
                 "A structure can only be set after a start job has been assigned."
