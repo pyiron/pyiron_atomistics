@@ -153,10 +153,10 @@ class ChemicalElement(object):
         Args:
             hdf (Hdfio): Hdfio object which will be used
         """
-        with hdf.open(self.Abbreviation) as hdf_el:  # "Symbol of the chemical element"
+        with hdf.open(self["Abbreviation"]) as hdf_el:  # "Symbol of the chemical element"
             # TODO: save all parameters that are different from the parent (e.g. modified mass)
-            if self.Parent is not None:
-                self._dataset = {"Parameter": ["Parent"], "Value": [self.Parent]}
+            if self["Parent"] is not None:
+                self._dataset = {"Parameter": ["Parent"], "Value": [self["Parent"]]}
                 hdf_el["elementData"] = self._dataset
             with hdf_el.open(
                 "tagData"
@@ -251,7 +251,7 @@ class PeriodicTable(object):
                 if not new_element.tags["sub_tags"]:
                     del new_element.tags["sub_tags"]
 
-            if new_element.Parent is None:
+            if new_element["Parent"] is None:
                 if not (el in self.dataframe.index.values):
                     raise AssertionError()
                 if len(new_element.sub["tags"]) > 0:
@@ -326,8 +326,8 @@ class PeriodicTable(object):
         if not isinstance(atom_no, int):
             raise ValueError("type not defined: " + str(type(atom_no)))
 
-        return self.Abbreviation[
-            np.nonzero(self.AtomicNumber.to_numpy() == atom_no)[0][0]
+        return self["Abbreviation"][
+            np.nonzero(self["AtomicNumber"].to_numpy() == atom_no)[0][0]
         ]
 
     def add_element(

@@ -118,10 +118,10 @@ class TestAtoms(unittest.TestCase):
         basis.set_species([el])
         self.assertEqual(basis.get_chemical_formula(), "Pt")
         self.assertTrue(
-            "Al" not in [sp.Abbreviation] for sp in basis._species_to_index_dict.keys()
+            "Al" not in [sp["Abbreviation"] for sp in basis._species_to_index_dict.keys()]
         )
         self.assertTrue(
-            "Pt" in [sp.Abbreviation] for sp in basis._species_to_index_dict.keys()
+            "Pt" in [sp["Abbreviation"] for sp in basis._species_to_index_dict.keys()]
         )
 
     def test_new_array(self):
@@ -203,7 +203,7 @@ class TestAtoms(unittest.TestCase):
         num_list = [1, 12, 13, 6]
         self.assertTrue(
             np.array_equal(
-                [el.Abbreviation for el in self.CO2.numbers_to_elements(num_list)],
+                [el["Abbreviation"] for el in self.CO2.numbers_to_elements(num_list)],
                 ["H", "Mg", "Al", "C"],
             )
         )

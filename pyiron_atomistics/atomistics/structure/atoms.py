@@ -791,7 +791,7 @@ class Atoms(ASEAtoms):
             numpy.ndarray: A list of atomic numbers
 
         """
-        el_lst = [el.AtomicNumber for el in self.species]
+        el_lst = [el["AtomicNumber"] for el in self.species]
         return np.array([el_lst[el] for el in self.indices])
 
     def get_chemical_symbols(self):
@@ -815,14 +815,16 @@ class Atoms(ASEAtoms):
         """
         sp_parent_list = list()
         for sp in self.species:
-            if isinstance(sp['Parent'], (float, type(None))):
+            if isinstance(sp["Parent"], (float, type(None))):
                 name = sp["Abbreviation"]
+            else:
+                name = sp["Parent"]
             sp_parent_list.append(name)
         return np.array([sp_parent_list[i] for i in self.indices])
 
     def get_parent_basis(self):
         """
-        Returns the basis with all user defined/special elements as the it's parent
+        Returns the basis with all user defined/special elements as their parent elements.
 
         Returns:
             pyiron.atomistics.structure.atoms.Atoms: Structure without any user defined elements
@@ -831,7 +833,8 @@ class Atoms(ASEAtoms):
         parent_basis = copy(self)
         new_species = np.array(parent_basis.species)
         for i, sp in enumerate(new_species):
-            if not isinstance(sp['Parent'], (float, type(None))):
+            parent = sp["Parent"]
+            if not isinstance(parent, (float, type(None))):
                 pse = PeriodicTable()
                 new_species[i] = pse.element(parent)
         sym_list = [el["Abbreviation"] for el in new_species]
@@ -930,7 +933,7 @@ class Atoms(ASEAtoms):
             numpy.ndarray: Array of masses
 
         """
-        el_lst = [el.AtomicMass for el in self.species]
+        el_lst = [el["AtomicMass"] for el in self.species]
         return np.array([el_lst[el] for el in self.indices])
 
     def get_masses_dof(self):
@@ -2083,7 +2086,7 @@ class Atoms(ASEAtoms):
                     ind_conv[ind_old] = ind_new
                 else:
                     new_species_lst.append(el)
-                    sum_atoms._store_elements[el.Abbreviation] = el
+                    sum_atoms._store_elements[el["Abbreviation"]] = el
                     ind_conv[ind_old] = len(new_species_lst) - 1
 
             for key, val in ind_conv.items():

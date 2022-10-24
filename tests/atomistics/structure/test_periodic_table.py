@@ -22,56 +22,56 @@ class TestPeriodicTable(unittest.TestCase):
 
     def test_numbertechnic(self):
         el1 = self.pse.element(1)
-        self.assertEqual(el1.Abbreviation, "H")
+        self.assertEqual(el1["Abbreviation"], "H")
 
     def test_Element_by_Abbreviation(self):
         el1 = self.pse.element("Na")
-        self.assertEqual(el1.Abbreviation, "Na")
+        self.assertEqual(el1["Abbreviation"], "Na")
 
     def test_Element_by_Index(self):
         el1 = self.pse.element(20)
-        self.assertEqual(el1.Abbreviation, "Ca")
+        self.assertEqual(el1["Abbreviation"], "Ca")
 
     def test_Abbreviation_range(self):
-        self.assertEqual(len(self.pse.dataframe.Abbreviation[self.pse.Period < 4]), 18)
+        self.assertEqual(len(self.pse.dataframe["Abbreviation"][self.pse["Period"] < 4]), 18)
 
     def test_add_element_without_tags(self):
         fe_up = self.pse.add_element("Fe", "B_up")
-        self.assertEqual(int(fe_up.MeltingPoint), 1808)
+        self.assertEqual(int(fe_up["MeltingPoint"]), 1808)
 
     def test_add_Abbreviation_bug(self):
         fe_up = self.pse.add_element("Fe", "B_up")
-        self.assertEqual(fe_up.Abbreviation, "B_up")
+        self.assertEqual(fe_up["Abbreviation"], "B_up")
 
     def test_add_element_tags(self):
         fe_up = self.pse.add_element(
             "Fe", "Fe_up", spin="up", pseudo_name="GGA", testtag="testtest"
         )
-        self.assertEqual(fe_up.Abbreviation, "Fe_up")
+        self.assertEqual(fe_up["Abbreviation"], "Fe_up")
         self.assertEqual(fe_up.tags["spin"], "up")
         self.assertEqual(fe_up.tags["pseudo_name"], "GGA")
         self.assertEqual(fe_up.tags["testtag"], "testtest")
 
     def test_atomic_mass(self):
         el1 = self.pse.element("Fe")
-        self.assertAlmostEqual(el1.AtomicMass, 55.845, places=3)
+        self.assertAlmostEqual(el1["AtomicMass"], 55.845, places=3)
 
     def test_group(self):
         el1 = self.pse.element("Fe")
-        self.assertEqual(el1.Group, 8)
+        self.assertEqual(el1["Group"], 8)
 
     def test_Period(self):
         el1 = self.pse.element("Fe")
-        self.assertEqual(el1.Period, 4)
+        self.assertEqual(el1["Period"], 4)
 
     def test_add_MeltingPoint(self):
         el1 = self.pse.element("Fe")
-        self.assertEqual(int(el1.MeltingPoint), 1808)
+        self.assertEqual(int(el1["MeltingPoint"]), 1808)
 
     def test_set_item(self):
         el1 = self.pse.element("Fe")
-        el1.MeltingPoint = 1900
-        self.assertEqual(int(el1.MeltingPoint), 1900)
+        el1["MeltingPoint"] = 1900
+        self.assertEqual(int(el1["MeltingPoint"]), 1900)
 
     def test_is_element(self):
         self.assertEqual(self.pse.is_element("Fe"), True)

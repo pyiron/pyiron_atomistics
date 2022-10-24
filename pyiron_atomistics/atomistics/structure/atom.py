@@ -93,7 +93,7 @@ class Atom(ASEAtom, SparseArrayElement):
                 index=index,
             )
         except KeyError:
-            symbol = pse.Parent[symbol]
+            symbol = pse["Parent"][symbol]
             ASEAtom.__init__(
                 self,
                 symbol=symbol,
@@ -120,7 +120,7 @@ class Atom(ASEAtom, SparseArrayElement):
             float: The atomic mass in a.u.
 
         """
-        return float(self.element.AtomicMass)
+        return float(self.element["AtomicMass"])
 
     @property
     def symbol(self):
@@ -131,7 +131,7 @@ class Atom(ASEAtom, SparseArrayElement):
             str: The chemical symbol of the atom
 
         """
-        return self.element.Abbreviation
+        return self.element["Abbreviation"]
 
     @property
     def number(self):
@@ -142,7 +142,7 @@ class Atom(ASEAtom, SparseArrayElement):
             int: The atomic number according to the periodic table
 
         """
-        return self.element.AtomicNumber
+        return self.element["AtomicNumber"]
 
     def __eq__(self, other):
         if not (isinstance(other, Atom)):
