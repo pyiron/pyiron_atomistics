@@ -17,7 +17,7 @@ dependencies:
 - pyiron_base =0.5.26
 - pymatgen =2022.10.22
 - pyscal =2.10.18
-- scipy =1.9.1
+- scipy =1.9.3
 - seekpath =2.0.1
 - scikit-learn =1.1.2
 - spglib =2.0.1
