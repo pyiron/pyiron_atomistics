@@ -757,7 +757,7 @@ class TestSphinx(unittest.TestCase):
                 version="fake_addon",
                 debug=True
             )
-            self.assertTrue (out.return_code != 0)
+            self.assertTrue (out.returncode != 0)
         finally:
             self.sphinx.decompress()
             try_remove (logfile_name)
