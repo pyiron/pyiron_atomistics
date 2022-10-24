@@ -714,7 +714,11 @@ class TestSphinx(unittest.TestCase):
         self.sphinx.compress()
         try:
             out = self.sphinx.run_addon(
-                "sxcheckinput", from_tar="input.sx", log=False, debug=True
+                "sxcheckinput",
+                from_tar="input.sx",
+                log=False,
+                version="fake_addon",
+                debug=True,
             )
             self.assertTrue(out.returncode == 0, msg=out.stdout + out.stderr)
             self.assertIn("Checking for dublets...ok\n", out.stdout)
@@ -722,7 +726,7 @@ class TestSphinx(unittest.TestCase):
             self.sphinx.decompress()
 
         # test addon from decompressed job (with log file)
-        self.sphinx.run_addon("sxcheckinput", silent=True)
+        self.sphinx.run_addon("sxcheckinput", silent=True, version="fake_addon")
         with open(
             os.path.join(self.sphinx.working_directory, "sxcheckinput.log")
         ) as logfile:
