@@ -710,7 +710,7 @@ class TestSphinx(unittest.TestCase):
         spx.run()
         self.assertEqual(spx["spins.in"], ["2\n", "X\n"])
     
-    @unittest.SkipIf('linux' not in sys.platform, "Running of the addon is only supported on linux")
+    @unittest.skipIf('linux' not in sys.platform, "Running of the addon is only supported on linux")
     def test_run_addon(self):
         # test addons from compressed job
         self.sphinx.compress()
