@@ -116,7 +116,16 @@ class TestSphinx(unittest.TestCase):
     def test_potential(self):
         self.assertEqual(['Fe_GGA'], self.sphinx.list_potentials())
         self.assertEqual(['Fe_GGA'], self.sphinx_2_3.list_potentials())
-        self.assertEqual(['Fe_GGA', 'Ni_GGA'], sorted(self.sphinx_2_5.list_potentials()))
+        # The following sphinx_2_5.list_potentials test depends on the environment
+        # [this probably applies to all list_potentials tests]
+        # Thoughts by C. Freysoldt, 2022-10-24:
+        #   - I think this is unhealthy, as the test environment is NOT controlled by the test
+        #   - there is a discrepancy between mybinder/pyiron_atomistics environment and the
+        #     github/CI environment.
+        # next line is for an environment with Fe_GGA and Ni_GGA (but no other Fe/Ni)
+        # self.assertEqual(['Fe_GGA', 'Ni_GGA'], sorted(self.sphinx_2_5.list_potentials()))
+        # next line is for the github/CI test environment (only Fe_GGA, no Ni, no other Fe)
+        self.assertEqual(['Fe_GGA'], self.sphinx_2_5.list_potentials())
         self.sphinx_2_3.potential.Fe = 'Fe_GGA'
         self.sphinx_2_5.potential["Fe"] = 'Fe_GGA'
         self.assertEqual('Fe_GGA', list(self.sphinx_2_3.potential.to_dict().values())[0])
