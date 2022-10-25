@@ -6,6 +6,7 @@ import os
 import unittest
 from tempfile import TemporaryDirectory
 import warnings
+import sys
 
 from pyiron_base import Settings
 from pyiron_atomistics.sphinx.util import sxversions
