@@ -12,6 +12,7 @@ from pyiron_atomistics.sphinx.util import sxversions
 
 
 class TestSphinxUtil(unittest.TestCase):
+    @unittest.skipIf('linux' not in sys.platform, "Running of the addon is only supported on linux")
     def test_sxversions(self):
         rp = Settings().resource_paths
 
