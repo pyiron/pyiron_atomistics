@@ -13,7 +13,6 @@ from pyiron_atomistics.sphinx.util import sxversions
 
 
 class TestSphinxUtil(unittest.TestCase):
-    @unittest.skipIf('linux' not in sys.platform, "Running of the addon is only supported on linux")
     def test_sxversions(self):
         rp = Settings().resource_paths
 
@@ -44,10 +43,10 @@ class TestSphinxUtil(unittest.TestCase):
                 self.assertEqual(sxv["sxv_json_tst"], "echo json")
 
                 # create json-writing script
-                scriptname = os.path.join(sxdir, "sxversions.sh")
+                scriptname = os.path.join(sxdir, "sxversions.py")
                 with open(scriptname, "w") as jsonscript:
                     jsonscript.writelines(
-                        ["#!/bin/sh\n", 'echo \'{ "sxv_json_tst" : "echo script" }\'\n']
+                        ['print (\'{ "sxv_json_tst" : "echo script" }\\n\')']
                     )
                 # make script executable
                 os.chmod(scriptname, 0o700)

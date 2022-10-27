@@ -13,6 +13,7 @@ from threading import Lock
 import json
 import warnings
 import os.path
+from sys import executable as python_interpreter
 import subprocess
 
 from pyiron_base import Settings
@@ -29,16 +30,19 @@ def sxversions(refresh=False):
     if not refresh and _sxversions is dict:
         return _sxversions
 
-    def do_update(newfile):
-        for v in sxv.keys():
-            if v in version_origin.keys() and _sxversions[v] != sxv[v]:
-                warnings.warn(
-                    "Overriding sxversion '{}' from {} with the one from {}".format(
-                        v, version_origin[v], newfile
+    def do_update(warn_what, newfile):
+        if isinstance(sxv, dict):
+            for v in sxv.keys():
+                if v in version_origin.keys() and _sxversions[v] != sxv[v]:
+                    warnings.warn(
+                        "Overriding sxversion '{}' from {} with the one from {}".format(
+                            v, version_origin[v], newfile
+                        )
                     )
-                )
-            version_origin[v] = newfile
-        _sxversions.update(sxv)
+                version_origin[v] = newfile
+            _sxversions.update(sxv)
+        else:
+            warnings.warn("Failed to parse " + warn_what + newfile)
 
     _sxversion_lock.acquire()
     try:
@@ -52,22 +56,19 @@ def sxversions(refresh=False):
                 if os.path.exists(jsonfile):
                     with open(jsonfile) as f:
                         sxv = json.load(f)
-                    if isinstance(sxv, dict):
-                        do_update(jsonfile)
-                    else:
-                        warnings.warn("Failed to parse ".jsonfile)
+                    do_update("", jsonfile)
 
-                jsonscript = os.path.join(p, "sphinx", "sxversions.sh")
+                jsonscript = os.path.join(p, "sphinx", "sxversions.py")
                 if os.path.exists(jsonscript):
                     sxv = json.loads(
                         subprocess.run(
-                            jsonscript, text=True, stdout=subprocess.PIPE
+                            [python_interpreter, jsonscript],
+                            text=True,
+                            stdout=subprocess.PIPE,
+                            cwd=os.path.join(p, "sphinx"),
                         ).stdout
                     )
-                    if isinstance(sxv, dict):
-                        do_update(jsonscript)
-                    else:
-                        warnings.warn("Failed to parse output from ".jsonscript)
+                    do_update("output from ", jsonscript)
     finally:
         _sxversion_lock.release()
     return _sxversions
