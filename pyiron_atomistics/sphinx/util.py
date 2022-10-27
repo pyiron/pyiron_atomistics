@@ -79,10 +79,13 @@ def sxversions(refresh=False):
                         try:
                             sxv = json.loads(proc.stdout)
                             do_update("output from ", jsonscript)
-                        except json.decoder.JSONDecodeError:
-                            print("json decoder error from " + jsonscript + "\n")
-                            print(proc.stdout)
-                            raise
+                        except json.decoder.JSONDecodeError as ex:
+                            raise RunTimeError(
+                                "json decoder error from "
+                                + jsonscript
+                                + " output:\n"
+                                + proc.stdout
+                            ) from ex
     finally:
         _sxversion_lock.release()
     return _sxversions
