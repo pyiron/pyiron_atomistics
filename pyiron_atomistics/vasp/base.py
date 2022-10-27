@@ -426,8 +426,13 @@ class VaspBase(GenericDFTJob):
                 self.logger.warning("Invoking Bader charge analysis failed")
             else:
                 charges, volumes = charges_orig.copy(), volumes_orig.copy()
-                charges[self.idx_pyiron_to_user] = charges_orig
-                volumes[self.idx_pyiron_to_user] = volumes_orig
+                # Backwards compatibility for old datasets using old vasp_sorter method
+                try:
+                    idx_pyiron_to_user = self.idx_pyiron_to_user
+                except:
+                    idx_pyiron_to_user = vasp_sorter(self.structure)
+                charges[idx_pyiron_to_user] = charges_orig
+                volumes[idx_pyiron_to_user] = volumes_orig
                 if (
                     "valence_charges"
                     in self._output_parser.generic_output.dft_log_dict.keys()
@@ -787,7 +792,17 @@ class VaspBase(GenericDFTJob):
         Returns:
             pyiron.atomistics.structure.atoms.Atoms: The final structure
         """
+        # I don't understand what exactly is happening here
+        # Why is a copy from output cell, positions to input structure, 
+        # and then returning the base structure even necessary?
+        # shouldn't a read_atoms from the output file be enough?
+        # Todo: Sanitise (use pymatgen CONTCAR reader)
         filename = posixpath.join(self.working_directory, filename)
+        # Backwards compatibility for old datasets using old vasp_sorter method
+        try:
+            idx_pyiron_to_user = self.idx_pyiron_to_user
+        except:
+            idx_pyiron_to_user = vasp_sorter(self.structure)
         if self.structure is None:
             try:
                 output_structure = read_atoms(filename=filename)
@@ -795,6 +810,7 @@ class VaspBase(GenericDFTJob):
             except (IndexError, ValueError, IOError):
                 raise IOError("Unable to read output structure")
         else:
+
             input_structure = self.structure.copy()
             try:
                 output_structure = read_atoms(
@@ -803,7 +819,7 @@ class VaspBase(GenericDFTJob):
                 )
                 input_structure.cell = output_structure.cell.copy()
                 input_structure.positions[
-                    self.idx_pyiron_to_user
+                    idx_pyiron_to_user
                 ] = output_structure.positions
             except (IndexError, ValueError, IOError):
                 raise IOError("Unable to read output structure")
@@ -2053,6 +2069,14 @@ class Output:
         files_present = os.listdir(directory)
         log_dict = dict()
         vasprun_working, outcar_working = False, False
+        # First attempt to extract indices maps from the job
+        try:
+            # If it succeeds, just use it for output parsing
+            idx_pyiron_to_user = self._job.idx_pyiron_to_user
+        except:
+            # If it fails, use the old vasp_sorter function
+            # TO DO: move vasp_sorter to base
+            idx_pyiron_to_user = vasp_sorter(self.structure)
         if not ("OUTCAR" in files_present or "vasprun.xml" in files_present):
             raise IOError("Either the OUTCAR or vasprun.xml files need to be present")
         if "OSZICAR" in files_present:
@@ -2097,9 +2121,9 @@ class Output:
                 final_magmoms = np.array(self.outcar.parse_dict["final_magmoms"]).copy()
                 if len(final_magmoms) != 0:
                     if len(final_magmoms.shape) == 3:
-                        final_magmoms[:, self._job.idx_pyiron_to_user, :] = final_magmoms.copy()
+                        final_magmoms[:, idx_pyiron_to_user, :] = final_magmoms.copy()
                     else:
-                        final_magmoms[:, self._job.idx_pyiron_to_user] = final_magmoms.copy()
+                        final_magmoms[:, idx_pyiron_to_user] = final_magmoms.copy()
                 self.generic_output.dft_log_dict[
                     "magnetization"
                 ] = magnetization.tolist()
@@ -2131,8 +2155,8 @@ class Output:
                 log_dict["energy_pot"] = log_dict["energy_tot"]
             log_dict["steps"] = np.arange(len(log_dict["energy_tot"]))
             log_dict["positions"] = self.vp_new.vasprun_dict["positions"]
-            log_dict["forces"][:, self._job.idx_pyiron_to_user] = log_dict["forces"].copy()
-            log_dict["positions"][:, self._job.idx_pyiron_to_user] = log_dict["positions"].copy()
+            log_dict["forces"][:, idx_pyiron_to_user] = log_dict["forces"].copy()
+            log_dict["positions"][:, idx_pyiron_to_user] = log_dict["positions"].copy()
             log_dict["positions"] = np.einsum(
                 "nij,njk->nik", log_dict["positions"], log_dict["cells"]
             )
@@ -2141,11 +2165,11 @@ class Output:
             self.electronic_structure = self.vp_new.get_electronic_structure()
             if self.electronic_structure.grand_dos_matrix is not None:
                 self.electronic_structure.grand_dos_matrix[
-                    :, :, :, self._job.idx_pyiron_to_user, :
+                    :, :, :, idx_pyiron_to_user, :
                 ] = self.electronic_structure.grand_dos_matrix[:, :, :, :, :].copy()
             if self.electronic_structure.resolved_densities is not None:
                 self.electronic_structure.resolved_densities[
-                    :, self._job.idx_pyiron_to_user, :, :
+                    :, idx_pyiron_to_user, :, :
                 ] = self.electronic_structure.resolved_densities[:, :, :, :].copy()
             self.structure.positions = log_dict["positions"][-1]
             self.structure.set_cell(log_dict["cells"][-1])
@@ -2154,7 +2178,7 @@ class Output:
             ] = self.vp_new.get_potentiostat_output()
             valence_charges_orig = self.vp_new.get_valence_electrons_per_atom()
             valence_charges = valence_charges_orig.copy()
-            valence_charges[self._job.idx_pyiron_to_user] = valence_charges_orig
+            valence_charges[idx_pyiron_to_user] = valence_charges_orig
             self.generic_output.dft_log_dict["valence_charges"] = valence_charges
 
         elif outcar_working:
@@ -2167,15 +2191,15 @@ class Output:
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
             log_dict["forces"] = self.outcar.parse_dict["forces"]
             log_dict["positions"] = self.outcar.parse_dict["positions"]
-            log_dict["forces"][:, self._job.idx_pyiron_to_user] = log_dict["forces"].copy()
-            log_dict["positions"][:, self._job.idx_pyiron_to_user] = log_dict["positions"].copy()
+            log_dict["forces"][:, idx_pyiron_to_user] = log_dict["forces"].copy()
+            log_dict["positions"][:, idx_pyiron_to_user] = log_dict["positions"].copy()
             if len(log_dict["positions"].shape) != 3:
                 raise VaspCollectError("Improper OUTCAR parsing")
-            elif log_dict["positions"].shape[1] != len(self._job.idx_pyiron_to_user):
+            elif log_dict["positions"].shape[1] != len(idx_pyiron_to_user):
                 raise VaspCollectError("Improper OUTCAR parsing")
             if len(log_dict["forces"].shape) != 3:
                 raise VaspCollectError("Improper OUTCAR parsing")
-            elif log_dict["forces"].shape[1] != len(self._job.idx_pyiron_to_user):
+            elif log_dict["forces"].shape[1] != len(idx_pyiron_to_user):
                 raise VaspCollectError("Improper OUTCAR parsing")
             log_dict["time"] = self.outcar.parse_dict["time"]
             log_dict["steps"] = self.outcar.parse_dict["steps"]
@@ -2211,7 +2235,7 @@ class Output:
                     )
                     #  Even the atom resolved values have to be sorted from the vasp atoms order to the Atoms order
                     self.electronic_structure.grand_dos_matrix[
-                        :, :, :, self._job.idx_pyiron_to_user, :
+                        :, :, :, idx_pyiron_to_user, :
                     ] = self.electronic_structure.grand_dos_matrix[:, :, :, :, :].copy()
                     try:
                         self.electronic_structure.efermi = self.outcar.parse_dict[

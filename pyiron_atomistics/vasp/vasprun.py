@@ -788,7 +788,7 @@ def clean_character(a, remove_char=" "):
 
 def clean_key(a, remove_char=" "):
     """
-    Replaces blanck spaces from a string for a dictionary key with "_"
+    Replaces blank spaces from a string for a dictionary key with "_"
 
     Args:
         a (str): String to be cleaned
