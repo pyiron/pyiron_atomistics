@@ -76,7 +76,6 @@ def sxversions(refresh=False):
                             + proc.stderr
                         )
                     else:
-                        print (proc.stdout)
                         try:
                             sxv = json.loads(proc.stdout)
                             do_update("output from ", jsonscript)
