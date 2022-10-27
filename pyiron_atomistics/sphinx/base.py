@@ -1426,7 +1426,7 @@ class SphinxBase(GenericDFTJob):
         """
         Collects the outputs and stores them to the hdf file
         """
-        if self.is_compressed:
+        if self.is_compressed():
             warnings.warn("Job already compressed - output not collected")
             return
         self._output_parser.collect(directory=self.working_directory)
