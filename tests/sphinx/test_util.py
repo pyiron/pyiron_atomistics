@@ -6,7 +6,6 @@ import os
 import unittest
 from tempfile import TemporaryDirectory
 import warnings
-import sys
 
 from pyiron_base import Settings
 from pyiron_atomistics.sphinx.util import sxversions
@@ -22,7 +21,7 @@ class TestSphinxUtil(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 sxversions(True)
                 n_other_warnings = len(w)
-        except:
+        except Exception:
             pass
 
         with TemporaryDirectory() as tempd:

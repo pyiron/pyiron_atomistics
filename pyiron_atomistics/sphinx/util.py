@@ -80,7 +80,7 @@ def sxversions(refresh=False):
                             sxv = json.loads(proc.stdout)
                             do_update("output from ", jsonscript)
                         except json.decoder.JSONDecodeError as ex:
-                            raise RunTimeError(
+                            raise RuntimeError(
                                 "json decoder error from "
                                 + jsonscript
                                 + " output:\n"

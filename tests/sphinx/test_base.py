@@ -709,19 +709,18 @@ class TestSphinx(unittest.TestCase):
         spx.server.run_mode.manual = True
         spx.run()
         self.assertEqual(spx["spins.in"], ["2\n", "X\n"])
-    
-    @unittest.skipIf('linux' not in sys.platform, "Running of the addon is only supported on linux")
+
+    @unittest.skipIf(
+        "linux" not in sys.platform, "Running of the addon is only supported on linux"
+    )
     def test_run_addon(self):
         def try_remove(path):
             try:
-                os.remove (path)
+                os.remove(path)
             except FileNotFoundError:
                 pass
 
-        logfile_name = os.path.join (
-           self.sphinx.working_directory,
-           "sxcheckinput.log"
-        )
+        logfile_name = os.path.join(self.sphinx.working_directory, "sxcheckinput.log")
         # test addons from compressed job
         self.sphinx.compress()
         try:
@@ -730,44 +729,40 @@ class TestSphinx(unittest.TestCase):
                 from_tar="input.sx",
                 log=False,
                 version="fake_addon",
-                debug=True
+                debug=True,
             )
             self.assertTrue(out.returncode == 0, msg=out.stdout + out.stderr)
             self.assertIn("Checking for dublets...ok\n", out.stdout)
-            with self.assertRaises (FileNotFoundError):
-               self.sphinx.run_addon("sxcheckinput")
-            with self.assertRaises (KeyError):
-               self.sphinx.run_addon("sxcheckinput", from_tar=[], version="inexistent")
-            with self.assertRaises (TypeError):
-               self.sphinx.run_addon("sxcheckinput", from_tar=[], version=3.14)
-            try_remove (logfile_name)
+            with self.assertRaises(FileNotFoundError):
+                self.sphinx.run_addon("sxcheckinput")
+            with self.assertRaises(KeyError):
+                self.sphinx.run_addon("sxcheckinput", from_tar=[], version="inexistent")
+            with self.assertRaises(TypeError):
+                self.sphinx.run_addon("sxcheckinput", from_tar=[], version=3.14)
+            try_remove(logfile_name)
             self.sphinx.run_addon(
-                  "sxcheckinput",
-                  ["", "", ""], # fake arguments
-                  from_tar=["inexistentFile","input.sx"],
-                  silent=True,
-                  version="fake_addon"
+                "sxcheckinput",
+                ["", "", ""],  # fake arguments
+                from_tar=["inexistentFile", "input.sx"],
+                silent=True,
+                version="fake_addon",
             )
-            self.assertTrue (os.path.exists (logfile_name))
+            self.assertTrue(os.path.exists(logfile_name))
             # check that addon doesn't run without input.sx
             out = self.sphinx.run_addon(
-                "sxcheckinput",
-                from_tar=[],
-                log=False,
-                version="fake_addon",
-                debug=True
+                "sxcheckinput", from_tar=[], log=False, version="fake_addon", debug=True
             )
-            self.assertTrue (out.returncode != 0)
+            self.assertTrue(out.returncode != 0)
         finally:
             self.sphinx.decompress()
-            try_remove (logfile_name)
+            try_remove(logfile_name)
 
         # test addon from decompressed job (with log file)
         self.sphinx.run_addon("sxcheckinput", silent=True, version="fake_addon")
         with open(logfile_name) as logfile:
             lines = logfile.readlines()
         self.assertIn("Checking for dublets...ok\n", lines)
-        try_remove (logfile_name)
+        try_remove(logfile_name)
 
 
 if __name__ == "__main__":
