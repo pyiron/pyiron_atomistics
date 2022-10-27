@@ -17,7 +17,7 @@ from pyiron_atomistics.vasp.potential import (
     strip_xc_from_potential_name,
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_base import state, GenericParameters, deprecate, DataContainer
+from pyiron_base import state, GenericParameters, deprecate, HasStoredTraits
 from pyiron_atomistics.vasp.outcar import Outcar
 from pyiron_atomistics.vasp.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
@@ -29,6 +29,20 @@ from pyiron_atomistics.vasp.potential import get_enmax_among_potentials
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
 from pyiron_atomistics.dft.bader import Bader
+
+from traitlets import (
+             Bool,
+             default,
+             Instance,
+             Int,
+             List,
+             observe,
+             TraitError,
+             TraitType,
+             Unicode,
+             validate
+         )
+
 import warnings
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
@@ -1810,18 +1824,21 @@ class VaspBase(GenericDFTJob):
     def __del__(self):
         pass
 
-
-class VaspSpecificOptions(DataContainer):
+class VaspSpecificOptions(HasStoredTraits):
     """
-    A `pyiron_base.DataContainer` for input that is specific to VASP.
+    A `pyiron_base.HasStoredTraits` object for input that is specific to VASP.
 
-    Attributes:
+    Traits:
         allow_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
             (e.g. Fe37 P1 Fe35 -> Fe72 P1 reduces POTCAR by one Fe POTCAR filesize. (Default is True.)
     """
     def __init__(self, init=None, table_name='vasp_specific_options', lazy=False, wrap_blacklist=()):
         super().__init__(init=init, table_name=table_name, lazy=lazy, wrap_blacklist=wrap_blacklist)
-        self.allow_structure_reordering = True
+    allow_structure_reordering = Bool()
+
+    @default('allow_structure_reordering')
+    def reordering_allowed(self):
+        return True
 
 
 class Input:
@@ -1834,7 +1851,7 @@ class Input:
         potcar: vasp.vasp.Potcar instance to set the appropriate POTCAR files for the simulation
 
     Ideally, the user would not have to access the Input instance unless the user wants to set an extremely specific
-    VASP tag which can't se set using functions in Vasp().
+    VASP tag which can't be set using functions in Vasp().
 
     Examples:
 

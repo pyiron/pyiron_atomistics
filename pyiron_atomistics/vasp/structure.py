@@ -319,24 +319,35 @@ def _dict_to_atoms(atoms_dict, species_list=None, read_from_first_line=False):
     return atoms
 
 
-# def vasp_sorter(structure):
-#     """
-#     Routine to sort the indices of a structure as it would be when written to a POSCAR file
+def vasp_sorter(structure):
+    """
+    Routine to sort the indices of a structure as it would be when written to a POSCAR file
 
-#     Args:
-#         structure (pyiron.atomistics.structure.atoms.Atoms): The structure whose indices need to be sorted
+    ######################################################################################################
+    WARNING: In new versions of pyiron, sorting maps are used for vasp jobs instead of this function.
+    The default behaviour is to first try to use job.idx_pyiron_to_user or job.idx_user_to_pyiron to remap.
+    So, to remap from system-side POSCAR (or raw scraped data) to user-specified ordering: 
+    
+    struct_usr = struct_system[job.idx_pyiron_to_usr]
 
-#     Returns:
-#         list: A list of indices which is sorted by the corresponding species for writing to POSCAR
+    Only when the indices maps are not present is this fn used now.
+    The default sorting behaviour remains the same as in this function.
+    ######################################################################################################
 
-#     """
-#     atom_numbers = structure.get_number_species_atoms()
-#     sorted_indices = list()
-#     for species in atom_numbers.keys():
-#         indices = structure.select_index(species)
-#         for i in indices:
-#             sorted_indices.append(i)
-#     return np.array(sorted_indices)
+    Args:
+        structure (pyiron.atomistics.structure.atoms.Atoms): The structure whose indices need to be sorted
+
+    Returns:
+        list: A list of indices which is sorted by the corresponding species for writing to POSCAR
+
+    """
+    atom_numbers = structure.get_number_species_atoms()
+    sorted_indices = list()
+    for species in atom_numbers.keys():
+        indices = structure.select_index(species)
+        for i in indices:
+            sorted_indices.append(i)
+    return np.array(sorted_indices)
 
 
 def manip_contcar(filename, new_filename, add_pos):
