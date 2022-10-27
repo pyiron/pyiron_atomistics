@@ -232,14 +232,14 @@ class StructureStorage(FlattenedStorage, HasStructure):
             raise KeyError(f"No structure named {frame}.") from None
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
-        elements = self.get_elements()
+        symbols = self.get_array("symbols", frame)
+        elements = [e for e in self.get_elements() if e in symbols]
         index_map = {e: i for i, e in enumerate(elements)}
         try:
             magmoms = self.get_array("spins", frame)
         except KeyError:
             # not all structures have spins saved on them
             magmoms = None
-        symbols = self.get_array("symbols", frame)
         structure = Atoms(
             species=[Atom(e).element for e in elements],
             indices=[index_map[e] for e in symbols],
