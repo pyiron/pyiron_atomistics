@@ -60,15 +60,29 @@ def sxversions(refresh=False):
 
                 jsonscript = os.path.join(p, "sphinx", "sxversions.py")
                 if os.path.exists(jsonscript):
-                    sxv = json.loads(
-                        subprocess.run(
-                            [python_interpreter, jsonscript],
-                            text=True,
-                            stdout=subprocess.PIPE,
-                            cwd=os.path.join(p, "sphinx"),
-                        ).stdout
+                    proc = subprocess.run(
+                        [python_interpreter, jsonscript],
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        cwd=os.path.join(p, "sphinx"),
                     )
-                    do_update("output from ", jsonscript)
+                    if proc.returncode != 0:
+                        warnings.warn(
+                            jsonscript
+                            + " failed with exitcode "
+                            + str(proc.returncode)
+                            + ": \n"
+                            + proc.stdout
+                            + proc.stderr
+                        )
+                    else:
+                        try:
+                            sxv = json.loads(proc.stdout)
+                            do_update("output from ", jsonscript)
+                        except json.decoder.JSONDecodeError:
+                            print("json decoder error from " + jsonscript + "\n")
+                            print(proc.stdout)
+                            raise
     finally:
         _sxversion_lock.release()
     return _sxversions
