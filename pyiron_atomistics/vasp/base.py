@@ -17,7 +17,8 @@ from pyiron_atomistics.vasp.potential import (
     strip_xc_from_potential_name,
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_base import state, GenericParameters, deprecate, HasStoredTraits
+from pyiron_base import state, GenericParameters, deprecate
+from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_atomistics.vasp.outcar import Outcar
 from pyiron_atomistics.vasp.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
@@ -1848,8 +1849,8 @@ class VaspSpecificOptions(HasStoredTraits):
         allow_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
             (e.g. Fe37 P1 Fe35 -> Fe72 P1 reduces POTCAR by one Fe POTCAR filesize. (Default is True.)
     """
-    def __init__(self, init=None, table_name='vasp_specific_options', lazy=False, wrap_blacklist=()):
-        super().__init__(init=init, table_name=table_name, lazy=lazy, wrap_blacklist=wrap_blacklist)
+    def __init__(self, init=None, table_name='vasp_specific_options', group_name=None, lazy=False, wrap_blacklist=()):
+        super().__init__(init=init, table_name=table_name, group_name=group_name, lazy=lazy, wrap_blacklist=wrap_blacklist)
     allow_structure_reordering = Bool()
 
     @default('allow_structure_reordering')
