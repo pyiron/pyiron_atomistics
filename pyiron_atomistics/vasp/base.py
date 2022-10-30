@@ -1849,8 +1849,9 @@ class VaspSpecificOptions(HasStoredTraits):
         allow_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
             (e.g. Fe37 P1 Fe35 -> Fe72 P1 reduces POTCAR by one Fe POTCAR filesize. (Default is True.)
     """
-    def __init__(self, init=None, table_name='vasp_specific_options', group_name=None, lazy=False, wrap_blacklist=()):
-        super().__init__(init=init, table_name=table_name, group_name=group_name, lazy=lazy, wrap_blacklist=wrap_blacklist)
+    def __init__(self, group_name='AdvancedOptions'):
+        super().__init__(group_name=group_name)
+
     allow_structure_reordering = Bool()
 
     @default('allow_structure_reordering')
@@ -1890,7 +1891,6 @@ class Input:
         self.structure = None
         self._idx_user_to_pyiron = []
         self._idx_pyiron_to_user = []
-
     @property
     def idx_user_to_pyiron(self):
         if self.structure is None:
@@ -2076,7 +2076,6 @@ class Output:
             idx_pyiron_to_user = self._job.idx_pyiron_to_user
         except:
             # If it fails, use the old vasp_sorter function
-            # TO DO: move vasp_sorter to base
             idx_pyiron_to_user = vasp_sorter(self.structure)
         if not ("OUTCAR" in files_present or "vasprun.xml" in files_present):
             raise IOError("Either the OUTCAR or vasprun.xml files need to be present")
