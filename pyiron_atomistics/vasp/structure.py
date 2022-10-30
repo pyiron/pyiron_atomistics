@@ -99,11 +99,29 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
         for a_i in structure.get_cell():
             x, y, z = a_i
             f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
-        atom_numbers = structure.get_number_species_atoms()
+        
+        # This section generates the species string and count of the POSCAR 
+        prev_element = structure.elements[0].Abbreviation
+        element_list = [prev_element]
+        element_count = []
+        count = 0
+        for i, element in enumerate([x.Abbreviation for x in structure.elements]):
+            if element == prev_element:
+                count += 1
+            else:
+                # The count append is always one behind...
+                # i.e. Fe -> Ni triggers an append of the count of Fe
+                # Then the last species never gets an update
+                element_count.append(count)
+                element_list.append(element)
+                prev_element = element
+                count = 1
+        # This is necessary since the last species never gets an update
+        element_count.append(count)
+        
         if write_species:
-            f.write(" ".join(atom_numbers.keys()) + endline)
-        num_str = [str(val) for val in atom_numbers.values()]
-        f.write(" ".join(num_str))
+            f.write(" ".join(element_list) + endline)
+        f.write(" ".join([str(x) for x in element_count]))
         f.write(endline)
         if "selective_dynamics" in structure.get_tags():
             selec_dyn = True
@@ -111,15 +129,13 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
             f.write("Selective dynamics" + endline)
         positions = list()
         selec_dyn_lst = list()
-        for species in atom_numbers.keys():
-            indices = structure.select_index(species)
-            for i in indices:
-                if cartesian:
-                    positions.append(structure.positions[i])
-                else:
-                    positions.append(structure.get_scaled_positions()[i])
-                if selec_dyn:
-                    selec_dyn_lst.append(structure.selective_dynamics[i])
+        for i in np.arange(0,len(structure.elements)):
+            if cartesian:
+                positions.append(structure.positions[i])
+            else:
+                positions.append(structure.get_scaled_positions()[i])
+            if selec_dyn:
+                selec_dyn_lst.append(structure.selective_dynamics[i])
         if cartesian:
             f.write("Cartesian" + endline)
         else:
