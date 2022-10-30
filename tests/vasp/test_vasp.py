@@ -79,7 +79,6 @@ class TestVasp(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.job.__name__, "Vasp")
-        self.assertEqual(self.job._sorted_indices, None)
         self.assertIsInstance(self.job.input, Input)
         self.assertIsInstance(self.job._output_parser, Output)
         self.assertIsInstance(self.job._potential, VaspPotentialSetter)

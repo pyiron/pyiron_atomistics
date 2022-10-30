@@ -177,12 +177,12 @@ class TestVaspStructure(unittest.TestCase):
         os.remove(posixpath.join(self.file_location, "POSCAR_test"))
 
     def test_vasp_sorter(self):
+        vasp_order = vasp_sorter(self.structure)
         write_poscar(
-            structure=self.structure,
+            structure=self.structure[vasp_order],
             filename=posixpath.join(self.file_location, "POSCAR_test"),
         )
         test_atoms = read_atoms(posixpath.join(self.file_location, "POSCAR_test"))
-        vasp_order = vasp_sorter(self.structure)
         self.assertEqual(len(self.structure), len(test_atoms))
         self.assertEqual(self.structure[vasp_order], test_atoms)
         os.remove(posixpath.join(self.file_location, "POSCAR_test"))
@@ -209,7 +209,7 @@ class TestVaspStructure(unittest.TestCase):
         positions[1] = [5.0, 5.7, 5.7]
         positions[2] = [5.0, -5.7, -5.7]
         struct = Atoms(["O", "H", "H"], positions=positions, cell=10.0 * np.eye(3))
-        write_poscar(structure=struct, filename="simple_water")
+        write_poscar(structure=struct[vasp_sorter(struct)], filename="simple_water")
         add_pos = np.zeros_like(positions)
         poscar_order = np.argsort(vasp_sorter(struct))
         add_pos[poscar_order[struct.select_index("O")], 2] += 3
