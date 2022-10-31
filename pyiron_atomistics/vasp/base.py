@@ -94,6 +94,7 @@ class VaspBase(GenericDFTJob):
 
     def __init__(self, project, job_name):
         super(VaspBase, self).__init__(project, job_name)
+        self._sorted_indices = None
         self.input = Input()
         self.input.incar["SYSTEM"] = self.job_name
         self._output_parser = Output(self)
@@ -126,6 +127,23 @@ class VaspBase(GenericDFTJob):
             self._potential = VaspPotentialSetter(
                 element_lst=structure.get_species_symbols().tolist()
             )
+    # DEPRECATE THIS SOON
+    @property
+    def sorted_indices(self):
+        """
+        How the original atom indices are ordered in the vasp format (species by species)
+        """
+        if self._sorted_indices is None:
+            self._sorted_indices = vasp_sorter(self.structure)
+        return self._sorted_indices
+
+    # DEPRECATE THIS SOON
+    @sorted_indices.setter
+    def sorted_indices(self, val):
+        """
+        Setter for the sorted indices
+        """
+        self._sorted_indices = val
 
     @property
     def idx_pyiron_to_user(self):
@@ -689,8 +707,13 @@ class VaspBase(GenericDFTJob):
             else:
                 raise ValueError("Unable to import job because structure not present")
             self.structure = structure
-            # Always set the _idx_pyiron_to_user to the original order (unsorted) when importing from jobs
-            self.idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
+            # Always set the idx_pyiron_to_user to the original order (unsorted) when importing from jobs
+            try:
+                self.idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
+            except:
+                # DEPRECATE SORTED_INDICES SOON
+                self.sorted_indices = np.arange(len(self.structure), dtype=int)
+                #raise warnings.WarningMessage("This job uses a previous sorted_indices implementation, which will be deprecated at some point in the future")
             # Read initial magnetic moments from the INCAR file and set it to the structure
             magmom_loc = np.array(self.input.incar._dataset["Parameter"]) == "MAGMOM"
             if any(magmom_loc):
