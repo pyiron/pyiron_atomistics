@@ -1872,7 +1872,7 @@ class VaspSpecificOptions(HasStoredTraits):
         allow_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
             (e.g. Fe37 P1 Fe35 -> Fe72 P1 reduces POTCAR by one Fe POTCAR filesize. (Default is True.)
     """
-    def __init__(self, group_name='AdvancedOptions'):
+    def __init__(self, group_name='advanced_options'):
         super().__init__(group_name=group_name)
 
     allow_structure_reordering = Bool()
