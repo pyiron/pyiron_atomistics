@@ -370,16 +370,8 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         )
         if repeat is not None:
             traj = traj.transform(lambda s: s.repeat(repeat))
-        animation = nglview.show_asetraj(traj)
-        if spacefill:
-            animation.add_spacefill(radius_type="vdw", scale=0.5, radius=particle_size)
-            animation.remove_ball_and_stick()
-        else:
-            animation.add_ball_and_stick()
-        if show_cell:
-            if self.structure.cell is not None:
-                animation.add_unitcell()
-        animation.camera = camera
+            
+        animation = traj.animate(spacefill, show_cell, center_of_mass, particle_size, camera)
         return animation
 
     def view_structure(self, snapshot=-1, spacefill=True, show_cell=True):
@@ -976,6 +968,55 @@ class Trajectory(HasStructure):
             :class:`~.TransformTrajectory`: trajectory that contains the transformed structures
         """
         return TransformTrajectory(self, transform)
+    
+    def animate(
+        self,
+        spacefill: bool = True,
+        show_cell: bool = True,
+        center_of_mass: bool = False,
+        particle_size: float = 0.5,
+        camera: str = "orthographic",
+        atom_indices: Union[list, np.ndarray] = None,
+        snapshot_indices: Union[list, np.ndarray] = None,
+        repeat: Union[int, Tuple[int, int, int]] = None,
+    ):
+        """
+        Animates the job if a trajectory is present
+
+        Args:
+            spacefill (bool): If True, then atoms are visualized in spacefill stype
+            show_cell (bool): True if the cell boundaries of the structure is to be shown
+            particle_size (float): Scaling factor for the spheres representing the atoms.
+                                    (The radius is determined by the atomic number)
+            center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
+            camera (str):
+                camera perspective, choose from "orthographic" or "perspective"
+                
+        Returns:
+            animation: nglview IPython widget
+
+        """
+        try:
+            import nglview
+        except ImportError:
+            raise ImportError(
+                "The animate() function requires the package nglview to be installed"
+            )
+
+        if self._number_of_structures <= 1:
+            raise ValueError("job must have more than one structure to animate!")
+
+        animation = nglview.show_asetraj(self)
+        if spacefill:
+            animation.add_spacefill(radius_type="vdw", scale=0.5, radius=particle_size)
+            animation.remove_ball_and_stick()
+        else:
+            animation.add_ball_and_stick()
+        if show_cell:
+            if self.structure.cell is not None:
+                animation.add_unitcell()
+        animation.camera = camera
+        return animation
 
 
 class TransformTrajectory(HasStructure):
