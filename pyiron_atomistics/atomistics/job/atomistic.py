@@ -975,11 +975,8 @@ class Trajectory(HasStructure):
         show_cell: bool = True,
         center_of_mass: bool = False,
         particle_size: float = 0.5,
-        camera: str = "orthographic",
-        atom_indices: Union[list, np.ndarray] = None,
-        snapshot_indices: Union[list, np.ndarray] = None,
-        repeat: Union[int, Tuple[int, int, int]] = None,
-    ):
+        camera: str = "orthographic"
+        ):
         """
         Animates the job if a trajectory is present
 
