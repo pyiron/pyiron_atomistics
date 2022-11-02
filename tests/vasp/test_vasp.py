@@ -21,7 +21,7 @@ __author__ = "Sudarsan Surendralal"
 
 class TestVasp(unittest.TestCase):
     """
-    Tests the pyiron_atomistics.objects.hamilton.dft.vasp.Vasp class
+    Tests the pyiron_atomistics.dft.vasp.Vasp class
     """
 
     @classmethod
@@ -447,16 +447,103 @@ class TestVasp(unittest.TestCase):
 
     def test_kspacing(self):
         job_kspace = self.project.create_job("Vasp", "job_kspacing")
-        job_kspace.structure = self.project.create_ase_bulk("Fe")
+        job_kspace.structure = self.project.create.structure.bulk("Fe")
         job_kspace.input.incar["KSPACING"] = 0.5
         with warnings.catch_warnings(record=True) as w:
             job_kspace.run(run_mode="manual")
             self.assertNotIn("KPOINTS", job_kspace.list_files(), "'KPOINTS' file written even when "
                                                                  "KPACING tag is present in INCAR")
-
             self.assertEqual(len(w), 1)
             self.assertEqual(str(w[0].message), "'KSPACING' found in INCAR, no KPOINTS file written")
 
+    def test_sorting_behaviours(self):
+        """
+        This is a set of tests for the generation of indices maps for the POSCAR sorter functionality in the VASP module
+        tests:
+        VaspBase.idx_pyiron_to_user
+        VaspBase.idx_user_to_pyiron
+        VaspBase.input._map_pyiron_to_user_idx, which generates the two properties above
+        Explicitly tests:
+        1. Sorting to conserve POTCAR ordering is allowed by default
+        2. job.idx_pyiron_to_user, job.idx_user_to_pyiron are generated properly when sorting is allowed
+        3. job.idx_pyiron_to_user, job.idx_user_to_pyiron are generated properly when sorting is forbidden
+        4. Checks written output to see if the structures written are as expected in both cases
+        5. Checks that remapping/reconstituting the Atoms object from written output (i.e. POSCAR) matches user input
+        """
+        # Test 1: Default behaviour is to allow sorting, check that it is allowed by default
+        job_idx_map = self.project.create_job("Vasp", "job_idx_maps")
+        struct = self.project.create.structure.bulk("Fe") * [np.random.randint(5, 100), 1, 1]
+        # Put another species in the middle somewhere in user-defined structure
+        struct[3] = "Al"
+        job_idx_map.structure = struct
+        job_idx_map.input.incar["KSPACING"] = 0.5
+        self.assertTrue(job_idx_map.input.options.allow_structure_reordering,\
+                        "Structure sorting should be True by default in job.input.options.allow_structure_reordering!")
+        # Test 2: The length of the indices maps are equal length to the structure.
+        self.assertEqual(len(job_idx_map.idx_pyiron_to_user), len(job_idx_map.structure),\
+                         "The created indices maps (job.idx_pyiron_to_user) are not equal in length to structure!")
+        self.assertEqual(len(job_idx_map.idx_user_to_pyiron), len(job_idx_map.structure),\
+                         "The created indices maps (job.idx_user_to_pyiron) are not equal in length to structure!")
+        # Test 3: The indices maps in event of sorting (due to how test is configured) must not be equal as default behaviour is to sort
+        # This causes the atom of different species in the middle to be shuffled to the ends of the file, so idx_user_to_pyiron != idx_pyiron_to_user
+        self.assertFalse(np.array_equal(job_idx_map.idx_pyiron_to_user, job_idx_map.idx_user_to_pyiron),\
+                         "job.idx_user_to_pyiron and job.idx_pyiron_to_user should not be equal in the sorted test")
+        # Test 4: The indices maps in event of sorting must generate equivalent comparisons of structure
+        job_idx_map.run(run_mode="manual") # write the input files
+        # Read the as-written POSCAR in the sorted case
+        struct_read_sorted = read_atoms("%s/%s/job_idx_maps_hdf5/job_idx_maps/POSCAR" % (self.execution_path, "test_vasp"))
+        # Now this looks weird, but I assure you it is necessary, as the __eq__ operator implemented in ASE/pyiron has weirdnesses
+        # that this section explicitly avoids this for the sake of testing equivalence in each set of object properties.
+        # i.e. stuff is not equal when they should be equal when using struct_1 == struct_2 when using ASE/pyiron Atoms objects
+        # 4a) Check element lists are equal
+        self.assertTrue((struct[job_idx_map.idx_user_to_pyiron].elements == struct_read_sorted.elements).all(),\
+                         "elements in written sorted POSCAR as written do not match pyiron-sorted POSCAR")
+        # 4b) Check cells are equal
+        self.assertTrue((struct[job_idx_map.idx_user_to_pyiron].cell == struct_read_sorted.cell).all(),\
+                         "cell parameters in written sorted POSCAR do not match pyiron-sorted POSCAR")
+        # 4c) Check positions/coordinates are equal
+        for i, site in enumerate(struct_read_sorted):
+            np.testing.assert_almost_equal(struct[job_idx_map.idx_user_to_pyiron][i].position, site.position,\
+                                           err_msg = "positions are not equivalent in written POSCAR and pyiron-sorted POSCAR")
+        # Test 5: Check that the conversion back works i.e. sorted structure -> unsort -> user input structure
+        # 5a) Check element lists are equal
+        self.assertTrue((struct.elements == struct_read_sorted[job_idx_map.idx_pyiron_to_user].elements).all(),\
+                         "element list in user input POSCAR as written do not match reconstituted (unsorted) POSCAR")
+        # 5b) Check cells are equal
+        self.assertTrue((struct.cell == struct_read_sorted[job_idx_map.idx_pyiron_to_user].cell).all(),\
+                         "cell in user input POSCAR as written does not match reconstituted (unsorted) POSCAR")
+        # 5c) Check positions/coordinates are equal
+        for i, site in enumerate(struct_read_sorted[job_idx_map.idx_pyiron_to_user]):
+            np.testing.assert_almost_equal(struct[i].position, site.position,\
+                                           err_msg = "positions are not equivalent in written POSCAR and pyiron-sorted POSCAR")
+        
+        # Test 6: The indices maps in event of no-sort should just be naivemaps
+        job_idx_map_no_sort = self.project.create_job("Vasp", "job_idx_maps_no_sort")
+        job_idx_map_no_sort.structure = struct
+        job_idx_map_no_sort.input.incar["KSPACING"] = 0.5
+        job_idx_map_no_sort.input.options.allow_structure_reordering = False
+        job_idx_map_no_sort.run(run_mode="manual")
+        # Check idx_pyiron_to_user and idx_user_to_pyiron are naive maps
+        self.assertTrue(np.array_equal(job_idx_map_no_sort.idx_pyiron_to_user, np.arange(len(job_idx_map_no_sort.structure))),\
+                        "idx_pyiron_to_user is not a naive map in the unsorted case")
+        self.assertTrue(np.array_equal(job_idx_map_no_sort.idx_user_to_pyiron, np.arange(len(job_idx_map_no_sort.structure))),\
+                        "idx_user_to_pyiron is not a naive map in the unsorted case")
+        # This should be a redundant test, but just do it anyway in case weirdnesses happen
+        self.assertTrue(np.array_equal(job_idx_map_no_sort.idx_pyiron_to_user, job_idx_map_no_sort.idx_user_to_pyiron),\
+                        "idx_pyiron_to_user is not the same as idx_user_to_pyiron in the unsorted case")
+        # Check that the written POSCAR and the user input structure match
+        # Read the as-written POSCAR in the sorted case
+        struct_read_unsorted = read_atoms("%s/%s/job_idx_maps_no_sort_hdf5/job_idx_maps_no_sort/POSCAR" % (self.execution_path, "test_vasp"))
+        # 6a) Check element lists are equal
+        self.assertTrue((struct[job_idx_map_no_sort.idx_user_to_pyiron].elements == struct_read_unsorted.elements).all(),\
+                         "elements in in written unsorted POSCAR as written do not match pyiron-unsorted POSCAR")
+        # 6b) Check cells are equal
+        self.assertTrue((struct[job_idx_map_no_sort.idx_user_to_pyiron].cell == struct_read_unsorted.cell).all(),\
+                         "cell parameters in written unsorted POSCAR do not match pyiron-unsorted POSCAR")
+        # 6c) Check positions/coordinates are equal
+        for i, site in enumerate(struct_read_unsorted):
+            np.testing.assert_almost_equal(struct[job_idx_map_no_sort.idx_user_to_pyiron][i].position, site.position,\
+                                           err_msg = "positions are not equivalent in unsorted case in the written POSCAR and pyiron-side user input POSCAR")
 
 if __name__ == "__main__":
     unittest.main()

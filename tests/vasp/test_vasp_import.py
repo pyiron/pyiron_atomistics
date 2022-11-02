@@ -25,6 +25,9 @@ class TestVaspImport(unittest.TestCase):
         project.remove_jobs(recursive=True, silently=True)
         project.remove(enable=True)
 
+    # TODO: ADD SAMPLES ON VASP 6.3.0 WITH ISPIN = 1, 2
+    # IMPORTING BREAKS ON OUTCAR PARSING ON THESE VERSIONS
+
     def test_import(self):
         folder_path = os.path.join(
                 self.file_location, "../static/vasp_test_files/full_job_sample"

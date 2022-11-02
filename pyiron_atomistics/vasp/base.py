@@ -127,7 +127,7 @@ class VaspBase(GenericDFTJob):
             self._potential = VaspPotentialSetter(
                 element_lst=structure.get_species_symbols().tolist()
             )
-    # DEPRECATE THIS SOON
+    # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
     @property
     def sorted_indices(self):
         """
@@ -137,7 +137,7 @@ class VaspBase(GenericDFTJob):
             self._sorted_indices = vasp_sorter(self.structure)
         return self._sorted_indices
 
-    # DEPRECATE THIS SOON
+    # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
     @sorted_indices.setter
     def sorted_indices(self, val):
         """
@@ -711,7 +711,7 @@ class VaspBase(GenericDFTJob):
             try:
                 self.idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
             except:
-                # DEPRECATE SORTED_INDICES SOON
+                # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
                 self.sorted_indices = np.arange(len(self.structure), dtype=int)
                 #raise warnings.WarningMessage("This job uses a previous sorted_indices implementation, which will be deprecated at some point in the future")
             # Read initial magnetic moments from the INCAR file and set it to the structure

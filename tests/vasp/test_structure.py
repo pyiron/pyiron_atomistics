@@ -175,7 +175,7 @@ class TestVaspStructure(unittest.TestCase):
         test_atoms_new = read_atoms(posixpath.join(self.file_location, "POSCAR_test"))
         self.assertEqual(test_atoms, test_atoms_new)
         os.remove(posixpath.join(self.file_location, "POSCAR_test"))
-
+    # Deprecate upon removal of backwards compatibility of datasets using old vasp_sorter 
     def test_vasp_sorter(self):
         vasp_order = vasp_sorter(self.structure)
         write_poscar(
