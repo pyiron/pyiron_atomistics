@@ -447,6 +447,7 @@ class VaspBase(GenericDFTJob):
                 # Backwards compatibility for old datasets using old vasp_sorter method
                 try:
                     idx_pyiron_to_user = self.idx_pyiron_to_user
+                # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
                 except:
                     idx_pyiron_to_user = vasp_sorter(self.structure)
                 charges[idx_pyiron_to_user] = charges_orig
@@ -815,13 +816,9 @@ class VaspBase(GenericDFTJob):
         Returns:
             pyiron.atomistics.structure.atoms.Atoms: The final structure
         """
-        # I don't understand what exactly is happening here
-        # Why is a copy from output cell, positions to input structure,
-        # and then returning the base structure even necessary?
-        # shouldn't a read_atoms from the output file be enough?
-        # Todo: Sanitise (use pymatgen CONTCAR reader)
         filename = posixpath.join(self.working_directory, filename)
         # Backwards compatibility for old datasets using old vasp_sorter method
+        # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
         try:
             idx_pyiron_to_user = self.idx_pyiron_to_user
         except:
@@ -2095,6 +2092,7 @@ class Output:
         files_present = os.listdir(directory)
         log_dict = dict()
         vasprun_working, outcar_working = False, False
+        # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
         # First attempt to extract indices maps from the job
         try:
             # If it succeeds, just use it for output parsing
