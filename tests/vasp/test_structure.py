@@ -186,7 +186,7 @@ class TestVaspStructure(unittest.TestCase):
         self.assertEqual(len(self.structure), len(test_atoms))
         self.assertEqual(self.structure[vasp_order], test_atoms)
         os.remove(posixpath.join(self.file_location, "POSCAR_test"))
-
+    # This probably needs to be completely rewritten on deprecation of vasp_sorter
     def test_manip_contcar(self):
         for f in self.file_list:
             if "CONTCAR_Mg" in f:
