@@ -308,9 +308,7 @@ class MetadynOutput(Output):
         self.report_file = Report()
 
     def collect(self, directory=os.getcwd(), sorted_indices=None):
-        super(MetadynOutput, self).collect(
-            directory=directory
-        )
+        super(MetadynOutput, self).collect(directory=directory)
         files_present = os.listdir(directory)
         if "REPORT" in files_present:
             self.report_file.from_file(filename=posixpath.join(directory, "REPORT"))

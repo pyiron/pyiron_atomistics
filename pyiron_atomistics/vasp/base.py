@@ -32,17 +32,17 @@ from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
 from pyiron_atomistics.dft.bader import Bader
 
 from traitlets import (
-             Bool,
-             default,
-             Instance,
-             Int,
-             List,
-             observe,
-             TraitError,
-             TraitType,
-             Unicode,
-             validate
-         )
+    Bool,
+    default,
+    Instance,
+    Int,
+    List,
+    observe,
+    TraitError,
+    TraitType,
+    Unicode,
+    validate,
+)
 
 import warnings
 
@@ -127,6 +127,7 @@ class VaspBase(GenericDFTJob):
             self._potential = VaspPotentialSetter(
                 element_lst=structure.get_species_symbols().tolist()
             )
+
     # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
     @property
     def sorted_indices(self):
@@ -156,7 +157,7 @@ class VaspBase(GenericDFTJob):
         if self.input.idx_user_to_pyiron is None:
             self.input.structure = self.structure
         return self.input.idx_user_to_pyiron
-        
+
     @property
     def potential(self):
         return self._potential
@@ -419,9 +420,7 @@ class VaspBase(GenericDFTJob):
             self.idx_pyiron_to_user = np.array(range(len(self.structure)))
         self._output_parser.structure = self.structure.copy()
         try:
-            self._output_parser.collect(
-                directory=self.working_directory
-            )
+            self._output_parser.collect(directory=self.working_directory)
         except VaspCollectError:
             self.status.aborted = True
             return
@@ -713,7 +712,7 @@ class VaspBase(GenericDFTJob):
             except:
                 # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
                 self.sorted_indices = np.arange(len(self.structure), dtype=int)
-                #raise warnings.WarningMessage("This job uses a previous sorted_indices implementation, which will be deprecated at some point in the future")
+                # raise warnings.WarningMessage("This job uses a previous sorted_indices implementation, which will be deprecated at some point in the future")
             # Read initial magnetic moments from the INCAR file and set it to the structure
             magmom_loc = np.array(self.input.incar._dataset["Parameter"]) == "MAGMOM"
             if any(magmom_loc):
@@ -817,7 +816,7 @@ class VaspBase(GenericDFTJob):
             pyiron.atomistics.structure.atoms.Atoms: The final structure
         """
         # I don't understand what exactly is happening here
-        # Why is a copy from output cell, positions to input structure, 
+        # Why is a copy from output cell, positions to input structure,
         # and then returning the base structure even necessary?
         # shouldn't a read_atoms from the output file be enough?
         # Todo: Sanitise (use pymatgen CONTCAR reader)
@@ -1864,6 +1863,7 @@ class VaspBase(GenericDFTJob):
     def __del__(self):
         pass
 
+
 class VaspSpecificOptions(HasStoredTraits):
     """
     A `pyiron_base.HasStoredTraits` object for input that is specific to VASP.
@@ -1872,12 +1872,13 @@ class VaspSpecificOptions(HasStoredTraits):
         allow_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
             (e.g. Fe37 P1 Fe35 -> Fe72 P1 reduces POTCAR by one Fe POTCAR filesize. (Default is True.)
     """
-    def __init__(self, group_name='advanced_options'):
+
+    def __init__(self, group_name="advanced_options"):
         super().__init__(group_name=group_name)
 
     allow_structure_reordering = Bool()
 
-    @default('allow_structure_reordering')
+    @default("allow_structure_reordering")
     def reordering_allowed(self):
         return True
 
@@ -1914,6 +1915,7 @@ class Input:
         self.structure = None
         self._idx_user_to_pyiron = []
         self._idx_pyiron_to_user = []
+
     @property
     def idx_user_to_pyiron(self):
         if self.structure is None:
@@ -1933,9 +1935,9 @@ class Input:
     def _map_pyiron_to_user_idx(self):
         """
         This writes the indices maps for user->pyiron (idx_user_to_pyiron), and pyiron->user (idx_pyiron_to_user)
-        This looks in Input.options for the allow_structure_reordering boolean value, and decides to return either 
+        This looks in Input.options for the allow_structure_reordering boolean value, and decides to return either
         1. Sorting map when species-based reordering is allowed (default behaviour of pyiron)
-        or 
+        or
         2. Sorting map when sorting is forbidden, in which case naive map (1:1, 2:2 etc.) is returned.
         """
         if self.options.allow_structure_reordering:
@@ -1961,14 +1963,14 @@ class Input:
         Writes all the input files to a specified directory
 
         Args:
-            structure (atomistics.structure.atoms.Atoms instance): Structure (unsorted) to be written 
+            structure (atomistics.structure.atoms.Atoms instance): Structure (unsorted) to be written
 
             The structure obj being fed into this fn at .write_input() function is sorted;
             this fn's structure doesn't need to be a sorted structure (if generating the job normally)
-            If using this manually (for whatever reason), to generate consistent input with what is generated with 
+            If using this manually (for whatever reason), to generate consistent input with what is generated with
             write_input(), which calls this fn to write the actual files to the job directory,
             you should feed the job structure like so:
-            
+
             job.input.write(job.structure[job.idx_user_to_pyiron],...)
 
             directory (str): The working directory for the VASP run
