@@ -1607,16 +1607,6 @@ class TestAtoms(unittest.TestCase):
         # check that again with three elements
         self.assertGreater(dt65 / dt76, expected_speedup_factor,
                             "Atom creation not speed up to the required level by caches!")
-
-    def test_pymatgen_to_pyiron_conversion(self):
-        """
-        Tests pymatgen_to_pyiron conversion functionality (implemented conversion path is pymatgen->ASE->pyiron)
-        Tests:
-        1. If conversion works with no site-specific properties
-        2. Equivalence in selective dynamics tags after conversion if only sel dyn is present
-        3. Checks if other tags are affected when sel dyn is present (magmom is checked)
-        4. Checks if other tags are affected when sel dyn is not present (magmom is checked)
-        """
         
     def test_calc_to_hdf(self):
         """Calculators set on the structure should be properly reloaded after reading from HDF."""
@@ -1630,6 +1620,16 @@ class TestAtoms(unittest.TestCase):
                     read_structure.calc.parameters[k],
                     msg=f"Calculator parameter {k} not correctly restored from HDF!"
             )
+            
+    def test_pymatgen_to_pyiron_conversion(self):
+        """
+        Tests pymatgen_to_pyiron conversion functionality (implemented conversion path is pymatgen->ASE->pyiron)
+        Tests:
+        1. If conversion works with no site-specific properties
+        2. Equivalence in selective dynamics tags after conversion if only sel dyn is present
+        3. Checks if other tags are affected when sel dyn is present (magmom is checked)
+        4. Checks if other tags are affected when sel dyn is not present (magmom is checked)
+        """
 
         coords = [[0, 0, 0], [0.75,0.5,0.75]]
         lattice = Lattice.from_parameters(a=4.2, b=4.2, c=4.2, alpha=120,
