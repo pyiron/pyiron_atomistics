@@ -370,8 +370,10 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         )
         if repeat is not None:
             traj = traj.transform(lambda s: s.repeat(repeat))
-            
-        animation = traj.animate(spacefill, show_cell, center_of_mass, particle_size, camera)
+
+        animation = traj.animate(
+            spacefill, show_cell, center_of_mass, particle_size, camera
+        )
         return animation
 
     def view_structure(self, snapshot=-1, spacefill=True, show_cell=True):
@@ -968,15 +970,15 @@ class Trajectory(HasStructure):
             :class:`~.TransformTrajectory`: trajectory that contains the transformed structures
         """
         return TransformTrajectory(self, transform)
-    
+
     def animate(
         self,
         spacefill: bool = True,
         show_cell: bool = True,
         center_of_mass: bool = False,
         particle_size: float = 0.5,
-        camera: str = "orthographic"
-        ):
+        camera: str = "orthographic",
+    ):
         """
         Animates the job if a trajectory is present
 
@@ -988,7 +990,7 @@ class Trajectory(HasStructure):
             center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
             camera (str):
                 camera perspective, choose from "orthographic" or "perspective"
-                
+
         Returns:
             animation: nglview IPython widget
 
