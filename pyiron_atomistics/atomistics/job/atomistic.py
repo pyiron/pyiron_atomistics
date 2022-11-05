@@ -318,8 +318,10 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         else:
             ValueError("There is no structure attached to the current Job.")
 
-    @deprecate("Call animate_structures() instead.  Arguments stride/center_of_mass/atom_indices/snapshot_indices/repeat "
-               "can be emulated by calling trajectory() first.")
+    @deprecate(
+        "Call animate_structures() instead.  Arguments stride/center_of_mass/atom_indices/snapshot_indices/repeat "
+        "can be emulated by calling trajectory() first."
+    )
     def animate_structure(
         self,
         spacefill: bool = True,
