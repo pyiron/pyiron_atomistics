@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from abc import ABC, abstractmethod, abstractproperty
+from typing import Callable
 import numbers
 from pyiron_base import deprecate, ImportAlarm
 
@@ -158,6 +159,18 @@ class HasStructure(ABC):
         for i in range(self.number_of_structures):
             yield self._get_structure(frame=i, wrap_atoms=wrap_atoms)
 
+    def transform_structures(self, modify) -> TransformStructure:
+        """
+        Return a modified object by applying a function to each object lazily.
+
+        Args:
+            modify (function): applied to each structure, has to return the modified structure
+
+        Returns:
+            :class:`.TransformStructure`: a container with the modified structures
+        """
+        return TransformStructure(self, modify)
+
     @nglview_alarm
     def animate_structures(
         self,
@@ -195,6 +208,27 @@ class HasStructure(ABC):
             animation.add_unitcell()
         animation.camera = camera
         return animation
+
+
+class TransformStructure(HasStructure):
+    """
+    Modifies any HasStructure by applying a function to each structure lazily.
+    """
+
+    __slots__ = ("_source", "_modify")
+
+    def __init__(self, source: HasStructure, modify: Callable[[Atoms], Atoms]):
+        self._source = source
+        self._modify = modify
+
+    def _number_of_structures(self):
+        return self._source._number_of_structures()
+
+    def _translate_frame(self, frame):
+        return self._source._translate_frame(frame)
+
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        return self._modify(self._source._get_structure(frame, wrap_atoms=wrap_atoms))
 
 
 class _TrajectoryAdapter:
