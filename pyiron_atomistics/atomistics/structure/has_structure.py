@@ -182,7 +182,7 @@ class HasStructure(ABC):
             animation: nglview IPython widget
         """
 
-        if self._number_of_structures <= 1:
+        if self._number_of_structures() <= 1:
             raise ValueError("job must have more than one structure to animate!")
 
         animation = nglview.show_asetraj(_TrajectoryAdapter(self))
