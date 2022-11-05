@@ -4,7 +4,10 @@
 
 from abc import ABC, abstractmethod, abstractproperty
 import numbers
-from pyiron_base import deprecate
+from pyiron_base import deprecate, ImportAlarm
+
+with ImportAlarm("Animation of atomic structures requires nglview") as nglview_alarm:
+    import nglview
 
 """
 Mixin for classes that have one or more structures attached to them.
@@ -15,7 +18,7 @@ __copyright__ = (
     "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
-__version__ = "1.1"
+__version__ = "1.2"
 __maintainer__ = "Marvin Poul"
 __email__ = "poul@mpie.de"
 __status__ = "production"
@@ -154,3 +157,65 @@ class HasStructure(ABC):
         """
         for i in range(self.number_of_structures):
             yield self._get_structure(frame=i, wrap_atoms=wrap_atoms)
+
+    @nglview_alarm
+    def animate_structures(
+        self,
+        spacefill: bool = True,
+        show_cell: bool = True,
+        center_of_mass: bool = False,
+        particle_size: float = 0.5,
+        camera: str = "orthographic",
+    ):
+        """
+        Animate a series of atomic structures.
+
+        Args:
+            spacefill (bool): If True, then atoms are visualized in spacefill stype
+            show_cell (bool): True if the cell boundaries of the structure is to be shown
+            particle_size (float): Scaling factor for the spheres representing the atoms.
+                                    (The radius is determined by the atomic number)
+            center_of_mass (bool): False (default) if the specified positions are w.r.t. the origin
+            camera (str): camera perspective, choose from "orthographic" or "perspective"
+
+        Returns:
+            animation: nglview IPython widget
+        """
+
+        if self._number_of_structures <= 1:
+            raise ValueError("job must have more than one structure to animate!")
+
+        animation = nglview.show_asetraj(_TrajectoryAdapter(self))
+        if spacefill:
+            animation.add_spacefill(radius_type="vdw", scale=0.5, radius=particle_size)
+            animation.remove_ball_and_stick()
+        else:
+            animation.add_ball_and_stick()
+        if show_cell:
+            if self.structure.cell is not None:
+                animation.add_unitcell()
+        animation.camera = camera
+        return animation
+
+
+class _TrajectoryAdapter:
+    """
+    Class that translates between HasStructure and the ASE Trajectory interface.
+
+    The ASE interface is needed e.g. by nglview to animate a series of structures, but the Trajectory interface uses
+    methods that not all can implement (e.g. AtomisticGenericJob already overloads __getitem__).
+    """
+
+    __slots__ = "_underlying"
+
+    def __init__(self, underlying: HasStructure):
+        self._underlying = underlying
+
+    def __getitem__(self, item):
+        return self._underlying.get_structure(item)
+
+    def __len__(self):
+        return self._underlying.number_of_structures
+
+    def __iter__(self):
+        yield from self._underlying.iter_structures()
