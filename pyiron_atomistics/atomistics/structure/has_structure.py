@@ -171,19 +171,27 @@ class HasStructure(ABC):
         """
         return TransformStructure(self, modify)
 
-    def collect_structures(self) -> StructureStorage:
+    def collect_structures(self, filter_function=None) -> StructureStorage:
         """
         Collects a copy of all structures in a compact :class:`.StructureStorage`.
 
         This can be used to force lazily applied modifications with :meth:`.transform_structures` or simply to obtain a
         known object type from a generic :class:`.HasStructure` object.
 
+        Args:
+            filter_function (function): include structure only if this function returns True for it
+
         Returns:
-            :class:`.StructureStorage`: a copy of all structures
+            :class:`.StructureStorage`: a copy of all (filtered) structures
         """
         store = StructureStorage()
-        for structure in self.iter_structures():
-            store.add_structure(structure)
+        if filter_function is None:
+            for structure in self.iter_structures():
+                store.add_structure(structure)
+        else:
+            for structure in self.iter_structures():
+                if filter_function(structure):
+                    store.add_structure(structure)
         return store
 
     @nglview_alarm
