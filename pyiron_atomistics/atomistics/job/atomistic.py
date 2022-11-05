@@ -367,6 +367,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         if repeat is not None:
             traj = traj.transform(lambda s: s.repeat(repeat))
 
+        if self.structure.cell is None:
+            show_cell = False
+
         animation = traj.animate_structures(
             spacefill, show_cell, center_of_mass, particle_size, camera
         )

@@ -192,8 +192,7 @@ class HasStructure(ABC):
         else:
             animation.add_ball_and_stick()
         if show_cell:
-            if self.structure.cell is not None:
-                animation.add_unitcell()
+            animation.add_unitcell()
         animation.camera = camera
         return animation
 
