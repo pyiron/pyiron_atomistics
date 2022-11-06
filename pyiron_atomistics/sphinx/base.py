@@ -2122,9 +2122,7 @@ class _SphinxLogParser:
         return self._n_steps
 
     def _parse_band(self, term):
-        arr = np.loadtxt(
-                re.findall(term, self.log_main, re.MULTILINE)
-        )
+        arr = np.loadtxt(re.findall(term, self.log_main, re.MULTILINE))
         shape = (-1, len(self.k_points), arr.shape[-1])
         if self.spin_enabled:
             shape = (-1, 2, len(self.k_points), shape[-1])
