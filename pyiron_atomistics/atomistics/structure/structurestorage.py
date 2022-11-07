@@ -15,6 +15,7 @@ import pandas as pd
 from pyiron_base import FlattenedStorage, ImportAlarm
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.symmetry import SymmetryError
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 
@@ -384,7 +385,10 @@ class StructurePlots:
                 return "cubic"
 
         def extract(s):
-            spg = s.get_symmetry(symprec=symprec).spacegroup["Number"]
+            try:
+                spg = s.get_symmetry(symprec=symprec).spacegroup["Number"]
+            except SymmetryError:
+                spg = 1
             return {"space_group": spg, "crystal_system": get_crystal_system(spg)}
 
         return pd.DataFrame(map(extract, self._store.iter_structures()))
@@ -413,9 +417,9 @@ class StructurePlots:
         sort_key = {
             "triclinic": 1,
             "monoclinic": 3,
-            "orthorombic": 16,
-            "trigonal": 75,
-            "tetragonal": 143,
+            "orthorhombic": 16,
+            "tetragonal": 75,
+            "trigonal": 143,
             "hexagonal": 168,
             "cubic": 195,
         }
