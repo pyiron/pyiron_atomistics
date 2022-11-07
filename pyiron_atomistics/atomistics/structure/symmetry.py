@@ -19,8 +19,10 @@ __email__ = "waseda@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+
 class SymmetryError(Exception):
     pass
+
 
 class Symmetry(dict):
 
