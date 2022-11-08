@@ -95,12 +95,9 @@ def get_volume_per_atom(job):
 
 
 def get_elements(job):
-    species = job["input/structure/species"]
-    indices_lst = job["input/structure/indices"]
-    indices_set = set(indices_lst)
-    count_lst = [indices_lst.tolist().count(ind) for ind in indices_set]
-    main_element = species[count_lst.index(np.max(count_lst))]
-    return {species[ind]: count_lst[ind] for ind in indices_set}
+    species = j['input/structure/species']
+    return {s: sum(j['input/generic/indices']==i)
+                for i, s in enumerate(species)}
 
 
 def get_convergence_check(job):
