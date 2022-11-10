@@ -48,6 +48,7 @@ class Outcar(object):
         """
         with open(filename, "r") as f:
             lines = f.readlines()
+        vasp_version = lines[0].lstrip().split(sep=" ")[0]
         energies = self.get_total_energies(filename=filename, lines=lines)
         energies_int = self.get_energy_without_entropy(filename=filename, lines=lines)
         energies_zero = self.get_energy_sigma_0(filename=filename, lines=lines)
@@ -123,6 +124,7 @@ class Outcar(object):
             "elapsed_time": elapsed_time,
             "memory_used": memory_used,
         }
+        self.parse_dict["vasp_version"] = vasp_version
         try:
             self.parse_dict["pressures"] = (
                 np.average(stresses[:, 0:3], axis=1) * KBAR_TO_EVA
@@ -176,6 +178,9 @@ class Outcar(object):
         with hdf.open(group_name) as hdf5_output:
             for key in hdf5_output.list_nodes():
                 self.parse_dict[key] = hdf5_output[key]
+                
+    def get_vasp_version(self, filename="OUTCAR", lines=None):
+        return lines[0].lstrip().split(sep=" ")[0]
 
     def get_positions_and_forces(self, filename="OUTCAR", lines=None, n_atoms=None):
         """
