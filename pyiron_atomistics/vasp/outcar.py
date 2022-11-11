@@ -74,6 +74,8 @@ class Outcar(object):
         system_time = self.get_system_time(filename=filename, lines=lines)
         elapsed_time = self.get_elapsed_time(filename=filename, lines=lines)
         memory_used = self.get_memory_used(filename=filename, lines=lines)
+        vasp_version = self.get_vasp_version(filename=filename, lines=lines)
+
         try:
             (
                 irreducible_kpoints,
@@ -89,7 +91,7 @@ class Outcar(object):
             filename=filename, lines=lines
         )
         broyden_mixing = self.get_broyden_mixing_mesh(filename=filename, lines=lines)
-
+        self.parse_dict["vasp_version"] = vasp_version
         self.parse_dict["energies"] = energies
         self.parse_dict["energies_int"] = energies_int
         self.parse_dict["energies_zero"] = energies_zero
@@ -176,6 +178,9 @@ class Outcar(object):
         with hdf.open(group_name) as hdf5_output:
             for key in hdf5_output.list_nodes():
                 self.parse_dict[key] = hdf5_output[key]
+
+    def get_vasp_version(self, filename="OUTCAR", lines=None):
+        return lines[0].lstrip().split(sep=" ")[0]
 
     def get_positions_and_forces(self, filename="OUTCAR", lines=None, n_atoms=None):
         """
@@ -952,6 +957,14 @@ class Outcar(object):
                     is_spin_polarized = True
                 for line in lines_new[ind + 1 :]:
                     data = line.strip().split()
+                    # This if "Fermi" bypass needs to exist because of VASP changing it's OUTCAR format after 6.1.0
+                    # In all versions prior, searching "Fermi" will only yield 2 mentions in the OUTCAR
+                    # In the new versions, a Fermi energy is printed immediately after each spin-component k-point text block:
+                    # i.e. Fermi energy: XXXXX
+                    # This breaks the (old) parser, and thus this bypass is necessary to skip this last line at each spin component block
+                    # Ugly and hacky, but parsing the OUTCAR is a ugly and hacky endeavour in general
+                    if "Fermi" in data:
+                        continue
                     if len(data) != 3:
                         break
                     band_data.append([float(d) for d in data[1:]])
