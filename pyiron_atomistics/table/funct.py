@@ -95,8 +95,8 @@ def get_volume_per_atom(job):
 
 
 def get_elements(job):
-    species = j['input/structure/species']
-    return {s: sum(j['input/generic/indices']==i)
+    species = job['input/structure/species']
+    return {s: sum(job['input/generic/indices']==i)
                 for i, s in enumerate(species)}
 
 
