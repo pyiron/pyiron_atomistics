@@ -885,6 +885,10 @@ class SphinxBase(GenericDFTJob):
             new_job.load_guess_group()
         return new_job
 
+    def relocate_hdf5(self, h5_path=None):
+        self.input._force_load()
+        super().relocate_hdf5(h5_path=h5_path)
+
     def to_hdf(self, hdf=None, group_name=None):
         """
         Stores the instance attributes into the hdf5 file
