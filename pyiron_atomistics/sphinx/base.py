@@ -2125,22 +2125,17 @@ class _SphinxLogParser:
         return self._n_steps
 
     def _parse_band(self, term):
-        fa = re.findall(term, self.log_main, re.MULTILINE)
-        arr = (
-            np.array(re.sub("[^0-9\. ]", "", "".join(fa)).split())
-            .astype(float)
-            .reshape(len(fa), -1)
-        )
+        arr = np.loadtxt(re.findall(term, self.log_main, re.MULTILINE))
         shape = (-1, len(self.k_points), arr.shape[-1])
         if self.spin_enabled:
             shape = (-1, 2, len(self.k_points), shape[-1])
         return arr.reshape(shape)
 
     def get_band_energy(self):
-        return self._parse_band("final eig \[eV\].*$")
+        return self._parse_band(f"final eig \[eV\]:(.*)$")
 
     def get_occupancy(self):
-        return self._parse_band("final focc:.*$")
+        return self._parse_band("final focc:(.*)$")
 
     def get_convergence(self):
         conv_dict = {
