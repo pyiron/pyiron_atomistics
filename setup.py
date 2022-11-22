@@ -27,7 +27,7 @@ setup(
                  'Programming Language :: Python :: 3.10'],
 
     keywords='pyiron',
-    packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*conda*", "*notebooks*", "*.ci_support*"]),
+    packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*.devcontainer*", "*notebooks*", "*.ci_support*", "*test_benchmarks*", "*test_integration*", "*.github*"]),
     install_requires=[
         'aimsgb==0.1.1',
         'ase==3.22.1',
@@ -35,8 +35,8 @@ setup(
         'h5py==3.7.0',
         'matplotlib==3.6.2',
         'mendeleev==0.11.0',
-        'mp-api==0.29.4',
-        'numpy==1.23.4',
+        'mp-api==0.29.7',
+        'numpy==1.23.5',
         'pandas==1.5.1',
         'phonopy==2.15.1',
         'pint==0.20.1',
