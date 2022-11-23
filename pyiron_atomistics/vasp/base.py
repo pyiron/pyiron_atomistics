@@ -30,7 +30,6 @@ from pyiron_atomistics.vasp.potential import get_enmax_among_potentials
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
 from pyiron_atomistics.dft.bader import Bader
-import warnings
 
 from traitlets import (
     Bool,
@@ -44,6 +43,8 @@ from traitlets import (
     Unicode,
     validate,
 )
+
+import warnings
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
 __copyright__ = (
@@ -419,15 +420,15 @@ class VaspBase(GenericDFTJob):
             self.idx_pyiron_to_user = np.array(range(len(self.structure)))
         self._output_parser.structure = self.structure.copy()
         try:
-            self._output_parser.collect(
-                directory=self.working_directory, sorted_indices=self.sorted_indices
-            )
+            self._output_parser.collect(directory=self.working_directory)
         except VaspCollectError:
             self.status.aborted = True
             return
         # Try getting high precision positions from CONTCAR
         try:
-            self._output_parser.collect(directory=self.working_directory)
+            self._output_parser.structure = self.get_final_structure_from_file(
+                filename="CONTCAR"
+            )
         except (IOError, ValueError, FileNotFoundError):
             pass
 
@@ -706,7 +707,7 @@ class VaspBase(GenericDFTJob):
             else:
                 raise ValueError("Unable to import job because structure not present")
             self.structure = structure
-            # Always set the idx_pyiron_to_user as naive map (as user specified) when importing from jobs
+            # Always set the idx_pyiron_to_user to the original order (unsorted) when importing from jobs
             try:
                 self.idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
             except:
@@ -829,6 +830,7 @@ class VaspBase(GenericDFTJob):
             except (IndexError, ValueError, IOError):
                 raise IOError("Unable to read output structure")
         else:
+
             input_structure = self.structure.copy()
             try:
                 output_structure = read_atoms(
@@ -1861,9 +1863,11 @@ class VaspBase(GenericDFTJob):
     def __del__(self):
         pass
 
+
 class VaspSpecificOptions(HasStoredTraits):
     """
     A `pyiron_base.HasStoredTraits` object for input that is specific to VASP.
+
     Traits:
         allow_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
             (e.g. Fe37 P1 Fe35 -> Fe72 P1 reduces POTCAR by one Fe POTCAR filesize. (Default is True.)
@@ -1877,6 +1881,7 @@ class VaspSpecificOptions(HasStoredTraits):
     @default("allow_structure_reordering")
     def reordering_allowed(self):
         return True
+
 
 class Input:
     """
@@ -1904,9 +1909,9 @@ class Input:
         self.incar = Incar(table_name="incar")
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
-
         self.options = VaspSpecificOptions()
         self._eddrmm = "warn"
+
         self.structure = None
         self._idx_user_to_pyiron = []
         self._idx_pyiron_to_user = []
@@ -1959,14 +1964,16 @@ class Input:
 
         Args:
             structure (atomistics.structure.atoms.Atoms instance): Structure (unsorted) to be written
-            directory (str): The working directory for the VASP run
 
             The structure obj being fed into this fn at .write_input() function is sorted;
             this fn's structure doesn't need to be a sorted structure (if generating the job normally)
             If using this manually (for whatever reason), to generate consistent input with what is generated with
             write_input(), which calls this fn to write the actual files to the job directory,
             you should feed the job structure like so:
+
             job.input.write(job.structure[job.idx_user_to_pyiron],...)
+
+            directory (str): The working directory for the VASP run
         """
         self.incar.write_file(file_name="INCAR", cwd=directory)
         if "KSPACING" in self.incar.keys():
@@ -2088,7 +2095,6 @@ class Output:
         files_present = os.listdir(directory)
         log_dict = dict()
         vasprun_working, outcar_working = False, False
-
         # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
         # First attempt to extract indices maps from the job
         try:
@@ -2097,7 +2103,6 @@ class Output:
         except:
             # If it fails, use the old vasp_sorter function
             idx_pyiron_to_user = vasp_sorter(self.structure)
-
         if not ("OUTCAR" in files_present or "vasprun.xml" in files_present):
             raise IOError("Either the OUTCAR or vasprun.xml files need to be present")
         if "OSZICAR" in files_present:

@@ -88,6 +88,7 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
         filename (str): Output filename
         write_species (bool): True if the species should be written to the file
         cartesian (bool): True if the positions are written in Cartesian coordinates
+        allow_reordering (bool): True if pyiron is allowed to reorder structure to minimise POTCAR sizing (e.g. Fe37 P1 Fe35 -> Fe72 P1) reduces POTCAR by one Fe POTCAR filesize
 
     """
     endline = "\n"
@@ -99,7 +100,7 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
             x, y, z = a_i
             f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
 
-        # This section generates the species string (Fe, P, Fe) and counts (e.g. 17 1 17) of the POSCAR
+        # This section generates the species string and count of the POSCAR
         prev_element = structure.elements[0].Abbreviation
         element_list = [prev_element]
         element_count = []
@@ -116,7 +117,7 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
                 prev_element = element
                 count = 1
         # This is necessary since the last species never gets an update
-        element_count.append(count)        
+        element_count.append(count)
 
         if write_species:
             f.write(" ".join(element_list) + endline)
@@ -336,15 +337,18 @@ def _dict_to_atoms(atoms_dict, species_list=None, read_from_first_line=False):
 
 def vasp_sorter(structure):
     """
+    Routine to sort the indices of a structure as it would be when written to a POSCAR file
+
     ######################################################################################################
     WARNING: In new versions of pyiron, sorting maps are used for vasp jobs instead of this function.
     The default behaviour is to first try to use job.idx_pyiron_to_user or job.idx_user_to_pyiron to remap.
     So, to remap from system-side POSCAR (or raw scraped data) to user-specified ordering:
+
     struct_usr = struct_system[job.idx_pyiron_to_usr]
+
     Only when the indices maps are not present is this fn used now.
     The default sorting behaviour remains the same as in this function.
     ######################################################################################################
-    Routine to sort the indices of a structure as it would be when written to a POSCAR file
 
     Args:
         structure (pyiron.atomistics.structure.atoms.Atoms): The structure whose indices need to be sorted

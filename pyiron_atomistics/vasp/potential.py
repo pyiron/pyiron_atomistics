@@ -419,7 +419,6 @@ class Potcar(GenericParameters):
 
     def _set_potential_paths(self):
 
-        # This is the part which is generating the element list to generate the potcar! e.g. Fe-P-Fe 
         prev_element = self._structure.elements[0]
         object_list = [prev_element]
         element_list = [prev_element.Abbreviation]
