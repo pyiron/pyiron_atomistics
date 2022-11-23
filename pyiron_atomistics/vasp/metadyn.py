@@ -132,21 +132,21 @@ class VaspMetadyn(Vasp):
             status = 7
         if constraint_type in ["x_pos", "y_pos", "z_pos"]:
             if isinstance(atom_indices, (list, np.ndarray)):
-                a_ind = str(self.idx_user_to_pyiron[atom_indices[0]] + 1)
+                a_ind = str(self._idx_user_to_pyiron[atom_indices[0]] + 1)
             else:
-                a_ind = str(self.idx_user_to_pyiron[atom_indices] + 1)
+                a_ind = str(self._idx_user_to_pyiron[atom_indices] + 1)
         elif constraint_type in ["bond"]:
             if len(atom_indices) != 2:
                 raise ValueError(
                     "For this constraint the atom_indices must be a list or numpy array with 2 values"
                 )
-            a_ind = " ".join(map(str, self.idx_user_to_pyiron[atom_indices] + 1))
+            a_ind = " ".join(map(str, self._idx_user_to_pyiron[atom_indices] + 1))
         elif constraint_type in ["angle"]:
             if len(atom_indices) != 3:
                 raise ValueError(
                     "For this constraint the atom_indices must be a list or numpy array with 3 values"
                 )
-            a_ind = " ".join(map(str, self.idx_user_to_pyiron[atom_indices] + 1))
+            a_ind = " ".join(map(str, self._idx_user_to_pyiron[atom_indices] + 1))
         else:
             raise ValueError(
                 "The constraint {} is not implemented!".format(constraint_type)

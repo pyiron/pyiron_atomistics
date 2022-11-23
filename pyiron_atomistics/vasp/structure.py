@@ -341,7 +341,7 @@ def vasp_sorter(structure):
 
     ######################################################################################################
     WARNING: In new versions of pyiron, sorting maps are used for vasp jobs instead of this function.
-    The default behaviour is to first try to use job.idx_pyiron_to_user or job.idx_user_to_pyiron to remap.
+    The default behaviour is to first try to use job._idx_pyiron_to_user or job._idx_user_to_pyiron to remap.
     So, to remap from system-side POSCAR (or raw scraped data) to user-specified ordering:
 
     struct_usr = struct_system[job.idx_pyiron_to_usr]
