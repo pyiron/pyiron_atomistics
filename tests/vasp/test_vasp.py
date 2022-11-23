@@ -456,7 +456,7 @@ class TestVasp(unittest.TestCase):
             self.assertEqual(len(w), 1)
             self.assertEqual(str(w[0].message), "'KSPACING' found in INCAR, no KPOINTS file written")
 
- def test_sorting_behaviours(self):
+    def test_sorting_behaviours(self):
         """
         This is a set of tests for the generation of indices maps for the POSCAR sorter functionality in the VASP module
         tests:
@@ -516,7 +516,7 @@ class TestVasp(unittest.TestCase):
         for i, site in enumerate(struct_read_sorted[job_idx_map.idx_pyiron_to_user]):
             np.testing.assert_almost_equal(struct[i].position, site.position,\
                                            err_msg = "positions are not equivalent in written POSCAR and pyiron-sorted POSCAR")
-
+        
         # Test 6: The indices maps in event of no-sort should just be naivemaps
         job_idx_map_no_sort = self.project.create_job("Vasp", "job_idx_maps_no_sort")
         job_idx_map_no_sort.structure = struct
