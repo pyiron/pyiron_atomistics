@@ -98,33 +98,49 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
         for a_i in structure.get_cell():
             x, y, z = a_i
             f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
-        atom_numbers = structure.get_number_species_atoms()
+
+        # This section generates the species string (Fe, P, Fe) and counts (e.g. 17 1 17) of the POSCAR
+        prev_element = structure.elements[0].Abbreviation
+        element_list = [prev_element]
+        element_count = []
+        count = 0
+        for i, element in enumerate([x.Abbreviation for x in structure.elements]):
+            if element == prev_element:
+                count += 1
+            else:
+                # The count append is always one behind...
+                # i.e. Fe -> Ni triggers an append of the count of Fe
+                # Then the last species never gets an update
+                element_count.append(count)
+                element_list.append(element)
+                prev_element = element
+                count = 1
+        # This is necessary since the last species never gets an update
+        element_count.append(count)        
+
         if write_species:
-            f.write(" ".join(atom_numbers.keys()) + endline)
-        num_str = [str(val) for val in atom_numbers.values()]
-        f.write(" ".join(num_str))
+            f.write(" ".join(element_list) + endline)
+        f.write(" ".join([str(x) for x in element_count]))
         f.write(endline)
         if "selective_dynamics" in structure.get_tags():
             selec_dyn = True
             cartesian = False
             f.write("Selective dynamics" + endline)
-        sorted_coords = list()
+        positions = list()
         selec_dyn_lst = list()
-        for species in atom_numbers.keys():
-            indices = structure.select_index(species)
-            for i in indices:
-                if cartesian:
-                    sorted_coords.append(structure.positions[i])
-                else:
-                    sorted_coords.append(structure.get_scaled_positions()[i])
-                if selec_dyn:
-                    selec_dyn_lst.append(structure.selective_dynamics[i])
+        for i in np.arange(0, len(structure.elements)):
+            if cartesian:
+                positions.append(structure.positions[i])
+            else:
+                positions.append(structure.get_scaled_positions()[i])
+            if selec_dyn:
+                selec_dyn_lst.append(structure.selective_dynamics[i])
         if cartesian:
             f.write("Cartesian" + endline)
         else:
             f.write("Direct" + endline)
         if selec_dyn:
-            for i, vec in enumerate(sorted_coords):
+            for i, vec in enumerate(positions):
                 x, y, z = vec
                 sd_string = " ".join(["T" if sd else "F" for sd in selec_dyn_lst[i]])
                 f.write(
@@ -134,7 +150,7 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
                     + endline
                 )
         else:
-            for i, vec in enumerate(sorted_coords):
+            for i, vec in enumerate(positions):
                 x, y, z = vec
                 f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
 
@@ -320,6 +336,14 @@ def _dict_to_atoms(atoms_dict, species_list=None, read_from_first_line=False):
 
 def vasp_sorter(structure):
     """
+    ######################################################################################################
+    WARNING: In new versions of pyiron, sorting maps are used for vasp jobs instead of this function.
+    The default behaviour is to first try to use job.idx_pyiron_to_user or job.idx_user_to_pyiron to remap.
+    So, to remap from system-side POSCAR (or raw scraped data) to user-specified ordering:
+    struct_usr = struct_system[job.idx_pyiron_to_usr]
+    Only when the indices maps are not present is this fn used now.
+    The default sorting behaviour remains the same as in this function.
+    ######################################################################################################
     Routine to sort the indices of a structure as it would be when written to a POSCAR file
 
     Args:

@@ -18,6 +18,7 @@ from pyiron_atomistics.vasp.potential import (
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_base import state, GenericParameters, deprecate
+from pyiron_base.storage.has_stored_traits import HasStoredTraits
 from pyiron_atomistics.vasp.outcar import Outcar
 from pyiron_atomistics.vasp.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
@@ -30,6 +31,19 @@ from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
 from pyiron_atomistics.dft.bader import Bader
 import warnings
+
+from traitlets import (
+    Bool,
+    default,
+    Instance,
+    Int,
+    List,
+    observe,
+    TraitError,
+    TraitType,
+    Unicode,
+    validate,
+)
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
 __copyright__ = (
@@ -82,7 +96,7 @@ class VaspBase(GenericDFTJob):
         self._sorted_indices = None
         self.input = Input()
         self.input.incar["SYSTEM"] = self.job_name
-        self._output_parser = Output()
+        self._output_parser = Output(self)
         self._potential = VaspPotentialSetter([])
         self._compress_by_default = True
         self.get_enmax_among_species = get_enmax_among_potentials
@@ -112,6 +126,36 @@ class VaspBase(GenericDFTJob):
             self._potential = VaspPotentialSetter(
                 element_lst=structure.get_species_symbols().tolist()
             )
+
+    # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
+    @property
+    def sorted_indices(self):
+        """
+        How the original atom indices are ordered in the vasp format (species by species)
+        """
+        if self._sorted_indices is None:
+            self._sorted_indices = vasp_sorter(self.structure)
+        return self._sorted_indices
+
+    # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
+    @sorted_indices.setter
+    def sorted_indices(self, val):
+        """
+        Setter for the sorted indices
+        """
+        self._sorted_indices = val
+
+    @property
+    def idx_pyiron_to_user(self):
+        if self.input.idx_pyiron_to_user is None:
+            self.input.structure = self.structure
+        return self.input.idx_pyiron_to_user
+
+    @property
+    def idx_user_to_pyiron(self):
+        if self.input.idx_user_to_pyiron is None:
+            self.input.structure = self.structure
+        return self.input.idx_user_to_pyiron
 
     @property
     def potential(self):
@@ -209,22 +253,6 @@ class VaspBase(GenericDFTJob):
                 "write_resolved_dos, can either be True, False or 0, 1, 2, 5, 10, 11, 12."
             )
         self.input.incar["LORBIT"] = resolved_dos
-
-    @property
-    def sorted_indices(self):
-        """
-        How the original atom indices are ordered in the vasp format (species by species)
-        """
-        if self._sorted_indices is None:
-            self._sorted_indices = vasp_sorter(self.structure)
-        return self._sorted_indices
-
-    @sorted_indices.setter
-    def sorted_indices(self, val):
-        """
-        Setter for the sorted indices
-        """
-        self._sorted_indices = val
 
     @property
     def fix_spin_constraint(self):
@@ -370,8 +398,10 @@ class VaspBase(GenericDFTJob):
                     self.logger.info(
                         "The POSCAR file will be overwritten by the CONTCAR file specified in restart_file_list."
                     )
+        # Structure being fed into the .write() function is sorted, that's why write()'s structure input is not sorted
+        # i.e. write() in write_input() has the sorted structure, so a second sorting in write() is not required
         self.input.write(
-            structure=self.structure,
+            structure=self.structure[self.idx_user_to_pyiron],
             directory=self.working_directory,
             modified_elements=modified_elements,
         )
@@ -386,7 +416,7 @@ class VaspBase(GenericDFTJob):
                 self.structure = self.get_final_structure_from_file(filename="CONTCAR")
             except IOError:
                 self.structure = self.get_final_structure_from_file(filename="POSCAR")
-            self._sorted_indices = np.array(range(len(self.structure)))
+            self.idx_pyiron_to_user = np.array(range(len(self.structure)))
         self._output_parser.structure = self.structure.copy()
         try:
             self._output_parser.collect(
@@ -397,9 +427,7 @@ class VaspBase(GenericDFTJob):
             return
         # Try getting high precision positions from CONTCAR
         try:
-            self._output_parser.structure = self.get_final_structure_from_file(
-                filename="CONTCAR"
-            )
+            self._output_parser.collect(directory=self.working_directory)
         except (IOError, ValueError, FileNotFoundError):
             pass
 
@@ -415,8 +443,14 @@ class VaspBase(GenericDFTJob):
                 self.logger.warning("Invoking Bader charge analysis failed")
             else:
                 charges, volumes = charges_orig.copy(), volumes_orig.copy()
-                charges[self.sorted_indices] = charges_orig
-                volumes[self.sorted_indices] = volumes_orig
+                # Backwards compatibility for old datasets using old vasp_sorter method
+                try:
+                    idx_pyiron_to_user = self.idx_pyiron_to_user
+                # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
+                except:
+                    idx_pyiron_to_user = vasp_sorter(self.structure)
+                charges[idx_pyiron_to_user] = charges_orig
+                volumes[idx_pyiron_to_user] = volumes_orig
                 if (
                     "valence_charges"
                     in self._output_parser.generic_output.dft_log_dict.keys()
@@ -672,8 +706,13 @@ class VaspBase(GenericDFTJob):
             else:
                 raise ValueError("Unable to import job because structure not present")
             self.structure = structure
-            # Always set the sorted_indices to the original order when importing from jobs
-            self.sorted_indices = np.arange(len(self.structure), dtype=int)
+            # Always set the idx_pyiron_to_user as naive map (as user specified) when importing from jobs
+            try:
+                self.idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
+            except:
+                # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
+                self.sorted_indices = np.arange(len(self.structure), dtype=int)
+                # raise warnings.WarningMessage("This job uses a previous sorted_indices implementation, which will be deprecated at some point in the future")
             # Read initial magnetic moments from the INCAR file and set it to the structure
             magmom_loc = np.array(self.input.incar._dataset["Parameter"]) == "MAGMOM"
             if any(magmom_loc):
@@ -764,7 +803,7 @@ class VaspBase(GenericDFTJob):
         """
         Resets the output instance
         """
-        self._output_parser = Output()
+        self._output_parser = Output(self)
 
     def get_final_structure_from_file(self, filename="CONTCAR"):
         """
@@ -777,6 +816,12 @@ class VaspBase(GenericDFTJob):
             pyiron.atomistics.structure.atoms.Atoms: The final structure
         """
         filename = posixpath.join(self.working_directory, filename)
+        # Backwards compatibility for old datasets using old vasp_sorter method
+        # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
+        try:
+            idx_pyiron_to_user = self.idx_pyiron_to_user
+        except:
+            idx_pyiron_to_user = vasp_sorter(self.structure)
         if self.structure is None:
             try:
                 output_structure = read_atoms(filename=filename)
@@ -792,7 +837,7 @@ class VaspBase(GenericDFTJob):
                 )
                 input_structure.cell = output_structure.cell.copy()
                 input_structure.positions[
-                    self.sorted_indices
+                    idx_pyiron_to_user
                 ] = output_structure.positions
             except (IndexError, ValueError, IOError):
                 raise IOError("Unable to read output structure")
@@ -812,7 +857,7 @@ class VaspBase(GenericDFTJob):
                         if isinstance(spin, (list, np.ndarray))
                         else str(spin)
                         for spin in self.structure.get_initial_magnetic_moments()[
-                            self.sorted_indices
+                            self.idx_pyiron_to_user
                         ]
                     ]
                 )
@@ -1450,7 +1495,7 @@ class VaspBase(GenericDFTJob):
             iteration_step (int): Step for which the structure is requested
 
         Returns:
-            numpy.ndarray/None: array of final magmetic moments or None if no magnetic moment is given
+            numpy.ndarray/None: array of final magnetic moments or None if no magnetic moment is given
         """
         spins = self["output/generic/dft/final_magmoms"]
         if spins is not None and len(spins) > 0:
@@ -1816,6 +1861,22 @@ class VaspBase(GenericDFTJob):
     def __del__(self):
         pass
 
+class VaspSpecificOptions(HasStoredTraits):
+    """
+    A `pyiron_base.HasStoredTraits` object for input that is specific to VASP.
+    Traits:
+        allow_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
+            (e.g. Fe37 P1 Fe35 -> Fe72 P1 reduces POTCAR by one Fe POTCAR filesize. (Default is True.)
+    """
+
+    def __init__(self, group_name="advanced_options"):
+        super().__init__(group_name=group_name)
+
+    allow_structure_reordering = Bool()
+
+    @default("allow_structure_reordering")
+    def reordering_allowed(self):
+        return True
 
 class Input:
     """
@@ -1827,7 +1888,7 @@ class Input:
         potcar: vasp.vasp.Potcar instance to set the appropriate POTCAR files for the simulation
 
     Ideally, the user would not have to access the Input instance unless the user wants to set an extremely specific
-    VASP tag which can't se set using functions in Vasp().
+    VASP tag which can't be set using functions in Vasp().
 
     Examples:
 
@@ -1844,15 +1905,68 @@ class Input:
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
 
+        self.options = VaspSpecificOptions()
         self._eddrmm = "warn"
+        self.structure = None
+        self._idx_user_to_pyiron = []
+        self._idx_pyiron_to_user = []
+
+    @property
+    def idx_user_to_pyiron(self):
+        if self.structure is None:
+            return None
+        if len(self._idx_user_to_pyiron) == 0:
+            self._map_pyiron_to_user_idx()
+        return self._idx_user_to_pyiron
+
+    @property
+    def idx_pyiron_to_user(self):
+        if self.structure is None:
+            return None
+        if len(self._idx_pyiron_to_user) == 0:
+            self._map_pyiron_to_user_idx()
+        return self._idx_pyiron_to_user
+
+    def _map_pyiron_to_user_idx(self):
+        """
+        This writes the indices maps for user->pyiron (idx_user_to_pyiron), and pyiron->user (idx_pyiron_to_user)
+        This looks in Input.options for the allow_structure_reordering boolean value, and decides to return either
+        1. Sorting map when species-based reordering is allowed (default behaviour of pyiron)
+        or
+        2. Sorting map when sorting is forbidden, in which case naive map (1:1, 2:2 etc.) is returned.
+        """
+        if self.options.allow_structure_reordering:
+            atom_numbers = self.structure.get_number_species_atoms()
+
+            idx_user_to_pyiron = list()
+            for species in atom_numbers.keys():
+                indices = self.structure.select_index(species)
+                for i in indices:
+                    idx_user_to_pyiron.append(i)
+            self._idx_user_to_pyiron = np.array(idx_user_to_pyiron)
+
+            idx_pyiron_to_user = np.array([0] * len(idx_user_to_pyiron))
+            for i, p in enumerate(idx_user_to_pyiron):
+                idx_pyiron_to_user[p] = i
+            self._idx_pyiron_to_user = idx_pyiron_to_user
+        else:
+            self._idx_user_to_pyiron = np.arange(len(self.structure))
+            self._idx_pyiron_to_user = np.arange(len(self.structure))
 
     def write(self, structure, modified_elements, directory=None):
         """
         Writes all the input files to a specified directory
 
         Args:
-            structure (atomistics.structure.atoms.Atoms instance): Structure to be written
+            structure (atomistics.structure.atoms.Atoms instance): Structure (unsorted) to be written
             directory (str): The working directory for the VASP run
+
+            The structure obj being fed into this fn at .write_input() function is sorted;
+            this fn's structure doesn't need to be a sorted structure (if generating the job normally)
+            If using this manually (for whatever reason), to generate consistent input with what is generated with
+            write_input(), which calls this fn to write the actual files to the job directory,
+            you should feed the job structure like so:
+            job.input.write(job.structure[job.idx_user_to_pyiron],...)
         """
         self.incar.write_file(file_name="INCAR", cwd=directory)
         if "KSPACING" in self.incar.keys():
@@ -1885,6 +1999,7 @@ class Input:
             self.incar.to_hdf(hdf5_input)
             self.kpoints.to_hdf(hdf5_input)
             self.potcar.to_hdf(hdf5_input)
+            self.options.to_hdf(hdf5_input)
 
             if "vasp_dict" in hdf5_input.list_nodes():
                 vasp_dict = hdf5_input["vasp_dict"]
@@ -1905,6 +2020,7 @@ class Input:
             self.incar.from_hdf(hdf5_input)
             self.kpoints.from_hdf(hdf5_input)
             self.potcar.from_hdf(hdf5_input)
+            self.options.from_hdf(hdf5_input)
 
             self._eddrmm = "ignore"
             if "vasp_dict" in hdf5_input.list_nodes():
@@ -1933,7 +2049,7 @@ class Output:
         charge_density: Gives the charge density of the system
     """
 
-    def __init__(self):
+    def __init__(self, job):
         self._structure = None
         self.outcar = Outcar()
         self.oszicar = Oszicar()
@@ -1946,6 +2062,7 @@ class Output:
         self.procar = Procar()
         self.electronic_structure = ElectronicStructure()
         self.vp_new = Vr()
+        self._job = job
 
     @property
     def structure(self):
@@ -1961,19 +2078,26 @@ class Output:
         """
         self._structure = atoms
 
-    def collect(self, directory=os.getcwd(), sorted_indices=None):
+    def collect(self, directory=os.getcwd()):
         """
         Collects output from the working directory
 
         Args:
             directory (str): Path to the directory
-            sorted_indices (np.array/None):
         """
-        if sorted_indices is None:
-            sorted_indices = vasp_sorter(self.structure)
         files_present = os.listdir(directory)
         log_dict = dict()
         vasprun_working, outcar_working = False, False
+
+        # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
+        # First attempt to extract indices maps from the job
+        try:
+            # If it succeeds, just use it for output parsing
+            idx_pyiron_to_user = self._job.idx_pyiron_to_user
+        except:
+            # If it fails, use the old vasp_sorter function
+            idx_pyiron_to_user = vasp_sorter(self.structure)
+
         if not ("OUTCAR" in files_present or "vasprun.xml" in files_present):
             raise IOError("Either the OUTCAR or vasprun.xml files need to be present")
         if "OSZICAR" in files_present:
@@ -2016,12 +2140,11 @@ class Output:
             if len(self.outcar.parse_dict["magnetization"]) > 0:
                 magnetization = np.array(self.outcar.parse_dict["magnetization"]).copy()
                 final_magmoms = np.array(self.outcar.parse_dict["final_magmoms"]).copy()
-                # magnetization[sorted_indices] = magnetization.copy()
                 if len(final_magmoms) != 0:
                     if len(final_magmoms.shape) == 3:
-                        final_magmoms[:, sorted_indices, :] = final_magmoms.copy()
+                        final_magmoms[:, idx_pyiron_to_user, :] = final_magmoms.copy()
                     else:
-                        final_magmoms[:, sorted_indices] = final_magmoms.copy()
+                        final_magmoms[:, idx_pyiron_to_user] = final_magmoms.copy()
                 self.generic_output.dft_log_dict[
                     "magnetization"
                 ] = magnetization.tolist()
@@ -2053,8 +2176,8 @@ class Output:
                 log_dict["energy_pot"] = log_dict["energy_tot"]
             log_dict["steps"] = np.arange(len(log_dict["energy_tot"]))
             log_dict["positions"] = self.vp_new.vasprun_dict["positions"]
-            log_dict["forces"][:, sorted_indices] = log_dict["forces"].copy()
-            log_dict["positions"][:, sorted_indices] = log_dict["positions"].copy()
+            log_dict["forces"][:, idx_pyiron_to_user] = log_dict["forces"].copy()
+            log_dict["positions"][:, idx_pyiron_to_user] = log_dict["positions"].copy()
             log_dict["positions"] = np.einsum(
                 "nij,njk->nik", log_dict["positions"], log_dict["cells"]
             )
@@ -2063,11 +2186,11 @@ class Output:
             self.electronic_structure = self.vp_new.get_electronic_structure()
             if self.electronic_structure.grand_dos_matrix is not None:
                 self.electronic_structure.grand_dos_matrix[
-                    :, :, :, sorted_indices, :
+                    :, :, :, idx_pyiron_to_user, :
                 ] = self.electronic_structure.grand_dos_matrix[:, :, :, :, :].copy()
             if self.electronic_structure.resolved_densities is not None:
                 self.electronic_structure.resolved_densities[
-                    :, sorted_indices, :, :
+                    :, idx_pyiron_to_user, :, :
                 ] = self.electronic_structure.resolved_densities[:, :, :, :].copy()
             self.structure.positions = log_dict["positions"][-1]
             self.structure.set_cell(log_dict["cells"][-1])
@@ -2076,7 +2199,7 @@ class Output:
             ] = self.vp_new.get_potentiostat_output()
             valence_charges_orig = self.vp_new.get_valence_electrons_per_atom()
             valence_charges = valence_charges_orig.copy()
-            valence_charges[sorted_indices] = valence_charges_orig
+            valence_charges[idx_pyiron_to_user] = valence_charges_orig
             self.generic_output.dft_log_dict["valence_charges"] = valence_charges
 
         elif outcar_working:
@@ -2089,15 +2212,15 @@ class Output:
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
             log_dict["forces"] = self.outcar.parse_dict["forces"]
             log_dict["positions"] = self.outcar.parse_dict["positions"]
-            log_dict["forces"][:, sorted_indices] = log_dict["forces"].copy()
-            log_dict["positions"][:, sorted_indices] = log_dict["positions"].copy()
+            log_dict["forces"][:, idx_pyiron_to_user] = log_dict["forces"].copy()
+            log_dict["positions"][:, idx_pyiron_to_user] = log_dict["positions"].copy()
             if len(log_dict["positions"].shape) != 3:
                 raise VaspCollectError("Improper OUTCAR parsing")
-            elif log_dict["positions"].shape[1] != len(sorted_indices):
+            elif log_dict["positions"].shape[1] != len(idx_pyiron_to_user):
                 raise VaspCollectError("Improper OUTCAR parsing")
             if len(log_dict["forces"].shape) != 3:
                 raise VaspCollectError("Improper OUTCAR parsing")
-            elif log_dict["forces"].shape[1] != len(sorted_indices):
+            elif log_dict["forces"].shape[1] != len(idx_pyiron_to_user):
                 raise VaspCollectError("Improper OUTCAR parsing")
             log_dict["time"] = self.outcar.parse_dict["time"]
             log_dict["steps"] = self.outcar.parse_dict["steps"]
@@ -2133,7 +2256,7 @@ class Output:
                     )
                     #  Even the atom resolved values have to be sorted from the vasp atoms order to the Atoms order
                     self.electronic_structure.grand_dos_matrix[
-                        :, :, :, sorted_indices, :
+                        :, :, :, idx_pyiron_to_user, :
                     ] = self.electronic_structure.grand_dos_matrix[:, :, :, :, :].copy()
                     try:
                         self.electronic_structure.efermi = self.outcar.parse_dict[

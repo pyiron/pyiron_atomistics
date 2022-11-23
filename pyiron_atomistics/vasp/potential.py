@@ -418,10 +418,17 @@ class Potcar(GenericParameters):
             self[key] = val
 
     def _set_potential_paths(self):
-        element_list = (
-            self._structure.get_species_symbols()
-        )  # .ElementList.getSpecies()
-        object_list = self._structure.get_species_objects()
+
+        # This is the part which is generating the element list to generate the potcar! e.g. Fe-P-Fe 
+        prev_element = self._structure.elements[0]
+        object_list = [prev_element]
+        element_list = [prev_element.Abbreviation]
+        for i, element in enumerate(self._structure.elements):
+            if element != prev_element:
+                object_list.append(element)
+                element_list.append(element.Abbreviation)
+                prev_element = element
+
         state.logger.debug("element list: {0}".format(element_list))
         self.el_path_lst = list()
         xc = self.get("xc")
