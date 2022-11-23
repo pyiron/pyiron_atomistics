@@ -88,9 +88,9 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
         filename (str): Output filename
         write_species (bool): True if the species should be written to the file
         cartesian (bool): True if the positions are written in Cartesian coordinates
-        allow_reordering (bool): True if pyiron is allowed to reorder structure to minimise POTCAR sizing (e.g. Fe37 P1 Fe35 -> Fe72 P1) reduces POTCAR by one Fe POTCAR filesize
 
     """
+    # TODO: LOOK INTO THE POSSIBILITY OF JUST CONVERTING INTO PYMATGEN WRITER
     endline = "\n"
     with open(filename, "w") as f:
         selec_dyn = False
