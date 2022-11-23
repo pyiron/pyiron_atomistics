@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod, abstractproperty
 from typing import Callable
 import numbers
 from pyiron_base import deprecate, ImportAlarm
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 with ImportAlarm("Animation of atomic structures requires nglview") as nglview_alarm:
     import nglview
@@ -159,7 +160,7 @@ class HasStructure(ABC):
         for i in range(self.number_of_structures):
             yield self._get_structure(frame=i, wrap_atoms=wrap_atoms)
 
-    def transform_structures(self, modify) -> TransformStructure:
+    def transform_structures(self, modify) -> "TransformStructure":
         """
         Return a modified object by applying a function to each object lazily.
 
@@ -171,7 +172,7 @@ class HasStructure(ABC):
         """
         return TransformStructure(self, modify)
 
-    def collect_structures(self, filter_function=None) -> StructureStorage:
+    def collect_structures(self, filter_function=None) -> "StructureStorage":
         """
         Collects a copy of all structures in a compact :class:`.StructureStorage`.
 
@@ -184,6 +185,10 @@ class HasStructure(ABC):
         Returns:
             :class:`.StructureStorage`: a copy of all (filtered) structures
         """
+        # breaks cyclical import
+        # this is a bit annoying, but I want to give users an entry point to using StructureStorage without having to
+        # import it
+        from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
         store = StructureStorage()
         if filter_function is None:
             for structure in self.iter_structures():
