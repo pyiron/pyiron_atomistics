@@ -188,7 +188,10 @@ class HasStructure(ABC):
         # breaks cyclical import
         # this is a bit annoying, but I want to give users an entry point to using StructureStorage without having to
         # import it
-        from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
+        from pyiron_atomistics.atomistics.structure.structurestorage import (
+            StructureStorage,
+        )
+
         store = StructureStorage()
         if filter_function is None:
             for structure in self.iter_structures():
