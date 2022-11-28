@@ -1967,11 +1967,11 @@ class Input:
         Args:
             structure (atomistics.structure.atoms.Atoms instance): Structure (unsorted) to be written
 
-            The structure obj being fed into this fn at .write_input() function is sorted;
-            this fn's structure doesn't need to be a sorted structure (if generating the job normally)
-            If using this manually (for whatever reason), to generate consistent input with what is generated with
-            write_input(), which calls this fn to write the actual files to the job directory,
-            you should feed the job structure like so:
+            The structure object being passed into this function at .write_input() is sorted;
+            So, the structure doesn't need to be sorted in this function (if generating the job normally)
+            If using this manually (for whatever reason), to generate consistent input with what is generated
+            by pyiron normally with write_input(), which calls write() (this function) to write
+            the actual files to the job directory, you should feed the job structure like so:
 
             job.input.write(job.structure[job._idx_user_to_pyiron],...)
 
