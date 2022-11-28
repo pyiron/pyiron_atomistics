@@ -37,7 +37,7 @@ setup(
         'mendeleev==0.11.0',
         'mp-api==0.29.7',
         'numpy==1.23.5',
-        'pandas==1.5.1',
+        'pandas==1.5.2',
         'phonopy==2.15.1',
         'pint==0.20.1',
         'pyiron_base==0.5.28',
