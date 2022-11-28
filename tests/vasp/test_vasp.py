@@ -477,8 +477,8 @@ class TestVasp(unittest.TestCase):
         struct[3] = "Al"
         job_idx_map.structure = struct
         job_idx_map.input.incar["KSPACING"] = 0.5
-        self.assertTrue(job_idx_map.input.options.allow_structure_reordering,\
-                        "Structure sorting should be True by default in job.input.options.allow_structure_reordering!")
+        self.assertTrue(job_idx_map.input.options.use_structure_reordering,\
+                        "Structure sorting should be True by default in job.input.options.use_structure_reordering!")
         # Test 2: The length of the indices maps are equal length to the structure.
         self.assertEqual(len(job_idx_map._idx_pyiron_to_user), len(job_idx_map.structure),\
                          "The created indices maps (job._idx_pyiron_to_user) are not equal in length to structure!")
@@ -521,7 +521,7 @@ class TestVasp(unittest.TestCase):
         job_idx_map_no_sort = self.project.create_job("Vasp", "job_idx_maps_no_sort")
         job_idx_map_no_sort.structure = struct
         job_idx_map_no_sort.input.incar["KSPACING"] = 0.5
-        job_idx_map_no_sort.input.options.allow_structure_reordering = False
+        job_idx_map_no_sort.input.options.use_structure_reordering = False
         job_idx_map_no_sort.run(run_mode="manual")
         # Check _idx_pyiron_to_user and _idx_user_to_pyiron are naive maps
         self.assertTrue(np.array_equal(job_idx_map_no_sort._idx_pyiron_to_user, np.arange(len(job_idx_map_no_sort.structure))),\

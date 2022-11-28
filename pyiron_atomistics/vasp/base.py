@@ -1871,16 +1871,16 @@ class VaspSpecificOptions(HasStoredTraits):
     A `pyiron_base.HasStoredTraits` object for input that is specific to VASP.
 
     Traits:
-        allow_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
+        use_structure_reordering (bool): Allows pyiron to reorder structures to minimize POTCAR sizing
             (e.g. Fe37 P1 Fe35 -> Fe72 P1 reduces POTCAR by one Fe POTCAR filesize. (Default is True.)
     """
 
     def __init__(self, group_name="advanced_options"):
         super().__init__(group_name=group_name)
 
-    allow_structure_reordering = Bool()
+    use_structure_reordering = Bool()
 
-    @default("allow_structure_reordering")
+    @default("use_structure_reordering")
     def reordering_allowed(self):
         return True
 
@@ -1937,12 +1937,12 @@ class Input:
     def _map_pyiron_to_user_idx(self):
         """
         This writes the indices maps for user->pyiron (_idx_user_to_pyiron), and pyiron->user (_idx_pyiron_to_user)
-        This looks in Input.options for the allow_structure_reordering boolean value, and decides to return either
+        This looks in Input.options for the use_structure_reordering boolean value, and decides to return either
         1. Sorting map when species-based reordering is allowed (default behaviour of pyiron)
         or
         2. Sorting map when sorting is forbidden, in which case naive map (0:0, 1:1 etc.) is returned.
         """
-        if self.options.allow_structure_reordering:
+        if self.options.use_structure_reordering:
             atom_numbers = self.structure.get_number_species_atoms()
 
             _idx_user_to_pyiron = list()
