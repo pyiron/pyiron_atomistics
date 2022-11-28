@@ -443,6 +443,8 @@ class TestVasp(unittest.TestCase):
             job = self.project.create.job.Vasp("test")
             job.structure = structure
             job.run(run_mode="manual")
+            for warn in w:
+                print(warn.message)
             self.assertEqual(len(w), 0, msg=f'Expected no warnings but got {[warn.message for warn in w]}.')
 
     def test_kspacing(self):

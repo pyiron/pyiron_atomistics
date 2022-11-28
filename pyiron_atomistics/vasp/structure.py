@@ -5,6 +5,7 @@
 from collections import OrderedDict
 import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_base import deprecate
 import warnings
 
 __author__ = "Sudarsan Surendralal"
@@ -334,7 +335,9 @@ def _dict_to_atoms(atoms_dict, species_list=None, read_from_first_line=False):
         atoms = Atoms(elements, scaled_positions=positions, cell=cell, pbc=True)
     return atoms
 
-
+@deprecate("DeprecationWarning: vasp_sorter in pyiron_atomistics.vasp.structure is deprecated and will be removed in a future version\
+    This probably popped up because you tried to import jobs from hdf5s of an old version of pyiron.\
+    regenerate/renew the hdf5 with the newest version of pyiron manually with collect_output() on the job")
 def vasp_sorter(structure):
     """
     Routine to sort the indices of a structure as it would be when written to a POSCAR file
@@ -346,7 +349,7 @@ def vasp_sorter(structure):
 
     struct_usr = struct_system[job.idx_pyiron_to_usr]
 
-    Only when the indices maps are not present is this fn used now.
+    Only when the indices maps are not present is this function used now.
     The default sorting behaviour remains the same as in this function.
     ######################################################################################################
 
