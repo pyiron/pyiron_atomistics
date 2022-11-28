@@ -399,8 +399,10 @@ class VaspBase(GenericDFTJob):
                     self.logger.info(
                         "The POSCAR file will be overwritten by the CONTCAR file specified in restart_file_list."
                     )
-        # Structure being fed into the .write() function is sorted, that's why write()'s structure input is not sorted
-        # i.e. write() in write_input() has the sorted structure, so a second sorting in write() is not required
+        # Structure passed into the .write() function is sorted in write_input
+        # write()'s structure input is not sorted inside the function, but here
+        # i.e. HERE: write(structure = self.structure[self._idx_user_to_pyiron]) in write_input() 
+        # not write(structure) = self.structure -> somewhere inside write() the structure is sorted 
         self.input.write(
             structure=self.structure[self._idx_user_to_pyiron],
             directory=self.working_directory,
@@ -417,7 +419,7 @@ class VaspBase(GenericDFTJob):
                 self.structure = self.get_final_structure_from_file(filename="CONTCAR")
             except IOError:
                 self.structure = self.get_final_structure_from_file(filename="POSCAR")
-            self._idx_pyiron_to_user = np.array(range(len(self.structure)))
+            self._idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
         self._output_parser.structure = self.structure.copy()
         try:
             self._output_parser.collect(directory=self.working_directory)
@@ -448,7 +450,7 @@ class VaspBase(GenericDFTJob):
                 try:
                     _idx_pyiron_to_user = self._idx_pyiron_to_user
                 # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
-                except:
+                except AttributeError:
                     _idx_pyiron_to_user = vasp_sorter(self.structure)
                 charges[_idx_pyiron_to_user] = charges_orig
                 volumes[_idx_pyiron_to_user] = volumes_orig
@@ -710,7 +712,7 @@ class VaspBase(GenericDFTJob):
             # Always set the _idx_pyiron_to_user to the original order (unsorted) when importing from jobs
             try:
                 self._idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
-            except:
+            except AttributeError:
                 # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
                 self.sorted_indices = np.arange(len(self.structure), dtype=int)
                 # raise warnings.WarningMessage("This job uses a previous sorted_indices implementation, which will be deprecated at some point in the future")
@@ -821,7 +823,7 @@ class VaspBase(GenericDFTJob):
         # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
         try:
             _idx_pyiron_to_user = self._idx_pyiron_to_user
-        except:
+        except AttributeError:
             _idx_pyiron_to_user = vasp_sorter(self.structure)
         if self.structure is None:
             try:
@@ -2100,7 +2102,7 @@ class Output:
         try:
             # If it succeeds, just use it for output parsing
             _idx_pyiron_to_user = self._job._idx_pyiron_to_user
-        except:
+        except AttributeError:
             # If it fails, use the old vasp_sorter function
             _idx_pyiron_to_user = vasp_sorter(self.structure)
         if not ("OUTCAR" in files_present or "vasprun.xml" in files_present):
