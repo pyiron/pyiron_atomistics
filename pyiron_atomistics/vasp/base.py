@@ -147,16 +147,16 @@ class VaspBase(GenericDFTJob):
         self._sorted_indices = val
 
     @property
-    def _idx_pyiron_to_user(self):
-        if self.input._idx_pyiron_to_user is None:
+    def idx_pyiron_to_user(self):
+        if self.input.idx_pyiron_to_user is None:
             self.input.structure = self.structure
-        return self.input._idx_pyiron_to_user
+        return self.input.idx_pyiron_to_user
 
     @property
-    def _idx_user_to_pyiron(self):
-        if self.input._idx_user_to_pyiron is None:
+    def idx_user_to_pyiron(self):
+        if self.input.idx_user_to_pyiron is None:
             self.input.structure = self.structure
-        return self.input._idx_user_to_pyiron
+        return self.input.idx_user_to_pyiron
 
     @property
     def potential(self):
@@ -401,10 +401,10 @@ class VaspBase(GenericDFTJob):
                     )
         # Structure passed into the .write() function is sorted in write_input
         # write()'s structure input is not sorted inside the function, but here
-        # i.e. HERE: write(structure = self.structure[self._idx_user_to_pyiron]) in write_input() 
+        # i.e. HERE: write(structure = self.structure[self.idx_user_to_pyiron]) in write_input() 
         # not write(structure) = self.structure -> somewhere inside write() the structure is sorted 
         self.input.write(
-            structure=self.structure[self._idx_user_to_pyiron],
+            structure=self.structure[self.idx_user_to_pyiron],
             directory=self.working_directory,
             modified_elements=modified_elements,
         )
@@ -419,7 +419,7 @@ class VaspBase(GenericDFTJob):
                 self.structure = self.get_final_structure_from_file(filename="CONTCAR")
             except IOError:
                 self.structure = self.get_final_structure_from_file(filename="POSCAR")
-            self._idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
+            self.idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
         self._output_parser.structure = self.structure.copy()
         try:
             self._output_parser.collect(directory=self.working_directory)
@@ -448,12 +448,12 @@ class VaspBase(GenericDFTJob):
                 charges, volumes = charges_orig.copy(), volumes_orig.copy()
                 # Backwards compatibility for old datasets using old vasp_sorter method
                 try:
-                    _idx_pyiron_to_user = self._idx_pyiron_to_user
+                    idx_pyiron_to_user = self.idx_pyiron_to_user
                 # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
                 except AttributeError:
-                    _idx_pyiron_to_user = vasp_sorter(self.structure)
-                charges[_idx_pyiron_to_user] = charges_orig
-                volumes[_idx_pyiron_to_user] = volumes_orig
+                    idx_pyiron_to_user = vasp_sorter(self.structure)
+                charges[idx_pyiron_to_user] = charges_orig
+                volumes[idx_pyiron_to_user] = volumes_orig
                 if (
                     "valence_charges"
                     in self._output_parser.generic_output.dft_log_dict.keys()
@@ -709,9 +709,9 @@ class VaspBase(GenericDFTJob):
             else:
                 raise ValueError("Unable to import job because structure not present")
             self.structure = structure
-            # Always set the _idx_pyiron_to_user to the original order (unsorted) when importing from jobs
+            # Always set the idx_pyiron_to_user to the original order (unsorted) when importing from jobs
             try:
-                self._idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
+                self.idx_pyiron_to_user = np.arange(len(self.structure), dtype=int)
             except AttributeError:
                 # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
                 self.sorted_indices = np.arange(len(self.structure), dtype=int)
@@ -822,9 +822,9 @@ class VaspBase(GenericDFTJob):
         # Backwards compatibility for old datasets using old vasp_sorter method
         # DEPRECATE THIS WITH VASP_SORTER IN STRUCTURE.PY
         try:
-            _idx_pyiron_to_user = self._idx_pyiron_to_user
+            idx_pyiron_to_user = self.idx_pyiron_to_user
         except AttributeError:
-            _idx_pyiron_to_user = vasp_sorter(self.structure)
+            idx_pyiron_to_user = vasp_sorter(self.structure)
         if self.structure is None:
             try:
                 output_structure = read_atoms(filename=filename)
@@ -841,7 +841,7 @@ class VaspBase(GenericDFTJob):
                 )
                 input_structure.cell = output_structure.cell.copy()
                 input_structure.positions[
-                    _idx_pyiron_to_user
+                    idx_pyiron_to_user
                 ] = output_structure.positions
             except (IndexError, ValueError, IOError):
                 raise IOError("Unable to read output structure")
@@ -861,7 +861,7 @@ class VaspBase(GenericDFTJob):
                         if isinstance(spin, (list, np.ndarray))
                         else str(spin)
                         for spin in self.structure.get_initial_magnetic_moments()[
-                            self._idx_pyiron_to_user
+                            self.idx_pyiron_to_user
                         ]
                     ]
                 )
@@ -1915,28 +1915,28 @@ class Input:
         self._eddrmm = "warn"
 
         self.structure = None
-        self.__idx_user_to_pyiron = []
-        self.__idx_pyiron_to_user = []
+        self._idx_user_to_pyiron = []
+        self._idx_pyiron_to_user = []
 
     @property
-    def _idx_user_to_pyiron(self):
+    def idx_user_to_pyiron(self):
         if self.structure is None:
             return None
-        if len(self.__idx_user_to_pyiron) == 0:
+        if len(self._idx_user_to_pyiron) == 0:
             self._map_pyiron_to_user_idx()
-        return self.__idx_user_to_pyiron
+        return self._idx_user_to_pyiron
 
     @property
-    def _idx_pyiron_to_user(self):
+    def idx_pyiron_to_user(self):
         if self.structure is None:
             return None
-        if len(self.__idx_pyiron_to_user) == 0:
+        if len(self._idx_pyiron_to_user) == 0:
             self._map_pyiron_to_user_idx()
-        return self.__idx_pyiron_to_user
+        return self._idx_pyiron_to_user
 
     def _map_pyiron_to_user_idx(self):
         """
-        This writes the indices maps for user->pyiron (_idx_user_to_pyiron), and pyiron->user (_idx_pyiron_to_user)
+        This writes the indices maps for user->pyiron (idx_user_to_pyiron), and pyiron->user (idx_pyiron_to_user)
         This looks in Input.options for the use_structure_reordering boolean value, and decides to return either
         1. Sorting map when species-based reordering is allowed (default behaviour of pyiron)
         or
@@ -1945,20 +1945,20 @@ class Input:
         if self.options.use_structure_reordering:
             atom_numbers = self.structure.get_number_species_atoms()
 
-            _idx_user_to_pyiron = list()
+            idx_user_to_pyiron = list()
             for species in atom_numbers.keys():
                 indices = self.structure.select_index(species)
                 for i in indices:
-                    _idx_user_to_pyiron.append(i)
-            self.__idx_user_to_pyiron = np.array(_idx_user_to_pyiron)
+                    idx_user_to_pyiron.append(i)
+            self._idx_user_to_pyiron = np.array(idx_user_to_pyiron)
 
-            _idx_pyiron_to_user = np.array([0] * len(_idx_user_to_pyiron))
-            for i, p in enumerate(_idx_user_to_pyiron):
-                _idx_pyiron_to_user[p] = i
-            self.__idx_pyiron_to_user = _idx_pyiron_to_user
+            idx_pyiron_to_user = np.array([0] * len(idx_user_to_pyiron))
+            for i, p in enumerate(idx_user_to_pyiron):
+                idx_pyiron_to_user[p] = i
+            self._idx_pyiron_to_user = idx_pyiron_to_user
         else:
-            self.__idx_user_to_pyiron = np.arange(len(self.structure))
-            self.__idx_pyiron_to_user = np.arange(len(self.structure))
+            self._idx_user_to_pyiron = np.arange(len(self.structure))
+            self._idx_pyiron_to_user = np.arange(len(self.structure))
 
     def write(self, structure, modified_elements, directory=None):
         """
@@ -1973,7 +1973,7 @@ class Input:
             by pyiron normally with write_input(), which calls write() (this function) to write
             the actual files to the job directory, you should feed the job structure like so:
 
-            job.input.write(job.structure[job._idx_user_to_pyiron],...)
+            job.input.write(job.structure[job.idx_user_to_pyiron],...)
 
             directory (str): The working directory for the VASP run
         """
@@ -2101,10 +2101,10 @@ class Output:
         # First attempt to extract indices maps from the job
         try:
             # If it succeeds, just use it for output parsing
-            _idx_pyiron_to_user = self._job._idx_pyiron_to_user
+            idx_pyiron_to_user = self._job.idx_pyiron_to_user
         except AttributeError:
             # If it fails, use the old vasp_sorter function
-            _idx_pyiron_to_user = vasp_sorter(self.structure)
+            idx_pyiron_to_user = vasp_sorter(self.structure)
         if not ("OUTCAR" in files_present or "vasprun.xml" in files_present):
             raise IOError("Either the OUTCAR or vasprun.xml files need to be present")
         if "OSZICAR" in files_present:
@@ -2149,9 +2149,9 @@ class Output:
                 final_magmoms = np.array(self.outcar.parse_dict["final_magmoms"]).copy()
                 if len(final_magmoms) != 0:
                     if len(final_magmoms.shape) == 3:
-                        final_magmoms[:, _idx_pyiron_to_user, :] = final_magmoms.copy()
+                        final_magmoms[:, idx_pyiron_to_user, :] = final_magmoms.copy()
                     else:
-                        final_magmoms[:, _idx_pyiron_to_user] = final_magmoms.copy()
+                        final_magmoms[:, idx_pyiron_to_user] = final_magmoms.copy()
                 self.generic_output.dft_log_dict[
                     "magnetization"
                 ] = magnetization.tolist()
@@ -2183,8 +2183,8 @@ class Output:
                 log_dict["energy_pot"] = log_dict["energy_tot"]
             log_dict["steps"] = np.arange(len(log_dict["energy_tot"]))
             log_dict["positions"] = self.vp_new.vasprun_dict["positions"]
-            log_dict["forces"][:, _idx_pyiron_to_user] = log_dict["forces"].copy()
-            log_dict["positions"][:, _idx_pyiron_to_user] = log_dict["positions"].copy()
+            log_dict["forces"][:, idx_pyiron_to_user] = log_dict["forces"].copy()
+            log_dict["positions"][:, idx_pyiron_to_user] = log_dict["positions"].copy()
             log_dict["positions"] = np.einsum(
                 "nij,njk->nik", log_dict["positions"], log_dict["cells"]
             )
@@ -2193,11 +2193,11 @@ class Output:
             self.electronic_structure = self.vp_new.get_electronic_structure()
             if self.electronic_structure.grand_dos_matrix is not None:
                 self.electronic_structure.grand_dos_matrix[
-                    :, :, :, _idx_pyiron_to_user, :
+                    :, :, :, idx_pyiron_to_user, :
                 ] = self.electronic_structure.grand_dos_matrix[:, :, :, :, :].copy()
             if self.electronic_structure.resolved_densities is not None:
                 self.electronic_structure.resolved_densities[
-                    :, _idx_pyiron_to_user, :, :
+                    :, idx_pyiron_to_user, :, :
                 ] = self.electronic_structure.resolved_densities[:, :, :, :].copy()
             self.structure.positions = log_dict["positions"][-1]
             self.structure.set_cell(log_dict["cells"][-1])
@@ -2206,7 +2206,7 @@ class Output:
             ] = self.vp_new.get_potentiostat_output()
             valence_charges_orig = self.vp_new.get_valence_electrons_per_atom()
             valence_charges = valence_charges_orig.copy()
-            valence_charges[_idx_pyiron_to_user] = valence_charges_orig
+            valence_charges[idx_pyiron_to_user] = valence_charges_orig
             self.generic_output.dft_log_dict["valence_charges"] = valence_charges
 
         elif outcar_working:
@@ -2219,15 +2219,15 @@ class Output:
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
             log_dict["forces"] = self.outcar.parse_dict["forces"]
             log_dict["positions"] = self.outcar.parse_dict["positions"]
-            log_dict["forces"][:, _idx_pyiron_to_user] = log_dict["forces"].copy()
-            log_dict["positions"][:, _idx_pyiron_to_user] = log_dict["positions"].copy()
+            log_dict["forces"][:, idx_pyiron_to_user] = log_dict["forces"].copy()
+            log_dict["positions"][:, idx_pyiron_to_user] = log_dict["positions"].copy()
             if len(log_dict["positions"].shape) != 3:
                 raise VaspCollectError("Improper OUTCAR parsing")
-            elif log_dict["positions"].shape[1] != len(_idx_pyiron_to_user):
+            elif log_dict["positions"].shape[1] != len(idx_pyiron_to_user):
                 raise VaspCollectError("Improper OUTCAR parsing")
             if len(log_dict["forces"].shape) != 3:
                 raise VaspCollectError("Improper OUTCAR parsing")
-            elif log_dict["forces"].shape[1] != len(_idx_pyiron_to_user):
+            elif log_dict["forces"].shape[1] != len(idx_pyiron_to_user):
                 raise VaspCollectError("Improper OUTCAR parsing")
             log_dict["time"] = self.outcar.parse_dict["time"]
             log_dict["steps"] = self.outcar.parse_dict["steps"]
@@ -2263,7 +2263,7 @@ class Output:
                     )
                     #  Even the atom resolved values have to be sorted from the vasp atoms order to the Atoms order
                     self.electronic_structure.grand_dos_matrix[
-                        :, :, :, _idx_pyiron_to_user, :
+                        :, :, :, idx_pyiron_to_user, :
                     ] = self.electronic_structure.grand_dos_matrix[:, :, :, :, :].copy()
                     try:
                         self.electronic_structure.efermi = self.outcar.parse_dict[
