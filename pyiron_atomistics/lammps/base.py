@@ -66,7 +66,7 @@ class DumpData:
 
 class LammpsStaticOutput(StaticWithPressureOutput):
 
-    def __init__(self, job: LammpsBase):
+    def __init__(self, job: "LammpsBase"):
         self._job = job
 
     @property
