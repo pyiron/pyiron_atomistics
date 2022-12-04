@@ -101,7 +101,7 @@ class CalcStatic(AbstractCalculator, ABC):
         # other calc modes, so we need to unset them here.  In the future we'll
         # hopefully have separate inputs for each calc mode.
         other_keys = ["max_iter", "pressure", "temperature", "n_ionic_steps", "n_print", "velocity"]
-        for key in others:
+        for key in other_keys:
             del self._calc_input[key]
 
     @abstractmethod
