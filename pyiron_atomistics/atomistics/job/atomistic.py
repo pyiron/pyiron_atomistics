@@ -39,6 +39,25 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
+class GenericInput(GenericParameters):
+    def __init__(self, input_file_name=None, table_name="generic"):
+        super(GenericInput, self).__init__(
+            input_file_name=input_file_name,
+            table_name=table_name,
+            comment_char="#",
+            separator_char="=",
+        )
+
+    def load_default(self):
+        """
+        Loads the default file content
+        """
+        file_content = """\
+calc_mode=static # static, minimize, md
+structure=atoms # atoms, continue_final
+"""
+        self.load_string(file_content)
+
 class StaticOutput(ABC):
 
     @property
@@ -1062,26 +1081,6 @@ class TransformTrajectory(HasStructure):
 
     def __iter__(self):
         yield from self.iter_structures()
-
-
-class GenericInput(GenericParameters):
-    def __init__(self, input_file_name=None, table_name="generic"):
-        super(GenericInput, self).__init__(
-            input_file_name=input_file_name,
-            table_name=table_name,
-            comment_char="#",
-            separator_char="=",
-        )
-
-    def load_default(self):
-        """
-        Loads the default file content
-        """
-        file_content = """\
-calc_mode=static # static, minimize, md
-structure=atoms # atoms, continue_final
-"""
-        self.load_string(file_content)
 
 
 class GenericOutput(object):
