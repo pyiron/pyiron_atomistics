@@ -2,9 +2,11 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+from abc import ABC, abstractmethod
 import copy
 import warnings
 import numpy as np
+from numpy.typing import NDArray
 import numbers
 import os
 from typing import Callable, Union, Tuple
@@ -35,6 +37,57 @@ __maintainer__ = "Jan Janssen"
 __email__ = "janssen@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
+
+
+class StaticOutput(ABC):
+
+    @property
+    @abstractmethod
+    def energy_pot(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def forces(self) -> NDArray[float]:
+        pass
+
+class StaticWithPressureOutput(StaticOutput, ABC):
+
+    @property
+    @abstractmethod
+    def pressure(self) -> NDArray[float]:
+        pass
+
+class AbstractCalculator(ABC):
+
+    @property
+    @abstractmethod
+    def _calc_input(self) -> GenericInput:
+        pass
+
+class CalcStatic(AbstractCalculator, ABC):
+
+    @abstractmethod
+    def _calc_static(self):
+        pass
+
+    def calc_static(self):
+        """
+        Perform a static calculation.
+        """
+        self._calc_static()
+        self._calc_input.clear_all()
+        self._calc_input["mode"] = "static"
+        # HACK: in the current impl job._generic_input keeps input also from
+        # other calc modes, so we need to unset them here.  In the future we'll
+        # hopefully have separate inputs for each calc mode.
+        other_keys = ["max_iter", "pressure", "temperature", "n_ionic_steps", "n_print", "velocity"]
+        for key in others:
+            del self._calc_input[key]
+
+    @abstractmethod
+    def collect_static(self) -> StaticOutput:
+        pass
 
 
 class AtomisticGenericJob(GenericJobCore, HasStructure):
