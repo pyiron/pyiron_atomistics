@@ -60,8 +60,25 @@ class DumpData:
     positions: List = field(default_factory=lambda: [])
     computes: Dict = field(default_factory=lambda: {})
 
+class LammpsStaticOutput(StaticWithPressureOutput):
 
-class LammpsBase(AtomisticGenericJob):
+    def __init__(self, job: LammpsBase):
+        self._job = job
+
+    @property
+    def energy_pot(self):
+        return job.output.energy_pot[-1]
+
+    @property
+    def forces(self):
+        return job.output.forces[-1]
+
+    @property
+    def pressure(self):
+        return job.output.pressures[-1]
+
+
+class LammpsBase(CalcStatic, AtomisticGenericJob):
     """
     Class to setup and run and analyze LAMMPS simulations which is a derivative of
     atomistics.job.generic.GenericJob. The functions in these modules are written in such the function names and
@@ -805,14 +822,23 @@ class LammpsBase(AtomisticGenericJob):
 
     calc_minimize.__doc__ = LammpsControl.calc_minimize.__doc__
 
-    def calc_static(self):
-        """
+    # CalcStatic Impl
+    @property
+    def _calc_input(self):
+        return self._generic_input
 
-        Returns:
-
-        """
-        super(LammpsBase, self).calc_static()
+    def _calc_static(self):
         self.input.control.calc_static()
+
+    # CalcStatic Impl
+    def collect_static(self) -> LammpsStaticOutput:
+        # HACK: in the current architecture collection is done centrally, so we
+        # defer here to collect_output.  In the future we want to split the
+        # output parsing for each calculation mode
+        if not self.status.finished:
+            self.collect_output()
+        return LammpsStaticOutput(self)
+
 
     def calc_md(
         self,
