@@ -92,7 +92,7 @@ class SphinxBase(GenericDFTJob):
 
         # keeps both the generic parameters as well as the sphinx specific
         # input groups
-        self.input = Group(table_name="parameters")
+        self.input = Group(table_name="parameters", lazy=True)
         self.load_default_input()
         self._save_memory = False
         self._output_parser = Output(self)
@@ -691,6 +691,10 @@ class SphinxBase(GenericDFTJob):
         Loads defaults for all SPHInX input groups, including a
         ricQN-based main Group.
 
+        .. warning::
+            Sphinx does not support volume minimizations!  Calling this method with `pressure` or `volume_only` results
+            in an error.
+
         Args:
             retain_electrostatic_potential:
             retain_charge_density:
@@ -710,7 +714,7 @@ class SphinxBase(GenericDFTJob):
                                   forces (optional)
             volume_only (bool):
         """
-        if pressure is not None:
+        if pressure is not None or volume_only:
             raise NotImplementedError(
                 "pressure minimization is not implemented in SPHInX"
             )
@@ -880,6 +884,10 @@ class SphinxBase(GenericDFTJob):
         if recreate_guess:
             new_job.load_guess_group()
         return new_job
+
+    def relocate_hdf5(self, h5_path=None):
+        self.input._force_load()
+        super().relocate_hdf5(h5_path=h5_path)
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -1422,6 +1430,9 @@ class SphinxBase(GenericDFTJob):
         """
         Collects the outputs and stores them to the hdf file
         """
+        if self.is_compressed():
+            warnings.warn("Job already compressed - output not collected")
+            return
         self._output_parser.collect(directory=self.working_directory)
         self._output_parser.to_hdf(self._hdf5, force_update=force_update)
         if compress_files:
@@ -2118,22 +2129,17 @@ class _SphinxLogParser:
         return self._n_steps
 
     def _parse_band(self, term):
-        fa = re.findall(term, self.log_main, re.MULTILINE)
-        arr = (
-            np.array(re.sub("[^0-9\. ]", "", "".join(fa)).split())
-            .astype(float)
-            .reshape(len(fa), -1)
-        )
+        arr = np.loadtxt(re.findall(term, self.log_main, re.MULTILINE))
         shape = (-1, len(self.k_points), arr.shape[-1])
         if self.spin_enabled:
             shape = (-1, 2, len(self.k_points), shape[-1])
         return arr.reshape(shape)
 
     def get_band_energy(self):
-        return self._parse_band("final eig \[eV\].*$")
+        return self._parse_band(f"final eig \[eV\]:(.*)$")
 
     def get_occupancy(self):
-        return self._parse_band("final focc:.*$")
+        return self._parse_band("final focc:(.*)$")
 
     def get_convergence(self):
         conv_dict = {

@@ -1,4 +1,4 @@
-# pip install master
+# pip install
 pip install .
 
 # ngl view for jupyter
