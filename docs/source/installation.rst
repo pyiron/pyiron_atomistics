@@ -352,7 +352,7 @@ So far we discussed the installation of pyiron on an individual workstation via 
 
 Install from Source 
 ===================
-For development, it is recommended to first create a conda environment containing all of pyiron's dependencies. The dependencies are available in pyiron's `environment.yml <https://github.com/pyiron/pyiron/blob/master/.ci_support/environment.yml>`_ file.
+For development, it is recommended to first create a conda environment containing all of pyiron's dependencies. The dependencies are available in pyiron's `environment.yml <https://github.com/pyiron/pyiron/blob/main/.ci_support/environment.yml>`_ file.
 
 .. code-block:: bash
     git clone https://github.com/pyiron/pyiron.git
@@ -368,7 +368,7 @@ The default installation via pip installs the latest release version of pyiron. 
 
     pip install pyiron
 
-For those who want to test the nightly releases of pyiron which include the latest status of the master branch you can install those via pip as well: 
+For those who want to test the nightly releases of pyiron which include the latest status of the main branch you can install those via pip as well:
 
 .. code-block:: bash
 
