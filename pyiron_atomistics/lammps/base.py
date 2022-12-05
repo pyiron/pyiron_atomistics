@@ -30,7 +30,7 @@ from pyiron_atomistics.lammps.engine import (
     collect_output_log_helper,
     collect_dump_file_helper,
     remap_indices_helper,
-    collect_h5md_file_helper
+    collect_h5md_file_helper,
 )
 
 
@@ -500,7 +500,7 @@ class LammpsBase(AtomisticGenericJob):
         """
         steps, positions, cell, forces = collect_h5md_file_helper(
             file_name=self.job_file_name(file_name=file_name, cwd=cwd),
-            cell=self.structure.cell
+            cell=self.structure.cell,
         )
         uc = UnitConverter(self.units)
         with self.project_hdf5.open("output/generic") as h5_file:
@@ -549,8 +549,7 @@ class LammpsBase(AtomisticGenericJob):
         file_name = self.job_file_name(file_name=file_name, cwd=cwd)
         if os.path.exists(file_name):
             df, generic_keys_lst, pressure_dict = collect_output_log_helper(
-                file_name=file_name,
-                prism=self._prism
+                file_name=file_name, prism=self._prism
             )
             with self.project_hdf5.open("output/generic") as hdf_output:
                 # This is a hack for backward comparability
@@ -825,7 +824,7 @@ class LammpsBase(AtomisticGenericJob):
         return remap_indices_helper(
             lammps_indices,
             element_lst=self.input.potential.get_element_lst(),
-            structure=self.structure
+            structure=self.structure,
         )
 
     def write_restart_file(self, filename="restart.out"):
@@ -886,7 +885,7 @@ class LammpsBase(AtomisticGenericJob):
                 file_name=file_name,
                 prism=self._prism,
                 element_lst=self.input.potential.get_element_lst(),
-                structure=self.structure
+                structure=self.structure,
             )
             # Write to hdf
             with self.project_hdf5.open("output/generic") as hdf_output:

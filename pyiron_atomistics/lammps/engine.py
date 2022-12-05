@@ -69,9 +69,9 @@ def collect_output_log_helper(file_name, prism):
     df = df.rename(index=str, columns=h5_dict)
     pressure_dict = dict()
     if all(
-            [
-                x in df.columns.values
-                for x in [
+        [
+            x in df.columns.values
+            for x in [
                 "Pxx",
                 "Pxy",
                 "Pxz",
@@ -82,7 +82,7 @@ def collect_output_log_helper(file_name, prism):
                 "Pyz",
                 "Pzz",
             ]
-            ]
+        ]
     ):
         pressures = (
             np.stack(
@@ -142,8 +142,8 @@ def collect_output_log_helper(file_name, prism):
         df = df.drop(
             columns=df.columns[
                 (
-                        df.columns.str.startswith("mean_pressure")
-                        & df.columns.str.endswith("]")
+                    df.columns.str.startswith("mean_pressure")
+                    & df.columns.str.endswith("]")
                 )
             ]
         )
@@ -198,7 +198,7 @@ def collect_dump_file_helper(file_name, prism, element_lst, structure):
                     remap_indices_helper(
                         lammps_indices=df["type"].array.astype(int),
                         element_lst=element_lst,
-                        structure=structure
+                        structure=structure,
                     )
                 )
 
@@ -215,9 +215,7 @@ def collect_dump_file_helper(file_name, prism, element_lst, structure):
                         ],
                         axis=1,
                     )
-                    dump.mean_forces.append(
-                        np.matmul(force, rotation_lammps2orig)
-                    )
+                    dump.mean_forces.append(np.matmul(force, rotation_lammps2orig))
                 if "vx" in columns and "vy" in columns and "vz" in columns:
                     v = np.stack(
                         [
@@ -238,9 +236,7 @@ def collect_dump_file_helper(file_name, prism, element_lst, structure):
                         ],
                         axis=1,
                     )
-                    dump.mean_velocities.append(
-                        np.matmul(v, rotation_lammps2orig)
-                    )
+                    dump.mean_velocities.append(np.matmul(v, rotation_lammps2orig))
 
                 if "xsu" in columns:
                     direct_unwrapped_positions = np.stack(
@@ -314,16 +310,16 @@ def remap_indices_helper(lammps_indices, element_lst, structure):
     # If new Lammps indices are present for which we have no species, extend the species list
     unique_lammps_indices = np.unique(lammps_indices)
     if len(unique_lammps_indices) > len(np.unique(structure)):
-        unique_lammps_indices -= 1  # Convert from Lammps start counting at 1 to python start counting at 0
+        unique_lammps_indices -= (
+            1  # Convert from Lammps start counting at 1 to python start counting at 0
+        )
         new_lammps_symbols = lammps_symbol_order[unique_lammps_indices]
         structure.set_species(
             [structure.convert_element(el) for el in new_lammps_symbols]
         )
 
     # Create a map between the lammps indices and structure indices to preserve species
-    structure_symbol_order = np.array(
-        [el.Abbreviation for el in structure.species]
-    )
+    structure_symbol_order = np.array([el.Abbreviation for el in structure.species])
     map_ = np.array(
         [
             int(np.argwhere(lammps_symbol_order == symbol)[0]) + 1
@@ -408,12 +404,8 @@ def collect_h5md_file_helper(file_name, cell):
             "The Lammps output will not be mapped back to pyiron correctly."
         )
     with h5py.File(file_name, mode="r", libver="latest", swmr=True) as h5md:
-        positions = [
-            pos_i.tolist() for pos_i in h5md["/particles/all/position/value"]
-        ]
-        steps = [
-            steps_i.tolist() for steps_i in h5md["/particles/all/position/step"]
-        ]
+        positions = [pos_i.tolist() for pos_i in h5md["/particles/all/position/value"]]
+        steps = [steps_i.tolist() for steps_i in h5md["/particles/all/position/step"]]
         forces = [for_i.tolist() for for_i in h5md["/particles/all/force/value"]]
         # following the explanation at: http://nongnu.org/h5md/h5md.html
         cell = [
