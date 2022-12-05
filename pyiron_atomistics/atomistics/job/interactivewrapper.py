@@ -24,14 +24,14 @@ class InteractiveWrapper(InteractiveWrapperBase):
 
     @property
     def structure(self):
-        if self.ref_job:
+        if self.ref_job is not None:
             return self._ref_job.structure
         else:
             return None
 
     @structure.setter
     def structure(self, basis):
-        if self.ref_job:
+        if self.ref_job is not None:
             self._ref_job.structure = basis
         else:
             raise ValueError(
