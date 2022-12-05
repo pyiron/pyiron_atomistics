@@ -1,6 +1,7 @@
 from typing import Union, List
 from mp_api.client import MPRester
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
 from pyiron_atomistics.atomistics.structure.atoms import pymatgen_to_pyiron, Atoms
 
 
@@ -28,6 +29,29 @@ class MPQueryResults(HasStructure):
 
     def _number_of_structures(self):
         return len(self._results)
+
+    def to_list(self):
+        """
+        Get a list of queried structures.
+
+        Returns:
+            list: structures
+        """
+        return [pymatgen_to_pyiron(r["structure"]) for r in self._results]
+
+    def to_storage(self):
+        """
+        Get a StructureStorage of queried structures.
+
+        The materials project id is used as the identifier.
+
+        Returns:
+            :class:`~.StructureStorage`: structures
+        """
+        store = StructureStorage()
+        for i, structure in enumerate(self):
+            store.add_structure(structure, identifier=self._material_ids[i])
+        return store
 
 
 class MaterialsProjectFactory:

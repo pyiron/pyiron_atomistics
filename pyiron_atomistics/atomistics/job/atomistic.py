@@ -318,6 +318,10 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         else:
             ValueError("There is no structure attached to the current Job.")
 
+    @deprecate(
+        "Call animate_structures() instead.  Arguments stride/center_of_mass/atom_indices/snapshot_indices/repeat "
+        "can be emulated by calling trajectory() first."
+    )
     def animate_structure(
         self,
         spacefill: bool = True,
@@ -352,12 +356,6 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             animation: nglview IPython widget
 
         """
-        try:
-            import nglview
-        except ImportError:
-            raise ImportError(
-                "The animate() function requires the package nglview to be installed"
-            )
 
         if self.number_of_structures <= 1:
             raise ValueError("job must have more than one structure to animate!")
@@ -370,16 +368,13 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         )
         if repeat is not None:
             traj = traj.transform(lambda s: s.repeat(repeat))
-        animation = nglview.show_asetraj(traj)
-        if spacefill:
-            animation.add_spacefill(radius_type="vdw", scale=0.5, radius=particle_size)
-            animation.remove_ball_and_stick()
-        else:
-            animation.add_ball_and_stick()
-        if show_cell:
-            if self.structure.cell is not None:
-                animation.add_unitcell()
-        animation.camera = camera
+
+        if self.structure.cell is None:
+            show_cell = False
+
+        animation = traj.animate_structures(
+            spacefill, show_cell, center_of_mass, particle_size, camera
+        )
         return animation
 
     def view_structure(self, snapshot=-1, spacefill=True, show_cell=True):
@@ -628,7 +623,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 sub_struct,
                 center_of_mass=center_of_mass,
                 cells=cells[::stride],
-                indices=remapped_indices[::stride, atom_indices],
+                indices=np.asarray(remapped_indices)[::stride, atom_indices],
             )
 
     def write_traj(

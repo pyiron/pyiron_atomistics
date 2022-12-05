@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from typing import List, Optional
+from typing import Optional, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -314,7 +314,9 @@ class DebyeModel(object):
         }
 
 
-def _strain_axes(structure: Atoms, axes: List[str], volume_strain: float):
+def _strain_axes(
+    structure: Atoms, axes: Literal["x", "y", "z"], volume_strain: float
+) -> Atoms:
     """
     Strain box along given axes to achieve given *volumetric* strain.
 
@@ -322,7 +324,9 @@ def _strain_axes(structure: Atoms, axes: List[str], volume_strain: float):
     """
     axes = np.array([a in axes for a in ("x", "y", "z")])
     num_axes = sum(axes)
-    strains = axes * (volume_strain ** (1.0 / num_axes) - 1)
+    # formula calculates the strain along each axis to achieve the overall volumetric strain
+    # beware that: (1+e)**x - 1 != e**x
+    strains = axes * ((1 + volume_strain) ** (1.0 / num_axes) - 1)
     return structure.apply_strain(strains, return_box=True)
 
 
@@ -335,15 +339,18 @@ class MurnaghanJobGenerator(JobGenerator):
             (list)
         """
         parameter_lst = []
-        for strain in np.linspace(
-            1 - self._master.input["vol_range"],
-            1 + self._master.input["vol_range"],
-            int(self._master.input["num_points"]),
-        ):
+        strains = self._master.input.get("strains")
+        if strains is None:
+            strains = np.linspace(
+                -self._master.input["vol_range"],
+                self._master.input["vol_range"],
+                int(self._master.input["num_points"]),
+            )
+        for strain in strains:
             basis = _strain_axes(
                 self._master.structure, self._master.input["axes"], strain
             )
-            parameter_lst.append([np.round(strain, 7), basis])
+            parameter_lst.append([1 + np.round(strain, 7), basis])
         return parameter_lst
 
     def job_name(self, parameter):
@@ -668,6 +675,10 @@ class Murnaghan(AtomisticParallelMaster):
             ["x", "y", "z"],
             "Axes along which the strain will be applied",
         )
+        self.input["strains"] = (
+            None,
+            "List of strains that should be calculated.  If given vol_range and num_points take no effect.",
+        )
 
         self.debye_model = DebyeModel(self)
         self.fit_module = EnergyVolumeFit()
@@ -957,7 +968,7 @@ class Murnaghan(AtomisticParallelMaster):
         if frame == 1:
             old_vol = self.structure.get_volume()
             new_vol = self["output/equilibrium_volume"]
-            vol_strain = new_vol / old_vol
+            vol_strain = new_vol / old_vol - 1
             return _strain_axes(self.structure, self.input["axes"], vol_strain)
         elif frame == 0:
             return self.structure
