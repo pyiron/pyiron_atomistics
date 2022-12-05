@@ -2,7 +2,7 @@ name: UpdateDependabotPR
 
 on:
   pull_request_target:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
