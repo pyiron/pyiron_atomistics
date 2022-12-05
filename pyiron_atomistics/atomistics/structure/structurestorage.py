@@ -15,6 +15,7 @@ import pandas as pd
 from pyiron_base import FlattenedStorage, ImportAlarm
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.symmetry import SymmetryError
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 
@@ -208,7 +209,7 @@ class StructureStorage(FlattenedStorage, HasStructure):
             **kwargs: additional arrays to store for structure
         """
 
-        if structure.spins is not None:
+        if structure.has("initial_magmoms"):
             arrays["spins"] = structure.spins
         if "selective_dynamics" in structure.get_tags():
             arrays["selective_dynamics"] = getattr(
@@ -232,14 +233,14 @@ class StructureStorage(FlattenedStorage, HasStructure):
             raise KeyError(f"No structure named {frame}.") from None
 
     def _get_structure(self, frame=-1, wrap_atoms=True):
-        elements = self.get_elements()
+        symbols = self.get_array("symbols", frame)
+        elements = [e for e in self.get_elements() if e in symbols]
         index_map = {e: i for i, e in enumerate(elements)}
         try:
             magmoms = self.get_array("spins", frame)
         except KeyError:
             # not all structures have spins saved on them
             magmoms = None
-        symbols = self.get_array("symbols", frame)
         structure = Atoms(
             species=[Atom(e).element for e in elements],
             indices=[index_map[e] for e in symbols],
@@ -373,18 +374,21 @@ class StructurePlots:
             elif num in range(3, 16):
                 return "monoclinic"
             elif num in range(16, 75):
-                return "orthorombic"
+                return "orthorhombic"
             elif num in range(75, 143):
-                return "trigonal"
-            elif num in range(143, 168):
                 return "tetragonal"
+            elif num in range(143, 168):
+                return "trigonal"
             elif num in range(168, 195):
                 return "hexagonal"
-            elif num in range(195, 230):
+            elif num in range(195, 231):
                 return "cubic"
 
         def extract(s):
-            spg = s.get_symmetry(symprec=symprec).spacegroup["Number"]
+            try:
+                spg = s.get_symmetry(symprec=symprec).spacegroup["Number"]
+            except SymmetryError:
+                spg = 1
             return {"space_group": spg, "crystal_system": get_crystal_system(spg)}
 
         return pd.DataFrame(map(extract, self._store.iter_structures()))
@@ -413,9 +417,9 @@ class StructurePlots:
         sort_key = {
             "triclinic": 1,
             "monoclinic": 3,
-            "orthorombic": 16,
-            "trigonal": 75,
-            "tetragonal": 143,
+            "orthorhombic": 16,
+            "tetragonal": 75,
+            "trigonal": 143,
             "hexagonal": 168,
             "cubic": 195,
         }
@@ -448,11 +452,13 @@ class StructurePlots:
                 "shells": self._store["shells"],
             }
         # check that _store and _neigh are still consistent
-        cur_neighbors = self._neigh.has_array("distances")["shape"][0]
         if (
             self._neigh is None
             or len(self._store) != len(self._neigh)
-            or (num_neighbors is None or cur_neighbors != num_neighbors)
+            or (
+                num_neighbors is None
+                or self._neigh.has_array("distances")["shape"][0] != num_neighbors
+            )
         ):
             if num_neighbors is None:
                 num_neighbors = 36

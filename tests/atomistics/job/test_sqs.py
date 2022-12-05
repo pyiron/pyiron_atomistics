@@ -13,7 +13,7 @@ class TestSQS(unittest.TestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "test_sqs"))
-        cls.project.remove_jobs_silently(recursive=True)
+        cls.project.remove_jobs(recursive=True, silently=True)
 
     @classmethod
     def tearDownClass(cls):

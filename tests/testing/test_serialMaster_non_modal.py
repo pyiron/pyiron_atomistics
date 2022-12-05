@@ -19,7 +19,7 @@ def convergence_goal(self, **qwargs):
     if var / len(erg_lst) < eps:
         return True
     ham_prev = self[-1]
-    job_name = self.first_child_name() + "_" + str(len(self))
+    job_name = list(self.child_names.values())[0] + "_" + str(len(self))
     ham_next = ham_prev.restart(job_name=job_name)
     return ham_next
 
@@ -31,7 +31,7 @@ class TestSerialMaster(unittest.TestCase):
         cls.project = Project(
             os.path.join(cls.file_location, "testing_serial_non_modal")
         )
-        cls.project.remove_jobs_silently(recursive=True)
+        cls.project.remove_jobs(recursive=True, silently=True)
 
     @classmethod
     def tearDownClass(cls):

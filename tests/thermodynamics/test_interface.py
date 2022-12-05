@@ -22,7 +22,7 @@ class TestHessianJob(unittest.TestCase):
         cls.project = Project(
             os.path.join(cls.file_location, "interface")
         )
-        cls.project.remove_jobs_silently(recursive=True)
+        cls.project.remove_jobs(recursive=True, silently=True)
         cls.structure = Atoms(
             positions=[[0, 0, 0], [1, 1, 1]], elements=["Fe", "Fe"], cell=2 * np.eye(3)
         )

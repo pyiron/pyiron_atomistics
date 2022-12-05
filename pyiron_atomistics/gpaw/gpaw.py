@@ -17,15 +17,11 @@ __email__ = "janssen@mpie.de"
 __status__ = "development"
 __date__ = "Sep 1, 2018"
 
-try:
+with ImportAlarm(
+    "Gpaw relies on the gpaw module but this is unavailable. Please ensure your python environment contains gpaw, "
+    "e.g. by running `conda install -c conda-forge gpaw`."
+) as import_alarm:
     from gpaw import GPAW as GPAWcode, PW, MethfesselPaxton
-
-    import_alarm = ImportAlarm()
-except ImportError:
-    import_alarm = ImportAlarm(
-        "Gpaw relies on the gpaw module but th is unavailable. Please ensure your python environment contains gpaw, "
-        "e.g. by running `conda install -c conda-forge gpaw`."
-    )
 
 
 class Gpaw(AseJob, GenericDFTJob):
@@ -92,7 +88,7 @@ class Gpaw(AseJob, GenericDFTJob):
             kpts=kpoints,
             txt=self.working_directory + "/" + self.job_name + ".txt",
         )
-        self.structure.set_calculator(calc)
+        self.structure.calc = calc
 
     def to_hdf(self, hdf=None, group_name=None):
         """

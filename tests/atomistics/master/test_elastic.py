@@ -24,7 +24,7 @@ class TestElasticTensor(unittest.TestCase):
         cls.basis = CrystalStructure(
             element="Fe", bravais_basis="bcc", lattice_constant=2.83
         )
-        cls.project.remove_jobs_silently(recursive=True)
+        cls.project.remove_jobs(recursive=True, silently=True)
 
     @classmethod
     def tearDownClass(cls):

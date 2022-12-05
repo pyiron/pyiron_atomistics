@@ -27,7 +27,7 @@ jobs:
       run: |
         git config --local user.email "pyiron@mpie.de"
         git config --local user.name "pyiron-runner"
-        git commit -m "Format black" -a
+        git commit -m "Format black" -a || exit 0
     - name: push
       uses: ad-m/github-push-action@master
       with:

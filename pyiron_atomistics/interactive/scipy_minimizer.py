@@ -4,10 +4,11 @@
 
 import numpy as np
 from pyiron_atomistics.atomistics.job.interactivewrapper import InteractiveWrapper
-from pyiron_base import DataContainer
+from pyiron_base import HasStorage
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractiveOutput
 from scipy.optimize import minimize
 import scipy
+from typing import List, Iterable
 import warnings
 
 __author__ = "Osamu Waseda"
@@ -72,7 +73,7 @@ class ScipyMinimizer(InteractiveWrapper):
         super(ScipyMinimizer, self).__init__(project, job_name)
 
         self._ref_job = None
-        self.input = Input()
+        self.input = ScipyMinimizerInput()
         self.output = ScipyMinimizerOutput(job=self)
         self.interactive_cache = {}
         self._delete_existing_job = True
@@ -112,8 +113,8 @@ class ScipyMinimizer(InteractiveWrapper):
             method=self.input.minimizer,
             fun=self._get_value,
             x0=x0,
-            jac=self._get_gradient,
-            tol=1.0e-20,
+            jac=self._get_gradient if self.input.use_pressure else None,
+            tol=self.input.ionic_energy_tolerance,
             options={"maxiter": self.input.ionic_steps, "return_all": True},
         )
         self.status.collect = True
@@ -189,7 +190,7 @@ class ScipyMinimizer(InteractiveWrapper):
             if max_force > self.input.ionic_force_tolerance:
                 return False
         elif self.input.volume_only:
-            if (
+            if self.input.use_pressure and (
                 np.absolute(self._get_pressure() - self.input.pressure).max()
                 > self.input.pressure_tolerance
             ):
@@ -197,7 +198,7 @@ class ScipyMinimizer(InteractiveWrapper):
         else:
             if max_force > self.input.ionic_force_tolerance:
                 return False
-            if (
+            if self.input.use_pressure and (
                 np.absolute(self._get_pressure() - self.input.pressure).max()
                 > self.input.pressure_tolerance
             ):
@@ -245,7 +246,7 @@ class ScipyMinimizer(InteractiveWrapper):
 
     def to_hdf(self, hdf=None, group_name=None):
         super(ScipyMinimizer, self).to_hdf(hdf=hdf, group_name=group_name)
-        self.output.to_hdf(self._hdf5)
+        self.output.to_hdf(self.project_hdf5)
 
     def calc_minimize(
         self,
@@ -291,23 +292,96 @@ class ScipyMinimizer(InteractiveWrapper):
         self.input.pressure_tolerance = pressure_tolerance
 
 
-class Input(DataContainer):
-    """
-    Args:
-        minimizer (str): minimizer to use (currently only 'CG' and 'BFGS' run
-            reliably)
-        ionic_steps (int): max number of steps
-        ionic_force_tolerance (float): maximum force tolerance
-    """
+class ScipyMinimizerInput(HasStorage):
+    def __init__(self):
+        super().__init__()
+        self.storage.minimizer = "CG"
+        self.storage.ionic_steps = 100
+        self.storage.ionic_energy_tolerance = 0
+        self.storage.ionic_force_tolerance = 1.0e-2
+        self.storage.pressure_tolerance = 1.0e-3
+        self.storage.pressure = None
+        self.storage.use_pressure = True
+        self.storage.volume_only = False
 
-    def __init__(self, input_file_name=None, table_name="input"):
-        self.minimizer = "CG"
-        self.ionic_steps = 100
-        self.ionic_force_tolerance = 1.0e-2
-        self.pressure = None
-        self.volume_only = False
-        self.ionic_energy_tolerance = 0
-        self.pressure_tolerance = 1.0e-3
+    def _get_hdf_group_name(self) -> str:
+        return "parameters"
+
+    @property
+    def minimizer(self) -> str:
+        """str: name of minimizer to use"""
+        return self.storage.minimizer
+
+    @minimizer.setter
+    def minimizer(self, value: str):
+        self.storage.minimizer = value
+
+    @property
+    def ionic_steps(self) -> int:
+        """int: maximum number of minimization steps"""
+        return self.storage.ionic_steps
+
+    @ionic_steps.setter
+    def ionic_steps(self, value: int):
+        self.storage.ionic_steps = value
+
+    @property
+    def ionic_force_tolerance(self) -> float:
+        """float: convergence goal in terms of forces"""
+        return self.storage.ionic_force_tolerance
+
+    @ionic_force_tolerance.setter
+    def ionic_force_tolerance(self, value: float):
+        self.storage.ionic_force_tolerance = value
+
+    @property
+    def ionic_energy_tolerance(self) -> float:
+        """float: convergence goal in terms of energye"""
+        return self.storage.ionic_energy_tolerance
+
+    @ionic_energy_tolerance.setter
+    def ionic_energy_tolerance(self, value: float):
+        self.storage.ionic_energy_tolerance = value
+
+    @property
+    def pressure_tolerance(self) -> float:
+        """float: convergence goal in terms of energye"""
+        return self.storage.pressure_tolerance
+
+    @pressure_tolerance.setter
+    def pressure_tolerance(self, value: float):
+        self.storage.pressure_tolerance = value
+
+    @property
+    def pressure(self):
+        """float: target pressure"""
+        if isinstance(self.storage.pressure, Iterable):
+            return np.asarray(self.storage.pressure)
+        else:
+            return self.storage.pressure
+
+    @pressure.setter
+    def pressure(self, value: Iterable[float]):
+        value = list(value)
+        self.storage.pressure = value
+
+    @property
+    def use_pressure(self) -> bool:
+        """bool: rely on pressures computed by reference job or not"""
+        return self.storage.use_pressure
+
+    @use_pressure.setter
+    def use_pressure(self, value: bool):
+        self.storage.use_pressure = value
+
+    @property
+    def volume_only(self) -> bool:
+        """bool: only pressure minimization"""
+        return self.storage.volume_only
+
+    @volume_only.setter
+    def volume_only(self, value: bool):
+        self.storage.volume_only = value
 
 
 class ScipyMinimizerOutput(GenericInteractiveOutput):

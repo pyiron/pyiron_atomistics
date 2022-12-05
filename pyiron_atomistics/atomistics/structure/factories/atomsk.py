@@ -58,7 +58,9 @@ class AtomskBuilder:
                 raise ValueError(
                     f"hkl must have shape 3x3 or 3x4 if provided, not {hkl}!"
                 )
-            line += "orient" + "  ".join("[" + "".join(map(str, a)) + "]" for a in hkl)
+            line += " orient " + "  ".join(
+                "[" + "".join(map(str, a)) + "]" for a in hkl
+            )
         # TODO: check len(species) etc. with the document list of supported phases
         self._options.append(line)
         return self

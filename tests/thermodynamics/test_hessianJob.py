@@ -16,7 +16,7 @@ class TestHessianJob(unittest.TestCase):
         cls.project = Project(
             os.path.join(cls.file_location, "hessian_class")
         )
-        cls.project.remove_jobs_silently(recursive=True)
+        cls.project.remove_jobs(recursive=True, silently=True)
         cls.job = cls.project.create_job(
             "HessianJob", "job_test_hessian"
         )

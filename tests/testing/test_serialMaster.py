@@ -4,7 +4,7 @@
 
 import os
 import unittest
-from pyiron_base import Project
+from pyiron_atomistics import Project
 
 
 def convergence_goal(self, **qwargs):
@@ -29,7 +29,7 @@ class TestSerialMaster(unittest.TestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "testing_serial"))
-        cls.project.remove_jobs_silently(recursive=True)
+        cls.project.remove_jobs(recursive=True, silently=True)
 
     @classmethod
     def tearDownClass(cls):

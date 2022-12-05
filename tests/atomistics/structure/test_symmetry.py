@@ -5,6 +5,7 @@
 import unittest
 import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.symmetry import SymmetryError
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 
 
@@ -135,6 +136,13 @@ class TestAtoms(unittest.TestCase):
         dx_round = np.round(np.absolute(dx), decimals=3)
         self.assertEqual(len(np.unique(dx_round + arg_v)), len(np.unique(arg_v)))
 
+    def test_error(self):
+        """spglib errors should be wrapped in a SymmetryError."""
+
+        structure = StructureFactory().bulk('Al')
+        structure += structure[-1]
+        with self.assertRaises(SymmetryError):
+            structure.get_symmetry()
 
 if __name__ == "__main__":
     unittest.main()

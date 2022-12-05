@@ -22,7 +22,7 @@ class TestVaspImport(unittest.TestCase):
     def tearDownClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         project = Project(os.path.join(cls.file_location, "vasp_import_testing"))
-        project.remove_jobs_silently(recursive=True)
+        project.remove_jobs(recursive=True, silently=True)
         project.remove(enable=True)
 
     def test_import(self):

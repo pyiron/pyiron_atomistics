@@ -470,6 +470,12 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._logger.debug("interactive run - done")
 
     def interactive_structure_setter(self, structure):
+        old_symbols = self.structure.get_species_symbols()
+        new_symbols = structure.get_species_symbols()
+        if any(old_symbols != new_symbols):
+            raise ValueError(
+                f"structure has different chemical symbols than old one: {new_symbols} != {old_symbols}"
+            )
         self._interactive_lib_command("clear")
         self._set_selective_dynamics()
         self._interactive_lib_command("units " + self.input.control["units"])
@@ -547,7 +553,16 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             positions = np.array(positions).reshape(-1, 3)
             positions = np.matmul(positions, self._prism.R)
         positions = positions.flatten()
-        elem_all = np.array([el_dict[el] for el in structure.get_chemical_elements()])
+        try:
+            elem_all = np.array(
+                [el_dict[el] for el in structure.get_chemical_elements()]
+            )
+        except KeyError:
+            missing = set(structure.get_chemical_elements()).difference(el_dict.keys())
+            missing = ", ".join([el.Abbreviation for el in missing])
+            raise ValueError(
+                f"Structure contains elements [{missing}], that are not present in the potential!"
+            )
         if self.server.run_mode.interactive and self.server.cores == 1:
             self._interactive_library.create_atoms(
                 n=len(structure),

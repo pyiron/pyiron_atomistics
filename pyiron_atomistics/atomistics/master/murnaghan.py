@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from typing import List, Optional
+from typing import Optional, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -314,6 +314,22 @@ class DebyeModel(object):
         }
 
 
+def _strain_axes(
+    structure: Atoms, axes: Literal["x", "y", "z"], volume_strain: float
+) -> Atoms:
+    """
+    Strain box along given axes to achieve given *volumetric* strain.
+
+    Returns a copy.
+    """
+    axes = np.array([a in axes for a in ("x", "y", "z")])
+    num_axes = sum(axes)
+    # formula calculates the strain along each axis to achieve the overall volumetric strain
+    # beware that: (1+e)**x - 1 != e**x
+    strains = axes * ((1 + volume_strain) ** (1.0 / num_axes) - 1)
+    return structure.apply_strain(strains, return_box=True)
+
+
 class MurnaghanJobGenerator(JobGenerator):
     @property
     def parameter_list(self):
@@ -323,14 +339,18 @@ class MurnaghanJobGenerator(JobGenerator):
             (list)
         """
         parameter_lst = []
-        for strain in np.linspace(
-            1 - self._master.input["vol_range"],
-            1 + self._master.input["vol_range"],
-            int(self._master.input["num_points"]),
-        ):
-            basis = self._master.ref_job.structure.copy()
-            basis.set_cell(basis.cell * strain ** (1.0 / 3.0), scale_atoms=True)
-            parameter_lst.append([np.round(strain, 7), basis])
+        strains = self._master.input.get("strains")
+        if strains is None:
+            strains = np.linspace(
+                -self._master.input["vol_range"],
+                self._master.input["vol_range"],
+                int(self._master.input["num_points"]),
+            )
+        for strain in strains:
+            basis = _strain_axes(
+                self._master.structure, self._master.input["axes"], strain
+            )
+            parameter_lst.append([1 + np.round(strain, 7), basis])
         return parameter_lst
 
     def job_name(self, parameter):
@@ -651,6 +671,14 @@ class Murnaghan(AtomisticParallelMaster):
             0.1,
             "relative volume variation around volume defined by ref_ham",
         )
+        self.input["axes"] = (
+            ["x", "y", "z"],
+            "Axes along which the strain will be applied",
+        )
+        self.input["strains"] = (
+            None,
+            "List of strains that should be calculated.  If given vol_range and num_points take no effect.",
+        )
 
         self.debye_model = DebyeModel(self)
         self.fit_module = EnergyVolumeFit()
@@ -766,6 +794,15 @@ class Murnaghan(AtomisticParallelMaster):
             return [parameter[1] for parameter in self._job_generator.parameter_list]
         else:
             return []
+
+    def validate_ready_to_run(self):
+        axes = self.input["axes"]
+        if len(set(axes)) != len(axes):
+            raise ValueError('input["axes"] may not contain duplicate entries!')
+        if not (1 <= len(axes) <= 3):
+            raise ValueError('input["axes"] must contain one to three entries!')
+        if set(axes).union(["x", "y", "z"]) != {"x", "y", "z"}:
+            raise ValueError('input["axes"] entries must be one of "x", "y" or "z"!')
 
     def collect_output(self):
         if self.ref_job.server.run_mode.interactive:
@@ -929,13 +966,10 @@ class Murnaghan(AtomisticParallelMaster):
             :class:`pyiron_atomistics.atomistics.structure.atoms.Atoms`: requested structure
         """
         if frame == 1:
-            snapshot = self.structure.copy()
-            old_vol = snapshot.get_volume()
+            old_vol = self.structure.get_volume()
             new_vol = self["output/equilibrium_volume"]
-            k = (new_vol / old_vol) ** (1.0 / 3.0)
-            new_cell = snapshot.cell * k
-            snapshot.set_cell(new_cell, scale_atoms=True)
-            return snapshot
+            vol_strain = new_vol / old_vol - 1
+            return _strain_axes(self.structure, self.input["axes"], vol_strain)
         elif frame == 0:
             return self.structure
 

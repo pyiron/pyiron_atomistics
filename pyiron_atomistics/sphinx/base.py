@@ -92,7 +92,7 @@ class SphinxBase(GenericDFTJob):
 
         # keeps both the generic parameters as well as the sphinx specific
         # input groups
-        self.input = Group(table_name="parameters")
+        self.input = Group(table_name="parameters", lazy=True)
         self.load_default_input()
         self._save_memory = False
         self._output_parser = Output(self)
@@ -103,6 +103,7 @@ class SphinxBase(GenericDFTJob):
         self._generic_input["restart_for_band_structure"] = False
         self._generic_input["path_name"] = None
         self._generic_input["n_path"] = None
+        self._generic_input["fix_spin_constraint"] = False
 
     def update_sphinx(self):
         if self._output_parser.old_version:
@@ -690,6 +691,10 @@ class SphinxBase(GenericDFTJob):
         Loads defaults for all SPHInX input groups, including a
         ricQN-based main Group.
 
+        .. warning::
+            Sphinx does not support volume minimizations!  Calling this method with `pressure` or `volume_only` results
+            in an error.
+
         Args:
             retain_electrostatic_potential:
             retain_charge_density:
@@ -709,7 +714,7 @@ class SphinxBase(GenericDFTJob):
                                   forces (optional)
             volume_only (bool):
         """
-        if pressure is not None:
+        if pressure is not None or volume_only:
             raise NotImplementedError(
                 "pressure minimization is not implemented in SPHInX"
             )
@@ -879,6 +884,10 @@ class SphinxBase(GenericDFTJob):
         if recreate_guess:
             new_job.load_guess_group()
         return new_job
+
+    def relocate_hdf5(self, h5_path=None):
+        self.input._force_load()
+        super().relocate_hdf5(h5_path=h5_path)
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -1383,14 +1392,7 @@ class SphinxBase(GenericDFTJob):
 
     @property
     def _spin_enabled(self):
-        if np.any(
-            [
-                m is not None
-                for m in self.structure.get_initial_magnetic_moments().flatten()
-            ]
-        ):
-            return True
-        return False
+        return self.structure.has("initial_magmoms")
 
     def get_charge_density(self):
         """
@@ -1428,6 +1430,9 @@ class SphinxBase(GenericDFTJob):
         """
         Collects the outputs and stores them to the hdf file
         """
+        if self.is_compressed():
+            warnings.warn("Job already compressed - output not collected")
+            return
         self._output_parser.collect(directory=self.working_directory)
         self._output_parser.to_hdf(self._hdf5, force_update=force_update)
         if compress_files:
@@ -1475,9 +1480,10 @@ class SphinxBase(GenericDFTJob):
         lattice = self.structure.cell
         positions = self.structure.get_scaled_positions()
         numbers = self.structure.get_atomic_numbers()
-        magmoms = self.structure.get_initial_magnetic_moments()
-        if np.all([m is None for m in magmoms]) or ignore_magmoms:
+        if ignore_magmoms:
             magmoms = np.zeros(len(magmoms))
+        else:
+            magmoms = self.structure.get_initial_magnetic_moments()
         mag_num = np.array(list(zip(magmoms, numbers)))
         satz = np.unique(mag_num, axis=0)
         numbers = []
@@ -1553,13 +1559,7 @@ class SphinxBase(GenericDFTJob):
                         + "3+NIONS for non-magnetic systems"
                     )
 
-            if len(w) > 0:
-                print("WARNING:")
-                for ww in w:
-                    print(ww.message)
-                return False
-            else:
-                return True
+            return len(w) == 0
 
     def validate_ready_to_run(self):
         """
@@ -1833,40 +1833,31 @@ class InputWriter(object):
                 given the default input will be written. (optional)
         """
         state.logger.debug(f"Writing {file_name}")
-        if spins_list is None or len(spins_list) == 0:
-            state.logger.debug(
-                "Getting magnetic moments via \
-                get_initial_magnetic_moments"
-            )
+        state.logger.debug(
+            "Getting magnetic moments via \
+            get_initial_magnetic_moments"
+        )
+        if self.structure.has("initial_magmoms"):
             if any(
                 [
-                    m is not None
-                    for m in self.structure.get_initial_magnetic_moments().flatten()
+                    True
+                    if isinstance(spin, list) or isinstance(spin, np.ndarray)
+                    else False
+                    for spin in self.structure.get_initial_magnetic_moments()
                 ]
             ):
-                if any(
-                    [
-                        True
-                        if isinstance(spin, list) or isinstance(spin, np.ndarray)
-                        else False
-                        for spin in self.structure.get_initial_magnetic_moments()
-                    ]
-                ):
-                    raise ValueError(
-                        "SPHInX only supports collinear spins at the moment."
-                    )
-                else:
-                    constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
-                    spins = self.structure.get_initial_magnetic_moments()[
-                        self.id_pyi_to_spx
-                    ].astype(str)
-                    spins[~np.asarray(constraint)] = "X"
-                    spins_str = "\n".join(spins) + "\n"
-        if spins_str is not None:
-            if cwd is not None:
-                file_name = posixpath.join(cwd, file_name)
-            with open(file_name, "w") as f:
-                f.write(spins_str)
+                raise ValueError("SPHInX only supports collinear spins at the moment.")
+            else:
+                constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
+                if spins_list is None or len(spins_list) == 0:
+                    spins_list = self.structure.get_initial_magnetic_moments()
+                spins = spins_list[self.id_pyi_to_spx].astype(str)
+                spins[~np.asarray(constraint)] = "X"
+                spins_str = "\n".join(spins) + "\n"
+                if cwd is not None:
+                    file_name = posixpath.join(cwd, file_name)
+                with open(file_name, "w") as f:
+                    f.write(spins_str)
         else:
             state.logger.debug("No magnetic moments")
 
@@ -2138,22 +2129,17 @@ class _SphinxLogParser:
         return self._n_steps
 
     def _parse_band(self, term):
-        fa = re.findall(term, self.log_main, re.MULTILINE)
-        arr = (
-            np.array(re.sub("[^0-9\. ]", "", "".join(fa)).split())
-            .astype(float)
-            .reshape(len(fa), -1)
-        )
+        arr = np.loadtxt(re.findall(term, self.log_main, re.MULTILINE))
         shape = (-1, len(self.k_points), arr.shape[-1])
         if self.spin_enabled:
             shape = (-1, 2, len(self.k_points), shape[-1])
         return arr.reshape(shape)
 
     def get_band_energy(self):
-        return self._parse_band("final eig \[eV\].*$")
+        return self._parse_band(f"final eig \[eV\]:(.*)$")
 
     def get_occupancy(self):
-        return self._parse_band("final focc:.*$")
+        return self._parse_band("final focc:(.*)$")
 
     def get_convergence(self):
         conv_dict = {

@@ -20,6 +20,10 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
+class SymmetryError(Exception):
+    pass
+
+
 class Symmetry(dict):
 
     """
@@ -202,7 +206,7 @@ class Symmetry(dict):
             )
             positions -= np.floor(positions + self.epsilon)
             distances, self._permutations = tree.query(positions)
-            if not np.allclose(distances, 0):
+            if np.ptp(distances) > self._symprec:
                 raise AssertionError("Neighbor search failed")
             self._permutations = self._permutations.argsort(axis=-1)
         return self._permutations
@@ -260,11 +264,14 @@ class Symmetry(dict):
 
 
         """
-        return spglib.get_symmetry(
+        sym = spglib.get_symmetry(
             cell=self._get_spglib_cell(),
             symprec=symprec,
             angle_tolerance=angle_tolerance,
         )
+        if sym is None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
+        return sym
 
     @property
     def info(self):
@@ -273,11 +280,14 @@ class Symmetry(dict):
 
         https://atztogo.github.io/spglib/python-spglib.html
         """
-        return spglib.get_symmetry_dataset(
+        info = spglib.get_symmetry_dataset(
             cell=self._get_spglib_cell(use_magmoms=False),
             symprec=self._symprec,
             angle_tolerance=self._angle_tolerance,
         )
+        if info is None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
+        return info
 
     @property
     def spacegroup(self):
@@ -295,7 +305,10 @@ class Symmetry(dict):
             cell=self._get_spglib_cell(use_magmoms=False),
             symprec=self._symprec,
             angle_tolerance=self._angle_tolerance,
-        ).split()
+        )
+        if space_group is None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
+        space_group = space_group.split()
         if len(space_group) == 1:
             return {"Number": ast.literal_eval(space_group[0])}
         return {
@@ -325,10 +338,13 @@ class Symmetry(dict):
         >>> len(symmetry.get_primitive_cell()) == len(basis)
         True
         """
-        cell, positions, indices = spglib.standardize_cell(
+        ret = spglib.standardize_cell(
             self._get_spglib_cell(use_elements=use_elements, use_magmoms=use_magmoms),
             to_primitive=not standardize,
         )
+        if ret is None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
+        cell, positions, indices = ret
         positions = (cell.T @ positions.T).T
         new_structure = self._structure.copy()
         new_structure.cell = cell
@@ -352,10 +368,13 @@ class Symmetry(dict):
         is_shift=np.zeros(3, dtype="intc"),
         is_time_reversal=True,
     ):
-        return spglib.get_ir_reciprocal_mesh(
+        mesh = spglib.get_ir_reciprocal_mesh(
             mesh=mesh,
             cell=self._get_spglib_cell(),
             is_shift=is_shift,
             is_time_reversal=is_time_reversal,
             symprec=self._symprec,
         )
+        if mesh is None:
+            raise SymmetryError(spglib.spglib.spglib_error.message)
+        return mesh

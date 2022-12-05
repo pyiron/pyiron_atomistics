@@ -17,7 +17,7 @@ class TestARTInteractive(unittest.TestCase):
     def tearDownClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, 'art'))
-        cls.project.remove_jobs_silently(recursive=True)
+        cls.project.remove_jobs(recursive=True, silently=True)
         cls.project.remove(enable=True)
 
     def test_R(self):

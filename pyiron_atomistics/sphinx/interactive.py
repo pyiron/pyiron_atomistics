@@ -180,7 +180,7 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
         )
         self._logger.debug("interactive interface is opened!")
         if (
-            np.all(self.structure.get_initial_magnetic_moments() == None)
+            not self.structure.has("initial_magmoms")
             and "atom_spins" in self.interactive_cache.keys()
         ):
             del self.interactive_cache["atom_spins"]
@@ -383,7 +383,7 @@ class SphinxOutput(GenericInteractiveOutput):
         n_elec = int(np.ceil(n_elec / 2))
         bands = self._job["output/generic/dft/bands_occ"][-1]
         bands = bands.reshape(-1, bands.shape[-1])
-        max_occ = np.sum(bands > 0, axis=-1).max()
+        max_occ = np.sum(~np.isclose(bands, 0), axis=-1).max()
         n_bands = bands.shape[-1]
         if plot:
             xticks = np.arange(1, n_bands + 1)

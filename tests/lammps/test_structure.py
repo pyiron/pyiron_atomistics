@@ -46,7 +46,7 @@ class TestLammpsStructure(TestWithCleanProject):
 
     def tearDown(self) -> None:
         super().tearDown()
-        self.ref_project.remove_jobs_silently(recursive=True)  # cf. comment in setUp
+        self.ref_project.remove_jobs(recursive=True, silently=True)  # cf. comment in setUp
 
     def test_velocity_basics(self):
         creator = Creator(self.project)
