@@ -318,8 +318,8 @@ class SxExtOptInteractive(InteractiveWrapper):
 
     def run_static(self):
         """
-        The run if modal function is called by run to execute the simulation, while waiting for the output. For this we
-        use subprocess.check_output()
+        The run if modal function is called by run to execute the simulation,
+        while waiting for the output. For this we use subprocess.check_output()
         """
         self._create_working_directory()
         self._interactive_interface = SxExtOpt(

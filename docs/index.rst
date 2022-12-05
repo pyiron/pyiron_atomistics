@@ -107,7 +107,7 @@ Read more about `citing individual modules/ plugins of pyiron and the implemente
    source/faq.rst
    Contributing <https://pyiron.readthedocs.io/en/latest/source/developers.html>
    Citing <https://pyiron.readthedocs.io/en/latest/source/citation.html>
-   License (BSD) <https://github.com/pyiron/pyiron/blob/master/LICENSE>
+   License (BSD) <https://github.com/pyiron/pyiron/blob/main/LICENSE>
    source/indices.rst
    Imprint <https://www.mpie.de/impressum>
    Data protection <https://www.mpie.de/3392182/data-protection>

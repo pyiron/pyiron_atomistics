@@ -92,7 +92,7 @@ class SphinxBase(GenericDFTJob):
 
         # keeps both the generic parameters as well as the sphinx specific
         # input groups
-        self.input = Group(table_name="parameters")
+        self.input = Group(table_name="parameters", lazy=True)
         self.load_default_input()
         self._save_memory = False
         self._output_parser = Output(self)
@@ -884,6 +884,10 @@ class SphinxBase(GenericDFTJob):
         if recreate_guess:
             new_job.load_guess_group()
         return new_job
+
+    def relocate_hdf5(self, h5_path=None):
+        self.input._force_load()
+        super().relocate_hdf5(h5_path=h5_path)
 
     def to_hdf(self, hdf=None, group_name=None):
         """
