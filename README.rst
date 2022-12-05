@@ -1,8 +1,8 @@
 pyiron
 ======
 
-.. image:: https://coveralls.io/repos/github/pyiron/pyiron_atomistics/badge.svg?branch=master
-    :target: https://coveralls.io/github/pyiron/pyiron_atomistics?branch=master
+.. image:: https://coveralls.io/repos/github/pyiron/pyiron_atomistics/badge.svg?branch=main
+    :target: https://coveralls.io/github/pyiron/pyiron_atomistics?branch=main
     :alt: Coverage Status
 
 .. image:: https://api.codacy.com/project/badge/Grade/c513254f10004df5a1f5c76425c6584b
@@ -47,7 +47,7 @@ See the `Documentation <http://pyiron.org>`_ page for more details.
 
 Installation
 ------------
-You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron_atomistics/master?urlpath=lab>`_.
+You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron_atomistics/main?urlpath=lab>`_.
 For a local installation we recommend to install pyiron inside an `anaconda <https://www.anaconda.com>`_  environment::
 
     conda install -c conda-forge pyiron
@@ -92,7 +92,7 @@ Getting started:
 Test pyiron with mybinder:
 
 .. image:: https://mybinder.org/badge_logo.svg
-     :target: https://mybinder.org/v2/gh/pyiron/pyiron_atomistics/master
+     :target: https://mybinder.org/v2/gh/pyiron/pyiron_atomistics/main
      :alt: mybinder
 
 

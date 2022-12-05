@@ -401,9 +401,9 @@ When you import pyiron in any python shell or jupyter notebook it should load th
 
 .. code-block:: bash
 
-    git checkout -b master
+    git checkout -b main
 
-In this case we switch to the master branch.  
+In this case we switch to the main branch.
 
 Download pyiron Parameter Files
 ===============================
@@ -432,7 +432,7 @@ For workshops, tutorials, and lectures it is sometimes necessary to setup multip
 
 Cloud Solutions
 ===============
-You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron/master?urlpath=lab>`_, without the need for a local installation. It is a flexible way to get a first impression of pyiron but it does not provide any permanent storage by default. Loading the pyiron environment on mybinder can take 5 to 15 minutes in case a new docker container needs to be built. Mybinder is a free service, so sessions on its servers are limited in duration and memory limits, and their stability is not guaranteed. We recommend having a backup plan when using mybinder for presentations/interactive tutorials, since the mybinder instance might be shutdown if it is idle for too long. 
+You can test pyiron on `Mybinder.org (beta) <https://mybinder.org/v2/gh/pyiron/pyiron/main?urlpath=lab>`_, without the need for a local installation. It is a flexible way to get a first impression of pyiron but it does not provide any permanent storage by default. Loading the pyiron environment on mybinder can take 5 to 15 minutes in case a new docker container needs to be built. Mybinder is a free service, so sessions on its servers are limited in duration and memory limits, and their stability is not guaranteed. We recommend having a backup plan when using mybinder for presentations/interactive tutorials, since the mybinder instance might be shutdown if it is idle for too long.
 
 Docker Container
 ================
@@ -469,7 +469,7 @@ To setup a local lab with pyiron when the internet connection is limited, we pro
 ***************
 Getting Started
 ***************
-Finally once you have installed pyiron you can quickly test your installation with the following minimalistic example. Many more examples are available in the `Github repository <https://github.com/pyiron/pyiron/tree/master/notebooks>`_.
+Finally once you have installed pyiron you can quickly test your installation with the following minimalistic example. Many more examples are available in the `Github repository <https://github.com/pyiron/pyiron/tree/main/notebooks>`_.
 
 First Calculation
 =================
