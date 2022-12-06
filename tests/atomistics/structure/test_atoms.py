@@ -523,6 +523,7 @@ class TestAtoms(unittest.TestCase):
         basis = Atoms(elements=3 * ["Ni"] + ["Fe"], positions=np.random.random((4, 3)), cell=np.eye(3))
         basis.set_initial_magnetic_moments({'Fe': 1, 'Ni': 2})
         self.assertEqual(basis.get_initial_magnetic_moments().tolist(), [2, 2, 2, 1])
+        self.assertRaises(ValueError, basis.set_initial_magnetic_moments, {'Fe': 1})
         basis = Atoms(elements=3 * ["Ni"] + ["Fe"], positions=np.random.random((4, 3)), cell=np.eye(3))
         basis.set_initial_magnetic_moments(1)
         self.assertEqual(basis.get_initial_magnetic_moments().tolist(), [1, 1, 1, 1])
