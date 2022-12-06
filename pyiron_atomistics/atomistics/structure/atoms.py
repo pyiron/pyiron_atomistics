@@ -2608,11 +2608,9 @@ class Atoms(ASEAtoms):
         # pyiron part
         if isinstance(magmoms, dict):
             if set(self.get_chemical_symbols()) != set(magmoms.keys()):
-                raise ValueError('Dict input must contain all the chemical species')
+                raise ValueError("Dict input must contain all the chemical species")
             magmoms = [magmoms[c] for c in self.get_chemical_symbols()]
-        elif not hasattr(magmoms, '__len__') or (
-                len(magmoms) == 3 and len(self) != 3
-            ):
+        elif not hasattr(magmoms, '__len__') or (len(magmoms) == 3 and len(self) != 3):
             magmoms = len(self) * [magmoms]
         if len(magmoms) != len(self):
             raise ValueError("magmons can be collinear or non-collinear.")
