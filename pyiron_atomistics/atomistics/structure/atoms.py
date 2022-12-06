@@ -2561,13 +2561,13 @@ class Atoms(ASEAtoms):
             else:
                 return np.zeros(len(self))
 
-    def set_initial_magnetic_moments(self, magmoms):
+    def set_initial_magnetic_moments(self, magmoms=None):
         """
         Set array of initial magnetic moments.
 
         Args:
-            magmoms (numpy.ndarray/list/dict/float): List, dict or single value
-                of magneric moments
+            magmoms (numpy.ndarray/list/dict/float/None): List, dict or single
+                value of magneric moments
 
 
         Example I:
