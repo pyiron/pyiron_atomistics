@@ -2588,19 +2588,11 @@ class Atoms(ASEAtoms):
         >>> structure[-1] = 'Fe'
         >>> structure.set_initial_magnetic_moments(1)
         >>> print(structure.get_initial_magnetic_moments())
-
-        Output:
-
-        >>> array([1, 1, 1, 1])
+        array([1, 1, 1, 1])
 
         If you want to make it non-magnetic, set `None`:
 
         >>> structure.set_initial_magnetic_moments(None)
-
-        If a list or an array of length 3 (e.g. [1, 2, 3]) is set and the
-        number of atoms is not 3, it will be considered as a non-collinear
-        magnetic moments, and the values will be distributed to all the
-        atoms (like in Example II)
         """
         # pyiron part
         if magmoms is not None:
@@ -2612,9 +2604,7 @@ class Atoms(ASEAtoms):
                         )
                     )
                 magmoms = [magmoms[c] for c in self.get_chemical_symbols()]
-            elif not hasattr(magmoms, "__len__") or (
-                len(magmoms) == 3 and len(self) != 3
-            ):
+            elif not hasattr(magmoms, "__len__"):
                 magmoms = len(self) * [magmoms]
             if len(magmoms) != len(self):
                 raise ValueError("magmons can be collinear or non-collinear.")
