@@ -2606,18 +2606,24 @@ class Atoms(ASEAtoms):
         atoms (like in Example II)
         """
         # pyiron part
-        if isinstance(magmoms, dict):
-            if set(self.get_chemical_symbols()) != set(magmoms.keys()):
-                raise ValueError("Dict input must contain all the chemical species")
-            magmoms = [magmoms[c] for c in self.get_chemical_symbols()]
-        elif not hasattr(magmoms, '__len__') or (len(magmoms) == 3 and len(self) != 3):
-            magmoms = len(self) * [magmoms]
-        if len(magmoms) != len(self):
-            raise ValueError("magmons can be collinear or non-collinear.")
-        if "spin" not in self._tag_list._lists.keys():
-            self.add_tag(spin=None)
-        for ind, spin in enumerate(magmoms):
-            self.spin[ind] = spin
+        if magmoms is not None:
+            if isinstance(magmoms, dict):
+                if set(self.get_chemical_symbols()) != set(magmoms.keys()):
+                    raise ValueError(
+                        "Elements in structure {} not equal to those in dict {}".format(
+                            set(self.get_chemical_symbols()), set(magmoms.keys())
+                        )
+                    )
+                magmoms = [magmoms[c] for c in self.get_chemical_symbols()]
+            elif not hasattr(magmoms, '__len__') or (len(magmoms) == 3 and len(self) != 3):
+                magmoms = len(self) * [magmoms]
+            if len(magmoms) != len(self):
+                raise ValueError("magmons can be collinear or non-collinear.")
+            if "spin" not in self._tag_list._lists.keys():
+                self.add_tag(spin=None)
+            for ind, spin in enumerate(magmoms):
+                self.spin[ind] = spin # For self._tag_list.spin
+        self.spins = magmoms # For self.array['initial_magmoms']
 
 
     def rotate(
