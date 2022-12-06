@@ -2597,7 +2597,7 @@ class Atoms(ASEAtoms):
         >>> array([1, 1, 1, 1])
 
         If you want to make it non-magnetic, set `None`:
-        
+
         >>> structure.set_initial_magnetic_moments(None)
 
         If a list or an array of length 3 (e.g. [1, 2, 3]) is set and the
@@ -2615,16 +2615,17 @@ class Atoms(ASEAtoms):
                         )
                     )
                 magmoms = [magmoms[c] for c in self.get_chemical_symbols()]
-            elif not hasattr(magmoms, '__len__') or (len(magmoms) == 3 and len(self) != 3):
+            elif not hasattr(magmoms, "__len__") or (
+                len(magmoms) == 3 and len(self) != 3
+            ):
                 magmoms = len(self) * [magmoms]
             if len(magmoms) != len(self):
                 raise ValueError("magmons can be collinear or non-collinear.")
             if "spin" not in self._tag_list._lists.keys():
                 self.add_tag(spin=None)
             for ind, spin in enumerate(magmoms):
-                self.spin[ind] = spin # For self._tag_list.spin
-        self.spins = magmoms # For self.array['initial_magmoms']
-
+                self.spin[ind] = spin  # For self._tag_list.spin
+        self.spins = magmoms  # For self.array['initial_magmoms']
 
     def rotate(
         self, a=0.0, v=None, center=(0, 0, 0), rotate_cell=False, index_list=None
