@@ -2605,7 +2605,7 @@ class Atoms(ASEAtoms):
         # pyiron part
         if magmoms is not None:
             if isinstance(magmoms, dict):
-                if set(self.get_chemical_symbols()) != set(magmoms.keys()):
+                if set(self.get_species_symbols()) != set(magmoms.keys()):
                     raise ValueError(
                         "Elements in structure {} not equal to those in dict {}".format(
                             set(self.get_chemical_symbols()), set(magmoms.keys())
