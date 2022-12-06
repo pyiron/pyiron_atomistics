@@ -2567,7 +2567,7 @@ class Atoms(ASEAtoms):
 
         Args:
             magmoms (numpy.ndarray/list/dict/float/None): List, dict or single
-                value of magneric moments
+                value of magnetic moments
 
 
         Example I:
