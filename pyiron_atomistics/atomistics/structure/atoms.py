@@ -2577,11 +2577,8 @@ class Atoms(ASEAtoms):
         >>> structure[-1] = 'Fe'
         >>> v_dict = {'Fe': 1, 'Ni': 2}
         >>> structure.set_initial_magnetic_moments(v_dict)
-        >>> print(structure.get_initial_magnetic_moments())
-
-        Output:
-
-        >>> array([2, 2, 2, 1])
+        >>> structure.get_initial_magnetic_moments()
+        array([2, 2, 2, 1])
 
 
         Example II:
