@@ -2569,13 +2569,21 @@ class Atoms(ASEAtoms):
             magmoms (numpy.ndarray/list): List of magneric moments
         """
         # pyiron part
+        if isinstance(magmoms, dict):
+            if set(self.get_chemical_symbols()) != set(magmoms.keys()):
+                raise ValueError('Dict input must contain all the chemical species')
+            magmoms = [magmoms[c] for c in self.get_chemical_symbols()]
+        elif not hasattr(magmoms, '__len__') or (
+                len(magmoms) == 3 and len(self) != 3
+            ):
+            magmoms = len(self) * [magmoms]
         if len(magmoms) != len(self):
             raise ValueError("magmons can be collinear or non-collinear.")
         if "spin" not in self._tag_list._lists.keys():
             self.add_tag(spin=None)
         for ind, spin in enumerate(magmoms):
             self.spin[ind] = spin
-        self.spins = magmoms
+
 
     def rotate(
         self, a=0.0, v=None, center=(0, 0, 0), rotate_cell=False, index_list=None
