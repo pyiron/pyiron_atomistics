@@ -2561,7 +2561,7 @@ class Atoms(ASEAtoms):
             else:
                 return np.zeros(len(self))
 
-    def set_initial_magnetic_moments(self, magmoms=None):
+    def set_initial_magnetic_moments(self, magmoms):
         """
         Set array of initial magnetic moments.
 
@@ -2569,13 +2569,12 @@ class Atoms(ASEAtoms):
             magmoms (numpy.ndarray/list): List of magneric moments
         """
         # pyiron part
-        if magmoms is not None:
-            if len(magmoms) != len(self):
-                raise ValueError("magmons can be collinear or non-collinear.")
-            if "spin" not in self._tag_list._lists.keys():
-                self.add_tag(spin=None)
-            for ind, spin in enumerate(magmoms):
-                self.spin[ind] = spin
+        if len(magmoms) != len(self):
+            raise ValueError("magmons can be collinear or non-collinear.")
+        if "spin" not in self._tag_list._lists.keys():
+            self.add_tag(spin=None)
+        for ind, spin in enumerate(magmoms):
+            self.spin[ind] = spin
         self.spins = magmoms
 
     def rotate(
