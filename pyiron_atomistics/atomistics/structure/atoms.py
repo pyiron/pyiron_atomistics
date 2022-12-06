@@ -2566,7 +2566,44 @@ class Atoms(ASEAtoms):
         Set array of initial magnetic moments.
 
         Args:
-            magmoms (numpy.ndarray/list): List of magneric moments
+            magmoms (numpy.ndarray/list/dict/float): List, dict or single value
+                of magneric moments
+
+
+        Example I:
+
+        >>> from pyiron_atomistics import Project
+        >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
+        >>> structure[-1] = 'Fe'
+        >>> v_dict = {'Fe': 1, 'Ni': 2}
+        >>> structure.set_initial_magnetic_moments(v_dict)
+        >>> print(structure.get_initial_magnetic_moments())
+
+        Output:
+
+        >>> array([2, 2, 2, 1])
+
+
+        Example II:
+
+        >>> from pyiron_atomistics import Project
+        >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
+        >>> structure[-1] = 'Fe'
+        >>> structure.set_initial_magnetic_moments(1)
+        >>> print(structure.get_initial_magnetic_moments())
+
+        Output:
+
+        >>> array([1, 1, 1, 1])
+
+        If you want to make it non-magnetic, set `None`:
+        
+        >>> structure.set_initial_magnetic_moments(None)
+
+        If a list or an array of length 3 (e.g. [1, 2, 3]) is set and the
+        number of atoms is not 3, it will be considered as a non-collinear
+        magnetic moments, and the values will be distributed to all the
+        atoms (like in Example II)
         """
         # pyiron part
         if isinstance(magmoms, dict):
