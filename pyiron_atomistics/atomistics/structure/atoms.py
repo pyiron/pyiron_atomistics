@@ -29,6 +29,7 @@ from pyiron_atomistics.atomistics.structure.periodic_table import (
 from pyiron_base import state, deprecate, deprecate_soon
 from pyiron_atomistics.atomistics.structure.pyironase import publication
 from pymatgen.io.ase import AseAtomsAdaptor
+from collections.abc import Sequence
 
 from scipy.spatial import cKDTree, Voronoi
 
@@ -2604,7 +2605,7 @@ class Atoms(ASEAtoms):
                         )
                     )
                 magmoms = [magmoms[c] for c in self.get_chemical_symbols()]
-            elif not hasattr(magmoms, "__len__"):
+            elif not isinstance(magmoms, (np.ndarray, Sequence)):
                 magmoms = len(self) * [magmoms]
             if len(magmoms) != len(self):
                 raise ValueError("magmons can be collinear or non-collinear.")
