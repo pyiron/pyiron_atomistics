@@ -2567,33 +2567,40 @@ class Atoms(ASEAtoms):
         Set array of initial magnetic moments.
 
         Args:
-            magmoms (numpy.ndarray/list/dict/float/None): List, dict or single
-                value of magnetic moments
+            magmoms (None/numpy.ndarray/list/dict/float): Default value is None (non magnetic calc).
+            List, dict or single value assigning magnetic moments to the structure object.
 
+        If you want to make it non-magnetic, set `None`
+        >>> structure.set_initial_magnetic_moments(None)
 
-        Example I:
-
+        Example I input: np.ndarray / List
+        Assigns site moments via corresponding list of same length as number of sites in structure
         >>> from pyiron_atomistics import Project
         >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
         >>> structure[-1] = 'Fe'
-        >>> v_dict = {'Fe': 1, 'Ni': 2}
-        >>> structure.set_initial_magnetic_moments(v_dict)
+        >>> spin_list = [1, 2, 3, 4]
+        >>> structure.set_initial_magnetic_moments(spin_list)
+        >>> structure.get_initial_magnetic_moments()
+        array([1, 2, 3, 4])
+        
+        Example II input: dict
+        Assigns species-specific magnetic moments species
+        >>> from pyiron_atomistics import Project
+        >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
+        >>> structure[-1] = 'Fe'
+        >>> spin_dict = {'Fe': 1, 'Ni': 2}
+        >>> structure.set_initial_magnetic_moments(spin_dict)
         >>> structure.get_initial_magnetic_moments()
         array([2, 2, 2, 1])
 
-
-        Example II:
-
+        Example III input: float
+        Assigns the same magnetic moment to all atoms in the structure
         >>> from pyiron_atomistics import Project
         >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
         >>> structure[-1] = 'Fe'
         >>> structure.set_initial_magnetic_moments(1)
         >>> print(structure.get_initial_magnetic_moments())
         array([1, 1, 1, 1])
-
-        If you want to make it non-magnetic, set `None`:
-
-        >>> structure.set_initial_magnetic_moments(None)
         """
         # pyiron part
         if magmoms is not None:
