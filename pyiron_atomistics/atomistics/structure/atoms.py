@@ -2570,7 +2570,7 @@ class Atoms(ASEAtoms):
             magmoms (None/numpy.ndarray/list/dict/float): Default value is None (non magnetic calc).
             List, dict or single value assigning magnetic moments to the structure object.
             
-            Non-collinear calculations may be specified through using a dict (see last example)
+            Non-collinear calculations may be specified through using a dict/list (see last example)
 
         If you want to make it non-magnetic, set `None`
         >>> structure.set_initial_magnetic_moments(None)
