@@ -2582,7 +2582,7 @@ class Atoms(ASEAtoms):
         >>> structure.set_initial_magnetic_moments(spin_list)
         >>> structure.get_initial_magnetic_moments()
         array([1, 2, 3, 4])
-        
+
         Example II input: dict
         Assigns species-specific magnetic moments species
         >>> from pyiron_atomistics import Project
