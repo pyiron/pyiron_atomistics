@@ -2586,7 +2586,7 @@ class Atoms(ASEAtoms):
         array([1, 2, 3, 4])
         
         Example II input: dict
-        Assigns species-specific magnetic moments species
+        Assigns species-specific magnetic moments
         >>> from pyiron_atomistics import Project
         >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
         >>> structure[-1] = 'Fe'
@@ -2596,7 +2596,7 @@ class Atoms(ASEAtoms):
         array([2, 2, 2, 1])
 
         Example III input: float
-        Assigns the same magnetic moment to all atoms in the structure
+        Assigns the same magnetic moment to all sites in the structure
         >>> from pyiron_atomistics import Project
         >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
         >>> structure[-1] = 'Fe'
@@ -2610,7 +2610,7 @@ class Atoms(ASEAtoms):
         >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
         >>> structure[-1] = 'Fe'
         
-        Option 1: List input sets vectors for each individual atom
+        Option 1: List input sets vectors for each individual site
         >>> non_coll_magmom_vect = [[1, 2, 3]
                                     [2, 3, 4],
                                     [3, 4, 5],
