@@ -2622,7 +2622,7 @@ class Atoms(ASEAtoms):
         Option 2: Dict input sets magmom vectors for individual species:
         >>> print(structure.get_initial_magnetic_moments())
         >>> non_coll_spin_dict = {'Fe': [2, 3, 4], 'Ni': [1, 2, 3]}
-        >>> structure.set_initial_magnetic_moments(spin_dict)
+        >>> structure.set_initial_magnetic_moments(non_coll_spin_dict)
         >>> print(structure.get_initial_magnetic_moments()) 
         array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [2, 3, 4]])       
         """
