@@ -29,6 +29,7 @@ from pyiron_atomistics.atomistics.structure.periodic_table import (
 from pyiron_base import state, deprecate, deprecate_soon
 from pyiron_atomistics.atomistics.structure.pyironase import publication
 from pymatgen.io.ase import AseAtomsAdaptor
+from collections.abc import Sequence
 
 from scipy.spatial import cKDTree, Voronoi
 
@@ -2566,17 +2567,87 @@ class Atoms(ASEAtoms):
         Set array of initial magnetic moments.
 
         Args:
-            magmoms (numpy.ndarray/list): List of magneric moments
+            magmoms (None/numpy.ndarray/list/dict/float): Default value is
+                None (non magnetic calc). List, dict or single value assigning
+                magnetic moments to the structure object.
+
+        Non-collinear calculations may be specified through using a dict/list
+        (see last example)
+
+        If you want to make it non-magnetic, set `None`
+        >>> structure.set_initial_magnetic_moments(None)
+
+        Example I input: np.ndarray / List
+        Assigns site moments via corresponding list of same length as number
+        of sites in structure
+        >>> from pyiron_atomistics import Project
+        >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
+        >>> structure[-1] = 'Fe'
+        >>> spin_list = [1, 2, 3, 4]
+        >>> structure.set_initial_magnetic_moments(spin_list)
+        >>> structure.get_initial_magnetic_moments()
+        array([1, 2, 3, 4])
+
+        Example II input: dict
+        Assigns species-specific magnetic moments
+        >>> from pyiron_atomistics import Project
+        >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
+        >>> structure[-1] = 'Fe'
+        >>> spin_dict = {'Fe': 1, 'Ni': 2}
+        >>> structure.set_initial_magnetic_moments(spin_dict)
+        >>> structure.get_initial_magnetic_moments()
+        array([2, 2, 2, 1])
+
+        Example III input: float
+        Assigns the same magnetic moment to all sites in the structure
+        >>> from pyiron_atomistics import Project
+        >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
+        >>> structure[-1] = 'Fe'
+        >>> structure.set_initial_magnetic_moments(1)
+        >>> print(structure.get_initial_magnetic_moments())
+        array([1, 1, 1, 1])
+
+        Example IV input: dict/list for non-collinear magmoms.
+        Assigns non-collinear magnetic moments to the sites in structure
+        >>> from pyiron_atomistics import Project
+        >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
+        >>> structure[-1] = 'Fe'
+
+        Option 1: List input sets vectors for each individual site
+        >>> non_coll_magmom_vect = [[1, 2, 3]
+                                    [2, 3, 4],
+                                    [3, 4, 5],
+                                    [4, 5, 6]]
+        >>> structure.set_initial_magnetic_moments(non_coll_magmom_vect)
+        >>> print(structure.get_initial_magnetic_moments())
+        array([[1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6]])
+
+        Option 2: Dict input sets magmom vectors for individual species:
+        >>> print(structure.get_initial_magnetic_moments())
+        >>> non_coll_spin_dict = {'Fe': [2, 3, 4], 'Ni': [1, 2, 3]}
+        >>> structure.set_initial_magnetic_moments(non_coll_spin_dict)
+        >>> print(structure.get_initial_magnetic_moments())
+        array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [2, 3, 4]])
         """
         # pyiron part
         if magmoms is not None:
+            if isinstance(magmoms, dict):
+                if set(self.get_species_symbols()) != set(magmoms.keys()):
+                    raise ValueError(
+                        "Elements in structure {} not found in dict {}".format(
+                            set(self.get_chemical_symbols()), set(magmoms.keys())
+                        )
+                    )
+                magmoms = [magmoms[c] for c in self.get_chemical_symbols()]
+            elif not isinstance(magmoms, (np.ndarray, Sequence)):
+                magmoms = len(self) * [magmoms]
             if len(magmoms) != len(self):
-                raise ValueError("magmons can be collinear or non-collinear.")
+                raise ValueError("magmoms can be collinear or non-collinear.")
             if "spin" not in self._tag_list._lists.keys():
                 self.add_tag(spin=None)
             for ind, spin in enumerate(magmoms):
-                self.spin[ind] = spin
-        self.spins = magmoms
+                self.spin[ind] = spin  # For self._tag_list.spin
+        self.spins = magmoms  # For self.array['initial_magmoms']
 
     def rotate(
         self, a=0.0, v=None, center=(0, 0, 0), rotate_cell=False, index_list=None
