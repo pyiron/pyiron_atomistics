@@ -2567,16 +2567,19 @@ class Atoms(ASEAtoms):
         Set array of initial magnetic moments.
 
         Args:
-            magmoms (None/numpy.ndarray/list/dict/float): Default value is None (non magnetic calc).
-            List, dict or single value assigning magnetic moments to the structure object.
+            magmoms (None/numpy.ndarray/list/dict/float): Default value is
+                None (non magnetic calc). List, dict or single value assigning
+                magnetic moments to the structure object.
 
-            Non-collinear calculations may be specified through using a dict/list (see last example)
+        Non-collinear calculations may be specified through using a dict/list
+        (see last example)
 
         If you want to make it non-magnetic, set `None`
         >>> structure.set_initial_magnetic_moments(None)
 
         Example I input: np.ndarray / List
-        Assigns site moments via corresponding list of same length as number of sites in structure
+        Assigns site moments via corresponding list of same length as number
+        of sites in structure
         >>> from pyiron_atomistics import Project
         >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
         >>> structure[-1] = 'Fe'
