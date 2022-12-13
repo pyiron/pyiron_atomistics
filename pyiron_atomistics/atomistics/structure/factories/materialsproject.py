@@ -59,7 +59,7 @@ class MaterialsProjectFactory:
     Convenience interface to the Materials Project Structure Database.
 
     Usage is only possible with an API key obtained from the Materials Project.  To do this, create an account with
-    them, login and access `this webpage <https://next-gen.materialsproject.org/ap://next-gen.materialsproject.org/api#api-key>`_.
+    them, login and access `this webpage <https://next-gen.materialsproject.org/api#api-key>`.
 
     Once you have a key, either pass it as the `api_key` parameter in the methods of this object or export an
     environment variable, called `MP_API_KEY`, in your shell setup.
