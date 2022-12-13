@@ -1996,7 +1996,7 @@ class _SphinxLogParser:
             len(re.findall("Program exited normally.", self.log_file, re.MULTILINE))
             == 0
         ):
-            warnings.warn("Log file created but first scf loop not reached")
+            warnings.warn("scf loops did not converge")
             return False
         return True
 
