@@ -520,6 +520,13 @@ class TestAtoms(unittest.TestCase):
         basis.set_repeat(2)
         self.assertTrue(np.array_equal(basis.spins, np.hstack([0.0, 2.0] * 8)))
         self.assertRaises(ValueError, basis.set_initial_magnetic_moments, magmoms=[4] * (len(basis) - 1))
+        basis = Atoms(elements=3 * ["Ni"] + ["Fe"], positions=np.random.random((4, 3)), cell=np.eye(3))
+        basis.set_initial_magnetic_moments({'Fe': 1, 'Ni': 2})
+        self.assertEqual(basis.get_initial_magnetic_moments().tolist(), [2, 2, 2, 1])
+        self.assertRaises(ValueError, basis.set_initial_magnetic_moments, {'Fe': 1})
+        basis = Atoms(elements=3 * ["Ni"] + ["Fe"], positions=np.random.random((4, 3)), cell=np.eye(3))
+        basis.set_initial_magnetic_moments(1)
+        self.assertEqual(basis.get_initial_magnetic_moments().tolist(), [1, 1, 1, 1])
 
     def test_get_parent_basis(self):
         periodic_table = PeriodicTable()
