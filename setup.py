@@ -16,18 +16,31 @@ setup(
     author_email='janssen@mpie.de',
     license='BSD',
 
-    classifiers=['Development Status :: 5 - Production/Stable',
-                 'Topic :: Scientific/Engineering :: Physics',
-                 'License :: OSI Approved :: BSD License',
-                 'Intended Audience :: Science/Research',
-                 'Operating System :: OS Independent',
-                 'Programming Language :: Python :: 3',
-                 'Programming Language :: Python :: 3.8',
-                 'Programming Language :: Python :: 3.9',
-                 'Programming Language :: Python :: 3.10'],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Topic :: Scientific/Engineering :: Physics',
+        'License :: OSI Approved :: BSD License',
+        'Intended Audience :: Science/Research',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11'
+    ],
 
     keywords='pyiron',
-    packages=find_packages(exclude=["*tests*", "*docs*", "*binder*", "*.devcontainer*", "*notebooks*", "*.ci_support*", "*test_benchmarks*", "*test_integration*", "*.github*"]),
+    packages=find_packages(exclude=[
+        "*tests*", 
+        "*docs*", 
+        "*binder*", 
+        "*.devcontainer*", 
+        "*notebooks*",
+        "*.ci_support*", 
+        "*test_benchmarks*", 
+        "*test_integration*", 
+        "*.github*"
+    ]),
     install_requires=[
         'aimsgb==0.1.1',
         'ase==3.22.1',
