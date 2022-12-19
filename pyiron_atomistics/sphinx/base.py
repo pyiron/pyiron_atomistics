@@ -766,7 +766,7 @@ class SphinxBase(GenericDFTJob):
             pyiron_atomistics.sphinx.sphinx.sphinx: new job instance
         """
         return self.restart_from_charge_density(
-            job_name=job_name, job_type=None, band_structure_calc=True
+            job_name=job_name, band_structure_calc=True
         )
 
     def restart_from_charge_density(
@@ -793,6 +793,15 @@ class SphinxBase(GenericDFTJob):
         )
         if band_structure_calc:
             ham_new._generic_input["restart_for_band_structure"] = True
+            # --- clean up minimization related settings
+            for setting in ["Istep", "dF", "dE"]:
+                if setting in ham_new.input:
+                    del ham_new.input[setting]
+            # remove optimization-related stuff from GenericDFTJob
+            super(SphinxBase, self).calc_static()
+            # --- recreate main group
+            del ham_new.input.sphinx["main"]
+            ham_new.load_main_group()
         return ham_new
 
     def restart_from_wave_functions(
