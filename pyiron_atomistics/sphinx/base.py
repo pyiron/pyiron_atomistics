@@ -799,7 +799,7 @@ class SphinxBase(GenericDFTJob):
             super(SphinxBase, self).calc_static()
             # --- recreate main group
             del ham_new.input.sphinx["main"]
-            ham_new.input.sphinx.create_group ("main")
+            ham_new.input.sphinx.create_group("main")
             ham_new.load_main_group()
         return ham_new
 
