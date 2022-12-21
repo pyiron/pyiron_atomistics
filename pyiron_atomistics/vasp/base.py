@@ -401,8 +401,8 @@ class VaspBase(GenericDFTJob):
                     )
         # Structure passed into the .write() function is sorted in write_input
         # write()'s structure input is not sorted inside the function, but here
-        # i.e. HERE: write(structure = self.structure[self._idx_user_to_pyiron]) in write_input() 
-        # not write(structure) = self.structure -> somewhere inside write() the structure is sorted 
+        # i.e. HERE: write(structure = self.structure[self._idx_user_to_pyiron]) in write_input()
+        # not write(structure) = self.structure -> somewhere inside write() the structure is sorted
         self.input.write(
             structure=self.structure[self._idx_user_to_pyiron],
             directory=self.working_directory,

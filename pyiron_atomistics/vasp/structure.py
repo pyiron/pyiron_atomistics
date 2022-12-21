@@ -335,9 +335,12 @@ def _dict_to_atoms(atoms_dict, species_list=None, read_from_first_line=False):
         atoms = Atoms(elements, scaled_positions=positions, cell=cell, pbc=True)
     return atoms
 
-@deprecate("DeprecationWarning: vasp_sorter in pyiron_atomistics.vasp.structure is deprecated and will be removed in a future version\
+
+@deprecate(
+    "DeprecationWarning: vasp_sorter in pyiron_atomistics.vasp.structure is deprecated and will be removed in a future version\
     This probably popped up because you tried to import jobs from hdf5s of an old version of pyiron.\
-    regenerate/renew the hdf5 with the newest version of pyiron manually with collect_output() on the job")
+    regenerate/renew the hdf5 with the newest version of pyiron manually with collect_output() on the job"
+)
 def vasp_sorter(structure):
     """
     Routine to sort the indices of a structure as it would be when written to a POSCAR file
