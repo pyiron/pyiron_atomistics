@@ -8,10 +8,20 @@ import os
 import time
 import warnings
 from pyiron_atomistics.atomistics.structure.atom import Atom
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure, ase_to_pyiron, pymatgen_to_pyiron, pyiron_to_pymatgen
+from pyiron_atomistics.atomistics.structure.atoms import (
+    Atoms,
+    CrystalStructure,
+    ase_to_pyiron,
+    pymatgen_to_pyiron,
+    pyiron_to_pymatgen,
+)
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseList
-from pyiron_atomistics.atomistics.structure.periodic_table import element, PeriodicTable, ChemicalElement
+from pyiron_atomistics.atomistics.structure.periodic_table import (
+    element,
+    PeriodicTable,
+    ChemicalElement,
+)
 from pyiron_base import ProjectHDFio, Project
 from ase.cell import Cell as ASECell
 from ase.atoms import Atoms as ASEAtoms
@@ -21,6 +31,7 @@ from pymatgen.io.ase import AseAtomsAdaptor
 
 from ase.calculators.morse import MorsePotential
 
+
 class TestAtoms(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
@@ -28,15 +39,11 @@ class TestAtoms(unittest.TestCase):
         if os.path.isfile(
             os.path.join(file_location, "../../static/atomistics/test_hdf")
         ):
-            os.remove(
-                os.path.join(file_location, "../../static/atomistics/test_hdf")
-            )
+            os.remove(os.path.join(file_location, "../../static/atomistics/test_hdf"))
         if os.path.isfile(
             os.path.join(file_location, "../../static/atomistics/test.h5")
         ):
-            os.remove(
-                os.path.join(file_location, "../../static/atomistics/test.h5")
-            )
+            os.remove(os.path.join(file_location, "../../static/atomistics/test.h5"))
 
     @classmethod
     def setUpClass(cls):
@@ -50,10 +57,7 @@ class TestAtoms(unittest.TestCase):
             "../../static/atomistics",
         )
         abs_filename = os.path.abspath(filename)
-        cls.hdf_obj = ProjectHDFio(
-            project=Project(abs_filename),
-            file_name="test.h5"
-        )
+        cls.hdf_obj = ProjectHDFio(project=Project(abs_filename), file_name="test.h5")
 
     def setUp(self):
         # These atoms are reset before every test.
@@ -310,7 +314,7 @@ class TestAtoms(unittest.TestCase):
             len(basis_new._tag_list), len(basis[mg_indices]) + len(basis[o_indices])
         )
         self.assertEqual(basis_new.get_spacegroup()["Number"], 225)
-        self.assertEqual(basis[:-3], basis[0:len(basis)-3])
+        self.assertEqual(basis[:-3], basis[0 : len(basis) - 3])
         self.assertEqual(basis.dimension, basis[mg_indices].dimension)
         self.assertTrue(np.array_equal(basis.pbc, basis[mg_indices].pbc))
         self.assertRaises(IndexError, basis_new.__getitem__, [True, True, False])
@@ -358,18 +362,31 @@ class TestAtoms(unittest.TestCase):
         pos, cell = generate_fcc_lattice()
         basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2)
         basis *= 2
-        self.assertTrue(np.array_equal(basis.numbers, [13.] * 8))
+        self.assertTrue(np.array_equal(basis.numbers, [13.0] * 8))
         basis[3:6] = "Mg"
-        self.assertTrue(np.array_equal(basis.numbers, [13., 13., 13., 12., 12., 12., 13., 13.]))
+        self.assertTrue(
+            np.array_equal(
+                basis.numbers, [13.0, 13.0, 13.0, 12.0, 12.0, 12.0, 13.0, 13.0]
+            )
+        )
         ase_basis = ASEAtoms("Al", positions=pos, cell=cell)
         ase_basis *= 2
-        self.assertTrue(np.array_equal(ase_basis.numbers, [13.] * 8))
+        self.assertTrue(np.array_equal(ase_basis.numbers, [13.0] * 8))
         ase_basis.symbols[3:6] = "Mg"
-        self.assertTrue(np.array_equal(ase_basis.numbers, [13., 13., 13., 12., 12., 12., 13., 13.]))
+        self.assertTrue(
+            np.array_equal(
+                ase_basis.numbers, [13.0, 13.0, 13.0, 12.0, 12.0, 12.0, 13.0, 13.0]
+            )
+        )
         basis.symbols[0] = "Ca"
         ase_basis.symbols[0] = "Ca"
-        self.assertEqual(ase_basis.symbols.get_chemical_formula(), basis.symbols.get_chemical_formula())
-        self.assertEqual(ase_basis.symbols.get_chemical_formula(), basis.get_chemical_formula())
+        self.assertEqual(
+            ase_basis.symbols.get_chemical_formula(),
+            basis.symbols.get_chemical_formula(),
+        )
+        self.assertEqual(
+            ase_basis.symbols.get_chemical_formula(), basis.get_chemical_formula()
+        )
 
     def test_cell(self):
         CO = Atoms(
@@ -393,7 +410,7 @@ class TestAtoms(unittest.TestCase):
         r_o = [0, 0, 0]
         r_h1 = [dx, 0, 0]
         r_h2 = [0, dx, 0]
-        water = Atoms(elements=['H', 'H', 'O'], positions=[r_h1, r_h2, r_o])
+        water = Atoms(elements=["H", "H", "O"], positions=[r_h1, r_h2, r_o])
         self.assertEqual(water.center_coordinates_in_unit_cell(), water)
         water.set_cell(np.zeros((3, 3)))
         self.assertTrue(np.array_equal(water.cell, np.zeros((3, 3))))
@@ -439,13 +456,18 @@ class TestAtoms(unittest.TestCase):
 
     def test_rotate(self):
         unitcell = Atoms(
-            elements="AlFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3), pbc=True)
+            elements="AlFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3), pbc=True
+        )
         basis = unitcell.copy()
         basis.rotate(a=10.0, v=[0, 0, 0.1 * np.pi])
-        self.assertAlmostEqual(np.arccos(basis.positions[1, :2].sum() / 2) * 180 / np.pi, 10.0)
+        self.assertAlmostEqual(
+            np.arccos(basis.positions[1, :2].sum() / 2) * 180 / np.pi, 10.0
+        )
         basis = unitcell.copy()
         basis.rotate(v=[0, 0, 1], a=0.1)
-        self.assertAlmostEqual(np.arccos(basis.positions[1, :2].sum() / 2) * 180 / np.pi, 0.1)
+        self.assertAlmostEqual(
+            np.arccos(basis.positions[1, :2].sum() / 2) * 180 / np.pi, 0.1
+        )
         basis = unitcell.copy()
         center_of_mass = basis.get_center_of_mass()
         basis.rotate(v=[0, 0, 0.1 * np.pi], center="com")
@@ -497,14 +519,18 @@ class TestAtoms(unittest.TestCase):
         basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2, pbc=True)
         basis *= 2
         basis.set_initial_magnetic_moments(magmoms=np.ones(len(basis)))
-        self.assertTrue(np.allclose(basis.arrays["initial_magmoms"], np.ones(len(basis))))
+        self.assertTrue(
+            np.allclose(basis.arrays["initial_magmoms"], np.ones(len(basis)))
+        )
         self.assertTrue(np.allclose(basis.spins, np.ones(len(basis))))
         # set new magnetic moments with different shape
         basis.set_initial_magnetic_moments(magmoms=np.ones((len(basis), 3)))
         basis.set_repeat(2)
-        self.assertTrue(np.allclose(basis.arrays["initial_magmoms"], np.ones((len(basis), 3))))
+        self.assertTrue(
+            np.allclose(basis.arrays["initial_magmoms"], np.ones((len(basis), 3)))
+        )
         self.assertTrue(np.allclose(basis.spins, np.ones((len(basis), 3))))
-        basis = basis[10: 30]
+        basis = basis[10:30]
         self.assertTrue(np.allclose(basis.spins, np.ones((len(basis), 3))))
         basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2, pbc=True)
         basis.spins = [4]
@@ -513,18 +539,32 @@ class TestAtoms(unittest.TestCase):
         with self.assertRaises(ValueError):
             basis.set_initial_magnetic_moments(magmoms=np.ones(4))
 
-        basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2, pbc=True).repeat([2, 1, 1])
+        basis = Atoms(symbols="Al", positions=pos, cell=cell, a=4.2, pbc=True).repeat(
+            [2, 1, 1]
+        )
         basis.set_initial_magnetic_moments(magmoms=np.ones(len(basis)) * 2)
         basis.spins[0] = 0
         self.assertTrue(np.array_equal(basis.spins, [0.0, 2.0]))
         basis.set_repeat(2)
         self.assertTrue(np.array_equal(basis.spins, np.hstack([0.0, 2.0] * 8)))
-        self.assertRaises(ValueError, basis.set_initial_magnetic_moments, magmoms=[4] * (len(basis) - 1))
-        basis = Atoms(elements=3 * ["Ni"] + ["Fe"], positions=np.random.random((4, 3)), cell=np.eye(3))
-        basis.set_initial_magnetic_moments({'Fe': 1, 'Ni': 2})
+        self.assertRaises(
+            ValueError,
+            basis.set_initial_magnetic_moments,
+            magmoms=[4] * (len(basis) - 1),
+        )
+        basis = Atoms(
+            elements=3 * ["Ni"] + ["Fe"],
+            positions=np.random.random((4, 3)),
+            cell=np.eye(3),
+        )
+        basis.set_initial_magnetic_moments({"Fe": 1, "Ni": 2})
         self.assertEqual(basis.get_initial_magnetic_moments().tolist(), [2, 2, 2, 1])
-        self.assertRaises(ValueError, basis.set_initial_magnetic_moments, {'Fe': 1})
-        basis = Atoms(elements=3 * ["Ni"] + ["Fe"], positions=np.random.random((4, 3)), cell=np.eye(3))
+        self.assertRaises(ValueError, basis.set_initial_magnetic_moments, {"Fe": 1})
+        basis = Atoms(
+            elements=3 * ["Ni"] + ["Fe"],
+            positions=np.random.random((4, 3)),
+            cell=np.eye(3),
+        )
         basis.set_initial_magnetic_moments(1)
         self.assertEqual(basis.get_initial_magnetic_moments().tolist(), [1, 1, 1, 1])
 
@@ -551,7 +591,9 @@ class TestAtoms(unittest.TestCase):
             scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
         )
         O_simple = Atoms(
-            ["O", "O"], cell=10.0 * np.eye(3), scaled_positions=[[0., 0., 0.], [0.5, 0.5, 0.5]]
+            ["O", "O"],
+            cell=10.0 * np.eye(3),
+            scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
         )
         O_parent = O_basis.get_parent_basis()
         self.assertNotEqual(O_basis, O_parent)
@@ -724,10 +766,10 @@ class TestAtoms(unittest.TestCase):
             )
         )
         # Indices set as numpy.int
-        Mg_indices = np.array(basis.select_index("Mg"), dtype=np.int)
+        Mg_indices = np.array(basis.select_index("Mg"), dtype=int)
         for ind in Mg_indices:
             basis.spin[ind] = 1
-        O_indices = np.array(basis.select_index("O"), dtype=np.int)
+        O_indices = np.array(basis.select_index("O"), dtype=int)
         for ind in O_indices:
             basis.spin[ind] = -1
         basis.set_repeat(2)
@@ -753,29 +795,37 @@ class TestAtoms(unittest.TestCase):
         self.assertAlmostEqual(NaCl.get_distance([0, 0, 0], [0, 0, 0.5]), 0.5)
 
     def test_find_neighbors_by_vector(self):
-        basis = Atoms(symbols=2*["Fe"],
-                      scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
-                      cell=np.identity(3),
-                      pbc=True)
-        id_lst = basis.find_neighbors_by_vector([0, 0, 1],
-                                                num_neighbors=14)
+        basis = Atoms(
+            symbols=2 * ["Fe"],
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
+        )
+        id_lst = basis.find_neighbors_by_vector([0, 0, 1], num_neighbors=14)
         self.assertEqual(len(np.unique(np.unique(id_lst, return_counts=True)[1])), 1)
 
     def test_get_neighborhood(self):
         basis = Atoms(
-            "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3), pbc=True
+            "FeFe",
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
         )
         neigh = basis.get_neighborhood([0, 0, 0.1])
         self.assertEqual(neigh.distances[0], 0.1)
 
     def test_get_neighbors(self):
-        basis = Atoms(symbols="FeFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3), pbc=True)
+        basis = Atoms(
+            symbols="FeFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3), pbc=True
+        )
         neigh = basis.get_neighbors(num_neighbors=58)
         self.assertAlmostEqual(neigh.distances[0][0], np.sqrt(3))
         counts = np.unique(neigh.shells[0], return_counts=True)
-        self.assertTrue(np.array_equal(counts[0], np.arange(5)+1))
-        self.assertTrue(np.array_equal(counts[1], np.array([ 8,  6, 12, 24,  8])))
-        basis = Atoms(symbols="FeFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3), pbc=True)
+        self.assertTrue(np.array_equal(counts[0], np.arange(5) + 1))
+        self.assertTrue(np.array_equal(counts[1], np.array([8, 6, 12, 24, 8])))
+        basis = Atoms(
+            symbols="FeFe", positions=[3 * [0], 3 * [1]], cell=2 * np.eye(3), pbc=True
+        )
         basis.pbc = np.array([True, False, False])
         neigh = basis.get_neighbors(num_neighbors=10)
         self.assertAlmostEqual(neigh.distances[0][0], np.sqrt(3))
@@ -791,14 +841,19 @@ class TestAtoms(unittest.TestCase):
         neigh = basis.get_neighbors(num_neighbors=1)
 
     def test_get_neighbors_by_distance(self):
-        basis = Atoms(symbols="FeFeFe", positions=[3 * [0], 3 * [1], [0, 0, 1]], cell=2 * np.eye(3), pbc=True)
+        basis = Atoms(
+            symbols="FeFeFe",
+            positions=[3 * [0], 3 * [1], [0, 0, 1]],
+            cell=2 * np.eye(3),
+            pbc=True,
+        )
         neigh = basis.get_neighbors_by_distance(1.5)
         self.assertEqual(len(neigh.distances[0]), 2)
         self.assertEqual(len(neigh.distances[1]), 4)
         self.assertEqual(len(neigh.distances[2]), 6)
-        self.assertEqual(neigh.distances[0][0], 1.)
+        self.assertEqual(neigh.distances[0][0], 1.0)
         self.assertAlmostEqual(neigh.distances[1][0], np.sqrt(2))
-        self.assertEqual(neigh.distances[2][0], 1.)
+        self.assertEqual(neigh.distances[2][0], 1.0)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             neigh = basis.get_neighbors_by_distance(cutoff_radius=1.5, num_neighbors=5)
@@ -812,28 +867,48 @@ class TestAtoms(unittest.TestCase):
         r_H1 = [dx, dx, 0]
         r_H2 = [-dx, dx, 0]
         unit_cell = 10 * np.eye(3)
-        water = Atoms(elements=['H', 'H', 'O'], positions=[r_H1, r_H2, r_O], cell=unit_cell, pbc=True)
+        water = Atoms(
+            elements=["H", "H", "O"],
+            positions=[r_H1, r_H2, r_O],
+            cell=unit_cell,
+            pbc=True,
+        )
         self.assertIsInstance(water.get_neighbors_by_distance(1.3).indices, list)
         water_new = water[[0, 1]]
-        self.assertTrue(np.array_equal(water_new.get_neighbors_by_distance(1.3).indices, [np.array([]), np.array([])]))
+        self.assertTrue(
+            np.array_equal(
+                water_new.get_neighbors_by_distance(1.3).indices,
+                [np.array([]), np.array([])],
+            )
+        )
 
     def test_get_number_of_neighbors_in_sphere(self):
-        basis = Atoms(symbols="FeFeFe", positions=[3 * [0], 3 * [1], [0, 0, 1]], cell=2 * np.eye(3), pbc=True)
-        num_neighbors_per_atom = basis.get_numbers_of_neighbors_in_sphere(cutoff_radius=2,
-                                                                          width_buffer=0)
+        basis = Atoms(
+            symbols="FeFeFe",
+            positions=[3 * [0], 3 * [1], [0, 0, 1]],
+            cell=2 * np.eye(3),
+            pbc=True,
+        )
+        num_neighbors_per_atom = basis.get_numbers_of_neighbors_in_sphere(
+            cutoff_radius=2, width_buffer=0
+        )
         self.assertEqual(num_neighbors_per_atom[0], 10)
         self.assertEqual(num_neighbors_per_atom[1], 12)
         self.assertEqual(num_neighbors_per_atom[2], 6)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            num_neighbors_per_atom = basis.get_numbers_of_neighbors_in_sphere(cutoff_radius=1.5, num_neighbors=5)
+            num_neighbors_per_atom = basis.get_numbers_of_neighbors_in_sphere(
+                cutoff_radius=1.5, num_neighbors=5
+            )
             self.assertGreaterEqual(len(w), 1)
         self.assertEqual(num_neighbors_per_atom[2], 5)
         with self.assertRaises(ValueError):
             basis.get_numbers_of_neighbors_in_sphere(width_buffer=-1)
 
     def test_get_shell_matrix(self):
-        structure = CrystalStructure(elements='Fe', lattice_constants=2.83, bravais_basis='bcc')
+        structure = CrystalStructure(
+            elements="Fe", lattice_constants=2.83, bravais_basis="bcc"
+        )
         shell_mat_atoms = structure.get_shell_matrix(num_neighbors=8)
         neigh = structure.get_neighbors(num_neighbors=8)
         self.assertEqual(shell_mat_atoms[0].sum(), neigh.get_shell_matrix()[0].sum())
@@ -857,20 +932,26 @@ class TestAtoms(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             self.assertTrue(
-                basis.analyse_ovito_cna_adaptive()["CommonNeighborAnalysis.counts.BCC"] == 2
+                basis.analyse_ovito_cna_adaptive()["CommonNeighborAnalysis.counts.BCC"]
+                == 2
             )
             self.assertGreaterEqual(len(w), 1)
 
     def test_analyse_ovito_centro_symmetry(self):
-        basis = CrystalStructure('Fe', bravais_basis='bcc', lattice_constants=2.8)
+        basis = CrystalStructure("Fe", bravais_basis="bcc", lattice_constants=2.8)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             self.assertTrue(
-                all([np.isclose(v, 0.0) for v in basis.analyse_ovito_centro_symmetry(num_neighbors=8)])
+                all(
+                    [
+                        np.isclose(v, 0.0)
+                        for v in basis.analyse_ovito_centro_symmetry(num_neighbors=8)
+                    ]
+                )
             )
             self.assertGreaterEqual(len(w), 1)
 
-    #@unittest.skip("skip ovito because it is not installed in the test environment")
+    # @unittest.skip("skip ovito because it is not installed in the test environment")
     def test_analyse_ovito_voronoi_volume(self):
         basis = Atoms(
             "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
@@ -887,8 +968,8 @@ class TestAtoms(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             qs, _ = basis.analyse_pyscal_steinhardt_parameter()
-            self.assertLess(np.abs(np.mean(qs[0]) - 0.0363696483726654), 1E-3)
-            self.assertLess(np.abs(np.mean(qs[1]) - 0.5106882308569508), 1E-3)
+            self.assertLess(np.abs(np.mean(qs[0]) - 0.0363696483726654), 1e-3)
+            self.assertLess(np.abs(np.mean(qs[1]) - 0.5106882308569508), 1e-3)
             self.assertGreaterEqual(len(w), 1)
 
     def test_analyse_pyscal_cna_adaptive(self):
@@ -903,11 +984,16 @@ class TestAtoms(unittest.TestCase):
             self.assertGreaterEqual(len(w), 1)
 
     def test_pyscal_centro_symmetry(self):
-        basis = CrystalStructure('Fe', bravais_basis='bcc', lattice_constants=2.8)
+        basis = CrystalStructure("Fe", bravais_basis="bcc", lattice_constants=2.8)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             self.assertTrue(
-                all([np.isclose(v, 0.0) for v in basis.analyse_pyscal_centro_symmetry(num_neighbors=8)])
+                all(
+                    [
+                        np.isclose(v, 0.0)
+                        for v in basis.analyse_pyscal_centro_symmetry(num_neighbors=8)
+                    ]
+                )
             )
             self.assertGreaterEqual(len(w), 1)
 
@@ -952,63 +1038,96 @@ class TestAtoms(unittest.TestCase):
         basis = Atoms(
             "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
         )
-        basis.plot3d(mode='plotly')
+        basis.plot3d(mode="plotly")
 
     def test_find_mic(self):
-        cell = 0.1*(np.random.random((3,3))-0.5)+np.eye(3)
-        basis = Atoms("Fe", positions=[3*[0.5]], cell=cell, pbc=True)
-        v = 2*np.random.random(3)-1
+        cell = 0.1 * (np.random.random((3, 3)) - 0.5) + np.eye(3)
+        basis = Atoms("Fe", positions=[3 * [0.5]], cell=cell, pbc=True)
+        v = 2 * np.random.random(3) - 1
         r = np.linalg.inv(cell.T).dot(v)
         r -= np.rint(r)
-        self.assertTrue(np.isclose(
-            r[0]*cell[0]+r[1]*cell[1]+r[2]*cell[2],
-            basis.find_mic(v, vectors=True)
-        ).all())
-        for v in [np.ones(3), np.ones((3,3)), np.ones((3,3,3))]:
+        self.assertTrue(
+            np.isclose(
+                r[0] * cell[0] + r[1] * cell[1] + r[2] * cell[2],
+                basis.find_mic(v, vectors=True),
+            ).all()
+        )
+        for v in [np.ones(3), np.ones((3, 3)), np.ones((3, 3, 3))]:
             self.assertTrue(np.array_equal(basis.find_mic(v).shape, v.shape))
 
     def test_get_distances_array(self):
-        basis = Atoms("FeFe", positions=[3*[0], 3*[0.9]], cell=np.identity(3), pbc=True)
-        self.assertAlmostEqual(basis.get_distances_array(mic=False)[0, 1], 0.9*np.sqrt(3))
-        self.assertTrue(np.allclose(basis.get_distances_array(p1=0.5*np.ones(3)),
-                                    basis.get_distances_array(p2=0.5*np.ones(3))))
-        self.assertTrue(np.allclose(basis.get_distances_array(vectors=True)[0, 1], -0.1*np.ones(3)))
+        basis = Atoms(
+            "FeFe", positions=[3 * [0], 3 * [0.9]], cell=np.identity(3), pbc=True
+        )
+        self.assertAlmostEqual(
+            basis.get_distances_array(mic=False)[0, 1], 0.9 * np.sqrt(3)
+        )
+        self.assertTrue(
+            np.allclose(
+                basis.get_distances_array(p1=0.5 * np.ones(3)),
+                basis.get_distances_array(p2=0.5 * np.ones(3)),
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                basis.get_distances_array(vectors=True)[0, 1], -0.1 * np.ones(3)
+            )
+        )
 
     def test_repeat_points(self):
-        basis = Atoms("Fe", positions=np.random.rand(3).reshape(-1, 3), cell=np.identity(3))
+        basis = Atoms(
+            "Fe", positions=np.random.rand(3).reshape(-1, 3), cell=np.identity(3)
+        )
         basis.cell[0, 1] = 0.01
         with self.assertRaises(ValueError):
-            basis.repeat_points([0, 0, 0], [2 ,2])
+            basis.repeat_points([0, 0, 0], [2, 2])
         with self.assertRaises(ValueError):
             basis.repeat_points([0, 0], 2)
         v = np.random.rand(3)
         w = basis.repeat_points(v, 3)
         v += np.array([1, 0.01, 0])
-        self.assertAlmostEqual(np.linalg.norm(w-v, axis=-1).min(), 0)
+        self.assertAlmostEqual(np.linalg.norm(w - v, axis=-1).min(), 0)
         v = np.random.rand(6).reshape(-1, 3)
         self.assertEqual(basis.repeat_points(v, 2).shape, (8, 2, 3))
 
     def test_get_extended_positions(self):
-        basis = Atoms("FeFe", positions=[[0.01, 0, 0], [0.5, 0.5, 0.5]], cell=np.identity(3), pbc=True)
+        basis = Atoms(
+            "FeFe",
+            positions=[[0.01, 0, 0], [0.5, 0.5, 0.5]],
+            cell=np.identity(3),
+            pbc=True,
+        )
         with self.assertRaises(ValueError):
             basis.get_extended_positions(-0.1)
-        self.assertTrue(np.array_equal(basis.get_extended_positions(0), basis.positions))
+        self.assertTrue(
+            np.array_equal(basis.get_extended_positions(0), basis.positions)
+        )
 
     def test_cluster_analysis(self):
-        basis = CrystalStructure("Al", bravais_basis="fcc", lattice_constants=4.2).repeat(10)
-        key, counts = basis.cluster_analysis(id_list=[0,1], return_cluster_sizes=True)
-        self.assertTrue(np.array_equal(key[1], [0,1]))
+        basis = CrystalStructure(
+            "Al", bravais_basis="fcc", lattice_constants=4.2
+        ).repeat(10)
+        key, counts = basis.cluster_analysis(id_list=[0, 1], return_cluster_sizes=True)
+        self.assertTrue(np.array_equal(key[1], [0, 1]))
         self.assertEqual(counts[0], 2)
-        key, counts = basis.cluster_analysis(id_list=[0,int(len(basis)/2)], return_cluster_sizes=True)
+        key, counts = basis.cluster_analysis(
+            id_list=[0, int(len(basis) / 2)], return_cluster_sizes=True
+        )
         self.assertTrue(np.array_equal(key[1], [0]))
         self.assertEqual(counts[0], 1)
 
     def test_get_bonds(self):
-        basis = CrystalStructure("Al", bravais_basis="fcc", lattice_constants=4.2).repeat(5)
+        basis = CrystalStructure(
+            "Al", bravais_basis="fcc", lattice_constants=4.2
+        ).repeat(5)
         bonds = basis.get_bonds()
         neigh = basis.get_neighbors()
-        self.assertTrue(np.array_equal(np.sort(bonds[0]['Al'][0]),
-                        np.sort(neigh.indices[0, neigh.shells[0]==1])))
+        self.assertTrue(
+            np.array_equal(
+                np.sort(bonds[0]["Al"][0]),
+                np.sort(neigh.indices[0, neigh.shells[0] == 1]),
+            )
+        )
 
     def test_get_parent_symbols(self):
         self.assertTrue(np.array_equal(self.CO2.get_parent_symbols(), ["C", "O", "O"]))
@@ -1075,30 +1194,39 @@ class TestAtoms(unittest.TestCase):
         with self.assertRaises(ValueError):
             basis_Fe.apply_strain(-2)
         basis_new = basis_Fe.apply_strain(0.01, return_box=True)
-        self.assertAlmostEqual(basis_new.cell[0,0], 2.85*1.01)
-        self.assertAlmostEqual(basis_new.positions[1,0], 0.5*2.85*1.01)
+        self.assertAlmostEqual(basis_new.cell[0, 0], 2.85 * 1.01)
+        self.assertAlmostEqual(basis_new.positions[1, 0], 0.5 * 2.85 * 1.01)
         self.assertAlmostEqual(basis_Fe.cell[0, 0], 2.85)
         basis_Fe.apply_strain(0.01)
-        self.assertAlmostEqual(basis_Fe.cell[0,0], 2.85*1.01)
+        self.assertAlmostEqual(basis_Fe.cell[0, 0], 2.85 * 1.01)
         basis_Fe = CrystalStructure("Fe", bravais_basis="bcc", lattice_constants=2.85)
-        basis_Fe.apply_strain(0.01*np.eye(3))
-        self.assertAlmostEqual(basis_Fe.cell[0,0], 2.85*1.01)
-        self.assertRaises(ValueError, basis_Fe.apply_strain, epsilon=np.eye(3), mode='hello')
+        basis_Fe.apply_strain(0.01 * np.eye(3))
+        self.assertAlmostEqual(basis_Fe.cell[0, 0], 2.85 * 1.01)
+        self.assertRaises(
+            ValueError, basis_Fe.apply_strain, epsilon=np.eye(3), mode="hello"
+        )
         self.assertRaises(
             ValueError,
-            basis_Fe.apply_strain, epsilon=np.random.random((3,3)), mode='lagrangian'
+            basis_Fe.apply_strain,
+            epsilon=np.random.random((3, 3)),
+            mode="lagrangian",
         )
         basis_Fe = CrystalStructure("Fe", bravais_basis="bcc", lattice_constants=2.85)
-        self.assertTrue(np.allclose(basis_Fe.apply_strain(
-            0.01, return_box=True, mode='lagrangian'
-        ).analyse.get_strain(basis_Fe)[0], 0.01*np.eye(3)))
+        self.assertTrue(
+            np.allclose(
+                basis_Fe.apply_strain(
+                    0.01, return_box=True, mode="lagrangian"
+                ).analyse.get_strain(basis_Fe)[0],
+                0.01 * np.eye(3),
+            )
+        )
 
     def test_get_spherical_coordinates(self):
         basis_Fe = CrystalStructure("Fe", bravais_basis="bcc", lattice_constants=2.85)
         x = basis_Fe.get_spherical_coordinates([0, 0, 0])
         self.assertAlmostEqual(x[0, 0], 0)
         x = basis_Fe.get_spherical_coordinates()
-        self.assertAlmostEqual(x[1, 2], 0.25*np.pi)
+        self.assertAlmostEqual(x[1, 2], 0.25 * np.pi)
 
     def test_get_initial_magnetic_moments(self):
         pt = PeriodicTable()
@@ -1109,7 +1237,9 @@ class TestAtoms(unittest.TestCase):
             scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
             cell=2.6 * np.eye(3),
         )
-        self.assertTrue(np.array_equal(basis.get_initial_magnetic_moments(), ["0.5"] * 2))
+        self.assertTrue(
+            np.array_equal(basis.get_initial_magnetic_moments(), ["0.5"] * 2)
+        )
 
     def test_occupy_lattice(self):
         basis_Mg = CrystalStructure("Mg", bravais_basis="fcc", lattice_constant=4.2)
@@ -1272,7 +1402,9 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(basis.get_spacegroup()["Number"], 225)
         # Adding an ASE instance to a pyiron instance
         ase_basis = ASEAtoms("O", scaled_positions=[[0, 0, 0]], cell=np.eye(3) * 10)
-        pyiron_basis = Atoms("O", scaled_positions=[[0.5, 0.5, 0.5]], cell=np.eye(3) * 10)
+        pyiron_basis = Atoms(
+            "O", scaled_positions=[[0.5, 0.5, 0.5]], cell=np.eye(3) * 10
+        )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             pyiron_basis += ase_basis
@@ -1286,7 +1418,9 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(len(w), 1)
         pyiron_basis += ase_basis[0]
         self.assertEqual(len(pyiron_basis), 3)
-        pyiron_basis = Atoms("O", scaled_positions=[[0.5, 0.5, 0.5]], cell=np.eye(3) * 10, pbc=True)
+        pyiron_basis = Atoms(
+            "O", scaled_positions=[[0.5, 0.5, 0.5]], cell=np.eye(3) * 10, pbc=True
+        )
         larger_cell = pyiron_basis.repeat(2)
         larger_cell.positions += 2.5
         with warnings.catch_warnings(record=True) as w:
@@ -1294,25 +1428,27 @@ class TestAtoms(unittest.TestCase):
             larger_cell += pyiron_basis
             self.assertEqual(len(w), 1)
         basis_1 = Atoms("O", scaled_positions=[[0.5, 0.5, 0.5]], cell=np.eye(3) * 10)
-        basis_2 = Atoms("O", scaled_positions=[[0., 0.5, 0.5]], cell=np.eye(3) * 10, pbc=True)
+        basis_2 = Atoms(
+            "O", scaled_positions=[[0.0, 0.5, 0.5]], cell=np.eye(3) * 10, pbc=True
+        )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             basis_1 += basis_2
             self.assertEqual(len(w), 1)
         a_0 = 2.86
-        structure = self.struct_factory.crystal('Fe', 'bcc', a_0)
-        carbon = Atoms(symbols=['C'], positions=[[0, 0, 0.5 * a_0]])
+        structure = self.struct_factory.crystal("Fe", "bcc", a_0)
+        carbon = Atoms(symbols=["C"], positions=[[0, 0, 0.5 * a_0]])
         structure += carbon
         self.assertEqual(carbon.indices[0], 0)
 
     def test_append(self):
         a_0 = 2.86
-        structure = self.struct_factory.crystal('Fe', 'bcc', a_0)
-        carbon = Atoms(symbols=['C'], positions=[[0, 0, 0.5 * a_0]], pbc=True)
+        structure = self.struct_factory.crystal("Fe", "bcc", a_0)
+        carbon = Atoms(symbols=["C"], positions=[[0, 0, 0.5 * a_0]], pbc=True)
         with warnings.catch_warnings(record=True) as w:
             structure.append(carbon)
             self.assertEqual(len(w), 0)
-            structure = self.struct_factory.crystal('Fe', 'bcc', a_0)
+            structure = self.struct_factory.crystal("Fe", "bcc", a_0)
             carbon.cell = np.random.rand(3)
             structure.append(carbon)
             self.assertEqual(len(w), 1)
@@ -1462,46 +1598,54 @@ class TestAtoms(unittest.TestCase):
         basis_Mg = CrystalStructure("Mg", bravais_basis="fcc", lattice_constant=4.2)
         basis_Mg.set_repeat(3)
         basis_Mg[:-3] = "Al"
-        self.assertEqual(basis_Mg.get_chemical_formula(), 'Al105Mg3')
-        basis_Mg[4:-len(basis_Mg)+7] = "C"
-        self.assertEqual(basis_Mg.get_chemical_formula(), 'Al102C3Mg3')
+        self.assertEqual(basis_Mg.get_chemical_formula(), "Al105Mg3")
+        basis_Mg[4 : -len(basis_Mg) + 7] = "C"
+        self.assertEqual(basis_Mg.get_chemical_formula(), "Al102C3Mg3")
         basis_Mg[4:] = "C"
-        self.assertEqual(basis_Mg.get_chemical_formula(), 'Al4C104')
+        self.assertEqual(basis_Mg.get_chemical_formula(), "Al4C104")
         basis_Mg[:] = "Mg"
-        self.assertEqual(basis_Mg.get_chemical_formula(), 'Mg108')
+        self.assertEqual(basis_Mg.get_chemical_formula(), "Mg108")
         basis_Mg[::2] = "Al"
-        self.assertEqual(basis_Mg.get_chemical_formula(), 'Al54Mg54')
-        struct = CrystalStructure("Al", bravais_basis="fcc", lattice_constant=4.2, bravais_lattice="cubic")
-        struct[0] = 'Mg'
-        self.assertEqual(struct.get_chemical_formula(), 'Al3Mg')
-        struct[1] = 'Cu'
-        self.assertEqual(struct.get_chemical_formula(), 'Al2CuMg')
-        struct[0] = 'Cu'
-        struct[1] = 'Cu'
-        struct[2] = 'Cu'
-        struct[3] = 'Cu'
-        self.assertEqual(struct.get_chemical_formula(), 'Cu4')
-        struct = CrystalStructure("Al", bravais_basis="fcc", lattice_constant=4.2, bravais_lattice="cubic")
-        struct[0] = 'Mg'
-        self.assertEqual(struct.get_chemical_formula(), 'Al3Mg')
-        struct[1] = 'Cu'
-        self.assertEqual(struct.get_chemical_formula(), 'Al2CuMg')
-        struct[0:] = 'N'
-        self.assertEqual(struct.get_chemical_formula(), 'N4')
-        struct = CrystalStructure("Al", bravais_basis="fcc", lattice_constant=4.2, bravais_lattice="cubic")
-        struct[0] = 'Mg'
-        self.assertEqual(struct.get_chemical_formula(), 'Al3Mg')
-        struct[1] = 'Cu'
-        self.assertEqual(struct.get_chemical_formula(), 'Al2CuMg')
-        struct[0:] = 'Cu'
-        self.assertEqual(struct.get_chemical_formula(), 'Cu4')
-        struct = CrystalStructure("Al", bravais_basis="fcc", lattice_constant=4.2, bravais_lattice="cubic")
-        struct[0] = 'Mg'
-        self.assertEqual(struct.get_chemical_formula(), 'Al3Mg')
-        struct[1] = 'Cu'
-        self.assertEqual(struct.get_chemical_formula(), 'Al2CuMg')
-        struct[0:] = 'Mg'
-        self.assertEqual(struct.get_chemical_formula(), 'Mg4')
+        self.assertEqual(basis_Mg.get_chemical_formula(), "Al54Mg54")
+        struct = CrystalStructure(
+            "Al", bravais_basis="fcc", lattice_constant=4.2, bravais_lattice="cubic"
+        )
+        struct[0] = "Mg"
+        self.assertEqual(struct.get_chemical_formula(), "Al3Mg")
+        struct[1] = "Cu"
+        self.assertEqual(struct.get_chemical_formula(), "Al2CuMg")
+        struct[0] = "Cu"
+        struct[1] = "Cu"
+        struct[2] = "Cu"
+        struct[3] = "Cu"
+        self.assertEqual(struct.get_chemical_formula(), "Cu4")
+        struct = CrystalStructure(
+            "Al", bravais_basis="fcc", lattice_constant=4.2, bravais_lattice="cubic"
+        )
+        struct[0] = "Mg"
+        self.assertEqual(struct.get_chemical_formula(), "Al3Mg")
+        struct[1] = "Cu"
+        self.assertEqual(struct.get_chemical_formula(), "Al2CuMg")
+        struct[0:] = "N"
+        self.assertEqual(struct.get_chemical_formula(), "N4")
+        struct = CrystalStructure(
+            "Al", bravais_basis="fcc", lattice_constant=4.2, bravais_lattice="cubic"
+        )
+        struct[0] = "Mg"
+        self.assertEqual(struct.get_chemical_formula(), "Al3Mg")
+        struct[1] = "Cu"
+        self.assertEqual(struct.get_chemical_formula(), "Al2CuMg")
+        struct[0:] = "Cu"
+        self.assertEqual(struct.get_chemical_formula(), "Cu4")
+        struct = CrystalStructure(
+            "Al", bravais_basis="fcc", lattice_constant=4.2, bravais_lattice="cubic"
+        )
+        struct[0] = "Mg"
+        self.assertEqual(struct.get_chemical_formula(), "Al3Mg")
+        struct[1] = "Cu"
+        self.assertEqual(struct.get_chemical_formula(), "Al2CuMg")
+        struct[0:] = "Mg"
+        self.assertEqual(struct.get_chemical_formula(), "Mg4")
 
     def test_static_functions(self):
         Al_bulk = self.struct_factory.ase_bulk("Al")
@@ -1509,18 +1653,22 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(all(Al_bulk.pbc))
         surface = self.struct_factory.surface("Al", "fcc111", size=(4, 4, 4), vacuum=10)
         self.assertTrue(all(surface.pbc))
-        surface = self.struct_factory.surface("Al", "fcc111", size=(4, 4, 4), vacuum=10, pbc=[True, True, False])
+        surface = self.struct_factory.surface(
+            "Al", "fcc111", size=(4, 4, 4), vacuum=10, pbc=[True, True, False]
+        )
         self.assertTrue(all(surface.pbc[0:2]))
         self.assertFalse(surface.pbc[2])
         self.assertIsInstance(surface, Atoms)
-        hkl_surface = self.struct_factory.surface_hkl(Al_bulk, [10, 8, 7], layers=20, vacuum=10)
+        hkl_surface = self.struct_factory.surface_hkl(
+            Al_bulk, [10, 8, 7], layers=20, vacuum=10
+        )
         self.assertIsInstance(hkl_surface, Atoms)
         self.assertTrue(all(hkl_surface.pbc))
         hkl_surface_center = self.struct_factory.surface_hkl(
             Al_bulk, [10, 8, 7], layers=20, vacuum=10, center=True
         )
         mean_z = np.mean([p[2] for p in hkl_surface_center.positions])
-        self.assertAlmostEqual(mean_z, hkl_surface_center.cell[2][2]/2)
+        self.assertAlmostEqual(mean_z, hkl_surface_center.cell[2][2] / 2)
 
     def test_non_periodic(self):
         structure = CrystalStructure("Fe", bravais_basis="bcc", lattice_constant=4.2)
@@ -1531,7 +1679,9 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(np.allclose(pos, pos_new))
         c3 = Atoms("C3", positions=[[0, 0, 0], [0, 0, 2], [0, 2, 0]])
         c3.get_scaled_positions()
-        c3 = Atoms("C3", positions=[[0, 0, 0], [0, 0, 2], [0, 2, 0]], cell=np.eye(3)*10)
+        c3 = Atoms(
+            "C3", positions=[[0, 0, 0], [0, 0, 2], [0, 2, 0]], cell=np.eye(3) * 10
+        )
         c3.get_scaled_positions()
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -1539,38 +1689,45 @@ class TestAtoms(unittest.TestCase):
             self.assertEqual(len(w), 0)
 
     def test_get_wrapped_coordinates(self):
-        structure = CrystalStructure("Fe", bravais_basis="bcc", lattice_constant=4.2, pbc=True)
-        position = structure.get_wrapped_coordinates(structure.cell*1.1)
-        self.assertAlmostEqual(
-            np.linalg.norm(position-structure.cell*0.1), 0
+        structure = CrystalStructure(
+            "Fe", bravais_basis="bcc", lattice_constant=4.2, pbc=True
         )
+        position = structure.get_wrapped_coordinates(structure.cell * 1.1)
+        self.assertAlmostEqual(np.linalg.norm(position - structure.cell * 0.1), 0)
 
     def test_is_skewed(self):
-        structure = CrystalStructure("Fe", bravais_basis="bcc", lattice_constant=4.2, pbc=True)
-        self.assertFalse(
-            structure.is_skewed(), "is_skewed() returned True, while structure is not skewed"
+        structure = CrystalStructure(
+            "Fe", bravais_basis="bcc", lattice_constant=4.2, pbc=True
         )
-        structure.cell[0,0] += 0.01
         self.assertFalse(
-            structure.is_skewed(), "is_skewed() returned True, while structure is not skewed"
+            structure.is_skewed(),
+            "is_skewed() returned True, while structure is not skewed",
         )
-        structure.cell[1,0] += 0.01
+        structure.cell[0, 0] += 0.01
+        self.assertFalse(
+            structure.is_skewed(),
+            "is_skewed() returned True, while structure is not skewed",
+        )
+        structure.cell[1, 0] += 0.01
         self.assertTrue(
-            structure.is_skewed(), "is_skewed() returned False, while structure is skewed"
+            structure.is_skewed(),
+            "is_skewed() returned False, while structure is skewed",
         )
 
     @staticmethod
     def test_set_dihedral():
-        structure = ase_to_pyiron(molecule('H2COH'))
+        structure = ase_to_pyiron(molecule("H2COH"))
         structure.set_dihedral(4, 0, 1, 2, angle=90)
 
     def test_str_repr(self):
-        H2 = Atoms(positions=[3*[0], 3*[0.5]], cell=np.eye(3), elements=2*['H'], pbc=True)
+        H2 = Atoms(
+            positions=[3 * [0], 3 * [0.5]], cell=np.eye(3), elements=2 * ["H"], pbc=True
+        )
         self.assertEqual(
             repr(H2),
-            'H: [0. 0. 0.]\nH: [0.5 0.5 0.5]\npbc: [ True  True  True]\ncell: \nCell([1.0, 1.0, 1.0])\n'
+            "H: [0. 0. 0.]\nH: [0.5 0.5 0.5]\npbc: [ True  True  True]\ncell: \nCell([1.0, 1.0, 1.0])\n",
         )
-        self.assertEqual(str(H2), 'H2')
+        self.assertEqual(str(H2), "H2")
 
     def test_cached_speed(self):
         """
@@ -1580,7 +1737,7 @@ class TestAtoms(unittest.TestCase):
         # Caution: This is essentially deactivating this test! Real test in Benchmarks.
         expected_speedup_factor = -15
         n_timing_loop = 1
-        t1, t2, t3, t4, t5, t6, t7 = [np.array([0.0]*n_timing_loop) for _ in range(7)]
+        t1, t2, t3, t4, t5, t6, t7 = [np.array([0.0] * n_timing_loop) for _ in range(7)]
         for i in range(n_timing_loop):
             element.cache_clear()
             PeriodicTable._get_periodic_table_df.cache_clear()
@@ -1591,29 +1748,46 @@ class TestAtoms(unittest.TestCase):
             t3[i] = time.perf_counter()
             Atoms(symbols="Cu", positions=pos, cell=cell)
             t4[i] = time.perf_counter()
-            Atoms(symbols="CuAl", positions=[[0., 0., 0.], [0.5, 0.5, 0.5]], cell=cell)
+            Atoms(
+                symbols="CuAl", positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]], cell=cell
+            )
             t5[i] = time.perf_counter()
-            Atoms(symbols="MgO", positions=[[0., 0., 0.], [0.5, 0.5, 0.5]], cell=cell)
+            Atoms(
+                symbols="MgO", positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]], cell=cell
+            )
             t6[i] = time.perf_counter()
-            Atoms(symbols="AlMgO", positions=[[0., 0., 0.], [0.5, 0.5, 0.5], [0.5, 0.5, 0.]], cell=cell)
+            Atoms(
+                symbols="AlMgO",
+                positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.5, 0.5, 0.0]],
+                cell=cell,
+            )
             t7[i] = time.perf_counter()
         dt21 = np.mean(t2 - t1)
         dt32 = np.mean(t3 - t2)
         # check the simple case of structures with one element type
         self.assertGreater(dt21, dt32, "Atom creation not speed up by caches!")
-        self.assertGreater(dt21 / dt32, expected_speedup_factor,
-                           "Atom creation not speed up to the required level by caches!")
+        self.assertGreater(
+            dt21 / dt32,
+            expected_speedup_factor,
+            "Atom creation not speed up to the required level by caches!",
+        )
         dt43 = np.mean(t4 - t3)
         dt54 = np.mean(t5 - t4)
         # check that speed up also holds when creating structures with multiple elements, but all the elements have been
         # seen before
-        self.assertGreater(dt43 / dt54, expected_speedup_factor,
-                            "Atom creation not speed up to the required level by caches!")
+        self.assertGreater(
+            dt43 / dt54,
+            expected_speedup_factor,
+            "Atom creation not speed up to the required level by caches!",
+        )
         dt65 = np.mean(t6 - t5)
         dt76 = np.mean(t7 - t6)
         # check that again with three elements
-        self.assertGreater(dt65 / dt76, expected_speedup_factor,
-                            "Atom creation not speed up to the required level by caches!")
+        self.assertGreater(
+            dt65 / dt76,
+            expected_speedup_factor,
+            "Atom creation not speed up to the required level by caches!",
+        )
 
     def test_pymatgen_to_pyiron_conversion(self):
         """
@@ -1625,9 +1799,10 @@ class TestAtoms(unittest.TestCase):
         4. Checks if other tags are affected when sel dyn is not present (magmom is checked)
         """
 
-        coords = [[0, 0, 0], [0.75,0.5,0.75]]
-        lattice = Lattice.from_parameters(a=4.2, b=4.2, c=4.2, alpha=120,
-                                        beta=90, gamma=60)
+        coords = [[0, 0, 0], [0.75, 0.5, 0.75]]
+        lattice = Lattice.from_parameters(
+            a=4.2, b=4.2, c=4.2, alpha=120, beta=90, gamma=60
+        )
         struct = Structure(lattice, ["Fe", "Fe"], coords)
 
         # First test make sure it actually works for structures without sel-dyn
@@ -1635,52 +1810,70 @@ class TestAtoms(unittest.TestCase):
 
         # Check that it doesn't have any selective dynamics tags attached when it shouldn't
         self.assertFalse(
-            hasattr(pyiron_atoms_no_sd, "selective_dynamics"), "It's adding selective dynamics after conversion even when original object doesn't have it"
+            hasattr(pyiron_atoms_no_sd, "selective_dynamics"),
+            "It's adding selective dynamics after conversion even when original object doesn't have it",
         )
 
         # Second test for equivalence in selective dynamics tags in pyiron Atoms vs pymatgen Structure
 
         struct_with_sd = struct.copy()
         new_site_properties = struct.site_properties
-        new_site_properties['selective_dynamics'] = [[True, False, False] for site in struct]
-        struct_with_sd = struct.copy(site_properties = new_site_properties)
+        new_site_properties["selective_dynamics"] = [
+            [True, False, False] for site in struct
+        ]
+        struct_with_sd = struct.copy(site_properties=new_site_properties)
 
         pyiron_atoms_sd = pymatgen_to_pyiron(struct_with_sd)
 
-        sd_equivalent = struct_with_sd.site_properties["selective_dynamics"] == [x.selective_dynamics for x in pyiron_atoms_sd]
+        sd_equivalent = struct_with_sd.site_properties["selective_dynamics"] == [
+            x.selective_dynamics for x in pyiron_atoms_sd
+        ]
         self.assertTrue(
-            sd_equivalent, "Failed equivalence test of selective dynamics tags after conversion"\
+            sd_equivalent,
+            "Failed equivalence test of selective dynamics tags after conversion",
         )
-        
+
         # Third test make sure no tags are erased (e.g. magmom) if selective dynamics are present
         new_site_properties = struct.site_properties
-        new_site_properties['selective_dynamics'] = [[True, False, False] for site in struct]
-        new_site_properties['magmom'] = [0.61 for site in struct]
-        new_site_properties['magmom'][1] = 3.0
-        struct_with_sd_magmom = struct.copy(site_properties = new_site_properties)
+        new_site_properties["selective_dynamics"] = [
+            [True, False, False] for site in struct
+        ]
+        new_site_properties["magmom"] = [0.61 for site in struct]
+        new_site_properties["magmom"][1] = 3.0
+        struct_with_sd_magmom = struct.copy(site_properties=new_site_properties)
         pyiron_atoms_sd_magmom = pymatgen_to_pyiron(struct_with_sd_magmom)
-        magmom_equivalent = struct_with_sd_magmom.site_properties["magmom"] == [x.spin for x in pyiron_atoms_sd_magmom]
-        sd_equivalent = struct_with_sd_magmom.site_properties["selective_dynamics"] == [x.selective_dynamics for x in pyiron_atoms_sd_magmom]
+        magmom_equivalent = struct_with_sd_magmom.site_properties["magmom"] == [
+            x.spin for x in pyiron_atoms_sd_magmom
+        ]
+        sd_equivalent = struct_with_sd_magmom.site_properties["selective_dynamics"] == [
+            x.selective_dynamics for x in pyiron_atoms_sd_magmom
+        ]
         self.assertTrue(
-            magmom_equivalent, "Failed equivalence test of magnetic moment tags if selective dynamics present after conversion (it's messing with other site-specific properties)"\
+            magmom_equivalent,
+            "Failed equivalence test of magnetic moment tags if selective dynamics present after conversion (it's messing with other site-specific properties)",
         )
         self.assertTrue(
-            sd_equivalent, "Failed equivalence test of selective dynamics tags if magmom site property is also present"\
+            sd_equivalent,
+            "Failed equivalence test of selective dynamics tags if magmom site property is also present",
         )
 
         # Fourth test, make sure if other traits are present (e.g. magmom) but no sel dyn, the conversion works properly (check if magmom is transferred)
         new_site_properties = struct.site_properties
-        new_site_properties['magmom'] = [0.61 for site in struct]
-        new_site_properties['magmom'][1] = 3.0
-        struct_with_magmom = struct.copy(site_properties = new_site_properties)
+        new_site_properties["magmom"] = [0.61 for site in struct]
+        new_site_properties["magmom"][1] = 3.0
+        struct_with_magmom = struct.copy(site_properties=new_site_properties)
         pyiron_atoms_magmom = pymatgen_to_pyiron(struct_with_magmom)
-        magmom_equivalent = struct_with_magmom.site_properties["magmom"] == [x.spin for x in pyiron_atoms_magmom]
+        magmom_equivalent = struct_with_magmom.site_properties["magmom"] == [
+            x.spin for x in pyiron_atoms_magmom
+        ]
         self.assertTrue(
-            magmom_equivalent, "Failed to convert site-specific properties (checked magmom spin) when no selective dynamics was present)"\
+            magmom_equivalent,
+            "Failed to convert site-specific properties (checked magmom spin) when no selective dynamics was present)",
         )
         # Make sure no sel dyn tags are added unnecessarily
         self.assertFalse(
-            hasattr(pyiron_atoms_magmom, "selective_dynamics"), "selective dynamics are added when there was none in original pymatgen Structure"
+            hasattr(pyiron_atoms_magmom, "selective_dynamics"),
+            "selective dynamics are added when there was none in original pymatgen Structure",
         )
 
     def test_pyiron_to_pymatgen_conversion(self):
@@ -1693,54 +1886,58 @@ class TestAtoms(unittest.TestCase):
         3. Checks if other tags are affected when sel dyn is present (magmom is checked)
         4. Checks if other tags are affected when sel dyn is not present (magmom is checked)
         """
-        pyiron_atoms = StructureFactory().bulk(name = "Fe", crystalstructure = "bcc", a = 4.182) * [1,2,1]
-        
+        pyiron_atoms = StructureFactory().bulk(
+            name="Fe", crystalstructure="bcc", a=4.182
+        ) * [1, 2, 1]
+
         # First, check conversion actually works
         struct = pyiron_to_pymatgen(pyiron_atoms)
         # Ensure no random selective dynamics are added
-        self.assertFalse(
-            "selective_dynamics" in struct.site_properties
-        )
+        self.assertFalse("selective_dynamics" in struct.site_properties)
 
         # Second, ensure that when only sel_dyn is present (no other site-props present), conversion works
         pyiron_atoms_sd = pyiron_atoms.copy()
-        pyiron_atoms_sd.add_tag(selective_dynamics = [False, True, True])
+        pyiron_atoms_sd.add_tag(selective_dynamics=[False, True, True])
         pyiron_atoms_sd.selective_dynamics[1] = [True, False, False]
 
         struct_sd = pyiron_to_pymatgen(pyiron_atoms_sd)
         self.assertTrue(
-            struct_sd.site_properties["selective_dynamics"] == [x.selective_dynamics for x in pyiron_atoms_sd],\
-            "Failed to produce equivalent selective dynamics after conversion!"
+            struct_sd.site_properties["selective_dynamics"]
+            == [x.selective_dynamics for x in pyiron_atoms_sd],
+            "Failed to produce equivalent selective dynamics after conversion!",
         )
 
         # Third, ensure when magnetic moment is present without selective dynamics, conversion works and magmom is transferred
         pyiron_atoms_magmom = pyiron_atoms.copy()
-        pyiron_atoms_magmom.add_tag(spin = 0.61)
+        pyiron_atoms_magmom.add_tag(spin=0.61)
         pyiron_atoms_magmom.spin[1] = 3
 
         struct_magmom = pyiron_to_pymatgen(pyiron_atoms_magmom)
         self.assertTrue(
-            struct_magmom.site_properties["magmom"] == [x.spin for x in pyiron_atoms_magmom],\
-            "Failed to produce equivalent magmom when only magmom and no sel_dyn are present!"
+            struct_magmom.site_properties["magmom"]
+            == [x.spin for x in pyiron_atoms_magmom],
+            "Failed to produce equivalent magmom when only magmom and no sel_dyn are present!",
         )
         self.assertFalse(
-            "selective_dynamics" in struct_magmom.site_properties,\
-            "Failed because selective dynamics was randomly added after conversion!"
+            "selective_dynamics" in struct_magmom.site_properties,
+            "Failed because selective dynamics was randomly added after conversion!",
         )
 
         # Fourth, ensure when both magmom and sd are present, conversion works and magmom+selective dynamics are transferred properly
         pyiron_atoms_sd_magmom = pyiron_atoms_sd.copy()
-        pyiron_atoms_sd_magmom.add_tag(spin = 0.61)
+        pyiron_atoms_sd_magmom.add_tag(spin=0.61)
         pyiron_atoms_sd_magmom.spin[1] = 3
 
         struct_sd_magmom = pyiron_to_pymatgen(pyiron_atoms_sd_magmom)
         self.assertTrue(
-            struct_sd_magmom.site_properties["magmom"] == [x.spin for x in pyiron_atoms_sd_magmom],\
-            "Failed to produce equivalent magmom when both magmom + sel_dyn are present!"
+            struct_sd_magmom.site_properties["magmom"]
+            == [x.spin for x in pyiron_atoms_sd_magmom],
+            "Failed to produce equivalent magmom when both magmom + sel_dyn are present!",
         )
         self.assertTrue(
-            struct_sd_magmom.site_properties["selective_dynamics"] == [x.selective_dynamics for x in pyiron_atoms_sd_magmom],\
-            "Failed to produce equivalent sel_dyn when both magmom + sel_dyn are present!"
+            struct_sd_magmom.site_properties["selective_dynamics"]
+            == [x.selective_dynamics for x in pyiron_atoms_sd_magmom],
+            "Failed to produce equivalent sel_dyn when both magmom + sel_dyn are present!",
         )
 
     def test_calc_to_hdf(self):
@@ -1751,10 +1948,11 @@ class TestAtoms(unittest.TestCase):
         read_structure = self.hdf_obj["structure_w_calc"].to_object()
         for k in structure.calc.parameters:
             self.assertEqual(
-                    structure.calc.parameters[k],
-                    read_structure.calc.parameters[k],
-                    msg=f"Calculator parameter {k} not correctly restored from HDF!"
+                structure.calc.parameters[k],
+                read_structure.calc.parameters[k],
+                msg=f"Calculator parameter {k} not correctly restored from HDF!",
             )
+
 
 def generate_fcc_lattice(a=4.2):
     positions = [[0, 0, 0]]
