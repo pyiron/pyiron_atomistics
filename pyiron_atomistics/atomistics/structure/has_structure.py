@@ -193,13 +193,9 @@ class HasStructure(ABC):
         )
 
         store = StructureStorage()
-        if filter_function is None:
-            for structure in self.iter_structures():
+        for structure in self.iter_structures():
+            if filter_function is None or filter_function(structure):
                 store.add_structure(structure)
-        else:
-            for structure in self.iter_structures():
-                if filter_function(structure):
-                    store.add_structure(structure)
         return store
 
     @nglview_alarm
