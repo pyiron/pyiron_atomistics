@@ -47,7 +47,6 @@ class Vasprun(object):
 
     def __init__(self):
         self.vasprun_dict = dict()
-        self.root = None
 
     def from_file(self, filename="vasprun.xml"):
         """
@@ -59,19 +58,18 @@ class Vasprun(object):
         if not (os.path.isfile(filename)):
             raise AssertionError()
         try:
-            self.root = ETree.parse(filename).getroot()
+            root = ETree.parse(filename).getroot()
         except ParseError:
             raise VasprunError(
                 "The vasprun.xml file is either corrupted or the simulation has failed"
             )
 
-        self.parse_root_to_dict()
+        self.parse_root_to_dict(root)
 
-    def parse_root_to_dict(self):
+    def parse_root_to_dict(self, root):
         """
         Parses from the main xml root.
         """
-        node = self.root
         d = self.vasprun_dict
         d["scf_energies"] = list()
         d["scf_fr_energies"] = list()
@@ -84,7 +82,7 @@ class Vasprun(object):
         d["total_fr_energies"] = list()
         d["total_0_energies"] = list()
         d["stress_tensors"] = list()
-        for leaf in node:
+        for leaf in root:
             if leaf.tag in ["generator", "incar"]:
                 d[leaf.tag] = dict()
                 for items in leaf:
