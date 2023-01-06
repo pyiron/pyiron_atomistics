@@ -3,8 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from abc import ABC, abstractmethod, abstractproperty
+from typing import Callable
 import numbers
 from pyiron_base import deprecate, ImportAlarm
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 with ImportAlarm("Animation of atomic structures requires nglview") as nglview_alarm:
     import nglview
@@ -158,6 +160,44 @@ class HasStructure(ABC):
         for i in range(self.number_of_structures):
             yield self._get_structure(frame=i, wrap_atoms=wrap_atoms)
 
+    def transform_structures(self, modify) -> "TransformStructure":
+        """
+        Return a modified object by applying a function to each object lazily.
+
+        Args:
+            modify (function): applied to each structure, has to return the modified structure
+
+        Returns:
+            :class:`.TransformStructure`: a container with the modified structures
+        """
+        return TransformStructure(self, modify)
+
+    def collect_structures(self, filter_function=None) -> "StructureStorage":
+        """
+        Collects a copy of all structures in a compact :class:`.StructureStorage`.
+
+        This can be used to force lazily applied modifications with :meth:`.transform_structures` or simply to obtain a
+        known object type from a generic :class:`.HasStructure` object.
+
+        Args:
+            filter_function (function): include structure only if this function returns True for it
+
+        Returns:
+            :class:`.StructureStorage`: a copy of all (filtered) structures
+        """
+        # breaks cyclical import
+        # this is a bit annoying, but I want to give users an entry point to using StructureStorage without having to
+        # import it
+        from pyiron_atomistics.atomistics.structure.structurestorage import (
+            StructureStorage,
+        )
+
+        store = StructureStorage()
+        for structure in self.iter_structures():
+            if filter_function is None or filter_function(structure):
+                store.add_structure(structure)
+        return store
+
     @nglview_alarm
     def animate_structures(
         self,
@@ -195,6 +235,27 @@ class HasStructure(ABC):
             animation.add_unitcell()
         animation.camera = camera
         return animation
+
+
+class TransformStructure(HasStructure):
+    """
+    Modifies any HasStructure by applying a function to each structure lazily.
+    """
+
+    __slots__ = ("_source", "_modify")
+
+    def __init__(self, source: HasStructure, modify: Callable[[Atoms], Atoms]):
+        self._source = source
+        self._modify = modify
+
+    def _number_of_structures(self):
+        return self._source._number_of_structures()
+
+    def _translate_frame(self, frame):
+        return self._source._translate_frame(frame)
+
+    def _get_structure(self, frame=-1, wrap_atoms=True):
+        return self._modify(self._source._get_structure(frame, wrap_atoms=wrap_atoms))
 
 
 class _TrajectoryAdapter:

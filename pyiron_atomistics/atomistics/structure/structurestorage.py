@@ -17,7 +17,7 @@ from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.symmetry import SymmetryError
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
-from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+import pyiron_atomistics.atomistics.structure.has_structure as pa_has_structure
 
 with ImportAlarm(
     "Some plotting functionality requires the seaborn library."
@@ -25,7 +25,7 @@ with ImportAlarm(
     import seaborn as sns
 
 
-class StructureStorage(FlattenedStorage, HasStructure):
+class StructureStorage(FlattenedStorage, pa_has_structure.HasStructure):
     """
     Class that can write and read lots of structures from and to hdf quickly.
 
