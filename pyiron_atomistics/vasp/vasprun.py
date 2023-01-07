@@ -66,8 +66,6 @@ class Vasprun(object):
                 "The vasprun.xml file is either corrupted or the simulation has failed"
             )
 
-        self.parse_root_to_dict(root)
-
     def parse_root_to_dict(self, filename):
         """
         Parses from the main xml root.
