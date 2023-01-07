@@ -58,8 +58,6 @@ class Vasprun(object):
         if not (os.path.isfile(filename)):
             raise AssertionError()
         try:
-            
-            #root = ETree.parse(filename).getroot()
             self.parse_root_to_dict(filename)
         except ParseError:
             raise VasprunError(
