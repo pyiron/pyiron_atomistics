@@ -30,7 +30,21 @@ class GenericDFTJob(AtomisticGenericJob):
         self._generic_input["k_mesh_spacing"] = None
         self._generic_input["k_mesh_center_shift"] = None
         self._generic_input["reduce_kpoint_symmetry"] = True
+        self.input = DFTInput()
+        
+    # These functions map the pyiron-sorted structure to user-input structure.
+    @property
+    def idx_pyiron_to_user(self):
+        if self.input.idx_pyiron_to_user is None:
+            self.input.structure = self.structure
+        return self.input.idx_pyiron_to_user
 
+    @property
+    def idx_user_to_pyiron(self):
+        if self.input.idx_user_to_pyiron is None:
+            self.input.structure = self.structure
+        return self.input.idx_user_to_pyiron
+    
     @property
     def encut(self):
         return self.plane_wave_cutoff
@@ -501,6 +515,54 @@ class GenericDFTJob(AtomisticGenericJob):
         hist *= 2 / len(eigen_values) / np.sqrt(2 * np.pi * sigma**2)
         return {"grid": grid, "dos": hist}
 
+class DFTInput():
+    
+    def __init__(self):
+        self.structure = None
+        self._idx_user_to_pyiron = []
+        self._idx_pyiron_to_user = []
+        
+    @property
+    def idx_user_to_pyiron(self):
+        if self.structure is None:
+            return None
+        if len(self._idx_user_to_pyiron) == 0:
+            self._map_pyiron_to_user_idx()
+        return self._idx_user_to_pyiron
+
+    @property
+    def idx_pyiron_to_user(self):
+        if self.structure is None:
+            return None
+        if len(self._idx_pyiron_to_user) == 0:
+            self._map_pyiron_to_user_idx()
+        return self._idx_pyiron_to_user
+    
+    def _map_pyiron_to_user_idx(self):
+        """
+        This writes the indices maps for user->pyiron (idx_user_to_pyiron), and pyiron->user (idx_pyiron_to_user)
+        This looks in Input.options for the use_structure_reordering boolean value, and decides to return either
+        1. Sorting map when species-based reordering is allowed (default behaviour of pyiron)
+        or
+        2. Sorting map when sorting is forbidden, in which case naive map (0:0, 1:1 etc.) is returned.
+        """
+        if self.options.use_structure_reordering:
+            atom_numbers = self.structure.get_number_species_atoms()
+
+            idx_user_to_pyiron = list()
+            for species in atom_numbers.keys():
+                indices = self.structure.select_index(species)
+                for i in indices:
+                    idx_user_to_pyiron.append(i)
+            self._idx_user_to_pyiron = np.array(idx_user_to_pyiron)
+
+            idx_pyiron_to_user = np.array([0] * len(idx_user_to_pyiron))
+            for i, p in enumerate(idx_user_to_pyiron):
+                idx_pyiron_to_user[p] = i
+            self._idx_pyiron_to_user = idx_pyiron_to_user
+        else:
+            self._idx_user_to_pyiron = np.arange(len(self.structure))
+            self._idx_pyiron_to_user = np.arange(len(self.structure))
 
 def get_k_mesh_by_density(cell, k_mesh_spacing=0.5):
     """

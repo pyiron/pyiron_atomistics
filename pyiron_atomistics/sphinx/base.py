@@ -15,7 +15,7 @@ import warnings
 import json
 import spglib
 
-from pyiron_atomistics.dft.job.generic import GenericDFTJob
+from pyiron_atomistics.dft.job.generic import GenericDFTJob, DFTInput
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.vasp.potential import (
     VaspPotentialFile,
@@ -151,18 +151,6 @@ class SphinxBase(GenericDFTJob):
             self._potential = VaspPotentialSetter(
                 element_lst=structure.get_species_symbols().tolist()
             )
-
-    @property
-    def id_pyi_to_spx(self):
-        if self.input_writer.id_pyi_to_spx is None:
-            self.input_writer.structure = self.structure
-        return self.input_writer.id_pyi_to_spx
-
-    @property
-    def id_spx_to_pyi(self):
-        if self.input_writer.id_spx_to_pyi is None:
-            self.input_writer.structure = self.structure
-        return self.input_writer.id_spx_to_pyi
 
     @property
     def plane_wave_cutoff(self):
@@ -621,7 +609,7 @@ class SphinxBase(GenericDFTJob):
                     rho.atomicSpin.clear()
                 if len(rho.atomicSpin) == 0:
                     for spin in self.structure.get_initial_magnetic_moments()[
-                        self.id_pyi_to_spx
+                        self.idx_user_to_pyiron
                     ]:
                         rho["atomicSpin"].append(
                             Group(
@@ -1708,16 +1696,14 @@ class SphinxBase(GenericDFTJob):
         )
 
 
-class InputWriter(object):
+class InputWriter(DFTInput):
     """
     The SPHInX Input writer is called to write the
     SPHInX specific input files.
     """
 
     def __init__(self):
-        self.structure = None
-        self._id_pyi_to_spx = []
-        self._id_spx_to_pyi = []
+        super(DFTInput, self).__init__()
         self.file_dict = {}
 
     def copy_potentials(
@@ -1791,35 +1777,6 @@ class InputWriter(object):
             else:
                 copyfile(potential_path, posixpath.join(cwd, elem + "_POTCAR"))
 
-    @property
-    def id_spx_to_pyi(self):
-        if self.structure is None:
-            return None
-        if len(self._id_spx_to_pyi) == 0:
-            self._initialize_order()
-        return self._id_spx_to_pyi
-
-    @property
-    def id_pyi_to_spx(self):
-        if self.structure is None:
-            return None
-        if len(self._id_pyi_to_spx) == 0:
-            self._initialize_order()
-        return self._id_pyi_to_spx
-
-    def _initialize_order(self):
-        for elm_species in self.structure.get_species_objects():
-            self._id_pyi_to_spx.append(
-                np.arange(len(self.structure))[
-                    self.structure.get_chemical_symbols() == elm_species.Abbreviation
-                ]
-            )
-        self._id_pyi_to_spx = np.array(
-            [ooo for oo in self._id_pyi_to_spx for ooo in oo]
-        )
-        self._id_spx_to_pyi = np.array([0] * len(self._id_pyi_to_spx))
-        for i, p in enumerate(self._id_pyi_to_spx):
-            self._id_spx_to_pyi[p] = i
 
     def write_spin_constraints(self, file_name="spins.in", cwd=None, spins_list=None):
         """
@@ -1848,10 +1805,10 @@ class InputWriter(object):
             ):
                 raise ValueError("SPHInX only supports collinear spins at the moment.")
             else:
-                constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
+                constraint = self.structure.spin_constraint[self.idx_user_to_pyiron]
                 if spins_list is None or len(spins_list) == 0:
                     spins_list = self.structure.get_initial_magnetic_moments()
-                spins = spins_list[self.id_pyi_to_spx].astype(str)
+                spins = spins_list[self.idx_user_to_pyiron].astype(str)
                 spins[~np.asarray(constraint)] = "X"
                 spins_str = "\n".join(spins) + "\n"
                 if cwd is not None:
@@ -2190,7 +2147,7 @@ class Output:
             return None
         spins = np.loadtxt(posixpath.join(cwd, file_name))
         self.generic.dft.atom_scf_spins = splitter(
-            np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]), spins[:, 0]
+            np.array([ss[self._job.idx_pyiron_to_user] for ss in spins[:, 1:]]), spins[:, 0]
         )
 
     def collect_energy_dat(self, file_name="energy.dat", cwd=None):
@@ -2322,11 +2279,11 @@ class Output:
             self.generic.dft.scf_energy_free = self._spx_log_parser.get_energy_free()
         if "forces" in self.generic.list_nodes():
             self.generic.forces = self._spx_log_parser.get_forces(
-                self._job.id_spx_to_pyi
+                self._job.idx_pyiron_to_user
             )
         if "scf_magnetic_forces" not in self.generic.dft.list_nodes():
             self.generic.dft.scf_magnetic_forces = (
-                self._spx_log_parser.get_magnetic_forces(self._job.id_spx_to_pyi)
+                self._spx_log_parser.get_magnetic_forces(self._job.idx_pyiron_to_user)
             )
 
     def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=None):
@@ -2344,7 +2301,7 @@ class Output:
             return None
         with open(file_name, "r") as f:
             file_content = "".join(f.readlines())
-        natoms = len(self._job.id_spx_to_pyi)
+        natoms = len(self._job.idx_pyiron_to_user)
 
         def get_value(term, file_content=file_content, natoms=natoms):
             value = (
@@ -2357,7 +2314,7 @@ class Output:
                 .astype(float)
                 .reshape(-1, natoms, 3)
             )
-            return np.array([ff[self._job.id_spx_to_pyi] for ff in value])
+            return np.array([ff[self._job.idx_pyiron_to_user] for ff in value])
 
         self.generic.positions = get_value("coords.*$") * BOHR_TO_ANGSTROM
         self.generic.forces = (
