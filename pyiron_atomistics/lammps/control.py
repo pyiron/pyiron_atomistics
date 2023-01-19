@@ -246,6 +246,11 @@ class LammpsControl(GenericParameters):
         ionic_force_tolerance *= force_units
 
         if pressure is not None:
+            if rotation_matrix is None:
+                raise ValueError(
+                    "No rotation matrix given while trying to convert pressure. "
+                    "This is most likely due to no structure being defined."
+                )
             self._force_skewed = False
             pressure = self.pressure_to_lammps(pressure, rotation_matrix)
             if np.isscalar(pressure):
