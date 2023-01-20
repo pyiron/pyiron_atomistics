@@ -103,6 +103,7 @@ class StructureFactory(PyironFactory):
     stack.__doc__ = AseFactory.stack.__doc__
 
     def read(self, *args, **kwargs):
+        # This looks weird, but it's because ASE doesn't handle selective dynamics properly, so we replace it with the pymatgen read equivalent.
         return pymatgen_to_pyiron(Structure.from_file(*args, **kwargs))
 
     read.__doc__ = AseFactory.read.__doc__
