@@ -46,6 +46,7 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     ovito_to_pyiron,
     pyiron_to_pymatgen,
 )
+from pymatgen.core import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import state, PyironFactory, deprecate
@@ -102,7 +103,7 @@ class StructureFactory(PyironFactory):
     stack.__doc__ = AseFactory.stack.__doc__
 
     def read(self, *args, **kwargs):
-        return self.ase.read(*args, **kwargs)
+        return pymatgen_to_pyiron(Structure.from_file(*args, **kwargs))
 
     read.__doc__ = AseFactory.read.__doc__
 
