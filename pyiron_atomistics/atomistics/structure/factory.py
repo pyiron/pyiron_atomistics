@@ -110,7 +110,7 @@ class StructureFactory(PyironFactory):
             # For stuff that pymatgen can't read it raises
             # ValueError: Unrecognized file extension!
             # backwards compatibility for notebooks.
-            # TypeError: IStructure.from_file() got an unexpected keyword argument 'format' 
+            # TypeError: IStructure.from_file() got an unexpected keyword argument 'format'
             structure = self.read_using_ase(*args, **kwargs)
         return structure
 
@@ -118,10 +118,10 @@ class StructureFactory(PyironFactory):
 
     def read_using_pymatgen(self, *args, **kwargs):
         return pymatgen_to_pyiron(Structure.from_file(*args, **kwargs))
-    
+
     def read_using_ase(self, *args, **kwargs):
         return self.ase.read(*args, **kwargs)
-    
+
     @deprecate(message="Please use .read or .ase.read", version="0.2.2")
     def ase_read(self, *args, **kwargs):
         return self.ase.read(*args, **kwargs)
