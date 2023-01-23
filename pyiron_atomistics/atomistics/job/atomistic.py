@@ -801,9 +801,13 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         ProjectGUI(self)
 
-    def _structure_to_hdf(self):
+    def _structure_to_hdf(self, hdf=None, group_name=None):
+        if hdf is None:
+            hdf = self.project_hdf5
+        if group_name is not None:
+            hdf = hdf.open(group_name)
         if self.structure is not None and self._generic_input["structure"] == "atoms":
-            with self.project_hdf5.open("input") as hdf5_input:
+            with hdf.open("input") as hdf5_input:
                 self.structure.to_hdf(hdf5_input)
 
     def _structure_from_hdf(self):

@@ -984,8 +984,8 @@ class LammpsBase(AtomisticGenericJob):
 
         """
         super(LammpsBase, self).to_hdf(hdf=hdf, group_name=group_name)
-        self._structure_to_hdf()
-        self.input.to_hdf(self._hdf5)
+        self._structure_to_hdf(hdf=hdf, group_name=group_name)
+        self.input.to_hdf(hdf)
 
     def from_hdf(self, hdf=None, group_name=None):  # TODO: group_name should be removed
         """
