@@ -605,34 +605,32 @@ class SphinxBase(GenericDFTJob):
         if charge_density_file is None:
             if wave_function_file is None:
                 guess.rho.setdefault("atomicOrbitals", True)
+                if self._spin_enabled:
+                    init_spins = self.structure.get_initial_magnetic_moments()
+                    # --- validate that initial spin moments are scalar
+                    for spin in init_spins:
+                        if isinstance(spin, list) or isinstance(spin, np.ndarray):
+                            raise ValueError("SPHInX only supports collinear spins.")
+                    guess.rho.get("atomicSpin", create=True)
+                    if update_spins:
+                        guess.rho.atomicSpin.clear()
+                    # --- create initial spins if needed
+                    if len(guess.rho.atomicSpin) == 0:
+                        # set initial spin via label for each unique value of spin
+                        # dict.from_keys (...).keys () deduplicates
+                        for spin in dict.fromkeys(init_spins).keys():
+                            guess.rho["atomicSpin"].append(
+                                Group(
+                                    {
+                                        "label": '"spin_' + str(spin) + '"',
+                                        "spin": str(spin),
+                                    }
+                                )
+                            )
             else:
                 guess.rho.setdefault("fromWaves", True)
         else:
             guess.rho.setdefault("file", '"' + charge_density_file + '"')
-        if self._spin_enabled:
-            if any(
-                [
-                    True
-                    if isinstance(spin, list) or isinstance(spin, np.ndarray)
-                    else False
-                    for spin in self.structure.get_initial_magnetic_moments()
-                ]
-            ):
-                raise ValueError("SPHInX only supports collinear spins.")
-            else:
-                rho = guess.rho
-                rho.get("atomicSpin", create=True)
-                if update_spins:
-                    rho.atomicSpin.clear()
-                if len(rho.atomicSpin) == 0:
-                    for spin in self.structure.get_initial_magnetic_moments()[
-                        self.id_pyi_to_spx
-                    ]:
-                        rho["atomicSpin"].append(
-                            Group(
-                                {"label": '"spin_' + str(spin) + '"', "spin": str(spin)}
-                            )
-                        )
 
         if "noWavesStorage" not in guess:
             guess["noWavesStorage"] = not self.input["WriteWaves"]
@@ -775,7 +773,7 @@ class SphinxBase(GenericDFTJob):
             pyiron_atomistics.sphinx.sphinx.sphinx: new job instance
         """
         return self.restart_from_charge_density(
-            job_name=job_name, job_type=None, band_structure_calc=True
+            job_name=job_name, band_structure_calc=True
         )
 
     def restart_from_charge_density(
@@ -802,6 +800,16 @@ class SphinxBase(GenericDFTJob):
         )
         if band_structure_calc:
             ham_new._generic_input["restart_for_band_structure"] = True
+            # --- clean up minimization related settings
+            for setting in ["Istep", "dF", "dE"]:
+                if setting in ham_new.input:
+                    del ham_new.input[setting]
+            # remove optimization-related stuff from GenericDFTJob
+            super(SphinxBase, self).calc_static()
+            # --- recreate main group
+            del ham_new.input.sphinx["main"]
+            ham_new.input.sphinx.create_group("main")
+            ham_new.load_main_group()
         return ham_new
 
     def restart_from_wave_functions(
