@@ -9,11 +9,15 @@ import os
 import posixpath
 import re
 import stat
-from shutil import copyfile
+from shutil import copyfile, move as movefile
 import scipy.constants
 import warnings
 import json
 import spglib
+import subprocess
+from subprocess import PIPE
+import tarfile
+from tempfile import TemporaryDirectory
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
@@ -28,6 +32,7 @@ from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
+from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
 from pyiron_base import HasGroups
@@ -66,15 +71,15 @@ class SphinxBase(GenericDFTJob):
 
     ```python
     # Modify/add a new parameter via
-    job.input.PAWHamiltonian.nEmptyStates = 15
-    job.input.PAWHamiltonian.dipoleCorrection = True
+    job.input.sphinx.PAWHamiltonian.nEmptyStates = 15
+    job.input.sphinx.PAWHamiltonian.dipoleCorrection = True
     # or
-    job.input.PAWHamiltonian.set("nEmptyStates", 15)
-    job.input.PAWHamiltonian.set("dipoleCorrection", True)
+    job.input.sphinx.PAWHamiltonian.set("nEmptyStates", 15)
+    job.input.sphinx.PAWHamiltonian.set("dipoleCorrection", True)
     # Modify/add a sub-group via
-    job.input.initialGuess.rho.charged = {"charge": 2, "z": 25}
+    job.input.sphinx.initialGuess.rho.charged = {"charge": 2, "z": 25}
     # or
-    job.input.initialGuess.rho.set("charged", {"charge": 2, "z": 25})
+    job.input.sphinx.initialGuess.rho.set("charged", {"charge": 2, "z": 25})
     ```
 
     Args:
@@ -1706,6 +1711,146 @@ class SphinxBase(GenericDFTJob):
                 for p in state.settings.resource_paths
             ]
         )
+
+    def run_addon(
+        self,
+        addon,
+        args=None,
+        from_tar=None,
+        silent=False,
+        log=True,
+        version=None,
+        debug=False,
+    ):
+        """Run a SPHInX addon
+
+        addon          - name of addon (str)
+        args           - arguments (str or list)
+        from_tar       - if job is compressed, extract these files (list)
+        silent         - do not print output for successful runs?
+        log            - produce log file?
+        version        - which sphinx version to load (str or None)
+        debug          - return subprocess.CompletedProcess ?
+
+        """
+        if self.is_compressed() and from_tar is None:
+            raise FileNotFoundError(
+                "Cannot run add-on on compressed job without 'from_tar' parameter.\n"
+                + "   Solution 1: Run .decompress () first.\n"
+                + "   Solution 2: specify from_tar list to run in temporary directory\n"
+                + "   Solution 3: run with from_tar=[] if no files from tar are needed\n"
+            )
+
+        # prepare argument list
+        if args is None:
+            args = ""
+        elif isinstance(args, list):
+            args = " ".join(args)
+        if log:
+            args += " --log"
+
+        cmd = addon + " " + args
+
+        # --- handle versions
+        sxv = sxversions()
+        if (
+            version is None
+            and self.executable.version is not None
+            and self.executable.version in sxv.keys()
+        ):
+            version = self.executable.version
+            if not silent:
+                print("Taking version '" + version + "' from job._executable version")
+        if isinstance(version, str):
+            if version in sxv.keys():
+                cmd = sxv[version] + " && " + cmd
+            elif version != "":
+                raise KeyError(
+                    "version '"
+                    + version
+                    + "' not found. Available versions are: '"
+                    + "', '".join(sxv.keys())
+                    + "'."
+                )
+            # version="" overrides job.executable_version
+        elif version is not None:
+            raise TypeError("version must be str or None")
+
+        if isinstance(from_tar, str):
+            from_tar = [from_tar]
+        if self.is_compressed() and isinstance(from_tar, list):
+            # run addon in temporary directory
+            with TemporaryDirectory() as tempd:
+                if not silent:
+                    print("Running {} in temporary directory {}".format(addon, tempd))
+
+                # --- extract files from list
+                # note: tf should be obtained from JobCore to ensure encapsulation
+                tarfilename = os.path.join(
+                    self.working_directory, self.job_name + ".tar.bz2"
+                )
+                with tarfile.open(tarfilename, "r:bz2") as tf:
+                    for file in from_tar:
+                        try:
+                            tf.extract(file, path=tempd)
+                        except:
+                            print("Cannot extract " + file + " from " + tarfilename)
+
+                # --- link other files
+                linkfiles = []
+                for file in self.list_files():
+                    linkfile = os.path.join(tempd, file)
+                    if not os.path.isfile(linkfile):
+                        os.symlink(
+                            os.path.join(self.working_directory, file),
+                            linkfile,
+                            target_is_directory=True,
+                        )
+                        linkfiles.append(linkfile)
+                # now run
+                out = subprocess.run(
+                    cmd, cwd=tempd, shell=True, stdout=PIPE, stderr=PIPE, text=True
+                )
+
+                # now clean tempdir
+                for file in from_tar:
+                    try:
+                        os.remove(os.path.join(tempd, file))
+                    except FileNotFoundError:
+                        pass
+                for linkfile in linkfiles:
+                    if os.path.islink:
+                        os.remove(linkfile)
+
+                # move output to working directory for successful runs
+                if out.returncode == 0:
+                    for file in os.listdir(tempd):
+                        movefile(os.path.join(tempd, file), self.working_directory)
+                        if not silent:
+                            print("Copying " + file + " to " + self.working_directory)
+                else:
+                    print(addon + " crashed - potential output files are not kept.")
+
+        else:
+            out = subprocess.run(
+                cmd,
+                cwd=self.working_directory,
+                shell=True,
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            if out.returncode != 0:
+                print(addon + " crashed.")
+
+        # print output
+        if not silent or out.returncode != 0:
+            if out.returncode != 0:
+                print(addon + " output:\n\n")
+            print(out.stdout)
+            if out.returncode != 0:
+                print(out.stderr)
+        return out if debug else None
 
 
 class InputWriter(object):

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if test -e "input.sx" ; then : ; else
+   echo "input.sx not found." >&2
+   exit 1
+fi
+
+cmd=cat
+while [ x"$1" != x"" ] ; do
+   if [ x"$1" = x"--log" ] ; then
+      cmd="tee sxcheckinput.log"
+   fi
+   shift
+done
+
+
+$cmd <<END_OUTPUT
+Checking for dublets...ok
+Checking cell size.
+Checking for close atoms...ok
+END_OUTPUT
+
