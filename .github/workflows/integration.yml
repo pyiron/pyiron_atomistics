@@ -23,7 +23,7 @@ jobs:
         run: |
           python .ci_support/condamerge.py --base .ci_support/environment.yml --add .ci_support/environment-notebooks.yml > environment.yml
       - name: Setup Mambaforge
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v2.2.0
         with:
           python-version: "3.10"
           miniforge-variant: Mambaforge
