@@ -419,8 +419,9 @@ class Potcar(GenericParameters):
 
     def _set_potential_paths(self):
         element_object_list = [
-            element_obj for i, element_obj in enumerate(self._structure.elements) 
-            if i==0 or self._structure.elements[i-1] != element_obj
+            element_obj
+            for i, element_obj in enumerate(self._structure.elements)
+            if i == 0 or self._structure.elements[i - 1] != element_obj
         ]
         element_list = [element_obj.Abbreviation for element_obj in element_object_list]
         state.logger.debug("element list: {0}".format(element_list))
