@@ -402,14 +402,14 @@ class Potcar(GenericParameters):
     def _set_default_path_dict(self):
         if self._structure is None:
             return
-        for i, el_obj in enumerate(self._structure.get_species_objects()):
-            if isinstance(el_obj.Parent, str):
-                el = el_obj.Parent
+        for i, element_obj in enumerate(self._structure.get_species_objects()):
+            if isinstance(element_obj.Parent, str):
+                el = element_obj.Parent
             else:
-                el = el_obj.Abbreviation
-            if isinstance(el_obj.tags, dict):
-                if "pseudo_potcar_file" in el_obj.tags.keys():
-                    new_element = el_obj.tags["pseudo_potcar_file"]
+                el = element_obj.Abbreviation
+            if isinstance(element_obj.tags, dict):
+                if "pseudo_potcar_file" in element_obj.tags.keys():
+                    new_element = element_obj.tags["pseudo_potcar_file"]
                     self.vasp_potentials.add_new_element(
                         parent_element=el, new_element=new_element
                     )
@@ -418,24 +418,25 @@ class Potcar(GenericParameters):
             self[key] = val
 
     def _set_potential_paths(self):
-        element_list = (
-            self._structure.get_species_symbols()
-        )  # .ElementList.getSpecies()
-        object_list = self._structure.get_species_objects()
+        element_object_list = [
+            element_obj for i, element_obj in enumerate(self._structure.elements) 
+            if i==0 or self._structure.elements[i-1] != element_obj
+        ]
+        element_list = [element_obj.Abbreviation for element_obj in element_object_list]
         state.logger.debug("element list: {0}".format(element_list))
         self.el_path_lst = list()
         xc = self.get("xc")
         state.logger.debug("XC: {0}".format(xc))
-        for i, el_obj in enumerate(object_list):
-            if isinstance(el_obj.Parent, str):
-                el = el_obj.Parent
+        for i, element_obj in enumerate(element_object_list):
+            if isinstance(element_obj.Parent, str):
+                el = element_obj.Parent
             else:
-                el = el_obj.Abbreviation
+                el = element_obj.Abbreviation
             if (
-                isinstance(el_obj.tags, dict)
-                and "pseudo_potcar_file" in el_obj.tags.keys()
+                isinstance(element_obj.tags, dict)
+                and "pseudo_potcar_file" in element_obj.tags.keys()
             ):
-                new_element = el_obj.tags["pseudo_potcar_file"]
+                new_element = element_obj.tags["pseudo_potcar_file"]
                 self.vasp_potentials.add_new_element(
                     parent_element=el, new_element=new_element
                 )
