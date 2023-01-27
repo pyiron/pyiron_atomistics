@@ -238,7 +238,8 @@ def get_equilibrium_parameters(job):
 
 
 def get_structure(job):
-    atoms = pyiron_to_ase(job.to_object().get_structure())
+    atoms = Atoms().from_hdf(job["output"])
+    # I don't understand why any of this is needed?
     atoms_dict = {
         "symbols": atoms.get_chemical_symbols(),
         "positions": atoms.get_positions().tolist(),
@@ -252,8 +253,10 @@ def get_structure(job):
         atoms_dict["masses"] = atoms.get_masses().tolist()
     if atoms.has("momenta"):
         atoms_dict["momenta"] = atoms.get_momenta().tolist()
+    # is this wrong? why are we setting magmoms to be initial magmoms?
     if atoms.has("initial_magmoms"):
         atoms_dict["magmoms"] = atoms.get_initial_magnetic_moments().tolist()
+    # is this wrong? why are we setting charge to be initial charge?
     if atoms.has("initial_charges"):
         atoms_dict["charges"] = atoms.get_initial_charges().tolist()
     if not atoms.__dict__["_calc"] == None:
