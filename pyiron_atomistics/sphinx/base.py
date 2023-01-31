@@ -94,7 +94,6 @@ class SphinxBase(GenericDFTJob):
         # input groups
         self.input = Group(table_name="parameters", lazy=True)
         self.load_default_input()
-        self._save_memory = False
         self._output_parser = Output(self)
         self.input_writer = InputWriter()
         self._potential = VaspPotentialSetter([])
