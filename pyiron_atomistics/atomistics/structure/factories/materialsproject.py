@@ -150,8 +150,8 @@ class MaterialsProjectFactory:
             (Default is False)
 
         Returns:
-            :class:`~.Atoms`: requested final structure if final is True or
-            a list of initial structures if final is False
+            :class:`~.Atoms`: requested final structure if final is True
+            list of :class:~.Atoms`:  a list of initial (pre-relaxation) structures if final is False
 
         Raises:
             ValueError: material id does not exist
