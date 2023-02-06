@@ -165,7 +165,7 @@ class MaterialsProjectFactory:
             if final:
                 return pymatgen_to_pyiron(
                     mpr.get_structure_by_material_id(
-                        material_id, final, conventional_unit_cell
+                        material_id=material_id, final=final, conventional_unit_cell=conventional_unit_cell
                     )
                 )
             else:
