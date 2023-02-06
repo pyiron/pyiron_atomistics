@@ -173,7 +173,7 @@ class MaterialsProjectFactory:
                     pymatgen_to_pyiron(mpr_structure)
                     for mpr_structure in (
                         mpr.get_structure_by_material_id(
-                            material_id, final, conventional_unit_cell
+                            material_id=material_id, final=final, conventional_unit_cell=conventional_unit_cell
                         )
                     )
                 ]
