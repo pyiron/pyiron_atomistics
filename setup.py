@@ -49,7 +49,7 @@ setup(
         'matplotlib==3.6.3',
         'mendeleev==0.12.1',
         'mp-api==0.30.5',
-        'numpy==1.24.1',
+        'numpy==1.24.2',
         'pandas==1.5.3',
         'phonopy==2.17.1',
         'pint==0.20.1',
