@@ -57,7 +57,7 @@ setup(
         'pymatgen==2022.11.7',
         'scipy==1.10.0',
         'seekpath==2.0.1',
-        'scikit-learn==1.2.0',
+        'scikit-learn==1.2.1',
         'spglib==2.0.2',
     ],
     cmdclass=versioneer.get_cmdclass(),

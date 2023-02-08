@@ -943,7 +943,6 @@ class SphinxBase(GenericDFTJob):
     def from_directory(self, directory, file_name="structure.sx"):
         try:
             if not self.status.finished:
-
                 file_path = posixpath.join(directory, file_name)
                 if os.path.isfile(file_path):
                     self.structure = read_atoms(file_path)
@@ -1512,9 +1511,7 @@ class SphinxBase(GenericDFTJob):
         return len(np.unique(mapping))
 
     def check_setup(self):
-
         with warnings.catch_warnings(record=True) as w:
-
             # Check for parameters that were not modified but
             # possibly should have (encut, kpoints, smearing, etc.),
             # or were set to nonsensical values.
@@ -1649,7 +1646,6 @@ class SphinxBase(GenericDFTJob):
                 and np.array(self.input.KpointFolding).tolist()
                 != np.array(self.input.sphinx.basis.folding).tolist()
             ):
-
                 warnings.warn(
                     "job.input.basis.kPoint was modified directly. "
                     "It is recommended to set all k-point settings via "
@@ -2074,7 +2070,6 @@ class Group(DataContainer):
             del self[name]
 
     def to_sphinx(self, content="__self__", indent=0):
-
         if content == "__self__":
             content = self
 

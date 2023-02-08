@@ -211,7 +211,6 @@ else:
         minimal: Optional[bool] = True,
         similar: Optional[bool] = True,
     ):
-
         structure = pyiron_to_ase(structure)
         composition = mole_fractions_to_composition(mole_fractions, len(structure))
 
