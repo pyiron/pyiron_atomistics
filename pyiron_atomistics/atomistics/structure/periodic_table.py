@@ -285,7 +285,6 @@ class PeriodicTable(object):
             else:
                 raise KeyError(arg)
         elif isinstance(arg, int):
-
             if arg in list(self.dataframe["AtomicNumber"]):
                 index = list(self.dataframe["AtomicNumber"]).index(arg)
                 self.el = self.dataframe.iloc[index].name

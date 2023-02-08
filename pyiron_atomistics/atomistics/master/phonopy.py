@@ -46,7 +46,6 @@ class Thermal:
     """
 
     def __init__(self, temperatures, free_energies, entropy, cv):
-
         self.temperatures = temperatures
         self.free_energies = free_energies
         self.entropy = entropy

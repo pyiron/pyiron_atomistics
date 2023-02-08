@@ -1693,7 +1693,6 @@ class VaspBase(GenericDFTJob):
         super(VaspBase, self).compress(files_to_compress=files_to_compress)
 
     def restart_from_wave_functions(self, job_name=None, job_type=None, istart=1):
-
         """
         Restart a new job created from an existing Vasp calculation by reading the wave functions.
 
