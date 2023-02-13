@@ -2736,7 +2736,6 @@ class _CrystalStructure(Atoms):
         pse=None,
         **kwargs,
     ):
-
         # print "basis0"
         # allow also for scalar input for LatticeConstants (for a cubic system)
         if lattice_constants is None:
@@ -3332,7 +3331,6 @@ def pyiron_to_pymatgen(pyiron_obj):
     # e.g. only accepts [T T T] or [F F F] but rejects [T, T, F] etc.
     # Let's just implement this workaround if any selective dynamics are present
     if hasattr(pyiron_obj, "selective_dynamics"):
-
         sel_dyn_list = pyiron_obj.selective_dynamics
         pyiron_obj_conv.selective_dynamics = [True, True, True]
         ase_obj = pyiron_to_ase(pyiron_obj_conv)

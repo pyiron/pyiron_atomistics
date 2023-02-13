@@ -355,6 +355,7 @@ Install from Source
 For development, it is recommended to first create a conda environment containing all of pyiron's dependencies. The dependencies are available in pyiron's `environment.yml <https://github.com/pyiron/pyiron/blob/main/.ci_support/environment.yml>`_ file.
 
 .. code-block:: bash
+
     git clone https://github.com/pyiron/pyiron.git
     conda env create -f pyiron/environment.yml
 

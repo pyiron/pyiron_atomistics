@@ -212,7 +212,6 @@ class Outcar(object):
         )
 
     def get_positions(self, filename="OUTCAR", lines=None, n_atoms=None):
-
         """
         Gets the positions for every ionic step from the OUTCAR file
 
