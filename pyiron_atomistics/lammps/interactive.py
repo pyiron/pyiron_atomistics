@@ -69,11 +69,11 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
     @property
     def interactive_mpi_communicator(self):
         return self._interactive_mpi_communicator
-    
+
     @interactive_mpi_communicator.setter
     def interactive_mpi_communicator(self, comm):
         self._interactive_mpi_communicator = comm
-        
+
     def _interactive_lib_command(self, command):
         self._logger.debug("Lammps library: " + command)
         self._interactive_library.command(command)
@@ -243,7 +243,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
                 self._log_file = os.path.join(self.working_directory, "log.lammps")
             self._interactive_library = lammps(
                 cmdargs=["-screen", "none", "-log", self._log_file],
-                comm=self._interactive_mpi_communicator
+                comm=self._interactive_mpi_communicator,
             )
         else:
             self._interactive_library = LammpsLibrary(
