@@ -2428,9 +2428,7 @@ class Output:
                 np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
             )
 
-    def collect_sphinx_log(
-        self, file_name="sphinx.log", cwd=None
-    ):
+    def collect_sphinx_log(self, file_name="sphinx.log", cwd=None):
         """
 
         Args:
