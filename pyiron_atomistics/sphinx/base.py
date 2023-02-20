@@ -2429,14 +2429,13 @@ class Output:
             )
 
     def collect_sphinx_log(
-        self, file_name="sphinx.log", cwd=None, check_consistency=True
+        self, file_name="sphinx.log", cwd=None
     ):
         """
 
         Args:
             file_name:
             cwd:
-            check_consistency (bool):
 
         Returns:
 
