@@ -35,7 +35,6 @@ from pyiron_atomistics.sphinx.potential import (
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
-from pyiron_base import HasGroups
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -1493,7 +1492,7 @@ class SphinxBase(GenericDFTJob):
         positions = self.structure.get_scaled_positions()
         numbers = self.structure.get_atomic_numbers()
         if ignore_magmoms:
-            magmoms = np.zeros(len(magmoms))
+            magmoms = np.zeros(len(positions))
         else:
             magmoms = self.structure.get_initial_magnetic_moments()
         mag_num = np.array(list(zip(magmoms, numbers)))
@@ -2107,7 +2106,7 @@ def splitter(arr, counter):
     spl_loc = list(np.where(np.array(counter) == min(counter))[0])
     spl_loc.append(None)
     for ii, ll in enumerate(spl_loc[:-1]):
-        arr_new.append(np.array(arr[ll : spl_loc[ii + 1]]).tolist())
+        arr_new.append(np.array(arr[ll: spl_loc[ii + 1]]).tolist())
     return arr_new
 
 
@@ -2135,7 +2134,7 @@ class _SphinxLogParser:
     def log_main(self):
         if self._log_main is None:
             match = re.search("Enter Main Loop", self.log_file)
-            self._log_main = self.log_file[match.end() + 1 :]
+            self._log_main = self.log_file[match.end() + 1:]
         return self._log_main
 
     @property
@@ -2167,7 +2166,7 @@ class _SphinxLogParser:
                 "-ik-     -x-      -y-       -z-    \|  -weight-    -nG-    -label-",
                 self.log_file,
             )
-            log_part = self.log_file[start_match.end() + 1 :]
+            log_part = self.log_file[start_match.end() + 1:]
             log_part = log_part[: re.search("^\n", log_part, re.MULTILINE).start()]
             self._log_k_points = log_part.split("\n")[:-2]
         return self._log_k_points
@@ -2284,7 +2283,7 @@ class _SphinxLogParser:
         return arr.reshape(shape)
 
     def get_band_energy(self):
-        return self._parse_band(f"final eig \[eV\]:(.*)$")
+        return self._parse_band("final eig \[eV\]:(.*)$")
 
     def get_occupancy(self):
         return self._parse_band("final focc:(.*)$")
