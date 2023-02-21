@@ -404,6 +404,7 @@ class SphinxOutput(Output, GenericInteractiveOutput):
         else:
             return False
 
+
 class SphinxInt2(SphinxInteractive):
     def __init__(self, project, job_name):
         warnings.warn("Please use SphinxInt instead of SphinxInt2")
