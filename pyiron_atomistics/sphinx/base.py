@@ -2114,8 +2114,6 @@ class _SphinxLogParser:
     def __init__(self, log_file):
         self.log_file = log_file
         self._check_enter_scf()
-        self._k_points = None
-        self._log_k_points = None
         self._log_main = None
         self._counter = None
         self._n_atoms = None
@@ -2124,18 +2122,14 @@ class _SphinxLogParser:
 
     @property
     def spin_enabled(self):
-        if self._spin_enabled is None:
-            self._spin_enabled = (
-                len(re.findall("The spin for the label", self.log_file)) > 0
-            )
-        return self._spin_enabled
+        return len(re.findall("The spin for the label", self.log_file)) > 0
 
     @property
     def log_main(self):
         if self._log_main is None:
             match = re.search("Enter Main Loop", self.log_file)
-            self._log_main = self.log_file[match.end() + 1 :]
-        return self._log_main
+            self._log_main = match.end() + 1
+        return self.log_file[self._log_main :]
 
     @property
     def job_finished(self):
@@ -2161,15 +2155,13 @@ class _SphinxLogParser:
 
     @property
     def log_k_points(self):
-        if self._log_k_points is None:
-            start_match = re.search(
-                "-ik-     -x-      -y-       -z-    \|  -weight-    -nG-    -label-",
-                self.log_file,
-            )
-            log_part = self.log_file[start_match.end() + 1 :]
-            log_part = log_part[: re.search("^\n", log_part, re.MULTILINE).start()]
-            self._log_k_points = log_part.split("\n")[:-2]
-        return self._log_k_points
+        start_match = re.search(
+            "-ik-     -x-      -y-       -z-    \|  -weight-    -nG-    -label-",
+            self.log_file,
+        )
+        log_part = self.log_file[start_match.end() + 1 :]
+        log_part = log_part[: re.search("^\n", log_part, re.MULTILINE).start()]
+        return log_part.split("\n")[:-2]
 
     def get_bands_k_weights(self):
         return np.array([float(kk.split()[6]) for kk in self.log_k_points])
@@ -2187,14 +2179,12 @@ class _SphinxLogParser:
 
     @property
     def k_points(self):
-        if self._k_points is None:
-            self._k_points = np.array(
-                [
-                    [float(kk.split()[i]) for i in range(2, 5)]
-                    for kk in self.log_k_points
-                ]
-            )
-        return self._k_points
+        return np.array(
+            [
+                [float(kk.split()[i]) for i in range(2, 5)]
+                for kk in self.log_k_points
+            ]
+        )
 
     def get_volume(self):
         volume = re.findall("Omega:.*$", self.log_file, re.MULTILINE)
