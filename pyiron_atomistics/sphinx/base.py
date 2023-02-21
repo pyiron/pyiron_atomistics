@@ -2180,10 +2180,7 @@ class _SphinxLogParser:
     @property
     def k_points(self):
         return np.array(
-            [
-                [float(kk.split()[i]) for i in range(2, 5)]
-                for kk in self.log_k_points
-            ]
+            [[float(kk.split()[i]) for i in range(2, 5)] for kk in self.log_k_points]
         )
 
     def get_volume(self):
