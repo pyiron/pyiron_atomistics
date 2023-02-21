@@ -2428,15 +2428,12 @@ class Output:
                 np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
             )
 
-    def collect_sphinx_log(
-        self, file_name="sphinx.log", cwd=None, check_consistency=True
-    ):
+    def collect_sphinx_log(self, file_name="sphinx.log", cwd=None):
         """
 
         Args:
             file_name:
             cwd:
-            check_consistency (bool):
 
         Returns:
 
