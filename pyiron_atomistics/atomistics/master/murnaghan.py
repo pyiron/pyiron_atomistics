@@ -733,11 +733,7 @@ class Murnaghan(AtomisticParallelMaster):
                 structure = ase_to_pyiron(structure)
             structure.to_hdf(hdf5)
 
-    def _fit_eos_general(self, vol_erg_dic=None, fittype="birchmurnaghan"):
-        self._set_fit_module(vol_erg_dic=vol_erg_dic)
-        fit_dict = self.fit_module.fit_eos_general(fittype=fittype)
-        self.input["fit_type"] = fit_dict["fit_type"]
-        self.input["fit_order"] = 0
+    def _store_fit_in_hdf(self, fit_dict):
         with self.project_hdf5.open("input") as hdf5_input:
             self.input.to_hdf(hdf5_input)
         with self.project_hdf5.open("output") as hdf5:
@@ -747,6 +743,12 @@ class Murnaghan(AtomisticParallelMaster):
             hdf5["equilibrium_b_prime"] = fit_dict["b_prime_eq"]
         self._final_struct_to_hdf()
 
+    def _fit_eos_general(self, vol_erg_dic=None, fittype="birchmurnaghan"):
+        self._set_fit_module(vol_erg_dic=vol_erg_dic)
+        fit_dict = self.fit_module.fit_eos_general(fittype=fittype)
+        self.input["fit_type"] = fit_dict["fit_type"]
+        self.input["fit_order"] = 0
+        self._store_fit_in_hdf(fit_dict=fit_dict)
         self.fit_dict = fit_dict
         return fit_dict
 
@@ -777,15 +779,7 @@ class Murnaghan(AtomisticParallelMaster):
         else:
             self.input["fit_type"] = fit_dict["fit_type"]
             self.input["fit_order"] = fit_dict["fit_order"]
-            with self.project_hdf5.open("input") as hdf5_input:
-                self.input.to_hdf(hdf5_input)
-            with self.project_hdf5.open("output") as hdf5:
-                hdf5["equilibrium_energy"] = fit_dict["energy_eq"]
-                hdf5["equilibrium_volume"] = fit_dict["volume_eq"]
-                hdf5["equilibrium_bulk_modulus"] = fit_dict["bulkmodul_eq"]
-                hdf5["equilibrium_b_prime"] = fit_dict["b_prime_eq"]
-            self._final_struct_to_hdf()
-
+            self._store_fit_in_hdf(fit_dict=fit_dict)
             self.fit_dict = fit_dict
         return fit_dict
 
