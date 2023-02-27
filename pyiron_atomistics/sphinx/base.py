@@ -35,7 +35,6 @@ from pyiron_atomistics.sphinx.potential import (
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
-from pyiron_base import HasGroups
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -1492,7 +1491,7 @@ class SphinxBase(GenericDFTJob):
         positions = self.structure.get_scaled_positions()
         numbers = self.structure.get_atomic_numbers()
         if ignore_magmoms:
-            magmoms = np.zeros(len(magmoms))
+            magmoms = np.zeros(len(positions))
         else:
             magmoms = self.structure.get_initial_magnetic_moments()
         mag_num = np.array(list(zip(magmoms, numbers)))
@@ -2270,7 +2269,7 @@ class _SphinxLogParser:
         return arr.reshape(shape)
 
     def get_band_energy(self):
-        return self._parse_band(f"final eig \[eV\]:(.*)$")
+        return self._parse_band("final eig \[eV\]:(.*)$")
 
     def get_occupancy(self):
         return self._parse_band("final focc:(.*)$")
