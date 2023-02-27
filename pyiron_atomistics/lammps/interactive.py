@@ -2,24 +2,16 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from ctypes import c_double, c_int
 import numpy as np
 import os
 import pandas as pd
 import warnings
-from scipy import constants
 
-from pyiron_atomistics.lammps.base import LammpsBase, _check_ortho_prism
+from pyiron_atomistics.lammps.base import LammpsBase
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.lammps.wrapper import PyironLammpsLibrary
-
-
-try:  # mpi4py is only supported on Linux and Mac Os X
-    from pylammpsmpi import LammpsLibrary
-except ImportError:
-    pass
 from pyiron_atomistics.lammps.units import UnitConverter
 
 __author__ = "Osamu Waseda, Jan Janssen"
