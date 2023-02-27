@@ -15,7 +15,9 @@ except ImportError:
 
 
 class PyironLammpsLibrary(object):
-    def __init__(self, working_directory, cores=1, comm=None, logger=None, log_file=None, library=None):
+    def __init__(
+        self, working_directory, cores=1, comm=None, logger=None, log_file=None
+    ):
         self._logger = logger
         self._prism = None
         self._structure = None
@@ -55,7 +57,9 @@ class PyironLammpsLibrary(object):
             positions = np.matmul(positions, self._prism.R)
         positions = np.array(positions).flatten()
         if self._cores == 1:
-            self._interactive_library.scatter_atoms("x", 1, 3, (len(positions) * c_double)(*positions))
+            self._interactive_library.scatter_atoms(
+                "x", 1, 3, (len(positions) * c_double)(*positions)
+            )
         else:
             self._interactive_library.scatter_atoms("x", positions)
         self.interactive_lib_command(command="change_box all remap")
@@ -137,7 +141,9 @@ class PyironLammpsLibrary(object):
                 f"structure has different chemical symbols than old one: {new_symbols} != {old_symbols}"
             )
         self.interactive_lib_command(command="clear")
-        control_dict = self._set_selective_dynamics(structure=structure, calc_md=calc_md)
+        control_dict = self._set_selective_dynamics(
+            structure=structure, calc_md=calc_md
+        )
         self.interactive_lib_command(command="units " + units)
         self.interactive_lib_command(command="dimension " + str(dimension))
         self.interactive_lib_command(command="boundary " + boundary)
@@ -217,9 +223,7 @@ class PyironLammpsLibrary(object):
                 [el_dict[el] for el in structure.get_chemical_elements()]
             )
         except KeyError:
-            missing = set(structure.get_chemical_elements()).difference(
-                el_dict.keys()
-            )
+            missing = set(structure.get_chemical_elements()).difference(el_dict.keys())
             missing = ", ".join([el.Abbreviation for el in missing])
             raise ValueError(
                 f"Structure contains elements [{missing}], that are not present in the potential!"
@@ -270,62 +274,79 @@ class PyironLammpsLibrary(object):
                 constraint_yz = not_constrained_xyz[np.intersect1d(ind_y, ind_z)] + 1
                 constraint_zx = not_constrained_xyz[np.intersect1d(ind_z, ind_x)] + 1
                 constraint_x = (
-                    not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_x, ind_y), ind_z)] + 1
+                    not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_x, ind_y), ind_z)]
+                    + 1
                 )
                 constraint_y = (
-                    not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_y, ind_z), ind_x)] + 1
+                    not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_y, ind_z), ind_x)]
+                    + 1
                 )
                 constraint_z = (
-                    not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_z, ind_x), ind_y)] + 1
+                    not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_z, ind_x), ind_y)]
+                    + 1
                 )
                 control_dict = {}
                 if len(constraint_xyz) > 0:
                     control_dict["group constraintxyz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_xyz]
                     )
-                    control_dict["fix constraintxyz"] = "constraintxyz setforce 0.0 0.0 0.0"
+                    control_dict[
+                        "fix constraintxyz"
+                    ] = "constraintxyz setforce 0.0 0.0 0.0"
                     if calc_md:
                         control_dict["velocity constraintxyz"] = "set 0.0 0.0 0.0"
                 if len(constraint_xy) > 0:
                     control_dict["group constraintxy"] = "id " + " ".join(
                         [str(ind) for ind in constraint_xy]
                     )
-                    control_dict["fix constraintxy"] = "constraintxy setforce 0.0 0.0 NULL"
+                    control_dict[
+                        "fix constraintxy"
+                    ] = "constraintxy setforce 0.0 0.0 NULL"
                     if calc_md:
                         control_dict["velocity constraintxy"] = "set 0.0 0.0 NULL"
                 if len(constraint_yz) > 0:
                     control_dict["group constraintyz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_yz]
                     )
-                    control_dict["fix constraintyz"] = "constraintyz setforce NULL 0.0 0.0"
+                    control_dict[
+                        "fix constraintyz"
+                    ] = "constraintyz setforce NULL 0.0 0.0"
                     if calc_md:
                         control_dict["velocity constraintyz"] = "set NULL 0.0 0.0"
                 if len(constraint_zx) > 0:
                     control_dict["group constraintxz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_zx]
                     )
-                    control_dict["fix constraintxz"] = "constraintxz setforce 0.0 NULL 0.0"
+                    control_dict[
+                        "fix constraintxz"
+                    ] = "constraintxz setforce 0.0 NULL 0.0"
                     if calc_md:
                         control_dict["velocity constraintxz"] = "set 0.0 NULL 0.0"
                 if len(constraint_x) > 0:
                     control_dict["group constraintx"] = "id " + " ".join(
                         [str(ind) for ind in constraint_x]
                     )
-                    control_dict["fix constraintx"] = "constraintx setforce 0.0 NULL NULL"
+                    control_dict[
+                        "fix constraintx"
+                    ] = "constraintx setforce 0.0 NULL NULL"
                     if calc_md:
                         control_dict["velocity constraintx"] = "set 0.0 NULL NULL"
                 if len(constraint_y) > 0:
                     control_dict["group constrainty"] = "id " + " ".join(
                         [str(ind) for ind in constraint_y]
                     )
-                    control_dict["fix constrainty"] = "constrainty setforce NULL 0.0 NULL"
+                    control_dict[
+                        "fix constrainty"
+                    ] = "constrainty setforce NULL 0.0 NULL"
                     if calc_md:
                         control_dict["velocity constrainty"] = "set NULL 0.0 NULL"
                 if len(constraint_z) > 0:
                     control_dict["group constraintz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_z]
                     )
-                    control_dict["fix constraintz"] = "constraintz setforce NULL NULL 0.0"
+                    control_dict[
+                        "fix constraintz"
+                    ] = "constraintz setforce NULL NULL 0.0"
                     if calc_md:
                         control_dict["velocity constraintz"] = "set NULL NULL 0.0"
         return control_dict
@@ -379,9 +400,7 @@ class PyironLammpsLibrary(object):
                 id_el = list(el_struct_lst).index(el_eam)
                 el = el_obj_lst[id_el]
                 el_dict[el] = id_eam + 1
-        elem_all = np.array(
-            [el_dict[self._structure.species[el]] for el in indices]
-        )
+        elem_all = np.array([el_dict[self._structure.species[el]] for el in indices])
         if self._cores == 1:
             self._interactive_library.scatter_atoms(
                 "type", 0, 1, (len(elem_all) * c_int)(*elem_all)

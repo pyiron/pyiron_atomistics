@@ -83,8 +83,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
     def interactive_cells_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            self._interactive_library.interactive_cells_getter(),
-            label="cells"
+            self._interactive_library.interactive_cells_getter(), label="cells"
         )
 
     def interactive_cells_setter(self, cell):
@@ -95,8 +94,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
     def interactive_volume_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            self._interactive_library.interactive_volume_getter(),
-            label="volume"
+            self._interactive_library.interactive_volume_getter(), label="volume"
         )
 
     def interactive_forces_getter(self):
@@ -177,7 +175,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             cores=self.server.cores,
             comm=self._interactive_mpi_communicator,
             logger=self._logger,
-            log_file=self._log_file
+            log_file=self._log_file,
         )
         if not all(self.structure.pbc):
             self.input.control["boundary"] = " ".join(
@@ -361,7 +359,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._reset_interactive_run_command()
             if self._user_fix_external is not None:
                 self._interactive_library.set_fix_external_callback(
-                    fix_id="fix_external", callback=self._user_fix_external.fix_external, caller=None
+                    fix_id="fix_external",
+                    callback=self._user_fix_external.fix_external,
+                    caller=None,
                 )
             counter = 0
             iteration_max = int(
@@ -513,8 +513,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
     def interactive_indices_setter(self, indices):
         self._interactive_library.interactive_indices_setter(
-            indices=indices,
-            el_eam_lst=self.input.potential.get_element_lst()
+            indices=indices, el_eam_lst=self.input.potential.get_element_lst()
         )
 
     def interactive_energy_pot_getter(self):
@@ -534,8 +533,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
     def interactive_steps_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            self._interactive_library.interactive_steps_getter(),
-            label="steps"
+            self._interactive_library.interactive_steps_getter(), label="steps"
         )
 
     def interactive_temperatures_getter(self):
@@ -554,10 +552,14 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             numpy.array: Nx3x3 np array of stress/atom
         """
         if not "stress" in self.interactive_cache.keys():
-            ss = self._interactive_library.interactive_stress_getter(enable_stress_computation=True)
+            ss = self._interactive_library.interactive_stress_getter(
+                enable_stress_computation=True
+            )
             self.interactive_cache["stress"] = []
         else:
-            ss = self._interactive_library.interactive_stress_getter(enable_stress_computation=False)
+            ss = self._interactive_library.interactive_stress_getter(
+                enable_stress_computation=False
+            )
         return ss
 
     def interactive_pressures_getter(self):
