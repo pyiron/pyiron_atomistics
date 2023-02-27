@@ -26,7 +26,7 @@ from pyiron_atomistics.lammps.structure import (
     structure_to_lammps,
 )
 from pyiron_atomistics.lammps.units import UnitConverter, LAMMPS_UNIT_CONVERSIONS
-from pyiron_atomistics.lammps.lammps_io import (
+from pyiron_atomistics.lammps.output import (
     collect_output_log,
     collect_h5md_file,
     collect_dump_file,
