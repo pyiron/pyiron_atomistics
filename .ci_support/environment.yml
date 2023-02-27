@@ -19,6 +19,6 @@ dependencies:
 - pymatgen =2022.11.7
 - pyscal =2.10.18
 - scikit-learn =1.2.1
-- scipy =1.10.0
+- scipy =1.10.1
 - seekpath =2.0.1
 - spglib =2.0.2
