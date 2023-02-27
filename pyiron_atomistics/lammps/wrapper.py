@@ -16,7 +16,13 @@ except ImportError:
 
 class PyironLammpsLibrary(object):
     def __init__(
-        self, working_directory, cores=1, comm=None, logger=None, log_file=None, library=None
+        self,
+        working_directory,
+        cores=1,
+        comm=None,
+        logger=None,
+        log_file=None,
+        library=None,
     ):
         self._logger = logger
         self._prism = None
