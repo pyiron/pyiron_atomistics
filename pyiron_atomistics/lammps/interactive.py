@@ -3,7 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from ctypes import c_double, c_int
-import importlib
 import numpy as np
 import os
 import pandas as pd
@@ -14,22 +13,7 @@ from pyiron_atomistics.lammps.base import LammpsBase, _check_ortho_prism
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
-from pyiron_atomistics.lammps.wrapper import (
-    interactive_lib_command,
-    interactive_positions_setter,
-    interactive_positions_getter,
-    interactive_cells_getter,
-    interactive_cells_setter,
-    interactive_volume_getter,
-    interactive_forces_getter,
-    interactive_structure_setter,
-    interactive_energy_pot_getter,
-    interactive_energy_tot_getter,
-    interactive_steps_getter,
-    interactive_temperatures_getter,
-    interactive_indices_getter,
-    interactive_pressures_getter,
-)
+from pyiron_atomistics.lammps.wrapper import PyironLammpsLibrary
 
 
 try:  # mpi4py is only supported on Linux and Mac Os X
@@ -91,66 +75,47 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_mpi_communicator = comm
 
     def _interactive_lib_command(self, command):
-        interactive_lib_command(
-            lmp=self._interactive_library, logger=self._logger, command=command
-        )
+        self._interactive_library.interactive_lib_command(command=command)
 
     def interactive_positions_getter(self):
         uc = UnitConverter(units=self.units)
-        positions = interactive_positions_getter(
-            lmp=self._interactive_library,
-            number_of_atoms=len(self.structure),
-            prism=self._prism,
-        )
+        positions = self._interactive_library.interactive_positions_getter()
         positions = uc.convert_array_to_pyiron_units(positions, label="positions")
         return positions.tolist()
 
     def interactive_positions_setter(self, positions):
-        interactive_positions_setter(
-            lmp=self._interactive_library,
-            logger=self._logger,
+        self._interactive_library.interactive_positions_setter(
             positions=positions,
-            prism=self._prism,
-            cores=self.server.cores,
-            interactive=self.server.run_mode.interactive,
         )
 
     def interactive_cells_getter(self):
         uc = UnitConverter(units=self.units)
-        cc = interactive_cells_getter(lmp=self._interactive_library)
+        cc = self._interactive_library.interactive_cells_getter()
         return uc.convert_array_to_pyiron_units(
             self._prism.unfold_cell(cc), label="cells"
         )
 
     def interactive_cells_setter(self, cell):
-        self._prism = interactive_cells_setter(
-            lmp=self._interactive_library,
-            logger=self._logger,
+        self._interactive_library.interactive_cells_setter(
             cell=cell,
-            structure_current=self._structure_current,
-            structure_previous=self._structure_previous,
+            structure=self._structure_current
         )
 
     def interactive_volume_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            interactive_volume_getter(lmp=self._interactive_library), label="volume"
+            self._interactive_library.interactive_volume_getter(),
+            label="volume"
         )
 
     def interactive_forces_getter(self):
         uc = UnitConverter(units=self.units)
-        ff = interactive_forces_getter(
-            lmp=self._interactive_library,
-            prism=self._prism,
-            number_of_atoms=len(self.structure),
-        )
+        ff = self._interactive_library.interactive_forces_getter()
         ff = uc.convert_array_to_pyiron_units(ff, label="forces")
         return ff.tolist()
 
     def interactive_execute(self):
-        interactive_lib_command(
-            lmp=self._interactive_library,
-            logger=self._logger,
+        self._interactive_library.interactive_lib_command(
             command=self._interactive_run_command,
         )
 
@@ -216,18 +181,13 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
     def interactive_initialize_interface(self):
         self._create_working_directory()
-        if self.server.run_mode.interactive and self.server.cores == 1:
-            lammps = getattr(importlib.import_module("lammps"), "lammps")
-            if self._log_file is None:
-                self._log_file = os.path.join(self.working_directory, "log.lammps")
-            self._interactive_library = lammps(
-                cmdargs=["-screen", "none", "-log", self._log_file],
-                comm=self._interactive_mpi_communicator,
-            )
-        else:
-            self._interactive_library = LammpsLibrary(
-                cores=self.server.cores, working_directory=self.working_directory
-            )
+        self._interactive_library = PyironLammpsLibrary(
+            working_directory=self.working_directory,
+            cores=self.server.cores,
+            comm=self._interactive_mpi_communicator,
+            logger=self._logger,
+            log_file=self._log_file
+        )
         if not all(self.structure.pbc):
             self.input.control["boundary"] = " ".join(
                 ["p" if coord else "f" for coord in self.structure.pbc]
@@ -410,7 +370,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._reset_interactive_run_command()
             if self._user_fix_external is not None:
                 self._interactive_library.set_fix_external_callback(
-                    "fix_external", self._user_fix_external.fix_external
+                    fix_id="fix_external", callback=self._user_fix_external.fix_external, caller=None
                 )
             counter = 0
             iteration_max = int(
@@ -459,19 +419,14 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._logger.debug("interactive run - done")
 
     def interactive_structure_setter(self, structure):
-        self._prism, control_dict = interactive_structure_setter(
-            lmp=self._interactive_library,
-            logger=self._logger,
-            structure_current=structure,
-            structure_previous=self.structure,
+        self._prism, control_dict = self._interactive_library.interactive_structure_setter(
+            structure=structure,
             units=self.input.control["units"],
             dimension=self.input.control["dimension"],
             boundary=self.input.control["boundary"],
             atom_style=self.input.control["atom_style"],
             el_eam_lst=self.input.potential.get_element_lst(),
             calc_md=self._generic_input["calc_mode"] == "md",
-            interactive=self.server.run_mode.interactive,
-            cores=self.server.cores,
         )
         for key, value in control_dict.items():
             self.input.control[key.replace(" ", "___")] = value
@@ -561,56 +516,43 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
     def interactive_indices_getter(self):
         uc = UnitConverter(units=self.units)
-        lammps_indices = interactive_indices_getter(lmp=self._interactive_library)
+        lammps_indices = self._interactive_library.interactive_indices_getter()
         indices = uc.convert_array_to_pyiron_units(
             self.remap_indices(lammps_indices), label="indices"
         )
         return indices.tolist()
 
     def interactive_indices_setter(self, indices):
-        el_struct_lst = self._structure_current.get_species_symbols()
-        el_obj_lst = self._structure_current.get_species_objects()
-        el_eam_lst = self.input.potential.get_element_lst()
-        el_dict = {}
-        for id_eam, el_eam in enumerate(el_eam_lst):
-            if el_eam in el_struct_lst:
-                id_el = list(el_struct_lst).index(el_eam)
-                el = el_obj_lst[id_el]
-                el_dict[el] = id_eam + 1
-        elem_all = np.array(
-            [el_dict[self._structure_current.species[el]] for el in indices]
+        self._interactive_library.interactive_indices_setter(
+            indices=indices,
+            el_eam_lst=self.input.potential.get_element_lst()
         )
-        if self.server.run_mode.interactive and self.server.cores == 1:
-            self._interactive_library.scatter_atoms(
-                "type", 0, 1, (len(elem_all) * c_int)(*elem_all)
-            )
-        else:
-            self._interactive_library.scatter_atoms("type", elem_all)
 
     def interactive_energy_pot_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            interactive_energy_pot_getter(lmp=self._interactive_library),
+            self._interactive_library.interactive_energy_pot_getter(),
             label="energy_pot",
         )
 
     def interactive_energy_tot_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            interactive_energy_tot_getter(lmp=self._interactive_library),
+            self._interactive_library.interactive_energy_tot_getter(),
             label="energy_tot",
         )
 
     def interactive_steps_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            interactive_steps_getter(lmp=self._interactive_library), label="steps"
+            self._interactive_library.interactive_steps_getter(),
+            label="steps"
         )
 
     def interactive_temperatures_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            interactive_temperatures_getter(lmp=self._interactive_library),
+            self._interactive_library.interactive_temperatures_getter(),
             label="temperature",
         )
 
@@ -623,33 +565,15 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             numpy.array: Nx3x3 np array of stress/atom
         """
         if not "stress" in self.interactive_cache.keys():
-            self._interactive_lib_command("compute st all stress/atom NULL")
-            self._interactive_lib_command("run 0")
+            ss = self._interactive_library.interactive_stress_getter(enable_stress_computation=True)
             self.interactive_cache["stress"] = []
-        id_lst = self._interactive_library.extract_atom("id", 0)
-        id_lst = np.array([id_lst[i] for i in range(len(self.structure))]) - 1
-        id_lst = np.arange(len(id_lst))[np.argsort(id_lst)]
-        ind = np.array([0, 3, 4, 3, 1, 5, 4, 5, 2])
-        ss = self._interactive_library.extract_compute("st", 1, 2)
-        ss = np.array(
-            [ss[i][j] for i in range(len(self.structure)) for j in range(6)]
-        ).reshape(-1, 6)[id_lst]
-        ss = (
-            ss[:, ind].reshape(len(self.structure), 3, 3)
-            / constants.eV
-            * constants.bar
-            * constants.angstrom**3
-        )
-        if _check_ortho_prism(prism=self._prism):
-            ss = np.einsum("ij,njk->nik", self._prism.R, ss)
-            ss = np.einsum("nij,kj->nik", ss, self._prism.R)
+        else:
+            ss = self._interactive_library.interactive_stress_getter(enable_stress_computation=False)
         return ss
 
     def interactive_pressures_getter(self):
         uc = UnitConverter(units=self.units)
-        pp = interactive_pressures_getter(
-            lmp=self._interactive_library, prism=self._prism
-        )
+        pp = self._interactive_library.interactive_pressures_getter()
         return uc.convert_array_to_pyiron_units(pp, label="pressure")
 
     def interactive_close(self):
