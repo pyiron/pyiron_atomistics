@@ -18,7 +18,7 @@ def interactive_positions_getter(lmp, number_of_atoms, prism):
 def interactive_positions_setter(lmp, logger, positions, prism, cores, interactive):
     if _check_ortho_prism(prism=prism):
         positions = np.array(positions).reshape(-1, 3)
-        positions = np.matmul(positions, prism)
+        positions = np.matmul(positions, prism.R)
     positions = np.array(positions).flatten()
     if interactive and cores == 1:
         lmp.scatter_atoms(
