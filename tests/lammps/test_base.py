@@ -11,7 +11,7 @@ from pyiron_base import state, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
-from pyiron_atomistics.lammps.lammps_io import to_amat
+from pyiron_atomistics.lammps.output import to_amat
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 import ase.units as units
 from pyiron_base._tests import TestWithCleanProject
