@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import warnings
 
-from pyiron_base import state, extract_data_from_file, deprecate
+from pyiron_base import state, deprecate
 from pyiron_atomistics.lammps.potential import (
     LammpsPotentialFile,
     PotentialAvailable,
@@ -551,7 +551,7 @@ class LammpsBase(AtomisticGenericJob):
         collect_errors(file_name=file_name)
         if os.path.exists(file_name):
             generic_keys_lst, pressure_dict, df = collect_output_log(
-                file_name=self.job_file_name(file_name=file_name, cwd=cwd),
+                file_name=file_name,
                 prism=self._prism,
             )
             uc = UnitConverter(self.units)
