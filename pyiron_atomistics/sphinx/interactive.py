@@ -359,9 +359,6 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
 
 
 class SphinxOutput(GenericInteractiveOutput):
-    def __init__(self, job):
-        super(SphinxOutput, self).__init__(job)
-
     def check_band_occupancy(self, plot=True):
         """
         Check whether there are still empty bands available.
