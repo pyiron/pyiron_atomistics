@@ -82,15 +82,14 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
     def interactive_cells_getter(self):
         uc = UnitConverter(units=self.units)
-        cc = self._interactive_library.interactive_cells_getter()
         return uc.convert_array_to_pyiron_units(
-            self._prism.unfold_cell(cc), label="cells"
+            self._interactive_library.interactive_cells_getter(),
+            label="cells"
         )
 
     def interactive_cells_setter(self, cell):
         self._interactive_library.interactive_cells_setter(
             cell=cell,
-            structure=self._structure_current
         )
 
     def interactive_volume_getter(self):
@@ -411,7 +410,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             self._logger.debug("interactive run - done")
 
     def interactive_structure_setter(self, structure):
-        self._prism, control_dict = self._interactive_library.interactive_structure_setter(
+        self._interactive_library.interactive_structure_setter(
             structure=structure,
             units=self.input.control["units"],
             dimension=self.input.control["dimension"],
@@ -420,8 +419,6 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             el_eam_lst=self.input.potential.get_element_lst(),
             calc_md=self._generic_input["calc_mode"] == "md",
         )
-        for key, value in control_dict.items():
-            self.input.control[key.replace(" ", "___")] = value
         self._interactive_lammps_input()
         self._interactive_set_potential()
 

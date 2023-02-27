@@ -59,7 +59,7 @@ class PyironLammpsLibrary(object):
         self.interactive_lib_command(command="change_box all remap")
 
     def interactive_cells_getter(self):
-        return np.array(
+        cc = np.array(
             [
                 [self._interactive_library.get_thermo("lx"), 0, 0],
                 [
@@ -74,8 +74,9 @@ class PyironLammpsLibrary(object):
                 ],
             ]
         )
+        return self._prism.unfold_cell(cc)
 
-    def interactive_cells_setter(self, cell, structure):
+    def interactive_cells_setter(self, cell):
         self._prism = UnfoldingPrism(cell)
         lx, ly, lz, xy, xz, yz = self._prism.get_lammps_prism()
         if _check_ortho_prism(prism=self._prism):
@@ -83,8 +84,8 @@ class PyironLammpsLibrary(object):
                 "Warning: setting upper trangular matrix might slow down the calculation"
             )
 
-        is_skewed = structure.is_skewed(tolerance=1.0e-8)
-        was_skewed = self._structure.is_skewed(tolerance=1.0e-8)
+        is_skewed = cell_is_skewed(cell=cell, tolerance=1.0e-8)
+        was_skewed = cell_is_skewed(cell=self._structure.cell, tolerance=1.0e-8)
 
         if is_skewed:
             if not was_skewed:
@@ -424,3 +425,23 @@ class PyironLammpsLibrary(object):
         self._interactive_library.set_fix_external_callback(
             fix_id=fix_id, callback=callback, caller=caller
         )
+
+
+def cell_is_skewed(cell, tolerance=1.0e-8):
+    """
+    Check whether the simulation box is skewed/sheared. The algorithm compares the box volume
+    and the product of the box length in each direction. If these numbers do not match, the box
+    is considered to be skewed and the function returns True
+
+    Args:
+        tolerance (float): Relative tolerance above which the structure is considered as skewed
+
+    Returns:
+        (bool): Whether the box is skewed or not.
+    """
+    volume = np.abs(np.linalg.det(cell))
+    prod = np.linalg.norm(cell, axis=-1).prod()
+    if volume > 0:
+        if abs(volume - prod) / volume < tolerance:
+            return False
+    return True
