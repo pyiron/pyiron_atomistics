@@ -15,12 +15,14 @@ except ImportError:
 
 
 class PyironLammpsLibrary(object):
-    def __int__(self, working_directory, cores=1, comm=None, logger=None, log_file=None):
+    def __init__(self, working_directory, cores=1, comm=None, logger=None, log_file=None, library=None):
         self._logger = logger
         self._prism = None
         self._structure = None
         self._cores = cores
-        if self._cores == 1:
+        if library is not None:
+            self._interactive_library = library
+        elif self._cores == 1:
             lammps = getattr(importlib.import_module("lammps"), "lammps")
             if log_file is None:
                 log_file = os.path.join(working_directory, "log.lammps")
