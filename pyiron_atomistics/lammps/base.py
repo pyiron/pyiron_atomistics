@@ -31,7 +31,7 @@ from pyiron_atomistics.lammps.lammps_io import (
     collect_h5md_file,
     collect_dump_file,
     collect_errors,
-    remap_indices
+    remap_indices,
 )
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
@@ -533,7 +533,7 @@ class LammpsBase(AtomisticGenericJob):
         return remap_indices(
             lammps_indices=lammps_indices,
             potential_elements=self.input.potential.get_element_lst(),
-            structure=self.structure
+            structure=self.structure,
         )
 
     def collect_output_log(self, file_name="log.lammps", cwd=None):
@@ -552,7 +552,7 @@ class LammpsBase(AtomisticGenericJob):
         if os.path.exists(file_name):
             generic_keys_lst, pressure_dict, df = collect_output_log(
                 file_name=self.job_file_name(file_name=file_name, cwd=cwd),
-                prism=self._prism
+                prism=self._prism,
             )
             uc = UnitConverter(self.units)
             with self.project_hdf5.open("output/generic") as hdf_output:
@@ -873,7 +873,6 @@ class LammpsBase(AtomisticGenericJob):
             )
             # Write to hdf
             with self.project_hdf5.open("output/generic") as hdf_output:
-
                 for k, v in dump_dict.pop("computes").items():
                     hdf_output[k] = uc.convert_array_to_pyiron_units(
                         np.array(v), label=k
