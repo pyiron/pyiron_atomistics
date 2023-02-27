@@ -28,7 +28,7 @@ from pyiron_atomistics.lammps.wrapper import (
     interactive_steps_getter,
     interactive_temperatures_getter,
     interactive_indices_getter,
-    interactive_pressures_getter
+    interactive_pressures_getter,
 )
 
 
@@ -91,14 +91,16 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_mpi_communicator = comm
 
     def _interactive_lib_command(self, command):
-        interactive_lib_command(lmp=self._interactive_library, logger=self._logger, command=command)
+        interactive_lib_command(
+            lmp=self._interactive_library, logger=self._logger, command=command
+        )
 
     def interactive_positions_getter(self):
         uc = UnitConverter(units=self.units)
         positions = interactive_positions_getter(
             lmp=self._interactive_library,
             number_of_atoms=len(self.structure),
-            prism=self._prism
+            prism=self._prism,
         )
         positions = uc.convert_array_to_pyiron_units(positions, label="positions")
         return positions.tolist()
@@ -110,7 +112,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             positions=positions,
             prism=self._prism,
             cores=self.server.cores,
-            interactive=self.server.run_mode.interactive
+            interactive=self.server.run_mode.interactive,
         )
 
     def interactive_cells_getter(self):
@@ -126,14 +128,13 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             logger=self._logger,
             cell=cell,
             structure_current=self._structure_current,
-            structure_previous=self._structure_previous
+            structure_previous=self._structure_previous,
         )
 
     def interactive_volume_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            interactive_volume_getter(lmp=self._interactive_library),
-            label="volume"
+            interactive_volume_getter(lmp=self._interactive_library), label="volume"
         )
 
     def interactive_forces_getter(self):
@@ -141,7 +142,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         ff = interactive_forces_getter(
             lmp=self._interactive_library,
             prism=self._prism,
-            number_of_atoms=len(self.structure)
+            number_of_atoms=len(self.structure),
         )
         ff = uc.convert_array_to_pyiron_units(ff, label="forces")
         return ff.tolist()
@@ -150,7 +151,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         interactive_lib_command(
             lmp=self._interactive_library,
             logger=self._logger,
-            command=self._interactive_run_command
+            command=self._interactive_run_command,
         )
 
     def _interactive_lammps_input(self):
@@ -470,7 +471,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             el_eam_lst=self.input.potential.get_element_lst(),
             calc_md=self._generic_input["calc_mode"] == "md",
             interactive=self.server.run_mode.interactive,
-            cores=self.server.cores
+            cores=self.server.cores,
         )
         for key, value in control_dict.items():
             self.input.control[key.replace(" ", "___")] = value
@@ -590,28 +591,27 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
             interactive_energy_pot_getter(lmp=self._interactive_library),
-            label="energy_pot"
+            label="energy_pot",
         )
 
     def interactive_energy_tot_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
             interactive_energy_tot_getter(lmp=self._interactive_library),
-            label="energy_tot"
+            label="energy_tot",
         )
 
     def interactive_steps_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            interactive_steps_getter(lmp=self._interactive_library),
-            label="steps"
+            interactive_steps_getter(lmp=self._interactive_library), label="steps"
         )
 
     def interactive_temperatures_getter(self):
         uc = UnitConverter(units=self.units)
         return uc.convert_array_to_pyiron_units(
-            interactive_temperatures_getter(lmp=self._interactive_library), \
-            label="temperature"
+            interactive_temperatures_getter(lmp=self._interactive_library),
+            label="temperature",
         )
 
     def interactive_stress_getter(self):
@@ -647,7 +647,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
 
     def interactive_pressures_getter(self):
         uc = UnitConverter(units=self.units)
-        pp = interactive_pressures_getter(lmp=self._interactive_library, prism=self._prism)
+        pp = interactive_pressures_getter(
+            lmp=self._interactive_library, prism=self._prism
+        )
         return uc.convert_array_to_pyiron_units(pp, label="pressure")
 
     def interactive_close(self):

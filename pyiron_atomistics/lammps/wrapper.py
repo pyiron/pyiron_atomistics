@@ -21,9 +21,7 @@ def interactive_positions_setter(lmp, logger, positions, prism, cores, interacti
         positions = np.matmul(positions, prism.R)
     positions = np.array(positions).flatten()
     if interactive and cores == 1:
-        lmp.scatter_atoms(
-            "x", 1, 3, (len(positions) * c_double)(*positions)
-        )
+        lmp.scatter_atoms("x", 1, 3, (len(positions) * c_double)(*positions))
     else:
         lmp.scatter_atoms("x", positions)
     interactive_lib_command(lmp=lmp, logger=logger, command="change_box all remap")
@@ -66,31 +64,28 @@ def interactive_cells_setter(lmp, logger, cell, structure_current, structure_pre
     if is_skewed:
         if not was_skewed:
             interactive_lib_command(
-                lmp=lmp,
-                logger=logger,
-                command="change_box all triclinic"
+                lmp=lmp, logger=logger, command="change_box all triclinic"
             )
         interactive_lib_command(
             lmp=lmp,
             logger=logger,
-            command="change_box all x final 0 %f y final 0 %f z final 0 %f  xy final %f xz final %f yz final %f remap units box" % (lx, ly, lz, xy, xz, yz)
+            command="change_box all x final 0 %f y final 0 %f z final 0 %f  xy final %f xz final %f yz final %f remap units box"
+            % (lx, ly, lz, xy, xz, yz),
         )
     elif was_skewed:
         interactive_lib_command(
             lmp=lmp,
             logger=logger,
-            command="change_box all x final 0 %f y final 0 %f z final 0 %f xy final %f xz final %f yz final %f remap units box" % (lx, ly, lz, 0.0, 0.0, 0.0)
+            command="change_box all x final 0 %f y final 0 %f z final 0 %f xy final %f xz final %f yz final %f remap units box"
+            % (lx, ly, lz, 0.0, 0.0, 0.0),
         )
-        interactive_lib_command(
-            lmp=lmp,
-            logger=logger,
-            command="change_box all ortho"
-        )
+        interactive_lib_command(lmp=lmp, logger=logger, command="change_box all ortho")
     else:
         interactive_lib_command(
             lmp=lmp,
             logger=logger,
-            command="change_box all x final 0 %f y final 0 %f z final 0 %f remap units box" % (lx, ly, lz)
+            command="change_box all x final 0 %f y final 0 %f z final 0 %f remap units box"
+            % (lx, ly, lz),
         )
     return prism
 
@@ -109,7 +104,20 @@ def interactive_forces_getter(lmp, prism, number_of_atoms):
     return ff
 
 
-def interactive_structure_setter(lmp, logger, structure_current, structure_previous, units, dimension, boundary, atom_style, el_eam_lst, calc_md, interactive, cores):
+def interactive_structure_setter(
+    lmp,
+    logger,
+    structure_current,
+    structure_previous,
+    units,
+    dimension,
+    boundary,
+    atom_style,
+    el_eam_lst,
+    calc_md,
+    interactive,
+    cores,
+):
     old_symbols = structure_previous.get_species_symbols()
     new_symbols = structure_current.get_species_symbols()
     if any(old_symbols != new_symbols):
@@ -119,7 +127,9 @@ def interactive_structure_setter(lmp, logger, structure_current, structure_previ
     interactive_lib_command(lmp=lmp, logger=logger, command="clear")
     control_dict = set_selective_dynamics(structure=structure_current, calc_md=calc_md)
     interactive_lib_command(lmp=lmp, logger=logger, command="units " + units)
-    interactive_lib_command(lmp=lmp, logger=logger, command="dimension " + str(dimension))
+    interactive_lib_command(
+        lmp=lmp, logger=logger, command="dimension " + str(dimension)
+    )
     interactive_lib_command(lmp=lmp, logger=logger, command="boundary " + boundary)
     interactive_lib_command(lmp=lmp, logger=logger, command="atom_style " + atom_style)
 
@@ -131,7 +141,10 @@ def interactive_structure_setter(lmp, logger, structure_current, structure_previ
         )
     xhi, yhi, zhi, xy, xz, yz = prism.get_lammps_prism()
     if prism.is_skewed():
-        interactive_lib_command(lmp=lmp, logger=logger, command="region 1 prism"
+        interactive_lib_command(
+            lmp=lmp,
+            logger=logger,
+            command="region 1 prism"
             + " 0.0 "
             + str(xhi)
             + " 0.0 "
@@ -144,40 +157,56 @@ def interactive_structure_setter(lmp, logger, structure_current, structure_previ
             + str(xz)
             + " "
             + str(yz)
-            + " units box"
+            + " units box",
         )
     else:
-        interactive_lib_command(lmp=lmp, logger=logger, command="region 1 block"
+        interactive_lib_command(
+            lmp=lmp,
+            logger=logger,
+            command="region 1 block"
             + " 0.0 "
             + str(xhi)
             + " 0.0 "
             + str(yhi)
             + " 0.0 "
             + str(zhi)
-            + " units box"
+            + " units box",
         )
     el_struct_lst = structure_current.get_species_symbols()
     el_obj_lst = structure_current.get_species_objects()
     if atom_style == "full":
-        interactive_lib_command(lmp=lmp, logger=logger, command="create_box "
+        interactive_lib_command(
+            lmp=lmp,
+            logger=logger,
+            command="create_box "
             + str(len(el_eam_lst))
             + " 1 "
             + "bond/types 1 "
             + "angle/types 1 "
             + "extra/bond/per/atom 2 "
-            + "extra/angle/per/atom 2 "
+            + "extra/angle/per/atom 2 ",
         )
     else:
-        interactive_lib_command(lmp=lmp, logger=logger, command="create_box " + str(len(el_eam_lst)) + " 1")
+        interactive_lib_command(
+            lmp=lmp, logger=logger, command="create_box " + str(len(el_eam_lst)) + " 1"
+        )
     el_dict = {}
     for id_eam, el_eam in enumerate(el_eam_lst):
         if el_eam in el_struct_lst:
             id_el = list(el_struct_lst).index(el_eam)
             el = el_obj_lst[id_el]
             el_dict[el] = id_eam + 1
-            interactive_lib_command(lmp=lmp, logger=logger, command="mass {0:3d} {1:f}".format(id_eam + 1, el.AtomicMass))
+            interactive_lib_command(
+                lmp=lmp,
+                logger=logger,
+                command="mass {0:3d} {1:f}".format(id_eam + 1, el.AtomicMass),
+            )
         else:
-            interactive_lib_command(lmp=lmp, logger=logger, command="mass {0:3d} {1:f}".format(id_eam + 1, 1.00))
+            interactive_lib_command(
+                lmp=lmp,
+                logger=logger,
+                command="mass {0:3d} {1:f}".format(id_eam + 1, 1.00),
+            )
     positions = structure_current.positions.flatten()
     if _check_ortho_prism(prism=prism):
         positions = np.array(positions).reshape(-1, 3)
@@ -188,7 +217,9 @@ def interactive_structure_setter(lmp, logger, structure_current, structure_previ
             [el_dict[el] for el in structure_current.get_chemical_elements()]
         )
     except KeyError:
-        missing = set(structure_current.get_chemical_elements()).difference(el_dict.keys())
+        missing = set(structure_current.get_chemical_elements()).difference(
+            el_dict.keys()
+        )
         missing = ", ".join([el.Abbreviation for el in missing])
         raise ValueError(
             f"Structure contains elements [{missing}], that are not present in the potential!"
@@ -237,95 +268,64 @@ def set_selective_dynamics(structure, calc_md):
             constraint_yz = not_constrained_xyz[np.intersect1d(ind_y, ind_z)] + 1
             constraint_zx = not_constrained_xyz[np.intersect1d(ind_z, ind_x)] + 1
             constraint_x = (
-                not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_x, ind_y), ind_z)]
-                + 1
+                not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_x, ind_y), ind_z)] + 1
             )
             constraint_y = (
-                not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_y, ind_z), ind_x)]
-                + 1
+                not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_y, ind_z), ind_x)] + 1
             )
             constraint_z = (
-                not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_z, ind_x), ind_y)]
-                + 1
+                not_constrained_xyz[np.setdiff1d(np.setdiff1d(ind_z, ind_x), ind_y)] + 1
             )
             control_dict = {}
             if len(constraint_xyz) > 0:
                 control_dict["group constraintxyz"] = "id " + " ".join(
                     [str(ind) for ind in constraint_xyz]
                 )
-                control_dict[
-                    "fix constraintxyz"
-                ] = "constraintxyz setforce 0.0 0.0 0.0"
+                control_dict["fix constraintxyz"] = "constraintxyz setforce 0.0 0.0 0.0"
                 if calc_md:
-                    control_dict[
-                        "velocity constraintxyz"
-                    ] = "set 0.0 0.0 0.0"
+                    control_dict["velocity constraintxyz"] = "set 0.0 0.0 0.0"
             if len(constraint_xy) > 0:
                 control_dict["group constraintxy"] = "id " + " ".join(
                     [str(ind) for ind in constraint_xy]
                 )
-                control_dict[
-                    "fix constraintxy"
-                ] = "constraintxy setforce 0.0 0.0 NULL"
+                control_dict["fix constraintxy"] = "constraintxy setforce 0.0 0.0 NULL"
                 if calc_md:
-                    control_dict[
-                        "velocity constraintxy"
-                    ] = "set 0.0 0.0 NULL"
+                    control_dict["velocity constraintxy"] = "set 0.0 0.0 NULL"
             if len(constraint_yz) > 0:
                 control_dict["group constraintyz"] = "id " + " ".join(
                     [str(ind) for ind in constraint_yz]
                 )
-                control_dict[
-                    "fix constraintyz"
-                ] = "constraintyz setforce NULL 0.0 0.0"
+                control_dict["fix constraintyz"] = "constraintyz setforce NULL 0.0 0.0"
                 if calc_md:
-                    control_dict[
-                        "velocity constraintyz"
-                    ] = "set NULL 0.0 0.0"
+                    control_dict["velocity constraintyz"] = "set NULL 0.0 0.0"
             if len(constraint_zx) > 0:
                 control_dict["group constraintxz"] = "id " + " ".join(
                     [str(ind) for ind in constraint_zx]
                 )
-                control_dict[
-                    "fix constraintxz"
-                ] = "constraintxz setforce 0.0 NULL 0.0"
+                control_dict["fix constraintxz"] = "constraintxz setforce 0.0 NULL 0.0"
                 if calc_md:
-                    control_dict[
-                        "velocity constraintxz"
-                    ] = "set 0.0 NULL 0.0"
+                    control_dict["velocity constraintxz"] = "set 0.0 NULL 0.0"
             if len(constraint_x) > 0:
                 control_dict["group constraintx"] = "id " + " ".join(
                     [str(ind) for ind in constraint_x]
                 )
-                control_dict[
-                    "fix constraintx"
-                ] = "constraintx setforce 0.0 NULL NULL"
+                control_dict["fix constraintx"] = "constraintx setforce 0.0 NULL NULL"
                 if calc_md:
-                    control_dict[
-                        "velocity constraintx"
-                    ] = "set 0.0 NULL NULL"
+                    control_dict["velocity constraintx"] = "set 0.0 NULL NULL"
             if len(constraint_y) > 0:
                 control_dict["group constrainty"] = "id " + " ".join(
                     [str(ind) for ind in constraint_y]
                 )
-                control_dict[
-                    "fix constrainty"
-                ] = "constrainty setforce NULL 0.0 NULL"
+                control_dict["fix constrainty"] = "constrainty setforce NULL 0.0 NULL"
                 if calc_md:
-                    control_dict[
-                        "velocity constrainty"
-                    ] = "set NULL 0.0 NULL"
+                    control_dict["velocity constrainty"] = "set NULL 0.0 NULL"
             if len(constraint_z) > 0:
                 control_dict["group constraintz"] = "id " + " ".join(
                     [str(ind) for ind in constraint_z]
                 )
-                control_dict[
-                    "fix constraintz"
-                ] = "constraintz setforce NULL NULL 0.0"
+                control_dict["fix constraintz"] = "constraintz setforce NULL NULL 0.0"
                 if calc_md:
-                    control_dict[
-                        "velocity constraintz"
-                    ] = "set NULL NULL 0.0"
+                    control_dict["velocity constraintz"] = "set NULL NULL 0.0"
     return control_dict
 
 
