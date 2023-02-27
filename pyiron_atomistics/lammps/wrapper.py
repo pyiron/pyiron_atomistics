@@ -134,12 +134,13 @@ class PyironLammpsLibrary(object):
         el_eam_lst,
         calc_md=True,
     ):
-        old_symbols = self._structure.get_species_symbols()
-        new_symbols = structure.get_species_symbols()
-        if any(old_symbols != new_symbols):
-            raise ValueError(
-                f"structure has different chemical symbols than old one: {new_symbols} != {old_symbols}"
-            )
+        if self._structure is not None:
+            old_symbols = self._structure.get_species_symbols()
+            new_symbols = structure.get_species_symbols()
+            if any(old_symbols != new_symbols):
+                raise ValueError(
+                    f"structure has different chemical symbols than old one: {new_symbols} != {old_symbols}"
+                )
         self.interactive_lib_command(command="clear")
         control_dict = self._set_selective_dynamics(
             structure=structure, calc_md=calc_md
