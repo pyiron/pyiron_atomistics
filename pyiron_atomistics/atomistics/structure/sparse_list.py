@@ -11,6 +11,7 @@ import numpy as np
 from numbers import Integral
 from collections import OrderedDict
 from collections.abc import Sequence
+from pyiron_base import DataContainer
 
 __author__ = "Joerg Neugebauer"
 __copyright__ = (
@@ -102,9 +103,14 @@ class SparseList(object):
         Returns:
 
         """
+        data = DataContainer()
+        data[key] = self.serialize()
+        data.to_hdf(hdf)
+
+    def serialize(self):
         if len(self.list()) > 0:
             # Convert to array and store
-            hdf[key] = np.array(self.list())
+            return np.array(self.list())
         elif len(self.values()) > 0:
             print("sparse array: ", key, len(self.values()))
             data_type = self._val_data_type()
@@ -118,7 +124,7 @@ class SparseList(object):
             else:
                 my_dict["values"] = self.values()
             print("values: ", self.values())
-            hdf[key] = my_dict
+            return my_dict
 
     def __len__(self):
         return self._length

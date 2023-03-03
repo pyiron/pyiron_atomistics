@@ -561,28 +561,9 @@ class Atoms(ASEAtoms):
                     self.bonds = hdf_atoms["explicit_bonds"]
                 if "spins" in hdf_atoms.list_nodes():
                     self.spins = hdf_atoms["spins"]
-                if "tags" in hdf_atoms.list_groups():
-                    with hdf_atoms.open("tags") as hdf_tags:
-                        tags = hdf_tags.list_nodes()
-                        for tag in tags:
-                            # tr_dict = {'0': False, '1': True}
-                            if isinstance(hdf_tags[tag], (list, np.ndarray)):
-                                my_list = hdf_tags[tag]
-                                self._tag_list[tag] = SparseList(
-                                    my_list, length=len(self)
-                                )
-
-                            else:
-                                my_dict = hdf_tags.get_pandas(tag).to_dict()
-                                my_dict = {
-                                    i: val
-                                    for i, val in zip(
-                                        my_dict["index"], my_dict["values"]
-                                    )
-                                }
-                                self._tag_list[tag] = SparseList(
-                                    my_dict, length=len(self)
-                                )
+                if "tags" in hdf_atoms.items():
+                    for k, v in hdf_atoms["tags"]:
+                        self.add_tag({k: v})
 
                 if "bonds" in hdf_atoms.list_nodes():
                     self.bonds = hdf_atoms["explicit_bonds"]
