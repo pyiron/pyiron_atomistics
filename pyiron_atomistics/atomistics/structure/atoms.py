@@ -565,7 +565,7 @@ class Atoms(ASEAtoms):
                     tags = hdf_atoms["tags"].to_object()
                     try:
                         tags = tags.to_object()
-                    except ValueError: # backward compatibility
+                    except ValueError:  # backward compatibility
                         pass
                     for k, v in tags.items():
                         self.add_tag(**{k: v})
