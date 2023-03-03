@@ -43,7 +43,7 @@ class AtomskBuilder:
         """
         Instiate new builder and add create mode.
 
-        See https://atomsk.univ-lille.fr/doc/en/mode_create.html or :method:`.AtomskFactory.create` for arguments.
+        See https://atomsk.univ-lille.fr/doc/en/mode_create.html or :meth:`.AtomskFactory.create` for arguments.
 
         Returns:
             :class:`.AtomskBuilder`: self
@@ -70,7 +70,7 @@ class AtomskBuilder:
         """ "
         Instiate new builder to modify and existing structure.
 
-        See :method:`.AtomskFactory.modify` for arguments.
+        See :meth:`.AtomskFactory.modify` for arguments.
 
         Returns:
             :class:`.AtomskBuilder`: self
@@ -141,10 +141,10 @@ class AtomskFactory:
     """
     Wrapper around the atomsk CLI.
 
-    Use :method:`.create()` to create a new structure and :method:`.modify()` to pass an existing structure to atomsk.
+    Use :meth:`.create()` to create a new structure and :meth:`.modify()` to pass an existing structure to atomsk.
     Both of them return a :class:`.AtomskBuilder`, which has methods named like the flags of atomsk.  Calling them with
     the appropriate arguments adds the flags to the command line.  Once you added all flags, call
-    :method:`.AtomskBuilder.build()` to create the new structure.  All methods to add flags return the
+    :meth:`.AtomskBuilder.build()` to create the new structure.  All methods to add flags return the
     :class:`AtomskBuilder` instance they are called on to allow method chaining.
 
     >>> from pyiron_atomistics import Project
@@ -187,7 +187,7 @@ class AtomskFactory:
 
         See https://atomsk.univ-lille.fr/doc/en/mode_create.html for supported lattices.
 
-        Call :method:`.AtomskBuilder.build()` on the returned object to actually create a structure.
+        Call :meth:`.AtomskBuilder.build()` on the returned object to actually create a structure.
 
         Args:
             lattice (str): lattice type to create
@@ -207,7 +207,7 @@ class AtomskFactory:
         """
         Modify existing structure with Atomsk.
 
-        Call :method:`.AtomskBuilder.build()` on the returned object to actually create a structure.
+        Call :meth:`.AtomskBuilder.build()` on the returned object to actually create a structure.
 
         Args:
             structure (:class:`.Atoms`): input structure
