@@ -562,7 +562,7 @@ class Atoms(ASEAtoms):
                 if "spins" in hdf_atoms.list_nodes():
                     self.spins = hdf_atoms["spins"]
                 if "tags" in hdf_atoms.list_groups():
-                    tags = hdf_atoms["tags"].to_object()
+                    tags = hdf_atoms["tags"]
                     try:
                         tags = tags.to_object()
                     except ValueError: # backward compatibility
