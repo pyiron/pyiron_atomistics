@@ -6,7 +6,7 @@ from scipy import constants
 import warnings
 
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
-from pyiron_atomistics.lammps.base import _check_ortho_prism
+from pyiron_atomistics.lammps.output import _check_ortho_prism
 
 try:  # mpi4py is only supported on Linux and Mac Os X
     from pylammpsmpi import LammpsLibrary
