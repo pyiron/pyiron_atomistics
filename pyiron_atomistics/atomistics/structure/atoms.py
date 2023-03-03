@@ -561,9 +561,9 @@ class Atoms(ASEAtoms):
                     self.bonds = hdf_atoms["explicit_bonds"]
                 if "spins" in hdf_atoms.list_nodes():
                     self.spins = hdf_atoms["spins"]
-                if "tags" in hdf_atoms.items():
-                    for k, v in hdf_atoms["tags"]:
-                        self.add_tag({k: v})
+                if "tags" in hdf_atoms.list_groups():
+                    for k, v in hdf_atoms["tags"].to_object().items():
+                        self.add_tag(**{k: v})
 
                 if "bonds" in hdf_atoms.list_nodes():
                     self.bonds = hdf_atoms["explicit_bonds"]
