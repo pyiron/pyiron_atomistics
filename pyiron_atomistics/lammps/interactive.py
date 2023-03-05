@@ -10,7 +10,8 @@ import pandas as pd
 import warnings
 from scipy import constants
 
-from pyiron_atomistics.lammps.base import LammpsBase, _check_ortho_prism
+from pyiron_atomistics.lammps.base import LammpsBase
+from pyiron_atomistics.lammps.output import _check_ortho_prism
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive

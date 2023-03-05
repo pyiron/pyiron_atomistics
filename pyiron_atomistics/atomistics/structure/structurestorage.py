@@ -34,14 +34,14 @@ class StructureStorage(FlattenedStorage, pa_has_structure.HasStructure):
     the number of structures and the total number of atoms in all structures, but re-allocates memory as necessary when
     more (or larger) structures are added than initially anticipated.
 
-    You can add structures and a human-readable name with :method:`.add_structure()`.
+    You can add structures and a human-readable name with :meth:`.add_structure()`.
 
     >>> container = StructureStorage()
     >>> container.add_structure(Atoms(...), "fcc")
     >>> container.add_structure(Atoms(...), "hcp")
     >>> container.add_structure(Atoms(...), "bcc")
 
-    Accessing stored structures works with :method:`.get_strucure()`.  You can either pass the identifier you passed
+    Accessing stored structures works with :meth:`.get_strucure()`.  You can either pass the identifier you passed
     when adding the structure or the numeric index
 
     >>> container.get_structure(frame=0) == container.get_structure(frame="fcc")
@@ -53,18 +53,18 @@ class StructureStorage(FlattenedStorage, pa_has_structure.HasStructure):
 
     (chunk means structure in this case, see below and :class:`.FlattenedStorage`)
 
-    You can then pass arrays of the corresponding shape to :method:`add_structure()`
+    You can then pass arrays of the corresponding shape to :meth:`add_structure()`
 
     >>> container.add_structure(Atoms(...), "grain_boundary", energy=3.14)
 
-    Saved arrays are accessed with :method:`.get_array()`
+    Saved arrays are accessed with :meth:`.get_array()`
 
     >>> container.get_array("energy", 3)
     3.14
     >>> container.get_array("energy", 0)
     -1
 
-    It is also possible to use the same names in :method:`.get_array()` as in :method:`.get_structure()`.
+    It is also possible to use the same names in :meth:`.get_array()` as in :meth:`.get_structure()`.
 
     >>> container.get_array("energy", 0) == container.get_array("energy", "fcc")
     True
@@ -153,7 +153,7 @@ class StructureStorage(FlattenedStorage, pa_has_structure.HasStructure):
 
         Args:
             name (str): name of array to set
-            frame (int, str): selects structure to set, as in :method:`.get_strucure()`
+            frame (int, str): selects structure to set, as in :meth:`.get_strucure()`
             value: value (for per chunk) or array of values (for per element); type and shape as per :meth:`.hasarray()`.
 
         Raises:
