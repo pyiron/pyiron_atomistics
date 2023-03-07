@@ -16,7 +16,6 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     pyiron_to_pymatgen,
 )
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from pyiron_atomistics.atomistics.structure.sparse_list import SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     element,
     PeriodicTable,

@@ -21,7 +21,6 @@ from pyiron_atomistics.atomistics.structure.neighbors import Neighbors, Tree
 from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
 from pyiron_atomistics.atomistics.structure.symmetry import Symmetry
-from pyiron_atomistics.atomistics.structure.sparse_list import SparseArray, SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
@@ -433,7 +432,7 @@ class Atoms(ASEAtoms):
             >>> self.remove_tag(key="selective_dynamics")
 
         """
-        del self.array[key]
+        del self.arrays[key]
 
     # @staticmethod
     def numbers_to_elements(self, numbers):
