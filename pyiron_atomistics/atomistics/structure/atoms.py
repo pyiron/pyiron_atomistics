@@ -585,7 +585,9 @@ class Atoms(ASEAtoms):
                                 my_list = hdf_tags[tag]
                             else:
                                 my_dict = hdf_tags.get_pandas(tag).to_dict()
-                                my_list = np.array(my_dict["values"])[np.argsort(my_dict["index"])]
+                                my_list = np.array(my_dict["values"])[
+                                    np.argsort(my_dict["index"])
+                                ]
                             self.new_array(tag, my_list)
 
                 if "bonds" in hdf_atoms.list_nodes():
@@ -642,9 +644,10 @@ class Atoms(ASEAtoms):
                             my_list = hdf_tags[tag]
                         else:
                             my_dict = hdf_tags.get_pandas(tag).to_dict()
-                            my_list = np.array(my_dict["values"])[np.argsort(my_dict["index"])]
+                            my_list = np.array(my_dict["values"])[
+                                np.argsort(my_dict["index"])
+                            ]
                         self.new_array(tag, my_list)
-
 
             self.cell = None
             if "cell" in hdf_atoms.list_groups():
@@ -2203,9 +2206,7 @@ class Atoms(ASEAtoms):
             for tag in tags:
                 if tag in ["positions", "numbers"]:
                     continue
-                out_str += (
-                    "    " + str(tag) + ": " + self.arrays[tag].__str__() + "\n"
-                )
+                out_str += "    " + str(tag) + ": " + self.arrays[tag].__str__() + "\n"
         if self.cell is not None:
             out_str += "pbc: " + str(self.pbc) + "\n"
             out_str += "cell: \n"
