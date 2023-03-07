@@ -102,11 +102,6 @@ class TestSparseArray(unittest.TestCase):
         self.assertEqual(len(self.aMatrix), 6)
 
     def test_add_tag(self):
-        self.aMatrix.add_tag("coordinates")
-        self.assertTrue("coordinates" in self.aMatrix.keys())
-        self.assertTrue(len(self.aMatrix.coordinates) == 6)
-        self.assertTrue(isinstance(self.aMatrix.coordinates, SparseList))
-
         self.aMatrix.add_tag(rel=[True, True, True])
         self.assertTrue(self.aMatrix.rel[1] == [True, True, True])
 
@@ -136,13 +131,14 @@ class TestSparseArray(unittest.TestCase):
         self.assertEqual(bMatrix.list_1, fac * [5, 4, 3, 4, 5, 6])
 
     def test__getattr__(self):
-        self.aMatrix.add_tag("spin")
+        self.aMatrix.add_tag(spin=True)
         self.assertEqual(len(self.aMatrix.spin), 6)
-        self.aMatrix.spin[1::2] = True
         self.aMatrix.spin[0::2] = False
         self.assertEqual(
             self.aMatrix.spin.list(), [False, True, False, True, False, True]
         )
+        self.aMatrix.remove_tag('spin')
+        self.assertFalse('spin' in self.aMatrix._lists.keys())
 
     def test_keys(self):
         self.assertEqual(

@@ -406,7 +406,7 @@ class Atoms(ASEAtoms):
 
         self._high_symmetry_path.update(path)
 
-    def add_tag(self, *args, **qwargs):
+    def add_tag(self, **qwargs):
         """
         Add tags to the atoms object.
 
@@ -417,7 +417,24 @@ class Atoms(ASEAtoms):
             >>> self.add_tag(selective_dynamics=[False, False, False])
 
         """
-        self._tag_list.add_tag(*args, **qwargs)
+        self._tag_list.add_tag(**qwargs)
+
+    def remove_tag(self, tag: str) -> None:
+        """
+        Remove tags to the atoms object.
+
+        Args:
+            tag (str): tag to remove
+
+        Examples:
+
+            For selective dynamics::
+
+            >>> self.add_tag(selective_dynamics=[False, False, False])
+            >>> self.remove_tag(key="selective_dynamics")
+
+        """
+        self._tag_list.remove_tag(**qwargs)
 
     # @staticmethod
     def numbers_to_elements(self, numbers):
