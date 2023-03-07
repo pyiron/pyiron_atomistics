@@ -415,7 +415,7 @@ class Atoms(ASEAtoms):
 
         """
         for tag, value in qwargs.items():
-            self.new_array(tag, np.repeat(value, len(self)))
+            self.new_array(tag, np.repeat([value], len(self), axis=0))
 
     def remove_tag(self, key: str) -> None:
         """
