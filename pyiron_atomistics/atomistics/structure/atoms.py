@@ -419,12 +419,12 @@ class Atoms(ASEAtoms):
         """
         self._tag_list.add_tag(**qwargs)
 
-    def remove_tag(self, tag: str) -> None:
+    def remove_tag(self, key: str) -> None:
         """
         Remove tags to the atoms object.
 
         Args:
-            tag (str): tag to remove
+            key (str): tag to remove
 
         Examples:
 
@@ -434,7 +434,7 @@ class Atoms(ASEAtoms):
             >>> self.remove_tag(key="selective_dynamics")
 
         """
-        self._tag_list.remove_tag(**qwargs)
+        self._tag_list.remove_tag(key)
 
     # @staticmethod
     def numbers_to_elements(self, numbers):
