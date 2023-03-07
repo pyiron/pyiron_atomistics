@@ -118,7 +118,6 @@ class Atoms(ASEAtoms):
         self.indices = np.array([])
         self.constraints = None
         self._pse = PeriodicTable()
-        self._tag_list = SparseArray()
 
         el_index_lst = list()
         element_list = None
@@ -186,7 +185,6 @@ class Atoms(ASEAtoms):
             el.Abbreviation if el.Parent is None else el.Parent for el in self.species
         ]
         symbols = np.array([el_lst[el] for el in self.indices])
-        self._tag_list._length = len(symbols)
         super(Atoms, self).__init__(
             symbols=symbols,
             positions=positions,
@@ -417,7 +415,8 @@ class Atoms(ASEAtoms):
             >>> self.add_tag(selective_dynamics=[False, False, False])
 
         """
-        self._tag_list.add_tag(**qwargs)
+        for tag, value in qwargs.items():
+            self.new_array(tag, np.repeat(value, len(self)))
 
     def remove_tag(self, key: str) -> None:
         """
@@ -434,7 +433,7 @@ class Atoms(ASEAtoms):
             >>> self.remove_tag(key="selective_dynamics")
 
         """
-        self._tag_list.remove_tag(key)
+        del self.array[key]
 
     # @staticmethod
     def numbers_to_elements(self, numbers):
@@ -486,10 +485,10 @@ class Atoms(ASEAtoms):
             hdf_structure["indices"] = self.indices
 
             with hdf_structure.open("tags") as hdf_tags:
-                for tag in self._tag_list.keys():
-                    tag_value = self._tag_list[tag]
-                    if isinstance(tag_value, SparseList):
-                        tag_value.to_hdf(hdf_tags, tag)
+                for tag, value in self.arrays.items():
+                    if tag in ["positions", "numbers"]:
+                        continue
+                    hdf_tags[tag] = value
             hdf_structure["units"] = self.units
             hdf_structure["dimension"] = self.dimension
 
@@ -545,7 +544,6 @@ class Atoms(ASEAtoms):
                     self.convert_element(el, self._pse) for el in hdf_atoms["species"]
                 ]
                 self.indices = hdf_atoms["indices"]
-                self._tag_list._length = len(self.indices)
 
                 self.set_species(el_object_list)
                 self.bonds = None
@@ -585,21 +583,10 @@ class Atoms(ASEAtoms):
                             # tr_dict = {'0': False, '1': True}
                             if isinstance(hdf_tags[tag], (list, np.ndarray)):
                                 my_list = hdf_tags[tag]
-                                self._tag_list[tag] = SparseList(
-                                    my_list, length=len(self)
-                                )
-
                             else:
                                 my_dict = hdf_tags.get_pandas(tag).to_dict()
-                                my_dict = {
-                                    i: val
-                                    for i, val in zip(
-                                        my_dict["index"], my_dict["values"]
-                                    )
-                                }
-                                self._tag_list[tag] = SparseList(
-                                    my_dict, length=len(self)
-                                )
+                                my_list = np.array(my_dict["values"])[np.argsort(my_dict["index"])]
+                            self.new_array(tag, my_list)
 
                 if "bonds" in hdf_atoms.list_nodes():
                     self.bonds = hdf_atoms["explicit_bonds"]
@@ -641,7 +628,6 @@ class Atoms(ASEAtoms):
             ]
             self.set_species(list(set(el_object_list)))
             self.indices = [self._species_to_index_dict[el] for el in el_object_list]
-            self._tag_list._length = len(self)
             self.bonds = None
             if "explicit_bonds" in hdf_atoms.list_nodes():
                 # print "bonds: "
@@ -654,15 +640,11 @@ class Atoms(ASEAtoms):
                         # tr_dict = {'0': False, '1': True}
                         if isinstance(hdf_tags[tag], (list, np.ndarray)):
                             my_list = hdf_tags[tag]
-                            self._tag_list[tag] = SparseList(my_list, length=len(self))
-
                         else:
                             my_dict = hdf_tags.get_pandas(tag).to_dict()
-                            my_dict = {
-                                i: val
-                                for i, val in zip(my_dict["index"], my_dict["values"])
-                            }
-                            self._tag_list[tag] = SparseList(my_dict, length=len(self))
+                            my_list = np.array(my_dict["values"])[np.argsort(my_dict["index"])]
+                        self.new_array(tag, my_list)
+
 
             self.cell = None
             if "cell" in hdf_atoms.list_groups():
@@ -729,7 +711,7 @@ class Atoms(ASEAtoms):
             dict_keys: Keys of the stored tags
 
         """
-        return self._tag_list.keys()
+        return self.arrays.keys()
 
     def convert_element(self, el, pse=None):
         """
@@ -2083,7 +2065,6 @@ class Atoms(ASEAtoms):
                 )
             sum_atoms = self
             # sum_atoms = copy(self)
-            sum_atoms._tag_list = sum_atoms._tag_list + other._tag_list
             sum_atoms.indices = np.append(sum_atoms.indices, other.indices)
             new_species_lst = copy(sum_atoms.species)
             ind_conv = {}
@@ -2136,8 +2117,6 @@ class Atoms(ASEAtoms):
         new_length = len(self) - len(np.arange(len(self))[np.asarray(key)])
         super(Atoms, self).__delitem__(key)
         self.indices = np.delete(self.indices, key, axis=0)
-        del self._tag_list[key]
-        self._tag_list._length = new_length
         deleted_species_indices = list()
         retain_species_indices = list()
         new_indices = self.indices.copy()
@@ -2162,7 +2141,9 @@ class Atoms(ASEAtoms):
     def __getitem__(self, item):
         new_dict = dict()
         if isinstance(item, int):
-            for key, value in self._tag_list.items():
+            for key, value in self.arrays.items():
+                if key in ["positions", "numbers"]:
+                    continue
                 if item < len(value):
                     if value[item] is not None:
                         new_dict[key] = value[item]
@@ -2189,9 +2170,6 @@ class Atoms(ASEAtoms):
         new_species = [self.species[ind] for ind in new_species_indices]
         new_array.set_species(new_species)
         new_array.indices = new_proper_indices
-        new_array._tag_list = self._tag_list[item]
-        # new_array._tag_list._length = self._tag_list._length
-        new_array._tag_list._length = len(new_array)
         if isinstance(new_array, Atom):
             natoms = len(self)
             if item < -natoms or item >= natoms:
@@ -2200,13 +2178,13 @@ class Atoms(ASEAtoms):
         return new_array
 
     def __getattr__(self, item):
-        if item in self._tag_list.keys():
-            return self._tag_list._lists[item]
+        if item in self.arrays.keys():
+            return self.arrays[item]
         return object.__getattribute__(self, item)
 
     def __dir__(self):
         new_dir = super().__dir__()
-        for key in self._tag_list.keys():
+        for key in self.arrays.keys():
             new_dir.append(key)
         return new_dir
 
@@ -2223,8 +2201,10 @@ class Atoms(ASEAtoms):
             tags = self.get_tags()
             out_str += "tags: \n"  # + ", ".join(tags) + "\n"
             for tag in tags:
+                if tag in ["positions", "numbers"]:
+                    continue
                 out_str += (
-                    "    " + str(tag) + ": " + self._tag_list[tag].__str__() + "\n"
+                    "    " + str(tag) + ": " + self.arrays[tag].__str__() + "\n"
                 )
         if self.cell is not None:
             out_str += "pbc: " + str(self.pbc) + "\n"
@@ -2355,57 +2335,6 @@ class Atoms(ASEAtoms):
 
     __mul__ = repeat
 
-    def __imul__(self, vec):
-        if isinstance(vec, (int, np.integer)):
-            vec = [vec] * self.dimension
-        initial_length = len(self)
-        if not hasattr(vec, "__len__"):
-            raise ValueError(
-                "Box repetition must be an integer or a list/ndarray of integers and not",
-                type(vec),
-            )
-
-        if len(vec) != self.dimension:
-            raise AssertionError(
-                "Dimension of box repetition not consistent: ",
-                len(vec),
-                "!=",
-                self.dimension,
-            )
-
-        i_vec = np.array([vec[0], 1, 1])
-        if self.dimension > 1:
-            i_vec[1] = vec[1]
-        if self.dimension > 2:
-            i_vec[2] = vec[2]
-
-        if not self.dimension == 3:
-            raise NotImplementedError()
-        mx, my, mz = i_vec
-        # Our position repeat algorithm is faster than ASE (no nested loops)
-        nx_lst, ny_lst, nz_lst = np.arange(mx), np.arange(my), np.arange(mz)
-        positions = self.get_scaled_positions(wrap=False)
-        lat = np.array(np.meshgrid(nx_lst, ny_lst, nz_lst)).T.reshape(-1, 3)
-        lat_new = np.repeat(lat, len(positions), axis=0)
-        new_positions = np.tile(positions, (len(lat), 1)) + lat_new
-        new_positions /= np.array(i_vec)
-        self.set_cell((self.cell.T * np.array(vec)).T, scale_atoms=True)
-        # ASE compatibility
-        for name, a in self.arrays.items():
-            self.arrays[name] = np.tile(
-                a, (np.product(vec),) + (1,) * (len(a.shape) - 1)
-            )
-        self.arrays["positions"] = np.dot(new_positions, self.cell)
-        self.indices = np.tile(self.indices, len(lat))
-        self._tag_list._length = len(self)
-        scale = i_vec[0] * i_vec[1] * i_vec[2]
-        for tag in self._tag_list.keys():
-            self._tag_list[tag] *= scale
-        # Repeating ASE constraints
-        if self.constraints is not None:
-            self.constraints = [c.repeat(vec, initial_length) for c in self.constraints]
-        return self
-
     @staticmethod
     def convert_formula(elements):
         """
@@ -2448,7 +2377,7 @@ class Atoms(ASEAtoms):
         return el_list
 
     def get_constraint(self):
-        if "selective_dynamics" in self._tag_list._lists.keys():
+        if "selective_dynamics" in self.arrays.keys():
             from ase.constraints import FixAtoms
 
             return FixAtoms(
@@ -2468,7 +2397,7 @@ class Atoms(ASEAtoms):
                 raise ValueError(
                     "Only FixAtoms is supported as ASE compatible constraint."
                 )
-            if "selective_dynamics" not in self._tag_list._lists.keys():
+            if "selective_dynamics" not in self.arrays.keys():
                 self.add_tag(selective_dynamics=None)
             for atom_ind in range(len(self)):
                 if atom_ind in constraint.index:
@@ -2543,7 +2472,7 @@ class Atoms(ASEAtoms):
         Returns:
             numpy.array()
         """
-        if "spin" in self._tag_list._lists.keys():
+        if "spin" in self.arrays.keys():
             return np.asarray(self.spin.list())
         else:
             spin_lst = [
@@ -2660,10 +2589,10 @@ class Atoms(ASEAtoms):
                 magmoms = len(self) * [magmoms]
             if len(magmoms) != len(self):
                 raise ValueError("magmoms can be collinear or non-collinear.")
-            if "spin" not in self._tag_list._lists.keys():
+            if "spin" not in self.arrays.keys():
                 self.add_tag(spin=None)
             for ind, spin in enumerate(magmoms):
-                self.spin[ind] = spin  # For self._tag_list.spin
+                self.spin[ind] = spin
         self.spins = magmoms  # For self.array['initial_magmoms']
 
     def rotate(
@@ -3241,13 +3170,13 @@ def ase_to_pyiron(ase_obj):
         for constraint in ase_obj.constraints:
             constraint_dict = constraint.todict()
             if constraint_dict["name"] == "FixAtoms":
-                if "selective_dynamics" not in pyiron_atoms._tag_list.keys():
+                if "selective_dynamics" not in pyiron_atoms.arrays.keys():
                     pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
                 pyiron_atoms.selective_dynamics[
                     constraint_dict["kwargs"]["indices"]
                 ] = [False, False, False]
             elif constraint_dict["name"] == "FixScaled":
-                if "selective_dynamics" not in pyiron_atoms._tag_list.keys():
+                if "selective_dynamics" not in pyiron_atoms.arrays.keys():
                     pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
                 pyiron_atoms.selective_dynamics[
                     constraint_dict["kwargs"]["a"]
