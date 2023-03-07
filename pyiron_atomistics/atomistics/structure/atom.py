@@ -55,25 +55,6 @@ class Atom(ASEAtom):
         element=None,
         **qwargs
     ):
-        if element is None:
-            element = symbol
-
-        if pse is None:
-            pse = PeriodicTable()
-
-        if element is None or element == "X":
-            if "Z" in qwargs:
-                el_symbol = pse.atomic_number_to_abbreviation(qwargs["Z"])
-                self._lists["element"] = pse.element(el_symbol)
-        else:
-            if isinstance(element, str):
-                el_symbol = element
-                self._lists["element"] = pse.element(el_symbol)
-            elif isinstance(element, ChemicalElement):
-                self._lists["element"] = element
-            else:
-                raise ValueError("Unknown element type")
-
         # KeyError handling required for user defined elements
         try:
             ASEAtom.__init__(
@@ -103,9 +84,31 @@ class Atom(ASEAtom):
                 index=index,
             )
 
+        if element is None:
+            element = symbol
+
+        if pse is None:
+            pse = PeriodicTable()
+
+        if element is None or element == "X":
+            if "Z" in qwargs:
+                el_symbol = pse.atomic_number_to_abbreviation(qwargs["Z"])
+                self.data["element"] = pse.element(el_symbol)
+        else:
+            if isinstance(element, str):
+                el_symbol = element
+                self.data["element"] = pse.element(el_symbol)
+            elif isinstance(element, ChemicalElement):
+                self.data["element"] = element
+            else:
+                raise ValueError("Unknown element type")
+
         # ASE compatibility for tags
         for key, val in qwargs.items():
             self.data[key] = val
+
+    def __getattr__(self, key):
+        return self.data[key]
 
     @property
     def mass(self):

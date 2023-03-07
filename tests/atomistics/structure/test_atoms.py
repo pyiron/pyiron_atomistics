@@ -309,9 +309,6 @@ class TestAtoms(unittest.TestCase):
         mg_indices = basis.select_index("Mg")
         o_indices = basis.select_index("O")
         basis_new = basis[mg_indices] + basis[o_indices]
-        self.assertEqual(
-            len(basis_new._tag_list), len(basis[mg_indices]) + len(basis[o_indices])
-        )
         self.assertEqual(basis_new.get_spacegroup()["Number"], 225)
         self.assertEqual(basis[:-3], basis[0 : len(basis) - 3])
         self.assertEqual(basis.dimension, basis[mg_indices].dimension)
@@ -1394,9 +1391,6 @@ class TestAtoms(unittest.TestCase):
         # basis_O.set_relative()
         basis_O.set_scaled_positions([0.0, 0.0, 0.5] + basis_O.get_scaled_positions())
         basis = basis_Mg + basis_O
-        self.assertEqual(
-            len(basis._tag_list), len(basis_Mg._tag_list) + len(basis_O._tag_list)
-        )
         basis.center_coordinates_in_unit_cell()
         self.assertEqual(basis.get_spacegroup()["Number"], 225)
         # Adding an ASE instance to a pyiron instance
@@ -1476,7 +1470,6 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(b.get_chemical_formula(), "H3NOO_up")
         self.assertEqual(len(b), 6)
         self.assertEqual(len(b.indices), 6)
-        self.assertEqual(len(b._tag_list), 6)
         self.assertEqual(len(b.species), 4)
         O_indices = b.select_index("O")
         b.__delitem__(O_indices)
