@@ -1077,17 +1077,6 @@ class Atoms(ASEAtoms):
 
         return struc_new
 
-    def repeat(self, rep):
-        """Create new repeated atoms object.
-
-        The *rep* argument should be a sequence of three positive
-        integers like *(2,3,1)* or a single integer (*r*) equivalent
-        to *(r,r,r)*."""
-
-        atoms = self.copy()
-        atoms *= rep
-        return atoms
-
     def set_repeat(self, vec):
         self *= vec
 
@@ -2335,8 +2324,6 @@ class Atoms(ASEAtoms):
             raise NotImplementedError()
         # For ASE compatibility
         self.numbers = self.get_atomic_numbers()
-
-    __mul__ = repeat
 
     def __imul__(self, vec):
         if isinstance(vec, (int, np.integer)):
