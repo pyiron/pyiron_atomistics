@@ -565,6 +565,8 @@ class Atoms(ASEAtoms):
                     with hdf_atoms.open("tags") as hdf_tags:
                         tags = hdf_tags.list_nodes()
                         for tag in tags:
+                            if tag in ["initial_magmoms"]:
+                                continue
                             # tr_dict = {'0': False, '1': True}
                             if isinstance(hdf_tags[tag], (list, np.ndarray)):
                                 my_list = hdf_tags[tag]
@@ -573,7 +575,7 @@ class Atoms(ASEAtoms):
                                 my_list = np.array(my_dict["values"])[
                                     np.argsort(my_dict["index"])
                                 ]
-                            self.new_array(tag, my_list)
+                            self.new_array(tag, np.asarray(my_list))
 
                 if "bonds" in hdf_atoms.list_nodes():
                     self.bonds = hdf_atoms["explicit_bonds"]
