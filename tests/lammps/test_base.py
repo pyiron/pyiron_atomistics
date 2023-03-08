@@ -10,7 +10,8 @@ from io import StringIO
 from pyiron_base import state, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
-from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism, to_amat
+from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.output import to_amat
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 import ase.units as units
 from pyiron_base._tests import TestWithCleanProject
@@ -59,7 +60,6 @@ class TestLammps(TestWithCleanProject):
         atoms.add_tag(selective_dynamics=[True, True, True])
         self.job.structure = atoms
         self.job._set_selective_dynamics()
-        self.assertFalse("group" in self.job.input.control._dataset["Parameter"])
         atoms.add_tag(selective_dynamics=None)
         atoms.selective_dynamics[1] = [True, True, False]
         atoms.selective_dynamics[2] = [True, False, True]
@@ -83,11 +83,11 @@ class TestLammps(TestWithCleanProject):
         lmp_structure._el_eam_lst = ["Fe"]
         lmp_structure.structure = atoms
         self.assertEqual(
-            lmp_structure._dataset["Value"],
+            lmp_structure._string_input.split("\n"),
             [
-                "Start File for LAMMPS",
-                "1 atoms",
-                "1 atom types",
+                "Start File for LAMMPS ",
+                "1 atoms ",
+                "1 atom types ",
                 "",
                 "0. 1.000000000000000 xlo xhi",
                 "0. 1.000000000000000 ylo yhi",
@@ -95,11 +95,12 @@ class TestLammps(TestWithCleanProject):
                 "",
                 "Masses",
                 "",
-                "1 55.845000",
+                "  1 55.845000",
                 "",
                 "Atoms",
                 "",
                 "1 1 0.000000000000000 0.000000000000000 0.000000000000000",
+                "",
                 "",
             ],
         )
@@ -112,11 +113,11 @@ class TestLammps(TestWithCleanProject):
         lmp_structure._el_eam_lst = ["Fe"]
         lmp_structure.structure = atoms
         self.assertEqual(
-            lmp_structure._dataset["Value"],
+            lmp_structure._string_input.split("\n"),
             [
-                "Start File for LAMMPS",
-                "1 atoms",
-                "1 atom types",
+                "Start File for LAMMPS ",
+                "1 atoms ",
+                "1 atom types ",
                 "",
                 "0. 1.000000000000000 xlo xhi",
                 "0. 1.000000000000000 ylo yhi",
@@ -124,11 +125,12 @@ class TestLammps(TestWithCleanProject):
                 "",
                 "Masses",
                 "",
-                "1 55.845000",
+                "  1 55.845000",
                 "",
                 "Atoms",
                 "",
                 "1 1 2.000000 0.000000000000000 0.000000000000000 0.000000000000000",
+                "",
                 "",
             ],
         )

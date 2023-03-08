@@ -5,14 +5,13 @@
 from __future__ import print_function
 from collections import OrderedDict
 import numpy as np
-from pyiron_atomistics.lammps.units import UnitConverter
-from pyiron_base import GenericParameters
+import posixpath
 import decimal as dec
 import warnings
+from pyiron_atomistics.lammps.units import UnitConverter
 
 try:
     from ase.calculators.lammps import Prism
-
 except ImportError:
     try:
         from ase.calculators.lammpsrun import Prism
@@ -178,20 +177,15 @@ class UnfoldingPrism(Prism):
         return tuple([self.f2s(x) for x in p])
 
 
-class LammpsStructure(GenericParameters):
+class LammpsStructure(object):
     """
 
     Args:
         input_file_name:
     """
 
-    def __init__(self, input_file_name=None, bond_dict=None, job=None):
-        super(LammpsStructure, self).__init__(
-            input_file_name=input_file_name,
-            table_name="structure_inp",
-            comment_char="#",
-            val_only=True,
-        )
+    def __init__(self, bond_dict=None, job=None):
+        self._string_input = ""
         self._structure = None
         self._potential = None
         self._el_eam_lst = []
@@ -252,7 +246,7 @@ class LammpsStructure(GenericParameters):
                 format_str = "{0:d} {1:f} {2:f}\n"
                 for id_atom, (x, y) in enumerate(vels, start=1):
                     input_str += format_str.format(id_atom, x, y)
-        self.load_string(input_str)
+        self._string_input = input_str
 
     @property
     def el_eam_lst(self):
@@ -274,15 +268,6 @@ class LammpsStructure(GenericParameters):
 
         """
         self._el_eam_lst = el_eam_lst
-
-    def load_default(self):
-        """
-
-        Returns:
-
-        """
-        input_str = ""
-        self.load_string(input_str)
 
     def simulation_cell(self):
         """
@@ -707,6 +692,21 @@ class LammpsStructure(GenericParameters):
         prism = UnfoldingPrism(self._structure.cell)
         vels = [prism.pos_to_lammps(vel) for vel in structure.velocities]
         return vels
+
+    def write_file(self, file_name, cwd=None):
+        """
+        Write GenericParameters to input file
+
+        Args:
+            file_name (str): name of the file, either absolute (then cwd must be None) or relative
+            cwd (str): path name (default: None)
+        """
+        if cwd is not None:
+            file_name = posixpath.join(cwd, file_name)
+
+        with open(file_name, "w") as f:
+            for line in self._string_input:
+                f.write(line)
 
 
 def write_lammps_datafile(structure, file_name="lammps.data", cwd=None):
