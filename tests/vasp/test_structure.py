@@ -15,7 +15,6 @@ from pyiron_atomistics.vasp.structure import (
     atoms_from_string,
     manip_contcar,
 )
-from pyiron_atomistics.atomistics.structure.sparse_list import SparseList
 import warnings
 
 
@@ -69,7 +68,6 @@ class TestVaspStructure(unittest.TestCase):
                 self.assertEqual(np.shape(velocities), (19, 3))
                 self.assertEqual(len(atoms.selective_dynamics), 19)
                 self.assertEqual(len(atoms.select_index("Mg")), 10)
-                self.assertIsInstance(atoms.selective_dynamics, SparseList)
                 neon_indices = atoms.select_index("Ne")
                 hydrogen_indices = atoms.select_index("H")
                 oxygen_indices = atoms.select_index("O")
@@ -135,7 +133,6 @@ class TestVaspStructure(unittest.TestCase):
                     self.assertEqual(len(atoms), 33)
                     self.assertEqual(len(atoms.selective_dynamics), 33)
                     self.assertEqual(len(atoms.select_index("Zn")), 1)
-                    self.assertIsInstance(atoms.selective_dynamics, SparseList)
                     truth_array = np.empty_like(atoms.positions, dtype=bool)
                     truth_array[:] = [True, True, True]
                     truth_array[0] = [False, False, False]
