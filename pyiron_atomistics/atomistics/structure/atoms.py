@@ -528,7 +528,7 @@ class Atoms(ASEAtoms):
                 el_object_list = [
                     self.convert_element(el, self._pse) for el in hdf_atoms["species"]
                 ]
-                self.set_array("indices", hdf_atoms["indices"])
+                self.arrays["indices"] = hdf_atoms["indices"]
 
                 self.set_species(el_object_list)
                 self.bonds = None
