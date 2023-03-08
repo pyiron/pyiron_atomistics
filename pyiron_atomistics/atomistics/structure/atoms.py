@@ -403,6 +403,7 @@ class Atoms(ASEAtoms):
 
         self._high_symmetry_path.update(path)
 
+    @deprecate("Use Atoms.new_array() instead")
     def add_tag(self, **qwargs):
         """
         Add tags to the atoms object.
