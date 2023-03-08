@@ -570,7 +570,7 @@ class Atoms(ASEAtoms):
                             # tr_dict = {'0': False, '1': True}
                             if isinstance(hdf_tags[tag], (list, np.ndarray)):
                                 my_list = hdf_tags[tag]
-                            else: # legacy of SparseList
+                            else:  # legacy of SparseList
                                 my_dict = hdf_tags.get_pandas(tag).to_dict()
                                 my_list = np.array(my_dict["values"])[
                                     np.argsort(my_dict["index"])
@@ -616,7 +616,9 @@ class Atoms(ASEAtoms):
                 self.convert_element(el, self._pse) for el in chemical_symbols
             ]
             self.set_species(list(set(el_object_list)))
-            self.set_array("indices", [self._species_to_index_dict[el] for el in el_object_list])
+            self.set_array(
+                "indices", [self._species_to_index_dict[el] for el in el_object_list]
+            )
             self.bonds = None
             if "explicit_bonds" in hdf_atoms.list_nodes():
                 # print "bonds: "
@@ -2029,7 +2031,7 @@ class Atoms(ASEAtoms):
         chem, new_indices = np.unique(
             self.get_chemical_symbols().tolist()
             + other.get_chemical_symbols().tolist(),
-            return_inverse=True
+            return_inverse=True,
         )
         new_species = [d[c] for c in chem]
 
