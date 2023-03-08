@@ -2286,61 +2286,6 @@ class Atoms(ASEAtoms):
         # For ASE compatibility
         self.numbers = self.get_atomic_numbers()
 
-<<<<<<< HEAD
-    __mul__ = repeat
-=======
-    def __imul__(self, vec):
-        if isinstance(vec, (int, np.integer)):
-            vec = [vec] * self.dimension
-        initial_length = len(self)
-        if not hasattr(vec, "__len__"):
-            raise ValueError(
-                "Box repetition must be an integer or a list/ndarray of integers and not",
-                type(vec),
-            )
-
-        if len(vec) != self.dimension:
-            raise AssertionError(
-                "Dimension of box repetition not consistent: ",
-                len(vec),
-                "!=",
-                self.dimension,
-            )
-
-        i_vec = np.array([vec[0], 1, 1])
-        if self.dimension > 1:
-            i_vec[1] = vec[1]
-        if self.dimension > 2:
-            i_vec[2] = vec[2]
-
-        if not self.dimension == 3:
-            raise NotImplementedError()
-        mx, my, mz = i_vec
-        # Our position repeat algorithm is faster than ASE (no nested loops)
-        nx_lst, ny_lst, nz_lst = np.arange(mx), np.arange(my), np.arange(mz)
-        positions = self.get_scaled_positions(wrap=False)
-        lat = np.array(np.meshgrid(nx_lst, ny_lst, nz_lst)).T.reshape(-1, 3)
-        lat_new = np.repeat(lat, len(positions), axis=0)
-        new_positions = np.tile(positions, (len(lat), 1)) + lat_new
-        new_positions /= np.array(i_vec)
-        self.set_cell((self.cell.T * np.array(vec)).T, scale_atoms=True)
-        # ASE compatibility
-        for name, a in self.arrays.items():
-            self.arrays[name] = np.tile(
-                a, (np.product(vec),) + (1,) * (len(a.shape) - 1)
-            )
-        self.arrays["positions"] = np.dot(new_positions, self.cell)
-        self.indices = np.tile(self.indices, len(lat))
-        self._tag_list._length = len(self)
-        scale = i_vec[0] * i_vec[1] * i_vec[2]
-        for tag in self._tag_list.keys():
-            self._tag_list[tag] *= scale
-        # Repeating ASE constraints
-        if self.constraints is not None:
-            self.constraints = [c.repeat(vec, initial_length) for c in self.constraints]
-        return self
->>>>>>> origin
-
     @staticmethod
     def convert_formula(elements):
         """
