@@ -76,7 +76,7 @@ class SxExtOpt(InteractiveInterface):
             ionic_force_tolerance=ionic_force_tolerance,
             max_step_length=max_step_length,
             soft_mode_damping=soft_mode_damping,
-            selective_dynamics="selective_dynamics" in structure._tag_list.keys(),
+            selective_dynamics="selective_dynamics" in structure.arrays.keys(),
             ssa=ssa,
         )
         self._cell = structure.cell

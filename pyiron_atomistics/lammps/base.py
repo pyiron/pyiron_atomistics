@@ -971,7 +971,7 @@ class LammpsBase(AtomisticGenericJob):
         return lmp_structure
 
     def _set_selective_dynamics(self):
-        if "selective_dynamics" in self.structure._tag_list.keys():
+        if "selective_dynamics" in self.structure.arrays.keys():
             if self.structure.selective_dynamics._default is None:
                 self.structure.selective_dynamics._default = [True, True, True]
             sel_dyn = np.logical_not(self.structure.selective_dynamics.list())

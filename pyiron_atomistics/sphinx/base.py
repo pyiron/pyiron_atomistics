@@ -342,7 +342,7 @@ class SphinxBase(GenericDFTJob):
                     "cell": np.array(self.structure.cell * 1 / BOHR_TO_ANGSTROM),
                 }
             )
-        if "selective_dynamics" in self.structure._tag_list.keys():
+        if "selective_dynamics" in self.structure.arrays.keys():
             selective_dynamics_list = self.structure.selective_dynamics.list()
         else:
             selective_dynamics_list = [3 * [False]] * len(self.structure.positions)

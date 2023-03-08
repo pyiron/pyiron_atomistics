@@ -1798,7 +1798,7 @@ class VaspBase(GenericDFTJob):
 
     def validate_ready_to_run(self):
         super(VaspBase, self).validate_ready_to_run()
-        if "spin_constraint" in self.structure._tag_list.keys():
+        if "spin_constraint" in self.structure.arrays.keys():
             raise NotImplementedError(
                 "The spin_constraint tag is not supported by VASP."
             )
