@@ -690,10 +690,9 @@ class TestAtoms(unittest.TestCase):
         )
         basis.set_repeat([3, 3, 2])
         sel_dyn_after = np.array(basis.selective_dynamics)
-        len_after = len(basis)
         self.assertEqual(basis.get_spacegroup()["Number"], 225)
-        self.assertEqual(len_before * 18, len_after)
         self.assertEqual(len(sel_dyn_before) * 18, len(sel_dyn_after))
+        self.assertEqual(len_before * 18, len(basis))
         self.assertTrue(
             np.alltrue(
                 np.logical_not(

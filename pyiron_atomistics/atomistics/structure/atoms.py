@@ -1077,7 +1077,7 @@ class Atoms(ASEAtoms):
         return atoms
 
     def set_repeat(self, vec):
-        self *= vec
+        self = self * vec # self *= vec fails for e.g. vec = [2, 2]
 
     def repeat_points(self, points, rep, centered=False):
         """
