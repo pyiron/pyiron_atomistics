@@ -114,7 +114,6 @@ class Atoms(ASEAtoms):
         self._is_scaled = False
 
         self._species = list()
-        self.indices = np.array([])
         self.constraints = None
         self._pse = PeriodicTable()
 
@@ -178,12 +177,12 @@ class Atoms(ASEAtoms):
                 )
             self.set_species(species)
 
-        self.indices = np.array(el_index_lst, dtype=int)
+        indices = np.array(el_index_lst, dtype=int)
 
         el_lst = [
             el.Abbreviation if el.Parent is None else el.Parent for el in self.species
         ]
-        symbols = np.array([el_lst[el] for el in self.indices])
+        symbols = np.array([el_lst[el] for el in indices])
         super(Atoms, self).__init__(
             symbols=symbols,
             positions=positions,
@@ -201,6 +200,8 @@ class Atoms(ASEAtoms):
             calculator=calculator,
             info=info,
         )
+
+        self.new_array("indices", indices)
 
         self.bonds = None
         self.units = {"length": "A", "mass": "u"}
@@ -469,7 +470,7 @@ class Atoms(ASEAtoms):
 
             with hdf_structure.open("tags") as hdf_tags:
                 for tag, value in self.arrays.items():
-                    if tag in ["positions", "numbers"]:
+                    if tag in ["positions", "numbers", "indices"]:
                         continue
                     hdf_tags[tag] = value
             hdf_structure["units"] = self.units
@@ -2128,7 +2129,7 @@ class Atoms(ASEAtoms):
         new_dict = dict()
         if isinstance(item, int):
             for key, value in self.arrays.items():
-                if key in ["positions", "numbers"]:
+                if key in ["positions", "numbers", "indices"]:
                     continue
                 if item < len(value):
                     if value[item] is not None:
@@ -2164,9 +2165,10 @@ class Atoms(ASEAtoms):
         return new_array
 
     def __getattr__(self, item):
-        if item in self.arrays.keys():
+        try:
             return self.arrays[item]
-        return object.__getattribute__(self, item)
+        except KeyError:
+            return object.__getattribute__(self, item)
 
     def __dir__(self):
         new_dir = super().__dir__()

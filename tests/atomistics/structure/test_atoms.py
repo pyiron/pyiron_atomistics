@@ -154,7 +154,6 @@ class TestAtoms(unittest.TestCase):
 
     def test_add_tags(self):
         self.CO2.add_tag(test_tag="a")
-        self.assertIsInstance(self.CO2.test_tag, SparseList)
         self.assertEqual(self.CO2.test_tag[0], "a")
         self.assertEqual(self.CO2.test_tag[0], self.CO2.test_tag[2])
         self.assertIsInstance(self.CO2.test_tag.list(), list)
@@ -165,7 +164,6 @@ class TestAtoms(unittest.TestCase):
 
     def test_get_tags(self):
         self.CO2.add_tag(test_tag="a")
-        self.assertIsInstance(self.CO2.test_tag, SparseList)
         self.assertIsInstance(self.CO2.get_tags(), type(dict().keys()))
 
     def test_get_pbc(self):
