@@ -2125,12 +2125,12 @@ class Atoms(ASEAtoms):
         new_array.dimension = self.dimension
         if isinstance(item, tuple):
             item = list(item)
-        new_species_indices, new_proper_indices = np.unique(
+        new_species_indices, new_indices = np.unique(
             self.indices[item], return_inverse=True
         )
         new_species = [self.species[ind] for ind in new_species_indices]
         new_array.set_species(new_species)
-        new_array.indices = new_proper_indices
+        new_array.arrays["indices"] = new_indices
         if isinstance(new_array, Atom):
             natoms = len(self)
             if item < -natoms or item >= natoms:
