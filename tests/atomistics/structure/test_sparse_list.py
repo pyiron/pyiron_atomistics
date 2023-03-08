@@ -137,8 +137,6 @@ class TestSparseArray(unittest.TestCase):
         self.assertEqual(
             self.aMatrix.spin.list(), [False, True, False, True, False, True]
         )
-        self.aMatrix.remove_tag('spin')
-        self.assertFalse('spin' in self.aMatrix._lists.keys())
 
     def test_keys(self):
         self.assertEqual(

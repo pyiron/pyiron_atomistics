@@ -274,7 +274,6 @@ class TestAtoms(unittest.TestCase):
             cell=np.identity(3),
         )
         self.Fe_bcc.add_tag(group=0)
-        self.Fe_bcc.remove_tag("group")
 
     def test_convert_formula(self):
         self.assertEqual(self.CO2.convert_formula("C"), ["C"])
