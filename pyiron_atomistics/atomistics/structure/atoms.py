@@ -2100,12 +2100,10 @@ class Atoms(ASEAtoms):
         key = np.array([key]).flatten()
         new_length = len(self) - len(key)
         super(Atoms, self).__delitem__(key)
-        deleted_species_indices = list()
         retain_species_indices = list()
         new_indices = self.indices.copy()
         for i, el in enumerate(self.species):
             if len(self.select_index(el)) == 0:
-                deleted_species_indices.append(i)
                 new_indices[new_indices >= i] += -1
             else:
                 retain_species_indices.append(i)
