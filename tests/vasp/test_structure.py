@@ -73,7 +73,7 @@ class TestVaspStructure(unittest.TestCase):
                 oxygen_indices = atoms.select_index("O")
                 truth_array = np.empty_like(atoms.positions[neon_indices], dtype=bool)
                 truth_array[:, :] = True
-                sel_dyn = np.array(atoms.selective_dynamics.list())
+                sel_dyn = np.array(atoms.selective_dynamics)
                 self.assertTrue(
                     np.array_equal(sel_dyn[neon_indices], np.logical_not(truth_array))
                 )
@@ -138,7 +138,7 @@ class TestVaspStructure(unittest.TestCase):
                     truth_array[0] = [False, False, False]
                     truth_array[-4:] = [False, False, False]
                     self.assertTrue(
-                        np.array_equal(atoms.selective_dynamics.list(), truth_array)
+                        np.array_equal(atoms.selective_dynamics, truth_array)
                     )
 
     def test_write_poscar(self):
@@ -159,7 +159,7 @@ class TestVaspStructure(unittest.TestCase):
         truth_array = np.empty_like(struct.positions, dtype=bool)
         truth_array[:] = [True, True, True]
         self.assertTrue(
-            np.array_equal(np.array(test_atoms.selective_dynamics.list()), truth_array)
+            np.array_equal(test_atoms.selective_dynamics, truth_array)
         )
         os.remove(posixpath.join(self.file_location, "POSCAR_test"))
         struct = self.structure.copy()
