@@ -109,8 +109,6 @@ class Atoms(ASEAtoms):
         ):
             state.logger.debug("Not supported parameter used!")
 
-        self._store_elements = dict()
-        self._species_to_index_dict = None
         self._is_scaled = False
 
         self._species = list()
@@ -279,7 +277,6 @@ class Atoms(ASEAtoms):
         """
         return self._species
 
-    # @species.setter
     def set_species(self, value):
         """
         Setting the species list
@@ -288,12 +285,16 @@ class Atoms(ASEAtoms):
             value (list): A list atomistics.structure.periodic_table.ChemicalElement instances
 
         """
-        if value is None:
-            return
-        value = list(value)
-        self._species_to_index_dict = {el: i for i, el in enumerate(value)}
-        self._species = value[:]
-        self._store_elements = {el.Abbreviation: el for el in value}
+        if value is not None:
+            self._species = list(value)[:]
+
+    @property
+    def _store_elements(self) -> dict:
+        return {el.Abbreviation: el for el in self.species}
+
+    @property
+    def _species_to_index_dict(self) -> dict:
+        return {el: i for i, el in enumerate(self.species)}
 
     @property
     def symbols(self):
@@ -527,7 +528,7 @@ class Atoms(ASEAtoms):
                 el_object_list = [
                     self.convert_element(el, self._pse) for el in hdf_atoms["species"]
                 ]
-                self.indices = hdf_atoms["indices"]
+                self.set_array("indices", hdf_atoms["indices"])
 
                 self.set_species(el_object_list)
                 self.bonds = None
@@ -613,7 +614,7 @@ class Atoms(ASEAtoms):
                 self.convert_element(el, self._pse) for el in chemical_symbols
             ]
             self.set_species(list(set(el_object_list)))
-            self.indices = [self._species_to_index_dict[el] for el in el_object_list]
+            self.set_array("indices", [self._species_to_index_dict[el] for el in el_object_list])
             self.bonds = None
             if "explicit_bonds" in hdf_atoms.list_nodes():
                 # print "bonds: "
@@ -729,7 +730,6 @@ class Atoms(ASEAtoms):
         else:
             raise ValueError("Unknown static type to specify a element")
 
-        self._store_elements[el] = element
         if hasattr(self, "species"):
             if element not in self.species:
                 self._species.append(element)
@@ -1594,7 +1594,7 @@ class Atoms(ASEAtoms):
             new_indices[new_indices >= i] += -1
         new_species = np.array(new_species)[retain_species_indices]
         self.set_species(new_species)
-        self.indices = new_indices
+        self.set_array("indices", new_indices)
 
     @deprecate(
         "Use neigh.cluster_analysis() instead (after calling neigh = structure.get_neighbors())",
@@ -2097,19 +2097,10 @@ class Atoms(ASEAtoms):
         return atoms_new
 
     def __delitem__(self, key):
-        key = np.array([key]).flatten()
-        new_length = len(self) - len(key)
-        super(Atoms, self).__delitem__(key)
-        retain_species_indices = list()
-        new_indices = self.indices.copy()
-        for i, el in enumerate(self.species):
-            if len(self.select_index(el)) == 0:
-                new_indices[new_indices >= i] += -1
-            else:
-                retain_species_indices.append(i)
-        new_species = np.array(self.species).copy()[retain_species_indices]
-        self.set_species(new_species)
-        self.indices = new_indices
+        super().__delitem__(np.array([key]).flatten())
+        unique_ind, new_ind = np.unique(self.indices, return_inverse=True)
+        self.set_array("indices", new_ind)
+        self.set_species(np.array(self.species)[unique_ind])
 
     def __eq__(self, other):
         return super(Atoms, self).__eq__(other) and np.array_equal(
@@ -2303,7 +2294,7 @@ class Atoms(ASEAtoms):
                             delete_indices.append(i)
                             # del new_species[i]
                             new_indices[new_indices >= i] -= 1
-                    self.indices = new_indices.copy()
+                    self.set_array("indices", new_indices.copy())
                     new_species = np.array(new_species)[
                         np.setdiff1d(np.arange(len(new_species)), delete_indices)
                     ].tolist()
