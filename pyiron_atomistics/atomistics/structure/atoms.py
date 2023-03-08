@@ -2457,9 +2457,9 @@ class Atoms(ASEAtoms):
         Returns:
             numpy.array()
         """
-        if "spin" in self.arrays.keys():
-            return np.asarray(self.spin.list())
-        else:
+        try:
+            return self.arrays["spin"]
+        except KeyError:
             spin_lst = [
                 element.tags["spin"] if "spin" in element.tags.keys() else None
                 for element in self.get_chemical_elements()
