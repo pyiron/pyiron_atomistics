@@ -473,7 +473,7 @@ class Atoms(ASEAtoms):
                 for tag, value in self.arrays.items():
                     if tag in ["positions", "numbers", "indices"]:
                         continue
-                    hdf_tags[tag] = value
+                    hdf_tags[tag] = value.tolist()
             hdf_structure["units"] = self.units
             hdf_structure["dimension"] = self.dimension
 
