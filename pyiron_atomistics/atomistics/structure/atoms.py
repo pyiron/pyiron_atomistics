@@ -2052,7 +2052,6 @@ class Atoms(ASEAtoms):
                 )
             sum_atoms = self
             # sum_atoms = copy(self)
-            sum_atoms.indices = np.append(sum_atoms.indices, other.indices)
             new_species_lst = copy(sum_atoms.species)
             ind_conv = {}
             for ind_old, el in enumerate(other.species):

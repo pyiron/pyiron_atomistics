@@ -1715,7 +1715,7 @@ class TestAtoms(unittest.TestCase):
         )
         self.assertEqual(
             repr(H2),
-            "H: [0. 0. 0.]\nH: [0.5 0.5 0.5]\ntags: \npbc: [ True  True  True]\ncell: \nCell([1.0, 1.0, 1.0])\n",
+            "H: [0. 0. 0.]\nH: [0.5 0.5 0.5]\ntags: \n    indices: [0 0]\npbc: [ True  True  True]\ncell: \nCell([1.0, 1.0, 1.0])\n",
         )
         self.assertEqual(str(H2), "H2")
 
