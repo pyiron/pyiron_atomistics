@@ -156,11 +156,9 @@ class TestAtoms(unittest.TestCase):
         self.CO2.add_tag(test_tag="a")
         self.assertEqual(self.CO2.test_tag[0], "a")
         self.assertEqual(self.CO2.test_tag[0], self.CO2.test_tag[2])
-        self.assertIsInstance(self.CO2.test_tag.list(), list)
         self.CO2.add_tag(selective_dynamics=[True, True, True])
         self.CO2.selective_dynamics[1] = [True, False, True]
-        self.assertEqual(self.CO2.selective_dynamics[1], [True, False, True])
-        self.assertIsInstance(self.CO2.selective_dynamics.list(), list)
+        self.assertEqual(self.CO2.selective_dynamics[1].tolist(), [True, False, True])
 
     def test_get_tags(self):
         self.CO2.add_tag(test_tag="a")
@@ -244,7 +242,6 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(basis.get_spacegroup()["Number"], 225)
         self.assertTrue(basis.selective_dynamics[7][0])
         self.assertFalse(basis.selective_dynamics[0][0])
-        basis.add_tag(selective_dynamics=[False, False, False])
         basis.selective_dynamics[6] = [True, True, True]
         self.assertTrue(basis.selective_dynamics[6][0])
         self.assertFalse(basis.selective_dynamics[5][0])
@@ -681,7 +678,7 @@ class TestAtoms(unittest.TestCase):
         basis.add_tag(selective_dynamics=[True, True, True])
         basis.selective_dynamics[basis.select_index("O")] = [False, False, False]
         len_before = len(basis)
-        sel_dyn_before = np.array(basis.selective_dynamics.list())
+        sel_dyn_before = np.array(basis.selective_dynamics)
         self.assertTrue(
             np.alltrue(
                 np.logical_not(
@@ -693,7 +690,7 @@ class TestAtoms(unittest.TestCase):
             np.alltrue(np.alltrue(sel_dyn_before[basis.select_index("Mg")], axis=1))
         )
         basis.set_repeat([3, 3, 2])
-        sel_dyn_after = np.array(basis.selective_dynamics.list())
+        sel_dyn_after = np.array(basis.selective_dynamics)
         len_after = len(basis)
         self.assertEqual(basis.get_spacegroup()["Number"], 225)
         self.assertEqual(len_before * 18, len_after)
@@ -714,26 +711,26 @@ class TestAtoms(unittest.TestCase):
         basis.spin[basis.select_index("O")] = -1
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("Mg")].list(),
+                basis.spin[basis.select_index("Mg")],
                 1 * np.ones(len(basis.select_index("Mg"))),
             )
         )
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("O")].list(),
+                basis.spin[basis.select_index("O")],
                 -1 * np.ones(len(basis.select_index("O"))),
             )
         )
         basis.set_repeat(2)
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("Mg")].list(),
+                basis.spin[basis.select_index("Mg")],
                 1 * np.ones(len(basis.select_index("Mg"))),
             )
         )
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("O")].list(),
+                basis.spin[basis.select_index("O")],
                 -1 * np.ones(len(basis.select_index("O"))),
             )
         )
@@ -749,13 +746,13 @@ class TestAtoms(unittest.TestCase):
         basis.set_repeat(2)
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("Mg")].list(),
+                basis.spin[basis.select_index("Mg")],
                 1 * np.ones(len(basis.select_index("Mg"))),
             )
         )
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("O")].list(),
+                basis.spin[basis.select_index("O")],
                 -1 * np.ones(len(basis.select_index("O"))),
             )
         )
@@ -769,13 +766,13 @@ class TestAtoms(unittest.TestCase):
         basis.set_repeat(2)
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("Mg")].list(),
+                basis.spin[basis.select_index("Mg")],
                 1 * np.ones(len(basis.select_index("Mg"))),
             )
         )
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("O")].list(),
+                basis.spin[basis.select_index("O")],
                 -1 * np.ones(len(basis.select_index("O"))),
             )
         )
