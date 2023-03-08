@@ -209,5 +209,10 @@ class TestContainer(TestWithProject):
         structure_read = cont.get_structure()
         self.assertIn("selective_dynamics", structure_read.get_tags(),
                       "Selective dynamics not defined on read structure!")
-        self.assertListEqual(structure.selective_dynamics.list(), structure_read.selective_dynamics.list(),
-                             "Selective dynamics not correctly restored!")
+        self.assertTrue(
+            np.array_equal(
+                structure.selective_dynamics,
+                structure_read.selective_dynamics,
+            ),
+            "Selective dynamics not correctly restored!"
+        )
