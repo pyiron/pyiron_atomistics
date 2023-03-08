@@ -2098,7 +2098,7 @@ class Atoms(ASEAtoms):
 
     def __delitem__(self, key):
         key = np.array([key]).flatten()
-        new_length = len(self) - len(np.arange(len(self))[np.asarray(key)])
+        new_length = len(self) - len(key)
         super(Atoms, self).__delitem__(key)
         self.indices = np.delete(self.indices, key, axis=0)
         deleted_species_indices = list()
