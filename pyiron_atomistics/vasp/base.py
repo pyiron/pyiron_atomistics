@@ -802,7 +802,7 @@ class VaspBase(GenericDFTJob):
         """
         Write the magnetic moments in INCAR from that assigned to the species
         """
-        if any(self.structure.get_initial_magnetic_moments().flatten()):
+        if self.structure.has("initial_magmoms"):
             if "ISPIN" not in self.input.incar._dataset["Parameter"]:
                 self.input.incar["ISPIN"] = 2
             if self.input.incar["ISPIN"] != 1:
