@@ -2100,7 +2100,6 @@ class Atoms(ASEAtoms):
         key = np.array([key]).flatten()
         new_length = len(self) - len(key)
         super(Atoms, self).__delitem__(key)
-        self.indices = np.delete(self.indices, key, axis=0)
         deleted_species_indices = list()
         retain_species_indices = list()
         new_indices = self.indices.copy()
