@@ -2038,7 +2038,8 @@ class Atoms(ASEAtoms):
         d = self._store_elements.copy()
         d.update(other._store_elements.copy())
         chem, new_indices = np.unique(
-            self.get_chemical_symbols().tolist() + other.get_chemical_symbols().tolist(),
+            self.get_chemical_symbols().tolist()
+            + other.get_chemical_symbols().tolist(),
             return_inverse=True
         )
         new_species = [d[c] for c in chem]
