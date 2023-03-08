@@ -2024,7 +2024,6 @@ class Atoms(ASEAtoms):
             pyiron.atomistics.structure.atoms.Atoms: The extended structure
 
         """
-        old_indices = self.indices
         if isinstance(other, Atom):
             other = self.__class__([other])
         elif isinstance(other, ASEAtom):
@@ -2035,7 +2034,14 @@ class Atoms(ASEAtoms):
             )
             other = ase_to_pyiron(other)
 
-        new_indices = other.indices.copy()
+        d = self._store_elements.copy()
+        d.update(other._store_elements.copy())
+        chem, new_indices = np.unique(
+            self.get_chemical_symbols().tolist() + other.get_chemical_symbols().tolist(),
+            return_inverse=True
+        )
+        new_species = [d[c] for c in chem]
+
         super(Atoms, self).extend(other=other)
         if isinstance(other, Atoms):
             if not np.allclose(self.cell, other.cell):
@@ -2052,27 +2058,9 @@ class Atoms(ASEAtoms):
                         self.cell
                     )
                 )
-            sum_atoms = self
-            # sum_atoms = copy(self)
-            new_species_lst = copy(sum_atoms.species)
-            ind_conv = {}
-            for ind_old, el in enumerate(other.species):
-                if el.Abbreviation in sum_atoms._store_elements.keys():
-                    ind_new = sum_atoms._species_to_index_dict[
-                        sum_atoms._store_elements[el.Abbreviation]
-                    ]
-                    ind_conv[ind_old] = ind_new
-                else:
-                    new_species_lst.append(el)
-                    sum_atoms._store_elements[el.Abbreviation] = el
-                    ind_conv[ind_old] = len(new_species_lst) - 1
-
-            for key, val in ind_conv.items():
-                new_indices[new_indices == key] = val + 1000
-            new_indices = np.mod(new_indices, 1000)
-            sum_atoms.indices[len(old_indices) :] = new_indices
-            sum_atoms.set_species(new_species_lst)
-            if not len(set(sum_atoms.indices)) == len(sum_atoms.species):
+            self.set_array("indices", new_indices)
+            self.set_species(new_species)
+            if not len(set(self.indices)) == len(self.species):
                 raise ValueError("Adding the atom instances went wrong!")
         return self
 
@@ -2137,9 +2125,8 @@ class Atoms(ASEAtoms):
         new_array.dimension = self.dimension
         if isinstance(item, tuple):
             item = list(item)
-        new_indices = self.indices[item].copy()
         new_species_indices, new_proper_indices = np.unique(
-            new_indices, return_inverse=True
+            self.indices[item], return_inverse=True
         )
         new_species = [self.species[ind] for ind in new_species_indices]
         new_array.set_species(new_species)

@@ -1812,7 +1812,7 @@ class TestAtoms(unittest.TestCase):
         pyiron_atoms_sd = pymatgen_to_pyiron(struct_with_sd)
 
         sd_equivalent = struct_with_sd.site_properties["selective_dynamics"] == [
-            x.selective_dynamics for x in pyiron_atoms_sd
+            x.selective_dynamics.tolist() for x in pyiron_atoms_sd
         ]
         self.assertTrue(
             sd_equivalent,
@@ -1832,7 +1832,7 @@ class TestAtoms(unittest.TestCase):
             x.spin for x in pyiron_atoms_sd_magmom
         ]
         sd_equivalent = struct_with_sd_magmom.site_properties["selective_dynamics"] == [
-            x.selective_dynamics for x in pyiron_atoms_sd_magmom
+            x.selective_dynamics.tolist() for x in pyiron_atoms_sd_magmom
         ]
         self.assertTrue(
             magmom_equivalent,
@@ -1888,8 +1888,10 @@ class TestAtoms(unittest.TestCase):
 
         struct_sd = pyiron_to_pymatgen(pyiron_atoms_sd)
         self.assertTrue(
-            struct_sd.site_properties["selective_dynamics"]
-            == [x.selective_dynamics for x in pyiron_atoms_sd],
+            np.array_equal(
+                struct_sd.site_properties["selective_dynamics"],
+                pyiron_atoms_sd.selective_dynamics
+            ),
             "Failed to produce equivalent selective dynamics after conversion!",
         )
 
@@ -1921,8 +1923,10 @@ class TestAtoms(unittest.TestCase):
             "Failed to produce equivalent magmom when both magmom + sel_dyn are present!",
         )
         self.assertTrue(
-            struct_sd_magmom.site_properties["selective_dynamics"]
-            == [x.selective_dynamics for x in pyiron_atoms_sd_magmom],
+            np.array_equal(
+                struct_sd_magmom.site_properties["selective_dynamics"],
+                pyiron_atoms_sd_magmom.selective_dynamics
+            ),
             "Failed to produce equivalent sel_dyn when both magmom + sel_dyn are present!",
         )
 
