@@ -98,7 +98,7 @@ class SphinxBase(GenericDFTJob):
         # input groups
         self.input = Group(table_name="parameters", lazy=True)
         self.load_default_input()
-        self._output_parser = Output(self)
+        self.output = Output(job=self)
         self.input_writer = InputWriter()
         self._potential = VaspPotentialSetter([])
         if self.check_vasp_potentials():
@@ -109,7 +109,7 @@ class SphinxBase(GenericDFTJob):
         self._generic_input["fix_spin_constraint"] = False
 
     def update_sphinx(self):
-        if self._output_parser.old_version:
+        if self.output.old_version:
             _update_datacontainer(self)
 
     def __getitem__(self, item):
@@ -912,7 +912,7 @@ class SphinxBase(GenericDFTJob):
         self._structure_to_hdf()
         with self._hdf5.open("input") as hdf:
             self.input.to_hdf(hdf)
-        self._output_parser.to_hdf(self._hdf5)
+        self.output.to_hdf(self._hdf5)
 
     def from_hdf(self, hdf=None, group_name=None):
         """
@@ -936,7 +936,7 @@ class SphinxBase(GenericDFTJob):
             self._structure_from_hdf()
             with self._hdf5.open("input") as hdf:
                 self.input.from_hdf(hdf, group_name="parameters")
-        self._output_parser.from_hdf(self._hdf5)
+        self.output.from_hdf(self._hdf5)
 
     def from_directory(self, directory, file_name="structure.sx"):
         try:
@@ -950,10 +950,10 @@ class SphinxBase(GenericDFTJob):
                         "Please double check the directory and file name."
                     )
 
-                self._output_parser.collect(directory=directory)
+                self.output.collect(directory=directory)
                 self.to_hdf(self._hdf5)
             else:
-                self._output_parser.from_hdf(self._hdf5)
+                self.output.from_hdf(self._hdf5)
             self.status.finished = True
         except Exception as err:
             print(err)
@@ -1443,8 +1443,8 @@ class SphinxBase(GenericDFTJob):
         if self.is_compressed():
             warnings.warn("Job already compressed - output not collected")
             return
-        self._output_parser.collect(directory=self.working_directory)
-        self._output_parser.to_hdf(self._hdf5, force_update=force_update)
+        self.output.collect(directory=self.working_directory)
+        self.output.to_hdf(self._hdf5, force_update=force_update)
         if compress_files:
             self.compress()
 
@@ -1460,7 +1460,7 @@ class SphinxBase(GenericDFTJob):
         # Checks if sufficient empty states are present
         if not self.nbands_convergence_check():
             return False
-        return self._output_parser.generic.dft.scf_convergence[-1]
+        return self.output.generic.dft.scf_convergence[-1]
 
     def collect_logfiles(self):
         """
@@ -2302,8 +2302,8 @@ class Output:
     """
 
     def __init__(self, job):
-        self.generic = DataContainer(table_name="output/generic")
         self._job = job
+        self.generic = DataContainer(table_name="output/generic")
         self.charge_density = SphinxVolumetricData()
         self.electrostatic_potential = SphinxVolumetricData()
         self.generic.create_group("dft")
@@ -2621,11 +2621,11 @@ class Output:
 
 
 def _update_datacontainer(job):
-    job._output_parser.generic.create_group("dft")
+    job.output.generic.create_group("dft")
     for node in job["output/generic/dft"].list_nodes():
-        job._output_parser.generic.dft[node] = job["output/generic/dft"][node]
+        job.output.generic.dft[node] = job["output/generic/dft"][node]
     for node in job["output/generic"].list_nodes():
-        job._output_parser.generic[node] = job["output/generic"][node]
+        job.output.generic[node] = job["output/generic"][node]
     job["output/generic"].remove_group()
-    job._output_parser.generic.to_hdf(hdf=job.project_hdf5)
-    job._output_parser.old_version = False
+    job.output.generic.to_hdf(hdf=job.project_hdf5)
+    job.output.old_version = False

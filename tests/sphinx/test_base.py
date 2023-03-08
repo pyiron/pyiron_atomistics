@@ -43,9 +43,7 @@ class TestSphinx(unittest.TestCase):
         basis.set_initial_magnetic_moments(2 * [0.5])
         cls.sphinx.structure = basis
         cls.sphinx.fix_spin_constraint = True
-        cls.sphinx_band_structure.structure = cls.project.create_structure(
-            "Fe", "bcc", 2.81
-        )
+        cls.sphinx_band_structure.structure = cls.project.create.structure.bulk("Fe")
         cls.sphinx_band_structure.structure = (
             cls.sphinx_band_structure.structure.create_line_mode_structure()
         )
@@ -597,7 +595,7 @@ class TestSphinx(unittest.TestCase):
             self.sphinx_aborted.collect_output()
 
     def test_collect_2_5(self):
-        output = self.sphinx_2_5._output_parser
+        output = self.sphinx_2_5.output
         output.collect(directory=self.sphinx_2_5.working_directory)
         self.assertTrue(all(np.diff(output.generic.dft.computation_time) > 0))
         self.assertTrue(
@@ -620,8 +618,8 @@ class TestSphinx(unittest.TestCase):
                     len(output.generic.dft[list_one]), len(output.generic.dft[list_two])
                 )
 
-        rho = self.sphinx_2_5._output_parser.charge_density
-        vel = self.sphinx_2_5._output_parser.electrostatic_potential
+        rho = self.sphinx_2_5.output.charge_density
+        vel = self.sphinx_2_5.output.electrostatic_potential
         self.assertIsNotNone(rho.total_data)
         self.assertIsNotNone(vel.total_data)
 
@@ -648,26 +646,26 @@ class TestSphinx(unittest.TestCase):
         eig_lst = [np.loadtxt(file_location + "eps.dat")[:, 1:].tolist()]
         self.sphinx_2_3.collect_output()
         self.assertEqual(
-            residue_lst, self.sphinx_2_3._output_parser.generic.dft["scf_residue"]
+            residue_lst, self.sphinx_2_3.output.generic.dft["scf_residue"]
         )
         self.assertEqual(
-            energy_int_lst, self.sphinx_2_3._output_parser.generic.dft["scf_energy_int"]
+            energy_int_lst, self.sphinx_2_3.output.generic.dft["scf_energy_int"]
         )
         self.assertEqual(
             eig_lst,
-            self.sphinx_2_3._output_parser.generic.dft["bands_eigen_values"].tolist(),
+            self.sphinx_2_3.output.generic.dft["bands_eigen_values"].tolist(),
         )
         self.assertEqual(
             energy_free_lst,
-            self.sphinx_2_3._output_parser.generic.dft["scf_energy_free"],
+            self.sphinx_2_3.output.generic.dft["scf_energy_free"],
         )
         self.assertEqual(
             21.952 * BOHR_TO_ANGSTROM ** 3,
-            self.sphinx_2_3._output_parser.generic["volume"],
+            self.sphinx_2_3.output.generic["volume"],
         )
 
     def test_structure_parsing(self):
-        self.sphinx_2_3._output_parser.collect_relaxed_hist(
+        self.sphinx_2_3.output.collect_relaxed_hist(
             file_name="relaxedHist_2.sx", cwd=self.sphinx_2_3.working_directory
         )
 

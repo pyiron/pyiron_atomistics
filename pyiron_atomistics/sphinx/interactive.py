@@ -8,7 +8,7 @@ import scipy.constants
 import subprocess
 import warnings
 import time
-from pyiron_atomistics.sphinx.base import SphinxBase, Group
+from pyiron_atomistics.sphinx.base import SphinxBase, Group, Output
 from pyiron_atomistics.atomistics.job.interactive import (
     GenericInteractive,
     GenericInteractiveOutput,
@@ -36,11 +36,11 @@ __date__ = "Sep 1, 2017"
 class SphinxInteractive(SphinxBase, GenericInteractive):
     def __init__(self, project, job_name):
         super(SphinxInteractive, self).__init__(project, job_name)
-        self.output = SphinxOutput(job=self)
         self._interactive_write_input_files = True
         self._interactive_library_read = None
         self._interactive_fetch_completed = True
         self.interactive_flush_frequency = 1
+        self.output = SphinxOutput(job=self)
 
     @property
     def structure(self):
@@ -358,7 +358,11 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
             super(SphinxInteractive, self).load_main_group()
 
 
-class SphinxOutput(GenericInteractiveOutput):
+class SphinxOutput(Output, GenericInteractiveOutput):
+    """
+    Handles the output from a SPHInX simulation.
+    """
+
     def check_band_occupancy(self, plot=True):
         """
         Check whether there are still empty bands available.
