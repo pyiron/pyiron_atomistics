@@ -110,8 +110,6 @@ class Atoms(ASEAtoms):
         ):
             state.logger.debug("Not supported parameter used!")
 
-        self._store_elements = dict()
-        self._species_to_index_dict = None
         self._is_scaled = False
 
         self._species = list()
@@ -290,12 +288,16 @@ class Atoms(ASEAtoms):
             value (list): A list atomistics.structure.periodic_table.ChemicalElement instances
 
         """
-        if value is None:
-            return
-        value = list(value)
-        self._species_to_index_dict = {el: i for i, el in enumerate(value)}
-        self._species = value[:]
-        self._store_elements = {el.Abbreviation: el for el in value}
+        if value is not None:
+            self._species = list(value)[:]
+
+    @property
+    def _store_elements(self) -> dict:
+        return {el.Abbreviation: el for el in self.species}
+
+    @property
+    def _species_to_index_dict(self) -> dict:
+        return {el: i for i, el in enumerate(self.species)}
 
     @property
     def symbols(self):
@@ -743,7 +745,6 @@ class Atoms(ASEAtoms):
         else:
             raise ValueError("Unknown static type to specify a element")
 
-        self._store_elements[el] = element
         if hasattr(self, "species"):
             if element not in self.species:
                 self._species.append(element)
@@ -2078,7 +2079,6 @@ class Atoms(ASEAtoms):
                     ind_conv[ind_old] = ind_new
                 else:
                     new_species_lst.append(el)
-                    sum_atoms._store_elements[el.Abbreviation] = el
                     ind_conv[ind_old] = len(new_species_lst) - 1
 
             for key, val in ind_conv.items():
