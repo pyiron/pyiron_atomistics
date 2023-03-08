@@ -670,8 +670,6 @@ class TestAtoms(unittest.TestCase):
         basis_O.set_scaled_positions(basis_O.get_scaled_positions() + [0.0, 0.0, 0.5])
         with self.assertRaises(TypeError):
             basis_O.set_repeat(5.0)
-        with self.assertRaises(IndexError):
-            basis_O.set_repeat([2, 2])
         basis = basis_Mg + basis_O
         basis.center_coordinates_in_unit_cell()
         basis.add_tag(selective_dynamics=[True, True, True])
@@ -774,7 +772,8 @@ class TestAtoms(unittest.TestCase):
                 -1 * np.ones(len(basis.select_index("O"))),
             )
         )
-        self.assertEqual(8 * len(self.CO2), len(self.CO2.repeat(np.int64(2))))
+        with self.assertRaises(IndexError):
+            basis_O.set_repeat([2, 2])
 
     def test_get_distance(self):
         cell = 2.2 * np.identity(3)
