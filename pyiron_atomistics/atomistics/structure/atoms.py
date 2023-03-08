@@ -417,23 +417,6 @@ class Atoms(ASEAtoms):
         for tag, value in qwargs.items():
             self.new_array(tag, np.repeat([value], len(self), axis=0))
 
-    def remove_tag(self, key: str) -> None:
-        """
-        Remove tags to the atoms object.
-
-        Args:
-            key (str): tag to remove
-
-        Examples:
-
-            For selective dynamics::
-
-            >>> self.add_tag(selective_dynamics=[False, False, False])
-            >>> self.remove_tag(key="selective_dynamics")
-
-        """
-        del self.arrays[key]
-
     # @staticmethod
     def numbers_to_elements(self, numbers):
         """
