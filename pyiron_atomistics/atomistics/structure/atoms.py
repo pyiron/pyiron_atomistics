@@ -570,7 +570,7 @@ class Atoms(ASEAtoms):
                             # tr_dict = {'0': False, '1': True}
                             if isinstance(hdf_tags[tag], (list, np.ndarray)):
                                 my_list = hdf_tags[tag]
-                            else:
+                            else: # legacy of SparseList
                                 my_dict = hdf_tags.get_pandas(tag).to_dict()
                                 my_list = np.array(my_dict["values"])[
                                     np.argsort(my_dict["index"])
