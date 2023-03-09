@@ -2540,10 +2540,7 @@ class Atoms(ASEAtoms):
                 magmoms = len(self) * [magmoms]
             if len(magmoms) != len(self):
                 raise ValueError("magmoms can be collinear or non-collinear.")
-            if "spin" not in self.arrays.keys():
-                self.add_tag(spin=None)
-            for ind, spin in enumerate(magmoms):
-                self.spin[ind] = spin
+            self.set_array("spin", np.array(magmoms))
         self.spins = magmoms  # For self.array['initial_magmoms']
 
     def rotate(
