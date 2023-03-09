@@ -1004,3 +1004,7 @@ def collect_dump_file_old(job, file_name="dump.out", cwd=None):
         output[k] = uc.convert_array_to_pyiron_units(array=v, label=k)
 
     return output
+
+
+if __name__ == "__main__":
+    unittest.main()
