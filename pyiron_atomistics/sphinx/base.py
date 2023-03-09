@@ -183,7 +183,9 @@ class SphinxBase(GenericDFTJob):
         if not isinstance(boolean, bool):
             raise ValueError("fix_spin_constraint has to be a boolean")
         self._generic_input["fix_spin_constraint"] = boolean
-        self.structure.add_tag(spin_constraint=boolean)
+        self.structure.set_array(
+            "spin_constraint", np.array(len(self.structure) * [boolean])
+        )
 
     @plane_wave_cutoff.setter
     def plane_wave_cutoff(self, val):
