@@ -532,13 +532,12 @@ class Atoms(ASEAtoms):
                 position_tag = "positions"
                 if position_tag not in hdf_atoms.list_nodes():
                     position_tag = "coordinates"
+                self.arrays["positions"] = hdf_atoms[position_tag]
                 if (
                     "is_absolute" in hdf_atoms.list_nodes()
                     and not tr_dict[hdf_atoms["is_absolute"]]
                 ):
-                    self.set_scaled_positions(hdf_atoms[position_tag])
-                else:
-                    self.set_array("positions", hdf_atoms[position_tag])
+                    self.set_scaled_positions(self.arrays["positions"])
 
                 self.set_array("numbers", self.get_atomic_numbers())
 
