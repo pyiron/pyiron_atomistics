@@ -15,6 +15,7 @@ from pyiron_atomistics.lammps.output import to_amat
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 import ase.units as units
 from pyiron_base._tests import TestWithCleanProject
+import unittest
 
 
 class TestLammps(TestWithCleanProject):
@@ -58,9 +59,6 @@ class TestLammps(TestWithCleanProject):
     def test_selective_dynamics(self):
         atoms = Atoms("Fe8", positions=np.zeros((8, 3)), cell=np.eye(3))
         atoms.add_tag(selective_dynamics=[True, True, True])
-        self.job.structure = atoms
-        self.job._set_selective_dynamics()
-        atoms.add_tag(selective_dynamics=None)
         atoms.selective_dynamics[1] = [True, True, False]
         atoms.selective_dynamics[2] = [True, False, True]
         atoms.selective_dynamics[3] = [False, True, True]
@@ -1004,3 +1002,7 @@ def collect_dump_file_old(job, file_name="dump.out", cwd=None):
         output[k] = uc.convert_array_to_pyiron_units(array=v, label=k)
 
     return output
+
+
+if __name__ == "__main__":
+    unittest.main()
