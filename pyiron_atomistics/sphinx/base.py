@@ -343,7 +343,7 @@ class SphinxBase(GenericDFTJob):
                 }
             )
         if "selective_dynamics" in self.structure.arrays.keys():
-            selective_dynamics_list = self.structure.selective_dynamics.list()
+            selective_dynamics_list = self.structure.selective_dynamics
         else:
             selective_dynamics_list = [3 * [False]] * len(self.structure.positions)
         species = structure_group.create_group("species")
