@@ -249,21 +249,10 @@ class Atoms(ASEAtoms):
 
     @spins.setter
     def spins(self, val):
-        if val is not None:
-            val = np.asarray(val)
-            if self.has("initial_magmoms"):
-                try:
-                    self.arrays["initial_magmoms"][:] = val
-                except ValueError as err:
-                    if len(self.arrays["initial_magmoms"]) == len(val):
-                        self.set_array("initial_magmoms", None)
-                        self.arrays["initial_magmoms"] = val
-                    else:
-                        raise err
-            else:
-                self.new_array("initial_magmoms", val)
-        else:
-            self.set_array("initial_magmoms", None)
+        self.set_array(
+            "initial_magmoms",
+            np.asarray(val) if val is not None else None
+        )
 
     @property
     def visualize(self):
