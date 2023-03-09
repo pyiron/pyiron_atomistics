@@ -366,7 +366,7 @@ class Project(ProjectCore):
             snapshot.cell = job.get("output/generic/cells")[iteration_step]
             snapshot.positions = job.get("output/generic/positions")[iteration_step]
             if "indices" in job.get("output/generic").list_nodes():
-                snapshot.indices = job.get("output/generic/indices")[iteration_step]
+                snapshot.set_array("indices", job.get("output/generic/indices")[iteration_step])
             if (
                 "dft" in job["output/generic"].list_groups()
                 and "atom_spins" in job["output/generic/dft"].list_nodes()

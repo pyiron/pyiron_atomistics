@@ -759,7 +759,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             if cell is not None:
                 snapshot.cell = cell
             if indices is not None:
-                snapshot.indices = indices
+                snapshot.set_array('indices', indices)
         if self.output.positions is not None:
             if wrap_atoms:
                 snapshot.positions = self.output.positions[frame]
@@ -882,7 +882,7 @@ class Trajectory(HasStructure):
             if self._cells is not None:
                 new_structure.cell = self._cells[item]
             if self._indices is not None:
-                new_structure.indices = self._indices[item]
+                new_structure.set_array("indices", self._indices[item])
             new_structure.positions = self._positions[item]
             # This step is necessary for using ase.io.write for trajectories
             new_structure.arrays["positions"] = new_structure.positions

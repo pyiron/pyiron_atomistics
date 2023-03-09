@@ -172,7 +172,7 @@ class AseJob(GenericInteractive):
                     pbc=self.structure.pbc,
                 )
                 # Update indicies to match the indicies in the cache.
-                atoms.indices = indices
+                atoms.set_array("indices", indices)
                 return atoms
             else:
                 return None

@@ -829,7 +829,7 @@ class Atoms(ASEAtoms):
             indices_copy = parent_basis.indices.copy()
             for i, ind_ind in enumerate(inv_ind):
                 indices_copy[parent_basis.indices == i] = ind_ind
-            parent_basis.indices = indices_copy
+            parent_basis.set_array("indices", indices_copy)
             return parent_basis
         parent_basis.set_species(list(new_species))
         return parent_basis
