@@ -15,6 +15,7 @@ from pyiron_atomistics.lammps.output import to_amat
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 import ase.units as units
 from pyiron_base._tests import TestWithCleanProject
+import unittest
 
 
 class TestLammps(TestWithCleanProject):
