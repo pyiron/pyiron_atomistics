@@ -249,7 +249,9 @@ class Atoms(ASEAtoms):
 
     @spins.setter
     def spins(self, val):
-        self.set_array("initial_magmoms", np.asarray(val) if val is not None else None)
+        self.set_array("initial_magmoms", None)
+        if val is not None:
+            self.set_array("initial_magmoms", np.asarray(val))
 
     @property
     def visualize(self):
