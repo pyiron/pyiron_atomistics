@@ -406,7 +406,7 @@ class Atoms(ASEAtoms):
 
         self._high_symmetry_path.update(path)
 
-    def add_tag(self, *args, **qwargs):
+    def add_tag(self, **qwargs):
         """
         Add tags to the atoms object.
 
@@ -417,7 +417,7 @@ class Atoms(ASEAtoms):
             >>> self.add_tag(selective_dynamics=[False, False, False])
 
         """
-        self._tag_list.add_tag(*args, **qwargs)
+        self._tag_list.add_tag(**qwargs)
 
     # @staticmethod
     def numbers_to_elements(self, numbers):
