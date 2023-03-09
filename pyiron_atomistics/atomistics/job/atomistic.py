@@ -759,7 +759,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             if cell is not None:
                 snapshot.cell = cell
             if indices is not None:
-                snapshot.set_array('indices', indices)
+                snapshot.set_array("indices", indices)
         if self.output.positions is not None:
             if wrap_atoms:
                 snapshot.positions = self.output.positions[frame]
