@@ -539,7 +539,7 @@ class Atoms(ASEAtoms):
                 ):
                     self.set_scaled_positions(self.arrays["positions"])
 
-                self.set_array("numbers", self.get_atomic_numbers())
+                self.arrays["numbers"] = self.get_atomic_numbers()
 
                 if "explicit_bonds" in hdf_atoms.list_nodes():
                     # print "bonds: "
