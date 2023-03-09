@@ -538,7 +538,7 @@ class Atoms(ASEAtoms):
                 if "is_absolute" in hdf_atoms.list_nodes() and not tr_dict[hdf_atoms["is_absolute"]]:
                     self.set_scaled_positions(hdf_atoms[position_tag])
                 else:
-                    self.set_positions(hdf_atoms[position_tag])
+                    self.set_array("positions", hdf_atoms[position_tag])
 
                 self.set_array("numbers", self.get_atomic_numbers())
 
