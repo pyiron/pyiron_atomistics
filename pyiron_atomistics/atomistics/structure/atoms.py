@@ -417,12 +417,8 @@ class Atoms(ASEAtoms):
             >>> self.add_tag(selective_dynamics=[False, False, False])
 
         """
-<<<<<<< HEAD
         for tag, value in qwargs.items():
             self.set_array(tag, np.repeat([value], len(self), axis=0))
-=======
-        self._tag_list.add_tag(**qwargs)
->>>>>>> origin
 
     # @staticmethod
     def numbers_to_elements(self, numbers):
