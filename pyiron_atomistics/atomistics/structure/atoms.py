@@ -199,7 +199,7 @@ class Atoms(ASEAtoms):
             info=info,
         )
 
-        self.new_array("indices", indices)
+        self.set_array("indices", indices)
 
         self.bonds = None
         self.units = {"length": "A", "mass": "u"}
@@ -405,7 +405,7 @@ class Atoms(ASEAtoms):
 
         self._high_symmetry_path.update(path)
 
-    @deprecate("Use Atoms.new_array() instead")
+    @deprecate("Use Atoms.set_array() instead")
     def add_tag(self, **qwargs):
         """
         Add tags to the atoms object.
@@ -418,7 +418,7 @@ class Atoms(ASEAtoms):
 
         """
         for tag, value in qwargs.items():
-            self.new_array(tag, np.repeat([value], len(self), axis=0))
+            self.set_array(tag, np.repeat([value], len(self), axis=0))
 
     # @staticmethod
     def numbers_to_elements(self, numbers):
@@ -575,7 +575,7 @@ class Atoms(ASEAtoms):
                                 my_list = np.array(my_dict["values"])[
                                     np.argsort(my_dict["index"])
                                 ]
-                            self.new_array(tag, np.asarray(my_list))
+                            self.set_array(tag, np.asarray(my_list))
 
                 if "bonds" in hdf_atoms.list_nodes():
                     self.bonds = hdf_atoms["explicit_bonds"]
@@ -636,7 +636,7 @@ class Atoms(ASEAtoms):
                             my_list = np.array(my_dict["values"])[
                                 np.argsort(my_dict["index"])
                             ]
-                        self.new_array(tag, my_list)
+                        self.set_array(tag, my_list)
 
             self.cell = None
             if "cell" in hdf_atoms.list_groups():
