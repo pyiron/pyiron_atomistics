@@ -202,12 +202,12 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
         with self.project_hdf5.open("output") as h5:
             if "interactive" in h5.list_groups():
                 for key in ["positions", "cells", "indices", "cells", "forces"]:
-                    self._output_parser.generic[key] = h5["interactive/" + key]
+                    self.output.generic[key] = h5["interactive/" + key]
                 if "atom_spin_constraints" in h5["interactive"].list_nodes():
-                    self._output_parser.generic.dft.atom_spin_constraints = h5[
+                    self.output.generic.dft.atom_spin_constraints = h5[
                         "interactive/atom_spin_constraints"
                     ]
-                self._output_parser.generic.to_hdf(hdf=self.project_hdf5)
+                self.output.generic.to_hdf(hdf=self.project_hdf5)
 
     def collect_output(self, force_update=False, compress_files=True):
         super(SphinxInteractive, self).collect_output(
