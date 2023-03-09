@@ -2540,6 +2540,7 @@ class Atoms(ASEAtoms):
                 magmoms = len(self) * [magmoms]
             if len(magmoms) != len(self):
                 raise ValueError("magmoms can be collinear or non-collinear.")
+            self.set_array("spin", None)
             self.set_array("spin", np.array(magmoms))
         self.spins = magmoms  # For self.array['initial_magmoms']
 
