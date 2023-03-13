@@ -249,21 +249,9 @@ class Atoms(ASEAtoms):
 
     @spins.setter
     def spins(self, val):
+        self.set_array("initial_magmoms", None)
         if val is not None:
-            val = np.asarray(val)
-            if self.has("initial_magmoms"):
-                try:
-                    self.arrays["initial_magmoms"][:] = val
-                except ValueError as err:
-                    if len(self.arrays["initial_magmoms"]) == len(val):
-                        self.set_array("initial_magmoms", None)
-                        self.arrays["initial_magmoms"] = val
-                    else:
-                        raise err
-            else:
-                self.new_array("initial_magmoms", val)
-        else:
-            self.set_array("initial_magmoms", None)
+            self.set_array("initial_magmoms", np.asarray(val))
 
     @property
     def visualize(self):
@@ -546,13 +534,12 @@ class Atoms(ASEAtoms):
                 position_tag = "positions"
                 if position_tag not in hdf_atoms.list_nodes():
                     position_tag = "coordinates"
-                if "is_absolute" in hdf_atoms.list_nodes():
-                    if not tr_dict[hdf_atoms["is_absolute"]]:
-                        self.set_scaled_positions(hdf_atoms[position_tag])
-                    else:
-                        self.arrays["positions"] = hdf_atoms[position_tag]
-                else:
-                    self.arrays["positions"] = hdf_atoms[position_tag]
+                self.arrays["positions"] = hdf_atoms[position_tag]
+                if (
+                    "is_absolute" in hdf_atoms.list_nodes()
+                    and not tr_dict[hdf_atoms["is_absolute"]]
+                ):
+                    self.set_scaled_positions(self.arrays["positions"])
 
                 self.arrays["numbers"] = self.get_atomic_numbers()
 
