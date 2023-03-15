@@ -98,6 +98,10 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
         for a_i in structure.get_cell():
             x, y, z = a_i
             f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
+        symbols = structure.get_chemical_symbols()
+        if not np.all(symbols == np.sort(symbols)):
+            raise ValueError("Sort structure by symbols before running VASP")
+
         atom_numbers = structure.get_number_species_atoms()
         if write_species:
             f.write(" ".join(atom_numbers.keys()) + endline)
