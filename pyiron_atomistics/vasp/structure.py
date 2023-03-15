@@ -108,23 +108,21 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
             selec_dyn = True
             cartesian = False
             f.write("Selective dynamics" + endline)
-        sorted_coords = list()
+        coords_lst = list()
         selec_dyn_lst = list()
-        for species in atom_numbers.keys():
-            indices = structure.select_index(species)
-            for i in indices:
-                if cartesian:
-                    sorted_coords.append(structure.positions[i])
-                else:
-                    sorted_coords.append(structure.get_scaled_positions()[i])
-                if selec_dyn:
-                    selec_dyn_lst.append(structure.selective_dynamics[i])
+        for i in range(len(structure)):
+            if cartesian:
+                coords_lst.append(structure.positions[i])
+            else:
+                coords_lst.append(structure.get_scaled_positions()[i])
+            if selec_dyn:
+                selec_dyn_lst.append(structure.selective_dynamics[i])
         if cartesian:
             f.write("Cartesian" + endline)
         else:
             f.write("Direct" + endline)
         if selec_dyn:
-            for i, vec in enumerate(sorted_coords):
+            for i, vec in enumerate(coords_lst):
                 x, y, z = vec
                 sd_string = " ".join(["T" if sd else "F" for sd in selec_dyn_lst[i]])
                 f.write(
@@ -134,7 +132,7 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
                     + endline
                 )
         else:
-            for i, vec in enumerate(sorted_coords):
+            for i, vec in enumerate(coords_lst):
                 x, y, z = vec
                 f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
 
