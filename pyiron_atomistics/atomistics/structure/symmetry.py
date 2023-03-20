@@ -135,7 +135,7 @@ class Symmetry(dict):
         x = np.einsum(
             "jk,...j->...k", np.linalg.inv(self._structure.cell), np.atleast_2d(points)
         )
-        x = np.einsum("nxy,...y->...nx", R, x) + t
+        x = np.einsum("...nx->n...x", np.einsum("nxy,...y->...nx", R, x) + t)
         if any(self._structure.pbc):
             x[:, :, self._structure.pbc] -= np.floor(
                 x[:, :, self._structure.pbc] + self.epsilon
@@ -172,8 +172,8 @@ class Symmetry(dict):
             axis=0,
             return_inverse=True,
         )
-        inverse = inverse.reshape(all_points.shape[:-1][::-1])
-        indices = np.min(inverse, axis=1)
+        inverse = inverse.reshape(all_points.shape[:-1])
+        indices = np.min(inverse, axis=0)
         return np.unique(indices, return_inverse=True)[1]
 
     @property
