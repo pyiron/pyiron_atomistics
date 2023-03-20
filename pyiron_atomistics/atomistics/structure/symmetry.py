@@ -135,15 +135,13 @@ class Symmetry(dict):
         x = np.einsum(
             "jk,nj->nk", np.linalg.inv(self._structure.cell), np.atleast_2d(points)
         )
-        x = np.einsum("nxy,my->mnx", R, x) + t
+        x = np.einsum('...nx->n...x', np.einsum("nxy,...y->...nx", R, x) + t)
         if any(self._structure.pbc):
             x[:, :, self._structure.pbc] -= np.floor(
                 x[:, :, self._structure.pbc] + self.epsilon
             )
         if not return_unique:
-            return np.einsum("ji,mnj->mni", self._structure.cell, x).reshape(
-                (len(R),) + np.shape(points)
-            )
+            return np.einsum("ji,...nj->...ni", self._structure.cell, x)
         x = x.reshape(-1, 3)
         _, indices = np.unique(
             np.round(x, decimals=decimals), return_index=True, axis=0
