@@ -28,9 +28,24 @@ class TestAtoms(unittest.TestCase):
     def test_generate_equivalent_points(self):
         a_0 = 4
         structure = StructureFactory().ase.bulk('Al', cubic=True, a=a_0)
+        sym = structure.get_symmetry()
         self.assertEqual(
             len(structure),
-            len(structure.get_symmetry().generate_equivalent_points([0, 0, 0.5 * a_0]))
+            len(sym.generate_equivalent_points([0, 0, 0.5 * a_0]))
+        )
+        x = np.array([[0, 0, 0.5 * a_0], 3 * [0.25 * a_0]])
+        y = np.random.randn(2)
+        sym_x = sym.generate_equivalent_points(x, return_unique=False)
+        y = np.tile(y, len(sym_x))
+        sym_x = sym_x.reshape(-1, 3)
+        xy = np.round(
+            [structure.get_neighborhood(sym_x, num_neighbors=1).distances.flatten(), y],
+            decimals=8
+        )
+        self.assertEqual(
+            np.unique(xy, axis=1).shape,
+            (2, 2),
+            msg="order of generated points does not match the original order"
         )
 
     def test_get_symmetry(self):
