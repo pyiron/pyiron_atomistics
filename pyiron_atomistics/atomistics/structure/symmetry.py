@@ -135,11 +135,7 @@ class Symmetry(dict):
         )
         x = np.einsum(
             "...nx->n...x",
-            np.einsum(
-                "nxy,...y->...nx",
-                self["rotations"],
-                x
-            ) + self["translations"]
+            np.einsum("nxy,...y->...nx", self["rotations"], x) + self["translations"],
         )
         if any(self._structure.pbc):
             x[:, :, self._structure.pbc] -= np.floor(
