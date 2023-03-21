@@ -130,12 +130,17 @@ class Symmetry(dict):
                 (n_symmetry, original_shape) if return_unique=False, otherwise (n, 3), where n is
                 the number of inequivalent vectors.
         """
-        R = self["rotations"]
-        t = self["translations"]
         x = np.einsum(
             "jk,...j->...k", np.linalg.inv(self._structure.cell), np.atleast_2d(points)
         )
-        x = np.einsum("...nx->n...x", np.einsum("nxy,...y->...nx", R, x) + t)
+        x = np.einsum(
+            "...nx->n...x",
+            np.einsum(
+                "nxy,...y->...nx",
+                self["rotations"],
+                x
+            ) + self["translations"]
+        )
         if any(self._structure.pbc):
             x[:, :, self._structure.pbc] -= np.floor(
                 x[:, :, self._structure.pbc] + self.epsilon
