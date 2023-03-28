@@ -95,7 +95,9 @@ def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
         (depends on `mode`)
     """
     state.publications.add(publication())
-    return stk.analyse_diamond_structure(atoms=atoms, mode=mode, ovito_compatibility=ovito_compatibility)
+    return stk.analyse_diamond_structure(
+        atoms=atoms, mode=mode, ovito_compatibility=ovito_compatibility
+    )
 
 
 def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
@@ -116,7 +118,9 @@ def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
         (depends on `mode`)
     """
     state.publications.add(publication())
-    return stk.analyse_cna_adaptive(atoms=atoms, mode=mode, ovito_compatibility=ovito_compatibility)
+    return stk.analyse_cna_adaptive(
+        atoms=atoms, mode=mode, ovito_compatibility=ovito_compatibility
+    )
 
 
 def analyse_voronoi_volume(atoms):

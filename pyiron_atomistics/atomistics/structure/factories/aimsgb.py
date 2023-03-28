@@ -78,14 +78,16 @@ class AimsgbFactory:
         Returns:
             :class:`.Atoms`: final grain boundary structure
         """
-        return ase_to_pyiron(grainboundary_build(
-            axis=axis,
-            sigma=sigma,
-            plane=plane,
-            initial_struct=initial_struct,
-            to_primitive=to_primitive,
-            delete_layer=delete_layer,
-            add_if_dist=add_if_dist,
-            uc_a=uc_a,
-            uc_b=uc_b,
-        ))
+        return ase_to_pyiron(
+            grainboundary_build(
+                axis=axis,
+                sigma=sigma,
+                plane=plane,
+                initial_struct=initial_struct,
+                to_primitive=to_primitive,
+                delete_layer=delete_layer,
+                add_if_dist=add_if_dist,
+                uc_a=uc_a,
+                uc_b=uc_b,
+            )
+        )

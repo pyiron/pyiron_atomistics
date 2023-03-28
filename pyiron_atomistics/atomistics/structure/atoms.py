@@ -18,7 +18,7 @@ from structuretoolkit import (
     get_neighborhood,
     center_coordinates_in_unit_cell,
     get_distances_array,
-    find_mic
+    find_mic,
 )
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
@@ -1638,7 +1638,7 @@ class Atoms(ASEAtoms):
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
-            angle_tolerance=angle_tolerance
+            angle_tolerance=angle_tolerance,
         )
 
     @deprecate("Use structure.get_symmetry().symmetrize_vectors()")
@@ -1941,7 +1941,9 @@ class Atoms(ASEAtoms):
             numpy.ndarray: NxN if vector=False and NxNx3 if vector=True
 
         """
-        return get_distances_array(structure=self, p1=p1, p2=p2, mic=mic, vectors=vectors)
+        return get_distances_array(
+            structure=self, p1=p1, p2=p2, mic=mic, vectors=vectors
+        )
 
     def append(self, atom):
         if isinstance(atom, ASEAtom):

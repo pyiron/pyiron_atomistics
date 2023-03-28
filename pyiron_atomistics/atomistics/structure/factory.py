@@ -25,7 +25,12 @@ from ase.build import (
     surface as ase_surf,
 )
 import numpy as np
-from structuretoolkit import high_index_surface, high_index_surface_info, grainboundary_build, grainboundary_info
+from structuretoolkit import (
+    high_index_surface,
+    high_index_surface_info,
+    grainboundary_build,
+    grainboundary_info,
+)
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
 from pyiron_atomistics.atomistics.structure.factories.atomsk import (
     AtomskFactory,
@@ -544,20 +549,22 @@ class StructureFactory(PyironFactory):
         Returns:
             slab: pyiron_atomistics.atomistics.structure.atoms.Atoms instance Required surface
         """
-        return ase_to_pyiron(high_index_surface(
-            element=element,
-            crystal_structure=crystal_structure,
-            lattice_constant=lattice_constant,
-            terrace_orientation=terrace_orientation,
-            step_orientation=step_orientation,
-            kink_orientation=kink_orientation,
-            step_down_vector=step_down_vector,
-            length_step=length_step,
-            length_terrace=length_terrace,
-            length_kink=length_kink,
-            layers=layers,
-            vacuum=vacuum,
-        ))
+        return ase_to_pyiron(
+            high_index_surface(
+                element=element,
+                crystal_structure=crystal_structure,
+                lattice_constant=lattice_constant,
+                terrace_orientation=terrace_orientation,
+                step_orientation=step_orientation,
+                kink_orientation=kink_orientation,
+                step_down_vector=step_down_vector,
+                length_step=length_step,
+                length_terrace=length_terrace,
+                length_kink=length_kink,
+                layers=layers,
+                vacuum=vacuum,
+            )
+        )
 
     @property
     def materialsproject(self):

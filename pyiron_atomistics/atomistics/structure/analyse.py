@@ -296,7 +296,7 @@ class Analyse:
             structure=self._structure,
             epsilon=epsilon,
             distance_threshold=distance_threshold,
-            width_buffer=width_buffer
+            width_buffer=width_buffer,
         )
 
     def get_strain(self, ref_structure, num_neighbors=None, only_bulk_type=False):
@@ -352,7 +352,9 @@ class Analyse:
         Returns:
             pairs (ndarray): Pair indices
         """
-        return get_voronoi_neighbors(structure=self._structure, width_buffer=width_buffer)
+        return get_voronoi_neighbors(
+            structure=self._structure, width_buffer=width_buffer
+        )
 
     def get_delaunay_neighbors(self, width_buffer: float = 10.0) -> np.ndarray:
         """
@@ -366,7 +368,9 @@ class Analyse:
         Returns:
             pairs (ndarray): Delaunay neighbor indices
         """
-        return get_delaunay_neighbors(structure=self._structure, width_buffer=width_buffer)
+        return get_delaunay_neighbors(
+            structure=self._structure, width_buffer=width_buffer
+        )
 
     def cluster_positions(
         self, positions=None, eps=1, buffer_width=None, return_labels=False
@@ -415,5 +419,5 @@ class Analyse:
             positions=positions,
             eps=eps,
             buffer_width=buffer_width,
-            return_labels=return_labels
+            return_labels=return_labels,
         )

@@ -59,7 +59,16 @@ class CompoundFactory:
             x1 (float): fractional x coordinate of B atoms on Wyckoff 6h
             z1 (float): fractional z coordinate of A atoms on Wyckoff 4f
         """
-        return ase_to_pyiron(C14(element_a=element_a, element_b=element_b, a=a, c_over_a=c_over_a, x1=x1, z1=z1))
+        return ase_to_pyiron(
+            C14(
+                element_a=element_a,
+                element_b=element_b,
+                a=a,
+                c_over_a=c_over_a,
+                x1=x1,
+                z1=z1,
+            )
+        )
 
     @staticmethod
     def C15(element_a, element_b, a=None):
@@ -118,16 +127,18 @@ class CompoundFactory:
             z2 (float): fractional z coordinate of A atoms on Wyckoff 4f
             z3 (float): fractional z coordinate of B atoms on Wyckoff 4f
         """
-        return ase_to_pyiron(C36(
-            element_a=element_a,
-            element_b=element_b,
-            a=a,
-            c_over_a=c_over_a,
-            x1=x1,
-            z1=z1,
-            z2=z2,
-            z3=z3,
-        ))
+        return ase_to_pyiron(
+            C36(
+                element_a=element_a,
+                element_b=element_b,
+                a=a,
+                c_over_a=c_over_a,
+                x1=x1,
+                z1=z1,
+                z2=z2,
+                z3=z3,
+            )
+        )
 
     @staticmethod
     def D03(element_a, element_b, a=None):
