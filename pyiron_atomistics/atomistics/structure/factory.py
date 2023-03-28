@@ -28,8 +28,6 @@ import numpy as np
 from structuretoolkit import (
     high_index_surface,
     high_index_surface_info,
-    grainboundary_build,
-    grainboundary_info,
 )
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
 from pyiron_atomistics.atomistics.structure.factories.atomsk import (
