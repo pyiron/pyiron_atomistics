@@ -5,7 +5,7 @@
 import unittest
 import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.symmetry import SymmetryError
+from structuretoolkit.analyse.symmetry import SymmetryError
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 
 
