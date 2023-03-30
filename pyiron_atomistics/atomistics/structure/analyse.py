@@ -3,9 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from sklearn.cluster import AgglomerativeClustering, DBSCAN
-from scipy.sparse import coo_matrix
-from scipy.spatial import Voronoi, Delaunay
 from pyiron_atomistics.atomistics.structure.pyscal import (
     get_steinhardt_parameter_structure,
     analyse_cna_adaptive,
@@ -14,9 +11,16 @@ from pyiron_atomistics.atomistics.structure.pyscal import (
     analyse_voronoi_volume,
     analyse_find_solids,
 )
-from pyiron_atomistics.atomistics.structure.strain import Strain
+from structuretoolkit import (
+    get_strain,
+    get_interstitials,
+    get_layers,
+    get_voronoi_vertices,
+    get_voronoi_neighbors,
+    get_delaunay_neighbors,
+    cluster_positions,
+)
 from pyiron_base import Deprecator
-from scipy.spatial import ConvexHull
 
 deprecate = Deprecator()
 
@@ -30,318 +34,6 @@ __maintainer__ = "Sam Waseda"
 __email__ = "waseda@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
-
-def get_mean_positions(positions, cell, pbc, labels):
-    """
-    This function calculates the average position(-s) across periodic boundary conditions according
-    to the labels
-
-    Args:
-        positions (numpy.ndarray (n, 3)): Coordinates to be averaged
-        cell (numpy.ndarray (3, 3)): Cell dimensions
-        pbc (numpy.ndarray (3,)): Periodic boundary conditions (in boolean)
-        labels (numpy.ndarray (n,)): labels according to which the atoms are grouped
-
-    Returns:
-        (numpy.ndarray): mean positions
-    """
-    # Translate labels to integer enumeration (0, 1, 2, ... etc.) and get their counts
-    _, labels, counts = np.unique(labels, return_inverse=True, return_counts=True)
-    # Get reference point for each unique label
-    mean_positions = positions[np.unique(labels, return_index=True)[1]]
-    # Get displacement vectors from reference points to all other points for the same labels
-    all_positions = positions - mean_positions[labels]
-    # Account for pbc
-    all_positions = np.einsum("ji,nj->ni", np.linalg.inv(cell), all_positions)
-    all_positions[:, pbc] -= np.rint(all_positions)[:, pbc]
-    all_positions = np.einsum("ji,nj->ni", cell, all_positions)
-    # Add average displacement vector of each label to the reference point
-    np.add.at(mean_positions, labels, (all_positions.T / counts[labels]).T)
-    return mean_positions
-
-
-def get_average_of_unique_labels(labels, values):
-    """
-
-    This function returns the average values of those elements, which share the same labels
-
-    Example:
-
-    >>> labels = [0, 1, 0, 2]
-    >>> values = [0, 1, 2, 3]
-    >>> print(get_average_of_unique_labels(labels, values))
-    array([1, 1, 3])
-
-    """
-    labels = np.unique(labels, return_inverse=True)[1]
-    unique_labels = np.unique(labels)
-    mat = coo_matrix((np.ones_like(labels), (labels, np.arange(len(labels)))))
-    mean_values = np.asarray(
-        mat.dot(np.asarray(values).reshape(len(labels), -1)) / mat.sum(axis=1)
-    )
-    if np.prod(mean_values.shape).astype(int) == len(unique_labels):
-        return mean_values.flatten()
-    return mean_values
-
-
-class Interstitials:
-    """
-    Class to search for interstitial sites
-
-    This class internally does the following steps:
-
-        1. Initialize grid points (or Voronoi vertices) which are considered as
-            interstitial site candidates.
-        2. Eliminate points within a distance from the nearest neighboring atoms as
-            given by `min_distance`
-        3. Initialize neighbor environment using `get_neighbors`
-        4. Shift interstitial candidates to the nearest symmetric points with respect to the
-            neighboring atom sites/vertices.
-        5. Kick out points with large neighbor distance variances; this eliminates "irregular"
-            shaped interstitials
-        6. Cluster interstitial candidates to avoid point overlapping.
-
-    The interstitial sites can be obtained via `positions`
-
-    In complex structures (i.e. grain boundary, dislocation etc.), the default parameters
-    should be chosen properly. In order to see other quantities, which potentially
-    characterize interstitial sites, see the following class methods:
-
-        - `get_variances()`
-        - `get_distances()`
-        - `get_steinhardt_parameters()`
-        - `get_volumes()`
-        - `get_areas()`
-    """
-
-    def __init__(
-        self,
-        structure,
-        num_neighbors,
-        n_gridpoints_per_angstrom=5,
-        min_distance=1,
-        use_voronoi=False,
-        variance_buffer=0.01,
-        n_iterations=2,
-        eps=0.1,
-    ):
-        """
-
-        Args:
-            num_neighbors (int): Number of neighbors/vertices to consider for the interstitial
-                sites. By definition, tetrahedral sites should have 4 vertices and octahedral
-                sites 6.
-            n_gridpoints_per_angstrom (int): Number of grid points per angstrom for the
-                initialization of the interstitial candidates. The finer the mesh (i.e. the larger
-                the value), the likelier it is to find the correct sites but then also it becomes
-                computationally more expensive. Ignored if `use_voronoi` is set to `True`
-            min_distance (float): Minimum distance from the nearest neighboring atoms to the
-                positions for them to be considered as interstitial site candidates. Set
-                `min_distance` to 0 if no point should be removed.
-            use_voronoi (bool): Use Voronoi vertices for the initial interstitial candidate
-                positions instead of grid points.
-            variance_buffer (bool): Maximum permitted variance value (in distance unit) of the
-                neighbor distance values with respect to the minimum value found for each point.
-                It should be close to 0 for perfect crystals and slightly higher values for
-                structures containing defects. Set `variance_buffer` to `numpy.inf` if no selection
-                by variance value should take place.
-            n_iterations (int): Number of iterations for the shifting of the candidate positions
-                to the nearest symmetric positions with respect to `num_neighbors`. In most of the
-                cases, 1 is enough. In some rare cases (notably tetrahedral sites in bcc), it
-                should be at least 2. It is unlikely that it has to be larger than 2. Set
-                `n_iterations` to 0 if no shifting should take place.
-            eps (float): Distance below which two interstitial candidate sites to be considered as
-                one site after the symmetrization of the points. Set `eps` to 0 if clustering should
-                not be done.
-        """
-        self._hull = None
-        self._neigh = None
-        self._positions = None
-        self.num_neighbors = num_neighbors
-        self.structure = structure
-        self._initialize(
-            n_gridpoints_per_angstrom=n_gridpoints_per_angstrom,
-            min_distance=min_distance,
-            use_voronoi=use_voronoi,
-            variance_buffer=variance_buffer,
-            n_iterations=n_iterations,
-            eps=eps,
-        )
-
-    def _initialize(
-        self,
-        n_gridpoints_per_angstrom=5,
-        min_distance=1,
-        use_voronoi=False,
-        variance_buffer=0.01,
-        n_iterations=2,
-        eps=0.1,
-    ):
-        if use_voronoi:
-            self.positions = self.structure.analyse.get_voronoi_vertices()
-        else:
-            self.positions = self._create_gridpoints(
-                n_gridpoints_per_angstrom=n_gridpoints_per_angstrom
-            )
-        self._remove_too_close(min_distance=min_distance)
-        for _ in range(n_iterations):
-            self._set_interstitials_to_high_symmetry_points()
-        self._kick_out_points(variance_buffer=variance_buffer)
-        self._cluster_points(eps=eps)
-
-    @property
-    def num_neighbors(self):
-        """
-        Number of atoms (vertices) to consider for each interstitial atom. By definition,
-        tetrahedral sites should have 4 and octahedral sites 6.
-        """
-        return self._num_neighbors
-
-    @num_neighbors.setter
-    def num_neighbors(self, n):
-        self.reset()
-        self._num_neighbors = n
-
-    def reset(self):
-        self._hull = None
-        self._neigh = None
-
-    @property
-    def neigh(self):
-        """
-        Neighborhood information of each interstitial candidate and their surrounding atoms. E.g.
-        `class.neigh.distances[0][0]` gives the distance from the first interstitial candidate to
-        its nearest neighboring atoms. The functionalities of `neigh` follow those of
-        `pyiron_atomistics.structure.atoms.neighbors`.
-        """
-        if self._neigh is None:
-            self._neigh = self.structure.get_neighborhood(
-                self.positions, num_neighbors=self.num_neighbors
-            )
-        return self._neigh
-
-    @property
-    def positions(self):
-        """
-        Positions of the interstitial candidates (and not those of the atoms).
-
-        IMPORTANT: Do not set positions via numpy setter, i.e.
-
-        BAD:
-        ```
-        >>> Interstitials.neigh.positions[0][0] = x
-        ```
-
-        GOOD:
-        ```
-        >>> positions = Interstitials.neigh.positions
-        >>> positions[0][0] = x
-        >>> Interstitialsneigh.positions = positions
-        ```
-
-        This is because in the first case related properties (most importantly the neighborhood
-        information) is not updated, which might lead to inconsistencies.
-        """
-        return self._positions
-
-    @positions.setter
-    def positions(self, x):
-        self.reset()
-        self._positions = x
-
-    @property
-    def hull(self):
-        """
-        Convex hull of each atom. It is mainly used for the volume and area calculation of each
-        interstitial candidate. For more info, see `get_volumes` and `get_areas`.
-        """
-        if self._hull is None:
-            self._hull = [ConvexHull(v) for v in self.neigh.vecs]
-        return self._hull
-
-    def _create_gridpoints(self, n_gridpoints_per_angstrom=5):
-        cell = self.structure.get_vertical_length()
-        n_points = (n_gridpoints_per_angstrom * cell).astype(int)
-        positions = np.meshgrid(
-            *[np.linspace(0, 1, n_points[i], endpoint=False) for i in range(3)]
-        )
-        positions = np.stack(positions, axis=-1).reshape(-1, 3)
-        return np.einsum("ji,nj->ni", self.structure.cell, positions)
-
-    def _remove_too_close(self, min_distance=1):
-        neigh = self.structure.get_neighborhood(self.positions, num_neighbors=1)
-        self.positions = self.positions[neigh.distances.flatten() > min_distance]
-
-    def _set_interstitials_to_high_symmetry_points(self):
-        self.positions = self.positions + np.mean(self.neigh.vecs, axis=-2)
-        self.positions = self.structure.get_wrapped_coordinates(self.positions)
-
-    def _kick_out_points(self, variance_buffer=0.01):
-        variance = self.get_variances()
-        min_var = variance.min()
-        self.positions = self.positions[variance < min_var + variance_buffer]
-
-    def _cluster_points(self, eps=0.1):
-        if eps == 0:
-            return
-        extended_positions, indices = self.structure.get_extended_positions(
-            eps, return_indices=True, positions=self.positions
-        )
-        labels = DBSCAN(eps=eps, min_samples=1).fit_predict(extended_positions)
-        coo = coo_matrix((labels, (np.arange(len(labels)), indices)))
-        labels = coo.max(axis=0).toarray().flatten()
-        self.positions = get_mean_positions(
-            self.positions, self.structure.cell, self.structure.pbc, labels
-        )
-
-    def get_variances(self):
-        """
-        Get variance of neighboring distances. Since interstitial sites are mostly in symmetric
-        sites, the variance values tend to be small. In the case of fcc, both tetrahedral and
-        octahedral sites as well as tetrahedral sites in bcc should have the value of 0.
-
-        Returns:
-            (numpy.array (n,)) Variance values
-        """
-        return np.std(self.neigh.distances, axis=-1)
-
-    def get_distances(self, function_to_apply=np.min):
-        """
-        Get per-position return values of a given function for the neighbors.
-
-        Args:
-            function_to_apply (function): Function to apply to the distance array. Default is
-                numpy.minimum
-
-        Returns:
-            (numpy.array (n,)) Function values on the distance array
-        """
-        return function_to_apply(self.neigh.distances, axis=-1)
-
-    def get_steinhardt_parameters(self, l):
-        """
-        Args:
-            l (int/numpy.array): Order of Steinhardt parameter
-
-        Returns:
-            (numpy.array (n,)) Steinhardt parameter values
-        """
-        return self.neigh.get_steinhardt_parameter(l=l)
-
-    def get_volumes(self):
-        """
-        Returns:
-            (numpy.array (n,)): Convex hull volume of each site.
-        """
-        return np.array([h.volume for h in self.hull])
-
-    def get_areas(self):
-        """
-        Returns:
-            (numpy.array (n,)): Convex hull area of each site.
-        """
-        return np.array([h.area for h in self.hull])
 
 
 class Analyse:
@@ -364,7 +56,7 @@ class Analyse:
         n_iterations=2,
         eps=0.1,
     ):
-        return Interstitials(
+        return get_interstitials(
             structure=self._structure,
             num_neighbors=num_neighbors,
             n_gridpoints_per_angstrom=n_gridpoints_per_angstrom,
@@ -375,10 +67,7 @@ class Analyse:
             eps=eps,
         )
 
-    get_interstitials.__doc__ = (
-        Interstitials.__doc__.replace("Class", "Function")
-        + Interstitials.__init__.__doc__
-    )
+    get_interstitials.__doc__ = get_interstitials.__doc__
 
     def get_layers(
         self,
@@ -429,66 +118,14 @@ class Analyse:
         >>> from sklearn.cluster import DBSCAN
         >>> layers = structure.analyse.get_layers(cluster_method=DBSCAN())
         """
-        if distance_threshold <= 0:
-            raise ValueError("distance_threshold must be a positive float")
-        if id_list is not None and len(id_list) == 0:
-            raise ValueError("id_list must contain at least one id")
-        if wrap_atoms and planes is None:
-            positions, indices = self._structure.get_extended_positions(
-                width=distance_threshold, return_indices=True
-            )
-            if id_list is not None:
-                id_list = np.arange(len(self._structure))[np.array(id_list)]
-                id_list = np.any(
-                    id_list[:, np.newaxis] == indices[np.newaxis, :], axis=0
-                )
-                positions = positions[id_list]
-                indices = indices[id_list]
-        else:
-            positions = self._structure.positions
-            if id_list is not None:
-                positions = positions[id_list]
-            if wrap_atoms:
-                positions = self._structure.get_wrapped_coordinates(positions)
-        if planes is not None:
-            mat = np.asarray(planes).reshape(-1, 3)
-            positions = np.einsum(
-                "ij,i,nj->ni", mat, 1 / np.linalg.norm(mat, axis=-1), positions
-            )
-        if cluster_method is None:
-            cluster_method = AgglomerativeClustering(
-                linkage="complete",
-                n_clusters=None,
-                distance_threshold=distance_threshold,
-            )
-        layers = []
-        for ii, x in enumerate(positions.T):
-            cluster = cluster_method.fit(x.reshape(-1, 1))
-            first_occurrences = np.unique(cluster.labels_, return_index=True)[1]
-            permutation = x[first_occurrences].argsort().argsort()
-            labels = permutation[cluster.labels_]
-            if wrap_atoms and planes is None and self._structure.pbc[ii]:
-                mean_positions = get_average_of_unique_labels(labels, positions)
-                scaled_positions = np.einsum(
-                    "ji,nj->ni", np.linalg.inv(self._structure.cell), mean_positions
-                )
-                unique_inside_box = np.all(
-                    np.absolute(scaled_positions - 0.5 + 1.0e-8) < 0.5, axis=-1
-                )
-                arr_inside_box = np.any(
-                    labels[:, None] == np.unique(labels)[unique_inside_box][None, :],
-                    axis=-1,
-                )
-                first_occurences = np.unique(
-                    indices[arr_inside_box], return_index=True
-                )[1]
-                labels = labels[arr_inside_box]
-                labels -= np.min(labels)
-                labels = labels[first_occurences]
-            layers.append(labels)
-        if planes is not None and len(np.asarray(planes).shape) == 1:
-            return np.asarray(layers).flatten()
-        return np.vstack(layers).T
+        return get_layers(
+            structure=self._structure,
+            distance_threshold=distance_threshold,
+            id_list=id_list,
+            wrap_atoms=wrap_atoms,
+            planes=planes,
+            cluster_method=cluster_method,
+        )
 
     @deprecate(
         arguments={"clustering": "use n_clusters=None instead of clustering=False."}
@@ -524,7 +161,6 @@ class Analyse:
             n_clusters=n_clusters,
             q=q,
             averaged=averaged,
-            clustering=clustering,
         )
 
     def pyscal_cna_adaptive(self, mode="total", ovito_compatibility=False):
@@ -656,21 +292,12 @@ class Analyse:
         >>> print(neigh.distances.min(axis=-1))
 
         """
-        voro = Voronoi(self._structure.get_extended_positions(width_buffer) + epsilon)
-        xx = voro.vertices
-        if distance_threshold > 0:
-            cluster = AgglomerativeClustering(
-                linkage="single", distance_threshold=distance_threshold, n_clusters=None
-            )
-            cluster.fit(xx)
-            xx = get_average_of_unique_labels(cluster.labels_, xx)
-        xx = xx[
-            np.linalg.norm(
-                xx - self._structure.get_wrapped_coordinates(xx, epsilon=0), axis=-1
-            )
-            < epsilon
-        ]
-        return xx - epsilon
+        return get_voronoi_vertices(
+            structure=self._structure,
+            epsilon=epsilon,
+            distance_threshold=distance_threshold,
+            width_buffer=width_buffer,
+        )
 
     def get_strain(self, ref_structure, num_neighbors=None, only_bulk_type=False):
         """
@@ -708,32 +335,12 @@ class Analyse:
             strain values they give similar results (i.e. when strain**2 can be neglected).
 
         """
-        return Strain(
+        return get_strain(
             structure=self._structure,
             ref_structure=ref_structure,
             num_neighbors=num_neighbors,
             only_bulk_type=only_bulk_type,
-        ).strain
-
-    def _get_neighbors(
-        self,
-        position_interpreter,
-        data_field: str,
-        width_buffer: float = 10,
-    ) -> np.ndarray:
-        positions, indices = self._structure.get_extended_positions(
-            width_buffer, return_indices=True
         )
-        interpretation = position_interpreter(positions)
-        data = getattr(interpretation, data_field)
-        x = positions[data]
-        return indices[
-            data[
-                np.isclose(self._structure.get_wrapped_coordinates(x), x)
-                .all(axis=-1)
-                .any(axis=-1)
-            ]
-        ]
 
     def get_voronoi_neighbors(self, width_buffer: float = 10) -> np.ndarray:
         """
@@ -745,7 +352,9 @@ class Analyse:
         Returns:
             pairs (ndarray): Pair indices
         """
-        return self._get_neighbors(Voronoi, "ridge_points", width_buffer=width_buffer)
+        return get_voronoi_neighbors(
+            structure=self._structure, width_buffer=width_buffer
+        )
 
     def get_delaunay_neighbors(self, width_buffer: float = 10.0) -> np.ndarray:
         """
@@ -759,7 +368,9 @@ class Analyse:
         Returns:
             pairs (ndarray): Delaunay neighbor indices
         """
-        return self._get_neighbors(Delaunay, "simplices", width_buffer=width_buffer)
+        return get_delaunay_neighbors(
+            structure=self._structure, width_buffer=width_buffer
+        )
 
     def cluster_positions(
         self, positions=None, eps=1, buffer_width=None, return_labels=False
@@ -803,22 +414,10 @@ class Analyse:
             positions (numpy.ndarray): Mean positions
             label (numpy.ndarray): Labels of the positions (returned when `return_labels = True`)
         """
-        positions = (
-            self._structure.positions if positions is None else np.array(positions)
+        return cluster_positions(
+            structure=self._structure,
+            positions=positions,
+            eps=eps,
+            buffer_width=buffer_width,
+            return_labels=return_labels,
         )
-        if buffer_width is None:
-            buffer_width = eps
-        extended_positions, indices = self._structure.get_extended_positions(
-            buffer_width, return_indices=True, positions=positions
-        )
-        labels = DBSCAN(eps=eps, min_samples=1).fit_predict(extended_positions)
-        coo = coo_matrix((labels, (np.arange(len(labels)), indices)))
-        labels = coo.max(axis=0).toarray().flatten()
-        # make labels look nicer
-        labels = np.unique(labels, return_inverse=True)[1]
-        mean_positions = get_mean_positions(
-            positions, self._structure.cell, self._structure.pbc, labels
-        )
-        if return_labels:
-            return mean_positions, labels
-        return mean_positions

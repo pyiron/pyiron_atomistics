@@ -2,9 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import numpy as np
-from phonopy.structure.atoms import PhonopyAtoms
-import spglib as spg
+import structuretoolkit as stk
 from pyiron_base import state
 
 __author__ = "Osamu Waseda"
@@ -31,16 +29,9 @@ def analyse_phonopy_equivalent_atoms(atoms, symprec=1e-5, angle_tolerance=-1.0):
 
     """
     state.publications.add(publication())
-    positions = atoms.get_scaled_positions()
-    cell = atoms.cell
-    types = atoms.get_chemical_symbols()
-    types = list(types)
-    natom = len(types)
-    positions = np.reshape(np.array(positions), (natom, 3))
-    cell = np.reshape(np.array(cell), (3, 3))
-    unitcell = PhonopyAtoms(symbols=types, cell=cell, scaled_positions=positions)
-    ops = spg.get_symmetry(unitcell, symprec=symprec, angle_tolerance=angle_tolerance)
-    return ops["equivalent_atoms"]
+    return stk.analyse_phonopy_equivalent_atoms(
+        atoms=atoms, symprec=symprec, angle_tolerance=angle_tolerance
+    )
 
 
 def publication():
