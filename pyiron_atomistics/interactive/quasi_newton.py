@@ -44,6 +44,14 @@ class QuasiNewtonInteractive:
         self.symmetry = None
         self.max_displacement = max_displacement
         self.regularization = None
+        try:
+            self.selective_dynamics = np.array(
+                structure.selective_dynamics
+            ).flatten()
+        except AttributeError:
+            self.selective_dynamics = np.array(
+                np.prod(structure.positions.shape) * [True]
+            )
         if symmetrize:
             self.symmetry = structure.get_symmetry()
         self._initialize_hessian(
@@ -58,15 +66,15 @@ class QuasiNewtonInteractive:
     ):
         if (
             np.prod(np.array(starting_h).shape)
-            == np.prod(structure.positions.shape) ** 2
+            == np.prod(len(self.selective_dynamics)) ** 2
         ):
             self.hessian = starting_h
         else:
-            self.hessian = starting_h * np.eye(np.prod(structure.positions.shape))
+            self.hessian = starting_h * np.eye(len(self.selective_dynamics))
         if diffusion_id is not None and diffusion_direction is not None:
             v = np.zeros_like(structure.positions)
             v[diffusion_id] = diffusion_direction
-            v = v.flatten()
+            v = v.flatten()[self.selective_dynamics]
             self.hessian -= (
                 (starting_h + 1) * np.einsum("i,j->ij", v, v) / np.linalg.norm(v) ** 2
             )
@@ -128,10 +136,19 @@ class QuasiNewtonInteractive:
             self._calc_eig()
         return self._eigenvectors
 
+    def filter_vector(self, v):
+        return np.array(v).flatten()[self.selective_dynamics]
+
+    def has_converged(self, f, ionic_force_tolerance):
+        if self.symmetry is not None:
+            f = self.symmetry.symmetrize_vectors(f)
+        return np.absolute(self.filter_vector(f), ionic_force_tolerance)
+
     def get_dx(self, g, threshold=1e-4, mode="PSB", update_hessian=True):
+        g = self.filter_vector(g)
         if update_hessian:
             self.update_hessian(g, threshold=threshold, mode=mode)
-        self.dx = -np.einsum("ij,j->i", self.inv_hessian, g.flatten()).reshape(-1, 3)
+        self.dx = -np.einsum("ij,j->i", self.inv_hessian, g).reshape(-1, 3)
         if self.symmetry is not None:
             self.dx = self.symmetry.symmetrize_vectors(self.dx)
         if (
@@ -239,7 +256,7 @@ def run_qn(
     job.run()
     for _ in range(ionic_steps):
         f = job.output.forces[-1]
-        if np.linalg.norm(f, axis=-1).max() < ionic_force_tolerance:
+        if qn.has_converged(f, ionic_force_tolerance):
             break
         dx = qn.get_dx(-f, mode=mode)
         if np.linalg.norm(dx, axis=-1).max() < min_displacement:
