@@ -42,7 +42,6 @@ setup(
         "*.github*"
     ]),
     install_requires=[
-        'aimsgb==0.1.1',
         'ase==3.22.1',
         'defusedxml==0.7.1',
         'h5py==3.8.0',
