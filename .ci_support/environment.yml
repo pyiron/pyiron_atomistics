@@ -1,7 +1,6 @@
 channels:
 - conda-forge
 dependencies:
-- aimsgb =0.1.1
 - ase =3.22.1
 - coveralls
 - coverage
