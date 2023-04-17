@@ -39,7 +39,7 @@ class LammpsPotentials:
         return list(args)
 
     @property
-    def model(self): -> str
+    def model(self) -> str:
         """Model name (required in pyiron df)"""
         return "_and_".join(set(self.df.model))
 
