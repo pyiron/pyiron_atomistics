@@ -19,14 +19,14 @@ import numpy as np
 import warnings
 
 
-class LammpsPotential:
+class LammpsPotentials:
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls)
         cls._df = None
         return obj
 
     def copy(self):
-        new_pot = LammpsPotential()
+        new_pot = LammpsPotentials()
         new_pot.set_df(self.get_df())
         return new_pot
 
@@ -201,10 +201,10 @@ class LammpsPotential:
         return df
 
     def __mul__(self, scale_or_potential):
-        if isinstance(scale_or_potential, LammpsPotential):
+        if isinstance(scale_or_potential, LammpsPotentials):
             if self.is_scaled or scale_or_potential.is_scaled:
                 raise ValueError("You cannot mix hybrid types")
-            new_pot = LammpsPotential()
+            new_pot = LammpsPotentials()
             new_pot.set_df(pd.concat((self.get_df(), scale_or_potential.get_df()), ignore_index=True))
             return new_pot
         if self.is_scaled:
@@ -216,7 +216,7 @@ class LammpsPotential:
     __rmul__ = __mul__
 
     def __add__(self, potential):
-        new_pot = LammpsPotential()
+        new_pot = LammpsPotentials()
         new_pot.set_df(pd.concat((self.get_df(default_scale=1), potential.get_df(default_scale=1)), ignore_index=True))
         return new_pot
 
@@ -257,7 +257,7 @@ class LammpsPotential:
         self.set_df(pd.DataFrame(arg_dict))
 
 
-class EAM(LammpsPotential):
+class EAM(LammpsPotentials):
     @staticmethod
     def _get_pair_style(config):
         if any(["hybrid" in c for c in config]):
@@ -293,7 +293,9 @@ class EAM(LammpsPotential):
             if "hybrid/overlay" in c:
                 return 1
             elif "hybrid/scaled" in c:
-                raise NotImplementedError("Too much work for something inexistent in pyiron database for now")
+                raise NotImplementedError(
+                    "Too much work for something inexistent in pyiron database for now"
+                )
         return
 
     def __init__(self, *chemical_elements, name=None, pair_style=None):
@@ -313,7 +315,9 @@ class EAM(LammpsPotential):
         if self._df is None:
             df = self._df_candidates.iloc[0]
             if len(self._df_candidates) > 1:
-                warnings.warn(f"Potential not specified - chose {df.Name}")
+                warnings.warn(
+                    f"Potential not uniquely specified - use default {df.Name}"
+                )
             self._initialize_df(
                 pair_style=self._get_pair_style(df.Config),
                 interacting_species=self._get_interacting_species(df.Config, df.Species),
@@ -328,7 +332,7 @@ class EAM(LammpsPotential):
         return self._df
 
 
-class Morse(LammpsPotential):
+class Morse(LammpsPotentials):
     def __init__(self, *chemical_elements, D_0, alpha, r_0, cutoff, pair_style="morse"):
         self._initialize_df(
             pair_style=[pair_style],
@@ -337,7 +341,7 @@ class Morse(LammpsPotential):
             cutoff=cutoff,
         )
 
-class CustomPotential(LammpsPotential):
+class CustomPotential(LammpsPotentials):
     def __init__(self, pair_style, *chemical_elements, cutoff, **kwargs):
         self._initialize_df(
             pair_style=[pair_style],

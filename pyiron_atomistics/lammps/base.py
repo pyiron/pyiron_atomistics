@@ -17,6 +17,7 @@ from pyiron_atomistics.lammps.potential import (
     view_potentials,
     list_potentials,
 )
+from pyiron_atomistics.lammps.potentials import LammpsPotentials
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
@@ -206,6 +207,8 @@ class LammpsBase(AtomisticGenericJob):
             potential = potential_db.find_by_name(potential_filename)
         elif isinstance(potential_filename, pd.DataFrame):
             potential = potential_filename
+        elif isinstance(potential_filename, LammpsPotentials):
+            potential = potential_filename.pyiron_df
         else:
             raise TypeError("Potentials have to be strings or pandas dataframes.")
         if self.structure:
