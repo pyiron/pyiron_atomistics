@@ -53,8 +53,10 @@ class LammpsPotentials:
         if len(preset) == 0:
             return list(species)
         elif len(preset) > 1:
-            raise NotImplementedError("Currently not possible to have multiple file-based potentials")
-        preset = list(preset)[0].split('___')
+            raise NotImplementedError(
+                "Currently not possible to have multiple file-based potentials"
+            )
+        preset = list(preset)[0].split("___")
         return [p for p in preset + list(species - set(preset)) if p != "*"]
 
     @property
@@ -100,7 +102,7 @@ class LammpsPotentials:
                 interacting_species,
                 pair_coeff,
                 species,
-                preset_species
+                preset_species,
             ):
                 self.is_hybrid = is_hybrid
                 self._interacting_species = interacting_species
@@ -132,8 +134,13 @@ class LammpsPotentials:
             @property
             def results(self):
                 return [
-                    " ".join((" ".join(("pair_coeff", ) + c)).split()) + "\n"
-                    for c in zip(self.interacting_species, self.pair_style, self.counter, self.pair_coeff)
+                    " ".join((" ".join(("pair_coeff",) + c)).split()) + "\n"
+                    for c in zip(
+                        self.interacting_species,
+                        self.pair_style,
+                        self.counter,
+                        self.pair_coeff,
+                    )
                 ]
 
             @property
@@ -142,7 +149,10 @@ class LammpsPotentials:
                     zip(self._species, (np.arange(len(self._species)) + 1).astype(str))
                 )
                 s_dict.update({"*": "*"})
-                return [" ".join([s_dict[cc] for cc in c]) for c in self._interacting_species]
+                return [
+                    " ".join([s_dict[cc] for cc in c])
+                    for c in self._interacting_species
+                ]
 
             @property
             def pair_coeff(self):
@@ -156,26 +166,27 @@ class LammpsPotentials:
                     results.append(pc)
                 return results
 
-
         return PairCoeff(
             is_hybrid="hybrid" in self.pair_style,
             pair_style=self.df.pair_style,
             interacting_species=self.df.interacting_species,
             pair_coeff=self.df.pair_coeff,
             species=self.species,
-            preset_species=self.df.preset_species
+            preset_species=self.df.preset_species,
         ).results
 
     @property
     def pyiron_df(self):
-        return pd.DataFrame({
-            "Config": [[self.pair_style] + self.pair_coeff],
-            "Filename": [self.filename],
-            "Model": [self.model],
-            "Name": [self.name],
-            "Species": [self.species],
-            "Citations": [self.citations],
-        })
+        return pd.DataFrame(
+            {
+                "Config": [[self.pair_style] + self.pair_coeff],
+                "Filename": [self.filename],
+                "Model": [self.model],
+                "Name": [self.name],
+                "Species": [self.species],
+                "Citations": [self.citations],
+            }
+        )
 
     def __repr__(self):
         return self.df.__repr__()
@@ -184,7 +195,12 @@ class LammpsPotentials:
         return self.df._repr_html_()
 
     def set_df(self, df):
-        for key in ["pair_style", "interacting_species", "pair_coeff", "preset_species"]:
+        for key in [
+            "pair_style",
+            "interacting_species",
+            "pair_coeff",
+            "preset_species",
+        ]:
             if key not in df:
                 raise ValueError(f"{key} missing")
         self._df = df
@@ -205,19 +221,28 @@ class LammpsPotentials:
             if self.is_scaled or scale_or_potential.is_scaled:
                 raise ValueError("You cannot mix hybrid types")
             new_pot = LammpsPotentials()
-            new_pot.set_df(pd.concat((self.get_df(), scale_or_potential.get_df()), ignore_index=True))
+            new_pot.set_df(
+                pd.concat(
+                    (self.get_df(), scale_or_potential.get_df()), ignore_index=True
+                )
+            )
             return new_pot
         if self.is_scaled:
             raise NotImplementedError("Currently you cannot scale twice")
         new_pot = self.copy()
-        new_pot.df['scale'] = scale_or_potential
+        new_pot.df["scale"] = scale_or_potential
         return new_pot
 
     __rmul__ = __mul__
 
     def __add__(self, potential):
         new_pot = LammpsPotentials()
-        new_pot.set_df(pd.concat((self.get_df(default_scale=1), potential.get_df(default_scale=1)), ignore_index=True))
+        new_pot.set_df(
+            pd.concat(
+                (self.get_df(default_scale=1), potential.get_df(default_scale=1)),
+                ignore_index=True,
+            )
+        )
         return new_pot
 
     def _initialize_df(
@@ -231,7 +256,7 @@ class LammpsPotentials:
         filename=None,
         name=None,
         scale=None,
-        cutoff=None
+        cutoff=None,
     ):
         def check_none_n_length(variable, default, length=len(pair_coeff)):
             if variable is None:
@@ -241,6 +266,7 @@ class LammpsPotentials:
             if len(variable) == 1 and len(variable) < length:
                 variable = length * variable
             return variable
+
         arg_dict = {
             "pair_style": pair_style,
             "interacting_species": interacting_species,
@@ -250,7 +276,7 @@ class LammpsPotentials:
             "model": check_none_n_length(model, pair_style),
             "citations": check_none_n_length(citations, [[]]),
             "filename": check_none_n_length(filename, [""]),
-            "name": check_none_n_length(name, pair_style)
+            "name": check_none_n_length(name, pair_style),
         }
         if scale is not None:
             arg_dict["scale"] = scale
@@ -264,7 +290,9 @@ class EAM(LammpsPotentials):
             return [c.split()[3] for c in config if "pair_coeff" in c]
         for c in config:
             if "pair_style" in c:
-                return [" ".join(c.replace('\n', '').split()[1:])] * sum(["pair_coeff" in c for c in config])
+                return [" ".join(c.replace("\n", "").split()[1:])] * sum(
+                    ["pair_coeff" in c for c in config]
+                )
         raise ValueError(f"pair_style could not determined: {config}")
 
     @staticmethod
@@ -274,7 +302,9 @@ class EAM(LammpsPotentials):
                 return [" ".join(c.split()[4:]) for c in config if "pair_coeff" in c]
             return [" ".join(c.split()[3:]) for c in config if "pair_coeff" in c]
         except IndexError:
-            raise AssertionError(f"{config} does not follow the format 'pair_coeff element_1 element_2 args'")
+            raise AssertionError(
+                f"{config} does not follow the format 'pair_coeff element_1 element_2 args'"
+            )
 
     @staticmethod
     def _get_interacting_species(config, species):
@@ -282,8 +312,12 @@ class EAM(LammpsPotentials):
             if c == "*":
                 return c
             return s[int(c) - 1]
-        return [[_convert(cc, species) for cc in c.split()[1:3]] for c in config if c.startswith('pair_coeff')]
 
+        return [
+            [_convert(cc, species) for cc in c.split()[1:3]]
+            for c in config
+            if c.startswith("pair_coeff")
+        ]
 
     @staticmethod
     def _get_scale(config):
@@ -320,14 +354,16 @@ class EAM(LammpsPotentials):
                 )
             self._initialize_df(
                 pair_style=self._get_pair_style(df.Config),
-                interacting_species=self._get_interacting_species(df.Config, df.Species),
+                interacting_species=self._get_interacting_species(
+                    df.Config, df.Species
+                ),
                 pair_coeff=self._get_pair_coeff(df.Config),
                 preset_species=[df.Species],
                 model=df.Model,
                 citations=df.Citations,
                 filename=df.Filename,
                 name=df.Name,
-                scale=self._get_scale(df.Config)
+                scale=self._get_scale(df.Config),
             )
         return self._df
 
@@ -340,6 +376,7 @@ class Morse(LammpsPotentials):
             pair_coeff=[" ".join([str(cc) for cc in [D_0, alpha, r_0, cutoff]])],
             cutoff=cutoff,
         )
+
 
 class CustomPotential(LammpsPotentials):
     def __init__(self, pair_style, *chemical_elements, cutoff, **kwargs):
