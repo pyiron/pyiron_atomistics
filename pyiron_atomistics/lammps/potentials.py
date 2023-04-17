@@ -31,7 +31,7 @@ class LammpsPotentials:
         return new_pot
 
     @staticmethod
-    def _harmonize_args(args):
+    def _harmonize_args(args) -> str:
         if len(args) == 0:
             raise ValueError("Chemical elements not specified")
         if len(args) == 1:
@@ -39,15 +39,18 @@ class LammpsPotentials:
         return list(args)
 
     @property
-    def model(self):
+    def model(self): -> str
+        """Model name (required in pyiron df)"""
         return "_and_".join(set(self.df.model))
 
     @property
-    def name(self):
+    def name(self) -> str:
+        """Potential name (required in pyiron df)"""
         return "_and_".join(set(self.df.name))
 
     @property
     def species(self):
+        """Species defined in the potential"""
         species = set([ss for s in self.df.interacting_species for ss in s])
         preset = set(["___".join(s) for s in self.df.preset_species if len(s) > 0])
         if len(preset) == 0:
@@ -58,19 +61,23 @@ class LammpsPotentials:
         return [p for p in preset + list(species - set(preset)) if p != "*"]
 
     @property
-    def filename(self):
+    def filename(self) -> list:
+        """LAMMPS potential files"""
         return [f for f in set(self.df.filename) if len(f) > 0]
 
     @property
-    def citations(self):
+    def citations(self) -> str:
+        """Citations to be included"""
         return "".join(np.unique([c for c in self.df.citations if len(c) > 0]))
 
     @property
-    def is_scaled(self):
+    def is_scaled(self) -> bool:
+        """Scaling in pair_style hybrid/scaled and hybrid/overlay (whih is scale=1)"""
         return "scale" in self.df
 
     @property
-    def pair_style(self):
+    def pair_style(self) -> str:
+        """LAMMPS pair_style"""
         if len(set(self.df.pair_style)) == 1:
             pair_style = "pair_style " + list(set(self.df.pair_style))[0]
             if np.max(self.df.cutoff) > 0:
@@ -91,7 +98,8 @@ class LammpsPotentials:
         return pair_style + "\n"
 
     @property
-    def pair_coeff(self):
+    def pair_coeff(self) -> list:
+        """LAMMPS pair_coeff"""
         class PairCoeff:
             def __init__(
                 self,
@@ -111,6 +119,10 @@ class LammpsPotentials:
 
             @property
             def counter(self):
+                """
+                Enumeration of potentials if a potential is used multiple
+                times in hybrid (which is a requirement from LAMMPS)
+                """
                 key, count = np.unique(self._pair_style, return_counts=True)
                 counter = {kk: 1 for kk in key[count > 1]}
                 results = []
@@ -124,6 +136,7 @@ class LammpsPotentials:
 
             @property
             def pair_style(self):
+                """pair_style to be output only in hybrid"""
                 if self.is_hybrid:
                     return self._pair_style
                 else:
@@ -131,13 +144,18 @@ class LammpsPotentials:
 
             @property
             def results(self):
+                """pair_coeff lines to be used in pyiron df"""
                 return [
                     " ".join((" ".join(("pair_coeff", ) + c)).split()) + "\n"
                     for c in zip(self.interacting_species, self.pair_style, self.counter, self.pair_coeff)
                 ]
 
             @property
-            def interacting_species(self):
+            def interacting_species(self) -> list:
+                """
+                Species in LAMMPS notation (i.e. in numbers instead of chemical
+                symbols)
+                """
                 s_dict = dict(
                     zip(self._species, (np.arange(len(self._species)) + 1).astype(str))
                 )
@@ -145,7 +163,12 @@ class LammpsPotentials:
                 return [" ".join([s_dict[cc] for cc in c]) for c in self._interacting_species]
 
             @property
-            def pair_coeff(self):
+            def pair_coeff(self) -> list:
+                """
+                Args for pair_coeff. Elements defined in EAM files are
+                complemented with the ones defined in other potentials in the
+                case of hybrid (filled with NULL)
+                """
                 if not self.is_hybrid:
                     return self._pair_coeff
                 results = []
@@ -168,6 +191,7 @@ class LammpsPotentials:
 
     @property
     def pyiron_df(self):
+        """df used in pyiron potential"""
         return pd.DataFrame({
             "Config": [[self.pair_style] + self.pair_coeff],
             "Filename": [self.filename],
@@ -191,6 +215,7 @@ class LammpsPotentials:
 
     @property
     def df(self):
+        """DataFrame containing all info for each pairwise interactions"""
         return self._df
 
     def get_df(self, default_scale=None):
