@@ -55,7 +55,7 @@ class LammpsPotential:
         elif len(preset) > 1:
             raise NotImplementedError("Currently not possible to have multiple file-based potentials")
         preset = list(preset)[0].split('___')
-        return preset + list(species - set(preset))
+        return [p for p in preset + list(species - set(preset)) if p != "*"]
 
     @property
     def filename(self):
@@ -72,34 +72,110 @@ class LammpsPotential:
     @property
     def pair_style(self):
         if len(set(self.df.pair_style)) == 1:
-            return "pair_style " + list(set(self.df.pair_style))[0]
+            pair_style = "pair_style " + list(set(self.df.pair_style))[0]
+            if np.max(self.df.cutoff) > 0:
+                pair_style += f" {np.max(self.df.cutoff)}"
+            return pair_style + "\n"
         elif "scale" not in self.df:
-            return "pair_style hybrid"
+            pair_style = "pair_style hybrid"
         elif all(self.df.scale == 1):
-            return "pair_style hybrid/overlay " + " ".join(list(self.df.pair_style))
-        return "pair_style hybrid/scaled " + " ".join([str(ss) for s in self.df[["scale", "pair_style"]].values for ss in s])
+            pair_style = "pair_style hybrid/overlay"
+        else:
+            pair_style = "pair_style hybrid/scaled"
+        for ii, s in enumerate(self.df[["pair_style", "cutoff"]].values):
+            if pair_style.startswith("pair_style hybrid/scaled"):
+                pair_style += f" {self.df.iloc[ii].scale}"
+            pair_style += f" {s[0]}"
+            if s[1] > 0:
+                pair_style += f" {s[1]}"
+        return pair_style + "\n"
 
     @property
     def pair_coeff(self):
-        def convert(c, species=self.species):
-            s_dict = dict(
-                zip(species, (np.arange(len(species)) + 1).astype(str))
-            )
-            s_dict.update({"*": "*"})
-            return [s_dict[cc] for cc in c]
-        if "hybrid" in self.pair_style:
-            return [
-                " ".join(
-                    ["pair_coeff"] + convert(c[0]) + [c[1]] + [c[2]] + ["\n"]
+        class PairCoeff:
+            def __init__(
+                self,
+                is_hybrid,
+                pair_style,
+                interacting_species,
+                pair_coeff,
+                species,
+                preset_species
+            ):
+                self.is_hybrid = is_hybrid
+                self._interacting_species = interacting_species
+                self._pair_coeff = pair_coeff
+                self._species = species
+                self._preset_species = preset_species
+                self._pair_style = pair_style
+
+            @property
+            def counter(self):
+                key, count = np.unique(self._pair_style, return_counts=True)
+                counter = {kk: 1 for kk in key[count > 1]}
+                results = []
+                for coeff in self._pair_style:
+                    if coeff in counter and self.is_hybrid:
+                        results.append(str(counter[coeff]))
+                        counter[coeff] += 1
+                    else:
+                        results.append("")
+                return results
+
+            @property
+            def pair_style(self):
+                if self.is_hybrid:
+                    return self._pair_style
+                else:
+                    return len(self._pair_style) * [""]
+
+            @property
+            def results(self):
+                return [
+                    " ".join((" ".join(("pair_coeff", ) + c)).split()) + "\n"
+                    for c in zip(self.interacting_species, self.pair_style, self.counter, self.pair_coeff)
+                ]
+
+            @property
+            def interacting_species(self):
+                s_dict = dict(
+                    zip(self._species, (np.arange(len(self._species)) + 1).astype(str))
                 )
-                for c in self.df[["interacting_species", "pair_style", "pair_coeff"]].values
-            ]
-        return [
-            " ".join(
-                ["pair_coeff"] + convert(c[0]) + [c[1]] + ["\n"]
-            )
-            for c in self.df[["interacting_species", "pair_coeff"]].values
-        ]
+                s_dict.update({"*": "*"})
+                return [" ".join([s_dict[cc] for cc in c]) for c in self._interacting_species]
+
+            @property
+            def pair_coeff(self):
+                if not self.is_hybrid:
+                    return self._pair_coeff
+                results = []
+                for pc, ps in zip(self._pair_coeff, self._preset_species):
+                    if len(ps) > 0 and "eam" in pc:
+                        s = " ".join(ps + (len(self._species) - len(ps)) * ["NULL"])
+                        pc = pc.replace(" ".join(ps), s)
+                    results.append(pc)
+                return results
+
+
+        return PairCoeff(
+            is_hybrid="hybrid" in self.pair_style,
+            pair_style=self.df.pair_style,
+            interacting_species=self.df.interacting_species,
+            pair_coeff=self.df.pair_coeff,
+            species=self.species,
+            preset_species=self.df.preset_species
+        ).results
+
+    @property
+    def pyiron_df(self):
+        return pd.DataFrame({
+            "Config": [[self.pair_style] + self.pair_coeff],
+            "Filename": [self.filename],
+            "Model": [self.model],
+            "Name": [self.name],
+            "Species": [self.species],
+            "Citations": [self.citations],
+        })
 
     def __repr__(self):
         return self.df.__repr__()
@@ -154,11 +230,14 @@ class LammpsPotential:
         citations=None,
         filename=None,
         name=None,
-        scale=None
+        scale=None,
+        cutoff=None
     ):
         def check_none_n_length(variable, default, length=len(pair_coeff)):
             if variable is None:
                 variable = default
+            if not isinstance(variable, list):
+                return variable
             if len(variable) == 1 and len(variable) < length:
                 variable = length * variable
             return variable
@@ -167,6 +246,7 @@ class LammpsPotential:
             "interacting_species": interacting_species,
             "pair_coeff": pair_coeff,
             "preset_species": check_none_n_length(preset_species, [[]]),
+            "cutoff": check_none_n_length(cutoff, 0),
             "model": check_none_n_length(model, pair_style),
             "citations": check_none_n_length(citations, [[]]),
             "filename": check_none_n_length(filename, [""]),
@@ -254,12 +334,14 @@ class Morse(LammpsPotential):
             pair_style=[pair_style],
             interacting_species=[self._harmonize_args(chemical_elements)],
             pair_coeff=[" ".join([str(cc) for cc in [D_0, alpha, r_0, cutoff]])],
+            cutoff=cutoff,
         )
 
 class CustomPotential(LammpsPotential):
-    def __init__(self, pair_style, *chemical_elements, **kwargs):
+    def __init__(self, pair_style, *chemical_elements, cutoff, **kwargs):
         self._initialize_df(
             pair_style=[pair_style],
             interacting_species=[self._harmonize_args(chemical_elements)],
             pair_coeff=[" ".join([str(cc) for cc in kwargs.values()])],
+            cutoff=cutoff,
         )
