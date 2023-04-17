@@ -346,6 +346,6 @@ class CustomPotential(LammpsPotentials):
         self._initialize_df(
             pair_style=[pair_style],
             interacting_species=[self._harmonize_args(chemical_elements)],
-            pair_coeff=[" ".join([str(cc) for cc in kwargs.values()])] + [f" {cutoff}"],
+            pair_coeff=[" ".join([str(cc) for cc in kwargs.values()]) + f" {cutoff}"],
             cutoff=cutoff,
         )
