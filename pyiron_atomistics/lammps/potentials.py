@@ -102,6 +102,7 @@ class LammpsPotentials:
     @property
     def pair_coeff(self) -> list:
         """LAMMPS pair_coeff"""
+
         class PairCoeff:
             def __init__(
                 self,
