@@ -3,7 +3,6 @@ channels:
 dependencies:
 - nbsphinx
 - sphinx <6.1
-- aimsgb
 - ase
 - defusedxml
 - future

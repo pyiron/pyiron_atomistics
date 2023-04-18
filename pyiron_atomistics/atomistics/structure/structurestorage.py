@@ -15,7 +15,7 @@ import pandas as pd
 from pyiron_base import FlattenedStorage, ImportAlarm
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.symmetry import SymmetryError
+from structuretoolkit.analyse.symmetry import SymmetryError
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 import pyiron_atomistics.atomistics.structure.has_structure as pa_has_structure
 

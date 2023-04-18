@@ -220,7 +220,7 @@ class LammpsBase(AtomisticGenericJob):
         if "Citations" in potential.columns.values:
             pot_pub_dict = {}
             pub_lst = potential["Citations"].values[0]
-            if isinstance(pub_lst, str):
+            if isinstance(pub_lst, str) and len(pub_lst) > 0:
                 for p in ast.literal_eval(pub_lst):
                     for k in p.keys():
                         pot_pub_dict[k] = p[k]
