@@ -13,6 +13,8 @@ __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+from typing import Optional
+
 import pandas as pd
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile
 import numpy as np
@@ -358,7 +360,12 @@ class EAM(LammpsPotentials):
                 )
         return
 
-    def __init__(self, *chemical_elements, name=None, pair_style=None):
+    def __init__(
+            self,
+            *chemical_elements: str,
+            name: Optional[str] = None,
+            pair_style: Optional[str] = None
+    ):
         if name is not None:
             self._df_candidates = LammpsPotentialFile().find_by_name(name)
         else:
