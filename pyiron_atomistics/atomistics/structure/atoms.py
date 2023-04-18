@@ -397,7 +397,8 @@ class Atoms(ASEAtoms):
 
         self._high_symmetry_path.update(path)
 
-    @deprecate("Use Atoms.set_array() instead")
+    @deprecate("Use Atoms.set_array() instead: 
+    e.g. Atoms.set_array('selective_dynamics', np.repeat([[True, True, False]], len(Atoms), axis=0))
     def add_tag(self, **qwargs):
         """
         Add tags to the atoms object.
