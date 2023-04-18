@@ -364,9 +364,11 @@ class EAM(LammpsPotentials):
     def __init__(
             self,
             *chemical_elements: str,
+            choice: int = 0,
             name: Optional[str] = None,
             structure: Optional[Atoms] = None
     ):
+        self._choice = choice
         if name is not None:
             self._df_candidates = LammpsPotentialFile().find_by_name(name)
         else:
@@ -384,7 +386,12 @@ class EAM(LammpsPotentials):
     @property
     def df(self):
         if self._df is None:
-            df = self._df_candidates.iloc[0]
+            if self._choice > len(self._df_candidates):
+                raise ValueError(
+                    f"Cannot choose {self._choice} among {len(self._df_candidates)} "
+                    f"available choices."
+                )
+            df = self._df_candidates.iloc[self._choice]
             if len(self._df_candidates) > 1:
                 warnings.warn(
                     f"Potential not uniquely specified - use default {df.Name}"
