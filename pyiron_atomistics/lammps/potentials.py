@@ -364,7 +364,6 @@ class EAM(LammpsPotentials):
             self,
             *chemical_elements: str,
             name: Optional[str] = None,
-            pair_style: Optional[str] = None
     ):
         if name is not None:
             self._df_candidates = LammpsPotentialFile().find_by_name(name)
