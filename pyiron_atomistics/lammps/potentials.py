@@ -336,6 +336,29 @@ class LammpsPotentials:
 
 
 class EAM(LammpsPotentials):
+    """
+    EAM potential class to choose an EAM potential from an existing library.
+    You can either specify the chemical species and/or the name of the
+    potential.
+
+    Example I: Via chemical species
+
+    >>> eam = EAM("Al")
+
+    Example II: Via potential name
+
+    >>> eam = EAM(name="1995--Angelo-J-E--Ni-Al-H--LAMMPS--ipr1")
+
+    If the variable `eam` is used without specifying the potential name (i.e.
+    in Example I), the first potential in the database corresponding with the
+    specified chemical species will be selected. In order to see the list of
+    potentials, you can also execute
+
+    >>> eam = EAM("Al")
+    >>> eam.list_potentials()  # See list of potential names
+    >>> eam.view_potentials()  # See potential names and metadata
+
+    """
     def __init__(self, *chemical_elements, name=None, pair_style=None):
         if name is not None:
             self._df_candidates = LammpsPotentialFile().find_by_name(name)
