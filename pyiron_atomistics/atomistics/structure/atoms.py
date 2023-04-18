@@ -1970,15 +1970,6 @@ class Atoms(ASEAtoms):
             )
             other = ase_to_pyiron(other)
 
-        d = self._store_elements.copy()
-        d.update(other._store_elements.copy())
-        chem, new_indices = np.unique(
-            self.get_chemical_symbols().tolist()
-            + other.get_chemical_symbols().tolist(),
-            return_inverse=True,
-        )
-        new_species = [d[c] for c in chem]
-
         super(Atoms, self).extend(other=other)
         if isinstance(other, Atoms):
             if not np.allclose(self.cell, other.cell):
@@ -1995,6 +1986,15 @@ class Atoms(ASEAtoms):
                         self.cell
                     )
                 )
+
+            d = self._store_elements.copy()
+            d.update(other._store_elements.copy())
+            chem, new_indices = np.unique(
+                self.get_chemical_symbols().tolist()
+                + other.get_chemical_symbols().tolist(),
+                return_inverse=True,
+            )
+            new_species = [d[c] for c in chem]
             self.set_array("indices", new_indices)
             self.set_species(new_species)
             if not len(set(self.indices)) == len(self.species):
