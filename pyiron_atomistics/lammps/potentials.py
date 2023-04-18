@@ -288,9 +288,7 @@ class LammpsPotentials:
         def check_none_n_length(variable, default, length=len(pair_coeff)):
             if variable is None:
                 variable = default
-            if not isinstance(variable, list):
-                return variable
-            if len(variable) == 1 and len(variable) < length:
+            if isinstance(variable, list) and len(variable) == 1 < length:
                 variable = length * variable
             return variable
 
