@@ -25,18 +25,57 @@ class LammpsPotentials:
         cls._df = None
         return obj
 
+    @staticmethod
+    def _harmonize_args(species_symbols) -> list:
+        """
+        Check whether species are set for the pairwise interactions. If only
+        one chemical species is given, duplicate the species.
+        """
+        if len(species_symbols) == 0:
+            raise ValueError("Chemical elements not specified")
+        if len(species_symbols) == 1:
+            species_symbols *= 2
+        return list(species_symbols)
+
+    def _initialize_df(
+        self,
+        pair_style,
+        interacting_species,
+        pair_coeff,
+        preset_species=None,
+        model=None,
+        citations=None,
+        filename=None,
+        name=None,
+        scale=None,
+        cutoff=None,
+    ):
+        def check_none_n_length(variable, default, length=len(pair_coeff)):
+            if variable is None:
+                variable = default
+            if isinstance(variable, list) and len(variable) == 1 < length:
+                variable = length * variable
+            return variable
+
+        arg_dict = {
+            "pair_style": pair_style,
+            "interacting_species": interacting_species,
+            "pair_coeff": pair_coeff,
+            "preset_species": check_none_n_length(preset_species, [[]]),
+            "cutoff": check_none_n_length(cutoff, 0),
+            "model": check_none_n_length(model, pair_style),
+            "citations": check_none_n_length(citations, [[]]),
+            "filename": check_none_n_length(filename, [""]),
+            "name": check_none_n_length(name, pair_style),
+        }
+        if scale is not None:
+            arg_dict["scale"] = scale
+        self.set_df(pd.DataFrame(arg_dict))
+
     def copy(self):
         new_pot = LammpsPotentials()
         new_pot.set_df(self.get_df())
         return new_pot
-
-    @staticmethod
-    def _harmonize_args(args) -> str:
-        if len(args) == 0:
-            raise ValueError("Chemical elements not specified")
-        if len(args) == 1:
-            args *= 2
-        return list(args)
 
     @property
     def model(self) -> str:
@@ -271,41 +310,6 @@ class LammpsPotentials:
             )
         )
         return new_pot
-
-    def _initialize_df(
-        self,
-        pair_style,
-        interacting_species,
-        pair_coeff,
-        preset_species=None,
-        model=None,
-        citations=None,
-        filename=None,
-        name=None,
-        scale=None,
-        cutoff=None,
-    ):
-        def check_none_n_length(variable, default, length=len(pair_coeff)):
-            if variable is None:
-                variable = default
-            if isinstance(variable, list) and len(variable) == 1 < length:
-                variable = length * variable
-            return variable
-
-        arg_dict = {
-            "pair_style": pair_style,
-            "interacting_species": interacting_species,
-            "pair_coeff": pair_coeff,
-            "preset_species": check_none_n_length(preset_species, [[]]),
-            "cutoff": check_none_n_length(cutoff, 0),
-            "model": check_none_n_length(model, pair_style),
-            "citations": check_none_n_length(citations, [[]]),
-            "filename": check_none_n_length(filename, [""]),
-            "name": check_none_n_length(name, pair_style),
-        }
-        if scale is not None:
-            arg_dict["scale"] = scale
-        self.set_df(pd.DataFrame(arg_dict))
 
 
 class EAM(LammpsPotentials):
