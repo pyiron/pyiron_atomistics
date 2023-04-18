@@ -99,98 +99,99 @@ class LammpsPotentials:
                 pair_style += f" {s[1]}"
         return pair_style + "\n"
 
+    class _PairCoeff:
+        def __init__(
+            self,
+            is_hybrid,
+            pair_style,
+            interacting_species,
+            pair_coeff,
+            species,
+            preset_species,
+        ):
+            self.is_hybrid = is_hybrid
+            self._interacting_species = interacting_species
+            self._pair_coeff = pair_coeff
+            self._species = species
+            self._preset_species = preset_species
+            self._pair_style = pair_style
+
+        @property
+        def counter(self):
+            """
+            Enumeration of potentials if a potential is used multiple
+            times in hybrid (which is a requirement from LAMMPS)
+            """
+            key, count = np.unique(self._pair_style, return_counts=True)
+            counter = {kk: 1 for kk in key[count > 1]}
+            results = []
+            for coeff in self._pair_style:
+                if coeff in counter and self.is_hybrid:
+                    results.append(str(counter[coeff]))
+                    counter[coeff] += 1
+                else:
+                    results.append("")
+            return results
+
+        @property
+        def pair_style(self):
+            """pair_style to be output only in hybrid"""
+            if self.is_hybrid:
+                return self._pair_style
+            else:
+                return len(self._pair_style) * [""]
+
+        @property
+        def results(self):
+            """pair_coeff lines to be used in pyiron df"""
+            return [
+                " ".join((" ".join(("pair_coeff",) + c)).split()) + "\n"
+                for c in zip(
+                    self.interacting_species,
+                    self.pair_style,
+                    self.counter,
+                    self.pair_coeff,
+                )
+            ]
+
+        @property
+        def interacting_species(self) -> list:
+            """
+            Species in LAMMPS notation (i.e. in numbers instead of chemical
+            symbols)
+            """
+            s_dict = dict(
+                zip(self._species, (np.arange(len(self._species)) + 1).astype(str))
+            )
+            s_dict.update({"*": "*"})
+            return [
+                " ".join([s_dict[cc] for cc in c])
+                for c in self._interacting_species
+            ]
+
+        @property
+        def pair_coeff(self) -> list:
+            """
+            Args for pair_coeff. Elements defined in EAM files are
+            complemented with the ones defined in other potentials in the
+            case of hybrid (filled with NULL)
+            """
+            if not self.is_hybrid:
+                return self._pair_coeff
+            results = []
+            for pc, ps in zip(self._pair_coeff, self._preset_species):
+                if len(ps) > 0 and "eam" in pc:
+                    s = " ".join(ps + (len(self._species) - len(ps)) * ["NULL"])
+                    pc = pc.replace(" ".join(ps), s)
+                results.append(pc)
+            return results
+
     @property
     def pair_coeff(self) -> list:
         """LAMMPS pair_coeff"""
 
-        class PairCoeff:
-            def __init__(
-                self,
-                is_hybrid,
-                pair_style,
-                interacting_species,
-                pair_coeff,
-                species,
-                preset_species,
-            ):
-                self.is_hybrid = is_hybrid
-                self._interacting_species = interacting_species
-                self._pair_coeff = pair_coeff
-                self._species = species
-                self._preset_species = preset_species
-                self._pair_style = pair_style
 
-            @property
-            def counter(self):
-                """
-                Enumeration of potentials if a potential is used multiple
-                times in hybrid (which is a requirement from LAMMPS)
-                """
-                key, count = np.unique(self._pair_style, return_counts=True)
-                counter = {kk: 1 for kk in key[count > 1]}
-                results = []
-                for coeff in self._pair_style:
-                    if coeff in counter and self.is_hybrid:
-                        results.append(str(counter[coeff]))
-                        counter[coeff] += 1
-                    else:
-                        results.append("")
-                return results
-
-            @property
-            def pair_style(self):
-                """pair_style to be output only in hybrid"""
-                if self.is_hybrid:
-                    return self._pair_style
-                else:
-                    return len(self._pair_style) * [""]
-
-            @property
-            def results(self):
-                """pair_coeff lines to be used in pyiron df"""
-                return [
-                    " ".join((" ".join(("pair_coeff",) + c)).split()) + "\n"
-                    for c in zip(
-                        self.interacting_species,
-                        self.pair_style,
-                        self.counter,
-                        self.pair_coeff,
-                    )
-                ]
-
-            @property
-            def interacting_species(self) -> list:
-                """
-                Species in LAMMPS notation (i.e. in numbers instead of chemical
-                symbols)
-                """
-                s_dict = dict(
-                    zip(self._species, (np.arange(len(self._species)) + 1).astype(str))
-                )
-                s_dict.update({"*": "*"})
-                return [
-                    " ".join([s_dict[cc] for cc in c])
-                    for c in self._interacting_species
-                ]
-
-            @property
-            def pair_coeff(self) -> list:
-                """
-                Args for pair_coeff. Elements defined in EAM files are
-                complemented with the ones defined in other potentials in the
-                case of hybrid (filled with NULL)
-                """
-                if not self.is_hybrid:
-                    return self._pair_coeff
-                results = []
-                for pc, ps in zip(self._pair_coeff, self._preset_species):
-                    if len(ps) > 0 and "eam" in pc:
-                        s = " ".join(ps + (len(self._species) - len(ps)) * ["NULL"])
-                        pc = pc.replace(" ".join(ps), s)
-                    results.append(pc)
-                return results
-
-        return PairCoeff(
+        return self._PairCoeff(
             is_hybrid="hybrid" in self.pair_style,
             pair_style=self.df.pair_style,
             interacting_species=self.df.interacting_species,
