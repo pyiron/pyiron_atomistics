@@ -19,6 +19,29 @@ import numpy as np
 import warnings
 
 
+general_doc = """
+How to combine potentials:
+
+Example I: Hybrid potential for a single element
+
+>>> from pyiron_atomistics.lammps.potentials import EAM, Morse
+>>> eam = EAM("Al")
+>>> morse = Morse("Al", D_0=0.5, alpha=1.1, r_0=2.1, cutoff=6)
+>>> lammps_job.potential = eam + morse
+
+Example II: Hybrid potential for multiple elements
+
+>>> from pyiron_atomistics.lammps.potentials import EAM, Morse
+>>> eam = EAM("Al")
+>>> morse_Al_Ni = Morse("Al", "Ni", D_0=0.2, alpha=1.05, r_0=2.2, cutoff=6)
+>>> morse_Ni = Morse("Ni", D_0=0.7, alpha=1.15, r_0=2.15, cutoff=6)
+>>> lammps_job.potential = eam + morse_Al_Ni + morse_Ni  # hybrid/overlay
+>>> lammps_job.potential = eam * morse_Al_Ni * morse_Ni  # hybrid
+>>> lammps_job.potential = 0.4 * eam + 0.1 * morse_Al_Ni + morse_Ni  # hybrid/scaled
+
+"""
+
+
 class LammpsPotentials:
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls)
@@ -313,6 +336,12 @@ class LammpsPotentials:
 
 
 class EAM(LammpsPotentials):
+    def __init__(self, *chemical_elements, name=None, pair_style=None):
+        if name is not None:
+            self._df_candidates = LammpsPotentialFile().find_by_name(name)
+        else:
+            self._df_candidates = LammpsPotentialFile().find(list(chemical_elements))
+
     @staticmethod
     def _get_pair_style(config):
         if any(["hybrid" in c for c in config]):
@@ -361,12 +390,6 @@ class EAM(LammpsPotentials):
                 )
         return
 
-    def __init__(self, *chemical_elements, name=None, pair_style=None):
-        if name is not None:
-            self._df_candidates = LammpsPotentialFile().find_by_name(name)
-        else:
-            self._df_candidates = LammpsPotentialFile().find(list(chemical_elements))
-
     def list_potentials(self):
         return self._df_candidates.Name
 
@@ -398,7 +421,25 @@ class EAM(LammpsPotentials):
 
 
 class Morse(LammpsPotentials):
+    """
+    Morse potential defined by:
+
+    E = D_0*[exp(-2*alpha*(r-r_0))-2*exp(-alpha*(r-r_0))]
+    """
     def __init__(self, *chemical_elements, D_0, alpha, r_0, cutoff, pair_style="morse"):
+        """
+        Args:
+            chemical_elements (str): Chemical elements
+            D_0 (float): parameter (s. eq. above)
+            alpha (float): parameter (s. eq. above)
+            r_0 (float): parameter (s. eq. above)
+            cutoff (float): cutoff length
+            pair_style (str): pair_style name (default: "morse")
+
+        Example:
+
+        >>> morse = Morse("Al", "Ni", D_0=1, alpha=0.5, r_0=2, cutoff=6)
+        """
         self._initialize_df(
             pair_style=[pair_style],
             interacting_species=[self._harmonize_species(chemical_elements)],
@@ -407,11 +448,34 @@ class Morse(LammpsPotentials):
         )
 
 
+Morse.__doc__ += general_doc
+
+
 class CustomPotential(LammpsPotentials):
+    """
+    Custom potential class to define LAMMPS potential not implemented in
+    pyiron
+    """
     def __init__(self, pair_style, *chemical_elements, cutoff, **kwargs):
+        """
+        Args:
+            pair_style (str): pair_style name (default: "morse")
+            chemical_elements (str): Chemical elements
+            cutoff (float): cutoff length
+
+        Example:
+
+        >>> morse = Morse("lj/cut", "Al", "Ni", epsilon=0.5, sigma=1, cutoff=3)
+
+        Important: the order of parameters is conserved in the LAMMPS input
+        (except for `cutoff`, which is always the last argument).
+        """
         self._initialize_df(
             pair_style=[pair_style],
             interacting_species=[self._harmonize_species(chemical_elements)],
             pair_coeff=[" ".join([str(cc) for cc in kwargs.values()]) + f" {cutoff}"],
             cutoff=cutoff,
         )
+
+
+CustomPotential.__doc__ += general_doc
