@@ -16,6 +16,7 @@ __date__ = "Sep 1, 2017"
 from typing import Optional
 
 import pandas as pd
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile
 import numpy as np
 import warnings
@@ -364,11 +365,15 @@ class EAM(LammpsPotentials):
             self,
             *chemical_elements: str,
             name: Optional[str] = None,
+            structure: Optional[Atoms] = None
     ):
         if name is not None:
             self._df_candidates = LammpsPotentialFile().find_by_name(name)
         else:
-            self._df_candidates = LammpsPotentialFile().find(list(chemical_elements))
+            structure_elements = [] if structure is None \
+                else list(structure.get_species_symbols())
+            chemical_elements = list(set(list(chemical_elements) + structure_elements))
+            self._df_candidates = LammpsPotentialFile().find(chemical_elements)
 
     def list_potentials(self):
         return self._df_candidates.Name
