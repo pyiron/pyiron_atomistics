@@ -27,7 +27,6 @@ from pyiron_atomistics.atomistics.structure.atom import (
 from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
 from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
-from pyiron_atomistics.atomistics.structure.symmetry import Symmetry
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
