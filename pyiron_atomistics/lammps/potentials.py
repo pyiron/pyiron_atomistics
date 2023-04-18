@@ -360,6 +360,11 @@ class EAM(LammpsPotentials):
 
     """
     def __init__(self, *chemical_elements, name=None):
+        """
+        Args:
+            chemical_elements (str): chemical elements/species
+            name (str): potential name in the database
+        """
         if name is not None:
             self._df_candidates = LammpsPotentialFile().find_by_name(name)
         else:
