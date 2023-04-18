@@ -359,7 +359,7 @@ class EAM(LammpsPotentials):
     >>> eam.view_potentials()  # See potential names and metadata
 
     """
-    def __init__(self, *chemical_elements, name=None, pair_style=None):
+    def __init__(self, *chemical_elements, name=None):
         if name is not None:
             self._df_candidates = LammpsPotentialFile().find_by_name(name)
         else:
