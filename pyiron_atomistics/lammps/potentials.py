@@ -239,7 +239,7 @@ class LammpsPotentials:
         if default_scale is None or "scale" in self.df:
             return self.df.copy()
         df = self.df.copy()
-        df["scale"] = 1
+        df["scale"] = default_scale
         return df
 
     def __mul__(self, scale_or_potential):
