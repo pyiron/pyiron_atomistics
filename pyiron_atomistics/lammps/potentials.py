@@ -441,7 +441,7 @@ class EAM(LammpsPotentials):
                 preset_species=[df.Species],
                 model=df.Model,
                 citations=df.Citations,
-                filename=df.Filename,
+                filename=[df.Filename],
                 name=df.Name,
                 scale=self._get_scale(df.Config),
             )
