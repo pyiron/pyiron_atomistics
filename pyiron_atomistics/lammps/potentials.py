@@ -26,7 +26,7 @@ class LammpsPotentials:
         return obj
 
     @staticmethod
-    def _harmonize_args(species_symbols) -> list:
+    def _harmonize_species(species_symbols) -> list:
         """
         Check whether species are set for the pairwise interactions. If only
         one chemical species is given, duplicate the species.
@@ -401,7 +401,7 @@ class Morse(LammpsPotentials):
     def __init__(self, *chemical_elements, D_0, alpha, r_0, cutoff, pair_style="morse"):
         self._initialize_df(
             pair_style=[pair_style],
-            interacting_species=[self._harmonize_args(chemical_elements)],
+            interacting_species=[self._harmonize_species(chemical_elements)],
             pair_coeff=[" ".join([str(cc) for cc in [D_0, alpha, r_0, cutoff]])],
             cutoff=cutoff,
         )
@@ -411,7 +411,7 @@ class CustomPotential(LammpsPotentials):
     def __init__(self, pair_style, *chemical_elements, cutoff, **kwargs):
         self._initialize_df(
             pair_style=[pair_style],
-            interacting_species=[self._harmonize_args(chemical_elements)],
+            interacting_species=[self._harmonize_species(chemical_elements)],
             pair_coeff=[" ".join([str(cc) for cc in kwargs.values()]) + f" {cutoff}"],
             cutoff=cutoff,
         )
