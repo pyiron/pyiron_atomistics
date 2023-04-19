@@ -227,8 +227,7 @@ class LammpsPotentials:
             )
             s_dict.update({"*": "*"})
             return [
-                " ".join([s_dict[cc] for cc in c])
-                for c in self._interacting_species
+                " ".join([s_dict[cc] for cc in c]) for c in self._interacting_species
             ]
 
         @property
@@ -251,7 +250,6 @@ class LammpsPotentials:
     @property
     def pair_coeff(self) -> list:
         """LAMMPS pair_coeff"""
-
 
         return self._PairCoeff(
             is_hybrid="hybrid" in self.pair_style,
@@ -359,6 +357,7 @@ class EAM(LammpsPotentials):
     >>> eam.view_potentials()  # See potential names and metadata
 
     """
+
     def __init__(self, *chemical_elements, name=None):
         """
         Args:
@@ -454,6 +453,7 @@ class Morse(LammpsPotentials):
 
     E = D_0*[exp(-2*alpha*(r-r_0))-2*exp(-alpha*(r-r_0))]
     """
+
     def __init__(self, *chemical_elements, D_0, alpha, r_0, cutoff, pair_style="morse"):
         """
         Args:
@@ -484,6 +484,7 @@ class CustomPotential(LammpsPotentials):
     Custom potential class to define LAMMPS potential not implemented in
     pyiron
     """
+
     def __init__(self, pair_style, *chemical_elements, cutoff, **kwargs):
         """
         Args:
