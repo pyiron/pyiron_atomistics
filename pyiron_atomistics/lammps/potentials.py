@@ -2,16 +2,16 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-__author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
+__author__ = "Sam Waseda"
 __copyright__ = (
-    "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
+    "Copyright 2023, Max-Planck-Institut für Eisenforschung GmbH - "
     "Computational Materials Design (CM) Department"
 )
 __version__ = "1.0"
-__maintainer__ = "Sudarsan Surendralal"
-__email__ = "surendralal@mpie.de"
+__maintainer__ = "Sam Waseda"
+__email__ = "waseda@mpie.de"
 __status__ = "production"
-__date__ = "Sep 1, 2017"
+__date__ = "April 18, 2023"
 
 from typing import Optional
 
@@ -22,24 +22,91 @@ import numpy as np
 import warnings
 
 
+general_doc = """
+How to combine potentials:
+
+Example I: Hybrid potential for a single element
+
+>>> from pyiron_atomistics.lammps.potentials import Library, Morse
+>>> eam = Library("Al")
+>>> morse = Morse("Al", D_0=0.5, alpha=1.1, r_0=2.1, cutoff=6)
+>>> lammps_job.potential = eam + morse
+
+Example II: Hybrid potential for multiple elements
+
+>>> from pyiron_atomistics.lammps.potentials import Library, Morse
+>>> eam = Library("Al")
+>>> morse_Al_Ni = Morse("Al", "Ni", D_0=0.2, alpha=1.05, r_0=2.2, cutoff=6)
+>>> morse_Ni = Morse("Ni", D_0=0.7, alpha=1.15, r_0=2.15, cutoff=6)
+>>> lammps_job.potential = eam + morse_Al_Ni + morse_Ni  # hybrid/overlay
+>>> lammps_job.potential = eam * morse_Al_Ni * morse_Ni  # hybrid
+>>> lammps_job.potential = 0.4 * eam + 0.1 * morse_Al_Ni + morse_Ni  # hybrid/scaled
+
+"""
+
+
 class LammpsPotentials:
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls)
         cls._df = None
         return obj
 
+    @staticmethod
+    def _harmonize_species(species_symbols) -> list:
+        """
+        Check whether species are set for the pairwise interactions. If only
+        one chemical species is given, duplicate the species.
+        """
+        if len(species_symbols) == 0:
+            raise ValueError("Chemical elements not specified")
+        if len(species_symbols) == 1:
+            species_symbols *= 2
+        return list(species_symbols)
+
+    def _initialize_df(
+        self,
+        pair_style,
+        interacting_species,
+        pair_coeff,
+        preset_species=None,
+        model=None,
+        citations=None,
+        filename=None,
+        name=None,
+        scale=None,
+        cutoff=None,
+    ):
+        def check_none_n_length(variable, default, length=len(pair_coeff)):
+            if variable is None:
+                variable = default
+            if isinstance(variable, list) and len(variable) == 1 < length:
+                variable = length * variable
+            return variable
+
+        arg_dict = {
+            "pair_style": pair_style,
+            "interacting_species": interacting_species,
+            "pair_coeff": pair_coeff,
+            "preset_species": check_none_n_length(preset_species, [[]]),
+            "cutoff": check_none_n_length(cutoff, 0),
+            "model": check_none_n_length(model, pair_style),
+            "citations": check_none_n_length(citations, [[]]),
+            "filename": check_none_n_length(filename, [""]),
+            "name": check_none_n_length(name, pair_style),
+        }
+        if scale is not None:
+            arg_dict["scale"] = scale
+        try:
+            self.set_df(pd.DataFrame(arg_dict))
+        except ValueError:
+            raise ValueError(
+                f"Initialization failed - inconsistency in data: {arg_dict}"
+            )
+
     def copy(self):
         new_pot = LammpsPotentials()
         new_pot.set_df(self.get_df())
         return new_pot
-
-    @staticmethod
-    def _harmonize_args(args) -> str:
-        if len(args) == 0:
-            raise ValueError("Chemical elements not specified")
-        if len(args) == 1:
-            args *= 2
-        return list(args)
 
     @property
     def model(self) -> str:
@@ -102,98 +169,97 @@ class LammpsPotentials:
                 pair_style += f" {s[1]}"
         return pair_style + "\n"
 
+    class _PairCoeff:
+        def __init__(
+            self,
+            is_hybrid,
+            pair_style,
+            interacting_species,
+            pair_coeff,
+            species,
+            preset_species,
+        ):
+            self.is_hybrid = is_hybrid
+            self._interacting_species = interacting_species
+            self._pair_coeff = pair_coeff
+            self._species = species
+            self._preset_species = preset_species
+            self._pair_style = pair_style
+
+        @property
+        def counter(self):
+            """
+            Enumeration of potentials if a potential is used multiple
+            times in hybrid (which is a requirement from LAMMPS)
+            """
+            key, count = np.unique(self._pair_style, return_counts=True)
+            counter = {kk: 1 for kk in key[count > 1]}
+            results = []
+            for coeff in self._pair_style:
+                if coeff in counter and self.is_hybrid:
+                    results.append(str(counter[coeff]))
+                    counter[coeff] += 1
+                else:
+                    results.append("")
+            return results
+
+        @property
+        def pair_style(self):
+            """pair_style to be output only in hybrid"""
+            if self.is_hybrid:
+                return self._pair_style
+            else:
+                return len(self._pair_style) * [""]
+
+        @property
+        def results(self):
+            """pair_coeff lines to be used in pyiron df"""
+            return [
+                " ".join((" ".join(("pair_coeff",) + c)).split()) + "\n"
+                for c in zip(
+                    self.interacting_species,
+                    self.pair_style,
+                    self.counter,
+                    self.pair_coeff,
+                )
+            ]
+
+        @property
+        def interacting_species(self) -> list:
+            """
+            Species in LAMMPS notation (i.e. in numbers instead of chemical
+            symbols)
+            """
+            s_dict = dict(
+                zip(self._species, (np.arange(len(self._species)) + 1).astype(str))
+            )
+            s_dict.update({"*": "*"})
+            return [
+                " ".join([s_dict[cc] for cc in c]) for c in self._interacting_species
+            ]
+
+        @property
+        def pair_coeff(self) -> list:
+            """
+            Args for pair_coeff. Elements defined in EAM files are
+            complemented with the ones defined in other potentials in the
+            case of hybrid (filled with NULL)
+            """
+            if not self.is_hybrid:
+                return self._pair_coeff
+            results = []
+            for pc, ps in zip(self._pair_coeff, self._preset_species):
+                if len(ps) > 0 and "eam" in pc:
+                    s = " ".join(ps + (len(self._species) - len(ps)) * ["NULL"])
+                    pc = pc.replace(" ".join(ps), s)
+                results.append(pc)
+            return results
+
     @property
     def pair_coeff(self) -> list:
         """LAMMPS pair_coeff"""
 
-        class PairCoeff:
-            def __init__(
-                self,
-                is_hybrid,
-                pair_style,
-                interacting_species,
-                pair_coeff,
-                species,
-                preset_species,
-            ):
-                self.is_hybrid = is_hybrid
-                self._interacting_species = interacting_species
-                self._pair_coeff = pair_coeff
-                self._species = species
-                self._preset_species = preset_species
-                self._pair_style = pair_style
-
-            @property
-            def counter(self):
-                """
-                Enumeration of potentials if a potential is used multiple
-                times in hybrid (which is a requirement from LAMMPS)
-                """
-                key, count = np.unique(self._pair_style, return_counts=True)
-                counter = {kk: 1 for kk in key[count > 1]}
-                results = []
-                for coeff in self._pair_style:
-                    if coeff in counter and self.is_hybrid:
-                        results.append(str(counter[coeff]))
-                        counter[coeff] += 1
-                    else:
-                        results.append("")
-                return results
-
-            @property
-            def pair_style(self):
-                """pair_style to be output only in hybrid"""
-                if self.is_hybrid:
-                    return self._pair_style
-                else:
-                    return len(self._pair_style) * [""]
-
-            @property
-            def results(self):
-                """pair_coeff lines to be used in pyiron df"""
-                return [
-                    " ".join((" ".join(("pair_coeff",) + c)).split()) + "\n"
-                    for c in zip(
-                        self.interacting_species,
-                        self.pair_style,
-                        self.counter,
-                        self.pair_coeff,
-                    )
-                ]
-
-            @property
-            def interacting_species(self) -> list:
-                """
-                Species in LAMMPS notation (i.e. in numbers instead of chemical
-                symbols)
-                """
-                s_dict = dict(
-                    zip(self._species, (np.arange(len(self._species)) + 1).astype(str))
-                )
-                s_dict.update({"*": "*"})
-                return [
-                    " ".join([s_dict[cc] for cc in c])
-                    for c in self._interacting_species
-                ]
-
-            @property
-            def pair_coeff(self) -> list:
-                """
-                Args for pair_coeff. Elements defined in EAM files are
-                complemented with the ones defined in other potentials in the
-                case of hybrid (filled with NULL)
-                """
-                if not self.is_hybrid:
-                    return self._pair_coeff
-                results = []
-                for pc, ps in zip(self._pair_coeff, self._preset_species):
-                    if len(ps) > 0 and "eam" in pc:
-                        s = " ".join(ps + (len(self._species) - len(ps)) * ["NULL"])
-                        pc = pc.replace(" ".join(ps), s)
-                    results.append(pc)
-                return results
-
-        return PairCoeff(
+        return self._PairCoeff(
             is_hybrid="hybrid" in self.pair_style,
             pair_style=self.df.pair_style,
             interacting_species=self.df.interacting_species,
@@ -242,7 +308,7 @@ class LammpsPotentials:
         if default_scale is None or "scale" in self.df:
             return self.df.copy()
         df = self.df.copy()
-        df["scale"] = 1
+        df["scale"] = default_scale
         return df
 
     def __mul__(self, scale_or_potential):
@@ -274,45 +340,44 @@ class LammpsPotentials:
         )
         return new_pot
 
-    def _initialize_df(
-        self,
-        pair_style,
-        interacting_species,
-        pair_coeff,
-        preset_species=None,
-        model=None,
-        citations=None,
-        filename=None,
-        name=None,
-        scale=None,
-        cutoff=None,
-    ):
-        def check_none_n_length(variable, default, length=len(pair_coeff)):
-            if variable is None:
-                variable = default
-            if not isinstance(variable, list):
-                return variable
-            if len(variable) == 1 and len(variable) < length:
-                variable = length * variable
-            return variable
 
-        arg_dict = {
-            "pair_style": pair_style,
-            "interacting_species": interacting_species,
-            "pair_coeff": pair_coeff,
-            "preset_species": check_none_n_length(preset_species, [[]]),
-            "cutoff": check_none_n_length(cutoff, 0),
-            "model": check_none_n_length(model, pair_style),
-            "citations": check_none_n_length(citations, [[]]),
-            "filename": check_none_n_length(filename, [""]),
-            "name": check_none_n_length(name, pair_style),
-        }
-        if scale is not None:
-            arg_dict["scale"] = scale
-        self.set_df(pd.DataFrame(arg_dict))
+class Library(LammpsPotentials):
+    """
+    Potential class to choose a file based potential from an existing library
+    (e.g. EAM).
+    You can either specify the chemical species and/or the name of the
+    potential.
 
+    Example I: Via chemical species
 
-class EAM(LammpsPotentials):
+    >>> eam = Library("Al")
+
+    Example II: Via potential name
+
+    >>> eam = Library(name="1995--Angelo-J-E--Ni-Al-H--LAMMPS--ipr1")
+
+    If the variable `eam` is used without specifying the potential name (i.e.
+    in Example I), the first potential in the database corresponding with the
+    specified chemical species will be selected. In order to see the list of
+    potentials, you can also execute
+
+    >>> eam = Library("Al")
+    >>> eam.list_potentials()  # See list of potential names
+    >>> eam.view_potentials()  # See potential names and metadata
+
+    """
+
+    def __init__(self, *chemical_elements, name=None):
+        """
+        Args:
+            chemical_elements (str): chemical elements/species
+            name (str): potential name in the database
+        """
+        if name is not None:
+            self._df_candidates = LammpsPotentialFile().find_by_name(name)
+        else:
+            self._df_candidates = LammpsPotentialFile().find(list(chemical_elements))
+
     @staticmethod
     def _get_pair_style(config):
         if any(["hybrid" in c for c in config]):
@@ -405,7 +470,7 @@ class EAM(LammpsPotentials):
                 preset_species=[df.Species],
                 model=df.Model,
                 citations=df.Citations,
-                filename=df.Filename,
+                filename=[df.Filename],
                 name=df.Name,
                 scale=self._get_scale(df.Config),
             )
@@ -413,20 +478,63 @@ class EAM(LammpsPotentials):
 
 
 class Morse(LammpsPotentials):
+    """
+    Morse potential defined by:
+
+    E = D_0*[exp(-2*alpha*(r-r_0))-2*exp(-alpha*(r-r_0))]
+    """
+
     def __init__(self, *chemical_elements, D_0, alpha, r_0, cutoff, pair_style="morse"):
+        """
+        Args:
+            chemical_elements (str): Chemical elements
+            D_0 (float): parameter (s. eq. above)
+            alpha (float): parameter (s. eq. above)
+            r_0 (float): parameter (s. eq. above)
+            cutoff (float): cutoff length
+            pair_style (str): pair_style name (default: "morse")
+
+        Example:
+
+        >>> morse = Morse("Al", "Ni", D_0=1, alpha=0.5, r_0=2, cutoff=6)
+        """
         self._initialize_df(
             pair_style=[pair_style],
-            interacting_species=[self._harmonize_args(chemical_elements)],
+            interacting_species=[self._harmonize_species(chemical_elements)],
             pair_coeff=[" ".join([str(cc) for cc in [D_0, alpha, r_0, cutoff]])],
             cutoff=cutoff,
         )
 
 
+Morse.__doc__ += general_doc
+
+
 class CustomPotential(LammpsPotentials):
+    """
+    Custom potential class to define LAMMPS potential not implemented in
+    pyiron
+    """
+
     def __init__(self, pair_style, *chemical_elements, cutoff, **kwargs):
+        """
+        Args:
+            pair_style (str): pair_style name (default: "morse")
+            chemical_elements (str): Chemical elements
+            cutoff (float): cutoff length
+
+        Example:
+
+        >>> morse = Morse("lj/cut", "Al", "Ni", epsilon=0.5, sigma=1, cutoff=3)
+
+        Important: the order of parameters is conserved in the LAMMPS input
+        (except for `cutoff`, which is always the last argument).
+        """
         self._initialize_df(
             pair_style=[pair_style],
-            interacting_species=[self._harmonize_args(chemical_elements)],
+            interacting_species=[self._harmonize_species(chemical_elements)],
             pair_coeff=[" ".join([str(cc) for cc in kwargs.values()]) + f" {cutoff}"],
             cutoff=cutoff,
         )
+
+
+CustomPotential.__doc__ += general_doc
