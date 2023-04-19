@@ -458,7 +458,7 @@ class Library(LammpsPotentials):
                     f"available choices."
                 )
             df = self._df_candidates.iloc[choice]
-            if len(self._df_candidates) > 1:
+            if self._choice is None and len(self._df_candidates) > 1:
                 warnings.warn(
                     f"Potential not uniquely specified - use default {df.Name}"
                 )
