@@ -429,7 +429,7 @@ class Library(LammpsPotentials):
     def __init__(
             self,
             *chemical_elements: str,
-            choice: int = 0,
+            choice: Optional[int] = None,
             name: Optional[str] = None,
             structure: Optional[Atoms] = None
     ):
@@ -451,12 +451,13 @@ class Library(LammpsPotentials):
     @property
     def df(self):
         if self._df is None:
-            if self._choice > len(self._df_candidates):
+            choice = 0 if self._choice is None else self._choice
+            if choice > len(self._df_candidates):
                 raise ValueError(
                     f"Cannot choose {self._choice} among {len(self._df_candidates)} "
                     f"available choices."
                 )
-            df = self._df_candidates.iloc[self._choice]
+            df = self._df_candidates.iloc[choice]
             if len(self._df_candidates) > 1:
                 warnings.warn(
                     f"Potential not uniquely specified - use default {df.Name}"
