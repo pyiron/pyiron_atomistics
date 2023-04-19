@@ -93,7 +93,12 @@ class LammpsPotentials:
         }
         if scale is not None:
             arg_dict["scale"] = scale
-        self.set_df(pd.DataFrame(arg_dict))
+        try:
+            self.set_df(pd.DataFrame(arg_dict))
+        except ValueError:
+            raise ValueError(
+                f"Initialization failed - inconsistency in data: {arg_dict}"
+            )
 
     def copy(self):
         new_pot = LammpsPotentials()
