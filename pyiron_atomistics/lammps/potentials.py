@@ -105,15 +105,20 @@ class LammpsPotentials:
         new_pot.set_df(self.get_df())
         return new_pot
 
+    @staticmethod
+    def _unique(args):
+        labels, indices = np.unique(args, return_index=True)
+        return labels[np.argsort(indices)]
+
     @property
     def model(self) -> str:
         """Model name (required in pyiron df)"""
-        return "_and_".join(set(self.df.model))
+        return "_and_".join(self._unique(self.df.model))
 
     @property
     def potential_name(self) -> str:
         """Potential name (required in pyiron df)"""
-        return "_and_".join(set(self.df.potential_name))
+        return "_and_".join(self._unique(self.df.potential_name))
 
     @property
     def species(self):

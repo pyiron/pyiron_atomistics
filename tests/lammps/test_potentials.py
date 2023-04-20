@@ -92,6 +92,14 @@ class TestPotentials(unittest.TestCase):
         )
         self.assertEqual(pot.potential_name, "first_and_second")
 
+    def test_is_scaled(self):
+        pot = CustomPotential("lj/cut", "Al", "Ni", epsilon=0.5, sigma=1, cutoff=3)
+        self.assertFalse(pot.is_scaled)
+
+    def test_unique(self):
+        pot = LammpsPotentials()
+        self.assertEqual(pot._unique([1, 0, 2, 1, 3]).tolist(), [1, 0, 2, 3])
+
 
 if __name__ == "__main__":
     unittest.main()
