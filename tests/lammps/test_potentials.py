@@ -80,6 +80,18 @@ class TestPotentials(unittest.TestCase):
         )
         self.assertEqual(pot.model, "first_and_second")
 
+    def test_potential_name(self):
+        pot = CustomPotential("lj/cut", "Al", "Ni", epsilon=0.5, sigma=1, cutoff=3)
+        self.assertEqual(pot.potential_name, "lj/cut")
+        pot = LammpsPotentials()
+        pot._initialize_df(
+            pair_style=["a", "b"],
+            interacting_species=[["Al"], ["Ni"]],
+            pair_coeff=["one", "two"],
+            potential_name=["first", "second"]
+        )
+        self.assertEqual(pot.potential_name, "first_and_second")
+
 
 if __name__ == "__main__":
     unittest.main()
