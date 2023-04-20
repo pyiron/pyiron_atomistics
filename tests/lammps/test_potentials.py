@@ -5,6 +5,7 @@
 from pyiron_atomistics.lammps.potentials import Library, Morse, CustomPotential, LammpsPotentials
 import unittest
 import pandas as pd
+import numpy as np
 
 
 class TestPotentials(unittest.TestCase):
@@ -59,6 +60,13 @@ class TestPotentials(unittest.TestCase):
     def test_custom_potential(self):
         pot = CustomPotential("lj/cut", "Al", "Ni", epsilon=0.5, sigma=1, cutoff=3)
         self.assertEqual(pot.df.iloc[0].pair_coeff, "0.5 1 3")
+
+    def test_copy(self):
+        pot_1 = CustomPotential("lj/cut", "Al", "Ni", epsilon=0.5, sigma=1, cutoff=3)
+        pot_2 = pot_1.copy()
+        self.assertTrue(np.all(pot_1.df == pot_2.df))
+        pot_2.df.cutoff = 1
+        self.assertFalse(np.all(pot_1.df == pot_2.df))
 
 if __name__ == "__main__":
     unittest.main()
