@@ -56,6 +56,9 @@ class TestPotentials(unittest.TestCase):
                 pair_coeff=["something"],
             )
 
+    def test_custom_potential(self):
+        pot = CustomPotential("lj/cut", "Al", "Ni", epsilon=0.5, sigma=1, cutoff=3)
+        self.assertEqual(pot.df.iloc[0].pair_coeff, "0.5 1 3")
 
 if __name__ == "__main__":
     unittest.main()

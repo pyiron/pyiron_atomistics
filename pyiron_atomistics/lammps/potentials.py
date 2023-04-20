@@ -500,7 +500,7 @@ class CustomPotential(LammpsPotentials):
 
         Example:
 
-        >>> morse = Morse("lj/cut", "Al", "Ni", epsilon=0.5, sigma=1, cutoff=3)
+        >>> custom_pot = CustomPotential("lj/cut", "Al", "Ni", epsilon=0.5, sigma=1, cutoff=3)
 
         Important: the order of parameters is conserved in the LAMMPS input
         (except for `cutoff`, which is always the last argument).
