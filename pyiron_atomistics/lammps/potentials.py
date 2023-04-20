@@ -384,7 +384,18 @@ class Library(LammpsPotentials):
                 return [" ".join(c.replace("\n", "").split()[1:])] * sum(
                     ["pair_coeff" in c for c in config]
                 )
-        raise ValueError(f"pair_style could not determined: {config}")
+        raise ValueError(
+            f"""
+            pair_style could not determined: {config}.
+
+            The reason why you are seeing this error is most likely because
+            the potential you chose had a corrupt config. It is
+            supposed to have at least one item which starts with "pair_style".
+            If you are using the standard pyiron database, feel free to
+            submit an issue on https://github.com/pyiron/pyiron_atomistics/issues
+            Typically you can get a reply within 24h.
+            """
+        )
 
     @staticmethod
     def _get_pair_coeff(config):
