@@ -31,6 +31,31 @@ class TestPotentials(unittest.TestCase):
             arg_dict = {k: [] for k in required_keys if k != key}
             self.assertRaises(ValueError, pot.set_df, pd.DataFrame(arg_dict))
 
+    def test_initialize_df(self):
+        pot = LammpsPotentials()
+        pot._initialize_df(
+            pair_style=["some_potential"],
+            interacting_species=[["Al", "Al"]],
+            pair_coeff=["something"],
+        )
+        self.assertIsInstance(pot.df, pd.DataFrame)
+        self.assertEqual(len(pot.df), 1)
+        self.assertEqual(pot.df.iloc[0].pair_style, "some_potential")
+        self.assertEqual(pot.df.iloc[0].interacting_species, ["Al", "Al"])
+        self.assertEqual(pot.df.iloc[0].pair_coeff, "something")
+        self.assertEqual(pot.df.iloc[0].preset_species, [])
+        self.assertEqual(pot.df.iloc[0].cutoff, 0)
+        self.assertEqual(pot.df.iloc[0].model, "some_potential")
+        self.assertEqual(pot.df.iloc[0].citations, [])
+        self.assertEqual(pot.df.iloc[0].filename, "")
+        self.assertEqual(pot.df.iloc[0].potential_name, "some_potential")
+        with self.assertRaises(ValueError):
+            pot._initialize_df(
+                pair_style=["some_potential", "one_too_many"],
+                interacting_species=[["Al", "Al"]],
+                pair_coeff=["something"],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

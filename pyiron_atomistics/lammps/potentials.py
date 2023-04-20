@@ -69,7 +69,7 @@ class LammpsPotentials:
         model=None,
         citations=None,
         filename=None,
-        name=None,
+        potential_name=None,
         scale=None,
         cutoff=None,
     ):
@@ -89,7 +89,7 @@ class LammpsPotentials:
             "model": check_none_n_length(model, pair_style),
             "citations": check_none_n_length(citations, [[]]),
             "filename": check_none_n_length(filename, [""]),
-            "name": check_none_n_length(name, pair_style),
+            "potential_name": check_none_n_length(potential_name, pair_style),
         }
         if scale is not None:
             arg_dict["scale"] = scale
@@ -111,9 +111,9 @@ class LammpsPotentials:
         return "_and_".join(set(self.df.model))
 
     @property
-    def name(self) -> str:
+    def potential_name(self) -> str:
         """Potential name (required in pyiron df)"""
-        return "_and_".join(set(self.df.name))
+        return "_and_".join(set(self.df.potential_name))
 
     @property
     def species(self):
@@ -141,7 +141,7 @@ class LammpsPotentials:
 
     @property
     def is_scaled(self) -> bool:
-        """Scaling in pair_style hybrid/scaled and hybrid/overlay (whih is scale=1)"""
+        """Scaling in pair_style hybrid/scaled and hybrid/overlay (which is scale=1)"""
         return "scale" in self.df
 
     @property
@@ -273,7 +273,7 @@ class LammpsPotentials:
                 "Config": [[self.pair_style] + self.pair_coeff],
                 "Filename": [self.filename],
                 "Model": [self.model],
-                "Name": [self.name],
+                "Name": [self.potential_name],
                 "Species": [self.species],
                 "Citations": [self.citations],
             }
@@ -447,7 +447,7 @@ class Library(LammpsPotentials):
                 model=df.Model,
                 citations=df.Citations,
                 filename=[df.Filename],
-                name=df.Name,
+                potential_name=df.Name,
                 scale=self._get_scale(df.Config),
             )
         return self._df
