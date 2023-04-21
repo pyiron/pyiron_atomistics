@@ -42,6 +42,38 @@ Example II: Hybrid potential for multiple elements
 """
 
 
+doc_pyiron_df = """
+- "Config": Lammps commands in a list. Lines are separated by list items and
+    each entry must finish with a new line
+- "Filename": Potential file name in either absolute path or relative to
+    the pyiron-resources path (optional)
+- "Model": Model name (optional)
+- "Name": Name of the potential (optional)
+- "Species": Order of species as defined in pair_coeff
+- "Citations": Citations (optional)
+
+Example
+
+>>> import pandas as pd
+>>> return pd.DataFrame(
+...     {
+...         "Config": [[
+...             'pair_style my_potential 3.2\n',
+...             'pair_coeff 2 1 1.1 2.3 3.2\n'
+...         ]],
+...         "Filename": [""],
+...         "Model": ["my_model"],
+...         "Name": ["my_potential"],
+...         "Species": [["Fe", "Al"]],
+...         "Citations": [],
+...     }
+... )
+"""
+
+
+issue_page = "https://github.com/pyiron/pyiron_atomistics/issues"
+
+
 class LammpsPotentials:
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls)
@@ -397,7 +429,7 @@ class Library(LammpsPotentials):
             the potential you chose had a corrupt config. It is
             supposed to have at least one item which starts with "pair_style".
             If you are using the standard pyiron database, feel free to
-            submit an issue on https://github.com/pyiron/pyiron_atomistics/issues
+            submit an issue on {issue_page}
             Typically you can get a reply within 24h.
             """
         )
@@ -469,6 +501,24 @@ class Library(LammpsPotentials):
         return self._df
 
 
+def check_cutoff(f):
+    def wrapper(*args, **kwargs):
+        if kwargs["cutoff"] == 0:
+            raise ValueError(f"""
+                It is not possible to set cutoff=0 for parameter-based
+                potentials. If you think this should be possible, you have the
+                following options:
+
+                - Open an issue on our GitHub page: {issue_page}
+
+                - Write your own potential in pyiron format. Here's how:
+
+                {doc_pyiron_df}
+            """)
+        return f(*args, **kwargs)
+    return wrapper
+
+
 class Morse(LammpsPotentials):
     """
     Morse potential defined by:
@@ -476,6 +526,7 @@ class Morse(LammpsPotentials):
     E = D_0*[exp(-2*alpha*(r-r_0))-2*exp(-alpha*(r-r_0))]
     """
 
+    @check_cutoff
     def __init__(self, *chemical_elements, D_0, alpha, r_0, cutoff, pair_style="morse"):
         """
         Args:
@@ -507,6 +558,7 @@ class CustomPotential(LammpsPotentials):
     pyiron
     """
 
+    @check_cutoff
     def __init__(self, pair_style, *chemical_elements, cutoff, **kwargs):
         """
         Args:
