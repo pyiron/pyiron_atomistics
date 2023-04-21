@@ -123,8 +123,8 @@ class LammpsPotentials:
     @property
     def species(self):
         """Species defined in the potential"""
-        species = set([ss for s in self.df.interacting_species for ss in s])
-        preset = set(["___".join(s) for s in self.df.preset_species if len(s) > 0])
+        species = self._unique([ss for s in self.df.interacting_species for ss in s])
+        preset = self._unique(["___".join(s) for s in self.df.preset_species if len(s) > 0])
         if len(preset) == 0:
             return list(species)
         elif len(preset) > 1:
@@ -132,12 +132,12 @@ class LammpsPotentials:
                 "Currently not possible to have multiple file-based potentials"
             )
         preset = list(preset)[0].split("___")
-        return [p for p in preset + list(species - set(preset)) if p != "*"]
+        return [p for p in preset + list(species - self._unique(preset)) if p != "*"]
 
     @property
     def filename(self) -> list:
         """LAMMPS potential files"""
-        return [f for f in set(self.df.filename) if len(f) > 0]
+        return [f for f in self._unique(self.df.filename) if len(f) > 0]
 
     @property
     def citations(self) -> str:
