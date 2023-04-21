@@ -100,6 +100,56 @@ class TestPotentials(unittest.TestCase):
         pot = LammpsPotentials()
         self.assertEqual(pot._unique([1, 0, 2, 1, 3]).tolist(), [1, 0, 2, 3])
 
+    def test_pair_style(self):
+        pot = LammpsPotentials()
+        pot._initialize_df(
+            pair_style=["a"],
+            interacting_species=[["Al"]],
+            pair_coeff=["one"],
+            potential_name=["first"]
+        )
+        self.assertEqual(pot.pair_style, "pair_style a\n")
+        pot._initialize_df(
+            pair_style=["a", "b"],
+            interacting_species=[["Al"], ["Ni"]],
+            pair_coeff=["one", "two"],
+            potential_name=["first", "second"]
+        )
+        self.assertEqual(pot.pair_style, "pair_style hybrid a b\n")
+        pot._initialize_df(
+            pair_style=["a", "b"],
+            interacting_species=[["Al"], ["Ni"]],
+            pair_coeff=["one", "two"],
+            potential_name=["first", "second"],
+            cutoff=[1, 1],
+        )
+        self.assertEqual(pot.pair_style, "pair_style hybrid a 1 b 1\n")
+        pot._initialize_df(
+            pair_style=["a", "b"],
+            interacting_species=[["Al"], ["Ni"]],
+            pair_coeff=["one", "two"],
+            potential_name=["first", "second"],
+            scale=[1, 1],
+            cutoff=[1, 1],
+        )
+        self.assertEqual(pot.pair_style, "pair_style hybrid/overlay a 1 b 1\n")
+        pot._initialize_df(
+            pair_style=["a", "b"],
+            interacting_species=[["Al"], ["Ni"]],
+            pair_coeff=["one", "two"],
+            potential_name=["first", "second"],
+            scale=[1, 0.5],
+            cutoff=[1, 1],
+        )
+        self.assertEqual(pot.pair_style, "pair_style hybrid/scaled 1.0 a 1 0.5 b 1\n")
+        pot._initialize_df(
+            pair_style=["a", "a"],
+            interacting_species=[["Al"], ["Ni"]],
+            pair_coeff=["one", "two"],
+            potential_name=["first", "second"],
+        )
+        self.assertEqual(pot.pair_style, "pair_style a\n")
+
 
 if __name__ == "__main__":
     unittest.main()
