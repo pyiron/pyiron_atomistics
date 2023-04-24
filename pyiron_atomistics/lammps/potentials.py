@@ -164,7 +164,8 @@ class LammpsPotentials:
                 "Currently not possible to have multiple file-based potentials"
             )
         preset = list(preset)[0].split("___")
-        return [p for p in preset + list(species - self._unique(preset)) if p != "*"]
+        comp_lst = [s for s in species if s not in self._unique(preset)]
+        return [p for p in preset + comp_lst if p != "*"]
 
     @property
     def filename(self) -> list:
@@ -503,7 +504,7 @@ class Library(LammpsPotentials):
 
 def check_cutoff(f):
     def wrapper(*args, **kwargs):
-        if kwargs["cutoff"] == 0:
+        if "cutoff" not in kwargs or kwargs["cutoff"] == 0:
             raise ValueError(f"""
                 It is not possible to set cutoff=0 for parameter-based
                 potentials. If you think this should be possible, you have the
