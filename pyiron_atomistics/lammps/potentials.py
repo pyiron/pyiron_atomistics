@@ -156,7 +156,9 @@ class LammpsPotentials:
     def species(self):
         """Species defined in the potential"""
         species = self._unique([ss for s in self.df.interacting_species for ss in s])
-        preset = self._unique(["___".join(s) for s in self.df.preset_species if len(s) > 0])
+        preset = self._unique(
+            ["___".join(s) for s in self.df.preset_species if len(s) > 0]
+        )
         if len(preset) == 0:
             return list(species)
         elif len(preset) > 1:
@@ -505,7 +507,8 @@ class Library(LammpsPotentials):
 def check_cutoff(f):
     def wrapper(*args, **kwargs):
         if "cutoff" not in kwargs or kwargs["cutoff"] == 0:
-            raise ValueError(f"""
+            raise ValueError(
+                f"""
                 It is not possible to set cutoff=0 for parameter-based
                 potentials. If you think this should be possible, you have the
                 following options:
@@ -515,8 +518,10 @@ def check_cutoff(f):
                 - Write your own potential in pyiron format. Here's how:
 
                 {doc_pyiron_df}
-            """)
+            """
+            )
         return f(*args, **kwargs)
+
     return wrapper
 
 
