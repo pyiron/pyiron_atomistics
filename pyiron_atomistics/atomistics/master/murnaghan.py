@@ -602,17 +602,17 @@ class EnergyVolumeFit(object):
     @staticmethod
     def birchmurnaghan_energy(V, E0, B0, BP, V0):
         "BirchMurnaghan equation from PRB 70, 224107"
-        return birchmurnaghan_energy(V, E0, B0, BP, V0)
+        return birchmurnaghan_energy(V, E0, B0 / eV_div_A3_to_GPa, BP, V0)
 
     @staticmethod
     def vinet_energy(V, E0, B0, BP, V0):
         "Vinet equation from PRB 70, 224107"
-        return vinet_energy(V, E0, B0, BP, V0)
+        return vinet_energy(V, E0, B0 / eV_div_A3_to_GPa, BP, V0)
 
     @staticmethod
     def murnaghan(V, E0, B0, BP, V0):
         "From PRB 28,5480 (1983"
-        return murnaghan(V, E0, B0, BP, V0)
+        return murnaghan(V, E0, B0 / eV_div_A3_to_GPa, BP, V0)
 
     @staticmethod
     def birch(V, E0, B0, BP, V0):
@@ -623,11 +623,11 @@ class EnergyVolumeFit(object):
 
         case where n=0
         """
-        return birch(V, E0, B0, BP, V0)
+        return birch(V, E0, B0 / eV_div_A3_to_GPa, BP, V0)
 
     @staticmethod
     def pouriertarantola(V, E0, B0, BP, V0):
-        return pouriertarantola(V, E0, B0, BP, V0)
+        return pouriertarantola(V, E0, B0 / eV_div_A3_to_GPa, BP, V0)
 
 
 # ToDo: not all abstract methods implemented
