@@ -55,6 +55,18 @@ def birchmurnaghan_energy(V, E0, B0, BP, V0):
     )
 
 
+e_doc_str += """
+    Args:
+        V (numpy.ndarray): Array of volumes
+        E0 (float): Minimum energy value
+        B0 (float): Bulk modulus
+        BP (float): Derivative of bulk modulus with respect to pressure
+        V0 (float): Minimum volume
+    
+    Returns:
+        (numpy.ndarray): Array of energies (same shape as V)
+"""
+
 def vinet_energy(V, E0, B0, BP, V0):
     "Vinet equation from PRB 70, 224107"
     eta = (V / V0) ** (1 / 3)
@@ -63,10 +75,16 @@ def vinet_energy(V, E0, B0, BP, V0):
     )
 
 
+vinet_energy.__doc__ += e_doc_str
+
+
 def murnaghan(V, E0, B0, BP, V0):
-    "From PRB 28,5480 (1983"
+    "From PRB 28,5480 (1983)"
     E = E0 + B0 * V / BP * (((V0 / V) ** BP) / (BP - 1) + 1) - V0 * B0 / (BP - 1)
     return E
+
+
+murnaghan.__doc__ += e_doc_str
 
 
 def birch(V, E0, B0, BP, V0):
@@ -85,6 +103,9 @@ def birch(V, E0, B0, BP, V0):
     return E
 
 
+birch.__doc__ += e_doc_str
+
+
 def pouriertarantola(V, E0, B0, BP, V0):
     "Pourier-Tarantola equation from PRB 70, 224107"
     eta = (V / V0) ** (1 / 3)
@@ -92,6 +113,9 @@ def pouriertarantola(V, E0, B0, BP, V0):
 
     E = E0 + B0 * V0 * squiggle**2 / 6 * (3 + squiggle * (BP - 2))
     return E
+
+
+pouriertarantola.__doc__ += e_doc_str
 
 
 def fitfunction(parameters, vol, fittype="vinet"):
