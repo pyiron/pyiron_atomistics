@@ -585,7 +585,7 @@ class EnergyVolumeFit(object):
             return ValueError("parameter 'fit_dict' has to be defined!")
         v = volume_lst
         e0 = self._fit_dict["energy_eq"]
-        b0 = self._fit_dict["bulkmodul_eq"] / eV_div_A3_to_GPa
+        b0 = self._fit_dict["bulkmodul_eq"]
         b_p = self._fit_dict["b_prime_eq"]
         v0 = self._fit_dict["volume_eq"]
         if self._fit_dict["fit_type"] == "birch":
