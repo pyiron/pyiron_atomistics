@@ -49,7 +49,7 @@ setup(
         'mendeleev==0.13.0',
         'mp-api==0.32.0',
         'numpy==1.24.3',
-        'pandas==2.0.0',
+        'pandas==2.0.1',
         'phonopy==2.18.0',
         'pint==0.20.1',
         'pyiron_base==0.5.37',
