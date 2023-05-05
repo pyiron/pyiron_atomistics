@@ -1836,7 +1836,7 @@ class SphinxBase(GenericDFTJob):
                 # move output to working directory for successful runs
                 if out.returncode == 0:
                     for file in os.listdir(tempd):
-                        shutil.movefile(os.path.join(tempd, file), self.working_directory)
+                        shutil.move(os.path.join(tempd, file), self.working_directory)
                         if not silent:
                             print("Copying " + file + " to " + self.working_directory)
                 else:
