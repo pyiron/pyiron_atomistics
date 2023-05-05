@@ -9,7 +9,7 @@ import os
 import posixpath
 import re
 import stat
-from shutil import copyfile, move as movefile
+import shutil
 import scipy.constants
 import warnings
 import json
@@ -1575,6 +1575,15 @@ class SphinxBase(GenericDFTJob):
         mean the simulation won't run if it returns False.
         """
 
+        if shutil.which("sphinx") is None:
+            raise ValueError(
+                "It looks like you have not installed SPHInX on your system, "
+                "which is not included in the pyiron conda package. You can "
+                "install SPHInX via\n\nconda install -c conda-forge "
+                "sphinxdft\n\n. For more info, take a look at our page: "
+                "https://pyiron.readthedocs.io/en/latest/"
+            )
+
         all_groups = {
             "job.input.pawPot": self.input.sphinx.pawPot,
             "job.input.structure": self.input.sphinx.structure,
@@ -1827,7 +1836,7 @@ class SphinxBase(GenericDFTJob):
                 # move output to working directory for successful runs
                 if out.returncode == 0:
                     for file in os.listdir(tempd):
-                        movefile(os.path.join(tempd, file), self.working_directory)
+                        shutil.movefile(os.path.join(tempd, file), self.working_directory)
                         if not silent:
                             print("Copying " + file + " to " + self.working_directory)
                 else:
@@ -1934,9 +1943,9 @@ class InputWriter(object):
                     path=potentials.find_default(elem)["Filename"].values[0][0]
                 )
             if potformat == "JTH":
-                copyfile(potential_path, posixpath.join(cwd, elem + "_GGA.atomicdata"))
+                shutil.copyfile(potential_path, posixpath.join(cwd, elem + "_GGA.atomicdata"))
             else:
-                copyfile(potential_path, posixpath.join(cwd, elem + "_POTCAR"))
+                shutil.copyfile(potential_path, posixpath.join(cwd, elem + "_POTCAR"))
 
     @property
     def id_spx_to_pyi(self):
@@ -2429,16 +2438,6 @@ class Output:
 
         with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
             log_file = "".join(sphinx_log_file.readlines())
-            if len(log_file) == 0:
-                raise ValueError(
-                    "There is a sphinx log file, but it is empty. It is likely "
-                    "that you have not installed SPHInX on your system, which "
-                    "is not included in the pyiron conda package. You can "
-                    "also take a look at the log file to look for "
-                    "indications. To find how to install SPHInX, take a look "
-                    "at the installation page of our website. Here's the "
-                    "homepage: https://pyiron.readthedocs.io/en/latest/"
-                )
         try:
             self._spx_log_parser = _SphinxLogParser(log_file)
         except AssertionError as e:
