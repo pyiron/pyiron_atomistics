@@ -53,7 +53,7 @@ def get_steinhardt_parameter_structure(
         n_clusters = None
     state.publications.add(publication())
     return stk.get_steinhardt_parameter_structure(
-        atoms=atoms,
+        structure=atoms,
         neighbor_method=neighbor_method,
         cutoff=cutoff,
         n_clusters=n_clusters,
@@ -74,7 +74,7 @@ def analyse_centro_symmetry(atoms, num_neighbors=12):
         csm (list) : list of centrosymmetry parameter
     """
     state.publications.add(publication())
-    return stk.analyse_centro_symmetry(atoms=atoms, num_neighbors=num_neighbors)
+    return stk.analyse_centro_symmetry(structure=atoms, num_neighbors=num_neighbors)
 
 
 def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
@@ -96,7 +96,7 @@ def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
     """
     state.publications.add(publication())
     return stk.analyse_diamond_structure(
-        atoms=atoms, mode=mode, ovito_compatibility=ovito_compatibility
+        structure=atoms, mode=mode, ovito_compatibility=ovito_compatibility
     )
 
 
@@ -119,7 +119,7 @@ def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
     """
     state.publications.add(publication())
     return stk.analyse_cna_adaptive(
-        atoms=atoms, mode=mode, ovito_compatibility=ovito_compatibility
+        structure=atoms, mode=mode, ovito_compatibility=ovito_compatibility
     )
 
 
@@ -131,7 +131,7 @@ def analyse_voronoi_volume(atoms):
         atoms : (pyiron_atomistics.structure.atoms.Atoms): The structure to analyze.
     """
     state.publications.add(publication())
-    return stk.analyse_voronoi_volume(atoms=atoms)
+    return stk.analyse_voronoi_volume(structure=atoms)
 
 
 def pyiron_to_pyscal_system(atoms):
