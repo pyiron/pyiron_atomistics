@@ -2429,6 +2429,16 @@ class Output:
 
         with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
             log_file = "".join(sphinx_log_file.readlines())
+            if len(log_file) == 0:
+                raise ValueError(
+                    "There is a sphinx log file, but it is empty. It is likely "
+                    "that you have not installed SPHInX on your system, which "
+                    "is not included in the pyiron conda package. You can "
+                    "also take a look at the log file to look for "
+                    "indications. To find how to install SPHInX, take a look "
+                    "at the installation page of our website. Here's the "
+                    "homepage: https://pyiron.readthedocs.io/en/latest/"
+                )
         try:
             self._spx_log_parser = _SphinxLogParser(log_file)
         except AssertionError as e:
