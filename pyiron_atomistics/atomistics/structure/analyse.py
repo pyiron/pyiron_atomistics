@@ -180,7 +180,9 @@ class Analyse:
             (depends on `mode`)
         """
         return analyse_cna_adaptive(
-            structure=self._structure, mode=mode, ovito_compatibility=ovito_compatibility
+            structure=self._structure,
+            mode=mode,
+            ovito_compatibility=ovito_compatibility,
         )
 
     def pyscal_centro_symmetry(self, num_neighbors=12):
@@ -214,7 +216,9 @@ class Analyse:
             (depends on `mode`)
         """
         return analyse_diamond_structure(
-            structure=self._structure, mode=mode, ovito_compatibility=ovito_compatibility
+            structure=self._structure,
+            mode=mode,
+            ovito_compatibility=ovito_compatibility,
         )
 
     def pyscal_voronoi_volume(self):
