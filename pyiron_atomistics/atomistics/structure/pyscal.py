@@ -25,7 +25,7 @@ __date__ = "Nov 6, 2019"
 
 @deprecate(arguments={"clustering": "use n_clusters=None instead of clustering=False."})
 def get_steinhardt_parameter_structure(
-    atoms,
+    structure,
     neighbor_method="cutoff",
     cutoff=0,
     n_clusters=2,
@@ -37,7 +37,7 @@ def get_steinhardt_parameter_structure(
     Calculate Steinhardts parameters
 
     Args:
-        atoms (Atoms): The structure to analyse.
+        structure (Atoms): The structure to analyse.
         neighbor_method (str) : can be ['cutoff', 'voronoi']. (Default is 'cutoff'.)
         cutoff (float) : Can be 0 for adaptive cutoff or any other value. (Default is 0, adaptive.)
         n_clusters (int/None) : Number of clusters for K means clustering or None to not cluster. (Default is 2.)
@@ -53,7 +53,7 @@ def get_steinhardt_parameter_structure(
         n_clusters = None
     state.publications.add(publication())
     return stk.get_steinhardt_parameter_structure(
-        structure=atoms,
+        structure=structure,
         neighbor_method=neighbor_method,
         cutoff=cutoff,
         n_clusters=n_clusters,
@@ -62,27 +62,27 @@ def get_steinhardt_parameter_structure(
     )
 
 
-def analyse_centro_symmetry(atoms, num_neighbors=12):
+def analyse_centro_symmetry(structure, num_neighbors=12):
     """
     Analyse centrosymmetry parameter
 
     Args:
-        atoms: Atoms object
+        structure: Atoms object
         num_neighbors (int) : number of neighbors
 
     Returns:
         csm (list) : list of centrosymmetry parameter
     """
     state.publications.add(publication())
-    return stk.analyse_centro_symmetry(structure=atoms, num_neighbors=num_neighbors)
+    return stk.analyse_centro_symmetry(structure=structure, num_neighbors=num_neighbors)
 
 
-def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
+def analyse_diamond_structure(structure, mode="total", ovito_compatibility=False):
     """
     Analyse diamond structure
 
     Args:
-        atoms: Atoms object
+        structure: Atoms object
         mode ("total"/"numeric"/"str"): Controls the style and level
         of detail of the output.
             - total : return number of atoms belonging to each structure
@@ -96,16 +96,16 @@ def analyse_diamond_structure(atoms, mode="total", ovito_compatibility=False):
     """
     state.publications.add(publication())
     return stk.analyse_diamond_structure(
-        structure=atoms, mode=mode, ovito_compatibility=ovito_compatibility
+        structure=structure, mode=mode, ovito_compatibility=ovito_compatibility
     )
 
 
-def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
+def analyse_cna_adaptive(structure, mode="total", ovito_compatibility=False):
     """
     Use common neighbor analysis
 
     Args:
-        atoms (pyiron_atomistics.structure.atoms.Atoms): The structure to analyze.
+        structure (pyiron_atomistics.structure.atoms.Atoms): The structure to analyze.
         mode ("total"/"numeric"/"str"): Controls the style and level
             of detail of the output.
             - total : return number of atoms belonging to each structure
@@ -119,28 +119,28 @@ def analyse_cna_adaptive(atoms, mode="total", ovito_compatibility=False):
     """
     state.publications.add(publication())
     return stk.analyse_cna_adaptive(
-        structure=atoms, mode=mode, ovito_compatibility=ovito_compatibility
+        structure=structure, mode=mode, ovito_compatibility=ovito_compatibility
     )
 
 
-def analyse_voronoi_volume(atoms):
+def analyse_voronoi_volume(structure):
     """
     Calculate the Voronoi volume of atoms
 
     Args:
-        atoms : (pyiron_atomistics.structure.atoms.Atoms): The structure to analyze.
+        structure : (pyiron_atomistics.structure.atoms.Atoms): The structure to analyze.
     """
     state.publications.add(publication())
-    return stk.analyse_voronoi_volume(structure=atoms)
+    return stk.analyse_voronoi_volume(structure=structure)
 
 
-def pyiron_to_pyscal_system(atoms):
+def pyiron_to_pyscal_system(structure):
     """
     Converts atoms to ase atoms and than to a pyscal system.
     Also adds the pyscal publication.
 
     Args:
-        atoms (pyiron atoms): Structure to convert.
+        structure (pyiron atoms): Structure to convert.
 
     Returns:
         Pyscal system: See the pyscal documentation.
@@ -148,14 +148,14 @@ def pyiron_to_pyscal_system(atoms):
     state.publications.add(publication())
     sys = pc.System()
     sys.read_inputfile(
-        pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(atoms),
+        pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(structure),
         format="ase",
     )
     return sys
 
 
 def analyse_find_solids(
-    atoms,
+    structure,
     neighbor_method="cutoff",
     cutoff=0,
     bonds=0.5,
@@ -187,7 +187,7 @@ def analyse_find_solids(
     """
     state.publications.add(publication())
     return stk.analyse_find_solids(
-        atoms=atoms,
+        atoms=structure,
         neighbor_method=neighbor_method,
         cutoff=cutoff,
         bonds=bonds,
