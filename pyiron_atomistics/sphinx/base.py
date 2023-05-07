@@ -1943,7 +1943,9 @@ class InputWriter(object):
                     path=potentials.find_default(elem)["Filename"].values[0][0]
                 )
             if potformat == "JTH":
-                shutil.copyfile(potential_path, posixpath.join(cwd, elem + "_GGA.atomicdata"))
+                shutil.copyfile(
+                    potential_path, posixpath.join(cwd, elem + "_GGA.atomicdata")
+                )
             else:
                 shutil.copyfile(potential_path, posixpath.join(cwd, elem + "_POTCAR"))
 
