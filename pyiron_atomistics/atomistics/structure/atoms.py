@@ -223,6 +223,9 @@ class Atoms(ASEAtoms):
         # Velocities were not handled at all during file writing
         self._velocities = None
 
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     @property
     def velocities(self):
         return self._velocities
