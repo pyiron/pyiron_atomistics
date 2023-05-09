@@ -1964,7 +1964,7 @@ class TestAtoms(unittest.TestCase):
             files = [f for f in os.listdir('.') if os.path.isfile(f)]
             raise RuntimeError(
                 f"pickle={pickle} ({type(pickle)}, pickle.dumps={pickle.dumps}, local "
-                f"files={files}, original error=" + e
+                f"files={files}"
             )
 
 
