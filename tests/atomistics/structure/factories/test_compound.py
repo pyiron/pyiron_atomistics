@@ -6,7 +6,7 @@ from pyiron_base._tests import PyironTestCase
 import pyiron_atomistics.atomistics.structure.factories.compound as compound_module
 from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from structuretoolkit import get_neighbors
+from structuretoolkit import get_neighbors, get_symmetry
 import numpy as np
 
 
@@ -61,7 +61,7 @@ class TestCompoundFactory(PyironTestCase):
         self.assertAlmostEqual((4 / np.sqrt(3)) * a_type_nn_distance, structure.cell.array[0, 0],
                                msg="Default lattice constant should relate to NN distance of A-type element.")
 
-        unique_ids = np.unique(structure.get_symmetry()['equivalent_atoms'])
+        unique_ids = np.unique(get_symmetry(structure)['equivalent_atoms'])
         self.assertEqual(2, len(unique_ids), msg="Expected only A- and B1-type sites.")
         symbols = np.array(structure.get_chemical_symbols())
         a_id = unique_ids[np.argwhere(symbols[unique_ids] == a_type)[0, 0]]
