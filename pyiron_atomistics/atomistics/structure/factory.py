@@ -237,7 +237,7 @@ class StructureFactory(PyironFactory):
                 z_max = np.max(surface.positions[:, 2])
                 surface.cell[2, 2] = z_max + vacuum
             surface.pbc = pbc
-            return ase_to_pyiron(surface)
+            return surface
         else:
             raise ValueError(f"Surface type {surface_type} not recognized.")
 
@@ -267,7 +267,7 @@ class StructureFactory(PyironFactory):
         if center:
             surface.positions += 0.5 * surface.cell[2] - [0, 0, z_max / 2]
         surface.pbc = pbc
-        return ase_to_pyiron(surface)
+        return surface
 
     @staticmethod
     def crystal(element, bravais_basis, lattice_constant):
@@ -441,11 +441,6 @@ class StructureFactory(PyironFactory):
     aimsgb_build.__doc__ = AimsgbFactory.build.__doc__
 
     @staticmethod
-    @wraps(ase_to_pyiron)
-    def from_ase(ase_atoms):
-        return ase_to_pyiron(ase_atoms)
-
-    @staticmethod
     @wraps(pymatgen_to_pyiron)
     def from_pymatgen(pymatgen_obj):
         return pymatgen_to_pyiron(pymatgen_obj)
@@ -541,21 +536,19 @@ class StructureFactory(PyironFactory):
         Returns:
             slab: pyiron_atomistics.atomistics.structure.atoms.Atoms instance Required surface
         """
-        return ase_to_pyiron(
-            high_index_surface(
-                element=element,
-                crystal_structure=crystal_structure,
-                lattice_constant=lattice_constant,
-                terrace_orientation=terrace_orientation,
-                step_orientation=step_orientation,
-                kink_orientation=kink_orientation,
-                step_down_vector=step_down_vector,
-                length_step=length_step,
-                length_terrace=length_terrace,
-                length_kink=length_kink,
-                layers=layers,
-                vacuum=vacuum,
-            )
+        return high_index_surface(
+            element=element,
+            crystal_structure=crystal_structure,
+            lattice_constant=lattice_constant,
+            terrace_orientation=terrace_orientation,
+            step_orientation=step_orientation,
+            kink_orientation=kink_orientation,
+            step_down_vector=step_down_vector,
+            length_step=length_step,
+            length_terrace=length_terrace,
+            length_kink=length_kink,
+            layers=layers,
+            vacuum=vacuum,
         )
 
     @property
