@@ -8,8 +8,6 @@ import os.path
 import shutil
 import io
 
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
-
 from ase.io import read, write
 import numpy as np
 
@@ -123,7 +121,7 @@ class AtomskBuilder:
             for l in output.split("\n"):
                 if l.strip().startswith("X!X ERROR:"):
                     raise AtomskError(f"atomsk returned error: {output}")
-            return ase_to_pyiron(read(io.StringIO(output), format="extxyz"))
+            return read(io.StringIO(output), format="extxyz")
 
     def __getattr__(self, name):
         # magic method to map method calls of the form self.foo_bar to options like -foo-bar; arguments converted str

@@ -12,7 +12,6 @@ from ase.build import (
 )
 from ase.io import read as ase_read
 from ase.spacegroup import crystal as ase_crystal
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.pyironase import (
     publication as publication_ase,
 )
@@ -57,7 +56,7 @@ def _ase_wraps(ase_func):
 class AseFactory:
     @_ase_wraps(ase_bulk)
     def bulk(self, *args, **kwargs):
-        return ase_to_pyiron(ase_bulk(*args, **kwargs))
+        return ase_bulk(*args, **kwargs)
 
     @_ase_wraps(ase_cut)
     def cut(self, *args, **kwargs):
@@ -69,12 +68,12 @@ class AseFactory:
 
     @_ase_wraps(ase_crystal)
     def crystal(self, *args, **kwargs):
-        return ase_to_pyiron(ase_crystal(*args, **kwargs))
+        return ase_crystal(*args, **kwargs)
 
     @_ase_wraps(ase_read)
     def read(self, *args, **kwargs):
-        return ase_to_pyiron(ase_read(*args, **kwargs))
+        return ase_read(*args, **kwargs)
 
     @_ase_wraps(ase_molecule)
     def molecule(self, *args, **kwargs):
-        return ase_to_pyiron(ase_molecule(*args, **kwargs))
+        return ase_molecule(*args, **kwargs)

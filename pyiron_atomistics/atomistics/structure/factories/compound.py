@@ -3,7 +3,6 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from structuretoolkit import B2, C14, C15, C36, D03
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 __author__ = "Liam Huber"
 __copyright__ = (
@@ -33,7 +32,7 @@ class CompoundFactory:
         Returns:
             (Atoms): The B2 unit cell.
         """
-        return ase_to_pyiron(B2(element_a=element_a, element_b=element_b, a=a))
+        return B2(element_a=element_a, element_b=element_b, a=a)
 
     @staticmethod
     def C14(element_a, element_b, a=None, c_over_a=1.626, x1=0.1697, z1=0.5629):
@@ -59,15 +58,13 @@ class CompoundFactory:
             x1 (float): fractional x coordinate of B atoms on Wyckoff 6h
             z1 (float): fractional z coordinate of A atoms on Wyckoff 4f
         """
-        return ase_to_pyiron(
-            C14(
-                element_a=element_a,
-                element_b=element_b,
-                a=a,
-                c_over_a=c_over_a,
-                x1=x1,
-                z1=z1,
-            )
+        return C14(
+            element_a=element_a,
+            element_b=element_b,
+            a=a,
+            c_over_a=c_over_a,
+            x1=x1,
+            z1=z1,
         )
 
     @staticmethod
@@ -90,7 +87,7 @@ class CompoundFactory:
         Returns:
             (Atoms): The C15 unit cell.
         """
-        return ase_to_pyiron(C15(element_a=element_a, element_b=element_b, a=a))
+        return C15(element_a=element_a, element_b=element_b, a=a)
 
     @staticmethod
     def C36(
@@ -127,17 +124,15 @@ class CompoundFactory:
             z2 (float): fractional z coordinate of A atoms on Wyckoff 4f
             z3 (float): fractional z coordinate of B atoms on Wyckoff 4f
         """
-        return ase_to_pyiron(
-            C36(
-                element_a=element_a,
-                element_b=element_b,
-                a=a,
-                c_over_a=c_over_a,
-                x1=x1,
-                z1=z1,
-                z2=z2,
-                z3=z3,
-            )
+        return C36(
+            element_a=element_a,
+            element_b=element_b,
+            a=a,
+            c_over_a=c_over_a,
+            x1=x1,
+            z1=z1,
+            z2=z2,
+            z3=z3,
         )
 
     @staticmethod
@@ -154,4 +149,4 @@ class CompoundFactory:
         Returns:
             (Atoms): The D03 unit cell.
         """
-        return ase_to_pyiron(D03(element_a=element_a, element_b=element_b, a=a))
+        return D03(element_a=element_a, element_b=element_b, a=a)
