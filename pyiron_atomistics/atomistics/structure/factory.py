@@ -42,13 +42,7 @@ from pyiron_atomistics.atomistics.structure.factories.materialsproject import (
 from pyiron_atomistics.atomistics.structure.pyironase import (
     publication as publication_ase,
 )
-from pyiron_atomistics.atomistics.structure.atoms import (
-    CrystalStructure,
-    Atoms,
-    ase_to_pyiron,
-    pymatgen_to_pyiron,
-    ovito_to_pyiron,
-)
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pymatgen.core import Structure
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import state, PyironFactory, deprecate
