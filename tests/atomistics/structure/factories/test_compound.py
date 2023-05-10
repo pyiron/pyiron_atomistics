@@ -27,7 +27,7 @@ class TestCompoundFactory(PyironTestCase):
                          msg="Docstring claims lattice constant defaults to primary species")
         self.assertEqual(2, len(structure))
         neigh = get_neighbors(structure, num_neighbors=8)
-        symbols = structure.get_chemical_symbols()
+        symbols = np.array(structure.get_chemical_symbols())
         self.assertEqual(8, np.sum(symbols[neigh.indices[0]] == 'Al'),
                          msg="Expected the primary atom to have all secondary neighbors")
         self.assertEqual(8, np.sum(symbols[neigh.indices[1]] == 'Fe'),
@@ -63,7 +63,7 @@ class TestCompoundFactory(PyironTestCase):
 
         unique_ids = np.unique(structure.get_symmetry()['equivalent_atoms'])
         self.assertEqual(2, len(unique_ids), msg="Expected only A- and B1-type sites.")
-        symbols = structure.get_chemical_symbols()
+        symbols = np.array(structure.get_chemical_symbols())
         a_id = unique_ids[np.argwhere(symbols[unique_ids] == a_type)[0, 0]]
         b_id = unique_ids[np.argwhere(symbols[unique_ids] == b_type)[0, 0]]
         unique_ids = [a_id, b_id]  # Now with guaranteed ordering
@@ -77,7 +77,7 @@ class TestCompoundFactory(PyironTestCase):
         neigh = get_neighbors(structure, num_neighbors=num_a_neighs)
         a_neighs = neigh.indices[unique_ids[0]]
         b_neighs = neigh.indices[unique_ids[1], :num_b_neighs]
-        symbols = structure.get_chemical_symbols()
+        symbols = np.array(structure.get_chemical_symbols())
         self.assertEqual(4, np.sum(symbols[a_neighs] == a_type))
         self.assertEqual(12, np.sum(symbols[a_neighs] == b_type))
         self.assertEqual(6, np.sum(symbols[b_neighs] == a_type))
@@ -93,7 +93,7 @@ class TestCompoundFactory(PyironTestCase):
     def test_D03(self):
         element_a, element_b = 'Al', 'Fe'
         structure = self.compound.D03(element_a, element_b)
-        symbols = structure.get_chemical_symbols()
+        symbols = np.array(structure.get_chemical_symbols())
         neigh = get_neighbors(structure, num_neighbors=8)
 
         a_neighbors = neigh.indices[symbols == element_a]
