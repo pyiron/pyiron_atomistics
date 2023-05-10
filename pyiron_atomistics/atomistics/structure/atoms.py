@@ -115,7 +115,6 @@ class Atoms(ASEAtoms):
         self._is_scaled = False
 
         self._species = list()
-        self.constraints = None
         self._pse = PeriodicTable()
 
         el_index_lst = list()
