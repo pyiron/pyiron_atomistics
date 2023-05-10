@@ -1,8 +1,9 @@
 from typing import Union, List
 from mp_api.client import MPRester
+from pymatgen.io.ase import AseAtomsAdaptor
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
-from pyiron_atomistics.atomistics.structure.atoms import pymatgen_to_pyiron, Atoms
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 
 class MPQueryResults(HasStructure):
@@ -25,7 +26,7 @@ class MPQueryResults(HasStructure):
         yield from self.iter_structures()
 
     def _get_structure(self, frame, wrap_atoms=True):
-        return pymatgen_to_pyiron(self._results[frame]["structure"])
+        return AseAtomsAdaptor.get_atoms(self._results[frame]["structure"])
 
     def _number_of_structures(self):
         return len(self._results)
@@ -37,7 +38,7 @@ class MPQueryResults(HasStructure):
         Returns:
             list: structures
         """
-        return [pymatgen_to_pyiron(r["structure"]) for r in self._results]
+        return [AseAtomsAdaptor.get_atoms(r["structure"]) for r in self._results]
 
     def to_storage(self):
         """
@@ -163,7 +164,7 @@ class MaterialsProjectFactory:
             rest_kwargs["api_key"] = api_key
         with MPRester(**rest_kwargs) as mpr:
             if final:
-                return pymatgen_to_pyiron(
+                return AseAtomsAdaptor.get_atoms(
                     mpr.get_structure_by_material_id(
                         material_id=material_id,
                         final=final,
@@ -172,7 +173,7 @@ class MaterialsProjectFactory:
                 )
             else:
                 return [
-                    pymatgen_to_pyiron(mpr_structure)
+                    AseAtomsAdaptor.get_atoms(mpr_structure)
                     for mpr_structure in (
                         mpr.get_structure_by_material_id(
                             material_id=material_id,
