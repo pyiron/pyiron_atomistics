@@ -446,9 +446,8 @@ class StructureFactory(PyironFactory):
         return AseAtomsAdaptor().get_atoms(pymatgen_obj)
 
     @staticmethod
-    @wraps(ovito_to_pyiron)
     def from_ovito(ovito_obj):
-        return ovito_to_pyiron(ovito_obj)
+        return ovito_obj.to_ase_atoms()
 
     def high_index_surface_info(
         self,
