@@ -6,7 +6,7 @@ from pyiron_base._tests import PyironTestCase
 import pyiron_atomistics.atomistics.structure.factories.compound as compound_module
 from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from structuretoolkit import get_neighbors, get_symmetry
+from structuretoolkit import analyse_centro_symmetry, get_neighbors, get_symmetry
 import numpy as np
 
 
@@ -68,7 +68,7 @@ class TestCompoundFactory(PyironTestCase):
         b_id = unique_ids[np.argwhere(symbols[unique_ids] == b_type)[0, 0]]
         unique_ids = [a_id, b_id]  # Now with guaranteed ordering
 
-        csa = structure.analyse.pyscal_centro_symmetry()[unique_ids]
+        csa = analyse_centro_symmetry(structure)[unique_ids]
         self.assertLess(1, csa[0], msg="A site for AB_2 C15 should be significantly non-centro-symmetric.")
         self.assertAlmostEqual(0, csa[1], msg="B site for AB_2 C15 should be nearly centro-symmetric.")
 
