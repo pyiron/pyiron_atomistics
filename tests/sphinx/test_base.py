@@ -458,6 +458,10 @@ class TestSphinx(unittest.TestCase):
 
     def test_validate_ready_to_run(self):
 
+        self.assertRaises(
+            ValueError, self.sphinx_band_structure.validate_ready_to_run
+        )
+
         backup = self.sphinx_band_structure.structure.copy()
         self.sphinx_band_structure.structure = None
         self.assertRaises(
