@@ -270,10 +270,10 @@ class StructureFactory(PyironFactory):
         surface.pbc = pbc
         return surface
 
-    @staticmethod
-    def crystal(element, bravais_basis, lattice_constant):
+    @deprecate("Use .bulk instead")
+    def crystal(self, element, bravais_basis, lattice_constant):
         """
-        Create a crystal structure using pyiron's native crystal structure generator
+        Deprecated method for making a bulk crystal
 
         Args:
             element (str): Element name
@@ -283,10 +283,10 @@ class StructureFactory(PyironFactory):
         Returns:
             pyiron.atomistics.structure.atoms.Atoms: The required crystal structure
         """
-        return CrystalStructure(
-            element=element,
-            bravais_basis=bravais_basis,
-            lattice_constants=[lattice_constant],
+        return self.ase.bulk(
+            element,
+            crystal_structure=bravais_basis,
+            a=lattice_constant,
         )
 
     @staticmethod
