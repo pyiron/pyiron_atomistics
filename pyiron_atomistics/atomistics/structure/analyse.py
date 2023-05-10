@@ -155,7 +155,7 @@ class Analyse:
             numpy.ndarray: If `clustering=True`, an additional per-atom array of cluster ids is also returned
         """
         return get_steinhardt_parameter_structure(
-            self._structure,
+            structure=self._structure,
             neighbor_method=neighbor_method,
             cutoff=cutoff,
             n_clusters=n_clusters,
@@ -180,7 +180,9 @@ class Analyse:
             (depends on `mode`)
         """
         return analyse_cna_adaptive(
-            atoms=self._structure, mode=mode, ovito_compatibility=ovito_compatibility
+            structure=self._structure,
+            mode=mode,
+            ovito_compatibility=ovito_compatibility,
         )
 
     def pyscal_centro_symmetry(self, num_neighbors=12):
@@ -194,7 +196,7 @@ class Analyse:
             list: list of centrosymmetry parameter
         """
         return analyse_centro_symmetry(
-            atoms=self._structure, num_neighbors=num_neighbors
+            structure=self._structure, num_neighbors=num_neighbors
         )
 
     def pyscal_diamond_structure(self, mode="total", ovito_compatibility=False):
@@ -214,12 +216,14 @@ class Analyse:
             (depends on `mode`)
         """
         return analyse_diamond_structure(
-            atoms=self._structure, mode=mode, ovito_compatibility=ovito_compatibility
+            structure=self._structure,
+            mode=mode,
+            ovito_compatibility=ovito_compatibility,
         )
 
     def pyscal_voronoi_volume(self):
         """Calculate the Voronoi volume of atoms"""
-        return analyse_voronoi_volume(atoms=self._structure)
+        return analyse_voronoi_volume(structure=self._structure)
 
     def pyscal_find_solids(
         self,
@@ -253,7 +257,7 @@ class Analyse:
             pyscal system: pyscal system when return_sys=True
         """
         return analyse_find_solids(
-            atoms=self._structure,
+            structure=self._structure,
             neighbor_method=neighbor_method,
             cutoff=cutoff,
             bonds=bonds,
