@@ -6,6 +6,7 @@ from pyiron_base._tests import PyironTestCase
 import pyiron_atomistics.atomistics.structure.factories.compound as compound_module
 from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from structuretoolkit import get_neighbors
 import numpy as np
 
 
@@ -25,7 +26,7 @@ class TestCompoundFactory(PyironTestCase):
         self.assertAlmostEqual(self.sf.bulk('Fe', cubic=True).cell[0, 0], structure.cell[0, 0],
                          msg="Docstring claims lattice constant defaults to primary species")
         self.assertEqual(2, len(structure))
-        neigh = structure.get_neighbors(num_neighbors=8)
+        neigh = get_neighbors(structure, num_neighbors=8)
         symbols = structure.get_chemical_symbols()
         self.assertEqual(8, np.sum(symbols[neigh.indices[0]] == 'Al'),
                          msg="Expected the primary atom to have all secondary neighbors")
@@ -53,7 +54,10 @@ class TestCompoundFactory(PyironTestCase):
         self.assertEqual(len(structure), 24, "Wrong number of atoms in C15 structure.")
         self.assertEqual(structure.get_chemical_formula(), "Cu16Mg8", "Wrong chemical formula.")
 
-        a_type_nn_distance = StructureFactory().bulk(a_type).get_neighbors(num_neighbors=1).distances[0, 0]
+        a_type_nn_distance = get_neighbors(
+            StructureFactory().bulk(a_type),
+            num_neighbors=1
+        ).distances[0, 0]
         self.assertAlmostEqual((4 / np.sqrt(3)) * a_type_nn_distance, structure.cell.array[0, 0],
                                msg="Default lattice constant should relate to NN distance of A-type element.")
 
@@ -70,7 +74,7 @@ class TestCompoundFactory(PyironTestCase):
 
         num_a_neighs = 16
         num_b_neighs = 12
-        neigh = structure.get_neighbors(num_neighbors=num_a_neighs)
+        neigh = get_neighbors(structure, num_neighbors=num_a_neighs)
         a_neighs = neigh.indices[unique_ids[0]]
         b_neighs = neigh.indices[unique_ids[1], :num_b_neighs]
         symbols = structure.get_chemical_symbols()
@@ -90,7 +94,7 @@ class TestCompoundFactory(PyironTestCase):
         element_a, element_b = 'Al', 'Fe'
         structure = self.compound.D03(element_a, element_b)
         symbols = structure.get_chemical_symbols()
-        neigh = structure.get_neighbors(num_neighbors=8)
+        neigh = get_neighbors(structure, num_neighbors=8)
 
         a_neighbors = neigh.indices[symbols == element_a]
         self.assertTrue(np.all(symbols[a_neighbors] == element_b), msg="A-type should only have B-type neighbors.")
