@@ -461,59 +461,59 @@ class TestSphinx(unittest.TestCase):
         backup = self.sphinx_band_structure.structure.copy()
         self.sphinx_band_structure.structure = None
         self.assertRaises(
-            AssertionError, self.sphinx_band_structure.validate_ready_to_run
+            AssertionError, self.sphinx_band_structure._validate_input_ready_to_run
         )
         self.sphinx_band_structure.structure = backup
 
         self.sphinx_band_structure.input["THREADS"] = 20
         self.sphinx_band_structure.server.cores = 10
         self.assertRaises(
-            AssertionError, self.sphinx_band_structure.validate_ready_to_run
+            AssertionError, self.sphinx_band_structure._validate_input_ready_to_run
         )
 
         self.sphinx_band_structure.input.sphinx.main.clear()
         self.assertRaises(
-            AssertionError, self.sphinx_band_structure.validate_ready_to_run
+            AssertionError, self.sphinx_band_structure._validate_input_ready_to_run
         )
 
         backup = self.sphinx.input.sphinx.basis.eCut
         self.sphinx.input.sphinx.basis.eCut = 400
-        self.assertFalse(self.sphinx.validate_ready_to_run())
+        self.assertFalse(self.sphinx._validate_input_ready_to_run())
         self.sphinx.input.sphinx.basis.eCut = backup
 
         backup = self.sphinx.input.sphinx.basis.kPoint.copy()
         self.sphinx.input.sphinx.basis.kPoint.clear()
         self.sphinx.input.sphinx.basis.kPoint.coords = [0.5, 0.5, 0.25]
         self.sphinx.input.sphinx.basis.kPoint.weight = 1
-        self.assertFalse(self.sphinx.validate_ready_to_run())
+        self.assertFalse(self.sphinx._validate_input_ready_to_run())
         self.sphinx.input.sphinx.basis.kPoint = backup
 
         backup = self.sphinx.input.sphinx.PAWHamiltonian.ekt
         self.sphinx.input.sphinx.PAWHamiltonian.ekt = 0.0001
-        self.assertFalse(self.sphinx.validate_ready_to_run())
+        self.assertFalse(self.sphinx._validate_input_ready_to_run())
         self.sphinx.input.sphinx.PAWHamiltonian.ekt = backup
 
         backup = self.sphinx.input.sphinx.PAWHamiltonian.xc
         self.sphinx.input.sphinx.PAWHamiltonian.xc = "Wrong"
-        self.assertFalse(self.sphinx.validate_ready_to_run())
+        self.assertFalse(self.sphinx._validate_input_ready_to_run())
         self.sphinx.input.sphinx.PAWHamiltonian.xc = backup
 
         backup = self.sphinx.input.sphinx.PAWHamiltonian.xc
         self.sphinx.input.sphinx.PAWHamiltonian.xc = "Wrong"
-        self.assertFalse(self.sphinx.validate_ready_to_run())
+        self.assertFalse(self.sphinx._validate_input_ready_to_run())
         self.sphinx.input.sphinx.PAWHamiltonian.xc = backup
 
         backup = self.sphinx.input.sphinx.PAWHamiltonian.nEmptyStates
         self.sphinx.input.sphinx.PAWHamiltonian.nEmptyStates = 100
-        self.assertFalse(self.sphinx.validate_ready_to_run())
+        self.assertFalse(self.sphinx._validate_input_ready_to_run())
         self.sphinx.input.sphinx.PAWHamiltonian.nEmptyStates = backup
 
         backup = self.sphinx.input.sphinx.structure.copy()
         self.sphinx.input.sphinx.structure.cell = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-        self.assertFalse(self.sphinx.validate_ready_to_run())
+        self.assertFalse(self.sphinx._validate_input_ready_to_run())
         self.sphinx.input.sphinx.structure = backup
 
-        self.assertTrue(self.sphinx.validate_ready_to_run())
+        self.assertTrue(self.sphinx._validate_input_ready_to_run())
 
     def test_set_mixing_parameters(self):
         self.assertRaises(

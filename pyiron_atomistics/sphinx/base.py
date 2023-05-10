@@ -1569,21 +1569,7 @@ class SphinxBase(GenericDFTJob):
 
             return len(w) == 0
 
-    def validate_ready_to_run(self):
-        """
-        Checks whether parameters are set appropriately. It does not
-        mean the simulation won't run if it returns False.
-        """
-
-        if shutil.which("sphinx") is None:
-            raise ValueError(
-                "It looks like you have not installed SPHInX on your system, "
-                "which is not included in the pyiron conda package. You can "
-                "install SPHInX via\n\nconda install -c conda-forge "
-                "sphinxdft\n\n. For more info, take a look at our page: "
-                "https://pyiron.readthedocs.io/en/latest/"
-            )
-
+    def _validate_input_ready_to_run(self):
         all_groups = {
             "job.input.pawPot": self.input.sphinx.pawPot,
             "job.input.structure": self.input.sphinx.structure,
@@ -1654,9 +1640,9 @@ class SphinxBase(GenericDFTJob):
                 != np.array(self.input.sphinx.basis.folding).tolist()
             ):
                 warnings.warn(
-                    "job.input.basis.kPoint was modified directly. "
-                    "It is recommended to set all k-point settings via "
-                    "job.set_kpoints()"
+                    "job.input.basis.kPoint was modified directly. It is"
+                    " recommended to set all k-point settings via"
+                    " job.set_kpoints()"
                 )
 
             structure_sync = str(self.input.sphinx.structure) == str(
@@ -1664,15 +1650,13 @@ class SphinxBase(GenericDFTJob):
             )
             if not structure_sync and not self.input.sphinx.structure.read_only:
                 warnings.warn(
-                    "job.input.structure != job.structure. "
-                    "The current job.structure will overwrite "
-                    "any changes you may might have made to "
-                    "job.input.structure in the meantime. "
-                    "To disable this overwrite, "
-                    "set job.input.structure.read_only = True. "
-                    "To disable this warning, call "
-                    "job.load_structure_group() after making changes "
-                    "to job.structure."
+                    "job.input.structure != job.structure. The current"
+                    " job.structure will overwrite any changes you may might"
+                    " have made to job.input.structure in the meantime. To"
+                    " disable this overwrite, set"
+                    " job.input.structure.read_only = True. To disable this"
+                    " warning, call job.load_structure_group() after making"
+                    " changes to job.structure."
                 )
 
             if len(w) > 0:
@@ -1682,6 +1666,22 @@ class SphinxBase(GenericDFTJob):
                 return False
             else:
                 return True
+
+    def validate_ready_to_run(self):
+        """
+        Checks whether parameters are set appropriately. It does not
+        mean the simulation won't run if it returns False.
+        """
+
+        if shutil.which("sphinx") is None:
+            raise ValueError(
+                "It looks like you have not installed SPHInX on your system, "
+                "which is not included in the pyiron conda package. You can "
+                "install SPHInX via\n\nconda install -c conda-forge "
+                "sphinxdft\n\n. For more info, take a look at our page: "
+                "https://pyiron.readthedocs.io/en/latest/"
+            )
+        return self._validate_input_ready_to_run()
 
     def compress(self, files_to_compress=None):
         """
