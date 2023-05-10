@@ -48,7 +48,6 @@ from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pymatgen.io.ase import AseAtomsAdaptor
 from pyiron_base import state, PyironFactory, deprecate
 import types
-from functools import wraps
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
