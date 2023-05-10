@@ -45,6 +45,7 @@ from pyiron_atomistics.atomistics.structure.pyironase import (
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pymatgen.core import Structure
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
+from pymatgen.io.ase import AseAtomsAdaptor
 from pyiron_base import state, PyironFactory, deprecate
 import types
 from functools import wraps
@@ -112,8 +113,8 @@ class StructureFactory(PyironFactory):
 
     read.__doc__ = AseFactory.read.__doc__
 
-    def read_using_pymatgen(self, *args, **kwargs):
-        return pymatgen_to_pyiron(Structure.from_file(*args, **kwargs))
+    def read_using_pymatgen(self, *args, **kwargs) -> Atoms:
+        return AseAtomsAdaptor().get_atoms(Structure.from_file(*args, **kwargs))
 
     def read_using_ase(self, *args, **kwargs):
         return self.ase.read(*args, **kwargs)
@@ -441,9 +442,8 @@ class StructureFactory(PyironFactory):
     aimsgb_build.__doc__ = AimsgbFactory.build.__doc__
 
     @staticmethod
-    @wraps(pymatgen_to_pyiron)
     def from_pymatgen(pymatgen_obj):
-        return pymatgen_to_pyiron(pymatgen_obj)
+        return AseAtomsAdaptor().get_atoms(pymatgen_obj)
 
     @staticmethod
     @wraps(ovito_to_pyiron)
