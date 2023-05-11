@@ -1954,18 +1954,10 @@ class TestAtoms(unittest.TestCase):
             )
 
     def test_pickle(self):
-        try:
-            pickled = pickle.dumps(self.C3)
-            unpickled = pickle.loads(pickled)
-            self.assertEqual(unpickled, self.C3)
-            self.assertTrue(np.allclose(unpickled.cell, self.C3.cell))
-        except TypeError as e:
-            import os
-            files = [f for f in os.listdir('.') if os.path.isfile(f)]
-            raise RuntimeError(
-                f"pickle={pickle} ({type(pickle)}, pickle.dumps={pickle.dumps}, local "
-                f"files={files}"
-            )
+        pickled = pickle.dumps(self.C3)
+        unpickled = pickle.loads(pickled)
+        self.assertEqual(unpickled, self.C3)
+        self.assertTrue(np.allclose(unpickled.cell, self.C3.cell))
 
 
 def generate_fcc_lattice(a=4.2):
