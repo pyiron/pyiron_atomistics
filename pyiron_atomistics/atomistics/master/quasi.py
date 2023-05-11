@@ -96,6 +96,14 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         self.input["temperature_end"] = 500
         self.input["temperature_steps"] = 10
         self.input["polynomial_degree"] = 3
+        self.input["strains"] = (
+            None,
+            "List of strains that should be calculated.  If given vol_range and num_points take no effect.",
+        )
+        self.input["axes"] = (
+            ["x", "y", "z"],
+            "Axes along which the strain will be applied",
+        )
         self._job_generator = MurnaghanJobGenerator(self)
 
     def collect_output(self):
