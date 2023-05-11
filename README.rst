@@ -21,8 +21,8 @@ pyiron
     :target: https://anaconda.org/conda-forge/pyiron_atomistics/
     :alt: Downloads
 
-.. image:: https://readthedocs.org/projects/pyiron/badge/?version=latest
-    :target: https://pyiron.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/pyiron_atomistics/badge/?version=latest
+    :target: https://pyiron-atomistics.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
 
