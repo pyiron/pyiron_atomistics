@@ -225,6 +225,11 @@ class Atoms(ASEAtoms):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
+        
+    def __getstate__(self):
+        # Only necessary to support pickling in python <3.11
+        # https://docs.python.org/release/3.11.2/library/pickle.html#object.__getstate__
+        return self.__dict__
 
     @property
     def velocities(self):
