@@ -15,6 +15,7 @@ from pyiron_atomistics.lammps.output import to_amat
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 import ase.units as units
 from pyiron_base._tests import TestWithCleanProject
+import unittest
 
 
 class TestLammps(TestWithCleanProject):
@@ -1004,3 +1005,7 @@ def collect_dump_file_old(job, file_name="dump.out", cwd=None):
         output[k] = uc.convert_array_to_pyiron_units(array=v, label=k)
 
     return output
+
+
+if __name__ == "__main__":
+    unittest.main()

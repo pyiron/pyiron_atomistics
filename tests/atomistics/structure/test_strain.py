@@ -1,20 +1,21 @@
 # coding: utf-8
 import unittest
 import numpy as np
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from pyiron_atomistics.atomistics.structure.strain import Strain
+from ase.build import bulk
+from structuretoolkit.analyse.strain import Strain
+from pyiron_atomistics import ase_to_pyiron
 
 
 class TestAtoms(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        bulk = StructureFactory().ase.bulk('Fe', cubic=True)
-        cls.strain = Strain(bulk, bulk)
+        structure_bulk = ase_to_pyiron(bulk('Fe', cubic=True))
+        cls.strain = Strain(structure_bulk, structure_bulk)
 
     def test_number_of_neighbors(self):
         self.assertEqual(self.strain.num_neighbors, 8)
-        bulk = StructureFactory().ase.bulk('Al', cubic=True)
-        strain = Strain(bulk, bulk)
+        structure_bulk = ase_to_pyiron(bulk('Al', cubic=True))
+        strain = Strain(structure_bulk, structure_bulk)
         self.assertEqual(strain.num_neighbors, 12)
 
     def test_get_angle(self):

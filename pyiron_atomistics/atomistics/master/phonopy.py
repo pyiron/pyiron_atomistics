@@ -499,9 +499,9 @@ class PhonopyJob(AtomisticParallelMaster):
         self, axis=None, *args, label: Optional[str] = None, **kwargs
     ):
         """
-        Plot bandstructure calculated with :method:`.get_bandstructure`.
+        Plot bandstructure calculated with :meth:`.get_bandstructure`.
 
-        If :method:`.get_bandstructure` hasn't been called before, it is automatically called with the default arguments.
+        If :meth:`.get_bandstructure` hasn't been called before, it is automatically called with the default arguments.
 
         If `label` is passed a legend is added automatically.
 

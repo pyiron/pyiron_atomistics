@@ -12,26 +12,29 @@ import numpy as np
 import warnings
 import seekpath
 import importlib
+from structuretoolkit import (
+    get_symmetry,
+    get_neighbors,
+    get_neighborhood,
+    center_coordinates_in_unit_cell,
+    get_distances_array,
+    find_mic,
+)
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
 )
 from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
-from pyiron_atomistics.atomistics.structure.neighbors import Neighbors, Tree
 from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
-from pyiron_atomistics.atomistics.structure.symmetry import Symmetry
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseArray, SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
 )
-from pyiron_base import state, deprecate, deprecate_soon
-from pyiron_atomistics.atomistics.structure.pyironase import publication
+from pyiron_base import state, deprecate
 from pymatgen.io.ase import AseAtomsAdaptor
 from collections.abc import Sequence
-
-from scipy.spatial import cKDTree, Voronoi
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
 __copyright__ = (
@@ -249,21 +252,9 @@ class Atoms(ASEAtoms):
 
     @spins.setter
     def spins(self, val):
+        self.set_array("initial_magmoms", None)
         if val is not None:
-            val = np.asarray(val)
-            if self.has("initial_magmoms"):
-                try:
-                    self.arrays["initial_magmoms"][:] = val
-                except ValueError as err:
-                    if len(self.arrays["initial_magmoms"]) == len(val):
-                        self.set_array("initial_magmoms", None)
-                        self.arrays["initial_magmoms"] = val
-                    else:
-                        raise err
-            else:
-                self.new_array("initial_magmoms", val)
-        else:
-            self.set_array("initial_magmoms", None)
+            self.set_array("initial_magmoms", np.asarray(val))
 
     @property
     def visualize(self):
@@ -406,7 +397,7 @@ class Atoms(ASEAtoms):
 
         self._high_symmetry_path.update(path)
 
-    def add_tag(self, *args, **qwargs):
+    def add_tag(self, **qwargs):
         """
         Add tags to the atoms object.
 
@@ -417,7 +408,7 @@ class Atoms(ASEAtoms):
             >>> self.add_tag(selective_dynamics=[False, False, False])
 
         """
-        self._tag_list.add_tag(*args, **qwargs)
+        self._tag_list.add_tag(**qwargs)
 
     # @staticmethod
     def numbers_to_elements(self, numbers):
@@ -546,13 +537,12 @@ class Atoms(ASEAtoms):
                 position_tag = "positions"
                 if position_tag not in hdf_atoms.list_nodes():
                     position_tag = "coordinates"
-                if "is_absolute" in hdf_atoms.list_nodes():
-                    if not tr_dict[hdf_atoms["is_absolute"]]:
-                        self.set_scaled_positions(hdf_atoms[position_tag])
-                    else:
-                        self.arrays["positions"] = hdf_atoms[position_tag]
-                else:
-                    self.arrays["positions"] = hdf_atoms[position_tag]
+                self.arrays["positions"] = hdf_atoms[position_tag]
+                if (
+                    "is_absolute" in hdf_atoms.list_nodes()
+                    and not tr_dict[hdf_atoms["is_absolute"]]
+                ):
+                    self.set_scaled_positions(self.arrays["positions"])
 
                 self.arrays["numbers"] = self.get_atomic_numbers()
 
@@ -1020,11 +1010,7 @@ class Atoms(ASEAtoms):
         Returns:
             :class:`pyiron_atomistics.atomistics.structure.atoms.Atoms`: reference to this structure
         """
-        if any(self.pbc):
-            self.set_scaled_positions(
-                np.mod(self.get_scaled_positions(wrap=False) + eps, 1) - eps + origin
-            )
-        return self
+        return center_coordinates_in_unit_cell(structure=self, origin=origin, eps=eps)
 
     def create_line_mode_structure(
         self,
@@ -1076,17 +1062,6 @@ class Atoms(ASEAtoms):
         struc_new._set_high_symmetry_path({"full": sp_dict["path"]})
 
         return struc_new
-
-    def repeat(self, rep):
-        """Create new repeated atoms object.
-
-        The *rep* argument should be a sequence of three positive
-        integers like *(2,3,1)* or a single integer (*r*) equivalent
-        to *(r,r,r)*."""
-
-        atoms = self.copy()
-        atoms *= rep
-        return atoms
 
     def set_repeat(self, vec):
         self *= vec
@@ -1410,22 +1385,20 @@ class Atoms(ASEAtoms):
 
         Returns:
 
-            pyiron.atomistics.structure.atoms.Neighbors: Neighbors instances with the neighbor
+            structuretoolkit.analyse.neighbors.Neighbors: Neighbors instances with the neighbor
                 indices, distances and vectors
 
         """
-        neigh = self._get_neighbors(
+        return get_neighbors(
+            structure=self,
             num_neighbors=num_neighbors,
             tolerance=tolerance,
             id_list=id_list,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
+            mode=mode,
             norm_order=norm_order,
         )
-        neigh._set_mode(mode)
-        if allow_ragged is not None:
-            neigh.allow_ragged = allow_ragged
-        return neigh
 
     @deprecate(allow_ragged="use `mode='ragged'` instead.")
     @deprecate("Use get_neighbors", version="1.0.0")
@@ -1452,54 +1425,6 @@ class Atoms(ASEAtoms):
         )
 
     get_neighbors_by_distance.__doc__ = get_neighbors.__doc__
-
-    def _get_neighbors(
-        self,
-        num_neighbors=12,
-        tolerance=2,
-        id_list=None,
-        cutoff_radius=np.inf,
-        width_buffer=1.2,
-        get_tree=False,
-        norm_order=2,
-    ):
-        if num_neighbors is not None and num_neighbors <= 0:
-            raise ValueError("invalid number of neighbors")
-        if width_buffer < 0:
-            raise ValueError("width_buffer must be a positive float")
-        if get_tree:
-            neigh = Tree(ref_structure=self)
-        else:
-            neigh = Neighbors(ref_structure=self, tolerance=tolerance)
-        neigh._norm_order = norm_order
-        width = neigh._estimate_width(
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
-        )
-        extended_positions, neigh._wrapped_indices = self.get_extended_positions(
-            width, return_indices=True, norm_order=norm_order
-        )
-        neigh._extended_positions = extended_positions
-        neigh._tree = cKDTree(extended_positions)
-        if get_tree:
-            return neigh
-        positions = self.positions
-        if id_list is not None:
-            positions = positions[np.array(id_list)]
-        neigh._get_neighborhood(
-            positions=positions,
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            exclude_self=True,
-            width_buffer=width_buffer,
-        )
-        if neigh._check_width(width=width, pbc=self.pbc):
-            warnings.warn(
-                "width_buffer may have been too small - "
-                "most likely not all neighbors properly assigned"
-            )
-        return neigh
 
     def get_neighborhood(
         self,
@@ -1530,19 +1455,14 @@ class Atoms(ASEAtoms):
                 indices, distances and vectors
 
         """
-
-        neigh = self._get_neighbors(
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
-            get_tree=True,
-            norm_order=norm_order,
-        )
-        neigh._set_mode(mode)
-        return neigh._get_neighborhood(
+        return get_neighborhood(
+            structure=self,
             positions=positions,
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
+            width_buffer=width_buffer,
+            mode=mode,
+            norm_order=norm_order,
         )
 
     @deprecate(
@@ -1552,12 +1472,26 @@ class Atoms(ASEAtoms):
     def find_neighbors_by_vector(
         self, vector, return_deviation=False, num_neighbors=96
     ):
+        """
+        Args:
+            vector (list/np.ndarray): vector by which positions are translated (and neighbors are searched)
+            return_deviation (bool): whether to return distance between the expect positions and real positions
+
+        Returns:
+            np.ndarray: list of id's for the specified translation
+
+        Example:
+            a_0 = 2.832
+            structure = pr.create_structure('Fe', 'bcc', a_0)
+            id_list = structure.find_neighbors_by_vector([0, 0, a_0])
+            # In this example, you get a list of neighbor atom id's at z+=a_0 for each atom.
+            # This is particularly powerful for SSA when the magnetic structure has to be translated
+            # in each direction.
+        """
         neighbors = self.get_neighbors(num_neighbors=num_neighbors)
         return neighbors.find_neighbors_by_vector(
             vector=vector, return_deviation=return_deviation
         )
-
-    find_neighbors_by_vector.__doc__ = Neighbors.find_neighbors_by_vector.__doc__
 
     @deprecate(
         "Use neigh.get_shell_matrix() instead (after calling neigh = structure.get_neighbors())",
@@ -1572,6 +1506,26 @@ class Atoms(ASEAtoms):
         cluster_by_distances=False,
         cluster_by_vecs=False,
     ):
+        """
+        Shell matrices for pairwise interaction. Note: The matrices are always symmetric, meaning if you
+        use them as bilinear operators, you have to divide the results by 2.
+
+        Args:
+            chemical_pair (list): pair of chemical symbols (e.g. ['Fe', 'Ni'])
+
+        Returns:
+            list of sparse matrices for different shells
+
+
+        Example:
+            from pyiron_atomistics import Project
+            structure = Project('.').create_structure('Fe', 'bcc', 2.83).repeat(2)
+            J = -0.1 # Ising parameter
+            magmoms = 2*np.random.random((len(structure)), 3)-1 # Random magnetic moments between -1 and 1
+            neigh = structure.get_neighbors(num_neighbors=8) # Iron first shell
+            shell_matrices = neigh.get_shell_matrix()
+            print('Energy =', 0.5*J*magmoms.dot(shell_matrices[0].dot(matmoms)))
+        """
         neigh_list = self.get_neighbors(
             num_neighbors=num_neighbors, id_list=id_list, tolerance=tolerance
         )
@@ -1580,8 +1534,6 @@ class Atoms(ASEAtoms):
             cluster_by_distances=cluster_by_distances,
             cluster_by_vecs=cluster_by_vecs,
         )
-
-    get_shell_matrix.__doc__ = Neighbors.get_shell_matrix.__doc__
 
     def occupy_lattice(self, **qwargs):
         """
@@ -1681,8 +1633,8 @@ class Atoms(ASEAtoms):
 
 
         """
-        return Symmetry(
-            self,
+        return get_symmetry(
+            structure=self,
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
@@ -1930,13 +1882,7 @@ class Atoms(ASEAtoms):
 
         Returns: numpy.ndarray of the same shape as input with mic
         """
-        if any(self.pbc):
-            v = np.einsum("ji,...j->...i", np.linalg.inv(self.cell), v)
-            v[..., self.pbc] -= np.rint(v)[..., self.pbc]
-            v = np.einsum("ji,...j->...i", self.cell, v)
-        if vectors:
-            return np.asarray(v)
-        return np.linalg.norm(v, axis=-1)
+        return find_mic(structure=self, v=v, vectors=vectors)
 
     def get_distance(self, a0, a1, mic=True, vector=False):
         """
@@ -1995,25 +1941,9 @@ class Atoms(ASEAtoms):
             numpy.ndarray: NxN if vector=False and NxNx3 if vector=True
 
         """
-        if p1 is None and p2 is not None:
-            p1 = p2
-            p2 = None
-        if p1 is None:
-            p1 = self.positions
-        if p2 is None:
-            p2 = self.positions
-        p1 = np.asarray(p1)
-        p2 = np.asarray(p2)
-        diff_relative = (
-            p2.reshape(-1, 3)[np.newaxis, :, :] - p1.reshape(-1, 3)[:, np.newaxis, :]
+        return get_distances_array(
+            structure=self, p1=p1, p2=p2, mic=mic, vectors=vectors
         )
-        diff_relative = diff_relative.reshape(p1.shape[:-1] + p2.shape[:-1] + (3,))
-        if not mic:
-            if vectors:
-                return diff_relative
-            else:
-                return np.linalg.norm(diff_relative, axis=-1)
-        return self.find_mic(diff_relative, vectors=vectors)
 
     def append(self, atom):
         if isinstance(atom, ASEAtom):
@@ -2335,8 +2265,6 @@ class Atoms(ASEAtoms):
             raise NotImplementedError()
         # For ASE compatibility
         self.numbers = self.get_atomic_numbers()
-
-    __mul__ = repeat
 
     def __imul__(self, vec):
         if isinstance(vec, (int, np.integer)):

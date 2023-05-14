@@ -22,20 +22,18 @@ class TestAtoms(unittest.TestCase):
         struct = CrystalStructure(elements='Al', lattice_constants=4, bravais_basis='fcc').repeat(10)
         del struct[0]
         neigh = struct.get_neighbors_by_distance(cutoff_radius=3)
-        self.assertTrue(neigh.allow_ragged)
+        self.assertTrue(neigh._mode["ragged"])
         self.assertTrue(isinstance(neigh.indices, list))
         indices = neigh.indices.copy()
-        with self.assertRaises(ValueError):
-            neigh.allow_ragged = 'yes'
-        neigh.allow_ragged = False
+        neigh._set_mode(neigh._allow_ragged_to_mode(False))
         self.assertTrue(isinstance(neigh.indices, np.ndarray))
         self.assertGreater(len(neigh.indices[0]), len(indices[0]))
         with self.assertRaises(IndexError):
             struct.positions[neigh.indices] = struct.positions[neigh.indices]
-        neigh.allow_ragged = True
+        neigh._set_mode(neigh._allow_ragged_to_mode(True))
         self.assertTrue(np.array_equal(neigh.indices[0], indices[0]))
         neigh = struct.get_neighbors(cutoff_radius=3, num_neighbors=None)
-        self.assertFalse(neigh.allow_ragged)
+        self.assertFalse(neigh._mode["ragged"])
         self.assertTrue(isinstance(neigh.indices, np.ndarray))
 
     def test_getter_and_ragged(self):
@@ -216,7 +214,7 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(
             np.sum(neigh.get_global_shells(cluster_by_distances=True, cluster_by_vecs=True)==-1), 12
         )
-        neigh.allow_ragged = True
+        neigh._set_mode(neigh._allow_ragged_to_mode(True))
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_global_shells()]), 12)
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_global_shells(cluster_by_distances=True)]), 12)
         self.assertEqual(np.sum([len(s)==11 for s in neigh.get_global_shells(cluster_by_vecs=True)]), 12)

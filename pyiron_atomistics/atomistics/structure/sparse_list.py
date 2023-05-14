@@ -563,24 +563,16 @@ class SparseArray(object):
         if isinstance(other, Integral):
             return self * other
 
-    def add_tag(self, *args, **qwargs):
-        for key in args:
-            self._lists[key] = SparseList({}, length=len(self))
-
+    def add_tag(self, **qwargs):
         for key, default in qwargs.items():
             self._lists[key] = SparseList({}, default=default, length=len(self))
 
-    def remove_tag(self, *args, **qwargs):
+    def remove_tag(self, key):
         """
+        Remove tags to the atoms object.
 
         Args:
-            *args:
-            **qwargs:
-
-        Returns:
+            tag (str): tag to remove
 
         """
-        for key in args:
-            del self._lists[key]
-        for key, default in qwargs.items():
-            del self._lists[key]
+        del self._lists[key]

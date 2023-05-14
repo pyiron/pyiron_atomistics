@@ -273,8 +273,7 @@ class TestAtoms(unittest.TestCase):
             scaled_positions=[[0, 0, 0], [0.25, 0.25, 0.25]],
             cell=np.identity(3),
         )
-        self.Fe_bcc.add_tag("group")
-        self.Fe_bcc.group[:] = 0
+        self.Fe_bcc.add_tag(group=0)
 
     def test_convert_formula(self):
         self.assertEqual(self.CO2.convert_formula("C"), ["C"])
