@@ -11,7 +11,7 @@ from pyiron_atomistics.lammps.base import LammpsBase
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
-from pyiron_atomistics.lammps.wrapper import PyironLammpsLibrary
+from pyiron_lammps.wrapper import PyironLammpsLibrary
 from pyiron_atomistics.lammps.units import UnitConverter
 
 __author__ = "Osamu Waseda, Jan Janssen"

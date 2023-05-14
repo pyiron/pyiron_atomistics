@@ -54,6 +54,7 @@ setup(
         'phonopy==2.17.1',
         'pint==0.20.1',
         'pyiron_base==0.5.33',
+        'pyiron_lammps==0.2.0'
         'pymatgen==2022.11.7',
         'scipy==1.10.1',
         'seekpath==2.0.1',

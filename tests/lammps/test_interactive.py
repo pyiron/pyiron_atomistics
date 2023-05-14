@@ -8,7 +8,7 @@ import os
 from pyiron_base import Project, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
-from pyiron_atomistics.lammps.wrapper import PyironLammpsLibrary, cell_is_skewed
+from pyiron_lammps.wrapper import PyironLammpsLibrary
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 
 
