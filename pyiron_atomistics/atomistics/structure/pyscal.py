@@ -6,7 +6,6 @@ import numpy as np
 import structuretoolkit as stk
 from pyiron_base import state
 import pyiron_atomistics.atomistics.structure.atoms
-import pyscal.core as pc
 from pyiron_base import Deprecator
 
 deprecate = Deprecator()
@@ -52,7 +51,7 @@ def get_steinhardt_parameter_structure(
     if clustering == False:
         n_clusters = None
     state.publications.add(publication())
-    return stk.get_steinhardt_parameter_structure(
+    return stk.analyse.get_steinhardt_parameters(
         structure=structure,
         neighbor_method=neighbor_method,
         cutoff=cutoff,
@@ -74,7 +73,7 @@ def analyse_centro_symmetry(structure, num_neighbors=12):
         csm (list) : list of centrosymmetry parameter
     """
     state.publications.add(publication())
-    return stk.analyse_centro_symmetry(structure=structure, num_neighbors=num_neighbors)
+    return stk.analyse.get_centro_symmetry_descriptors(structure=structure, num_neighbors=num_neighbors)
 
 
 def analyse_diamond_structure(structure, mode="total", ovito_compatibility=False):
@@ -95,7 +94,7 @@ def analyse_diamond_structure(structure, mode="total", ovito_compatibility=False
         (depends on `mode`)
     """
     state.publications.add(publication())
-    return stk.analyse_diamond_structure(
+    return stk.analyse.get_diamond_structure_descriptors(
         structure=structure, mode=mode, ovito_compatibility=ovito_compatibility
     )
 
@@ -118,7 +117,7 @@ def analyse_cna_adaptive(structure, mode="total", ovito_compatibility=False):
         (depends on `mode`)
     """
     state.publications.add(publication())
-    return stk.analyse_cna_adaptive(
+    return stk.analyse.get_adaptive_cna_descriptors(
         structure=structure, mode=mode, ovito_compatibility=ovito_compatibility
     )
 
@@ -131,7 +130,7 @@ def analyse_voronoi_volume(structure):
         structure : (pyiron_atomistics.structure.atoms.Atoms): The structure to analyze.
     """
     state.publications.add(publication())
-    return stk.analyse_voronoi_volume(structure=structure)
+    return stk.analyse.get_voronoi_volumes(structure=structure)
 
 
 def pyiron_to_pyscal_system(structure):
@@ -146,12 +145,7 @@ def pyiron_to_pyscal_system(structure):
         Pyscal system: See the pyscal documentation.
     """
     state.publications.add(publication())
-    sys = pc.System()
-    sys.read_inputfile(
-        pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(structure),
-        format="ase",
-    )
-    return sys
+    return stk.common.ase_to_pyscal(pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(structure))
 
 
 def analyse_find_solids(
@@ -186,8 +180,8 @@ def analyse_find_solids(
         pyscal system: pyscal system when return_sys=True
     """
     state.publications.add(publication())
-    return stk.analyse_find_solids(
-        atoms=structure,
+    return stk.analyse.find_solids(
+        structure=structure,
         neighbor_method=neighbor_method,
         cutoff=cutoff,
         bonds=bonds,

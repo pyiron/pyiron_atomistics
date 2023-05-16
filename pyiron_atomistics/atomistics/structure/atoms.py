@@ -12,14 +12,14 @@ import numpy as np
 import warnings
 import seekpath
 import importlib
-from structuretoolkit import (
+from structuretoolkit.analyse import (
     get_symmetry,
     get_neighbors,
     get_neighborhood,
-    center_coordinates_in_unit_cell,
     get_distances_array,
     find_mic,
 )
+from structuretoolkit.common import center_coordinates_in_unit_cell
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
