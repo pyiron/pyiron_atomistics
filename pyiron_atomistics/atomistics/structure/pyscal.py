@@ -73,7 +73,9 @@ def analyse_centro_symmetry(structure, num_neighbors=12):
         csm (list) : list of centrosymmetry parameter
     """
     state.publications.add(publication())
-    return stk.analyse.get_centro_symmetry_descriptors(structure=structure, num_neighbors=num_neighbors)
+    return stk.analyse.get_centro_symmetry_descriptors(
+        structure=structure, num_neighbors=num_neighbors
+    )
 
 
 def analyse_diamond_structure(structure, mode="total", ovito_compatibility=False):
@@ -145,7 +147,9 @@ def pyiron_to_pyscal_system(structure):
         Pyscal system: See the pyscal documentation.
     """
     state.publications.add(publication())
-    return stk.common.ase_to_pyscal(pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(structure))
+    return stk.common.ase_to_pyscal(
+        pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(structure)
+    )
 
 
 def analyse_find_solids(
