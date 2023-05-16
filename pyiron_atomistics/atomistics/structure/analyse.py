@@ -11,14 +11,14 @@ from pyiron_atomistics.atomistics.structure.pyscal import (
     analyse_voronoi_volume,
     analyse_find_solids,
 )
-from structuretoolkit import (
+from structuretoolkit.analyse import (
     get_strain,
     get_interstitials,
     get_layers,
     get_voronoi_vertices,
     get_voronoi_neighbors,
     get_delaunay_neighbors,
-    cluster_positions,
+    get_cluster_positions,
 )
 from pyiron_base import Deprecator
 
@@ -418,7 +418,7 @@ class Analyse:
             positions (numpy.ndarray): Mean positions
             label (numpy.ndarray): Labels of the positions (returned when `return_labels = True`)
         """
-        return cluster_positions(
+        return get_cluster_positions(
             structure=self._structure,
             positions=positions,
             eps=eps,
