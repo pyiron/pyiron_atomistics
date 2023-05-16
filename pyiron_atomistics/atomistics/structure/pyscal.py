@@ -187,7 +187,7 @@ def analyse_find_solids(
     """
     state.publications.add(publication())
     return stk.analyse_find_solids(
-        atoms=structure,
+        structure=structure,
         neighbor_method=neighbor_method,
         cutoff=cutoff,
         bonds=bonds,
