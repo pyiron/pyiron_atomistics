@@ -24,51 +24,43 @@ create_ase_bulk = _StructureFactory().ase.bulk
 create_structure = _StructureFactory.crystal
 
 # Make classes available for new pyiron version
-JOB_CLASS_DICT["ART"] = "pyiron_atomistics.interactive.activation_relaxation_technique"
-JOB_CLASS_DICT["AtomisticExampleJob"] = "pyiron_atomistics.testing.randomatomistic"
-JOB_CLASS_DICT["Calphy"] = "pyiron_atomistics.calphy.job"
-JOB_CLASS_DICT[
-    "ConvEncutParallel"
-] = "pyiron_atomistics.dft.master.convergence_encut_parallel"
-JOB_CLASS_DICT[
-    "ConvEncutSerial"
-] = "pyiron_atomistics.dft.master.convergence_encut_serial"
-JOB_CLASS_DICT[
-    "ConvergenceVolume"
-] = "pyiron_atomistics.atomistics.master.convergence_volume"
-JOB_CLASS_DICT[
-    "ConvKpointParallel"
-] = "pyiron_atomistics.dft.master.convergence_kpoint_parallel"
-JOB_CLASS_DICT["ElasticTensor"] = "pyiron_atomistics.atomistics.master.elastic"
-JOB_CLASS_DICT["ExampleJob"] = "pyiron_atomistics.testing.randomatomistic"
-JOB_CLASS_DICT["Gaussian"] = "pyiron_atomistics.gaussian.gaussian"
-JOB_CLASS_DICT["Gpaw"] = "pyiron_atomistics.gpaw.gpaw"
-JOB_CLASS_DICT["HessianJob"] = "pyiron_atomistics.thermodynamics.hessian"
-JOB_CLASS_DICT["Lammps"] = "pyiron_atomistics.lammps.lammps"
-JOB_CLASS_DICT["MapMaster"] = "pyiron_atomistics.atomistics.master.parallel"
-JOB_CLASS_DICT["Murnaghan"] = "pyiron_atomistics.atomistics.master.murnaghan"
-JOB_CLASS_DICT["MurnaghanDFT"] = "pyiron_atomistics.dft.master.murnaghan_dft"
-JOB_CLASS_DICT["PhonopyJob"] = "pyiron_atomistics.atomistics.master.phonopy"
-JOB_CLASS_DICT["QuasiHarmonicJob"] = "pyiron_atomistics.atomistics.master.quasi"
-JOB_CLASS_DICT["QuasiNewton"] = "pyiron_atomistics.interactive.quasi_newton"
-JOB_CLASS_DICT["ScipyMinimizer"] = "pyiron_atomistics.interactive.scipy_minimizer"
-JOB_CLASS_DICT["SerialMaster"] = "pyiron_atomistics.atomistics.master.serial"
-JOB_CLASS_DICT["Sphinx"] = "pyiron_atomistics.sphinx.sphinx"
-JOB_CLASS_DICT[
-    "StructureContainer"
-] = "pyiron_atomistics.atomistics.job.structurecontainer"
-JOB_CLASS_DICT["StructureListMaster"] = "pyiron_atomistics.atomistics.master.structure"
-JOB_CLASS_DICT["SQSJob"] = "pyiron_atomistics.atomistics.job.sqs"
-JOB_CLASS_DICT["SQSMaster"] = "pyiron_atomistics.atomistics.master.sqsmaster"
-JOB_CLASS_DICT["SxDynMat"] = "pyiron_atomistics.thermodynamics.sxphonons"
-JOB_CLASS_DICT["SxExtOptInteractive"] = "pyiron_atomistics.interactive.sxextoptint"
-JOB_CLASS_DICT["SxHarmPotTst"] = "pyiron_atomistics.thermodynamics.sxphonons"
-JOB_CLASS_DICT["SxPhonons"] = "pyiron_atomistics.thermodynamics.sxphonons"
-JOB_CLASS_DICT["SxUniqDispl"] = "pyiron_atomistics.thermodynamics.sxphonons"
-JOB_CLASS_DICT["TableJob"] = "pyiron_atomistics.table.datamining"
-JOB_CLASS_DICT["Vasp"] = "pyiron_atomistics.vasp.vasp"
-JOB_CLASS_DICT["VaspMetadyn"] = "pyiron_atomistics.vasp.metadyn"
-JOB_CLASS_DICT["VaspSol"] = "pyiron_atomistics.vasp.vaspsol"
+ATOMISTIC_JOB_CLASS_DICT = {
+    "ART": "pyiron_atomistics.interactive.activation_relaxation_technique",
+    "AtomisticExampleJob": "pyiron_atomistics.testing.randomatomistic",
+    "Calphy": "pyiron_atomistics.calphy.job",
+    "ConvEncutParallel": "pyiron_atomistics.dft.master.convergence_encut_parallel",
+    "ConvEncutSerial": "pyiron_atomistics.dft.master.convergence_encut_serial",
+    "ConvergenceVolume": "pyiron_atomistics.atomistics.master.convergence_volume",
+    "ConvKpointParallel": "pyiron_atomistics.dft.master.convergence_kpoint_parallel",
+    "ElasticTensor": "pyiron_atomistics.atomistics.master.elastic",
+    "ExampleJob": "pyiron_atomistics.testing.randomatomistic",
+    "Gpaw": "pyiron_atomistics.gpaw.gpaw",
+    "HessianJob": "pyiron_atomistics.thermodynamics.hessian",
+    "Lammps": "pyiron_atomistics.lammps.lammps",
+    "MapMaster": "pyiron_atomistics.atomistics.master.parallel",
+    "Murnaghan": "pyiron_atomistics.atomistics.master.murnaghan",
+    "MurnaghanDFT": "pyiron_atomistics.dft.master.murnaghan_dft",
+    "PhonopyJob": "pyiron_atomistics.atomistics.master.phonopy",
+    "QuasiHarmonicJob": "pyiron_atomistics.atomistics.master.quasi",
+    "QuasiNewton": "pyiron_atomistics.interactive.quasi_newton",
+    "ScipyMinimizer": "pyiron_atomistics.interactive.scipy_minimizer",
+    "SerialMaster": "pyiron_atomistics.atomistics.master.serial",
+    "Sphinx": "pyiron_atomistics.sphinx.sphinx",
+    "StructureContainer": "pyiron_atomistics.atomistics.job.structurecontainer",
+    "StructureListMaster": "pyiron_atomistics.atomistics.master.structure",
+    "SQSJob": "pyiron_atomistics.atomistics.job.sqs",
+    "SQSMaster": "pyiron_atomistics.atomistics.master.sqsmaster",
+    "SxDynMat": "pyiron_atomistics.thermodynamics.sxphonons",
+    "SxExtOptInteractive": "pyiron_atomistics.interactive.sxextoptint",
+    "SxHarmPotTst": "pyiron_atomistics.thermodynamics.sxphonons",
+    "SxPhonons": "pyiron_atomistics.thermodynamics.sxphonons",
+    "SxUniqDispl": "pyiron_atomistics.thermodynamics.sxphonons",
+    "TableJob": "pyiron_atomistics.table.datamining",
+    "Vasp": "pyiron_atomistics.vasp.vasp",
+    "VaspMetadyn": "pyiron_atomistics.vasp.metadyn",
+    "VaspSol": "pyiron_atomistics.vasp.vaspsol",
+}
+JOB_CLASS_DICT.update(ATOMISTIC_JOB_CLASS_DICT)
 
 from ._version import get_versions
 
