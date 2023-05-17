@@ -2076,7 +2076,7 @@ class Atoms(ASEAtoms):
 
     def __getattr__(self, item):
         try:
-            return self.arrays[item]
+            return self.arrays[item].tolist()
         except KeyError:
             return object.__getattribute__(self, item)
 
