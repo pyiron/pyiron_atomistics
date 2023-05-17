@@ -282,6 +282,16 @@ class StructurePlots:
         self._store = store
         self._neigh = None
 
+    def atoms(self):
+        """
+        Plot a histogram of the number of atoms in each structure.
+        """
+        length = store["length"]
+        lo = length.min()
+        hi = length.max()
+        # make the bins fall in between whole numbers and include hi
+        plt.hist(length, bins=np.arange(lo, hi + 2) - 0.5)
+
     def cell(self, angle_in_degrees=True):
         """
         Plot histograms of cell parameters.
