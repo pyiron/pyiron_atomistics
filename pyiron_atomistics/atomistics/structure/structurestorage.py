@@ -509,21 +509,42 @@ class StructurePlots:
         plt.legend(title="Shell")
         plt.title("Neighbor Coordination in Shells")
 
-    def distances(self, bins=50, num_neighbors=None):
+    def distances(self,
+                  bins: int = 50,
+                  num_neighbors: int = None,
+                  normalize: bool = False,
+                  density: bool = False
+    ):
         """
         Plot a histogram of the neighbor distances.
+
+        Setting `normalize` and `density` plots the radial distribution
+        function.
 
         Args:
             bins (int): number of bins
             num_neighbors (int): maximum number of neighbors to calculate, when 'shells' or 'distances' are not defined in storage
                                  default is the value from the previous call or 36
+            normalize (bool): normalize the distribution by the surface area of
+                              the radial bin, 4pi r^2
+            density (bool): normalize the bin count by bin width
         """
         neigh = self._calc_neighbors(num_neighbors=num_neighbors)
-        distances = neigh["distances"]
+        distances = neigh["distances"].flatten()
 
-        plt.hist(distances.flatten(), bins=bins)
-        plt.xlabel(r"Distance [$\AA$]")
-        plt.ylabel("Neighbor count")
+        if normalize:
+            plt.hist(distances, bins=bins, density=density, weights=1/(4*np.pi*distances**2))
+        else:
+            plt.hist(distances, bins=bins, density=density)
+        plt.xlabel(r"Distance [$\mathrm{\AA}$]")
+        if density:
+            if normalize:
+                units = '$\mathrm{\AA}^{-3}$'
+            else:
+                units = '$\mathrm{\AA}^{-1}$'
+            plt.ylabel(f"Neighbor density [{units}]")
+        else:
+            plt.ylabel("Neighbor count")
 
     def shell_distances(self, num_shells=4, num_neighbors=None):
         """
