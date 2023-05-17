@@ -24,7 +24,7 @@ create_ase_bulk = _StructureFactory().ase.bulk
 create_structure = _StructureFactory.crystal
 
 # Make classes available for new pyiron version
-ATOMISTIC_JOB_CLASS_DICT = {
+JOB_CLASS_DICT.update({
     "ART": "pyiron_atomistics.interactive.activation_relaxation_technique",
     "AtomisticExampleJob": "pyiron_atomistics.testing.randomatomistic",
     "Calphy": "pyiron_atomistics.calphy.job",
@@ -59,8 +59,7 @@ ATOMISTIC_JOB_CLASS_DICT = {
     "Vasp": "pyiron_atomistics.vasp.vasp",
     "VaspMetadyn": "pyiron_atomistics.vasp.metadyn",
     "VaspSol": "pyiron_atomistics.vasp.vaspsol",
-}
-JOB_CLASS_DICT.update(ATOMISTIC_JOB_CLASS_DICT)
+})
 
 from ._version import get_versions
 
