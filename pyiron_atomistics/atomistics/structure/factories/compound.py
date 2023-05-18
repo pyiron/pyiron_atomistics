@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from structuretoolkit import B2, C14, C15, C36, D03
+from structuretoolkit.build import B2, C14, C15, C36, D03
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 __author__ = "Liam Huber"

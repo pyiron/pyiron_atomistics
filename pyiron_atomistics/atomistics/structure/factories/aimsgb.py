@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from structuretoolkit import grainboundary_build, grainboundary_info
+from structuretoolkit.build import grainboundary, get_grainboundary_info
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 __author__ = "Ujjal Saikia"
@@ -39,7 +39,7 @@ class AimsgbFactory:
         To construct the grain boundary select a GB plane and sigma value from the list and pass it to the
         GBBuilder.gb_build() function along with the rotational axis and initial bulk structure.
         """
-        return grainboundary_info(axis=axis, max_sigma=max_sigma)
+        return get_grainboundary_info(axis=axis, max_sigma=max_sigma)
 
     @staticmethod
     def build(
@@ -79,7 +79,7 @@ class AimsgbFactory:
             :class:`.Atoms`: final grain boundary structure
         """
         return ase_to_pyiron(
-            grainboundary_build(
+            grainboundary(
                 axis=axis,
                 sigma=sigma,
                 plane=plane,

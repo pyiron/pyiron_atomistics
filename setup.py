@@ -47,18 +47,18 @@ setup(
         'h5py==3.8.0',
         'matplotlib==3.7.1',
         'mendeleev==0.13.1',
-        'mp-api==0.33.1',
+        'mp-api==0.33.2',
         'numpy==1.24.3',
         'pandas==2.0.1',
-        'phonopy==2.18.0',
+        'phonopy==2.19.0',
         'pint==0.21',
-        'pyiron_base==0.5.37',
-        'pymatgen==2023.3.23',
+        'pyiron_base==0.5.38',
+        'pymatgen==2023.5.10',
         'scipy==1.10.1',
         'seekpath==2.0.1',
         'scikit-learn==1.2.2',
         'spglib==2.0.2',
-        'structuretoolkit==0.0.2'
+        'structuretoolkit==0.0.3'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
