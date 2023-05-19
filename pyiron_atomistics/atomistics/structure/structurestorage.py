@@ -523,7 +523,6 @@ class StructurePlots:
                   bins: int = 50,
                   num_neighbors: int = None,
                   normalize: bool = False,
-                  density: bool = False
     ):
         """
         Plot a histogram of the neighbor distances.
@@ -537,7 +536,6 @@ class StructurePlots:
                                  default is the value from the previous call or 36
             normalize (bool): normalize the distribution by the surface area of
                               the radial bin, 4pi r^2
-            density (bool): normalize the bin count by bin width
         """
         neigh = self._calc_neighbors(num_neighbors=num_neighbors)
         distances = neigh["distances"].flatten()
@@ -547,12 +545,8 @@ class StructurePlots:
         else:
             plt.hist(distances, bins=bins, density=density)
         plt.xlabel(r"Distance [$\mathrm{\AA}$]")
-        if density:
-            if normalize:
-                units = '$\mathrm{\AA}^{-3}$'
-            else:
-                units = '$\mathrm{\AA}^{-1}$'
-            plt.ylabel(f"Neighbor density [{units}]")
+        if normalize:
+            plt.ylabel("Neighbor density [$\mathrm{\AA}^{-2}$]")
         else:
             plt.ylabel("Neighbor count")
 
