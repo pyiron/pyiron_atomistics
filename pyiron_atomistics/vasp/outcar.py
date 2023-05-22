@@ -661,19 +661,21 @@ class Outcar(object):
         Returns:
             numpy.ndarray: Steps during the simulation
         """
-        nblock_trigger = "NBLOCK ="
+        nblock_regex = re.compile(r"NBLOCK =\s+(\d+);")
         trigger = "FREE ENERGIE OF THE ION-ELECTRON SYSTEM (eV)"
         trigger_indices = list()
-        n_block = 1
+        nblock = None
         lines = _get_lines_from_file(filename=filename, lines=lines)
         for i, line in enumerate(lines):
             line = line.strip()
             if trigger in line:
                 trigger_indices.append(i)
-            if nblock_trigger in line:
+            if nblock is not None:
                 line = _clean_line(line)
-                n_block = int(line.split(nblock_trigger.split(";", maxsplit=1)[0])[-1])
-        return np.arange(0, len(trigger_indices) * n_block, n_block)
+                nblock = int(nblock_regex.findall(line)[0])
+        if nblock is None:
+            nblock = 1
+        return np.arange(0, len(trigger_indices) * nblock, nblock)
 
     def get_time(self, filename="OUTCAR", lines=None):
         """
