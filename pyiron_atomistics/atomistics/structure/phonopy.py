@@ -29,8 +29,8 @@ def analyse_phonopy_equivalent_atoms(atoms, symprec=1e-5, angle_tolerance=-1.0):
 
     """
     state.publications.add(publication())
-    return stk.analyse_phonopy_equivalent_atoms(
-        atoms=atoms, symprec=symprec, angle_tolerance=angle_tolerance
+    return stk.analyse.get_equivalent_atoms(
+        structure=atoms, symprec=symprec, angle_tolerance=angle_tolerance
     )
 
 

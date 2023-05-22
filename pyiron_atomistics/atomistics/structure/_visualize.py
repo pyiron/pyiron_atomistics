@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from structuretoolkit import plot3d
+from structuretoolkit.visualize import plot3d
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
 __copyright__ = (
