@@ -2075,13 +2075,10 @@ class Atoms(ASEAtoms):
         return new_array
 
     def __getattr__(self, item):
-        if item in self.arrays.keys():
-            warnings.warn(
-                "Using tags via attribute is deprecated. Use"
-                f" arrays[{item}] instead"
-            )
+        try:
             return self.arrays[item]
-        return object.__getattribute__(self, item)
+        except KeyError:
+            return object.__getattribute__(self, item)
 
     def __dir__(self):
         new_dir = super().__dir__()
