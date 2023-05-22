@@ -663,19 +663,19 @@ class Outcar(object):
         """
         nblock_regex = re.compile(r"NBLOCK =\s+(\d+);")
         trigger = "FREE ENERGIE OF THE ION-ELECTRON SYSTEM (eV)"
-        trigger_indices = list()
+        steps = 0
         nblock = None
         lines = _get_lines_from_file(filename=filename, lines=lines)
         for i, line in enumerate(lines):
             line = line.strip()
             if trigger in line:
-                trigger_indices.append(i)
+                steps += 1
             if nblock is not None:
                 line = _clean_line(line)
                 nblock = int(nblock_regex.findall(line)[0])
         if nblock is None:
             nblock = 1
-        return np.arange(0, len(trigger_indices) * nblock, nblock)
+        return np.arange(0, steps * nblock, nblock)
 
     def get_time(self, filename="OUTCAR", lines=None):
         """
