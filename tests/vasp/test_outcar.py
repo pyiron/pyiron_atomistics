@@ -834,8 +834,8 @@ class TestOutcar(unittest.TestCase):
             self.assertIsInstance(output, np.ndarray, "steps has to be an array!")
             nblock, steps = naive_parse(filename)
             total = steps * nblock
-            self.assertEqual(
-                    (output == np.arange(0, total, nblock)).all(),
+            self.assertTrue(
+                    np.array_equal(output, np.arange(0, total, nblock)),
                     "Parsed output steps do not match numpy.arange(0, {total}, {nblock})!"
             )
 
