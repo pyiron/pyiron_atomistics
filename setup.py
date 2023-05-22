@@ -55,7 +55,7 @@ setup(
         'pyiron_base==0.5.38',
         'pymatgen==2023.5.10',
         'scipy==1.10.1',
-        'seekpath==2.0.1',
+        'seekpath==2.1.0',
         'scikit-learn==1.2.2',
         'spglib==2.0.2',
         'structuretoolkit==0.0.3'
