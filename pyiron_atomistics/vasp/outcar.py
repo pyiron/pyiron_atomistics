@@ -672,7 +672,7 @@ class Outcar(object):
                 trigger_indices.append(i)
             if nblock_trigger in line:
                 line = _clean_line(line)
-                n_block = int(line.split(nblock_trigger)[-1])
+                n_block = int(line.split(nblock_trigger.split(";", maxsplit=1)[0])[-1])
         return np.arange(0, len(trigger_indices) * n_block, n_block)
 
     def get_time(self, filename="OUTCAR", lines=None):
