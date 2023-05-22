@@ -1267,7 +1267,7 @@ class TestAtoms(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             basis.get_majority_species()
-            self.assertEqual(len(w), 1)
+            self.assertEqual(len(w), 5)
 
     def test_select_index(self):
         basis = Atoms(
@@ -1400,7 +1400,7 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(len(ase_basis), 3)
         self.assertIsInstance(ase_basis, ASEAtoms)
         self.assertNotIsInstance(ase_basis, Atoms)
-        self.assertEqual(len(w), 1)
+        self.assertEqual(len(w), 4)
         pyiron_basis += ase_basis[0]
         self.assertEqual(len(pyiron_basis), 3)
         pyiron_basis = Atoms(
@@ -1411,7 +1411,7 @@ class TestAtoms(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             larger_cell += pyiron_basis
-            self.assertEqual(len(w), 1)
+            self.assertEqual(len(w), 4)
         basis_1 = Atoms("O", scaled_positions=[[0.5, 0.5, 0.5]], cell=np.eye(3) * 10)
         basis_2 = Atoms(
             "O", scaled_positions=[[0.0, 0.5, 0.5]], cell=np.eye(3) * 10, pbc=True
@@ -1419,7 +1419,7 @@ class TestAtoms(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             basis_1 += basis_2
-            self.assertEqual(len(w), 1)
+            self.assertEqual(len(w), 4)
         a_0 = 2.86
         structure = self.struct_factory.crystal("Fe", "bcc", a_0)
         carbon = Atoms(symbols=["C"], positions=[[0, 0, 0.5 * a_0]])
@@ -1432,11 +1432,11 @@ class TestAtoms(unittest.TestCase):
         carbon = Atoms(symbols=["C"], positions=[[0, 0, 0.5 * a_0]], pbc=True)
         with warnings.catch_warnings(record=True) as w:
             structure.append(carbon)
-            self.assertEqual(len(w), 0)
+            self.assertEqual(len(w), 1)
             structure = self.struct_factory.crystal("Fe", "bcc", a_0)
             carbon.cell = np.random.rand(3)
             structure.append(carbon)
-            self.assertEqual(len(w), 1)
+            self.assertEqual(len(w), 2)
 
     def test__delitem__(self):
         cell = np.eye(3) * 10.0
