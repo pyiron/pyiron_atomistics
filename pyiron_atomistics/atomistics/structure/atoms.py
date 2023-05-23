@@ -2463,12 +2463,16 @@ class Atoms(ASEAtoms):
             ]
             if any(spin_lst):
                 if (
-                    isinstance(spin_lst, str)
-                    or (
-                        isinstance(spin_lst, (list, np.ndarray))
-                        and isinstance(spin_lst[0], str)
+                    (
+                        isinstance(spin_lst, str)
+                        or (
+                            isinstance(spin_lst, (list, np.ndarray))
+                            and isinstance(spin_lst[0], str)
+                        )
                     )
-                ) and list(set(spin_lst))[0] is not None and "[" in list(set(spin_lst))[0]:
+                    and list(set(spin_lst))[0] is not None
+                    and "[" in list(set(spin_lst))[0]
+                ):
                     return np.array(
                         [
                             [
