@@ -1155,6 +1155,7 @@ class TestAtoms(unittest.TestCase):
         o_up = pse.element("O_up")
         basis = Atoms([o_up], scaled_positions=[[0.27, 0.27, 0.27]], cell=cell)
         self.assertTrue(np.array_equal(basis.get_chemical_symbols(), ["O_up"]))
+        self.assertTrue(np.array_equal(basis.get_chemical_symbols(parent=True), ["O"]))
 
     def test_get_number_species_atoms(self):
         self.assertEqual(list(self.CO2.get_number_species_atoms().values()), [1, 2])
