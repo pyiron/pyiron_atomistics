@@ -779,15 +779,21 @@ class Atoms(ASEAtoms):
         el_lst = [el.AtomicNumber for el in self.species]
         return np.array([el_lst[el] for el in self.indices])
 
-    def get_chemical_symbols(self):
+    def get_chemical_symbols(self, parent=False):
         """
         Returns the chemical symbols for all the atoms in the structure
+
+        Args:
+            parent (bool): Whether to return the parent symbols
 
         Returns:
             numpy.ndarray: A list of chemical symbols
 
         """
-        el_lst = [el.Abbreviation for el in self.species]
+        if parent:
+            el_lst = [el.Parent for el in self.species]
+        else:
+            el_lst = [el.Abbreviation for el in self.species]
         return np.array([el_lst[el] for el in self.indices])
 
     def get_parent_symbols(self):
