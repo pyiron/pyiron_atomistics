@@ -566,6 +566,7 @@ class TestOutcar(unittest.TestCase):
             8: 0.0,
             9: 787952.0,
             10: 1036056.0,
+            11: 39113.0
         }
         for filename in self.file_list:
             self.assertEqual(
@@ -822,7 +823,7 @@ class TestOutcar(unittest.TestCase):
         def naive_parse(filename):
             with open(filename) as f:
                 nblock = 1
-                steps = 1
+                steps = 0
                 for l in f:
                     if "NBLOCK" in l:
                         nblock = int(l.split(";")[0].split("=")[1])
@@ -1173,7 +1174,7 @@ class TestOutcar(unittest.TestCase):
                 self.assertEqual(output_all.__str__(), output.__str__())
 
     def test_get_nelect(self):
-        n_elect_list = [40.0, 16.0, 16.0, 16.0, 16.0, 16.0, 224.0, 358.0, 8, 1]
+        n_elect_list = [40.0, 16.0, 16.0, 16.0, 16.0, 16.0, 224.0, 358.0, 8, 1, 324.0]
         for filename in self.file_list:
             i = int(filename.split("_")[-1]) - 1
             self.assertEqual(n_elect_list[i], self.outcar_parser.get_nelect(filename))

@@ -666,11 +666,11 @@ class Outcar(object):
         steps = 0
         nblock = None
         lines = _get_lines_from_file(filename=filename, lines=lines)
-        for i, line in enumerate(lines):
-            line = line.strip()
+        for line in lines:
             if trigger in line:
                 steps += 1
-            if nblock is not None:
+            if nblock is None and "NBLOCK" in line:
+                line = line.strip()
                 line = _clean_line(line)
                 nblock = int(nblock_regex.findall(line)[0])
         if nblock is None:
@@ -696,7 +696,7 @@ class Outcar(object):
             if potim_trigger in line:
                 line = line.strip()
                 line = _clean_line(line)
-                potim = float(line.split(potim_trigger)[0])
+                potim = float(line.split(potim_trigger)[1].strip().split()[0])
                 break
         return potim * self.get_steps(filename)
 
