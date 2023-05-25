@@ -571,3 +571,38 @@ class StructurePlots:
         sns.violinplot(y=d.shells, x=d.distance, scale="width", orient="h")
         plt.xlabel(r"Distance [$\AA$]")
         plt.ylabel("Shell")
+
+    def concentration(self, elements: List[str] = None, **kwargs) -> pd.DataFrame:
+        """
+        Plot histograms of the concentrations in each structure.
+
+        Args:
+            elements (list of str): elements to plot the histograms for; default is for all elements in the container
+            **kwargs: passed through to `seaborn.histplot`
+
+        Returns:
+            `pandas.DataFrame`: table of concentrations in each structure; column headers are the element names 
+        """
+        if elements is not None:
+            for elem in elements:
+                if elem not in self._store.get_elements():
+                    raise ValueError(f"Element {elem} not present in storage!")
+        else:
+            elements = self._store.get_elements()
+
+        df = pd.DataFrame([
+            {elem: sum(elem==sym)/len(sym) for elem in elements}    
+                    for sym in self._store.get_array_ragged("symbols")
+        ])
+
+        sns.histplot(
+            data=df.melt(
+                var_name="element",
+                value_name="concentration"
+            ),
+            x="concentration", hue="element",
+            multiple="dodge",
+            **kwargs
+        )
+
+        return df
