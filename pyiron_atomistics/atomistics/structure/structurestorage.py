@@ -286,7 +286,7 @@ class StructurePlots:
         """
         Plot a histogram of the number of atoms in each structure.
         """
-        length = store["length"]
+        length = self._store["length"]
         lo = length.min()
         hi = length.max()
         # make the bins fall in between whole numbers and include hi
