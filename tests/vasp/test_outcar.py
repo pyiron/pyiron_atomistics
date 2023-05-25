@@ -830,76 +830,36 @@ class TestOutcar(unittest.TestCase):
                 return steps, nblock
 
         for filename in self.file_list:
-            output = self.outcar_parser.get_steps(filename)
-            self.assertIsInstance(output, np.ndarray, "steps has to be an array!")
-            nblock, steps = naive_parse(filename)
-            total = steps * nblock
-            self.assertTrue(
-                    np.array_equal(output, np.arange(0, total, nblock)),
-                    "Parsed output steps do not match numpy.arange(0, {total}, {nblock})!"
-            )
+            with self.subTest(filename=filename):
+                output = self.outcar_parser.get_steps(filename)
+                self.assertIsInstance(output, np.ndarray, "steps has to be an array!")
+                steps, nblock = naive_parse(filename)
+                total = steps * nblock
+                self.assertEqual(
+                        output, np.arange(0, total, nblock),
+                        f"Parsed output steps do not match numpy.arange(0, {total}, {nblock})!"
+                )
 
 
     def test_get_time(self):
+        def naive_parse(filename):
+            with open(filename) as f:
+                for l in f:
+                    if "POTIM" in l:
+                        return float(
+                            l.split("=")[1].strip().split()[0]
+                        )
+                return 1.0
         for filename in self.file_list:
-            output = self.outcar_parser.get_time(filename)
-            self.assertIsInstance(output, np.ndarray)
-            if int(filename.split("/OUTCAR_")[-1]) in [1, 2, 3, 4, 5, 6]:
-                time = np.array(
-                    [
-                        0.0,
-                        0.02040816,
-                        0.04081633,
-                        0.06122449,
-                        0.08163265,
-                        0.10204082,
-                        0.12244898,
-                        0.14285714,
-                        0.16326531,
-                        0.18367347,
-                        0.20408163,
-                        0.2244898,
-                        0.24489796,
-                        0.26530612,
-                        0.28571429,
-                        0.30612245,
-                        0.32653061,
-                        0.34693878,
-                        0.36734694,
-                        0.3877551,
-                        0.40816327,
-                        0.42857143,
-                        0.44897959,
-                        0.46938776,
-                        0.48979592,
-                        0.51020408,
-                        0.53061224,
-                        0.55102041,
-                        0.57142857,
-                        0.59183673,
-                        0.6122449,
-                        0.63265306,
-                        0.65306122,
-                        0.67346939,
-                        0.69387755,
-                        0.71428571,
-                        0.73469388,
-                        0.75510204,
-                        0.7755102,
-                        0.79591837,
-                        0.81632653,
-                        0.83673469,
-                        0.85714286,
-                        0.87755102,
-                        0.89795918,
-                        0.91836735,
-                        0.93877551,
-                        0.95918367,
-                        0.97959184,
-                        1.0,
-                    ]
-                )
-                self.assertEqual(time.__str__(), output.__str__())
+            with self.subTest(filename=filename):
+                potim = naive_parse(filename)
+                time = self.outcar_parser.get_time(filename)
+                step = self.outcar_parser.get_steps(filename)
+                for t, s in zip(time, step):
+                    self.assertEqual(
+                        t, s * potim,
+                        f"Time {t} is not equal to steps times POTIM {potim * s}!"
+                    )
 
     def test_get_fermi_level(self):
         for filename in self.file_list:
