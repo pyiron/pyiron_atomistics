@@ -521,10 +521,11 @@ class StructurePlots:
         plt.legend(title="Shell")
         plt.title("Neighbor Coordination in Shells")
 
-    def distances(self,
-                  bins: int = 50,
-                  num_neighbors: int = None,
-                  normalize: bool = False,
+    def distances(
+        self,
+        bins: int = 50,
+        num_neighbors: int = None,
+        normalize: bool = False,
     ):
         """
         Plot a histogram of the neighbor distances.
@@ -543,7 +544,12 @@ class StructurePlots:
         distances = neigh["distances"].flatten()
 
         if normalize:
-            plt.hist(distances, bins=bins, density=density, weights=1/(4*np.pi*distances**2))
+            plt.hist(
+                distances,
+                bins=bins,
+                density=density,
+                weights=1 / (4 * np.pi * distances**2),
+            )
         else:
             plt.hist(distances, bins=bins, density=density)
         plt.xlabel(r"Distance [$\mathrm{\AA}$]")
@@ -583,7 +589,7 @@ class StructurePlots:
             **kwargs: passed through to `seaborn.histplot`
 
         Returns:
-            `pandas.DataFrame`: table of concentrations in each structure; column headers are the element names 
+            `pandas.DataFrame`: table of concentrations in each structure; column headers are the element names
         """
         if elements is not None:
             for elem in elements:
@@ -592,19 +598,19 @@ class StructurePlots:
         else:
             elements = self._store.get_elements()
 
-        df = pd.DataFrame([
-            {elem: sum(elem==sym)/len(sym) for elem in elements}    
-                    for sym in self._store.get_array_ragged("symbols")
-        ])
+        df = pd.DataFrame(
+            [
+                {elem: sum(elem == sym) / len(sym) for elem in elements}
+                for sym in self._store.get_array_ragged("symbols")
+            ]
+        )
 
         sns.histplot(
-            data=df.melt(
-                var_name="element",
-                value_name="concentration"
-            ),
-            x="concentration", hue="element",
+            data=df.melt(var_name="element", value_name="concentration"),
+            x="concentration",
+            hue="element",
             multiple="dodge",
-            **kwargs
+            **kwargs,
         )
 
         return df
