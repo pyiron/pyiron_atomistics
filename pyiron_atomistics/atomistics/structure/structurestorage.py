@@ -291,6 +291,8 @@ class StructurePlots:
         hi = length.max()
         # make the bins fall in between whole numbers and include hi
         plt.hist(length, bins=np.arange(lo, hi + 2) - 0.5)
+        plt.xlabel("#Atoms")
+        plt.ylabel("Count")
 
     def cell(self, angle_in_degrees=True):
         """
