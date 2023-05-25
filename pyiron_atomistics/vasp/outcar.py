@@ -690,15 +690,14 @@ class Outcar(object):
 
         """
         potim_trigger = "POTIM  ="
-        read_potim = True
         potim = 1.0
         lines = _get_lines_from_file(filename=filename, lines=lines)
         for i, line in enumerate(lines):
-            line = line.strip()
-            if read_potim is None:
-                if potim_trigger in line:
-                    line = _clean_line(line)
-                    potim = float(line.split(potim_trigger)[0])
+            if potim_trigger in line:
+                line = line.strip()
+                line = _clean_line(line)
+                potim = float(line.split(potim_trigger)[0])
+                break
         return potim * self.get_steps(filename)
 
     @staticmethod
