@@ -50,8 +50,6 @@ class AseJob(GenericInteractive):
         self.server.run_mode = pre_run_mode
 
     def run_if_interactive(self):
-        if self.structure.calc is None:
-            self.set_calculator()
         super(AseJob, self).run_if_interactive()
         self.interactive_collect()
 
@@ -68,6 +66,8 @@ class AseJob(GenericInteractive):
 
     def interactive_initialize_interface(self):
         self.status.running = True
+        if self.structure.calc is None:
+            self.set_calculator()
         self._structure.calc.set_label(self.working_directory + "/")
         self._interactive_library = True
 
