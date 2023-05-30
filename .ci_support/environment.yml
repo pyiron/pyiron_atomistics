@@ -11,7 +11,7 @@ dependencies:
 - mendeleev =0.13.1
 - mp-api =0.33.3
 - numpy =1.24.3
-- pandas =2.0.1
+- pandas =2.0.2
 - phonopy =2.19.1
 - pint =0.21
 - pyiron_base =0.5.39
