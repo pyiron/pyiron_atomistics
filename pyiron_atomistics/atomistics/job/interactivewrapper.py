@@ -40,13 +40,13 @@ class InteractiveWrapper(InteractiveWrapperBase):
 
     @deprecate("use get_structure() instead")
     def get_final_structure(self):
-        """
+        return self.get_structure()
 
-        Returns:
-
-        """
-        if self.ref_job:
-            return self._ref_job.get_structure(iteration_step=-1)
+    def get_structure(self, frame=-1, wrap_atoms=True):
+        if self.ref_job is not None:
+            return self._ref_job.get_structure(
+                frame=frame, wrap_atoms=wrap_atoms
+            )
         else:
             return None
 
