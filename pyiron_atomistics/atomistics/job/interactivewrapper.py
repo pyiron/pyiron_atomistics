@@ -44,9 +44,7 @@ class InteractiveWrapper(InteractiveWrapperBase):
 
     def get_structure(self, frame=-1, wrap_atoms=True):
         if self.ref_job is not None:
-            return self._ref_job.get_structure(
-                frame=frame, wrap_atoms=wrap_atoms
-            )
+            return self._ref_job.get_structure(frame=frame, wrap_atoms=wrap_atoms)
         else:
             return None
 
