@@ -1237,7 +1237,8 @@ class TestAtoms(unittest.TestCase):
             cell=2.6 * np.eye(3),
         )
         self.assertTrue(
-            np.array_equal(basis.get_initial_magnetic_moments(), [0.5] * 2)
+            np.array_equal(basis.get_initial_magnetic_moments(), [0.5] * 2),
+            msg=f"Expected basis.get_initial_magnetic_moments() to be equal to {[0.5] * 2} but got {basis.get_initial_magnetic_moments()}."
         )
 
     def test_occupy_lattice(self):
