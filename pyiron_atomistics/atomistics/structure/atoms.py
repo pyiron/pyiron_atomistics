@@ -2509,12 +2509,16 @@ class Atoms(ASEAtoms):
             ]
             if any(spin_lst):
                 if (
-                    isinstance(spin_lst, str)
-                    or (
-                        isinstance(spin_lst, (list, np.ndarray))
-                        and isinstance(spin_lst[0], str)
+                    (
+                        isinstance(spin_lst, str)
+                        or (
+                            isinstance(spin_lst, (list, np.ndarray))
+                            and isinstance(spin_lst[0], str)
+                        )
                     )
-                ) and "[" in list(set(spin_lst))[0]:
+                    and list(set(spin_lst))[0] is not None
+                    and "[" in list(set(spin_lst))[0]
+                ):
                     return np.array(
                         [
                             [
@@ -2530,7 +2534,7 @@ class Atoms(ASEAtoms):
                         ]
                     )
                 elif isinstance(spin_lst, (list, np.ndarray)):
-                    return np.array(spin_lst)
+                    return np.array([float(s) if s else 0.0 for s in spin_lst])
                 else:
                     return np.array([float(spin) if spin else 0.0 for spin in spin_lst])
             else:
