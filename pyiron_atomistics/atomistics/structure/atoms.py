@@ -3312,14 +3312,14 @@ def pyiron_to_pymatgen(pyiron_obj):
         sel_dyn_list = pyiron_obj.selective_dynamics
         pyiron_obj_conv.selective_dynamics = [True, True, True]
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
-        pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+        pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj)
         new_site_properties = pymatgen_obj_conv.site_properties
         new_site_properties["selective_dynamics"] = sel_dyn_list
         pymatgen_obj = pymatgen_obj_conv.copy(site_properties=new_site_properties)
     else:
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
         _check_if_simple_atoms(atoms=ase_obj)
-        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj)
     return pymatgen_obj
 
 
