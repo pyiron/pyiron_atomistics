@@ -530,8 +530,7 @@ class StructurePlots:
         """
         Plot a histogram of the neighbor distances.
 
-        Setting `normalize` and `density` plots the radial distribution
-        function.
+        Setting `normalize` plots the radial distribution function.
 
         Args:
             bins (int): number of bins
@@ -547,16 +546,13 @@ class StructurePlots:
             plt.hist(
                 distances,
                 bins=bins,
-                density=density,
                 weights=1 / (4 * np.pi * distances**2),
             )
-        else:
-            plt.hist(distances, bins=bins, density=density)
-        plt.xlabel(r"Distance [$\mathrm{\AA}$]")
-        if normalize:
             plt.ylabel("Neighbor density [$\mathrm{\AA}^{-2}$]")
         else:
+            plt.hist(distances, bins=bins)
             plt.ylabel("Neighbor count")
+        plt.xlabel(r"Distance [$\mathrm{\AA}$]")
 
     def shell_distances(self, num_shells=4, num_neighbors=None):
         """
