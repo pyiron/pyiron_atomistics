@@ -5,6 +5,7 @@
 import unittest
 import numpy as np
 import os
+import pickle
 import time
 import warnings
 from pyiron_atomistics.atomistics.structure.atom import Atom
@@ -1952,6 +1953,12 @@ class TestAtoms(unittest.TestCase):
                 read_structure.calc.parameters[k],
                 msg=f"Calculator parameter {k} not correctly restored from HDF!",
             )
+
+    def test_pickle(self):
+        pickled = pickle.dumps(self.C3)
+        unpickled = pickle.loads(pickled)
+        self.assertEqual(unpickled, self.C3)
+        self.assertTrue(np.allclose(unpickled.cell, self.C3.cell))
 
 
 def generate_fcc_lattice(a=4.2):
