@@ -20,12 +20,12 @@ from structuretoolkit.analyse import (
     find_mic,
 )
 from structuretoolkit.common import center_coordinates_in_unit_cell
+from structuretoolkit.visualize import plot3d
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
 )
 from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
-from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseArray, SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
@@ -113,8 +113,6 @@ class Atoms(ASEAtoms):
         ):
             state.logger.debug("Not supported parameter used!")
 
-        self._store_elements = dict()
-        self._species_to_index_dict = None
         self._is_scaled = False
 
         self._species = list()
@@ -218,7 +216,6 @@ class Atoms(ASEAtoms):
             self.dimension = len(self.positions[0])
         else:
             self.dimension = 0
-        self._visualize = Visualize(self)
         self._analyse = Analyse(self)
         # Velocities were not handled at all during file writing
         self._velocities = None
@@ -265,10 +262,6 @@ class Atoms(ASEAtoms):
             self.set_array("initial_magmoms", np.asarray(val))
 
     @property
-    def visualize(self):
-        return self._visualize
-
-    @property
     def analyse(self):
         return self._analyse
 
@@ -289,12 +282,16 @@ class Atoms(ASEAtoms):
             value (list): A list atomistics.structure.periodic_table.ChemicalElement instances
 
         """
-        if value is None:
-            return
-        value = list(value)
-        self._species_to_index_dict = {el: i for i, el in enumerate(value)}
-        self._species = value[:]
-        self._store_elements = {el.Abbreviation: el for el in value}
+        if value is not None:
+            self._species = list(value)[:]
+
+    @property
+    def _store_elements(self) -> dict:
+        return {el.Abbreviation: el for el in self.species}
+
+    @property
+    def _species_to_index_dict(self) -> dict:
+        return {el: i for i, el in enumerate(self.species)}
 
     @property
     def symbols(self):
@@ -741,7 +738,6 @@ class Atoms(ASEAtoms):
         else:
             raise ValueError("Unknown static type to specify a element")
 
-        self._store_elements[el] = element
         if hasattr(self, "species"):
             if element not in self.species:
                 self._species.append(element)
@@ -1220,7 +1216,61 @@ class Atoms(ASEAtoms):
         distance_from_camera=1.0,
         opacity=1.0,
     ):
-        return self.visualize.plot3d(
+        """
+        Plot3d relies on NGLView or plotly to visualize atomic structures. Here, we construct a string in the "protein database"
+
+        The final widget is returned. If it is assigned to a variable, the visualization is suppressed until that
+        variable is evaluated, and in the meantime more NGL operations can be applied to it to modify the visualization.
+
+        Args:
+            mode (str): `NGLView`, `plotly` or `ase`
+            show_cell (bool): Whether or not to show the frame. (Default is True.)
+            show_axes (bool): Whether or not to show xyz axes. (Default is True.)
+            camera (str): 'perspective' or 'orthographic'. (Default is 'perspective'.)
+            spacefill (bool): Whether to use a space-filling or ball-and-stick representation. (Default is True, use
+                space-filling atoms.)
+            particle_size (float): Size of the particles. (Default is 1.)
+            select_atoms (numpy.ndarray): Indices of atoms to show, either as integers or a boolean array mask.
+                (Default is None, show all atoms.)
+            background (str): Background color. (Default is 'white'.)
+            color_scheme (str): NGLView color scheme to use. (Default is None, color by element.)
+            colors (numpy.ndarray): A per-atom array of HTML color names or hex color codes to use for atomic colors.
+                (Default is None, use coloring scheme.)
+            scalar_field (numpy.ndarray): Color each atom according to the array value (Default is None, use coloring
+                scheme.)
+            scalar_start (float): The scalar value to be mapped onto the low end of the color map (lower values are
+                clipped). (Default is None, use the minimum value in `scalar_field`.)
+            scalar_end (float): The scalar value to be mapped onto the high end of the color map (higher values are
+                clipped). (Default is None, use the maximum value in `scalar_field`.)
+            scalar_cmap (matplotlib.cm): The colormap to use. (Default is None, giving a blue-red divergent map.)
+            vector_field (numpy.ndarray): Add vectors (3 values) originating at each atom. (Default is None, no
+                vectors.)
+            vector_color (numpy.ndarray): Colors for the vectors (only available with vector_field). (Default is None,
+                vectors are colored by their direction.)
+            magnetic_moments (bool): Plot magnetic moments as 'scalar_field' or 'vector_field'.
+            view_plane (numpy.ndarray): A Nx3-array (N = 1,2,3); the first 3d-component of the array specifies
+                which plane of the system to view (for example, [1, 0, 0], [1, 1, 0] or the [1, 1, 1] planes), the
+                second 3d-component (if specified, otherwise [1, 0, 0]) gives the horizontal direction, and the third
+                component (if specified) is the vertical component, which is ignored and calculated internally. The
+                orthonormality of the orientation is internally ensured, and therefore is not required in the function
+                call. (Default is np.array([0, 0, 1]), which is view normal to the x-y plane.)
+            distance_from_camera (float): Distance of the camera from the structure. Higher = farther away.
+                (Default is 14, which also seems to be the NGLView default value.)
+
+            Possible NGLView color schemes:
+              " ", "picking", "random", "uniform", "atomindex", "residueindex",
+              "chainindex", "modelindex", "sstruc", "element", "resname", "bfactor",
+              "hydrophobicity", "value", "volume", "occupancy"
+
+        Returns:
+            (nglview.NGLWidget): The NGLView widget itself, which can be operated on further or viewed as-is.
+
+        Warnings:
+            * Many features only work with space-filling atoms (e.g. coloring by a scalar field).
+            * The colour interpretation of some hex codes is weird, e.g. 'green'.
+        """
+        return plot3d(
+            structure=pyiron_to_ase(self),
             mode=mode,
             show_cell=show_cell,
             show_axes=show_axes,
@@ -1242,8 +1292,6 @@ class Atoms(ASEAtoms):
             distance_from_camera=distance_from_camera,
             opacity=opacity,
         )
-
-    plot3d.__doc__ = Visualize.plot3d.__doc__
 
     def pos_xyz(self):
         """
@@ -2016,7 +2064,6 @@ class Atoms(ASEAtoms):
                     ind_conv[ind_old] = ind_new
                 else:
                     new_species_lst.append(el)
-                    sum_atoms._store_elements[el.Abbreviation] = el
                     ind_conv[ind_old] = len(new_species_lst) - 1
 
             for key, val in ind_conv.items():
@@ -2046,7 +2093,6 @@ class Atoms(ASEAtoms):
         for key, val in self.__dict__.items():
             if key not in ase_keys:
                 atoms_new.__dict__[key] = copy(val)
-        atoms_new._visualize = Visualize(atoms_new)
         atoms_new._analyse = Analyse(atoms_new)
         return atoms_new
 
@@ -2471,12 +2517,16 @@ class Atoms(ASEAtoms):
             ]
             if any(spin_lst):
                 if (
-                    isinstance(spin_lst, str)
-                    or (
-                        isinstance(spin_lst, (list, np.ndarray))
-                        and isinstance(spin_lst[0], str)
+                    (
+                        isinstance(spin_lst, str)
+                        or (
+                            isinstance(spin_lst, (list, np.ndarray))
+                            and isinstance(spin_lst[0], str)
+                        )
                     )
-                ) and "[" in list(set(spin_lst))[0]:
+                    and list(set(spin_lst))[0] is not None
+                    and "[" in list(set(spin_lst))[0]
+                ):
                     return np.array(
                         [
                             [
@@ -2492,7 +2542,7 @@ class Atoms(ASEAtoms):
                         ]
                     )
                 elif isinstance(spin_lst, (list, np.ndarray)):
-                    return np.array(spin_lst)
+                    return np.array([float(s) if s else 0.0 for s in spin_lst])
                 else:
                     return np.array([float(spin) if spin else 0.0 for spin in spin_lst])
             else:
@@ -3270,14 +3320,14 @@ def pyiron_to_pymatgen(pyiron_obj):
         sel_dyn_list = pyiron_obj.selective_dynamics
         pyiron_obj_conv.selective_dynamics = [True, True, True]
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
-        pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+        pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj)
         new_site_properties = pymatgen_obj_conv.site_properties
         new_site_properties["selective_dynamics"] = sel_dyn_list
         pymatgen_obj = pymatgen_obj_conv.copy(site_properties=new_site_properties)
     else:
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
         _check_if_simple_atoms(atoms=ase_obj)
-        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj)
     return pymatgen_obj
 
 
