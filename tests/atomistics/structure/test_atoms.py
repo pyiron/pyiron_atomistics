@@ -5,6 +5,7 @@
 import unittest
 import numpy as np
 import os
+import pickle
 import time
 import warnings
 from pyiron_atomistics.atomistics.structure.atom import Atom
@@ -1237,7 +1238,8 @@ class TestAtoms(unittest.TestCase):
             cell=2.6 * np.eye(3),
         )
         self.assertTrue(
-            np.array_equal(basis.get_initial_magnetic_moments(), ["0.5"] * 2)
+            np.array_equal(basis.get_initial_magnetic_moments(), [0.5] * 2),
+            msg=f"Expected basis.get_initial_magnetic_moments() to be equal to {[0.5] * 2} but got {basis.get_initial_magnetic_moments()}."
         )
 
     def test_occupy_lattice(self):
@@ -1951,6 +1953,12 @@ class TestAtoms(unittest.TestCase):
                 read_structure.calc.parameters[k],
                 msg=f"Calculator parameter {k} not correctly restored from HDF!",
             )
+
+    def test_pickle(self):
+        pickled = pickle.dumps(self.C3)
+        unpickled = pickle.loads(pickled)
+        self.assertEqual(unpickled, self.C3)
+        self.assertTrue(np.allclose(unpickled.cell, self.C3.cell))
 
 
 def generate_fcc_lattice(a=4.2):
