@@ -52,7 +52,7 @@ setup(
         'pandas==2.0.2',
         'phonopy==2.19.1',
         'pint==0.21',
-        'pyiron_base==0.5.39',
+        'pyiron_base==0.5.42',
         'pymatgen==2023.5.31',
         'scipy==1.10.1',
         'seekpath==2.1.0',
