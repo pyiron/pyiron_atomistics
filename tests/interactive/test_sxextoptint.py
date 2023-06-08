@@ -12,7 +12,7 @@ class TestSxExtOptInteractive(unittest.TestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "../static/sxextopt"))
-        cls.basis = cls.project.create_structure("Fe", "bcc", 2.8)
+        cls.basis = cls.project.create.structure.ase.bulk("Fe", a=2.8)
         job = cls.project.create_job(
             cls.project.job_type.AtomisticExampleJob, "job_single"
         )
