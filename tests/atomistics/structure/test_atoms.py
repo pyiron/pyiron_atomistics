@@ -1649,7 +1649,7 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(struct.get_chemical_formula(), "Mg4")
 
     def test_static_functions(self):
-        Al_bulk = self.struct_factory.ase_bulk("Al")
+        Al_bulk = self.struct_factory.ase.bulk("Al")
         self.assertIsInstance(Al_bulk, Atoms)
         self.assertTrue(all(Al_bulk.pbc))
         surface = self.struct_factory.surface("Al", "fcc111", size=(4, 4, 4), vacuum=10)
