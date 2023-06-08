@@ -448,7 +448,7 @@ class TestVasp(unittest.TestCase):
 
     def test_kspacing(self):
         job_kspace = self.project.create_job("Vasp", "job_kspacing")
-        job_kspace.structure = self.project.create_ase_bulk("Fe")
+        job_kspace.structure = self.project.create.structure.ase.bulk("Fe")
         job_kspace.input.incar["KSPACING"] = 0.5
         with warnings.catch_warnings(record=True) as w:
             job_kspace.run(run_mode="manual")

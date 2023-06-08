@@ -25,7 +25,7 @@ class TestProject(unittest.TestCase):
         project.remove(enable=True)
 
     def test_structure_creation(self):
-        self.assertIsInstance(self.project.create_ase_bulk("Al"), Atoms)
+        self.assertIsInstance(self.project.create.structure.ase.bulk("Al"), Atoms)
         surface = self.project.create.structure.surface("Al", "fcc111", size=(4, 4, 4), vacuum=10)
         self.assertTrue(all(surface.pbc))
         self.assertIsInstance(surface, Atoms)
