@@ -86,7 +86,7 @@ class TestAtoms(unittest.TestCase):
         self.assertIsInstance(basis.elements, np.ndarray)
         basis = Atoms(symbols="Al", positions=pos, cell=cell)
         self.assertIsInstance(basis, Atoms)
-        self.assertEqual(basis.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
         basis = Atoms(elements="Al", positions=pos, cell=cell)
         with self.assertRaises(AttributeError):
             basis.spins
@@ -245,7 +245,7 @@ class TestAtoms(unittest.TestCase):
         basis = Atoms().from_hdf(self.hdf_obj, group_name="simple_structure")
         self.assertEqual(len(basis), 8)
         self.assertEqual(basis.get_majority_species()["symbol"], "Al")
-        self.assertEqual(basis.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
         self.assertTrue(basis.selective_dynamics[7][0])
         self.assertFalse(basis.selective_dynamics[0][0])
         basis.add_tag(selective_dynamics=[False, False, False])
@@ -261,7 +261,7 @@ class TestAtoms(unittest.TestCase):
         basis = self.hdf_obj["simple_structure"].to_object()
         self.assertEqual(len(basis), 8)
         self.assertEqual(basis.get_majority_species()["symbol"], "Al")
-        self.assertEqual(basis.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
 
     def test_create_Fe_bcc(self):
         self.pse = PeriodicTable()
@@ -313,7 +313,7 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(
             len(basis_new._tag_list), len(basis[mg_indices]) + len(basis[o_indices])
         )
-        self.assertEqual(basis_new.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis_new.get_symmetry().spacegroup["Number"], 225)
         self.assertEqual(basis[:-3], basis[0 : len(basis) - 3])
         self.assertEqual(basis.dimension, basis[mg_indices].dimension)
         self.assertTrue(np.array_equal(basis.pbc, basis[mg_indices].pbc))
@@ -701,7 +701,7 @@ class TestAtoms(unittest.TestCase):
         basis.set_repeat([3, 3, 2])
         sel_dyn_after = np.array(basis.selective_dynamics.list())
         len_after = len(basis)
-        self.assertEqual(basis.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
         self.assertEqual(len_before * 18, len_after)
         self.assertEqual(len(sel_dyn_before) * 18, len(sel_dyn_after))
         self.assertTrue(
@@ -1400,7 +1400,7 @@ class TestAtoms(unittest.TestCase):
             len(basis._tag_list), len(basis_Mg._tag_list) + len(basis_O._tag_list)
         )
         basis.center_coordinates_in_unit_cell()
-        self.assertEqual(basis.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
         # Adding an ASE instance to a pyiron instance
         ase_basis = ASEAtoms("O", scaled_positions=[[0, 0, 0]], cell=np.eye(3) * 10)
         pyiron_basis = Atoms(
