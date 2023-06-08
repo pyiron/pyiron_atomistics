@@ -360,27 +360,27 @@ class TestAtoms(unittest.TestCase):
             neigh.norm_order = 3
 
     def test_chemical_symbols(self):
-        basis = StructureFactory().ase_bulk('Fe', cubic=True)
+        basis = StructureFactory().ase.bulk('Fe', cubic=True)
         basis[0] = 'Ni'
         neigh = basis.get_neighbors(num_neighbors=1)
         self.assertEqual(neigh.chemical_symbols[0,0], 'Fe')
         self.assertEqual(neigh.chemical_symbols[1,0], 'Ni')
-        vacancy = StructureFactory().ase_bulk('Fe', cubic=True).repeat(4)
+        vacancy = StructureFactory().ase.bulk('Fe', cubic=True).repeat(4)
         del vacancy[0]
         neigh = vacancy.get_neighbors(num_neighbors=None, cutoff_radius=3)
         self.assertEqual(neigh.chemical_symbols[0,-1], 'v')
 
     def test_steinhardt_parameters(self):
-        neigh = StructureFactory().ase_bulk('Al').get_neighbors(num_neighbors=12)
+        neigh = StructureFactory().ase.bulk('Al').get_neighbors(num_neighbors=12)
         # values obtained with pyscal
         self.assertAlmostEqual(0, neigh.get_steinhardt_parameter(2)[0])
         self.assertAlmostEqual(0.19094065395649323, neigh.get_steinhardt_parameter(4)[0])
         self.assertAlmostEqual(0.5745242597140696, neigh.get_steinhardt_parameter(6)[0])
-        neigh = StructureFactory().ase_bulk('Mg', a=1, c=np.sqrt(8/3)).get_neighbors(num_neighbors=12)
+        neigh = StructureFactory().ase.bulk('Mg', a=1, c=np.sqrt(8/3)).get_neighbors(num_neighbors=12)
         self.assertAlmostEqual(0, neigh.get_steinhardt_parameter(2)[0])
         self.assertAlmostEqual(0.097222222, neigh.get_steinhardt_parameter(4)[0])
         self.assertAlmostEqual(0.484761685, neigh.get_steinhardt_parameter(6)[0])
-        neigh = StructureFactory().ase_bulk('Fe').get_neighbors(num_neighbors=14)
+        neigh = StructureFactory().ase.bulk('Fe').get_neighbors(num_neighbors=14)
         self.assertAlmostEqual(0.03636964837266537, neigh.get_steinhardt_parameter(4)[0])
         self.assertAlmostEqual(0.5106882308569508, neigh.get_steinhardt_parameter(6)[0])
         self.assertRaises(ValueError, neigh.get_steinhardt_parameter, 2, 2)
@@ -401,7 +401,7 @@ class TestAtoms(unittest.TestCase):
             neigh = basis.get_neighbors(mode='random_key')
 
     def test_centrosymmetry(self):
-        structure = StructureFactory().ase_bulk('Fe').repeat(4)
+        structure = StructureFactory().ase.bulk('Fe').repeat(4)
         cs = structure.get_neighbors(num_neighbors=8).centrosymmetry
         self.assertAlmostEqual(cs.max(), 0)
         self.assertAlmostEqual(cs.min(), 0)
@@ -415,7 +415,7 @@ class TestAtoms(unittest.TestCase):
         )
 
     def test_get_all_pairs(self):
-        structure = StructureFactory().ase_bulk('Fe').repeat(4)
+        structure = StructureFactory().ase.bulk('Fe').repeat(4)
         neigh = structure.get_neighbors(num_neighbors=8)
         for n in [2, 4, 6]:
             pairs = neigh._get_all_possible_pairs(n)
