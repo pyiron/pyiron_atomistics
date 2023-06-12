@@ -46,19 +46,19 @@ setup(
         'defusedxml==0.7.1',
         'h5py==3.8.0',
         'matplotlib==3.7.1',
-        'mendeleev==0.13.1',
+        'mendeleev==0.14.0',
         'mp-api==0.33.3',
         'numpy==1.24.3',
         'pandas==2.0.2',
         'phonopy==2.19.1',
-        'pint==0.21',
-        'pyiron_base==0.5.39',
+        'pint==0.22',
+        'pyiron_base==0.6.1',
         'pymatgen==2023.5.31',
         'scipy==1.10.1',
         'seekpath==2.1.0',
         'scikit-learn==1.2.2',
         'spglib==2.0.2',
-        'structuretoolkit==0.0.3'
+        'structuretoolkit==0.0.5'
     ],
     cmdclass=versioneer.get_cmdclass(),
 

@@ -13,7 +13,7 @@ class TestStructureContainer(unittest.TestCase):
         cls.lattice_constant = 3.5
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "structure_testing"))
-        cls.basis = cls.project.create_structure(
+        cls.basis = cls.project.create.structure.crystal(
             element="Fe", bravais_basis="fcc", lattice_constant=cls.lattice_constant
         )
         cls.structure_container = cls.project.create_job(

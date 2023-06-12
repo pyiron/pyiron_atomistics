@@ -675,7 +675,7 @@ class TestSphinx(unittest.TestCase):
 
     def test_convergence_precision(self):
         job = self.project.create_job(job_type="Sphinx", job_name="energy_convergence")
-        job.structure = self.project.create_ase_bulk("Al", "fcc", 3.5)
+        job.structure = self.project.create.structure.ase.bulk("Al", "fcc", 3.5)
         job.set_convergence_precision(
             ionic_energy_tolerance=1e-5, electronic_energy=1e-8
         )
