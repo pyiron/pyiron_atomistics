@@ -11,8 +11,6 @@ class TestGpaw(TestWithProject):
         """
         Gpaw should run interactively, even if you update the structure to a new object.
         """
-        self.project.remove_jobs(silently=True, recursive=True)
-
         job = self.project.create.job.Gpaw("gpaw", delete_existing_job=True)
         job.input["encut"] = 100
         job.input["kpoints"] = 3 * [1]
