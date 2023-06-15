@@ -50,8 +50,13 @@ class AseJob(GenericInteractive):
         self.server.run_mode = pre_run_mode
 
     def run_if_interactive(self):
+        self._ensure_structure_calc_is_set()
         super(AseJob, self).run_if_interactive()
         self.interactive_collect()
+
+    def _ensure_structure_calc_is_set(self):
+        if self.structure.calc is None:
+            self.set_calculator()
 
     def set_calculator(self):
         raise NotImplementedError(
@@ -66,8 +71,7 @@ class AseJob(GenericInteractive):
 
     def interactive_initialize_interface(self):
         self.status.running = True
-        if self.structure.calc is None:
-            self.set_calculator()
+        self._ensure_structure_calc_is_set()
         self._structure.calc.set_label(self.working_directory + "/")
         self._interactive_library = True
 
