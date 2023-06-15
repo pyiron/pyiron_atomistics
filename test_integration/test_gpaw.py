@@ -26,3 +26,15 @@ class TestGpaw(TestWithProject):
             ijob.run()
             ijob.structure = s2
             ijob.run()
+
+    def test_interface_initialization(self):
+        """
+        Make sure that you can initialize the interactive interface without having
+        already run the code.
+        """
+        job = self.project.create.job.Gpaw("gpaw", delete_existing_job=True)
+        job.input["encut"] = 100
+        job.input["kpoints"] = 3 * [1]
+        job.structure = self.project.atomistics.structure.bulk("Al", cubic=True)
+        job.interactive_open()
+        job.interactive_initialize_interface()
