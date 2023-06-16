@@ -2,8 +2,6 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from abc import ABC, abstractmethod
-
 import numpy as np
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
@@ -25,7 +23,7 @@ __status__ = "development"
 __date__ = "Sep 1, 2018"
 
 
-class AseJob(GenericInteractive, ABC):
+class AseJob(GenericInteractive):
     def __init__(self, project, job_name):
         super(AseJob, self).__init__(project, job_name)
 
@@ -57,9 +55,12 @@ class AseJob(GenericInteractive, ABC):
         if self.structure.calc is None:
             self.set_calculator()
 
-    @abstractmethod
     def set_calculator(self):
-        pass
+        raise NotImplementedError(
+            "The set_calculator function is not implemented for this code. Either set "
+            "an ase calculator to the structure attribute, or subclass this job and "
+            "define set_calculator."
+        )
 
     def interactive_structure_setter(self, structure):
         self.structure.calc.calculate(structure)
