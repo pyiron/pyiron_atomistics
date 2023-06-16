@@ -103,7 +103,7 @@ class TestSphinx(unittest.TestCase):
         job.calc_minimize()
         job.run()
         E = job['output/generic/energy_tot']
-        self.assertGreater(E[0], E[1], 'Energy not decreased')
+        self.assertGreater(E[0], E[-1], 'Energy not decreased')
 
     def test_check_overlap(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_check_overlap')
