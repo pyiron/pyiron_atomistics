@@ -58,7 +58,7 @@ class TestSphinx(unittest.TestCase):
         )
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Fe_ferro')
         job.structure = self.project.create.structure.ase.bulk('Fe', a=self.a_Fe)
-        job.structure.set_initial_magnetic_moments([2, 2])
+        job.structure.set_initial_magnetic_moments(len(job.structure) * [2])
         job.calc_static()
         job.run()
         self.assertLess(
@@ -70,7 +70,7 @@ class TestSphinx(unittest.TestCase):
     def test_Fe_ferro_C(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Fe_ferro_C')
         job.structure = self.project.create.structure.ase.bulk('Fe', a=self.a_Fe)
-        job.structure.set_initial_magnetic_moments([2, 2])
+        job.structure.set_initial_magnetic_moments(len(job.structure) * [2])
         job.structure += self.project.create_atoms(
             elements=['C'], positions=[[0, 0, 0.5 * self.a_Fe]], magmoms=[0]
         )
@@ -122,7 +122,7 @@ class TestSphinx(unittest.TestCase):
     def test_Fe_ferro_constraint(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Fe_ferro_constraint')
         job.structure = self.project.create.structure.ase.bulk('Fe', a=self.a_Fe)
-        job.structure.set_initial_magnetic_moments([2, 2])
+        job.structure.set_initial_magnetic_moments(len(job.structure) * [2])
         job.fix_spin_constraint = True
         job.calc_static()
         job.run()
@@ -163,7 +163,7 @@ class TestSphinx(unittest.TestCase):
     def test_sxextopt_Fe(self):
         spx = self.project.create_job('Sphinx', 'spx_sxextopt_Fe')
         spx.structure = self.project.create.structure.ase.bulk('Fe', a=2)
-        spx.structure.set_initial_magnetic_moments([2, 2])
+        spx.structure.set_initial_magnetic_moments(len(spx.structure) * [2])
         spx.server.run_mode.interactive = True
         spx.calc_static()
         sxextopt = self.project.create_job('SxExtOptInteractive', 'sxextopt_Fe')
