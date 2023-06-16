@@ -71,7 +71,7 @@ class AseJob(GenericInteractive):
     def interactive_initialize_interface(self):
         self.status.running = True
         self._ensure_structure_calc_is_set()
-        self._structure.calc.set_label(self.working_directory + "/")
+        self.structure.calc.set_label(self.working_directory + "/")
         self._interactive_library = True
 
     def interactive_close(self):
