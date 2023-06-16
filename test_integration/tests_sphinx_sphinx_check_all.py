@@ -98,7 +98,7 @@ class TestSphinx(unittest.TestCase):
 
     def test_Al_minimize(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Al_minimize')
-        job.structure = self.project.create.structure.ase.bulk('Al', a=self.a_Al)
+        job.structure = self.project.create.structure.ase.bulk('Al', a=self.a_Al, cubic=True)
         job.structure.positions[0, 0] += 0.01
         job.calc_minimize()
         job.run()
