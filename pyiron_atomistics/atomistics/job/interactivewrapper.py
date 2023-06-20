@@ -5,6 +5,7 @@
 from pyiron_base import InteractiveWrapper as InteractiveWrapperBase, deprecate
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.atoms import Atoms as PAtoms
+from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -18,7 +19,7 @@ __status__ = "development"
 __date__ = "Sep 1, 2017"
 
 
-class InteractiveWrapper(InteractiveWrapperBase):
+class InteractiveWrapper(InteractiveWrapperBase, HasStructure):
     def __init__(self, project, job_name):
         super(InteractiveWrapper, self).__init__(project, job_name)
 
@@ -42,11 +43,14 @@ class InteractiveWrapper(InteractiveWrapperBase):
     def get_final_structure(self):
         return self.get_structure()
 
-    def get_structure(self, frame=-1, wrap_atoms=True):
+    def _get_structure(self, frame=-1, wrap_atoms=True):
         if self.ref_job is not None:
             return self._ref_job.get_structure(frame=frame, wrap_atoms=wrap_atoms)
         else:
             return None
+
+    def _number_of_structures(self):
+        return int(self.ref_job is not None)
 
     def db_entry(self):
         """
