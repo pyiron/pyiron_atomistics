@@ -39,6 +39,10 @@ from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFa
 from pyiron_atomistics.atomistics.structure.factories.materialsproject import (
     MaterialsProjectFactory,
 )
+from pyiron_atomistics.atomistics.structure.pyxtal import (
+    pyxtal,
+    publication as publication_pyxtal
+)
 from pyiron_atomistics.atomistics.structure.pyironase import (
     publication as publication_ase,
 )
@@ -567,3 +571,9 @@ class StructureFactory(PyironFactory):
     @property
     def materialsproject(self):
         return self._materialsproject
+
+    @staticmethod
+    @wraps(pyxtal)
+    def pyxtal(*args, **kwargs):
+        state.publications.add(publication_pyxtal())
+        return pyxtal(*args, **kwargs)
