@@ -8,27 +8,30 @@ from tqdm.auto import tqdm
 from pyxtal import pyxtal as _pyxtal
 from pyxtal.msg import Comp_CompatibilityError
 
-publication = {"pyxtal": {
-    "title": "PyXtal: A Python library for crystal structure generation and symmetry analysis",
-    "journal": "Computer Physics Communications",
-    "volume": "261",
-    "pages": "107810",
-    "year": "2021",
-    "issn": "0010-4655",
-    "doi": "https://doi.org/10.1016/j.cpc.2020.107810",
-    "url": "http://www.sciencedirect.com/science/article/pii/S0010465520304057",
-    "author": "Scott Fredericks and Kevin Parrish and Dean Sayre and Qiang Zhu",
-}}
+publication = {
+    "pyxtal": {
+        "title": "PyXtal: A Python library for crystal structure generation and symmetry analysis",
+        "journal": "Computer Physics Communications",
+        "volume": "261",
+        "pages": "107810",
+        "year": "2021",
+        "issn": "0010-4655",
+        "doi": "https://doi.org/10.1016/j.cpc.2020.107810",
+        "url": "http://www.sciencedirect.com/science/article/pii/S0010465520304057",
+        "author": "Scott Fredericks and Kevin Parrish and Dean Sayre and Qiang Zhu",
+    }
+}
+
 
 def pyxtal(
-    group: Union[int, List[int]], 
+    group: Union[int, List[int]],
     species: Tuple[str],
     num_ions: Tuple[int],
     dim=3,
     repeat=1,
     storage=None,
     allow_exceptions=True,
-    **kwargs
+    **kwargs,
 ) -> Union[Atoms, StructureStorage]:
     """
     Generate random crystal structures with PyXtal.
@@ -60,27 +63,29 @@ def pyxtal(
         ValueError: if stoichiometry and symmetry group are incompatible and allow_exceptions==False or only one structure is requested
     """
     if len(species) != len(num_ions):
-        raise ValueError("species and num_ions must be of same length, "
-                        f"not {species} and {num_ions}!")
+        raise ValueError(
+            "species and num_ions must be of same length, "
+            f"not {species} and {num_ions}!"
+        )
     stoich = "".join(f"{s}{n}" for s, n in zip(species, num_ions))
+
     def generate(group):
         s = _pyxtal()
         try:
             s.from_random(
-                dim=dim,
-                group=group,
-                species=species,
-                numIons=num_ions,
-                **kwargs
+                dim=dim, group=group, species=species, numIons=num_ions, **kwargs
             )
         except Comp_CompatibilityError as e:
             if not allow_exceptions:
-                raise ValueError(f"Symmetry group {group} incompatible with stoichiometry {stoich}!") from None
+                raise ValueError(
+                    f"Symmetry group {group} incompatible with stoichiometry {stoich}!"
+                ) from None
             else:
                 return None
         s = ase_to_pyiron(s.to_ase())
         s.center_coordinates_in_unit_cell()
         return s
+
     # return a single structure
     if repeat == 1 and isinstance(group, int):
         allow_exceptions = False
@@ -98,11 +103,10 @@ def pyxtal(
                     failed_groups.append(g)
                     continue
                 storage.add_structure(
-                    s,
-                    identifier=f"{stoich}_{g}_{i}",
-                    symmetry=g,
-                    repeat=i
+                    s, identifier=f"{stoich}_{g}_{i}", symmetry=g, repeat=i
                 )
         if len(failed_groups) > 0:
-            warnings.warn(f'Groups [{", ".join(map(str,failed_groups))}] could not be generated with stoichiometry {stoich}!') 
+            warnings.warn(
+                f'Groups [{", ".join(map(str,failed_groups))}] could not be generated with stoichiometry {stoich}!'
+            )
         return storage

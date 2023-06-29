@@ -41,7 +41,7 @@ from pyiron_atomistics.atomistics.structure.factories.materialsproject import (
 )
 from pyiron_atomistics.atomistics.structure.pyxtal import (
     pyxtal,
-    publication as publication_pyxtal
+    publication as publication_pyxtal,
 )
 from pyiron_atomistics.atomistics.structure.pyironase import (
     publication as publication_ase,
