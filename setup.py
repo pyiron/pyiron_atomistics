@@ -54,7 +54,7 @@ setup(
         'pint==0.22',
         'pyiron_base==0.6.1',
         'pymatgen==2023.6.28',
-        'scipy==1.11.0',
+        'scipy==1.11.1',
         'seekpath==2.1.0',
         'scikit-learn==1.2.2',
         'spglib==2.0.2',
