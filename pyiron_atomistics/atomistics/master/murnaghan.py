@@ -679,6 +679,10 @@ class Murnaghan(AtomisticParallelMaster):
             None,
             "List of strains that should be calculated.  If given vol_range and num_points take no effect.",
         )
+        self.input["allow_unfinished"] = (
+            0,
+            "The number of child jobs that are allowed to fail or not converge, before this job is considered aborted or not converged."
+        )
 
         self.debye_model = DebyeModel(self)
         self.fit_module = EnergyVolumeFit()
@@ -809,8 +813,14 @@ class Murnaghan(AtomisticParallelMaster):
             self._output["energy"] = erg_lst[arg_lst]
         else:
             erg_lst, vol_lst, err_lst, id_lst = [], [], [], []
+            allowed_unfinished_children = self.input.get("allow_unfinished", 0)
             for job_id in self.child_ids:
                 ham = self.project_hdf5.inspect(job_id)
+                if ham.status in ["aborted", "not_converged"]:
+                    if allowed_unfinished_children == 0:
+                        raise ValueError(f"Child {ham.name}({job_id}) is {ham.status}!")
+                    allowed_unfinished_children -= 1
+                    continue
                 if "energy_tot" in ham["output/generic"].list_nodes():
                     energy = ham["output/generic/energy_tot"][-1]
                 elif "energy_pot" in ham["output/generic"].list_nodes():
