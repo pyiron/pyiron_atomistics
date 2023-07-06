@@ -816,9 +816,9 @@ class Murnaghan(AtomisticParallelMaster):
             allowed_unfinished_children = self.input.get("allow_unfinished", 0)
             for job_id in self.child_ids:
                 ham = self.project_hdf5.inspect(job_id)
-                if ham.status in ["aborted", "not_converged"]:
+                if ham.status == "aborted":
                     if allowed_unfinished_children == 0:
-                        raise ValueError(f"Child {ham.name}({job_id}) is {ham.status}!")
+                        raise ValueError(f"Child {ham.name}({job_id}) is aborted!")
                     allowed_unfinished_children -= 1
                     continue
                 if "energy_tot" in ham["output/generic"].list_nodes():
@@ -832,6 +832,9 @@ class Murnaghan(AtomisticParallelMaster):
                 err_lst.append(np.var(energy))
                 vol_lst.append(volume)
                 id_lst.append(job_id)
+            failed_children = self.input.get('allow_unfinished') - allowed_unfinished_children
+            if failed_children > 0:
+                self.logger.warning(f"{failed_children} failed, but proceeding anyway.")
             vol_lst = np.array(vol_lst)
             erg_lst = np.array(erg_lst)
             err_lst = np.array(err_lst)
