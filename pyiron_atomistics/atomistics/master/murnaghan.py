@@ -681,7 +681,7 @@ class Murnaghan(AtomisticParallelMaster):
         )
         self.input["allow_aborted"] = (
             0,
-            "The number of child jobs that are allowed to fail or not converge, before this job is considered aborted or not converged.",
+            "The number of child jobs that are allowed to abort, before the whole job is considered aborted.",
         )
 
         self.debye_model = DebyeModel(self)
