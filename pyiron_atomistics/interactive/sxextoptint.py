@@ -14,7 +14,7 @@ from pyiron_atomistics.atomistics.job.interactivewrapper import (
     ReferenceJobOutput,
 )
 from pyiron_atomistics.atomistics.job.interactive import InteractiveInterface
-from pyiron_atomistics.sphinx.base import InputWriter
+from pyiron_atomistics.sphinx.base import get_structure_group
 
 __author__ = "Jan Janssen, Osamu Waseda"
 __copyright__ = (
@@ -100,15 +100,10 @@ class SxExtOpt(InteractiveInterface):
         selective_dynamics=False,
     ):
         if selective_dynamics:
-            input_writer_obj = InputWriter()
-            input_writer_obj.structure = structure
-            input_writer_obj.write_structure(
-                file_name="structure.sx",
-                cwd=self.working_directory,
-                structure_str=None,
-                symmetry_enabled=True,
-                keep_angstrom=True,
-            )
+            structure_to_write = structure.copy()
+            file_name = posixpath.join(self.working_directory, "input.sx")
+            with open(file_name, "w") as f:
+                f.write(get_structure_group(structure, keep_angstrom=True).to_sphinx())
         self._write_input(
             working_directory=self.working_directory,
             maxDist=maxDist,

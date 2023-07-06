@@ -334,52 +334,11 @@ class SphinxBase(GenericDFTJob):
         Args:
             keep_angstrom (bool): Store distances in Angstroms or Bohr
         """
-        if keep_angstrom:
-            structure_group = Group({"cell": np.array(self.structure.cell)})
-        else:
-            structure_group = Group(
-                {
-                    "cell": np.array(self.structure.cell * 1 / BOHR_TO_ANGSTROM),
-                }
-            )
-        if "selective_dynamics" in self.structure._tag_list.keys():
-            selective_dynamics_list = self.structure.selective_dynamics.list()
-        else:
-            selective_dynamics_list = [3 * [False]] * len(self.structure.positions)
-        species = structure_group.create_group("species")
-        for elm_species in self.structure.get_species_objects():
-            if elm_species.Parent:
-                element = elm_species.Parent
-            else:
-                element = elm_species.Abbreviation
-            species.append(Group({"element": '"' + str(element) + '"'}))
-            elm_list = np.array(
-                self.structure.get_chemical_symbols() == elm_species.Abbreviation
-            )
-            atom_group = species[-1].create_group("atom")
-            for elm_pos, elm_magmon, selective in zip(
-                self.structure.positions[elm_list],
-                np.array(self.structure.get_initial_magnetic_moments())[elm_list],
-                np.array(selective_dynamics_list)[elm_list],
-            ):
-                atom_group.append(Group())
-                if self._spin_enabled:
-                    atom_group[-1]["label"] = '"spin_' + str(elm_magmon) + '"'
-                if keep_angstrom:
-                    atom_group[-1]["coords"] = np.array(elm_pos)
-                else:
-                    atom_group[-1]["coords"] = np.array(elm_pos * 1 / BOHR_TO_ANGSTROM)
-                if all(selective):
-                    atom_group[-1]["movable"] = True
-                elif any(selective):
-                    for ss, xx in zip(selective, ["X", "Y", "Z"]):
-                        if ss:
-                            atom_group[-1]["movable" + xx] = True
-        if not self.fix_symmetry:
-            structure_group.symmetry = Group(
-                {"operator": {"S": "[[1,0,0],[0,1,0],[0,0,1]]"}}
-            )
-        return structure_group
+        return get_structure_group(
+            structure=self.structure,
+            use_symmetry=self.fix_symmetry,
+            keep_angstrom=keep_angstrom,
+        )
 
     def load_default_input(self):
         """
@@ -1853,6 +1812,66 @@ class SphinxBase(GenericDFTJob):
             if out.returncode != 0:
                 print(out.stderr)
         return out if debug else None
+
+
+def get_structure_group(structure, use_symmetry=True, keep_angstrom=False):
+    """
+    create a SPHInX Group object based on structure
+
+    Args:
+        structure (pyiron_atomistics.atomistics.structure.atoms) structure
+        use_symmetry (bool): Whether or not consider internal symmetry
+        keep_angstrom (bool): Store distances in Angstroms or Bohr
+
+    Returns:
+        (Group): structure group
+    """
+    if keep_angstrom:
+        structure_group = Group({"cell": np.array(structure.cell)})
+    else:
+        structure_group = Group(
+            {
+                "cell": np.array(structure.cell * 1 / BOHR_TO_ANGSTROM),
+            }
+        )
+    if "selective_dynamics" in structure._tag_list.keys():
+        selective_dynamics_list = structure.selective_dynamics.list()
+    else:
+        selective_dynamics_list = [3 * [False]] * len(structure.positions)
+    species = structure_group.create_group("species")
+    for elm_species in structure.get_species_objects():
+        if elm_species.Parent:
+            element = elm_species.Parent
+        else:
+            element = elm_species.Abbreviation
+        species.append(Group({"element": '"' + str(element) + '"'}))
+        elm_list = np.array(
+            structure.get_chemical_symbols() == elm_species.Abbreviation
+        )
+        atom_group = species[-1].create_group("atom")
+        for elm_pos, elm_magmon, selective in zip(
+            structure.positions[elm_list],
+            np.array(structure.get_initial_magnetic_moments())[elm_list],
+            np.array(selective_dynamics_list)[elm_list],
+        ):
+            atom_group.append(Group())
+            if structure.has("initial_magmoms"):
+                atom_group[-1]["label"] = '"spin_' + str(elm_magmon) + '"'
+            if keep_angstrom:
+                atom_group[-1]["coords"] = np.array(elm_pos)
+            else:
+                atom_group[-1]["coords"] = np.array(elm_pos * 1 / BOHR_TO_ANGSTROM)
+            if all(selective):
+                atom_group[-1]["movable"] = True
+            elif any(selective):
+                for ss, xx in zip(selective, ["X", "Y", "Z"]):
+                    if ss:
+                        atom_group[-1]["movable" + xx] = True
+    if not use_symmetry:
+        structure_group.symmetry = Group(
+            {"operator": {"S": "[[1,0,0],[0,1,0],[0,0,1]]"}}
+        )
+    return structure_group
 
 
 class InputWriter(object):
