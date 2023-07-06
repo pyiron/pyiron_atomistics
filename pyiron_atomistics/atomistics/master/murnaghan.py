@@ -865,9 +865,9 @@ class Murnaghan(AtomisticParallelMaster):
         Raises:
             ValueError: if job is not finished when calling this method
         """
-        if not self.status.finished:
+        if not (self.status.finished or self.status.not_converged):
             raise ValueError(
-                "Job must be successfully run, before calling this method."
+                "Job must have finished executing before calling this method."
             )
 
         if ax is None:

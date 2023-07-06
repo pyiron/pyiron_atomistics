@@ -12,26 +12,29 @@ import numpy as np
 import warnings
 import seekpath
 import importlib
+from structuretoolkit.analyse import (
+    get_symmetry,
+    get_neighbors,
+    get_neighborhood,
+    get_distances_array,
+    find_mic,
+)
+from structuretoolkit.common import center_coordinates_in_unit_cell
+from structuretoolkit.visualize import plot3d
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
 )
 from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
-from pyiron_atomistics.atomistics.structure.neighbors import Neighbors, Tree
-from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
-from pyiron_atomistics.atomistics.structure.symmetry import Symmetry
 from pyiron_atomistics.atomistics.structure.sparse_list import SparseArray, SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
 )
-from pyiron_base import state, deprecate, deprecate_soon
-from pyiron_atomistics.atomistics.structure.pyironase import publication
+from pyiron_base import state, deprecate
 from pymatgen.io.ase import AseAtomsAdaptor
 from collections.abc import Sequence
-
-from scipy.spatial import cKDTree, Voronoi
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
 __copyright__ = (
@@ -110,8 +113,6 @@ class Atoms(ASEAtoms):
         ):
             state.logger.debug("Not supported parameter used!")
 
-        self._store_elements = dict()
-        self._species_to_index_dict = None
         self._is_scaled = False
 
         self._species = list()
@@ -215,10 +216,17 @@ class Atoms(ASEAtoms):
             self.dimension = len(self.positions[0])
         else:
             self.dimension = 0
-        self._visualize = Visualize(self)
         self._analyse = Analyse(self)
         # Velocities were not handled at all during file writing
         self._velocities = None
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def __getstate__(self):
+        # Only necessary to support pickling in python <3.11
+        # https://docs.python.org/release/3.11.2/library/pickle.html#object.__getstate__
+        return self.__dict__
 
     @property
     def velocities(self):
@@ -254,10 +262,6 @@ class Atoms(ASEAtoms):
             self.set_array("initial_magmoms", np.asarray(val))
 
     @property
-    def visualize(self):
-        return self._visualize
-
-    @property
     def analyse(self):
         return self._analyse
 
@@ -278,12 +282,16 @@ class Atoms(ASEAtoms):
             value (list): A list atomistics.structure.periodic_table.ChemicalElement instances
 
         """
-        if value is None:
-            return
-        value = list(value)
-        self._species_to_index_dict = {el: i for i, el in enumerate(value)}
-        self._species = value[:]
-        self._store_elements = {el.Abbreviation: el for el in value}
+        if value is not None:
+            self._species = list(value)[:]
+
+    @property
+    def _store_elements(self) -> dict:
+        return {el.Abbreviation: el for el in self.species}
+
+    @property
+    def _species_to_index_dict(self) -> dict:
+        return {el: i for i, el in enumerate(self.species)}
 
     @property
     def symbols(self):
@@ -730,7 +738,6 @@ class Atoms(ASEAtoms):
         else:
             raise ValueError("Unknown static type to specify a element")
 
-        self._store_elements[el] = element
         if hasattr(self, "species"):
             if element not in self.species:
                 self._species.append(element)
@@ -1007,11 +1014,7 @@ class Atoms(ASEAtoms):
         Returns:
             :class:`pyiron_atomistics.atomistics.structure.atoms.Atoms`: reference to this structure
         """
-        if any(self.pbc):
-            self.set_scaled_positions(
-                np.mod(self.get_scaled_positions(wrap=False) + eps, 1) - eps + origin
-            )
-        return self
+        return center_coordinates_in_unit_cell(structure=self, origin=origin, eps=eps)
 
     def create_line_mode_structure(
         self,
@@ -1213,7 +1216,61 @@ class Atoms(ASEAtoms):
         distance_from_camera=1.0,
         opacity=1.0,
     ):
-        return self.visualize.plot3d(
+        """
+        Plot3d relies on NGLView or plotly to visualize atomic structures. Here, we construct a string in the "protein database"
+
+        The final widget is returned. If it is assigned to a variable, the visualization is suppressed until that
+        variable is evaluated, and in the meantime more NGL operations can be applied to it to modify the visualization.
+
+        Args:
+            mode (str): `NGLView`, `plotly` or `ase`
+            show_cell (bool): Whether or not to show the frame. (Default is True.)
+            show_axes (bool): Whether or not to show xyz axes. (Default is True.)
+            camera (str): 'perspective' or 'orthographic'. (Default is 'perspective'.)
+            spacefill (bool): Whether to use a space-filling or ball-and-stick representation. (Default is True, use
+                space-filling atoms.)
+            particle_size (float): Size of the particles. (Default is 1.)
+            select_atoms (numpy.ndarray): Indices of atoms to show, either as integers or a boolean array mask.
+                (Default is None, show all atoms.)
+            background (str): Background color. (Default is 'white'.)
+            color_scheme (str): NGLView color scheme to use. (Default is None, color by element.)
+            colors (numpy.ndarray): A per-atom array of HTML color names or hex color codes to use for atomic colors.
+                (Default is None, use coloring scheme.)
+            scalar_field (numpy.ndarray): Color each atom according to the array value (Default is None, use coloring
+                scheme.)
+            scalar_start (float): The scalar value to be mapped onto the low end of the color map (lower values are
+                clipped). (Default is None, use the minimum value in `scalar_field`.)
+            scalar_end (float): The scalar value to be mapped onto the high end of the color map (higher values are
+                clipped). (Default is None, use the maximum value in `scalar_field`.)
+            scalar_cmap (matplotlib.cm): The colormap to use. (Default is None, giving a blue-red divergent map.)
+            vector_field (numpy.ndarray): Add vectors (3 values) originating at each atom. (Default is None, no
+                vectors.)
+            vector_color (numpy.ndarray): Colors for the vectors (only available with vector_field). (Default is None,
+                vectors are colored by their direction.)
+            magnetic_moments (bool): Plot magnetic moments as 'scalar_field' or 'vector_field'.
+            view_plane (numpy.ndarray): A Nx3-array (N = 1,2,3); the first 3d-component of the array specifies
+                which plane of the system to view (for example, [1, 0, 0], [1, 1, 0] or the [1, 1, 1] planes), the
+                second 3d-component (if specified, otherwise [1, 0, 0]) gives the horizontal direction, and the third
+                component (if specified) is the vertical component, which is ignored and calculated internally. The
+                orthonormality of the orientation is internally ensured, and therefore is not required in the function
+                call. (Default is np.array([0, 0, 1]), which is view normal to the x-y plane.)
+            distance_from_camera (float): Distance of the camera from the structure. Higher = farther away.
+                (Default is 14, which also seems to be the NGLView default value.)
+
+            Possible NGLView color schemes:
+              " ", "picking", "random", "uniform", "atomindex", "residueindex",
+              "chainindex", "modelindex", "sstruc", "element", "resname", "bfactor",
+              "hydrophobicity", "value", "volume", "occupancy"
+
+        Returns:
+            (nglview.NGLWidget): The NGLView widget itself, which can be operated on further or viewed as-is.
+
+        Warnings:
+            * Many features only work with space-filling atoms (e.g. coloring by a scalar field).
+            * The colour interpretation of some hex codes is weird, e.g. 'green'.
+        """
+        return plot3d(
+            structure=pyiron_to_ase(self),
             mode=mode,
             show_cell=show_cell,
             show_axes=show_axes,
@@ -1235,8 +1292,6 @@ class Atoms(ASEAtoms):
             distance_from_camera=distance_from_camera,
             opacity=opacity,
         )
-
-    plot3d.__doc__ = Visualize.plot3d.__doc__
 
     def pos_xyz(self):
         """
@@ -1386,22 +1441,20 @@ class Atoms(ASEAtoms):
 
         Returns:
 
-            pyiron.atomistics.structure.atoms.Neighbors: Neighbors instances with the neighbor
+            structuretoolkit.analyse.neighbors.Neighbors: Neighbors instances with the neighbor
                 indices, distances and vectors
 
         """
-        neigh = self._get_neighbors(
+        return get_neighbors(
+            structure=self,
             num_neighbors=num_neighbors,
             tolerance=tolerance,
             id_list=id_list,
             cutoff_radius=cutoff_radius,
             width_buffer=width_buffer,
+            mode=mode,
             norm_order=norm_order,
         )
-        neigh._set_mode(mode)
-        if allow_ragged is not None:
-            neigh.allow_ragged = allow_ragged
-        return neigh
 
     @deprecate(allow_ragged="use `mode='ragged'` instead.")
     @deprecate("Use get_neighbors", version="1.0.0")
@@ -1428,54 +1481,6 @@ class Atoms(ASEAtoms):
         )
 
     get_neighbors_by_distance.__doc__ = get_neighbors.__doc__
-
-    def _get_neighbors(
-        self,
-        num_neighbors=12,
-        tolerance=2,
-        id_list=None,
-        cutoff_radius=np.inf,
-        width_buffer=1.2,
-        get_tree=False,
-        norm_order=2,
-    ):
-        if num_neighbors is not None and num_neighbors <= 0:
-            raise ValueError("invalid number of neighbors")
-        if width_buffer < 0:
-            raise ValueError("width_buffer must be a positive float")
-        if get_tree:
-            neigh = Tree(ref_structure=self)
-        else:
-            neigh = Neighbors(ref_structure=self, tolerance=tolerance)
-        neigh._norm_order = norm_order
-        width = neigh._estimate_width(
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
-        )
-        extended_positions, neigh._wrapped_indices = self.get_extended_positions(
-            width, return_indices=True, norm_order=norm_order
-        )
-        neigh._extended_positions = extended_positions
-        neigh._tree = cKDTree(extended_positions)
-        if get_tree:
-            return neigh
-        positions = self.positions
-        if id_list is not None:
-            positions = positions[np.array(id_list)]
-        neigh._get_neighborhood(
-            positions=positions,
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            exclude_self=True,
-            width_buffer=width_buffer,
-        )
-        if neigh._check_width(width=width, pbc=self.pbc):
-            warnings.warn(
-                "width_buffer may have been too small - "
-                "most likely not all neighbors properly assigned"
-            )
-        return neigh
 
     def get_neighborhood(
         self,
@@ -1506,19 +1511,14 @@ class Atoms(ASEAtoms):
                 indices, distances and vectors
 
         """
-
-        neigh = self._get_neighbors(
-            num_neighbors=num_neighbors,
-            cutoff_radius=cutoff_radius,
-            width_buffer=width_buffer,
-            get_tree=True,
-            norm_order=norm_order,
-        )
-        neigh._set_mode(mode)
-        return neigh._get_neighborhood(
+        return get_neighborhood(
+            structure=self,
             positions=positions,
             num_neighbors=num_neighbors,
             cutoff_radius=cutoff_radius,
+            width_buffer=width_buffer,
+            mode=mode,
+            norm_order=norm_order,
         )
 
     @deprecate(
@@ -1528,12 +1528,26 @@ class Atoms(ASEAtoms):
     def find_neighbors_by_vector(
         self, vector, return_deviation=False, num_neighbors=96
     ):
+        """
+        Args:
+            vector (list/np.ndarray): vector by which positions are translated (and neighbors are searched)
+            return_deviation (bool): whether to return distance between the expect positions and real positions
+
+        Returns:
+            np.ndarray: list of id's for the specified translation
+
+        Example:
+            a_0 = 2.832
+            structure = pr.create_structure('Fe', 'bcc', a_0)
+            id_list = structure.find_neighbors_by_vector([0, 0, a_0])
+            # In this example, you get a list of neighbor atom id's at z+=a_0 for each atom.
+            # This is particularly powerful for SSA when the magnetic structure has to be translated
+            # in each direction.
+        """
         neighbors = self.get_neighbors(num_neighbors=num_neighbors)
         return neighbors.find_neighbors_by_vector(
             vector=vector, return_deviation=return_deviation
         )
-
-    find_neighbors_by_vector.__doc__ = Neighbors.find_neighbors_by_vector.__doc__
 
     @deprecate(
         "Use neigh.get_shell_matrix() instead (after calling neigh = structure.get_neighbors())",
@@ -1548,6 +1562,26 @@ class Atoms(ASEAtoms):
         cluster_by_distances=False,
         cluster_by_vecs=False,
     ):
+        """
+        Shell matrices for pairwise interaction. Note: The matrices are always symmetric, meaning if you
+        use them as bilinear operators, you have to divide the results by 2.
+
+        Args:
+            chemical_pair (list): pair of chemical symbols (e.g. ['Fe', 'Ni'])
+
+        Returns:
+            list of sparse matrices for different shells
+
+
+        Example:
+            from pyiron_atomistics import Project
+            structure = Project('.').create_structure('Fe', 'bcc', 2.83).repeat(2)
+            J = -0.1 # Ising parameter
+            magmoms = 2*np.random.random((len(structure)), 3)-1 # Random magnetic moments between -1 and 1
+            neigh = structure.get_neighbors(num_neighbors=8) # Iron first shell
+            shell_matrices = neigh.get_shell_matrix()
+            print('Energy =', 0.5*J*magmoms.dot(shell_matrices[0].dot(matmoms)))
+        """
         neigh_list = self.get_neighbors(
             num_neighbors=num_neighbors, id_list=id_list, tolerance=tolerance
         )
@@ -1556,8 +1590,6 @@ class Atoms(ASEAtoms):
             cluster_by_distances=cluster_by_distances,
             cluster_by_vecs=cluster_by_vecs,
         )
-
-    get_shell_matrix.__doc__ = Neighbors.get_shell_matrix.__doc__
 
     def occupy_lattice(self, **qwargs):
         """
@@ -1657,8 +1689,8 @@ class Atoms(ASEAtoms):
 
 
         """
-        return Symmetry(
-            self,
+        return get_symmetry(
+            structure=self,
             use_magmoms=use_magmoms,
             use_elements=use_elements,
             symprec=symprec,
@@ -1906,13 +1938,7 @@ class Atoms(ASEAtoms):
 
         Returns: numpy.ndarray of the same shape as input with mic
         """
-        if any(self.pbc):
-            v = np.einsum("ji,...j->...i", np.linalg.inv(self.cell), v)
-            v[..., self.pbc] -= np.rint(v)[..., self.pbc]
-            v = np.einsum("ji,...j->...i", self.cell, v)
-        if vectors:
-            return np.asarray(v)
-        return np.linalg.norm(v, axis=-1)
+        return find_mic(structure=self, v=v, vectors=vectors)
 
     def get_distance(self, a0, a1, mic=True, vector=False):
         """
@@ -1971,25 +1997,9 @@ class Atoms(ASEAtoms):
             numpy.ndarray: NxN if vector=False and NxNx3 if vector=True
 
         """
-        if p1 is None and p2 is not None:
-            p1 = p2
-            p2 = None
-        if p1 is None:
-            p1 = self.positions
-        if p2 is None:
-            p2 = self.positions
-        p1 = np.asarray(p1)
-        p2 = np.asarray(p2)
-        diff_relative = (
-            p2.reshape(-1, 3)[np.newaxis, :, :] - p1.reshape(-1, 3)[:, np.newaxis, :]
+        return get_distances_array(
+            structure=self, p1=p1, p2=p2, mic=mic, vectors=vectors
         )
-        diff_relative = diff_relative.reshape(p1.shape[:-1] + p2.shape[:-1] + (3,))
-        if not mic:
-            if vectors:
-                return diff_relative
-            else:
-                return np.linalg.norm(diff_relative, axis=-1)
-        return self.find_mic(diff_relative, vectors=vectors)
 
     def append(self, atom):
         if isinstance(atom, ASEAtom):
@@ -2054,7 +2064,6 @@ class Atoms(ASEAtoms):
                     ind_conv[ind_old] = ind_new
                 else:
                     new_species_lst.append(el)
-                    sum_atoms._store_elements[el.Abbreviation] = el
                     ind_conv[ind_old] = len(new_species_lst) - 1
 
             for key, val in ind_conv.items():
@@ -2084,7 +2093,6 @@ class Atoms(ASEAtoms):
         for key, val in self.__dict__.items():
             if key not in ase_keys:
                 atoms_new.__dict__[key] = copy(val)
-        atoms_new._visualize = Visualize(atoms_new)
         atoms_new._analyse = Analyse(atoms_new)
         return atoms_new
 
@@ -2509,12 +2517,16 @@ class Atoms(ASEAtoms):
             ]
             if any(spin_lst):
                 if (
-                    isinstance(spin_lst, str)
-                    or (
-                        isinstance(spin_lst, (list, np.ndarray))
-                        and isinstance(spin_lst[0], str)
+                    (
+                        isinstance(spin_lst, str)
+                        or (
+                            isinstance(spin_lst, (list, np.ndarray))
+                            and isinstance(spin_lst[0], str)
+                        )
                     )
-                ) and "[" in list(set(spin_lst))[0]:
+                    and list(set(spin_lst))[0] is not None
+                    and "[" in list(set(spin_lst))[0]
+                ):
                     return np.array(
                         [
                             [
@@ -2530,7 +2542,7 @@ class Atoms(ASEAtoms):
                         ]
                     )
                 elif isinstance(spin_lst, (list, np.ndarray)):
-                    return np.array(spin_lst)
+                    return np.array([float(s) if s else 0.0 for s in spin_lst])
                 else:
                     return np.array([float(spin) if spin else 0.0 for spin in spin_lst])
             else:
@@ -3308,14 +3320,14 @@ def pyiron_to_pymatgen(pyiron_obj):
         sel_dyn_list = pyiron_obj.selective_dynamics
         pyiron_obj_conv.selective_dynamics = [True, True, True]
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
-        pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+        pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj)
         new_site_properties = pymatgen_obj_conv.site_properties
         new_site_properties["selective_dynamics"] = sel_dyn_list
         pymatgen_obj = pymatgen_obj_conv.copy(site_properties=new_site_properties)
     else:
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
         _check_if_simple_atoms(atoms=ase_obj)
-        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj)
     return pymatgen_obj
 
 

@@ -206,6 +206,8 @@ class LammpsBase(AtomisticGenericJob):
             potential = potential_db.find_by_name(potential_filename)
         elif isinstance(potential_filename, pd.DataFrame):
             potential = potential_filename
+        elif hasattr(potential_filename, "get_df"):
+            potential = potential_filename.get_df()
         else:
             raise TypeError("Potentials have to be strings or pandas dataframes.")
         if self.structure:
@@ -220,7 +222,7 @@ class LammpsBase(AtomisticGenericJob):
         if "Citations" in potential.columns.values:
             pot_pub_dict = {}
             pub_lst = potential["Citations"].values[0]
-            if isinstance(pub_lst, str):
+            if isinstance(pub_lst, str) and len(pub_lst) > 0:
                 for p in ast.literal_eval(pub_lst):
                     for k in p.keys():
                         pot_pub_dict[k] = p[k]

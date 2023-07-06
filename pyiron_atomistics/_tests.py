@@ -56,4 +56,4 @@ class TestWithCleanProject(TestWithProject, ABC):
     """
 
     def tearDown(self):
-        self.project.remove_jobs_silently(recursive=True)
+        self.project.remove_jobs(recursive=True, silently=True)

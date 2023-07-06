@@ -44,11 +44,6 @@ jobs:
             label: linux-64-py-3-9
             prefix: /usr/share/miniconda3/envs/my-env
 
-          - operating-system: ubuntu-latest
-            python-version: 3.8
-            label: linux-64-py-3-8
-            prefix: /usr/share/miniconda3/envs/my-env
-
     steps:
       - uses: actions/checkout@v2
       - name: Setup environment

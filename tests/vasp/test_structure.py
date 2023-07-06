@@ -124,13 +124,13 @@ class TestVaspStructure(unittest.TestCase):
                     self.assertEqual(len(atoms.select_index("Cu")), 256)
                     cell = np.eye(3) * 4.0 * 3.63
                     self.assertTrue(np.array_equal(atoms.cell, cell))
-                    self.assertEqual(atoms.get_spacegroup()["Number"], 225)
+                    self.assertEqual(atoms.get_symmetry().spacegroup["Number"], 225)
                 if f.split("/")[-1] == "POSCAR_volume_scaled":
                     self.assertEqual(len(atoms), 256)
                     self.assertEqual(len(atoms.select_index("Cu")), 256)
                     cell = np.eye(3) * 4.0 * 3.63
                     self.assertTrue(np.array_equal(atoms.cell, cell))
-                    self.assertEqual(atoms.get_spacegroup()["Number"], 225)
+                    self.assertEqual(atoms.get_symmetry().spacegroup["Number"], 225)
                 if f.split("/")[-1] == "POSCAR_random":
                     self.assertEqual(len(atoms), 33)
                     self.assertEqual(len(atoms.selective_dynamics), 33)
