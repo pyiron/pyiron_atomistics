@@ -339,10 +339,7 @@ def collect_dump_file(file_name, prism, structure, potential_elements):
                         axis=1,
                     )
                     dump.mean_unwrapped_positions.append(
-                        np.matmul(
-                            np.matmul(pos, lammps_cell),
-                            rotation_lammps2orig,
-                        )
+                        np.matmul(pos, rotation_lammps2orig)
                     )
                 for k in columns:
                     if k.startswith("c_"):

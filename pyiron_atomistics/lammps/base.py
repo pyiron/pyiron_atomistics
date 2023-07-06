@@ -206,6 +206,8 @@ class LammpsBase(AtomisticGenericJob):
             potential = potential_db.find_by_name(potential_filename)
         elif isinstance(potential_filename, pd.DataFrame):
             potential = potential_filename
+        elif hasattr(potential_filename, "get_df"):
+            potential = potential_filename.get_df()
         else:
             raise TypeError("Potentials have to be strings or pandas dataframes.")
         if self.structure:

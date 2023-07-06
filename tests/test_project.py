@@ -25,13 +25,13 @@ class TestProject(unittest.TestCase):
         project.remove(enable=True)
 
     def test_structure_creation(self):
-        self.assertIsInstance(self.project.create_ase_bulk("Al"), Atoms)
-        surface = self.project.create_surface("Al", "fcc111", size=(4, 4, 4), vacuum=10)
+        self.assertIsInstance(self.project.create.structure.ase.bulk("Al"), Atoms)
+        surface = self.project.create.structure.surface("Al", "fcc111", size=(4, 4, 4), vacuum=10)
         self.assertTrue(all(surface.pbc))
         self.assertIsInstance(surface, Atoms)
-        surface = self.project.create_surface("Al", "fcc111", size=(4, 4, 4), vacuum=10, pbc=[True, True, False])
+        surface = self.project.create.structure.surface("Al", "fcc111", size=(4, 4, 4), vacuum=10, pbc=[True, True, False])
         self.assertFalse(all(surface.pbc))
-        self.assertIsInstance(self.project.create_structure("Al", "fcc", 4.05), Atoms)
+        self.assertIsInstance(self.project.create.structure.ase.bulk("Al", a=4.05), Atoms)
 
     def test_remove_jobs(self):
         sample_job = self.project.create_job("ScriptJob", "Sample")

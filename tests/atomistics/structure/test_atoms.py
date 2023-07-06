@@ -5,6 +5,7 @@
 import unittest
 import numpy as np
 import os
+import pickle
 import time
 import warnings
 from pyiron_atomistics.atomistics.structure.atom import Atom
@@ -84,7 +85,7 @@ class TestAtoms(unittest.TestCase):
         self.assertIsInstance(basis.elements, np.ndarray)
         basis = Atoms(symbols="Al", positions=pos, cell=cell)
         self.assertIsInstance(basis, Atoms)
-        self.assertEqual(basis.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
         basis = Atoms(elements="Al", positions=pos, cell=cell)
         with self.assertRaises(AttributeError):
             basis.spins
@@ -239,7 +240,7 @@ class TestAtoms(unittest.TestCase):
         basis = Atoms().from_hdf(self.hdf_obj, group_name="simple_structure")
         self.assertEqual(len(basis), 8)
         self.assertEqual(basis.get_majority_species()["symbol"], "Al")
-        self.assertEqual(basis.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
         self.assertTrue(basis.selective_dynamics[7][0])
         self.assertFalse(basis.selective_dynamics[0][0])
         basis.selective_dynamics[6] = [True, True, True]
@@ -254,7 +255,7 @@ class TestAtoms(unittest.TestCase):
         basis = self.hdf_obj["simple_structure"].to_object()
         self.assertEqual(len(basis), 8)
         self.assertEqual(basis.get_majority_species()["symbol"], "Al")
-        self.assertEqual(basis.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
 
     def test_create_Fe_bcc(self):
         self.pse = PeriodicTable()
@@ -1226,7 +1227,8 @@ class TestAtoms(unittest.TestCase):
             cell=2.6 * np.eye(3),
         )
         self.assertTrue(
-            np.array_equal(basis.get_initial_magnetic_moments(), ["0.5"] * 2)
+            np.array_equal(basis.get_initial_magnetic_moments(), [0.5] * 2),
+            msg=f"Expected basis.get_initial_magnetic_moments() to be equal to {[0.5] * 2} but got {basis.get_initial_magnetic_moments()}."
         )
 
     def test_occupy_lattice(self):
@@ -1384,7 +1386,7 @@ class TestAtoms(unittest.TestCase):
         basis_O.set_scaled_positions([0.0, 0.0, 0.5] + basis_O.get_scaled_positions())
         basis = basis_Mg + basis_O
         basis.center_coordinates_in_unit_cell()
-        self.assertEqual(basis.get_spacegroup()["Number"], 225)
+        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
         # Adding an ASE instance to a pyiron instance
         ase_basis = ASEAtoms("O", scaled_positions=[[0, 0, 0]], cell=np.eye(3) * 10)
         pyiron_basis = Atoms(
@@ -1632,7 +1634,7 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(struct.get_chemical_formula(), "Mg4")
 
     def test_static_functions(self):
-        Al_bulk = self.struct_factory.ase_bulk("Al")
+        Al_bulk = self.struct_factory.ase.bulk("Al")
         self.assertIsInstance(Al_bulk, Atoms)
         self.assertTrue(all(Al_bulk.pbc))
         surface = self.struct_factory.surface("Al", "fcc111", size=(4, 4, 4), vacuum=10)
@@ -1940,6 +1942,12 @@ class TestAtoms(unittest.TestCase):
                 read_structure.calc.parameters[k],
                 msg=f"Calculator parameter {k} not correctly restored from HDF!",
             )
+
+    def test_pickle(self):
+        pickled = pickle.dumps(self.C3)
+        unpickled = pickle.loads(pickled)
+        self.assertEqual(unpickled, self.C3)
+        self.assertTrue(np.allclose(unpickled.cell, self.C3.cell))
 
 
 def generate_fcc_lattice(a=4.2):

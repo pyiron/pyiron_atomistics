@@ -2,9 +2,6 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from ase.constraints import dict2constraint
-import copy
-import importlib
 import numpy as np
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
@@ -50,14 +47,19 @@ class AseJob(GenericInteractive):
         self.server.run_mode = pre_run_mode
 
     def run_if_interactive(self):
-        if self.structure.calc is None:
-            self.set_calculator()
+        self._ensure_structure_calc_is_set()
         super(AseJob, self).run_if_interactive()
         self.interactive_collect()
 
+    def _ensure_structure_calc_is_set(self):
+        if self.structure.calc is None:
+            self.set_calculator()
+
     def set_calculator(self):
         raise NotImplementedError(
-            "The _set_calculator function is not implemented for this code."
+            "The set_calculator function is not implemented for this code. Either set "
+            "an ase calculator to the structure attribute, or subclass this job and "
+            "define set_calculator."
         )
 
     def interactive_structure_setter(self, structure):
@@ -68,7 +70,8 @@ class AseJob(GenericInteractive):
 
     def interactive_initialize_interface(self):
         self.status.running = True
-        self._structure.calc.set_label(self.working_directory + "/")
+        self._ensure_structure_calc_is_set()
+        self.structure.calc.set_label(self.working_directory + "/")
         self._interactive_library = True
 
     def interactive_close(self):

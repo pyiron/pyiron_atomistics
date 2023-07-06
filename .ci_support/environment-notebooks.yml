@@ -11,5 +11,5 @@ dependencies:
 - sphinxdft >=3.0
 - sphinxdft-data
 - iprpy-data
-- pyiron-data >=0.0.14
+- pyiron-data >=0.0.22
 - sqsgenerator

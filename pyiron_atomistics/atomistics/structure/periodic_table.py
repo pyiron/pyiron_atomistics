@@ -89,6 +89,14 @@ class ChemicalElement(object):
         if item in self.sub.index:
             return self.sub[item]
 
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def __getstate__(self):
+        # Only necessary to support pickling in python <3.11
+        # https://docs.python.org/release/3.11.2/library/pickle.html#object.__getstate__
+        return self.__dict__
+
     def __eq__(self, other):
         if self is other:
             return True
@@ -222,6 +230,17 @@ class PeriodicTable(object):
             return self.dataframe[item]
         if item in self.dataframe.index.values:
             return self.dataframe.loc[item]
+
+    def __setstate__(self, state):
+        """
+        Used by (cloud)pickle; force the state update to avoid recursion pickling Atoms
+        """
+        self.__dict__.update(state)
+
+    def __getstate__(self):
+        # Only necessary to support pickling in python <3.11
+        # https://docs.python.org/release/3.11.2/library/pickle.html#object.__getstate__
+        return self.__dict__
 
     def from_hdf(self, hdf):
         """
