@@ -337,7 +337,7 @@ class SphinxBase(GenericDFTJob):
         return get_structure_group(
             structure=self.structure,
             use_symmetry=self.fix_symmetry,
-            keep_angstrom=keep_angstrom
+            keep_angstrom=keep_angstrom,
         )
 
     def load_default_input(self):
