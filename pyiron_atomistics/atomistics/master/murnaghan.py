@@ -679,7 +679,7 @@ class Murnaghan(AtomisticParallelMaster):
             None,
             "List of strains that should be calculated.  If given vol_range and num_points take no effect.",
         )
-        self.input["allow_unfinished"] = (
+        self.input["allow_aborted"] = (
             0,
             "The number of child jobs that are allowed to fail or not converge, before this job is considered aborted or not converged.",
         )
@@ -813,13 +813,13 @@ class Murnaghan(AtomisticParallelMaster):
             self._output["energy"] = erg_lst[arg_lst]
         else:
             erg_lst, vol_lst, err_lst, id_lst = [], [], [], []
-            allowed_unfinished_children = self.input.get("allow_unfinished", 0)
+            allowed_aborted_children = self.input.get("allow_aborted", 0)
             for job_id in self.child_ids:
                 ham = self.project_hdf5.inspect(job_id)
                 if ham.status == "aborted":
-                    if allowed_unfinished_children == 0:
+                    if allowed_aborted_children == 0:
                         raise ValueError(f"Child {ham.name}({job_id}) is aborted!")
-                    allowed_unfinished_children -= 1
+                    allowed_aborted_children -= 1
                     continue
                 if "energy_tot" in ham["output/generic"].list_nodes():
                     energy = ham["output/generic/energy_tot"][-1]
@@ -832,9 +832,9 @@ class Murnaghan(AtomisticParallelMaster):
                 err_lst.append(np.var(energy))
                 vol_lst.append(volume)
                 id_lst.append(job_id)
-            failed_children = self.input.get('allow_unfinished') - allowed_unfinished_children
-            if failed_children > 0:
-                self.logger.warning(f"{failed_children} failed, but proceeding anyway.")
+            aborted_children = self.input.get('allow_aborted') - allowed_aborted_children
+            if aborted_children > 0:
+                self.logger.warning(f"{aborted_children} aborted, but proceeding anyway.")
             vol_lst = np.array(vol_lst)
             erg_lst = np.array(erg_lst)
             err_lst = np.array(err_lst)
