@@ -832,9 +832,13 @@ class Murnaghan(AtomisticParallelMaster):
                 err_lst.append(np.var(energy))
                 vol_lst.append(volume)
                 id_lst.append(job_id)
-            aborted_children = self.input.get('allow_aborted') - allowed_aborted_children
+            aborted_children = (
+                self.input.get("allow_aborted") - allowed_aborted_children
+            )
             if aborted_children > 0:
-                self.logger.warning(f"{aborted_children} aborted, but proceeding anyway.")
+                self.logger.warning(
+                    f"{aborted_children} aborted, but proceeding anyway."
+                )
             vol_lst = np.array(vol_lst)
             erg_lst = np.array(erg_lst)
             err_lst = np.array(err_lst)
