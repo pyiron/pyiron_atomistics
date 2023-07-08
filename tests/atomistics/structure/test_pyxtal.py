@@ -31,5 +31,5 @@ class TestPyxtal(TestCase):
                               "returned not a StructureStorage with multiple groups")
         self.assertIsInstance(pyxtal(1, species=['Fe'], num_ions=[1], repeat=5), StructureStorage,
                               "returned not a StructureStorage with repeat given")
-        self.assertEqual(pyxtal(1, species=['Fe'], num_ions=[1], repeat=5), 5,
+        self.assertEqual(pyxtal(1, species=['Fe'], num_ions=[1], repeat=5).number_of_structures, 5,
                          "returned number of structures did not match given repeat")
