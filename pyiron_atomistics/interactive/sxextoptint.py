@@ -46,7 +46,6 @@ class SxExtOpt(InteractiveInterface):
         max_step_length=1.0e-1,
         soft_mode_damping=1,
         executable=None,
-        ssa=False,
     ):
         if ionic_forces is not None:
             ionic_force_tolerance = ionic_forces
@@ -77,18 +76,14 @@ class SxExtOpt(InteractiveInterface):
             max_step_length=max_step_length,
             soft_mode_damping=soft_mode_damping,
             selective_dynamics="selective_dynamics" in structure._tag_list.keys(),
-            ssa=ssa,
         )
         self._cell = structure.cell
-        if ssa:
-            self._elements = structure.get_parent_symbols()
-        else:
-            magmom = structure.get_initial_magnetic_moments()
-            magmom[magmom != None] = np.round(magmom[magmom != None], decimals=1)
-            magmom = np.char.mod("%s", magmom)
-            self._elements = np.char.add(structure.get_parent_symbols(), magmom)
-            self._elements = np.char.replace(self._elements, "-", "m")
-            self._elements = np.char.replace(self._elements, ".", "p")
+        magmom = structure.get_initial_magnetic_moments()
+        magmom[magmom != None] = np.round(magmom[magmom != None], decimals=1)
+        magmom = np.char.mod("%s", magmom)
+        self._elements = np.char.add(structure.get_parent_symbols(), magmom)
+        self._elements = np.char.replace(self._elements, "-", "m")
+        self._elements = np.char.replace(self._elements, ".", "p")
         self._positions = structure.positions
         self._converged = False
 
@@ -103,14 +98,9 @@ class SxExtOpt(InteractiveInterface):
         max_step_length=1.0e-1,
         soft_mode_damping=1,
         selective_dynamics=False,
-        ssa=False,
     ):
         if selective_dynamics:
             structure_to_write = structure.copy()
-            if ssa:
-                structure_to_write.structure.set_initial_magnetic_moments(
-                    len(structure) * [None]
-                )
             file_name = posixpath.join(self.working_directory, "input.sx")
             with open(file_name, "w") as f:
                 f.write(get_structure_group(structure, keep_angstrom=True).to_sphinx())
@@ -327,7 +317,6 @@ class SxExtOptInteractive(InteractiveWrapper):
             max_step_length=float(self.input["max_step_length"]),
             soft_mode_damping=float(self.input["soft_mode_damping"]),
             executable=self.executable.executable_path,
-            ssa=self.input["ssa"],
         )
         self.status.running = True
         self._logger.info("job status: %s", self.status)
@@ -403,7 +392,6 @@ class Input(GenericParameters):
             "ionic_force_tolerance = 1.0e-2\n"
             "maxDist = 5 // maximum possible distance for considering neighbors\n"
             "max_step_length = 1.0e-1 // maximum displacement at each step\n"
-            "ssa = False // ignore different magnetic moment values when internal symmetries are considered\n"
             "soft_mode_damping = 1.0 // Tikhonov damper\n"
         )
         self.load_string(file_content)
