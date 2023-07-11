@@ -133,6 +133,7 @@ _conversion_dict["energy"] = [
     "energy_tot",
     "energy_pot",
     "energy_pot_per_atom",
+    "energy_kin_per_atom",
     "mean_energy_pot",
 ]
 _conversion_dict["temperature"] = ["temperature", "temperatures"]

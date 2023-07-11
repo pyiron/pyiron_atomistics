@@ -297,7 +297,7 @@ class VaspInteractive(VaspBase, GenericInteractive):
             or self.server.run_mode.interactive_non_modal
         ):
             self.interactive_prepare()
-        return super(VaspInteractive, self)._run_if_new(debug=debug)
+        super(VaspInteractive, self)._run_if_new(debug=debug)
 
     def interactive_prepare(self):
         """
