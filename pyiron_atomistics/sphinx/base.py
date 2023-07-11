@@ -1836,8 +1836,8 @@ def get_structure_group(structure, use_symmetry=True, keep_angstrom=False):
                 "cell": np.array(structure.cell * 1 / BOHR_TO_ANGSTROM),
             }
         )
-    if "selective_dynamics" in structure._tag_list.keys():
-        selective_dynamics_list = structure.selective_dynamics.list()
+    if "selective_dynamics" in structure.arrays:
+        selective_dynamics_list = list(structure.selective_dynamics)
     else:
         selective_dynamics_list = [3 * [False]] * len(structure.positions)
     species = structure_group.create_group("species")
