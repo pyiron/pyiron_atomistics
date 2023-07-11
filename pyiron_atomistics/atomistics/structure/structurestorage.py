@@ -212,9 +212,7 @@ class StructureStorage(FlattenedStorage, pa_has_structure.HasStructure):
         if structure.has("initial_magmoms"):
             arrays["spins"] = structure.spins
         if "selective_dynamics" in structure.get_tags():
-            arrays["selective_dynamics"] = getattr(
-                structure, "selective_dynamics"
-            ).list()
+            arrays["selective_dynamics"] = structure.selective_dynamics
 
         self.add_chunk(
             len(structure),

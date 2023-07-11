@@ -7,7 +7,6 @@ from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
 )
-from pyiron_atomistics.atomistics.structure.sparse_list import SparseArrayElement
 from ase.atom import Atom as ASEAtom
 
 __author__ = "Sudarsan Surendralal"
@@ -22,7 +21,7 @@ __status__ = "production"
 __date__ = "Aug 1, 2020"
 
 
-class Atom(ASEAtom, SparseArrayElement):
+class Atom(ASEAtom):
     """
     Class for representing a single atom derived from the `ASE atom class`_.
 
@@ -59,22 +58,19 @@ class Atom(ASEAtom, SparseArrayElement):
         if element is None:
             element = symbol
 
-        SparseArrayElement.__init__(self, **qwargs)
-        # super(SparseArrayElement, self).__init__(**qwargs)
-        # verify that element is given (as string, ChemicalElement object or nucleus number
         if pse is None:
             pse = PeriodicTable()
 
         if element is None or element == "X":
             if "Z" in qwargs:
                 el_symbol = pse.atomic_number_to_abbreviation(qwargs["Z"])
-                self._lists["element"] = pse.element(el_symbol)
+                qwargs["element"] = pse.element(el_symbol)
         else:
             if isinstance(element, str):
                 el_symbol = element
-                self._lists["element"] = pse.element(el_symbol)
+                qwargs["element"] = pse.element(el_symbol)
             elif isinstance(element, ChemicalElement):
-                self._lists["element"] = element
+                qwargs["element"] = element
             else:
                 raise ValueError("Unknown element type")
 
@@ -110,6 +106,9 @@ class Atom(ASEAtom, SparseArrayElement):
         # ASE compatibility for tags
         for key, val in qwargs.items():
             self.data[key] = val
+
+    def __getattr__(self, key):
+        return self.data[key]
 
     @property
     def mass(self):

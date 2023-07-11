@@ -183,7 +183,9 @@ class SphinxBase(GenericDFTJob):
         if not isinstance(boolean, bool):
             raise ValueError("fix_spin_constraint has to be a boolean")
         self._generic_input["fix_spin_constraint"] = boolean
-        self.structure.add_tag(spin_constraint=boolean)
+        self.structure.set_array(
+            "spin_constraint", np.array(len(self.structure) * [boolean])
+        )
 
     @plane_wave_cutoff.setter
     def plane_wave_cutoff(self, val):
@@ -1834,8 +1836,8 @@ def get_structure_group(structure, use_symmetry=True, keep_angstrom=False):
                 "cell": np.array(structure.cell * 1 / BOHR_TO_ANGSTROM),
             }
         )
-    if "selective_dynamics" in structure._tag_list.keys():
-        selective_dynamics_list = structure.selective_dynamics.list()
+    if "selective_dynamics" in structure.arrays:
+        selective_dynamics_list = list(structure.selective_dynamics)
     else:
         selective_dynamics_list = [3 * [False]] * len(structure.positions)
     species = structure_group.create_group("species")

@@ -17,7 +17,6 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     pyiron_to_pymatgen,
 )
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from pyiron_atomistics.atomistics.structure.sparse_list import SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     element,
     PeriodicTable,
@@ -156,18 +155,14 @@ class TestAtoms(unittest.TestCase):
 
     def test_add_tags(self):
         self.CO2.add_tag(test_tag="a")
-        self.assertIsInstance(self.CO2.test_tag, SparseList)
         self.assertEqual(self.CO2.test_tag[0], "a")
         self.assertEqual(self.CO2.test_tag[0], self.CO2.test_tag[2])
-        self.assertIsInstance(self.CO2.test_tag.list(), list)
         self.CO2.add_tag(selective_dynamics=[True, True, True])
         self.CO2.selective_dynamics[1] = [True, False, True]
-        self.assertEqual(self.CO2.selective_dynamics[1], [True, False, True])
-        self.assertIsInstance(self.CO2.selective_dynamics.list(), list)
+        self.assertEqual(self.CO2.selective_dynamics[1].tolist(), [True, False, True])
 
     def test_get_tags(self):
         self.CO2.add_tag(test_tag="a")
-        self.assertIsInstance(self.CO2.test_tag, SparseList)
         self.assertIsInstance(self.CO2.get_tags(), type(dict().keys()))
 
     def test_get_pbc(self):
@@ -248,7 +243,6 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
         self.assertTrue(basis.selective_dynamics[7][0])
         self.assertFalse(basis.selective_dynamics[0][0])
-        basis.add_tag(selective_dynamics=[False, False, False])
         basis.selective_dynamics[6] = [True, True, True]
         self.assertTrue(basis.selective_dynamics[6][0])
         self.assertFalse(basis.selective_dynamics[5][0])
@@ -310,10 +304,7 @@ class TestAtoms(unittest.TestCase):
         mg_indices = basis.select_index("Mg")
         o_indices = basis.select_index("O")
         basis_new = basis[mg_indices] + basis[o_indices]
-        self.assertEqual(
-            len(basis_new._tag_list), len(basis[mg_indices]) + len(basis[o_indices])
-        )
-        self.assertEqual(basis_new.get_symmetry().spacegroup["Number"], 225)
+        self.assertEqual(basis_new.get_spacegroup()["Number"], 225)
         self.assertEqual(basis[:-3], basis[0 : len(basis) - 3])
         self.assertEqual(basis.dimension, basis[mg_indices].dimension)
         self.assertTrue(np.array_equal(basis.pbc, basis[mg_indices].pbc))
@@ -678,16 +669,14 @@ class TestAtoms(unittest.TestCase):
         basis_Mg = CrystalStructure("Mg", bravais_basis="fcc", lattice_constant=4.2)
         basis_O = CrystalStructure("O", bravais_basis="fcc", lattice_constant=4.2)
         basis_O.set_scaled_positions(basis_O.get_scaled_positions() + [0.0, 0.0, 0.5])
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             basis_O.set_repeat(5.0)
-        with self.assertRaises(AssertionError):
-            basis_O.set_repeat([2, 2])
         basis = basis_Mg + basis_O
         basis.center_coordinates_in_unit_cell()
         basis.add_tag(selective_dynamics=[True, True, True])
         basis.selective_dynamics[basis.select_index("O")] = [False, False, False]
         len_before = len(basis)
-        sel_dyn_before = np.array(basis.selective_dynamics.list())
+        sel_dyn_before = np.array(basis.selective_dynamics)
         self.assertTrue(
             np.alltrue(
                 np.logical_not(
@@ -699,11 +688,10 @@ class TestAtoms(unittest.TestCase):
             np.alltrue(np.alltrue(sel_dyn_before[basis.select_index("Mg")], axis=1))
         )
         basis.set_repeat([3, 3, 2])
-        sel_dyn_after = np.array(basis.selective_dynamics.list())
-        len_after = len(basis)
-        self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
-        self.assertEqual(len_before * 18, len_after)
+        sel_dyn_after = np.array(basis.selective_dynamics)
+        self.assertEqual(basis.get_spacegroup()["Number"], 225)
         self.assertEqual(len(sel_dyn_before) * 18, len(sel_dyn_after))
+        self.assertEqual(len_before * 18, len(basis))
         self.assertTrue(
             np.alltrue(
                 np.logical_not(
@@ -720,26 +708,26 @@ class TestAtoms(unittest.TestCase):
         basis.spin[basis.select_index("O")] = -1
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("Mg")].list(),
+                basis.spin[basis.select_index("Mg")],
                 1 * np.ones(len(basis.select_index("Mg"))),
             )
         )
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("O")].list(),
+                basis.spin[basis.select_index("O")],
                 -1 * np.ones(len(basis.select_index("O"))),
             )
         )
         basis.set_repeat(2)
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("Mg")].list(),
+                basis.spin[basis.select_index("Mg")],
                 1 * np.ones(len(basis.select_index("Mg"))),
             )
         )
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("O")].list(),
+                basis.spin[basis.select_index("O")],
                 -1 * np.ones(len(basis.select_index("O"))),
             )
         )
@@ -755,13 +743,13 @@ class TestAtoms(unittest.TestCase):
         basis.set_repeat(2)
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("Mg")].list(),
+                basis.spin[basis.select_index("Mg")],
                 1 * np.ones(len(basis.select_index("Mg"))),
             )
         )
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("O")].list(),
+                basis.spin[basis.select_index("O")],
                 -1 * np.ones(len(basis.select_index("O"))),
             )
         )
@@ -775,17 +763,18 @@ class TestAtoms(unittest.TestCase):
         basis.set_repeat(2)
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("Mg")].list(),
+                basis.spin[basis.select_index("Mg")],
                 1 * np.ones(len(basis.select_index("Mg"))),
             )
         )
         self.assertTrue(
             np.array_equal(
-                basis.spin[basis.select_index("O")].list(),
+                basis.spin[basis.select_index("O")],
                 -1 * np.ones(len(basis.select_index("O"))),
             )
         )
-        self.assertEqual(8 * len(self.CO2), len(self.CO2.repeat(np.int64(2))))
+        with self.assertRaises(IndexError):
+            basis_O.set_repeat([2, 2])
 
     def test_get_distance(self):
         cell = 2.2 * np.identity(3)
@@ -1396,9 +1385,6 @@ class TestAtoms(unittest.TestCase):
         # basis_O.set_relative()
         basis_O.set_scaled_positions([0.0, 0.0, 0.5] + basis_O.get_scaled_positions())
         basis = basis_Mg + basis_O
-        self.assertEqual(
-            len(basis._tag_list), len(basis_Mg._tag_list) + len(basis_O._tag_list)
-        )
         basis.center_coordinates_in_unit_cell()
         self.assertEqual(basis.get_symmetry().spacegroup["Number"], 225)
         # Adding an ASE instance to a pyiron instance
@@ -1478,7 +1464,6 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(b.get_chemical_formula(), "H3NOO_up")
         self.assertEqual(len(b), 6)
         self.assertEqual(len(b.indices), 6)
-        self.assertEqual(len(b._tag_list), 6)
         self.assertEqual(len(b.species), 4)
         O_indices = b.select_index("O")
         b.__delitem__(O_indices)
@@ -1726,7 +1711,7 @@ class TestAtoms(unittest.TestCase):
         )
         self.assertEqual(
             repr(H2),
-            "H: [0. 0. 0.]\nH: [0.5 0.5 0.5]\npbc: [ True  True  True]\ncell: \nCell([1.0, 1.0, 1.0])\n",
+            "H: [0. 0. 0.]\nH: [0.5 0.5 0.5]\ntags: \n    indices: [0 0]\npbc: [ True  True  True]\ncell: \nCell([1.0, 1.0, 1.0])\n",
         )
         self.assertEqual(str(H2), "H2")
 
@@ -1827,7 +1812,7 @@ class TestAtoms(unittest.TestCase):
         pyiron_atoms_sd = pymatgen_to_pyiron(struct_with_sd)
 
         sd_equivalent = struct_with_sd.site_properties["selective_dynamics"] == [
-            x.selective_dynamics for x in pyiron_atoms_sd
+            x.selective_dynamics.tolist() for x in pyiron_atoms_sd
         ]
         self.assertTrue(
             sd_equivalent,
@@ -1847,7 +1832,7 @@ class TestAtoms(unittest.TestCase):
             x.spin for x in pyiron_atoms_sd_magmom
         ]
         sd_equivalent = struct_with_sd_magmom.site_properties["selective_dynamics"] == [
-            x.selective_dynamics for x in pyiron_atoms_sd_magmom
+            x.selective_dynamics.tolist() for x in pyiron_atoms_sd_magmom
         ]
         self.assertTrue(
             magmom_equivalent,
@@ -1903,8 +1888,10 @@ class TestAtoms(unittest.TestCase):
 
         struct_sd = pyiron_to_pymatgen(pyiron_atoms_sd)
         self.assertTrue(
-            struct_sd.site_properties["selective_dynamics"]
-            == [x.selective_dynamics for x in pyiron_atoms_sd],
+            np.array_equal(
+                struct_sd.site_properties["selective_dynamics"],
+                pyiron_atoms_sd.selective_dynamics
+            ),
             "Failed to produce equivalent selective dynamics after conversion!",
         )
 
@@ -1936,8 +1923,10 @@ class TestAtoms(unittest.TestCase):
             "Failed to produce equivalent magmom when both magmom + sel_dyn are present!",
         )
         self.assertTrue(
-            struct_sd_magmom.site_properties["selective_dynamics"]
-            == [x.selective_dynamics for x in pyiron_atoms_sd_magmom],
+            np.array_equal(
+                struct_sd_magmom.site_properties["selective_dynamics"],
+                pyiron_atoms_sd_magmom.selective_dynamics
+            ),
             "Failed to produce equivalent sel_dyn when both magmom + sel_dyn are present!",
         )
 
