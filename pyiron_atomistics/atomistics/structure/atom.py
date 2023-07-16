@@ -108,7 +108,10 @@ class Atom(ASEAtom):
             self.data[key] = val
 
     def __getattr__(self, key):
-        return self.data[key]
+        try:
+            return self.data[key]
+        except KeyError:
+            raise AttributeError(key)
 
     @property
     def mass(self):
