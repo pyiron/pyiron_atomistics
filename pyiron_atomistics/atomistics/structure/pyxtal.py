@@ -4,9 +4,7 @@ import warnings
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
 
-from tqdm.auto import tqdm
-from pyxtal import pyxtal as _pyxtal
-from pyxtal.msg import Comp_CompatibilityError
+from structuretoolkit.build import pyxtal as _pyxtal
 
 publication = {
     "pyxtal": {
@@ -62,51 +60,19 @@ def pyxtal(
         ValueError: if `species` and `num_ions` are not of the same length
         ValueError: if stoichiometry and symmetry group are incompatible and allow_exceptions==False or only one structure is requested
     """
-    if len(species) != len(num_ions):
-        raise ValueError(
-            "species and num_ions must be of same length, "
-            f"not {species} and {num_ions}!"
-        )
-    stoich = "".join(f"{s}{n}" for s, n in zip(species, num_ions))
-
-    def generate(group):
-        s = _pyxtal()
-        try:
-            s.from_random(
-                dim=dim, group=group, species=species, numIons=num_ions, **kwargs
-            )
-        except Comp_CompatibilityError as e:
-            if not allow_exceptions:
-                raise ValueError(
-                    f"Symmetry group {group} incompatible with stoichiometry {stoich}!"
-                ) from None
-            else:
-                return None
-        s = ase_to_pyiron(s.to_ase())
-        s.center_coordinates_in_unit_cell()
-        return s
-
-    # return a single structure
-    if repeat == 1 and isinstance(group, int):
-        allow_exceptions = False
-        return generate(group)
+    ret = _pyxtal(group=group, species=species, num_ions=num_ions, dim=dim,
+                  repeat=repeat, allow_exceptions=allow_exceptions, **kwargs)
+    if isinstance(ret, ase.Atoms):
+        return ase_to_pyiron(ret)
     else:
+        stoich = "".join(f"{s}{n}" for s, n in zip(species, num_ions))
         if storage is None:
             storage = StructureStorage()
-        if isinstance(group, int):
-            group = [group]
-        failed_groups = []
-        for g in tqdm(group, desc="Spacegroups"):
-            for i in range(repeat):
-                s = generate(g)
-                if s is None:
-                    failed_groups.append(g)
-                    continue
-                storage.add_structure(
-                    s, identifier=f"{stoich}_{g}_{i}", symmetry=g, repeat=i
-                )
-        if len(failed_groups) > 0:
-            warnings.warn(
-                f'Groups [{", ".join(map(str,failed_groups))}] could not be generated with stoichiometry {stoich}!'
+        for struct in ret:
+            storage.add_structure(
+                    struct["atoms"],
+                    identifier=f"{stoich}_{struct['symmetry']}_{struct['repeat']}",
+                    symmetry=struct["symmetry"],
+                    repeat=struct["repeat"],
             )
         return storage
