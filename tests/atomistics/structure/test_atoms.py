@@ -27,7 +27,6 @@ from ase.cell import Cell as ASECell
 from ase.atoms import Atoms as ASEAtoms
 from ase.build import molecule
 from pymatgen.core import Structure, Lattice
-from pymatgen.io.ase import AseAtomsAdaptor
 
 from ase.calculators.morse import MorsePotential
 
