@@ -22,7 +22,7 @@ from structuretoolkit.analyse import (
 from structuretoolkit.common import (
     center_coordinates_in_unit_cell,
     ase_to_pymatgen,
-    pymatgen_to_ase
+    pymatgen_to_ase,
 )
 from structuretoolkit.visualize import plot3d
 from pyiron_atomistics.atomistics.structure.atom import (
