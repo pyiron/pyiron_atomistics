@@ -19,7 +19,11 @@ from structuretoolkit.analyse import (
     get_distances_array,
     find_mic,
 )
-from structuretoolkit.common import center_coordinates_in_unit_cell
+from structuretoolkit.common import (
+    center_coordinates_in_unit_cell,
+    ase_to_pymatgen,
+    pymatgen_to_ase,
+)
 from structuretoolkit.visualize import plot3d
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
@@ -32,7 +36,6 @@ from pyiron_atomistics.atomistics.structure.periodic_table import (
     ChemicalElement,
 )
 from pyiron_base import state, deprecate
-from pymatgen.io.ase import AseAtomsAdaptor
 from collections.abc import Sequence
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
@@ -3202,12 +3205,12 @@ def pymatgen_to_pyiron(structure):
         sel_dyn_list = structure.site_properties["selective_dynamics"]
         struct = structure.copy()
         struct.remove_site_property("selective_dynamics")
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=struct))
+        pyiron_atoms = ase_to_pyiron(pymatgen_to_ase(structure=struct))
         pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
         for i, _ in enumerate(pyiron_atoms):
             pyiron_atoms.selective_dynamics[i] = sel_dyn_list[i]
     else:
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=structure))
+        pyiron_atoms = ase_to_pyiron(pymatgen_to_ase(structure=structure))
     return pyiron_atoms
 
 
@@ -3229,14 +3232,14 @@ def pyiron_to_pymatgen(pyiron_obj):
         sel_dyn_list = pyiron_obj.selective_dynamics
         pyiron_obj_conv.selective_dynamics = [True, True, True]
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
-        pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj)
+        pymatgen_obj_conv = ase_to_pymatgen(structure=ase_obj)
         new_site_properties = pymatgen_obj_conv.site_properties
         new_site_properties["selective_dynamics"] = sel_dyn_list
         pymatgen_obj = pymatgen_obj_conv.copy(site_properties=new_site_properties)
     else:
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
         _check_if_simple_atoms(atoms=ase_obj)
-        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj)
+        pymatgen_obj = ase_to_pymatgen(structure=ase_obj)
     return pymatgen_obj
 
 
