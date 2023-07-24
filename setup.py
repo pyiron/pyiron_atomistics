@@ -48,7 +48,7 @@ setup(
         'matplotlib==3.7.2',
         'mendeleev==0.14.0',
         'mp-api==0.33.3',
-        'numpy==1.24.3',
+        'numpy==1.25.1',
         'pandas==2.0.3',
         'phonopy==2.20.0',
         'pint==0.22',
