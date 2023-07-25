@@ -833,7 +833,7 @@ class Murnaghan(AtomisticParallelMaster):
                 vol_lst.append(volume)
                 id_lst.append(job_id)
             aborted_children = (
-                self.input.get("allow_aborted") - allowed_aborted_children
+                self.input.get("allow_aborted", 0) - allowed_aborted_children
             )
             if aborted_children > 0:
                 self.logger.warning(
