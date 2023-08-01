@@ -195,7 +195,7 @@ class VaspInteractive(VaspBase, GenericInteractive):
                 ionic_energy_tolerance=ionic_energy_tolerance,
                 ionic_force_tolerance=ionic_force_tolerance,
                 volume_only=volume_only,
-                cell_only=cell_only
+                cell_only=cell_only,
             )
 
     def calc_md(
