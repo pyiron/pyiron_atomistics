@@ -194,6 +194,8 @@ class VaspInteractive(VaspBase, GenericInteractive):
                 algorithm=algorithm,
                 retain_charge_density=retain_charge_density,
                 retain_electrostatic_potential=retain_electrostatic_potential,
+                ionic_energy_tolerance=ionic_energy_tolerance,
+                ionic_force_tolerance=ionic_force_tolerance,
                 ionic_energy=ionic_energy,
                 ionic_forces=ionic_forces,
                 volume_only=volume_only,
