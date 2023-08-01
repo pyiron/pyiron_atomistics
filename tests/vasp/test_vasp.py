@@ -420,12 +420,16 @@ class TestVasp(unittest.TestCase):
         self.job.set_convergence_precision(electronic_energy=1e-7, ionic_force_tolerance=0.1)
         self.assertEqual(self.job.input.incar["EDIFF"], 1e-7)
         self.assertEqual(self.job.input.incar["EDIFFG"], -0.1)
+        self.job.set_convergence_precision(ionic_force_tolerance=0.001)
+        self.assertEqual(self.job.input.incar["EDIFFG"], -0.001)
         self.job.calc_minimize()
         self.assertEqual(self.job.input.incar["EDIFFG"], -0.01)
-        self.job.calc_minimize(ionic_energy=1e-4)
-        self.assertEqual(self.job.input.incar["EDIFFG"], 0.0001)
-        self.job.calc_minimize(ionic_forces=1e-3)
-        self.assertEqual(self.job.input.incar["EDIFFG"], -0.001)
+        self.job.calc_minimize(ionic_energy_tolerance=1e-5)
+        self.assertEqual(self.job.input.incar["EDIFFG"], 1e-5,
+                         'ionic energy tolerance not set correctly by calc_minimize')
+        self.job.calc_minimize(ionic_force_tolerance=1e-3)
+        self.assertEqual(self.job.input.incar["EDIFFG"], -0.001,
+                         'ionic force tolerance not set correctly by calc_minimize')
         self.assertEqual(self.job.input.incar["EDIFF"], 1e-7)
 
     def test_mixing_parameter(self):
