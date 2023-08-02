@@ -177,6 +177,38 @@ class LammpsBase(AtomisticGenericJob):
         """
         self._cutoff_radius = cutoff
 
+    @staticmethod
+    def _potential_file_to_potential(potential_filename):
+        if isinstance(potential_filename, str):
+            if ".lmp" in potential_filename:
+                potential_filename = potential_filename.split(".lmp")[0]
+            potential_db = LammpsPotentialFile()
+            return potential_db.find_by_name(potential_filename)
+        elif isinstance(potential_filename, pd.DataFrame):
+            return potential_filename
+        elif hasattr(potential_filename, "get_df"):
+            return potential_filename.get_df()
+        else:
+            raise TypeError("Potentials have to be strings or pandas dataframes.")
+
+    @staticmethod
+    def _check_potential_elements(structure_elements, potential_elements):
+        if not set(structure_elements).issubset(potential_elements):
+            raise ValueError(
+                f"Potential {potential_elements} does not support elements "
+                f"in structure {structure_elements}."
+            )
+
+    @staticmethod
+    def _get_potential_citations(potential):
+        pot_pub_dict = {}
+        pub_lst = potential["Citations"].values[0]
+        if isinstance(pub_lst, str) and len(pub_lst) > 0:
+            for p in ast.literal_eval(pub_lst):
+                for k in p.keys():
+                    pot_pub_dict[k] = p[k]
+        return {"lammps_potential": pot_pub_dict}
+
     @property
     def potential(self):
         """
@@ -198,44 +230,23 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        stringtypes = str
-        if isinstance(potential_filename, stringtypes):
-            if ".lmp" in potential_filename:
-                potential_filename = potential_filename.split(".lmp")[0]
-            potential_db = LammpsPotentialFile()
-            potential = potential_db.find_by_name(potential_filename)
-        elif isinstance(potential_filename, pd.DataFrame):
-            potential = potential_filename
-        elif hasattr(potential_filename, "get_df"):
-            potential = potential_filename.get_df()
-        else:
-            raise TypeError("Potentials have to be strings or pandas dataframes.")
-        if self.structure:
-            structure_elements = self.structure.get_species_symbols()
-            potential_elements = list(potential["Species"])[0]
-            if not set(structure_elements).issubset(potential_elements):
-                raise ValueError(
-                    "Potential {} does not support elements "
-                    "in structure {}.".format(potential_elements, structure_elements)
-                )
+        potential = self._potential_file_to_potential(potential_file)
+        if self.structure is not None:
+            self._check_potential_elements(
+                self.structure.get_species_symbols(), list(potential["Species"])[0]
+            )
         self.input.potential.df = potential
         if "Citations" in potential.columns.values:
-            pot_pub_dict = {}
-            pub_lst = potential["Citations"].values[0]
-            if isinstance(pub_lst, str) and len(pub_lst) > 0:
-                for p in ast.literal_eval(pub_lst):
-                    for k in p.keys():
-                        pot_pub_dict[k] = p[k]
-            state.publications.add({"lammps_potential": pot_pub_dict})
+            state.publications.add(self._get_potential_citations(potential))
         for val in ["units", "atom_style", "dimension"]:
             v = self.input.potential[val]
             if v is not None:
                 self.input.control[val] = v
-                if val == "units" and v != "metal":
-                    warnings.warn(
-                        "WARNING: Non-'metal' units are not fully supported. Your calculation should run OK, but "
-                        "results may not be saved in pyiron units."
-                    )
+        if self.input.potential["units"] not in ("metal", None):
+            warnings.warn(
+                "Non-'metal' units are not fully supported. Your calculation should run OK, but "
+                "results may not be saved in pyiron units."
+            )
         self.input.potential.remove_structure_block()
 
     @property
