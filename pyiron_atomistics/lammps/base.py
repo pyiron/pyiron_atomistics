@@ -228,7 +228,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        potential = self._potential_file_to_potential(potential_file)
+        potential = self._potential_file_to_potential(potential_filename)
         if self.structure is not None:
             self._check_potential_elements(
                 self.structure.get_species_symbols(), list(potential["Species"])[0]
