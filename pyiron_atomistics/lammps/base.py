@@ -180,10 +180,8 @@ class LammpsBase(AtomisticGenericJob):
     @staticmethod
     def _potential_file_to_potential(potential_filename):
         if isinstance(potential_filename, str):
-            if ".lmp" in potential_filename:
-                potential_filename = potential_filename.split(".lmp")[0]
-            potential_db = LammpsPotentialFile()
-            return potential_db.find_by_name(potential_filename)
+            potential_filename = potential_filename.split(".lmp")[0]
+            return LammpsPotentialFile().find_by_name(potential_filename)
         elif isinstance(potential_filename, pd.DataFrame):
             return potential_filename
         elif hasattr(potential_filename, "get_df"):
