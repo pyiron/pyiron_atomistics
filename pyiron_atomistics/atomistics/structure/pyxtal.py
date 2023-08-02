@@ -60,8 +60,15 @@ def pyxtal(
         ValueError: if `species` and `num_ions` are not of the same length
         ValueError: if stoichiometry and symmetry group are incompatible and allow_exceptions==False or only one structure is requested
     """
-    ret = _pyxtal(group=group, species=species, num_ions=num_ions, dim=dim,
-                  repeat=repeat, allow_exceptions=allow_exceptions, **kwargs)
+    ret = _pyxtal(
+        group=group,
+        species=species,
+        num_ions=num_ions,
+        dim=dim,
+        repeat=repeat,
+        allow_exceptions=allow_exceptions,
+        **kwargs,
+    )
     if isinstance(ret, ase.Atoms):
         return ase_to_pyiron(ret)
     else:
@@ -70,9 +77,9 @@ def pyxtal(
             storage = StructureStorage()
         for struct in ret:
             storage.add_structure(
-                    struct["atoms"],
-                    identifier=f"{stoich}_{struct['symmetry']}_{struct['repeat']}",
-                    symmetry=struct["symmetry"],
-                    repeat=struct["repeat"],
+                struct["atoms"],
+                identifier=f"{stoich}_{struct['symmetry']}_{struct['repeat']}",
+                symmetry=struct["symmetry"],
+                repeat=struct["repeat"],
             )
         return storage
