@@ -154,22 +154,27 @@ class ChemicalElement(object):
         """
         (self.sub["tags"]).update(tag_dic)
 
+    def to_dict(self):
+        hdf_el = {}
+        # TODO: save all parameters that are different from the parent (e.g. modified mass)
+        if self.Parent is not None:
+            self._dataset = {"Parameter": ["Parent"], "Value": [self.Parent]}
+            hdf_el["elementData"] = self._dataset
+        for key in self.tags.keys():
+            hdf_el["tagData"][key] = self.tags[
+                key
+            ]  # "Dictionary of element tag static"
+        return hdf_el
+
     def to_hdf(self, hdf):
         """
         saves the element with his parameters into his hdf5 job file
         Args:
             hdf (Hdfio): Hdfio object which will be used
         """
-        with hdf.open(self.Abbreviation) as hdf_el:  # "Symbol of the chemical element"
-            # TODO: save all parameters that are different from the parent (e.g. modified mass)
-            if self.Parent is not None:
-                self._dataset = {"Parameter": ["Parent"], "Value": [self.Parent]}
-                hdf_el["elementData"] = self._dataset
-            with hdf_el.open(
-                "tagData"
-            ) as hdf_tag:  # "Dictionary of element tag static"
-                for key in self.tags.keys():
-                    hdf_tag[key] = self.tags[key]
+        chemical_element_dict_to_hdf(
+            data_dict=self.to_dict(), hdf=hdf, group_name=self.Abbreviation
+        )
 
     def from_hdf(self, hdf):
         """
@@ -424,3 +429,13 @@ class PeriodicTable(object):
                 + file_name
                 + " supported file formats are csv, h5."
             )
+
+
+def chemical_element_dict_to_hdf(data_dict, hdf, group_name):
+    with hdf.open(group_name) as hdf_el:
+        if "elementData" in data_dict.keys():
+            hdf_el["elementData"] = data_dict["elementData"]
+        with hdf_el.open("tagData") as hdf_tag:
+            if "tagData" in data_dict.keys():
+                for k, v in data_dict["tagData"].items():
+                    hdf_tag[k] = v

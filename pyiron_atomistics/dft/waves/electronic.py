@@ -6,7 +6,11 @@ from __future__ import print_function
 
 import numpy as np
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.atoms import (
+    Atoms,
+    structure_dict_to_hdf,
+    dict_group_to_hdf,
+)
 from pyiron_atomistics.dft.waves.dos import Dos
 
 __author__ = "Sudarsan Surendralal"
@@ -481,24 +485,33 @@ class ElectronicStructure(object):
             hdf: Path to the hdf5 file/group in the file
             group_name: Name of the group under which the attributes are o be stored
         """
-        with hdf.open(group_name) as h_es:
-            h_es["TYPE"] = str(type(self))
-            if self.structure is not None:
-                self.structure.to_hdf(h_es)
-            h_es["k_points"] = self.kpoint_list
-            h_es["k_weights"] = self.kpoint_weights
-            h_es["eig_matrix"] = self.eigenvalue_matrix
-            h_es["occ_matrix"] = self.occupancy_matrix
-            if self.efermi is not None:
-                h_es["efermi"] = self.efermi
-            with h_es.open("dos") as h_dos:
-                h_dos["energies"] = self.dos_energies
-                h_dos["tot_densities"] = self.dos_densities
-                h_dos["int_densities"] = self.dos_idensities
-                if self.grand_dos_matrix is not None:
-                    h_dos["grand_dos_matrix"] = self.grand_dos_matrix
-                if self.resolved_densities is not None:
-                    h_dos["resolved_densities"] = self.resolved_densities
+        electronic_structure_dict_to_hdf(
+            data_dict=self.to_dict(), hdf=hdf, group_name=group_name
+        )
+
+    def to_dict(self):
+        h_es = {
+            "TYPE": str(type(self)),
+            "k_points": self.kpoint_list,
+            "k_weights": self.kpoint_weights,
+            "eig_matrix": self.eigenvalue_matrix,
+            "occ_matrix": self.occupancy_matrix,
+        }
+        if self.structure is not None:
+            h_es["structure"] = self.structure.to_dict()
+        if self.efermi is not None:
+            h_es["efermi"] = self.efermi
+
+        h_es["dos"] = {
+            "energies": self.dos_energies,
+            "tot_densities": self.dos_densities,
+            "int_densities": self.dos_idensities,
+        }
+        if self.grand_dos_matrix is not None:
+            h_es["dos"]["grand_dos_matrix"] = self.grand_dos_matrix
+        if self.resolved_densities is not None:
+            h_es["dos"]["resolved_densities"] = self.resolved_densities
+        return h_es
 
     def from_hdf(self, hdf, group_name="electronic_structure"):
         """
@@ -841,3 +854,15 @@ class Band(object):
     @resolved_dos_matrix.setter
     def resolved_dos_matrix(self, val):
         self._resolved_dos_matrix = val
+
+
+def electronic_structure_dict_to_hdf(data_dict, hdf, group_name):
+    with hdf.open(group_name) as h_es:
+        for k, v in data_dict.items():
+            if k not in ["structure", "dos"]:
+                h_es[k] = v
+
+        if "structure" in data_dict.keys():
+            structure_dict_to_hdf(data_dict=data_dict["structure"], hdf=h_es)
+
+        dict_group_to_hdf(data_dict=data_dict, hdf=h_es, group="dos")
