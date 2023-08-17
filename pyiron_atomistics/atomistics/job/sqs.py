@@ -5,7 +5,7 @@
 import random
 import warnings
 import itertools
-from structuretoolkit import get_sqs_structures
+from structuretoolkit.build import sqs_structures
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, DataContainer, GenericParameters, ImportAlarm
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
@@ -238,7 +238,7 @@ class SQSJob(AtomisticGenericJob):
 
     # This function is executed
     def run_static(self):
-        structure_lst, decmp, iterations, cycle_time = get_sqs_structures(
+        structure_lst, decmp, iterations, cycle_time = sqs_structures(
             structure=self.structure,
             mole_fractions={k: v for k, v in self.input.mole_fractions.items()},
             weights=self.input.weights,
@@ -246,6 +246,7 @@ class SQSJob(AtomisticGenericJob):
             iterations=self.input.iterations,
             output_structures=self.input.n_output_structures,
             num_threads=self.server.cores,
+            return_statistics=True,
         )
         self._lst_of_struct = [ase_to_pyiron(s) for s in structure_lst]
         for i, structure in enumerate(self._lst_of_struct):

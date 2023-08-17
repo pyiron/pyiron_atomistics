@@ -12,28 +12,30 @@ import numpy as np
 import warnings
 import seekpath
 import importlib
-from structuretoolkit import (
+from structuretoolkit.analyse import (
     get_symmetry,
     get_neighbors,
     get_neighborhood,
-    center_coordinates_in_unit_cell,
     get_distances_array,
     find_mic,
 )
+from structuretoolkit.common import (
+    center_coordinates_in_unit_cell,
+    ase_to_pymatgen,
+    pymatgen_to_ase,
+)
+from structuretoolkit.visualize import plot3d
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
 )
 from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
-from pyiron_atomistics.atomistics.structure._visualize import Visualize
 from pyiron_atomistics.atomistics.structure.analyse import Analyse
-from pyiron_atomistics.atomistics.structure.sparse_list import SparseArray, SparseList
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
 )
 from pyiron_base import state, deprecate
-from pymatgen.io.ase import AseAtomsAdaptor
 from collections.abc import Sequence
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
@@ -113,15 +115,10 @@ class Atoms(ASEAtoms):
         ):
             state.logger.debug("Not supported parameter used!")
 
-        self._store_elements = dict()
-        self._species_to_index_dict = None
         self._is_scaled = False
 
         self._species = list()
-        self.indices = np.array([])
-        self.constraints = None
         self._pse = PeriodicTable()
-        self._tag_list = SparseArray()
 
         el_index_lst = list()
         element_list = None
@@ -183,13 +180,12 @@ class Atoms(ASEAtoms):
                 )
             self.set_species(species)
 
-        self.indices = np.array(el_index_lst, dtype=int)
+        indices = np.array(el_index_lst, dtype=int)
 
         el_lst = [
             el.Abbreviation if el.Parent is None else el.Parent for el in self.species
         ]
-        symbols = np.array([el_lst[el] for el in self.indices])
-        self._tag_list._length = len(symbols)
+        symbols = np.array([el_lst[el] for el in indices])
         super(Atoms, self).__init__(
             symbols=symbols,
             positions=positions,
@@ -208,6 +204,8 @@ class Atoms(ASEAtoms):
             info=info,
         )
 
+        self.set_array("indices", indices)
+
         self.bonds = None
         self.units = {"length": "A", "mass": "u"}
         self.set_initial_magnetic_moments(magmoms)
@@ -218,10 +216,17 @@ class Atoms(ASEAtoms):
             self.dimension = len(self.positions[0])
         else:
             self.dimension = 0
-        self._visualize = Visualize(self)
         self._analyse = Analyse(self)
         # Velocities were not handled at all during file writing
         self._velocities = None
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def __getstate__(self):
+        # Only necessary to support pickling in python <3.11
+        # https://docs.python.org/release/3.11.2/library/pickle.html#object.__getstate__
+        return self.__dict__
 
     @property
     def velocities(self):
@@ -257,10 +262,6 @@ class Atoms(ASEAtoms):
             self.set_array("initial_magmoms", np.asarray(val))
 
     @property
-    def visualize(self):
-        return self._visualize
-
-    @property
     def analyse(self):
         return self._analyse
 
@@ -272,7 +273,6 @@ class Atoms(ASEAtoms):
         """
         return self._species
 
-    # @species.setter
     def set_species(self, value):
         """
         Setting the species list
@@ -281,12 +281,16 @@ class Atoms(ASEAtoms):
             value (list): A list atomistics.structure.periodic_table.ChemicalElement instances
 
         """
-        if value is None:
-            return
-        value = list(value)
-        self._species_to_index_dict = {el: i for i, el in enumerate(value)}
-        self._species = value[:]
-        self._store_elements = {el.Abbreviation: el for el in value}
+        if value is not None:
+            self._species = list(value)[:]
+
+    @property
+    def _store_elements(self) -> dict:
+        return {el.Abbreviation: el for el in self.species}
+
+    @property
+    def _species_to_index_dict(self) -> dict:
+        return {el: i for i, el in enumerate(self.species)}
 
     @property
     def symbols(self):
@@ -397,6 +401,9 @@ class Atoms(ASEAtoms):
 
         self._high_symmetry_path.update(path)
 
+    @deprecate(
+        "Use Atoms.set_array() instead: e.g. Atoms.set_array('selective_dynamics', np.repeat([[True, True, False]], len(Atoms), axis=0))"
+    )
     def add_tag(self, **qwargs):
         """
         Add tags to the atoms object.
@@ -408,7 +415,8 @@ class Atoms(ASEAtoms):
             >>> self.add_tag(selective_dynamics=[False, False, False])
 
         """
-        self._tag_list.add_tag(**qwargs)
+        for tag, value in qwargs.items():
+            self.set_array(tag, np.repeat([value], len(self), axis=0))
 
     # @staticmethod
     def numbers_to_elements(self, numbers):
@@ -460,10 +468,10 @@ class Atoms(ASEAtoms):
             hdf_structure["indices"] = self.indices
 
             with hdf_structure.open("tags") as hdf_tags:
-                for tag in self._tag_list.keys():
-                    tag_value = self._tag_list[tag]
-                    if isinstance(tag_value, SparseList):
-                        tag_value.to_hdf(hdf_tags, tag)
+                for tag, value in self.arrays.items():
+                    if tag in ["positions", "numbers", "indices"]:
+                        continue
+                    hdf_tags[tag] = value.tolist()
             hdf_structure["units"] = self.units
             hdf_structure["dimension"] = self.dimension
 
@@ -518,8 +526,7 @@ class Atoms(ASEAtoms):
                 el_object_list = [
                     self.convert_element(el, self._pse) for el in hdf_atoms["species"]
                 ]
-                self.indices = hdf_atoms["indices"]
-                self._tag_list._length = len(self.indices)
+                self.arrays["indices"] = hdf_atoms["indices"]
 
                 self.set_species(el_object_list)
                 self.bonds = None
@@ -555,24 +562,17 @@ class Atoms(ASEAtoms):
                     with hdf_atoms.open("tags") as hdf_tags:
                         tags = hdf_tags.list_nodes()
                         for tag in tags:
+                            if tag in ["initial_magmoms"]:
+                                continue
                             # tr_dict = {'0': False, '1': True}
                             if isinstance(hdf_tags[tag], (list, np.ndarray)):
                                 my_list = hdf_tags[tag]
-                                self._tag_list[tag] = SparseList(
-                                    my_list, length=len(self)
-                                )
-
-                            else:
+                            else:  # legacy of SparseList
                                 my_dict = hdf_tags.get_pandas(tag).to_dict()
-                                my_dict = {
-                                    i: val
-                                    for i, val in zip(
-                                        my_dict["index"], my_dict["values"]
-                                    )
-                                }
-                                self._tag_list[tag] = SparseList(
-                                    my_dict, length=len(self)
-                                )
+                                my_list = np.array(my_dict["values"])[
+                                    np.argsort(my_dict["index"])
+                                ]
+                            self.set_array(tag, np.asarray(my_list))
 
                 if "bonds" in hdf_atoms.list_nodes():
                     self.bonds = hdf_atoms["explicit_bonds"]
@@ -613,8 +613,9 @@ class Atoms(ASEAtoms):
                 self.convert_element(el, self._pse) for el in chemical_symbols
             ]
             self.set_species(list(set(el_object_list)))
-            self.indices = [self._species_to_index_dict[el] for el in el_object_list]
-            self._tag_list._length = len(self)
+            self.set_array(
+                "indices", [self._species_to_index_dict[el] for el in el_object_list]
+            )
             self.bonds = None
             if "explicit_bonds" in hdf_atoms.list_nodes():
                 # print "bonds: "
@@ -627,15 +628,12 @@ class Atoms(ASEAtoms):
                         # tr_dict = {'0': False, '1': True}
                         if isinstance(hdf_tags[tag], (list, np.ndarray)):
                             my_list = hdf_tags[tag]
-                            self._tag_list[tag] = SparseList(my_list, length=len(self))
-
                         else:
                             my_dict = hdf_tags.get_pandas(tag).to_dict()
-                            my_dict = {
-                                i: val
-                                for i, val in zip(my_dict["index"], my_dict["values"])
-                            }
-                            self._tag_list[tag] = SparseList(my_dict, length=len(self))
+                            my_list = np.array(my_dict["values"])[
+                                np.argsort(my_dict["index"])
+                            ]
+                        self.set_array(tag, my_list)
 
             self.cell = None
             if "cell" in hdf_atoms.list_groups():
@@ -702,7 +700,7 @@ class Atoms(ASEAtoms):
             dict_keys: Keys of the stored tags
 
         """
-        return self._tag_list.keys()
+        return self.arrays.keys()
 
     def convert_element(self, el, pse=None):
         """
@@ -733,7 +731,6 @@ class Atoms(ASEAtoms):
         else:
             raise ValueError("Unknown static type to specify a element")
 
-        self._store_elements[el] = element
         if hasattr(self, "species"):
             if element not in self.species:
                 self._species.append(element)
@@ -829,7 +826,7 @@ class Atoms(ASEAtoms):
             indices_copy = parent_basis.indices.copy()
             for i, ind_ind in enumerate(inv_ind):
                 indices_copy[parent_basis.indices == i] = ind_ind
-            parent_basis.indices = indices_copy
+            parent_basis.set_array("indices", indices_copy)
             return parent_basis
         parent_basis.set_species(list(new_species))
         return parent_basis
@@ -1063,6 +1060,7 @@ class Atoms(ASEAtoms):
 
         return struc_new
 
+    @deprecate("Use Atoms.repeat")
     def set_repeat(self, vec):
         self *= vec
 
@@ -1212,7 +1210,61 @@ class Atoms(ASEAtoms):
         distance_from_camera=1.0,
         opacity=1.0,
     ):
-        return self.visualize.plot3d(
+        """
+        Plot3d relies on NGLView or plotly to visualize atomic structures. Here, we construct a string in the "protein database"
+
+        The final widget is returned. If it is assigned to a variable, the visualization is suppressed until that
+        variable is evaluated, and in the meantime more NGL operations can be applied to it to modify the visualization.
+
+        Args:
+            mode (str): `NGLView`, `plotly` or `ase`
+            show_cell (bool): Whether or not to show the frame. (Default is True.)
+            show_axes (bool): Whether or not to show xyz axes. (Default is True.)
+            camera (str): 'perspective' or 'orthographic'. (Default is 'perspective'.)
+            spacefill (bool): Whether to use a space-filling or ball-and-stick representation. (Default is True, use
+                space-filling atoms.)
+            particle_size (float): Size of the particles. (Default is 1.)
+            select_atoms (numpy.ndarray): Indices of atoms to show, either as integers or a boolean array mask.
+                (Default is None, show all atoms.)
+            background (str): Background color. (Default is 'white'.)
+            color_scheme (str): NGLView color scheme to use. (Default is None, color by element.)
+            colors (numpy.ndarray): A per-atom array of HTML color names or hex color codes to use for atomic colors.
+                (Default is None, use coloring scheme.)
+            scalar_field (numpy.ndarray): Color each atom according to the array value (Default is None, use coloring
+                scheme.)
+            scalar_start (float): The scalar value to be mapped onto the low end of the color map (lower values are
+                clipped). (Default is None, use the minimum value in `scalar_field`.)
+            scalar_end (float): The scalar value to be mapped onto the high end of the color map (higher values are
+                clipped). (Default is None, use the maximum value in `scalar_field`.)
+            scalar_cmap (matplotlib.cm): The colormap to use. (Default is None, giving a blue-red divergent map.)
+            vector_field (numpy.ndarray): Add vectors (3 values) originating at each atom. (Default is None, no
+                vectors.)
+            vector_color (numpy.ndarray): Colors for the vectors (only available with vector_field). (Default is None,
+                vectors are colored by their direction.)
+            magnetic_moments (bool): Plot magnetic moments as 'scalar_field' or 'vector_field'.
+            view_plane (numpy.ndarray): A Nx3-array (N = 1,2,3); the first 3d-component of the array specifies
+                which plane of the system to view (for example, [1, 0, 0], [1, 1, 0] or the [1, 1, 1] planes), the
+                second 3d-component (if specified, otherwise [1, 0, 0]) gives the horizontal direction, and the third
+                component (if specified) is the vertical component, which is ignored and calculated internally. The
+                orthonormality of the orientation is internally ensured, and therefore is not required in the function
+                call. (Default is np.array([0, 0, 1]), which is view normal to the x-y plane.)
+            distance_from_camera (float): Distance of the camera from the structure. Higher = farther away.
+                (Default is 14, which also seems to be the NGLView default value.)
+
+            Possible NGLView color schemes:
+              " ", "picking", "random", "uniform", "atomindex", "residueindex",
+              "chainindex", "modelindex", "sstruc", "element", "resname", "bfactor",
+              "hydrophobicity", "value", "volume", "occupancy"
+
+        Returns:
+            (nglview.NGLWidget): The NGLView widget itself, which can be operated on further or viewed as-is.
+
+        Warnings:
+            * Many features only work with space-filling atoms (e.g. coloring by a scalar field).
+            * The colour interpretation of some hex codes is weird, e.g. 'green'.
+        """
+        return plot3d(
+            structure=pyiron_to_ase(self),
             mode=mode,
             show_cell=show_cell,
             show_axes=show_axes,
@@ -1234,8 +1286,6 @@ class Atoms(ASEAtoms):
             distance_from_camera=distance_from_camera,
             opacity=opacity,
         )
-
-    plot3d.__doc__ = Visualize.plot3d.__doc__
 
     def pos_xyz(self):
         """
@@ -1560,7 +1610,7 @@ class Atoms(ASEAtoms):
             new_indices[new_indices >= i] += -1
         new_species = np.array(new_species)[retain_species_indices]
         self.set_species(new_species)
-        self.indices = new_indices
+        self.set_array("indices", new_indices)
 
     @deprecate(
         "Use neigh.cluster_analysis() instead (after calling neigh = structure.get_neighbors())",
@@ -1966,7 +2016,6 @@ class Atoms(ASEAtoms):
             pyiron.atomistics.structure.atoms.Atoms: The extended structure
 
         """
-        old_indices = self.indices
         if isinstance(other, Atom):
             other = self.__class__([other])
         elif isinstance(other, ASEAtom):
@@ -1977,7 +2026,15 @@ class Atoms(ASEAtoms):
             )
             other = ase_to_pyiron(other)
 
-        new_indices = other.indices.copy()
+        d = self._store_elements.copy()
+        d.update(other._store_elements.copy())
+        chem, new_indices = np.unique(
+            self.get_chemical_symbols().tolist()
+            + other.get_chemical_symbols().tolist(),
+            return_inverse=True,
+        )
+        new_species = [d[c] for c in chem]
+
         super(Atoms, self).extend(other=other)
         if isinstance(other, Atoms):
             if not np.allclose(self.cell, other.cell):
@@ -1994,29 +2051,9 @@ class Atoms(ASEAtoms):
                         self.cell
                     )
                 )
-            sum_atoms = self
-            # sum_atoms = copy(self)
-            sum_atoms._tag_list = sum_atoms._tag_list + other._tag_list
-            sum_atoms.indices = np.append(sum_atoms.indices, other.indices)
-            new_species_lst = copy(sum_atoms.species)
-            ind_conv = {}
-            for ind_old, el in enumerate(other.species):
-                if el.Abbreviation in sum_atoms._store_elements.keys():
-                    ind_new = sum_atoms._species_to_index_dict[
-                        sum_atoms._store_elements[el.Abbreviation]
-                    ]
-                    ind_conv[ind_old] = ind_new
-                else:
-                    new_species_lst.append(el)
-                    sum_atoms._store_elements[el.Abbreviation] = el
-                    ind_conv[ind_old] = len(new_species_lst) - 1
-
-            for key, val in ind_conv.items():
-                new_indices[new_indices == key] = val + 1000
-            new_indices = np.mod(new_indices, 1000)
-            sum_atoms.indices[len(old_indices) :] = new_indices
-            sum_atoms.set_species(new_species_lst)
-            if not len(set(sum_atoms.indices)) == len(sum_atoms.species):
+            self.set_array("indices", new_indices)
+            self.set_species(new_species)
+            if not len(set(self.indices)) == len(self.species):
                 raise ValueError("Adding the atom instances went wrong!")
         return self
 
@@ -2038,31 +2075,14 @@ class Atoms(ASEAtoms):
         for key, val in self.__dict__.items():
             if key not in ase_keys:
                 atoms_new.__dict__[key] = copy(val)
-        atoms_new._visualize = Visualize(atoms_new)
         atoms_new._analyse = Analyse(atoms_new)
         return atoms_new
 
     def __delitem__(self, key):
-        if isinstance(key, (int, np.integer)):
-            key = [key]
-        key = np.array(key).flatten()
-        new_length = len(self) - len(np.arange(len(self))[np.asarray(key)])
-        super(Atoms, self).__delitem__(key)
-        self.indices = np.delete(self.indices, key, axis=0)
-        del self._tag_list[key]
-        self._tag_list._length = new_length
-        deleted_species_indices = list()
-        retain_species_indices = list()
-        new_indices = self.indices.copy()
-        for i, el in enumerate(self.species):
-            if len(self.select_index(el)) == 0:
-                deleted_species_indices.append(i)
-                new_indices[new_indices >= i] += -1
-            else:
-                retain_species_indices.append(i)
-        new_species = np.array(self.species).copy()[retain_species_indices]
-        self.set_species(new_species)
-        self.indices = new_indices
+        super().__delitem__(np.array([key]).flatten())
+        unique_ind, new_ind = np.unique(self.indices, return_inverse=True)
+        self.set_array("indices", new_ind)
+        self.set_species(np.array(self.species)[unique_ind])
 
     def __eq__(self, other):
         return super(Atoms, self).__eq__(other) and np.array_equal(
@@ -2075,7 +2095,9 @@ class Atoms(ASEAtoms):
     def __getitem__(self, item):
         new_dict = dict()
         if isinstance(item, int):
-            for key, value in self._tag_list.items():
+            for key, value in self.arrays.items():
+                if key in ["positions", "numbers", "indices"]:
+                    continue
                 if item < len(value):
                     if value[item] is not None:
                         new_dict[key] = value[item]
@@ -2095,16 +2117,12 @@ class Atoms(ASEAtoms):
         new_array.dimension = self.dimension
         if isinstance(item, tuple):
             item = list(item)
-        new_indices = self.indices[item].copy()
-        new_species_indices, new_proper_indices = np.unique(
-            new_indices, return_inverse=True
+        new_species_indices, new_indices = np.unique(
+            self.indices[item], return_inverse=True
         )
         new_species = [self.species[ind] for ind in new_species_indices]
         new_array.set_species(new_species)
-        new_array.indices = new_proper_indices
-        new_array._tag_list = self._tag_list[item]
-        # new_array._tag_list._length = self._tag_list._length
-        new_array._tag_list._length = len(new_array)
+        new_array.arrays["indices"] = new_indices
         if isinstance(new_array, Atom):
             natoms = len(self)
             if item < -natoms or item >= natoms:
@@ -2113,13 +2131,14 @@ class Atoms(ASEAtoms):
         return new_array
 
     def __getattr__(self, item):
-        if item in self._tag_list.keys():
-            return self._tag_list._lists[item]
-        return object.__getattribute__(self, item)
+        try:
+            return self.arrays[item]
+        except KeyError:
+            return object.__getattribute__(self, item)
 
     def __dir__(self):
         new_dir = super().__dir__()
-        for key in self._tag_list.keys():
+        for key in self.arrays.keys():
             new_dir.append(key)
         return new_dir
 
@@ -2136,9 +2155,9 @@ class Atoms(ASEAtoms):
             tags = self.get_tags()
             out_str += "tags: \n"  # + ", ".join(tags) + "\n"
             for tag in tags:
-                out_str += (
-                    "    " + str(tag) + ": " + self._tag_list[tag].__str__() + "\n"
-                )
+                if tag in ["positions", "numbers"]:
+                    continue
+                out_str += "    " + str(tag) + ": " + self.arrays[tag].__str__() + "\n"
         if self.cell is not None:
             out_str += "pbc: " + str(self.pbc) + "\n"
             out_str += "cell: \n"
@@ -2256,7 +2275,7 @@ class Atoms(ASEAtoms):
                             delete_indices.append(i)
                             # del new_species[i]
                             new_indices[new_indices >= i] -= 1
-                    self.indices = new_indices.copy()
+                    self.set_array("indices", new_indices.copy())
                     new_species = np.array(new_species)[
                         np.setdiff1d(np.arange(len(new_species)), delete_indices)
                     ].tolist()
@@ -2265,57 +2284,6 @@ class Atoms(ASEAtoms):
             raise NotImplementedError()
         # For ASE compatibility
         self.numbers = self.get_atomic_numbers()
-
-    def __imul__(self, vec):
-        if isinstance(vec, (int, np.integer)):
-            vec = [vec] * self.dimension
-        initial_length = len(self)
-        if not hasattr(vec, "__len__"):
-            raise ValueError(
-                "Box repetition must be an integer or a list/ndarray of integers and not",
-                type(vec),
-            )
-
-        if len(vec) != self.dimension:
-            raise AssertionError(
-                "Dimension of box repetition not consistent: ",
-                len(vec),
-                "!=",
-                self.dimension,
-            )
-
-        i_vec = np.array([vec[0], 1, 1])
-        if self.dimension > 1:
-            i_vec[1] = vec[1]
-        if self.dimension > 2:
-            i_vec[2] = vec[2]
-
-        if not self.dimension == 3:
-            raise NotImplementedError()
-        mx, my, mz = i_vec
-        # Our position repeat algorithm is faster than ASE (no nested loops)
-        nx_lst, ny_lst, nz_lst = np.arange(mx), np.arange(my), np.arange(mz)
-        positions = self.get_scaled_positions(wrap=False)
-        lat = np.array(np.meshgrid(nx_lst, ny_lst, nz_lst)).T.reshape(-1, 3)
-        lat_new = np.repeat(lat, len(positions), axis=0)
-        new_positions = np.tile(positions, (len(lat), 1)) + lat_new
-        new_positions /= np.array(i_vec)
-        self.set_cell((self.cell.T * np.array(vec)).T, scale_atoms=True)
-        # ASE compatibility
-        for name, a in self.arrays.items():
-            self.arrays[name] = np.tile(
-                a, (np.product(vec),) + (1,) * (len(a.shape) - 1)
-            )
-        self.arrays["positions"] = np.dot(new_positions, self.cell)
-        self.indices = np.tile(self.indices, len(lat))
-        self._tag_list._length = len(self)
-        scale = i_vec[0] * i_vec[1] * i_vec[2]
-        for tag in self._tag_list.keys():
-            self._tag_list[tag] *= scale
-        # Repeating ASE constraints
-        if self.constraints is not None:
-            self.constraints = [c.repeat(vec, initial_length) for c in self.constraints]
-        return self
 
     @staticmethod
     def convert_formula(elements):
@@ -2359,7 +2327,7 @@ class Atoms(ASEAtoms):
         return el_list
 
     def get_constraint(self):
-        if "selective_dynamics" in self._tag_list._lists.keys():
+        if "selective_dynamics" in self.arrays.keys():
             from ase.constraints import FixAtoms
 
             return FixAtoms(
@@ -2379,7 +2347,7 @@ class Atoms(ASEAtoms):
                 raise ValueError(
                     "Only FixAtoms is supported as ASE compatible constraint."
                 )
-            if "selective_dynamics" not in self._tag_list._lists.keys():
+            if "selective_dynamics" not in self.arrays.keys():
                 self.add_tag(selective_dynamics=None)
             for atom_ind in range(len(self)):
                 if atom_ind in constraint.index:
@@ -2454,21 +2422,25 @@ class Atoms(ASEAtoms):
         Returns:
             numpy.array()
         """
-        if "spin" in self._tag_list._lists.keys():
-            return np.asarray(self.spin.list())
-        else:
+        try:
+            return self.arrays["spin"]
+        except KeyError:
             spin_lst = [
                 element.tags["spin"] if "spin" in element.tags.keys() else None
                 for element in self.get_chemical_elements()
             ]
             if any(spin_lst):
                 if (
-                    isinstance(spin_lst, str)
-                    or (
-                        isinstance(spin_lst, (list, np.ndarray))
-                        and isinstance(spin_lst[0], str)
+                    (
+                        isinstance(spin_lst, str)
+                        or (
+                            isinstance(spin_lst, (list, np.ndarray))
+                            and isinstance(spin_lst[0], str)
+                        )
                     )
-                ) and "[" in list(set(spin_lst))[0]:
+                    and list(set(spin_lst))[0] is not None
+                    and "[" in list(set(spin_lst))[0]
+                ):
                     return np.array(
                         [
                             [
@@ -2484,7 +2456,7 @@ class Atoms(ASEAtoms):
                         ]
                     )
                 elif isinstance(spin_lst, (list, np.ndarray)):
-                    return np.array(spin_lst)
+                    return np.array([float(s) if s else 0.0 for s in spin_lst])
                 else:
                     return np.array([float(spin) if spin else 0.0 for spin in spin_lst])
             else:
@@ -2571,10 +2543,8 @@ class Atoms(ASEAtoms):
                 magmoms = len(self) * [magmoms]
             if len(magmoms) != len(self):
                 raise ValueError("magmoms can be collinear or non-collinear.")
-            if "spin" not in self._tag_list._lists.keys():
-                self.add_tag(spin=None)
-            for ind, spin in enumerate(magmoms):
-                self.spin[ind] = spin  # For self._tag_list.spin
+            self.set_array("spin", None)
+            self.set_array("spin", np.array(magmoms))
         self.spins = magmoms  # For self.array['initial_magmoms']
 
     def rotate(
@@ -3152,13 +3122,13 @@ def ase_to_pyiron(ase_obj):
         for constraint in ase_obj.constraints:
             constraint_dict = constraint.todict()
             if constraint_dict["name"] == "FixAtoms":
-                if "selective_dynamics" not in pyiron_atoms._tag_list.keys():
+                if "selective_dynamics" not in pyiron_atoms.arrays.keys():
                     pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
                 pyiron_atoms.selective_dynamics[
                     constraint_dict["kwargs"]["indices"]
                 ] = [False, False, False]
             elif constraint_dict["name"] == "FixScaled":
-                if "selective_dynamics" not in pyiron_atoms._tag_list.keys():
+                if "selective_dynamics" not in pyiron_atoms.arrays.keys():
                     pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
                 pyiron_atoms.selective_dynamics[
                     constraint_dict["kwargs"]["a"]
@@ -3235,12 +3205,12 @@ def pymatgen_to_pyiron(structure):
         sel_dyn_list = structure.site_properties["selective_dynamics"]
         struct = structure.copy()
         struct.remove_site_property("selective_dynamics")
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=struct))
+        pyiron_atoms = ase_to_pyiron(pymatgen_to_ase(structure=struct))
         pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
         for i, _ in enumerate(pyiron_atoms):
             pyiron_atoms.selective_dynamics[i] = sel_dyn_list[i]
     else:
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=structure))
+        pyiron_atoms = ase_to_pyiron(pymatgen_to_ase(structure=structure))
     return pyiron_atoms
 
 
@@ -3262,14 +3232,14 @@ def pyiron_to_pymatgen(pyiron_obj):
         sel_dyn_list = pyiron_obj.selective_dynamics
         pyiron_obj_conv.selective_dynamics = [True, True, True]
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
-        pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+        pymatgen_obj_conv = ase_to_pymatgen(structure=ase_obj)
         new_site_properties = pymatgen_obj_conv.site_properties
         new_site_properties["selective_dynamics"] = sel_dyn_list
         pymatgen_obj = pymatgen_obj_conv.copy(site_properties=new_site_properties)
     else:
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
         _check_if_simple_atoms(atoms=ase_obj)
-        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj, cls=None)
+        pymatgen_obj = ase_to_pymatgen(structure=ase_obj)
     return pymatgen_obj
 
 

@@ -59,9 +59,6 @@ class TestLammps(TestWithCleanProject):
     def test_selective_dynamics(self):
         atoms = Atoms("Fe8", positions=np.zeros((8, 3)), cell=np.eye(3))
         atoms.add_tag(selective_dynamics=[True, True, True])
-        self.job.structure = atoms
-        self.job._set_selective_dynamics()
-        atoms.add_tag(selective_dynamics=None)
         atoms.selective_dynamics[1] = [True, True, False]
         atoms.selective_dynamics[2] = [True, False, True]
         atoms.selective_dynamics[3] = [False, True, True]

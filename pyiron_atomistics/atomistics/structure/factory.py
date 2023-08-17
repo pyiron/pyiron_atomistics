@@ -25,9 +25,9 @@ from ase.build import (
     surface as ase_surf,
 )
 import numpy as np
-from structuretoolkit import (
+from structuretoolkit.build import (
     high_index_surface,
-    high_index_surface_info,
+    get_high_index_surface_info,
 )
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
 from pyiron_atomistics.atomistics.structure.factories.atomsk import (
@@ -500,7 +500,7 @@ class StructureFactory(PyironFactory):
             fin_kink_orientation: The kink orientation lying in the terrace
             fin_step_orientation: The step orientation lying in the terrace
         """
-        return high_index_surface_info(
+        return get_high_index_surface_info(
             element=element,
             crystal_structure=crystal_structure,
             lattice_constant=lattice_constant,

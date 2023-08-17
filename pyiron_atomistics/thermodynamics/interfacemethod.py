@@ -59,7 +59,7 @@ def remove_selective_dynamics(basis):
     Returns:
         Atoms: Atomistic structure object with selective dynamics set to True
     """
-    if "selective_dynamics" in basis._tag_list.keys():
+    if "selective_dynamics" in basis.arrays.keys():
         for ind in range(len(basis)):
             basis.selective_dynamics[ind] = [True, True, True]
     return basis

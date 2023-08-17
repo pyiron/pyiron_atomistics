@@ -661,21 +661,21 @@ class Outcar(object):
         Returns:
             numpy.ndarray: Steps during the simulation
         """
-        nblock_trigger = "NBLOCK ="
+        nblock_regex = re.compile(r"NBLOCK =\s+(\d+);")
         trigger = "FREE ENERGIE OF THE ION-ELECTRON SYSTEM (eV)"
-        trigger_indices = list()
-        read_nblock = True
-        n_block = 1
+        steps = 0
+        nblock = None
         lines = _get_lines_from_file(filename=filename, lines=lines)
-        for i, line in enumerate(lines):
-            line = line.strip()
+        for line in lines:
             if trigger in line:
-                trigger_indices.append(i)
-            if read_nblock is None:
-                if nblock_trigger in line:
-                    line = _clean_line(line)
-                    n_block = int(line.split(nblock_trigger)[-1])
-        return n_block * np.linspace(0, len(trigger_indices))
+                steps += 1
+            if nblock is None and "NBLOCK" in line:
+                line = line.strip()
+                line = _clean_line(line)
+                nblock = int(nblock_regex.findall(line)[0])
+        if nblock is None:
+            nblock = 1
+        return np.arange(0, steps * nblock, nblock)
 
     def get_time(self, filename="OUTCAR", lines=None):
         """
@@ -690,15 +690,14 @@ class Outcar(object):
 
         """
         potim_trigger = "POTIM  ="
-        read_potim = True
         potim = 1.0
         lines = _get_lines_from_file(filename=filename, lines=lines)
         for i, line in enumerate(lines):
-            line = line.strip()
-            if read_potim is None:
-                if potim_trigger in line:
-                    line = _clean_line(line)
-                    potim = float(line.split(potim_trigger)[0])
+            if potim_trigger in line:
+                line = line.strip()
+                line = _clean_line(line)
+                potim = float(line.split(potim_trigger)[1].strip().split()[0])
+                break
         return potim * self.get_steps(filename)
 
     @staticmethod
