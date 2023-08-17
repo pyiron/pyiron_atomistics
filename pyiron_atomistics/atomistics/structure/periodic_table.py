@@ -161,10 +161,7 @@ class ChemicalElement(object):
             self._dataset = {"Parameter": ["Parent"], "Value": [self.Parent]}
             hdf_el["elementData"] = self._dataset
         # "Dictionary of element tag static"
-        hdf_el["tagData"] = {
-            key: self.tags[key]
-            for key in self.tags.keys()
-        }
+        hdf_el["tagData"] = {key: self.tags[key] for key in self.tags.keys()}
         return hdf_el
 
     def to_hdf(self, hdf):
