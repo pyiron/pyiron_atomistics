@@ -160,10 +160,11 @@ class ChemicalElement(object):
         if self.Parent is not None:
             self._dataset = {"Parameter": ["Parent"], "Value": [self.Parent]}
             hdf_el["elementData"] = self._dataset
-        for key in self.tags.keys():
-            hdf_el["tagData"][key] = self.tags[
-                key
-            ]  # "Dictionary of element tag static"
+        # "Dictionary of element tag static"
+        hdf_el["tagData"] = {
+            key: self.tags[key]
+            for key in self.tags.keys()
+        }
         return hdf_el
 
     def to_hdf(self, hdf):

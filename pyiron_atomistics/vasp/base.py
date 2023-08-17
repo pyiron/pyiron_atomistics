@@ -2595,10 +2595,11 @@ def output_dict_to_hdf(data_dict, hdf, group_name="output"):
                 group_name="charge_density",
             )
 
-        electronic_structure_dict_to_hdf(
-            data_dict=data_dict["electronic_structure"],
-            hdf=hdf5_output,
-            group_name="electronic_structure",
-        )
+        if "electronic_structure" in data_dict.keys():
+            electronic_structure_dict_to_hdf(
+                data_dict=data_dict["electronic_structure"],
+                hdf=hdf5_output,
+                group_name="electronic_structure",
+            )
 
         dict_group_to_hdf(data_dict=data_dict, hdf=hdf5_output, group="outcar")

@@ -467,6 +467,8 @@ class Atoms(ASEAtoms):
         for tag, value in self.arrays.items():
             if tag in ["positions", "numbers", "indices"]:
                 continue
+            if "tags" not in hdf_structure.keys():
+                hdf_structure["tags"] = {}
             hdf_structure["tags"][tag] = value.tolist()
 
         if self.cell is not None:
