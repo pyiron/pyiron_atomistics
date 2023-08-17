@@ -16,8 +16,8 @@ from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.lammps.units import UnitConverter
 
 with ImportAlarm(
-        "Gpaw relies on the gpaw module but this is unavailable. Please ensure your python environment contains gpaw, "
-        "e.g. by running `conda install -c conda-forge gpaw`."
+    "Lammps interactive relies on the lammps module but this is unavailable. Please ensure your python environment"
+    "contains lammps, e.g. by running `conda install -c conda-forge lammps`."
 ) as import_alarm:
     from pylammpsmpi import LammpsASELibrary
 
