@@ -455,12 +455,16 @@ class LammpsBase(AtomisticGenericJob):
         }
 
     def collect_output_parser(self):
-        dump_h5_file_name = self.job_file_name(file_name="dump.h5", cwd=self.working_directory)
-        dump_out_file_name = self.job_file_name(file_name="dump.out", cwd=self.working_directory)
-        log_lammps_file_name = self.job_file_name(file_name="log.lammps", cwd=self.working_directory)
-        if os.path.isfile(
-                dump_h5_file_name
-        ):
+        dump_h5_file_name = self.job_file_name(
+            file_name="dump.h5", cwd=self.working_directory
+        )
+        dump_out_file_name = self.job_file_name(
+            file_name="dump.out", cwd=self.working_directory
+        )
+        log_lammps_file_name = self.job_file_name(
+            file_name="log.lammps", cwd=self.working_directory
+        )
+        if os.path.isfile(dump_h5_file_name):
             forces, positions, steps, cells = collect_h5md_file(
                 file_name=dump_h5_file_name,
                 prism=self._prism,
@@ -469,7 +473,7 @@ class LammpsBase(AtomisticGenericJob):
                 "forces": forces,
                 "positions": positions,
                 "steps": steps,
-                "cells": cells
+                "cells": cells,
             }
         elif os.path.exists(dump_out_file_name):
             dump_dict = collect_dump_file(
@@ -518,7 +522,11 @@ class LammpsBase(AtomisticGenericJob):
                         np.array(v), label=k
                     )
 
-        if df is not None and pressure_dict is not None and generic_keys_lst is not None:
+        if (
+            df is not None
+            and pressure_dict is not None
+            and generic_keys_lst is not None
+        ):
             with self.project_hdf5.open("output/generic") as hdf_output:
                 # This is a hack for backward comparability
                 for k, v in df.items():
