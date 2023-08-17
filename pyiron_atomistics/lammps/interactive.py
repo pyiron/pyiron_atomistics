@@ -7,12 +7,20 @@ import os
 import pandas as pd
 import warnings
 
+from pyiron_base import ImportAlarm
+
 from pyiron_atomistics.lammps.base import LammpsBase
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
-from pyiron_lammps.wrapper import PyironLammpsLibrary
 from pyiron_atomistics.lammps.units import UnitConverter
+
+with ImportAlarm(
+        "Gpaw relies on the gpaw module but this is unavailable. Please ensure your python environment contains gpaw, "
+        "e.g. by running `conda install -c conda-forge gpaw`."
+) as import_alarm:
+    from pylammpsmpi import LammpsASELibrary
+
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -168,9 +176,10 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         df = pd.DataFrame(self.input.control.dataset)
         self._interactive_run_command = " ".join(df.T[df.index[-1]].values)
 
+    @import_alarm
     def interactive_initialize_interface(self):
         self._create_working_directory()
-        self._interactive_library = PyironLammpsLibrary(
+        self._interactive_library = LammpsASELibrary(
             working_directory=self.working_directory,
             cores=self.server.cores,
             comm=self._interactive_mpi_communicator,
