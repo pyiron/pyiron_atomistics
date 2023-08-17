@@ -8,7 +8,7 @@ import os
 from pyiron_base import Project, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
-from pyiron_lammps.wrapper import PyironLammpsLibrary
+from pylammpsmpi import LammpsASELibrary
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 
 
@@ -25,7 +25,7 @@ class InteractiveLibrary(object):
 
 class TestLammpsInteractive(unittest.TestCase):
     def setUp(self):
-        self.job._interactive_library = PyironLammpsLibrary(
+        self.job._interactive_library = LammpsASELibrary(
             working_directory=self.job.working_directory,
             cores=1,
             comm=None,
@@ -33,7 +33,7 @@ class TestLammpsInteractive(unittest.TestCase):
             log_file=None,
             library=InteractiveLibrary()
         )
-        self.minimize_job._interactive_library = PyironLammpsLibrary(
+        self.minimize_job._interactive_library = LammpsASELibrary(
             working_directory=self.job.working_directory,
             cores=1,
             comm=None,
@@ -41,7 +41,7 @@ class TestLammpsInteractive(unittest.TestCase):
             log_file=None,
             library=InteractiveLibrary()
         )
-        self.minimize_control_job._interactive_library = PyironLammpsLibrary(
+        self.minimize_control_job._interactive_library = LammpsASELibrary(
             working_directory=self.job.working_directory,
             cores=1,
             comm=None,
