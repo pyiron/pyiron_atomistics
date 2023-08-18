@@ -2325,7 +2325,7 @@ class GenericOutput:
             hdf_dft[key] = val
         hdf_go["dft"] = hdf_dft
         if self.bands.eigenvalue_matrix is not None:
-            hdf_go["bands"] = self.bands.to_dict()
+            hdf_go["dft"]["bands"] = self.bands.to_dict()
         return hdf_go
 
     def from_hdf(self, hdf):
