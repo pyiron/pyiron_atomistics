@@ -119,6 +119,7 @@ class StructureFactory(PyironFactory):
 
     def read_using_pymatgen(self, *args, **kwargs):
         from pymatgen.core import Structure
+
         return pymatgen_to_pyiron(Structure.from_file(*args, **kwargs))
 
     def read_using_ase(self, *args, **kwargs):

@@ -26,6 +26,7 @@ pandas.options.mode.chained_assignment = None
 @lru_cache(maxsize=118)
 def element(*args):
     import mendeleev
+
     return mendeleev.element(*args)
 
 

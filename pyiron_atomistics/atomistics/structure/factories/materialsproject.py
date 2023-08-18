@@ -107,6 +107,7 @@ class MaterialsProjectFactory:
             :class:`~.MPQueryResults`: resulting structures from the query
         """
         from mp_api.client import MPRester
+
         rest_kwargs = {
             "use_document_model": False,  # returns results as dictionaries
             "include_user_agent": True,  # send some additional software version info to MP
