@@ -403,25 +403,6 @@ class LammpsBase(AtomisticGenericJob):
         )
         self.input.potential.copy_pot_files(self.working_directory)
 
-    def _get_executable_version_number(self):
-        """
-        Get the version of the executable
-
-        Returns:
-            list: List of integers defining the version number
-        """
-        if self.executable.version:
-            return [
-                l
-                for l in [
-                    [int(i) for i in sv.split(".") if i.isdigit()]
-                    for sv in self.executable.version.split("/")[-1].split("_")
-                ]
-                if len(l) > 0
-            ][0]
-        else:
-            return None
-
     @property
     def publication(self):
         return {
