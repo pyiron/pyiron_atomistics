@@ -6,7 +6,6 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 import os
 from pyiron_base import state
-import mendeleev
 import pandas
 from functools import lru_cache
 
@@ -26,6 +25,7 @@ pandas.options.mode.chained_assignment = None
 
 @lru_cache(maxsize=118)
 def element(*args):
+    import mendeleev
     return mendeleev.element(*args)
 
 

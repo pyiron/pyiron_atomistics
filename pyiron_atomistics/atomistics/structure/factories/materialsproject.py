@@ -1,5 +1,4 @@
 from typing import Union, List
-from mp_api.client import MPRester
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
 from pyiron_atomistics.atomistics.structure.atoms import pymatgen_to_pyiron, Atoms
@@ -107,6 +106,7 @@ class MaterialsProjectFactory:
         Returns:
             :class:`~.MPQueryResults`: resulting structures from the query
         """
+        from mp_api.client import MPRester
         rest_kwargs = {
             "use_document_model": False,  # returns results as dictionaries
             "include_user_agent": True,  # send some additional software version info to MP
