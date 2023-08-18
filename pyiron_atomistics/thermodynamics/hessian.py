@@ -4,7 +4,7 @@
 
 import numpy as np
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
+from pyiron_atomistics.job import GenericInteractive
 
 __author__ = "Jan Janssen"
 __copyright__ = (

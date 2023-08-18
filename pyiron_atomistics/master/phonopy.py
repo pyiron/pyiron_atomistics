@@ -15,8 +15,8 @@ from phonopy.units import VaspToTHz
 from phonopy.file_IO import write_FORCE_CONSTANTS
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
-from pyiron_atomistics.atomistics.structure.phonopy import (
+from pyiron_atomistics.master.parallel import AtomisticParallelMaster
+from pyiron_atomistics.structure.phonopy import (
     publication as phonopy_publication,
 )
 from pyiron_base import state, JobGenerator, ImportAlarm, deprecate
@@ -576,6 +576,6 @@ class PhonopyJob(AtomisticParallelMaster):
                 "ensure your python environment contains alm, e.g. by running `conda install -c conda-forge alm`."
                 "Note: at time of writing alm is only available for Linux and OSX systems."
             ) as import_alarm:
-                import alm
+                pass
             import_alarm.warn_if_failed()
         super().validate_ready_to_run()

@@ -17,7 +17,7 @@ from pyiron_atomistics.lammps.potential import (
     view_potentials,
     list_potentials,
 )
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
+from pyiron_atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import (

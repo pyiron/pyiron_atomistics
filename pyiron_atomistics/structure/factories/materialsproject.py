@@ -1,7 +1,7 @@
 from typing import Union, List
 from mp_api.client import MPRester
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
-from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
+from pyiron_atomistics.structure.structurestorage import StructureStorage
 from pyiron_atomistics.atomistics.structure.atoms import pymatgen_to_pyiron, Atoms
 
 

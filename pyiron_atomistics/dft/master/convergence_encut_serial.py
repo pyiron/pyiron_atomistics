@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from pyiron_atomistics.atomistics.master.serial import SerialMaster
+from pyiron_atomistics.master.serial import SerialMaster
 
 __author__ = "Jan Janssen"
 __copyright__ = (

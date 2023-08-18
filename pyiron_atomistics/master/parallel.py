@@ -7,7 +7,7 @@ from collections import OrderedDict
 import inspect
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_base import ParallelMaster, JobGenerator, get_function_from_string
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
+from pyiron_atomistics.job.atomistic import AtomisticGenericJob
 
 __author__ = "Jan Janssen"
 __copyright__ = (

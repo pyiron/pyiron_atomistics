@@ -29,8 +29,8 @@ from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
 )
-from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
-from pyiron_atomistics.atomistics.structure.analyse import Analyse
+from pyiron_atomistics.structure.pyscal import pyiron_to_pyscal_system
+from pyiron_atomistics.structure.analyse import Analyse
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
@@ -1181,7 +1181,7 @@ class Atoms(ASEAtoms):
 
     @deprecate("Use get_symmetry()['equivalent_atoms'] instead")
     def analyse_phonopy_equivalent_atoms(self):
-        from pyiron_atomistics.atomistics.structure.phonopy import (
+        from pyiron_atomistics.structure.phonopy import (
             analyse_phonopy_equivalent_atoms,
         )
 
@@ -2481,7 +2481,7 @@ class Atoms(ASEAtoms):
         Assigns site moments via corresponding list of same length as number
         of sites in structure
         >>> from pyiron_atomistics import Project
-        >>> structure = Project('.').create.structure.bulk('Ni', cubic=True)
+        >>> structure = Project('').create.structure.bulk('Ni', cubic=True)
         >>> structure[-1] = 'Fe'
         >>> spin_list = [1, 2, 3, 4]
         >>> structure.set_initial_magnetic_moments(spin_list)

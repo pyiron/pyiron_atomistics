@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.job.atomistic import (
+from pyiron_atomistics.job.atomistic import (
     AtomisticGenericJob,
     MapFunctions as AtomisticMapFunctions,
 )

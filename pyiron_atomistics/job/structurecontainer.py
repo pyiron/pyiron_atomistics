@@ -14,10 +14,10 @@ __status__ = "development"
 __date__ = "Aug 12, 2020"
 
 from pyiron_base import DataContainer, GenericJob, deprecate
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
+from pyiron_atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
-from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
+from pyiron_atomistics.structure.structurestorage import StructureStorage
 
 
 class StructureContainer(GenericJob, HasStructure):

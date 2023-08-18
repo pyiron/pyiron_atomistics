@@ -9,8 +9,8 @@ import scipy.constants
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.sphinx.base import InputWriter, Output
 from pyiron_base import GenericJob, GenericParameters, JobGenerator
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
-from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+from pyiron_atomistics.job.atomistic import AtomisticGenericJob
+from pyiron_atomistics.master import AtomisticParallelMaster
 
 __author__ = "Jan Janssen"
 __copyright__ = (

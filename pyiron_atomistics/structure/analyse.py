@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.structure.pyscal import (
+from pyiron_atomistics.structure.pyscal import (
     get_steinhardt_parameter_structure,
     analyse_cna_adaptive,
     analyse_centro_symmetry,
@@ -327,7 +327,7 @@ class Analyse:
         Example:
 
         >>> from pyiron_atomistics import Project
-        >>> pr = Project('.')
+        >>> pr = Project('')
         >>> bulk = pr.create.structure.bulk('Fe', cubic=True)
         >>> structure = bulk.apply_strain(np.random.random((3,3))*0.1, return_box=True)
         >>> structure.analyse.get_strain(bulk)

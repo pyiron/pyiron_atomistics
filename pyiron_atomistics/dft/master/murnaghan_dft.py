@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from pyiron_atomistics.atomistics.master.murnaghan import Murnaghan, DebyeModel
+from pyiron_atomistics.master.murnaghan import Murnaghan
 from pyiron_base import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"

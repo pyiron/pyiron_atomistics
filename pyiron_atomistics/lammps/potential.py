@@ -6,7 +6,7 @@ import pandas as pd
 import shutil
 import os
 from pyiron_base import state, GenericParameters
-from pyiron_atomistics.atomistics.job.potentials import (
+from pyiron_atomistics.job import (
     PotentialAbstract,
     find_potential_file_base,
 )

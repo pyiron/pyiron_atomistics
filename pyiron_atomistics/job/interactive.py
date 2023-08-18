@@ -5,7 +5,7 @@
 import numpy as np
 from pyiron_base import state, InteractiveBase
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_atomistics.atomistics.job.atomistic import (
+from pyiron_atomistics.job.atomistic import (
     AtomisticGenericJob,
     GenericOutput,
 )

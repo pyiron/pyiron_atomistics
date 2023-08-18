@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.master.parallel import ParallelMaster
+from pyiron_atomistics.master.parallel import ParallelMaster
 from pyiron_base import JobGenerator
 
 """
