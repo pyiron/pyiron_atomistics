@@ -387,20 +387,24 @@ class VaspBase(GenericDFTJob):
             modified_elements=modified_elements,
         )
 
-    def collect_output_parser(self):
+    def collect_output_parser(self, cwd):
         """
         Collects the outputs and stores them to the hdf file
         """
         if self.structure is None or len(self.structure) == 0:
             try:
-                self.structure = self.get_final_structure_from_file(filename="CONTCAR")
+                self.structure = self.get_final_structure_from_file(
+                    cwd=cwd, filename="CONTCAR"
+                )
             except IOError:
-                self.structure = self.get_final_structure_from_file(filename="POSCAR")
+                self.structure = self.get_final_structure_from_file(
+                    cwd=cwd, filename="POSCAR"
+                )
             self._sorted_indices = np.array(range(len(self.structure)))
         self._output_parser.structure = self.structure.copy()
         try:
             self._output_parser.collect(
-                directory=self.working_directory, sorted_indices=self.sorted_indices
+                directory=cwd, sorted_indices=self.sorted_indices
             )
         except VaspCollectError:
             self.status.aborted = True
@@ -408,15 +412,16 @@ class VaspBase(GenericDFTJob):
         # Try getting high precision positions from CONTCAR
         try:
             self._output_parser.structure = self.get_final_structure_from_file(
-                filename="CONTCAR"
+                cwd=cwd,
+                filename="CONTCAR",
             )
         except (IOError, ValueError, FileNotFoundError):
             pass
 
         # Bader analysis
-        if os.path.isfile(
-            os.path.join(self.working_directory, "AECCAR0")
-        ) and os.path.isfile(os.path.join(self.working_directory, "AECCAR2")):
+        if os.path.isfile(os.path.join(cwd, "AECCAR0")) and os.path.isfile(
+            os.path.join(cwd, "AECCAR2")
+        ):
             bader = Bader(self)
             try:
                 charges_orig, volumes_orig = bader.compute_bader_charges()
@@ -449,7 +454,9 @@ class VaspBase(GenericDFTJob):
         Collects the outputs and stores them to the hdf file
         """
         output_dict_to_hdf(
-            data_dict=self.collect_output_parser(), hdf=self._hdf5, group_name="output"
+            data_dict=self.collect_output_parser(cwd=self.working_directory),
+            hdf=self._hdf5,
+            group_name="output",
         )
         if len(self._exclude_groups_hdf) > 0 or len(self._exclude_nodes_hdf) > 0:
             self.project_hdf5.rewrite_hdf5()
@@ -785,7 +792,7 @@ class VaspBase(GenericDFTJob):
         """
         self._output_parser = Output()
 
-    def get_final_structure_from_file(self, filename="CONTCAR"):
+    def get_final_structure_from_file(self, cwd, filename="CONTCAR"):
         """
         Get the final structure of the simulation usually from the CONTCAR file
 
@@ -795,7 +802,7 @@ class VaspBase(GenericDFTJob):
         Returns:
             pyiron.atomistics.structure.atoms.Atoms: The final structure
         """
-        filename = posixpath.join(self.working_directory, filename)
+        filename = posixpath.join(cwd, filename)
         if self.structure is None:
             try:
                 output_structure = read_atoms(filename=filename)
