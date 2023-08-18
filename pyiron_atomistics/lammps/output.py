@@ -3,9 +3,11 @@ from typing import List, Dict
 import h5py
 from io import StringIO
 import numpy as np
+import os
 import pandas as pd
-from pyiron_base import extract_data_from_file
 import warnings
+from pyiron_base import extract_data_from_file
+from pyiron_atomistics.lammps.units import UnitConverter
 
 
 @dataclass
@@ -458,3 +460,76 @@ def remap_indices(lammps_indices, potential_elements, structure):
     # TODO: Vectorize this for-loop for computational efficiency
 
     return structure_indices
+
+
+def lammps_collect_output_parser(
+    dump_h5_full_file_name,
+    dump_out_full_file_name,
+    log_lammps_full_file_name,
+    prism,
+    structure,
+    potential_elements,
+    units,
+):
+    if os.path.isfile(dump_h5_full_file_name):
+        forces, positions, steps, cells = collect_h5md_file(
+            file_name=dump_h5_full_file_name,
+            prism=prism,
+        )
+        dump_dict = {
+            "forces": forces,
+            "positions": positions,
+            "steps": steps,
+            "cells": cells,
+        }
+    elif os.path.exists(dump_out_full_file_name):
+        dump_dict = collect_dump_file(
+            file_name=dump_out_full_file_name,
+            prism=prism,
+            structure=structure,
+            potential_elements=potential_elements,
+        )
+    else:
+        dump_dict = {}
+    if os.path.exists(log_lammps_full_file_name):
+        collect_errors(file_name=log_lammps_full_file_name)
+        generic_keys_lst, pressure_dict, df = collect_output_log(
+            file_name=log_lammps_full_file_name,
+            prism=prism,
+        )
+    else:
+        generic_keys_lst, pressure_dict, df = None, None, None
+
+    # convert output to dictionary
+    uc = UnitConverter(units)
+    hdf_output = {"generic": {}, "lammps": {}}
+    hdf_generic = hdf_output["generic"]
+    hdf_lammps = hdf_output["lammps"]
+
+    if "computes" in dump_dict.keys():
+        for k, v in dump_dict.pop("computes").items():
+            hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+
+    hdf_generic["steps"] = uc.convert_array_to_pyiron_units(
+        np.array(dump_dict.pop("steps"), dtype=int), label="steps"
+    )
+
+    for k, v in dump_dict.items():
+        if len(v) > 0:
+            hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+
+    if df is not None and pressure_dict is not None and generic_keys_lst is not None:
+        for k, v in df.items():
+            if k in generic_keys_lst:
+                hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+        # Store pressures as numpy arrays
+        for key, val in pressure_dict.items():
+            hdf_generic[key] = uc.convert_array_to_pyiron_units(val, label=key)
+
+        # This is a hack for backward comparability
+        for k, v in df.items():
+            if k not in generic_keys_lst:
+                hdf_lammps[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+    else:
+        warnings.warn("LAMMPS warning: No log.lammps output file found.")
+    return hdf_output
