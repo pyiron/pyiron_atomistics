@@ -3,12 +3,12 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.job.interactivewrapper import InteractiveWrapper
+from pyiron_atomistics.job import InteractiveWrapper
 from pyiron_base import HasStorage
-from pyiron_atomistics.atomistics.job.interactive import GenericInteractiveOutput
+from pyiron_atomistics.job import GenericInteractiveOutput
 from scipy.optimize import minimize
 import scipy
-from typing import List, Iterable
+from typing import Iterable
 import warnings
 
 __author__ = "Osamu Waseda"

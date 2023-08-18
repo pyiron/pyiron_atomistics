@@ -6,7 +6,7 @@ A toolkit for managing extensions to the project from atomistics.
 """
 
 from pyiron_base import Toolkit, Project, JobFactoryCore, JOB_CLASS_DICT
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.structure.factory import StructureFactory
 
 __author__ = "Liam Huber"
 __copyright__ = (

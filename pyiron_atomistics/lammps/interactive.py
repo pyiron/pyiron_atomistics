@@ -14,7 +14,7 @@ from pyiron_atomistics.lammps.base import LammpsBase
 from pyiron_atomistics.lammps.output import _check_ortho_prism
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.control import LammpsControl
-from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
+from pyiron_atomistics.job import GenericInteractive
 
 
 try:  # mpi4py is only supported on Linux and Mac Os X

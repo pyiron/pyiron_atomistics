@@ -13,7 +13,7 @@ from pyiron_atomistics.vasp.potential import VaspPotentialSetter
 from pyiron_atomistics.vasp.base import GenericOutput as GenericOutputBase
 from pyiron_atomistics.vasp.base import DFTOutput as DFTOutputBase
 from pyiron_atomistics.vasp.base import Output as OutputBase
-from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
+from pyiron_atomistics.job import GenericInteractive
 
 
 __author__ = "Osamu Waseda, Jan Janssen"

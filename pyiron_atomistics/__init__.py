@@ -3,19 +3,14 @@ __all__ = []
 
 from pyiron_atomistics.project import Project
 from pyiron_atomistics.toolkit import AtomisticsTools
-from pyiron_atomistics.atomistics.structure.atoms import (
-    ase_to_pyiron,
-    pyiron_to_ase,
-    Atoms,
-)
-from pyiron_base import Notebook, install_dialog, JOB_CLASS_DICT
+from pyiron_base import install_dialog, JOB_CLASS_DICT
 
 from pyiron_base import Project as ProjectBase
 
 ProjectBase.register_tools("atomistics", AtomisticsTools)
 
 # To maintain backwards compatibility until we deprecate the old structure creation functions:
-from pyiron_atomistics.atomistics.structure.factory import (
+from pyiron_atomistics.structure.factory import (
     StructureFactory as _StructureFactory,
 )
 

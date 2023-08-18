@@ -6,7 +6,7 @@ from __future__ import print_function
 
 import numpy as np
 import scipy.constants
-from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+from pyiron_atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_base import JobGenerator
 from sklearn.linear_model import LinearRegression
 from collections import defaultdict

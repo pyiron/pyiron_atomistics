@@ -29,14 +29,14 @@ from structuretoolkit.build import (
     high_index_surface,
     get_high_index_surface_info,
 )
-from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
+from pyiron_atomistics.structure.factories.ase import AseFactory
 from pyiron_atomistics.atomistics.structure.factories.atomsk import (
     AtomskFactory,
     _ATOMSK_EXISTS,
 )
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
-from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
-from pyiron_atomistics.atomistics.structure.factories.materialsproject import (
+from pyiron_atomistics.structure.factories.compound import CompoundFactory
+from pyiron_atomistics.structure.factories.materialsproject import (
     MaterialsProjectFactory,
 )
 from pyiron_atomistics.atomistics.structure.pyironase import (

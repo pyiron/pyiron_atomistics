@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import Callable
 import numbers
 from pyiron_base import deprecate, ImportAlarm
@@ -188,7 +188,7 @@ class HasStructure(ABC):
         # breaks cyclical import
         # this is a bit annoying, but I want to give users an entry point to using StructureStorage without having to
         # import it
-        from pyiron_atomistics.atomistics.structure.structurestorage import (
+        from pyiron_atomistics.structure.structurestorage import (
             StructureStorage,
         )
 

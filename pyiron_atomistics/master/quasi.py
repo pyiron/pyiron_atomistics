@@ -3,8 +3,8 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.master.murnaghan import MurnaghanJobGenerator
-from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+from pyiron_atomistics.master.murnaghan import MurnaghanJobGenerator
+from pyiron_atomistics.master.parallel import AtomisticParallelMaster
 import matplotlib
 
 __author__ = "Jan Janssen"

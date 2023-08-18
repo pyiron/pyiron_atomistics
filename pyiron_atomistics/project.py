@@ -22,7 +22,7 @@ try:
     from pyiron_base import ProjectGUI
 except (ImportError, TypeError, AttributeError):
     pass
-from pyiron_atomistics.atomistics.generic.object_type import (
+from pyiron_atomistics.generic.object_type import (
     ObjectType,
     ObjectTypeChoice,
 )
@@ -31,8 +31,8 @@ from pyiron_atomistics.lammps.potential import LammpsPotentialFile
 from pyiron_atomistics.vasp.potential import VaspPotential
 import pyiron_atomistics.atomistics.structure.pyironase as ase
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from pyiron_atomistics.atomistics.master.parallel import pipe
+from pyiron_atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.master import pipe
 
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
