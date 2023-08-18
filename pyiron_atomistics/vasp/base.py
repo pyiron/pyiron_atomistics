@@ -2561,7 +2561,7 @@ def generic_output_dict_to_hdf(data_dict, hdf, group_name="generic"):
                 if k not in ["bands"]:
                     hdf_dft[k] = v
 
-            if "bands" in data_dict["dft"].keys:
+            if "bands" in data_dict["dft"].keys():
                 electronic_structure_dict_to_hdf(
                     data_dict=data_dict["dft"]["bands"],
                     hdf=hdf_dft,
@@ -2573,6 +2573,7 @@ def output_dict_to_hdf(data_dict, hdf, group_name="output"):
     with hdf.open(group_name) as hdf5_output:
         for k, v in data_dict.items():
             if k not in [
+                "generic",
                 "structure",
                 "electrostatic_potential",
                 "charge_density",
@@ -2580,6 +2581,13 @@ def output_dict_to_hdf(data_dict, hdf, group_name="output"):
                 "outcar",
             ]:
                 hdf5_output[k] = v
+
+        if "generic" in data_dict.keys():
+            generic_output_dict_to_hdf(
+                data_dict=data_dict["generic"],
+                hdf=hdf5_output,
+                group_name="generic",
+            )
 
         if "structure" in data_dict.keys():
             structure_dict_to_hdf(
