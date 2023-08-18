@@ -386,7 +386,6 @@ class LammpsBase(AtomisticGenericJob):
             structure=self.structure, cutoff_radius=self.cutoff_radius
         )
         lmp_structure.write_file(file_name="structure.inp", cwd=self.working_directory)
-        version_int_lst = self._get_executable_version_number()
         update_input_hdf5 = False
         if not all(self.structure.pbc):
             self.input.control["boundary"] = " ".join(
