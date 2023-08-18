@@ -1,5 +1,5 @@
 from pyiron_atomistics._tests import TestWithProject
-from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
+from pyiron_atomistics.structure.structurestorage import StructureStorage
 import numpy as np
 
 class TestContainer(TestWithProject):

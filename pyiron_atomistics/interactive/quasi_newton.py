@@ -1,7 +1,7 @@
 import numpy as np
 from pyiron_base import GenericParameters
 import warnings
-from pyiron_atomistics.job import (
+from pyiron_atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
 )

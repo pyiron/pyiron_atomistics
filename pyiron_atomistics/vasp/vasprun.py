@@ -7,8 +7,8 @@ import os
 # import xml.etree.cElementTree as ETree
 import numpy as np
 from collections import OrderedDict
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
+from pyiron_atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import state
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 import defusedxml.cElementTree as ETree

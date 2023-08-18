@@ -7,7 +7,7 @@ import scipy
 from scipy.io.netcdf import netcdf_file
 import os
 from pyiron_base import state
-from pyiron_atomistics.dft.volumetric import VolumetricData
+from pyiron_atomistics.dft.volumetric.generic import VolumetricData
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (

@@ -25,13 +25,13 @@ from structuretoolkit.common import (
     pymatgen_to_ase,
 )
 from structuretoolkit.visualize import plot3d
-from pyiron_atomistics.atomistics.structure.atom import (
+from pyiron_atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
 )
 from pyiron_atomistics.structure.pyscal import pyiron_to_pyscal_system
 from pyiron_atomistics.structure.analyse import Analyse
-from pyiron_atomistics.atomistics.structure.periodic_table import (
+from pyiron_atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
 )

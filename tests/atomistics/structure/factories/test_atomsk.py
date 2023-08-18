@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_atomistics._tests import TestWithProject
-from pyiron_atomistics.atomistics.structure.factories.atomsk import AtomskFactory, AtomskError, _ATOMSK_EXISTS
+from pyiron_atomistics.structure.factories.atomsk import AtomskFactory, AtomskError, _ATOMSK_EXISTS
 
 if _ATOMSK_EXISTS:
     class TestAtomskFactory(TestWithProject):

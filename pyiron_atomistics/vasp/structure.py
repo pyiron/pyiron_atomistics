@@ -4,7 +4,7 @@
 
 from collections import OrderedDict
 import numpy as np
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 import warnings
 
 __author__ = "Sudarsan Surendralal"

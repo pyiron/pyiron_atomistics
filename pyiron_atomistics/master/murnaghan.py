@@ -12,7 +12,7 @@ import scipy.integrate
 import scipy.optimize as spy
 
 from pyiron_atomistics.master.parallel import AtomisticParallelMaster
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
+from pyiron_atomistics.structure.atoms import Atoms, ase_to_pyiron
 from pyiron_base import JobGenerator
 
 __author__ = "Joerg Neugebauer, Jan Janssen"

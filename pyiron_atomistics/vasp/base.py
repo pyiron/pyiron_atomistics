@@ -16,7 +16,7 @@ from pyiron_atomistics.vasp.potential import (
     Potcar,
     strip_xc_from_potential_name,
 )
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_base import state, GenericParameters, deprecate
 from pyiron_atomistics.vasp.outcar import Outcar
 from pyiron_atomistics.vasp.oszicar import Oszicar

@@ -3,9 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_base._tests import PyironTestCase
-import pyiron_atomistics.atomistics.structure.factories.compound as compound_module
-from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+import pyiron_atomistics.structure.factories.compound as compound_module
+from pyiron_atomistics.structure.factories.compound import CompoundFactory
+from pyiron_atomistics.structure.factory import StructureFactory
 import numpy as np
 
 

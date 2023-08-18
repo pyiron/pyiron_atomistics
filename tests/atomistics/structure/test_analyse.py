@@ -4,11 +4,11 @@
 
 import unittest
 import numpy as np
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.structure.factory import StructureFactory
 from scipy.spatial import Voronoi
 from ase.lattice.cubic import BodyCenteredCubic
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.structure.atoms import ase_to_pyiron
 from sklearn.cluster import AgglomerativeClustering, DBSCAN
 
 

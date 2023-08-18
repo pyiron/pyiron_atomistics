@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from structuretoolkit.build import B2, C14, C15, C36, D03
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.structure.atoms import ase_to_pyiron
 
 __author__ = "Liam Huber"
 __copyright__ = (

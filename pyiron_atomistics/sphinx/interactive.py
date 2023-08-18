@@ -9,7 +9,7 @@ import subprocess
 import warnings
 import time
 from pyiron_atomistics.sphinx.base import SphinxBase, Group, Output
-from pyiron_atomistics.job import (
+from pyiron_atomistics.job.interactive import (
     GenericInteractive,
     GenericInteractiveOutput,
 )

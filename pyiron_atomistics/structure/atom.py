@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.structure.periodic_table import (
+from pyiron_atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
 )

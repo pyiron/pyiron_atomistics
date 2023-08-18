@@ -9,11 +9,11 @@ import time
 import posixpath
 import warnings
 from pyiron_base import state, GenericParameters, Executable, deprecate
-from pyiron_atomistics.job import (
+from pyiron_atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
 )
-from pyiron_atomistics.job import InteractiveInterface
+from pyiron_atomistics.job.interactive import InteractiveInterface
 from pyiron_atomistics.sphinx.base import get_structure_group
 
 __author__ = "Jan Janssen, Osamu Waseda"

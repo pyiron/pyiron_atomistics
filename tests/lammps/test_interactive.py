@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 import os
 from pyiron_base import Project, ProjectHDFio
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 
 

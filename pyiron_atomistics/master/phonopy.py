@@ -14,7 +14,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.units import VaspToTHz
 from phonopy.file_IO import write_FORCE_CONSTANTS
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_atomistics.structure.phonopy import (
     publication as phonopy_publication,

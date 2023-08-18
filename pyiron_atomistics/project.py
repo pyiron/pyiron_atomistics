@@ -26,13 +26,13 @@ from pyiron_atomistics.generic.object_type import (
     ObjectType,
     ObjectTypeChoice,
 )
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
+from pyiron_atomistics.structure.periodic_table import PeriodicTable
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile
 from pyiron_atomistics.vasp.potential import VaspPotential
-import pyiron_atomistics.atomistics.structure.pyironase as ase
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+import pyiron_atomistics.structure.pyironase as ase
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.structure.factory import StructureFactory
-from pyiron_atomistics.master import pipe
+from pyiron_atomistics.master.parallel import pipe
 
 
 __author__ = "Joerg Neugebauer, Jan Janssen"

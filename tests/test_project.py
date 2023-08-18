@@ -6,7 +6,7 @@ import unittest
 import unittest.mock
 import os
 from pyiron_atomistics import Project
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 
 
 class TestProject(unittest.TestCase):

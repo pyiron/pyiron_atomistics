@@ -7,10 +7,10 @@ import unittest
 import numpy as np
 import pandas
 from ase.build import bulk
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.structure.atoms import ase_to_pyiron
 import pyiron_atomistics
 from pyiron_base import Project
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.thermodynamics.interfacemethod import half_velocity, \
     freeze_one_half, fix_iso, fix_z_dir, create_job_template, check_diamond
 

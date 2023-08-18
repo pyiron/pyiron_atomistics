@@ -6,11 +6,11 @@ import pandas as pd
 import shutil
 import os
 from pyiron_base import state, GenericParameters
-from pyiron_atomistics.job import (
+from pyiron_atomistics.job.potentials import (
     PotentialAbstract,
     find_potential_file_base,
 )
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from typing import List
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"

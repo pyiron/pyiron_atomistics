@@ -8,16 +8,16 @@ import os
 import pickle
 import time
 import warnings
-from pyiron_atomistics.atomistics.structure.atom import Atom
-from pyiron_atomistics.atomistics.structure.atoms import (
+from pyiron_atomistics.structure.atom import Atom
+from pyiron_atomistics.structure.atoms import (
     Atoms,
     CrystalStructure,
     ase_to_pyiron,
     pymatgen_to_pyiron,
     pyiron_to_pymatgen,
 )
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from pyiron_atomistics.atomistics.structure.periodic_table import (
+from pyiron_atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.structure.periodic_table import (
     element,
     PeriodicTable,
     ChemicalElement,

@@ -30,19 +30,19 @@ from structuretoolkit.build import (
     get_high_index_surface_info,
 )
 from pyiron_atomistics.structure.factories.ase import AseFactory
-from pyiron_atomistics.atomistics.structure.factories.atomsk import (
+from pyiron_atomistics.structure.factories.atomsk import (
     AtomskFactory,
     _ATOMSK_EXISTS,
 )
-from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
+from pyiron_atomistics.structure.factories.aimsgb import AimsgbFactory
 from pyiron_atomistics.structure.factories.compound import CompoundFactory
 from pyiron_atomistics.structure.factories.materialsproject import (
     MaterialsProjectFactory,
 )
-from pyiron_atomistics.atomistics.structure.pyironase import (
+from pyiron_atomistics.structure.pyironase import (
     publication as publication_ase,
 )
-from pyiron_atomistics.atomistics.structure.atoms import (
+from pyiron_atomistics.structure.atoms import (
     CrystalStructure,
     Atoms,
     ase_to_pyiron,
@@ -50,7 +50,7 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     ovito_to_pyiron,
 )
 from pymatgen.core import Structure
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
+from pyiron_atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import state, PyironFactory, deprecate
 import types
 from functools import wraps

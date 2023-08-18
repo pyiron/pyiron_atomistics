@@ -12,8 +12,8 @@ from ase.build import (
 )
 from ase.io import read as ase_read
 from ase.spacegroup import crystal as ase_crystal
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
-from pyiron_atomistics.atomistics.structure.pyironase import (
+from pyiron_atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.structure.pyironase import (
     publication as publication_ase,
 )
 from pyiron_base import state

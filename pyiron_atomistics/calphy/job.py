@@ -8,13 +8,12 @@ from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialF
 from pyiron_base import GenericJob, ImportAlarm
 from pyiron_atomistics.lammps.structure import (
     LammpsStructure,
-    UnfoldingPrism,
     structure_to_lammps,
 )
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
-from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+from pyiron_atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.structure.has_structure import HasStructure
 
 calphy_version = "1.0.0"
 

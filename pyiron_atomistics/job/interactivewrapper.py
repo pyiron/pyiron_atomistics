@@ -3,8 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from pyiron_base import InteractiveWrapper as InteractiveWrapperBase, deprecate
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
-from pyiron_atomistics.atomistics.structure.atoms import Atoms as PAtoms
+from pyiron_atomistics.structure.atoms import ase_to_pyiron, Atoms as PAtoms
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (

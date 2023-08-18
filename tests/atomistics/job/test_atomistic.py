@@ -10,8 +10,8 @@ import shutil
 from pathlib import Path
 from pyiron_base import ProjectHDFio
 from pyiron_base._tests import TestWithCleanProject
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob, Trajectory
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.job.atomistic import AtomisticGenericJob, Trajectory
+from pyiron_atomistics.structure.atoms import Atoms, CrystalStructure
 import warnings
 
 

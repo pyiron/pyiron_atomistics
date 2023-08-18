@@ -5,7 +5,7 @@
 import numpy as np
 import structuretoolkit as stk
 from pyiron_base import state
-import pyiron_atomistics.atomistics.structure.atoms
+import pyiron_atomistics.structure.atoms
 from pyiron_base import Deprecator
 
 deprecate = Deprecator()
@@ -148,7 +148,7 @@ def pyiron_to_pyscal_system(structure):
     """
     state.publications.add(publication())
     return stk.common.ase_to_pyscal(
-        pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(structure)
+        pyiron_atomistics.structure.atoms.pyiron_to_ase(structure)
     )
 
 
