@@ -3453,7 +3453,7 @@ def structure_dict_to_hdf(data_dict, hdf, group_name="structure"):
         if "new_species" in data_dict.keys():
             for el, el_dict in data_dict["new_species"].items():
                 chemical_element_dict_to_hdf(
-                    data_dict=el_dict, hdf=hdf, group_name="new_species/" + el
+                    data_dict=el_dict, hdf=hdf_structure, group_name="new_species/" + el
                 )
 
         dict_group_to_hdf(data_dict=data_dict, hdf=hdf_structure, group="tags")
