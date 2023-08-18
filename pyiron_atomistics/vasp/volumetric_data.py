@@ -11,7 +11,7 @@ from pyiron_atomistics.vasp.structure import (
     atoms_from_string,
     get_species_list_from_potcar,
 )
-from pyiron_atomistics.atomistics.volumetric.generic import VolumetricData
+from pyiron_atomistics.dft.volumetric import VolumetricData
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
