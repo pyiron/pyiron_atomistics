@@ -2318,11 +2318,12 @@ class GenericOutput:
         )
 
     def to_dict(self):
-        hdf_go = {}
+        hdf_go, hdf_dft = {}, {}
         for key, val in self.log_dict.items():
             hdf_go[key] = val
         for key, val in self.dft_log_dict.items():
-            hdf_go["dft"][key] = val
+            hdf_dft[key] = val
+        hdf_go["dft"] = hdf_dft
         if self.bands.eigenvalue_matrix is not None:
             hdf_go["bands"] = self.bands.to_dict()
         return hdf_go
@@ -2571,7 +2572,13 @@ def generic_output_dict_to_hdf(data_dict, hdf, group_name="generic"):
 def output_dict_to_hdf(data_dict, hdf, group_name="output"):
     with hdf.open(group_name) as hdf5_output:
         for k, v in data_dict.items():
-            if k not in ["structure"]:
+            if k not in [
+                "structure",
+                "electrostatic_potential",
+                "charge_density",
+                "electronic_structure",
+                "outcar",
+            ]:
                 hdf5_output[k] = v
 
         if "structure" in data_dict.keys():
