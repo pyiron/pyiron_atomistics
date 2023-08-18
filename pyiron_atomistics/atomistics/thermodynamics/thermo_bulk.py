@@ -26,6 +26,7 @@ class ThermoBulk(AtomisticsThermoBulk):
         name:
 
     """
+
     def __init__(self, project=None, name=None):
         # only for compatibility with pyiron objects
         self._project = project
