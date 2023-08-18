@@ -6,7 +6,12 @@ from __future__ import print_function
 from typing import Optional
 
 from atomistics.thermo.debye import DebyeModel
-from atomistics.evcurve.fit import EnergyVolumeFit, fitfunction, get_error
+from atomistics.evcurve.fit import (
+    EnergyVolumeFit,
+    fitfunction,
+    get_error,
+    fit_leastsq_eos,
+)
 from atomistics.evcurve.calculator import _strain_axes
 import matplotlib.pyplot as plt
 import numpy as np
@@ -237,7 +242,7 @@ class Murnaghan(AtomisticParallelMaster):
         return fit_dict
 
     def _fit_leastsq(self, volume_lst, energy_lst, fittype="birchmurnaghan"):
-        return self.fit_module._fit_leastsq(
+        return fit_leastsq_eos(
             volume_lst=volume_lst, energy_lst=energy_lst, fittype=fittype
         )
 
