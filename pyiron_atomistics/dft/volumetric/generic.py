@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.vasp.structure import write_poscar
 
 __author__ = "Sudarsan Surendralal, Su-Hyun Yoo"

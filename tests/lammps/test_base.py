@@ -8,7 +8,7 @@ import os
 import re
 from io import StringIO
 from pyiron_base import state, ProjectHDFio
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
 from pyiron_atomistics.lammps.output import to_amat

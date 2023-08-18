@@ -14,8 +14,7 @@ from pathlib import Path
 import warnings
 import scipy.constants
 from pyiron_atomistics.project import Project
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.sphinx.base import Group
 
 BOHR_TO_ANGSTROM = (

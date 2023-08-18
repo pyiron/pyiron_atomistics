@@ -6,7 +6,7 @@ from __future__ import print_function
 
 import numpy as np
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.dft.waves.dos import Dos
 
 __author__ = "Sudarsan Surendralal"

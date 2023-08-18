@@ -4,9 +4,9 @@
 
 import unittest
 import numpy as np
-from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
-from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.structure.neighbors import NeighborsTrajectory
+from pyiron_atomistics.structure.structurestorage import StructureStorage
+from pyiron_atomistics.structure.factory import StructureFactory
 
 class TestNeighborsTrajectory(unittest.TestCase):
 

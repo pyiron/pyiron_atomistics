@@ -6,7 +6,7 @@ import os
 import numpy as np
 from pyiron_base import ProjectHDFio
 from pyiron_atomistics.gpaw.gpaw import Gpaw
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_base._tests import TestWithProject
 
 

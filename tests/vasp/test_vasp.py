@@ -5,7 +5,7 @@
 import unittest
 import os
 import posixpath
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
+from pyiron_atomistics.structure.atoms import CrystalStructure
 from pyiron_atomistics.vasp.base import Input, Output
 from pyiron_atomistics import Project
 from pyiron_base import state, ProjectHDFio

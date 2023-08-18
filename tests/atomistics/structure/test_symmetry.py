@@ -4,9 +4,9 @@
 
 import unittest
 import numpy as np
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from structuretoolkit.common.error import SymmetryError
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.structure.factory import StructureFactory
 
 
 class TestAtoms(unittest.TestCase):

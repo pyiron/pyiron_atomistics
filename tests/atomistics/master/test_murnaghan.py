@@ -6,7 +6,7 @@ import unittest
 import matplotlib
 import matplotlib.pylab as plt
 import numpy as np
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
+from pyiron_atomistics.structure.atoms import CrystalStructure
 from pyiron_base._tests import TestWithCleanProject
 
 

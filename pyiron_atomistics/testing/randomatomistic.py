@@ -6,7 +6,7 @@ from __future__ import print_function
 import numpy as np
 import posixpath
 from pyiron_base import GenericParameters, GenericJob, Logstatus
-from pyiron_atomistics.job import GenericInteractive
+from pyiron_atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.testing.executable import ExampleExecutable
 from collections import defaultdict
 import pint

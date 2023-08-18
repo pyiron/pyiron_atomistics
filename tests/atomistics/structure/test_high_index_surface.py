@@ -1,5 +1,5 @@
 import unittest
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.structure.factory import StructureFactory
 
 
 class TestHighIndexSurface(unittest.TestCase):

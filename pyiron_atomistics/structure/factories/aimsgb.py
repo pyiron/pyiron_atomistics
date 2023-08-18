@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from structuretoolkit.build import grainboundary, get_grainboundary_info
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.structure.atoms import ase_to_pyiron
 
 __author__ = "Ujjal Saikia"
 __copyright__ = (

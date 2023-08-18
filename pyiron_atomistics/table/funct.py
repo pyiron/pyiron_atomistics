@@ -7,7 +7,7 @@ import json
 import numpy as np
 import warnings
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, pyiron_to_ase
+from pyiron_atomistics.structure.atoms import Atoms, pyiron_to_ase
 
 
 def _get_value_from_incar(job, key):

@@ -5,9 +5,9 @@
 import unittest
 import numpy as np
 import os
-from pyiron_atomistics.dft.volumetric import VolumetricData
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.dft.volumetric.generic import VolumetricData
+from pyiron_atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.factory import StructureFactory
 from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 
 

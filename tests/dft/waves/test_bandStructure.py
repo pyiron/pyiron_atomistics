@@ -4,7 +4,7 @@
 
 import unittest
 import numpy as np
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
+from pyiron_atomistics.structure.atoms import CrystalStructure
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
 
 

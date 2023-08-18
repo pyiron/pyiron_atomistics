@@ -5,8 +5,8 @@
 import unittest
 import numpy as np
 import time
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.periodic_table import element, PeriodicTable
+from pyiron_atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.periodic_table import element, PeriodicTable
 
 
 class TestAtoms(unittest.TestCase):

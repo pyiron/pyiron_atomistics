@@ -4,8 +4,8 @@
 
 import unittest
 import numpy as np
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_atomistics.atomistics.structure.factory import StructureFactory
+from pyiron_atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.structure.factory import StructureFactory
 import warnings
 
 

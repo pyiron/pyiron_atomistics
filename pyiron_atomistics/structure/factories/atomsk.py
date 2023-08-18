@@ -8,7 +8,7 @@ import os.path
 import shutil
 import io
 
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.structure.atoms import ase_to_pyiron
 
 from ase.io import read, write
 import numpy as np

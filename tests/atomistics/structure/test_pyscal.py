@@ -5,10 +5,10 @@
 import unittest
 import numpy as np
 import pyscal.core as pc
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.structure.atoms import Atoms, CrystalStructure
 from ase.build import bulk
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
-import pyiron_atomistics.atomistics.structure.pyscal as pas
+from pyiron_atomistics.structure.atoms import ase_to_pyiron
+import pyiron_atomistics.structure.pyscal as pas
 from pyiron_atomistics._tests import TestWithCleanProject
 
 

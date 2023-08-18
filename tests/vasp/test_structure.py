@@ -7,7 +7,7 @@ import os
 import posixpath
 import numpy as np
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.vasp.structure import (
     read_atoms,
     write_poscar,

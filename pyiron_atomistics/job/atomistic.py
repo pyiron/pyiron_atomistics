@@ -10,9 +10,9 @@ import os
 from typing import Union, Tuple
 from ase.io import write as ase_write
 import posixpath
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_atomistics.structure.neighbors import NeighborsTrajectory
-from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+from pyiron_atomistics.structure.has_structure import HasStructure
 from pyiron_base import (
     GenericParameters,
     GenericMaster,

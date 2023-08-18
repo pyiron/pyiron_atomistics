@@ -5,7 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import inspect
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.structure.atoms import Atoms
 from pyiron_base import ParallelMaster, JobGenerator, get_function_from_string
 from pyiron_atomistics.job.atomistic import AtomisticGenericJob
 
