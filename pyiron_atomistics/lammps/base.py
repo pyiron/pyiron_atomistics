@@ -388,18 +388,6 @@ class LammpsBase(AtomisticGenericJob):
         lmp_structure.write_file(file_name="structure.inp", cwd=self.working_directory)
         version_int_lst = self._get_executable_version_number()
         update_input_hdf5 = False
-        if (
-            version_int_lst is not None
-            and "dump_modify" in self.input.control._dataset["Parameter"]
-            and (
-                version_int_lst[0] < 2016
-                or (version_int_lst[0] == 2016 and version_int_lst[1] < 11)
-            )
-        ):
-            self.input.control["dump_modify"] = self.input.control[
-                "dump_modify"
-            ].replace(" line ", " ")
-            update_input_hdf5 = True
         if not all(self.structure.pbc):
             self.input.control["boundary"] = " ".join(
                 ["p" if coord else "f" for coord in self.structure.pbc]
