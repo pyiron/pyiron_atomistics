@@ -386,20 +386,7 @@ class LammpsBase(AtomisticGenericJob):
             structure=self.structure, cutoff_radius=self.cutoff_radius
         )
         lmp_structure.write_file(file_name="structure.inp", cwd=self.working_directory)
-        version_int_lst = self._get_executable_version_number()
         update_input_hdf5 = False
-        if (
-            version_int_lst is not None
-            and "dump_modify" in self.input.control._dataset["Parameter"]
-            and (
-                version_int_lst[0] < 2016
-                or (version_int_lst[0] == 2016 and version_int_lst[1] < 11)
-            )
-        ):
-            self.input.control["dump_modify"] = self.input.control[
-                "dump_modify"
-            ].replace(" line ", " ")
-            update_input_hdf5 = True
         if not all(self.structure.pbc):
             self.input.control["boundary"] = " ".join(
                 ["p" if coord else "f" for coord in self.structure.pbc]
@@ -415,25 +402,6 @@ class LammpsBase(AtomisticGenericJob):
             file_name="potential.inp", cwd=self.working_directory
         )
         self.input.potential.copy_pot_files(self.working_directory)
-
-    def _get_executable_version_number(self):
-        """
-        Get the version of the executable
-
-        Returns:
-            list: List of integers defining the version number
-        """
-        if self.executable.version:
-            return [
-                l
-                for l in [
-                    [int(i) for i in sv.split(".") if i.isdigit()]
-                    for sv in self.executable.version.split("/")[-1].split("_")
-                ]
-                if len(l) > 0
-            ][0]
-        else:
-            return None
 
     @property
     def publication(self):

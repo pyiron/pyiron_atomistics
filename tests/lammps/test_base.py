@@ -133,30 +133,6 @@ class TestLammps(TestWithCleanProject):
             ],
         )
 
-    def test_avilable_versions(self):
-        self.job.executable = os.path.abspath(
-            os.path.join(
-                self.execution_path,
-                "..",
-                "static",
-                "lammps",
-                "bin",
-                "run_lammps_2018.03.16.sh",
-            )
-        )
-        self.assertTrue([2018, 3, 16] == self.job._get_executable_version_number())
-        self.job.executable = os.path.abspath(
-            os.path.join(
-                self.execution_path,
-                "..",
-                "static",
-                "lammps",
-                "bin",
-                "run_lammps_2018.03.16_mpi.sh",
-            )
-        )
-        self.assertTrue([2018, 3, 16] == self.job._get_executable_version_number())
-
     def _build_water(self, y0_shift=0.0):
         density = 1.0e-24  # g/A^3
         n_mols = 27
