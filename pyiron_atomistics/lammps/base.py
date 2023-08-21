@@ -25,13 +25,10 @@ from pyiron_atomistics.lammps.structure import (
     UnfoldingPrism,
     structure_to_lammps,
 )
-from pyiron_atomistics.lammps.units import UnitConverter, LAMMPS_UNIT_CONVERSIONS
+from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
 from pyiron_atomistics.lammps.output import (
-    collect_output_log,
-    collect_h5md_file,
-    collect_dump_file,
-    collect_errors,
     remap_indices,
+    lammps_collect_output_parser,
 )
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
@@ -422,6 +419,30 @@ class LammpsBase(AtomisticGenericJob):
             }
         }
 
+    def collect_output_parser(
+        self,
+        cwd,
+        dump_h5_file_name="dump.h5",
+        dump_out_file_name="dump.out",
+        log_lammps_file_name="log.lammps",
+    ):
+        # Parse output files
+        return lammps_collect_output_parser(
+            dump_h5_full_file_name=self.job_file_name(
+                file_name=dump_h5_file_name, cwd=cwd
+            ),
+            dump_out_full_file_name=self.job_file_name(
+                file_name=dump_out_file_name, cwd=cwd
+            ),
+            log_lammps_full_file_name=self.job_file_name(
+                file_name=log_lammps_file_name, cwd=cwd
+            ),
+            prism=self._prism,
+            structure=self.structure,
+            potential_elements=self.input.potential.get_element_lst(),
+            units=self.units,
+        )
+
     def collect_output(self):
         """
 
@@ -429,13 +450,22 @@ class LammpsBase(AtomisticGenericJob):
 
         """
         self.input.from_hdf(self._hdf5)
-        if os.path.isfile(
-            self.job_file_name(file_name="dump.h5", cwd=self.working_directory)
-        ):
-            self.collect_h5md_file(file_name="dump.h5", cwd=self.working_directory)
-        else:
-            self.collect_dump_file(file_name="dump.out", cwd=self.working_directory)
-        self.collect_output_log(file_name="log.lammps", cwd=self.working_directory)
+        hdf_dict = self.collect_output_parser(
+            cwd=self.working_directory,
+            dump_h5_file_name="dump.h5",
+            dump_out_file_name="dump.out",
+            log_lammps_file_name="log.lammps",
+        )
+
+        # Write to hdf
+        with self.project_hdf5.open("output/generic") as hdf_output:
+            for k, v in hdf_dict["generic"].items():
+                hdf_output[k] = v
+
+        with self.project_hdf5.open("output/lammps") as hdf_output:
+            for k, v in hdf_dict["lammps"].items():
+                hdf_output[k] = v
+
         if len(self.output.cells) > 0:
             final_structure = self.get_structure(iteration_step=-1)
             if final_structure is not None:
@@ -466,34 +496,6 @@ class LammpsBase(AtomisticGenericJob):
         """
         return
 
-    # TODO: make rotation of all vectors back to the original as in self.collect_dump_file
-    def collect_h5md_file(self, file_name="dump.h5", cwd=None):
-        """
-
-        Args:
-            file_name:
-            cwd:
-
-        Returns:
-
-        """
-        uc = UnitConverter(self.units)
-        forces, positions, steps, cell = collect_h5md_file(
-            file_name=self.job_file_name(file_name=file_name, cwd=cwd),
-            prism=self._prism,
-        )
-        with self.project_hdf5.open("output/generic") as h5_file:
-            h5_file["forces"] = uc.convert_array_to_pyiron_units(
-                np.array(forces), "forces"
-            )
-            h5_file["positions"] = uc.convert_array_to_pyiron_units(
-                np.array(positions), "positions"
-            )
-            h5_file["steps"] = uc.convert_array_to_pyiron_units(
-                np.array(steps), "steps"
-            )
-            h5_file["cells"] = uc.convert_array_to_pyiron_units(np.array(cell), "cells")
-
     def remap_indices(self, lammps_indices):
         """
         Give the Lammps-dumped indices, re-maps these back onto the structure's indices to preserve the species.
@@ -514,46 +516,6 @@ class LammpsBase(AtomisticGenericJob):
             potential_elements=self.input.potential.get_element_lst(),
             structure=self.structure,
         )
-
-    def collect_output_log(self, file_name="log.lammps", cwd=None):
-        """
-        general purpose routine to extract static from a lammps log file
-
-        Args:
-            file_name:
-            cwd:
-
-        Returns:
-
-        """
-        file_name = self.job_file_name(file_name=file_name, cwd=cwd)
-        collect_errors(file_name=file_name)
-        if os.path.exists(file_name):
-            generic_keys_lst, pressure_dict, df = collect_output_log(
-                file_name=file_name,
-                prism=self._prism,
-            )
-            uc = UnitConverter(self.units)
-            with self.project_hdf5.open("output/generic") as hdf_output:
-                # This is a hack for backward comparability
-                for k, v in df.items():
-                    if k in generic_keys_lst:
-                        hdf_output[k] = uc.convert_array_to_pyiron_units(
-                            np.array(v), label=k
-                        )
-                # Store pressures as numpy arrays
-                for key, val in pressure_dict.items():
-                    hdf_output[key] = uc.convert_array_to_pyiron_units(val, label=key)
-
-            with self.project_hdf5.open("output/lammps") as hdf_output:
-                # This is a hack for backward comparability
-                for k, v in df.items():
-                    if k not in generic_keys_lst:
-                        hdf_output[k] = uc.convert_array_to_pyiron_units(
-                            np.array(v), label=k
-                        )
-        else:
-            warnings.warn("LAMMPS warning: No log.lammps output file found.")
 
     def calc_minimize(
         self,
@@ -828,47 +790,6 @@ class LammpsBase(AtomisticGenericJob):
         self.input.control.remove_keys(
             ["dimension", "read_data", "boundary", "atom_style", "velocity"]
         )
-
-    def collect_dump_file(self, file_name="dump.out", cwd=None):
-        """
-        general purpose routine to extract static from a lammps dump file
-
-        Args:
-            file_name:
-            cwd:
-
-        Returns:
-
-        """
-        uc = UnitConverter(self.units)
-        file_name = self.job_file_name(file_name=file_name, cwd=cwd)
-
-        if os.path.exists(file_name):
-            dump_dict = collect_dump_file(
-                file_name=file_name,
-                prism=self._prism,
-                structure=self.structure,
-                potential_elements=self.input.potential.get_element_lst(),
-            )
-            # Write to hdf
-            with self.project_hdf5.open("output/generic") as hdf_output:
-                for k, v in dump_dict.pop("computes").items():
-                    hdf_output[k] = uc.convert_array_to_pyiron_units(
-                        np.array(v), label=k
-                    )
-
-                hdf_output["steps"] = uc.convert_array_to_pyiron_units(
-                    np.array(dump_dict.pop("steps"), dtype=int), label="steps"
-                )
-
-                for k, v in dump_dict.items():
-                    if len(v) > 0:
-                        hdf_output[k] = uc.convert_array_to_pyiron_units(
-                            np.array(v), label=k
-                        )
-
-        else:
-            warnings.warn("LAMMPS warning: No dump.out output file found.")
 
     # Outdated functions:
     def set_potential(self, file_name):
