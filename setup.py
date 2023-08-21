@@ -47,7 +47,7 @@ setup(
         'h5py==3.9.0',
         'matplotlib==3.7.2',
         'mendeleev==0.14.0',
-        'mp-api==0.33.3',
+        'mp-api==0.34.3',
         'numpy==1.24.3',
         'pandas==2.0.3',
         'phonopy==2.20.0',
