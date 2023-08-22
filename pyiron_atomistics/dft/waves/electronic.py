@@ -524,7 +524,7 @@ class ElectronicStructure(HasHDF):
             hdf: Path to the hdf5 file/group in the file
             version: which version of this class was written to the HDF file
         """
-        if "dos" not in hdf[group_name].list_groups():
+        if "dos" not in hdf.list_groups():
             self.from_hdf_old(hdf=hdf[".."], group_name="electronic_structure")
         else:
             nodes = hdf.list_nodes()
