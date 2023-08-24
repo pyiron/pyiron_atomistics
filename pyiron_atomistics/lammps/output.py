@@ -314,7 +314,6 @@ def _collect_output_log(
     with open(file_name, "r") as f:
         read_thermo = False
         thermo_lines = ""
-        dfs = []
         for l in f:
             l = l.lstrip()
 
@@ -328,18 +327,7 @@ def _collect_output_log(
                 read_thermo = True
                 thermo_lines += l
 
-        dfs.append(
-            pd.read_csv(
-                StringIO(thermo_lines),
-                sep="\s+",
-                engine="c",
-            )
-        )
-
-    if len(dfs) == 1:
-        df = dfs[0]
-    else:
-        df = pd.concat[dfs]
+    df = pd.read_csv(StringIO(thermo_lines), sep="\s+", engine="c")
 
     h5_dict = {
         "Step": "steps",
