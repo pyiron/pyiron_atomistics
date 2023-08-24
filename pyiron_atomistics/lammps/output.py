@@ -43,7 +43,7 @@ def parse_lammps_output(
         potential_elements
     )
 
-    generic_keys_lst, pressure_dict, df = _parse_log_file_if_it_exists(
+    generic_keys_lst, pressure_dict, df = _parse_log(
         log_lammps_full_file_name,
         prism
     )
@@ -539,7 +539,7 @@ def remap_indices(lammps_indices, potential_elements, structure):
     return structure_indices
 
 
-def _parse_log_file_if_it_exists(log_lammps_full_file_name, prism):
+def _parse_log(log_lammps_full_file_name, prism):
     """
 
     Args:
