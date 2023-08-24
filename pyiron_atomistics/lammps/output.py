@@ -261,7 +261,7 @@ def _raise_exception_if_errors_found(file_name: str) -> None:
         raise RuntimeError("Run time error occurred: " + str(error))
 
 
-def _collect_dump_file(file_name, prism, structure, potential_elements):
+def _collect_dump_file(file_name, prism, structure, potential_elements) -> Dict:
     """
     general purpose routine to extract static from a lammps dump file
 
@@ -522,7 +522,7 @@ def _parse_dump(
         prism,
         structure,
         potential_elements
-):
+) -> Dict:
     dump_dict = {}
 
     if os.path.isfile(dump_h5_full_file_name):
