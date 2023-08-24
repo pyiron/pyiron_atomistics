@@ -514,14 +514,13 @@ def lammps_collect_output_parser(
         for k, v in df.items():
             if k in generic_keys_lst:
                 hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+            else:  # This is a hack for backward comparability
+                hdf_lammps[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+
         # Store pressures as numpy arrays
         for key, val in pressure_dict.items():
             hdf_generic[key] = uc.convert_array_to_pyiron_units(val, label=key)
 
-        # This is a hack for backward comparability
-        for k, v in df.items():
-            if k not in generic_keys_lst:
-                hdf_lammps[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
     else:
         warnings.warn("LAMMPS warning: No log.lammps output file found.")
     return hdf_output
