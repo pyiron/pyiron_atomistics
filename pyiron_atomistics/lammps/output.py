@@ -468,6 +468,55 @@ def lammps_collect_output_parser(
     hdf_generic = hdf_output["generic"]
     hdf_lammps = hdf_output["lammps"]
 
+    dump_dict = _parse_dump_to_dict(
+        dump_h5_full_file_name,
+        dump_out_full_file_name,
+        prism,
+        structure,
+        potential_elements
+    )
+
+    if "computes" in dump_dict.keys():
+        for k, v in dump_dict.pop("computes").items():
+            hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+
+    hdf_generic["steps"] = uc.convert_array_to_pyiron_units(
+        np.array(dump_dict.pop("steps"), dtype=int), label="steps"
+    )
+
+    for k, v in dump_dict.items():
+        if len(v) > 0:
+            hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+
+    generic_keys_lst, pressure_dict, df = _parse_log_file_if_it_exists(
+        log_lammps_full_file_name,
+        prism
+    )
+
+    if df is not None and pressure_dict is not None and generic_keys_lst is not None:
+        for k, v in df.items():
+            v = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+            if k in generic_keys_lst:
+                hdf_generic[k] = v
+            else:  # This is a hack for backward comparability
+                hdf_lammps[k] = v
+
+        # Store pressures as numpy arrays
+        for key, val in pressure_dict.items():
+            hdf_generic[key] = uc.convert_array_to_pyiron_units(val, label=key)
+    else:
+        warnings.warn("LAMMPS warning: No log.lammps output file found.")
+
+    return hdf_output
+
+
+def _parse_dump_to_dict(
+        dump_h5_full_file_name,
+        dump_out_full_file_name,
+        prism,
+        structure,
+        potential_elements
+):
     if os.path.isfile(dump_h5_full_file_name):
         forces, positions, steps, cells = collect_h5md_file(
             file_name=dump_h5_full_file_name,
@@ -488,40 +537,29 @@ def lammps_collect_output_parser(
         )
     else:
         dump_dict = {}
+    return dump_dict
 
-    if "computes" in dump_dict.keys():
-        for k, v in dump_dict.pop("computes").items():
-            hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
 
-    hdf_generic["steps"] = uc.convert_array_to_pyiron_units(
-        np.array(dump_dict.pop("steps"), dtype=int), label="steps"
-    )
+def _parse_log_file_if_it_exists(log_lammps_full_file_name, prism):
+    """
 
-    for k, v in dump_dict.items():
-        if len(v) > 0:
-            hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+    Args:
+        log_lammps_full_file_name:
+        prism:
 
+    Returns:
+        (list | None): Generic keys
+        (dict | None): Pressures
+        (pandas.DataFrame | None):
+
+    Raises:
+        (RuntimeError): If there are "ERROR" tags in the log.
+    """
     if os.path.exists(log_lammps_full_file_name):
         raise_exception_if_errors_found(file_name=log_lammps_full_file_name)
-        generic_keys_lst, pressure_dict, df = collect_output_log(
+        return collect_output_log(
             file_name=log_lammps_full_file_name,
             prism=prism,
         )
     else:
-        generic_keys_lst, pressure_dict, df = None, None, None
-
-    if df is not None and pressure_dict is not None and generic_keys_lst is not None:
-        for k, v in df.items():
-            v = uc.convert_array_to_pyiron_units(np.array(v), label=k)
-            if k in generic_keys_lst:
-                hdf_generic[k] = v
-            else:  # This is a hack for backward comparability
-                hdf_lammps[k] = v
-
-        # Store pressures as numpy arrays
-        for key, val in pressure_dict.items():
-            hdf_generic[key] = uc.convert_array_to_pyiron_units(val, label=key)
-    else:
-        warnings.warn("LAMMPS warning: No log.lammps output file found.")
-
-    return hdf_output
+        return None, None, None
