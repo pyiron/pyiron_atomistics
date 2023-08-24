@@ -518,6 +518,8 @@ def _parse_dump_to_dict(
         structure,
         potential_elements
 ):
+    dump_dict = {}
+
     if os.path.isfile(dump_h5_full_file_name):
         forces, positions, steps, cells = collect_h5md_file(
             file_name=dump_h5_full_file_name,
@@ -536,8 +538,7 @@ def _parse_dump_to_dict(
             structure=structure,
             potential_elements=potential_elements,
         )
-    else:
-        dump_dict = {}
+
     return dump_dict
 
 
