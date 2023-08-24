@@ -183,14 +183,18 @@ def collect_h5md_file(file_name, prism):
         return forces, positions, steps, cell
 
 
-def collect_errors(file_name):
+def collect_errors(file_name: str) -> True:
     """
+    Raises a `RuntimeError` if the `"ERROR"` tag is found in the file.
 
     Args:
-        file_name:
+        file_name (str): The file holding the LAMMPS log
 
     Returns:
+        (True): if no "ERROR" tag is found
 
+    Raises:
+        (RuntimeError): if at least one "ERROR" tag is found
     """
     error = extract_data_from_file(file_name, tag="ERROR", num_args=1000)
     if len(error) > 0:
