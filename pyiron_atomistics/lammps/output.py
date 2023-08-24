@@ -512,10 +512,11 @@ def lammps_collect_output_parser(
 
     if df is not None and pressure_dict is not None and generic_keys_lst is not None:
         for k, v in df.items():
+            v = uc.convert_array_to_pyiron_units(np.array(v), label=k)
             if k in generic_keys_lst:
-                hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+                hdf_generic[k] = v
             else:  # This is a hack for backward comparability
-                hdf_lammps[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+                hdf_lammps[k] = v
 
         # Store pressures as numpy arrays
         for key, val in pressure_dict.items():
