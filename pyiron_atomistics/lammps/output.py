@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field, asdict
-from typing import List, Dict
+from typing import Dict, List, Tuple, TYPE_CHECKING, Union
 import h5py
 from io import StringIO
 import numpy as np
@@ -8,6 +10,11 @@ import pandas as pd
 import warnings
 from pyiron_base import extract_data_from_file
 from pyiron_atomistics.lammps.units import UnitConverter
+
+
+if TYPE_CHECKING:
+    from pyiron_atomistics.atomistics.structure.atoms import Atoms
+    from pyiron_atomistics.lammps.structure import UnfoldingPrism
 
 
 @dataclass
@@ -27,13 +34,13 @@ class DumpData:
 
 
 def parse_lammps_output(
-    dump_h5_full_file_name,
-    dump_out_full_file_name,
-    log_lammps_full_file_name,
-    prism,
-    structure,
-    potential_elements,
-    units,
+    dump_h5_full_file_name: str,
+    dump_out_full_file_name: str,
+    log_lammps_full_file_name: str,
+    prism: UnfoldingPrism,
+    structure: Atoms,
+    potential_elements: Union[np.ndarray, List],
+    units: str,
 ) -> Dict:
     dump_dict = _parse_dump(
         dump_h5_full_file_name,
@@ -84,11 +91,11 @@ def parse_lammps_output(
 
 
 def _parse_dump(
-        dump_h5_full_file_name,
-        dump_out_full_file_name,
-        prism,
-        structure,
-        potential_elements
+        dump_h5_full_file_name: str,
+        dump_out_full_file_name: str,
+        prism: UnfoldingPrism,
+        structure: Atoms,
+        potential_elements: Union[np.ndarray, List]
 ) -> Dict:
     if os.path.isfile(dump_h5_full_file_name):
         return _collect_dump_from_h5md(
@@ -106,7 +113,7 @@ def _parse_dump(
         return {}
 
 
-def _collect_dump_from_h5md(file_name, prism) -> Dict:
+def _collect_dump_from_h5md(file_name: str, prism: UnfoldingPrism) -> Dict:
     """
 
     Args:
@@ -137,7 +144,12 @@ def _collect_dump_from_h5md(file_name, prism) -> Dict:
     }
 
 
-def _collect_dump_from_text(file_name, prism, structure, potential_elements) -> Dict:
+def _collect_dump_from_text(
+        file_name: str,
+        prism: UnfoldingPrism,
+        structure: Atoms,
+        potential_elements: Union[np.ndarray, List]
+) -> Dict:
     """
     general purpose routine to extract static from a lammps dump file
 
@@ -283,7 +295,9 @@ def _collect_dump_from_text(file_name, prism, structure, potential_elements) -> 
         return asdict(dump)
 
 
-def _parse_log(log_lammps_full_file_name, prism):
+def _parse_log(log_lammps_full_file_name: str, prism: UnfoldingPrism) -> Union[
+    Tuple[List[str], Dict, pd.DataFrame], Tuple[None, None, None]
+]:
     """
 
     Args:
@@ -308,7 +322,9 @@ def _parse_log(log_lammps_full_file_name, prism):
         return None, None, None
 
 
-def _collect_output_log(file_name, prism):
+def _collect_output_log(file_name: str, prism: UnfoldingPrism) -> Tuple[
+    List[str], Dict, pd.DataFrame
+]:
     """
     general purpose routine to extract static from a lammps log file
 
@@ -455,7 +471,11 @@ def _raise_exception_if_errors_found(file_name: str) -> None:
         raise RuntimeError("Run time error occurred: " + str(error))
 
 
-def _check_ortho_prism(prism, rtol=0.0, atol=1e-08):
+def _check_ortho_prism(
+        prism: UnfoldingPrism,
+        rtol: float = 0.0,
+        atol: float = 1e-08
+) -> bool:
     """
     Check if the rotation matrix of the UnfoldingPrism object is sufficiently close to a unit matrix
 
@@ -470,7 +490,7 @@ def _check_ortho_prism(prism, rtol=0.0, atol=1e-08):
     return np.isclose(prism.R, np.eye(3), rtol=rtol, atol=atol).all()
 
 
-def to_amat(l_list):
+def to_amat(l_list: Union[np.ndarray, List]) -> List:
     """
 
     Args:
@@ -517,7 +537,11 @@ def to_amat(l_list):
     return cell
 
 
-def remap_indices(lammps_indices, potential_elements, structure):
+def remap_indices(
+        lammps_indices: Union[np.ndarray, List],
+        potential_elements: Union[np.ndarray, List],
+        structure: Atoms
+) -> np.ndarray:
     """
     Give the Lammps-dumped indices, re-maps these back onto the structure's indices to preserve the species.
 
