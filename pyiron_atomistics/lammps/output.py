@@ -114,15 +114,6 @@ def _parse_dump(
 
 
 def _collect_dump_from_h5md(file_name: str, prism: UnfoldingPrism) -> Dict:
-    """
-
-    Args:
-        file_name:
-        cwd:
-
-    Returns:
-
-    """
     if _check_ortho_prism(prism=prism):
         raise RuntimeError(
             "The Lammps output will not be mapped back to pyiron correctly."
@@ -152,15 +143,6 @@ def _collect_dump_from_text(
 ) -> Dict:
     """
     general purpose routine to extract static from a lammps dump file
-
-    Args:
-        file_name:
-        prism:
-        structure:
-        potential_elements:
-
-    Returns:
-
     """
     rotation_lammps2orig = prism.R.T
     with open(file_name, "r") as f:
@@ -327,13 +309,6 @@ def _collect_output_log(file_name: str, prism: UnfoldingPrism) -> Tuple[
 ]:
     """
     general purpose routine to extract static from a lammps log file
-
-    Args:
-        file_name:
-        prism:
-
-    Returns:
-
     """
     with open(file_name, "r") as f:
         read_thermo = False
@@ -491,14 +466,6 @@ def _check_ortho_prism(
 
 
 def to_amat(l_list: Union[np.ndarray, List]) -> List:
-    """
-
-    Args:
-        l_list:
-
-    Returns:
-
-    """
     lst = np.reshape(l_list, -1)
     if len(lst) == 9:
         (
