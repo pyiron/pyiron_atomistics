@@ -483,6 +483,7 @@ def lammps_collect_output_parser(
         )
     else:
         dump_dict = {}
+
     if os.path.exists(log_lammps_full_file_name):
         raise_exception_if_errors_found(file_name=log_lammps_full_file_name)
         generic_keys_lst, pressure_dict, df = collect_output_log(
@@ -521,7 +522,7 @@ def lammps_collect_output_parser(
         # Store pressures as numpy arrays
         for key, val in pressure_dict.items():
             hdf_generic[key] = uc.convert_array_to_pyiron_units(val, label=key)
-
     else:
         warnings.warn("LAMMPS warning: No log.lammps output file found.")
+
     return hdf_output
