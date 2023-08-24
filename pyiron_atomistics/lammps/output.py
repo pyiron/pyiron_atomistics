@@ -133,15 +133,8 @@ def collect_output_log(file_name, prism):
         pressures = (
             np.stack(
                 (
-                    df["mean_pressure[1]"],
-                    df["mean_pressure[4]"],
-                    df["mean_pressure[5]"],
-                    df["mean_pressure[4]"],
-                    df["mean_pressure[2]"],
-                    df["mean_pressure[6]"],
-                    df["mean_pressure[5]"],
-                    df["mean_pressure[6]"],
-                    df["mean_pressure[3]"],
+                    df[f"mean_pressure{i}"]
+                    for i in [1, 4, 5, 4, 2, 6, 5, 6, 3]
                 ),
                 axis=-1,
             )
