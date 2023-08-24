@@ -26,6 +26,63 @@ class DumpData:
     computes: Dict = field(default_factory=lambda: {})
 
 
+def parse_lammps_output(
+    dump_h5_full_file_name,
+    dump_out_full_file_name,
+    log_lammps_full_file_name,
+    prism,
+    structure,
+    potential_elements,
+    units,
+) -> Dict:
+    convert_units = UnitConverter(units).convert_array_to_pyiron_units
+
+    hdf_output = {"generic": {}, "lammps": {}}
+    hdf_generic = hdf_output["generic"]
+    hdf_lammps = hdf_output["lammps"]
+
+    dump_dict = _parse_dump_to_dict(
+        dump_h5_full_file_name,
+        dump_out_full_file_name,
+        prism,
+        structure,
+        potential_elements
+    )
+
+    if "computes" in dump_dict.keys():
+        for k, v in dump_dict.pop("computes").items():
+            hdf_generic[k] = convert_units(np.array(v), label=k)
+
+    hdf_generic["steps"] = convert_units(
+        np.array(dump_dict.pop("steps"), dtype=int), label="steps"
+    )
+
+    for k, v in dump_dict.items():
+        if len(v) > 0:
+            hdf_generic[k] = convert_units(np.array(v), label=k)
+
+    generic_keys_lst, pressure_dict, df = _parse_log_file_if_it_exists(
+        log_lammps_full_file_name,
+        prism
+    )
+
+    if df is not None and pressure_dict is not None and generic_keys_lst is not None:
+        for k, v in df.items():
+            v = convert_units(np.array(v), label=k)
+            if k in generic_keys_lst:
+                hdf_generic[k] = v
+            else:  # This is a hack for backward comparability
+                hdf_lammps[k] = v
+
+        # Store pressures as numpy arrays
+        for key, val in pressure_dict.items():
+            hdf_generic[key] = convert_units(val, label=key)
+    else:
+        warnings.warn("LAMMPS warning: No log.lammps output file found.")
+
+    return hdf_output
+
+
 def _collect_output_log(file_name, prism):
     """
     general purpose routine to extract static from a lammps log file
@@ -452,63 +509,6 @@ def remap_indices(lammps_indices, potential_elements, structure):
     # TODO: Vectorize this for-loop for computational efficiency
 
     return structure_indices
-
-
-def parse_lammps_output(
-    dump_h5_full_file_name,
-    dump_out_full_file_name,
-    log_lammps_full_file_name,
-    prism,
-    structure,
-    potential_elements,
-    units,
-) -> Dict:
-    convert_units = UnitConverter(units).convert_array_to_pyiron_units
-
-    hdf_output = {"generic": {}, "lammps": {}}
-    hdf_generic = hdf_output["generic"]
-    hdf_lammps = hdf_output["lammps"]
-
-    dump_dict = _parse_dump_to_dict(
-        dump_h5_full_file_name,
-        dump_out_full_file_name,
-        prism,
-        structure,
-        potential_elements
-    )
-
-    if "computes" in dump_dict.keys():
-        for k, v in dump_dict.pop("computes").items():
-            hdf_generic[k] = convert_units(np.array(v), label=k)
-
-    hdf_generic["steps"] = convert_units(
-        np.array(dump_dict.pop("steps"), dtype=int), label="steps"
-    )
-
-    for k, v in dump_dict.items():
-        if len(v) > 0:
-            hdf_generic[k] = convert_units(np.array(v), label=k)
-
-    generic_keys_lst, pressure_dict, df = _parse_log_file_if_it_exists(
-        log_lammps_full_file_name,
-        prism
-    )
-
-    if df is not None and pressure_dict is not None and generic_keys_lst is not None:
-        for k, v in df.items():
-            v = convert_units(np.array(v), label=k)
-            if k in generic_keys_lst:
-                hdf_generic[k] = v
-            else:  # This is a hack for backward comparability
-                hdf_lammps[k] = v
-
-        # Store pressures as numpy arrays
-        for key, val in pressure_dict.items():
-            hdf_generic[key] = convert_units(val, label=key)
-    else:
-        warnings.warn("LAMMPS warning: No log.lammps output file found.")
-
-    return hdf_output
 
 
 def _parse_dump_to_dict(
