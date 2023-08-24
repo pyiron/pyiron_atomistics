@@ -41,7 +41,7 @@ def parse_lammps_output(
     hdf_generic = hdf_output["generic"]
     hdf_lammps = hdf_output["lammps"]
 
-    dump_dict = _parse_dump_to_dict(
+    dump_dict = _parse_dump(
         dump_h5_full_file_name,
         dump_out_full_file_name,
         prism,
@@ -511,7 +511,7 @@ def remap_indices(lammps_indices, potential_elements, structure):
     return structure_indices
 
 
-def _parse_dump_to_dict(
+def _parse_dump(
         dump_h5_full_file_name,
         dump_out_full_file_name,
         prism,
