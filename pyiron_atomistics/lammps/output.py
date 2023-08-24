@@ -183,7 +183,7 @@ def collect_h5md_file(file_name, prism):
         return forces, positions, steps, cell
 
 
-def collect_errors(file_name: str) -> None:
+def raise_exception_if_errors_found(file_name: str) -> None:
     """
     Raises a `RuntimeError` if the `"ERROR"` tag is found in the file.
 
@@ -484,7 +484,7 @@ def lammps_collect_output_parser(
     else:
         dump_dict = {}
     if os.path.exists(log_lammps_full_file_name):
-        collect_errors(file_name=log_lammps_full_file_name)
+        raise_exception_if_errors_found(file_name=log_lammps_full_file_name)
         generic_keys_lst, pressure_dict, df = collect_output_log(
             file_name=log_lammps_full_file_name,
             prism=prism,
