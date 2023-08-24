@@ -28,7 +28,7 @@ from pyiron_atomistics.lammps.structure import (
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
 from pyiron_atomistics.lammps.output import (
     remap_indices,
-    lammps_collect_output_parser,
+    parse_lammps_output,
 )
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
@@ -427,7 +427,7 @@ class LammpsBase(AtomisticGenericJob):
         log_lammps_file_name="log.lammps",
     ):
         # Parse output files
-        return lammps_collect_output_parser(
+        return parse_lammps_output(
             dump_h5_full_file_name=self.job_file_name(
                 file_name=dump_h5_file_name, cwd=cwd
             ),

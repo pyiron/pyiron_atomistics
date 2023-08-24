@@ -454,7 +454,7 @@ def remap_indices(lammps_indices, potential_elements, structure):
     return structure_indices
 
 
-def lammps_collect_output_parser(
+def parse_lammps_output(
     dump_h5_full_file_name,
     dump_out_full_file_name,
     log_lammps_full_file_name,
