@@ -47,13 +47,10 @@ def parse_lammps_output(
         dump_out_full_file_name,
         prism,
         structure,
-        potential_elements
+        potential_elements,
     )
 
-    generic_keys_lst, pressure_dict, df = _parse_log(
-        log_lammps_full_file_name,
-        prism
-    )
+    generic_keys_lst, pressure_dict, df = _parse_log(log_lammps_full_file_name, prism)
 
     convert_units = UnitConverter(units).convert_array_to_pyiron_units
 
@@ -91,11 +88,11 @@ def parse_lammps_output(
 
 
 def _parse_dump(
-        dump_h5_full_file_name: str,
-        dump_out_full_file_name: str,
-        prism: UnfoldingPrism,
-        structure: Atoms,
-        potential_elements: Union[np.ndarray, List]
+    dump_h5_full_file_name: str,
+    dump_out_full_file_name: str,
+    prism: UnfoldingPrism,
+    structure: Atoms,
+    potential_elements: Union[np.ndarray, List],
 ) -> Dict:
     if os.path.isfile(dump_h5_full_file_name):
         return _collect_dump_from_h5md(
@@ -136,10 +133,10 @@ def _collect_dump_from_h5md(file_name: str, prism: UnfoldingPrism) -> Dict:
 
 
 def _collect_dump_from_text(
-        file_name: str,
-        prism: UnfoldingPrism,
-        structure: Atoms,
-        potential_elements: Union[np.ndarray, List]
+    file_name: str,
+    prism: UnfoldingPrism,
+    structure: Atoms,
+    potential_elements: Union[np.ndarray, List],
 ) -> Dict:
     """
     general purpose routine to extract static from a lammps dump file
@@ -277,9 +274,9 @@ def _collect_dump_from_text(
         return asdict(dump)
 
 
-def _parse_log(log_lammps_full_file_name: str, prism: UnfoldingPrism) -> Union[
-    Tuple[List[str], Dict, pd.DataFrame], Tuple[None, None, None]
-]:
+def _parse_log(
+    log_lammps_full_file_name: str, prism: UnfoldingPrism
+) -> Union[Tuple[List[str], Dict, pd.DataFrame], Tuple[None, None, None]]:
     """
     If it exists, parses the lammps log file and either raises an exception if errors
     occurred or returns data. Just returns a tuple of Nones if there is no file at the
@@ -308,9 +305,9 @@ def _parse_log(log_lammps_full_file_name: str, prism: UnfoldingPrism) -> Union[
         return None, None, None
 
 
-def _collect_output_log(file_name: str, prism: UnfoldingPrism) -> Tuple[
-    List[str], Dict, pd.DataFrame
-]:
+def _collect_output_log(
+    file_name: str, prism: UnfoldingPrism
+) -> Tuple[List[str], Dict, pd.DataFrame]:
     """
     general purpose routine to extract static from a lammps log file
     """
@@ -409,10 +406,7 @@ def _collect_output_log(file_name: str, prism: UnfoldingPrism) -> Tuple[
     if "mean_pressure[1]" in df.columns:
         pressures = (
             np.stack(
-                tuple(
-                    df[f"mean_pressure[{i}]"]
-                    for i in [1, 4, 5, 4, 2, 6, 5, 6, 3]
-                ),
+                tuple(df[f"mean_pressure[{i}]"] for i in [1, 4, 5, 4, 2, 6, 5, 6, 3]),
                 axis=-1,
             )
             .reshape(-1, 3, 3)
@@ -451,9 +445,7 @@ def _raise_exception_if_errors_found(file_name: str) -> None:
 
 
 def _check_ortho_prism(
-        prism: UnfoldingPrism,
-        rtol: float = 0.0,
-        atol: float = 1e-08
+    prism: UnfoldingPrism, rtol: float = 0.0, atol: float = 1e-08
 ) -> bool:
     """
     Check if the rotation matrix of the UnfoldingPrism object is sufficiently close to a unit matrix
@@ -509,9 +501,9 @@ def to_amat(l_list: Union[np.ndarray, List]) -> List:
 
 
 def remap_indices(
-        lammps_indices: Union[np.ndarray, List],
-        potential_elements: Union[np.ndarray, List],
-        structure: Atoms
+    lammps_indices: Union[np.ndarray, List],
+    potential_elements: Union[np.ndarray, List],
+    structure: Atoms,
 ) -> np.ndarray:
     """
     Give the Lammps-dumped indices, re-maps these back onto the structure's indices to preserve the species.
