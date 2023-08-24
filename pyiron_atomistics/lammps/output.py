@@ -214,7 +214,7 @@ def _collect_output_log(file_name, prism):
     return generic_keys_lst, pressure_dict, df
 
 
-def _collect_h5md_file(file_name, prism):
+def _collect_h5md_file(file_name, prism) -> Dict:
     """
 
     Args:
@@ -237,7 +237,12 @@ def _collect_h5md_file(file_name, prism):
             np.eye(3) * np.array(cell_i.tolist())
             for cell_i in h5md["/particles/all/box/edges/value"]
         ]
-        return forces, positions, steps, cell
+    return {
+        "forces": forces,
+        "positions": positions,
+        "steps": steps,
+        "cells": cell,
+    }
 
 
 def _raise_exception_if_errors_found(file_name: str) -> None:
@@ -521,16 +526,10 @@ def _parse_dump(
     dump_dict = {}
 
     if os.path.isfile(dump_h5_full_file_name):
-        forces, positions, steps, cells = _collect_h5md_file(
+        dump_dict = _collect_h5md_file(
             file_name=dump_h5_full_file_name,
             prism=prism,
         )
-        dump_dict = {
-            "forces": forces,
-            "positions": positions,
-            "steps": steps,
-            "cells": cells,
-        }
     elif os.path.exists(dump_out_full_file_name):
         dump_dict = _collect_dump_file(
             file_name=dump_out_full_file_name,
