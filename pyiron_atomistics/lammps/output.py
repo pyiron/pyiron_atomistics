@@ -281,15 +281,19 @@ def _parse_log(log_lammps_full_file_name: str, prism: UnfoldingPrism) -> Union[
     Tuple[List[str], Dict, pd.DataFrame], Tuple[None, None, None]
 ]:
     """
+    If it exists, parses the lammps log file and either raises an exception if errors
+    occurred or returns data. Just returns a tuple of Nones if there is no file at the
+    given location.
 
     Args:
-        log_lammps_full_file_name:
-        prism:
+        log_lammps_full_file_name (str): The path to the lammps log file.
+        prism (pyiron_atomistics.lammps.structure.UnfoldingPrism): For mapping between
+            lammps and pyiron structures
 
     Returns:
         (list | None): Generic keys
         (dict | None): Pressures
-        (pandas.DataFrame | None):
+        (pandas.DataFrame | None): A dataframe with the rest of the information
 
     Raises:
         (RuntimeError): If there are "ERROR" tags in the log.
