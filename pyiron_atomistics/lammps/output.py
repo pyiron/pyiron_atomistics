@@ -91,12 +91,12 @@ def _parse_dump(
         potential_elements
 ) -> Dict:
     if os.path.isfile(dump_h5_full_file_name):
-        return _collect_h5md_file(
+        return _collect_dump_from_h5md(
             file_name=dump_h5_full_file_name,
             prism=prism,
         )
     elif os.path.exists(dump_out_full_file_name):
-        return _collect_dump_file(
+        return _collect_dump_from_text(
             file_name=dump_out_full_file_name,
             prism=prism,
             structure=structure,
@@ -106,7 +106,7 @@ def _parse_dump(
         return {}
 
 
-def _collect_h5md_file(file_name, prism) -> Dict:
+def _collect_dump_from_h5md(file_name, prism) -> Dict:
     """
 
     Args:
@@ -137,7 +137,7 @@ def _collect_h5md_file(file_name, prism) -> Dict:
     }
 
 
-def _collect_dump_file(file_name, prism, structure, potential_elements) -> Dict:
+def _collect_dump_from_text(file_name, prism, structure, potential_elements) -> Dict:
     """
     general purpose routine to extract static from a lammps dump file
 
