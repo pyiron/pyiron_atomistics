@@ -35,12 +35,6 @@ def parse_lammps_output(
     potential_elements,
     units,
 ) -> Dict:
-    convert_units = UnitConverter(units).convert_array_to_pyiron_units
-
-    hdf_output = {"generic": {}, "lammps": {}}
-    hdf_generic = hdf_output["generic"]
-    hdf_lammps = hdf_output["lammps"]
-
     dump_dict = _parse_dump(
         dump_h5_full_file_name,
         dump_out_full_file_name,
@@ -48,6 +42,17 @@ def parse_lammps_output(
         structure,
         potential_elements
     )
+
+    generic_keys_lst, pressure_dict, df = _parse_log_file_if_it_exists(
+        log_lammps_full_file_name,
+        prism
+    )
+
+    convert_units = UnitConverter(units).convert_array_to_pyiron_units
+
+    hdf_output = {"generic": {}, "lammps": {}}
+    hdf_generic = hdf_output["generic"]
+    hdf_lammps = hdf_output["lammps"]
 
     if "computes" in dump_dict.keys():
         for k, v in dump_dict.pop("computes").items():
@@ -60,11 +65,6 @@ def parse_lammps_output(
     for k, v in dump_dict.items():
         if len(v) > 0:
             hdf_generic[k] = convert_units(np.array(v), label=k)
-
-    generic_keys_lst, pressure_dict, df = _parse_log_file_if_it_exists(
-        log_lammps_full_file_name,
-        prism
-    )
 
     if df is not None and pressure_dict is not None and generic_keys_lst is not None:
         for k, v in df.items():
