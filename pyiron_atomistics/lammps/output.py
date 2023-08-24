@@ -83,135 +83,27 @@ def parse_lammps_output(
     return hdf_output
 
 
-def _collect_output_log(file_name, prism):
-    """
-    general purpose routine to extract static from a lammps log file
-
-    Args:
-        file_name:
-        prism:
-
-    Returns:
-
-    """
-    with open(file_name, "r") as f:
-        read_thermo = False
-        thermo_lines = ""
-        dfs = []
-        for l in f:
-            l = l.lstrip()
-
-            if read_thermo:
-                if l.startswith("Loop"):
-                    read_thermo = False
-                    continue
-                thermo_lines += l
-
-            if l.startswith("Step"):
-                read_thermo = True
-                thermo_lines += l
-
-        dfs.append(
-            pd.read_csv(
-                StringIO(thermo_lines),
-                sep="\s+",
-                engine="c",
-            )
+def _parse_dump(
+        dump_h5_full_file_name,
+        dump_out_full_file_name,
+        prism,
+        structure,
+        potential_elements
+) -> Dict:
+    if os.path.isfile(dump_h5_full_file_name):
+        return _collect_h5md_file(
+            file_name=dump_h5_full_file_name,
+            prism=prism,
         )
-
-    if len(dfs) == 1:
-        df = dfs[0]
+    elif os.path.exists(dump_out_full_file_name):
+        return _collect_dump_file(
+            file_name=dump_out_full_file_name,
+            prism=prism,
+            structure=structure,
+            potential_elements=potential_elements,
+        )
     else:
-        df = pd.concat[dfs]
-
-    h5_dict = {
-        "Step": "steps",
-        "Temp": "temperature",
-        "PotEng": "energy_pot",
-        "TotEng": "energy_tot",
-        "Volume": "volume",
-    }
-
-    for key in df.columns[df.columns.str.startswith("f_mean")]:
-        h5_dict[key] = key.replace("f_", "")
-
-    df = df.rename(index=str, columns=h5_dict)
-    pressure_dict = dict()
-    if all(
-        [
-            x in df.columns.values
-            for x in [
-                "Pxx",
-                "Pxy",
-                "Pxz",
-                "Pxy",
-                "Pyy",
-                "Pyz",
-                "Pxz",
-                "Pyz",
-                "Pzz",
-            ]
-        ]
-    ):
-        pressures = (
-            np.stack(
-                (
-                    df.Pxx,
-                    df.Pxy,
-                    df.Pxz,
-                    df.Pxy,
-                    df.Pyy,
-                    df.Pyz,
-                    df.Pxz,
-                    df.Pyz,
-                    df.Pzz,
-                ),
-                axis=-1,
-            )
-            .reshape(-1, 3, 3)
-            .astype("float64")
-        )
-        # Rotate pressures from Lammps frame to pyiron frame if necessary
-        if _check_ortho_prism(prism=prism):
-            rotation_matrix = prism.R.T
-            pressures = rotation_matrix.T @ pressures @ rotation_matrix
-
-        df = df.drop(
-            columns=df.columns[
-                ((df.columns.str.len() == 3) & df.columns.str.startswith("P"))
-            ]
-        )
-        pressure_dict["pressures"] = pressures
-    else:
-        warnings.warn(
-            "LAMMPS warning: log.lammps does not contain the required pressure values."
-        )
-    if "mean_pressure[1]" in df.columns:
-        pressures = (
-            np.stack(
-                tuple(
-                    df[f"mean_pressure[{i}]"]
-                    for i in [1, 4, 5, 4, 2, 6, 5, 6, 3]
-                ),
-                axis=-1,
-            )
-            .reshape(-1, 3, 3)
-            .astype("float64")
-        )
-        if _check_ortho_prism(prism=prism):
-            rotation_matrix = prism.R.T
-            pressures = rotation_matrix.T @ pressures @ rotation_matrix
-        df = df.drop(
-            columns=df.columns[
-                (
-                    df.columns.str.startswith("mean_pressure")
-                    & df.columns.str.endswith("]")
-                )
-            ]
-        )
-        pressure_dict["mean_pressures"] = pressures
-    generic_keys_lst = list(h5_dict.values())
-    return generic_keys_lst, pressure_dict, df
+        return {}
 
 
 def _collect_h5md_file(file_name, prism) -> Dict:
@@ -243,22 +135,6 @@ def _collect_h5md_file(file_name, prism) -> Dict:
         "steps": steps,
         "cells": cell,
     }
-
-
-def _raise_exception_if_errors_found(file_name: str) -> None:
-    """
-    Raises a `RuntimeError` if the `"ERROR"` tag is found in the file.
-
-    Args:
-        file_name (str): The file holding the LAMMPS log
-
-    Raises:
-        (RuntimeError): if at least one "ERROR" tag is found
-    """
-    error = extract_data_from_file(file_name, tag="ERROR", num_args=1000)
-    if len(error) > 0:
-        error = " ".join(error[0])
-        raise RuntimeError("Run time error occurred: " + str(error))
 
 
 def _collect_dump_file(file_name, prism, structure, potential_elements) -> Dict:
@@ -407,6 +283,153 @@ def _collect_dump_file(file_name, prism, structure, potential_elements) -> Dict:
         return asdict(dump)
 
 
+def _collect_output_log(file_name, prism):
+    """
+    general purpose routine to extract static from a lammps log file
+
+    Args:
+        file_name:
+        prism:
+
+    Returns:
+
+    """
+    with open(file_name, "r") as f:
+        read_thermo = False
+        thermo_lines = ""
+        dfs = []
+        for l in f:
+            l = l.lstrip()
+
+            if read_thermo:
+                if l.startswith("Loop"):
+                    read_thermo = False
+                    continue
+                thermo_lines += l
+
+            if l.startswith("Step"):
+                read_thermo = True
+                thermo_lines += l
+
+        dfs.append(
+            pd.read_csv(
+                StringIO(thermo_lines),
+                sep="\s+",
+                engine="c",
+            )
+        )
+
+    if len(dfs) == 1:
+        df = dfs[0]
+    else:
+        df = pd.concat[dfs]
+
+    h5_dict = {
+        "Step": "steps",
+        "Temp": "temperature",
+        "PotEng": "energy_pot",
+        "TotEng": "energy_tot",
+        "Volume": "volume",
+    }
+
+    for key in df.columns[df.columns.str.startswith("f_mean")]:
+        h5_dict[key] = key.replace("f_", "")
+
+    df = df.rename(index=str, columns=h5_dict)
+    pressure_dict = dict()
+    if all(
+        [
+            x in df.columns.values
+            for x in [
+                "Pxx",
+                "Pxy",
+                "Pxz",
+                "Pxy",
+                "Pyy",
+                "Pyz",
+                "Pxz",
+                "Pyz",
+                "Pzz",
+            ]
+        ]
+    ):
+        pressures = (
+            np.stack(
+                (
+                    df.Pxx,
+                    df.Pxy,
+                    df.Pxz,
+                    df.Pxy,
+                    df.Pyy,
+                    df.Pyz,
+                    df.Pxz,
+                    df.Pyz,
+                    df.Pzz,
+                ),
+                axis=-1,
+            )
+            .reshape(-1, 3, 3)
+            .astype("float64")
+        )
+        # Rotate pressures from Lammps frame to pyiron frame if necessary
+        if _check_ortho_prism(prism=prism):
+            rotation_matrix = prism.R.T
+            pressures = rotation_matrix.T @ pressures @ rotation_matrix
+
+        df = df.drop(
+            columns=df.columns[
+                ((df.columns.str.len() == 3) & df.columns.str.startswith("P"))
+            ]
+        )
+        pressure_dict["pressures"] = pressures
+    else:
+        warnings.warn(
+            "LAMMPS warning: log.lammps does not contain the required pressure values."
+        )
+    if "mean_pressure[1]" in df.columns:
+        pressures = (
+            np.stack(
+                tuple(
+                    df[f"mean_pressure[{i}]"]
+                    for i in [1, 4, 5, 4, 2, 6, 5, 6, 3]
+                ),
+                axis=-1,
+            )
+            .reshape(-1, 3, 3)
+            .astype("float64")
+        )
+        if _check_ortho_prism(prism=prism):
+            rotation_matrix = prism.R.T
+            pressures = rotation_matrix.T @ pressures @ rotation_matrix
+        df = df.drop(
+            columns=df.columns[
+                (
+                    df.columns.str.startswith("mean_pressure")
+                    & df.columns.str.endswith("]")
+                )
+            ]
+        )
+        pressure_dict["mean_pressures"] = pressures
+    generic_keys_lst = list(h5_dict.values())
+    return generic_keys_lst, pressure_dict, df
+
+
+def _raise_exception_if_errors_found(file_name: str) -> None:
+    """
+    Raises a `RuntimeError` if the `"ERROR"` tag is found in the file.
+
+    Args:
+        file_name (str): The file holding the LAMMPS log
+
+    Raises:
+        (RuntimeError): if at least one "ERROR" tag is found
+    """
+    error = extract_data_from_file(file_name, tag="ERROR", num_args=1000)
+    if len(error) > 0:
+        error = " ".join(error[0])
+        raise RuntimeError("Run time error occurred: " + str(error))
+
+
 def _check_ortho_prism(prism, rtol=0.0, atol=1e-08):
     """
     Check if the rotation matrix of the UnfoldingPrism object is sufficiently close to a unit matrix
@@ -514,29 +537,6 @@ def remap_indices(lammps_indices, potential_elements, structure):
     # TODO: Vectorize this for-loop for computational efficiency
 
     return structure_indices
-
-
-def _parse_dump(
-        dump_h5_full_file_name,
-        dump_out_full_file_name,
-        prism,
-        structure,
-        potential_elements
-) -> Dict:
-    if os.path.isfile(dump_h5_full_file_name):
-        return _collect_h5md_file(
-            file_name=dump_h5_full_file_name,
-            prism=prism,
-        )
-    elif os.path.exists(dump_out_full_file_name):
-        return _collect_dump_file(
-            file_name=dump_out_full_file_name,
-            prism=prism,
-            structure=structure,
-            potential_elements=potential_elements,
-        )
-    else:
-        return {}
 
 
 def _parse_log_file_if_it_exists(log_lammps_full_file_name, prism):
