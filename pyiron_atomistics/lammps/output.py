@@ -462,7 +462,7 @@ def parse_lammps_output(
     structure,
     potential_elements,
     units,
-):
+) -> Dict:
     uc = UnitConverter(units)
     hdf_output = {"generic": {}, "lammps": {}}
     hdf_generic = hdf_output["generic"]
