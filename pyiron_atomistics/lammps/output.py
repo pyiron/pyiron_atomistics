@@ -463,6 +463,11 @@ def lammps_collect_output_parser(
     potential_elements,
     units,
 ):
+    uc = UnitConverter(units)
+    hdf_output = {"generic": {}, "lammps": {}}
+    hdf_generic = hdf_output["generic"]
+    hdf_lammps = hdf_output["lammps"]
+
     if os.path.isfile(dump_h5_full_file_name):
         forces, positions, steps, cells = collect_h5md_file(
             file_name=dump_h5_full_file_name,
@@ -484,21 +489,6 @@ def lammps_collect_output_parser(
     else:
         dump_dict = {}
 
-    if os.path.exists(log_lammps_full_file_name):
-        raise_exception_if_errors_found(file_name=log_lammps_full_file_name)
-        generic_keys_lst, pressure_dict, df = collect_output_log(
-            file_name=log_lammps_full_file_name,
-            prism=prism,
-        )
-    else:
-        generic_keys_lst, pressure_dict, df = None, None, None
-
-    # convert output to dictionary
-    uc = UnitConverter(units)
-    hdf_output = {"generic": {}, "lammps": {}}
-    hdf_generic = hdf_output["generic"]
-    hdf_lammps = hdf_output["lammps"]
-
     if "computes" in dump_dict.keys():
         for k, v in dump_dict.pop("computes").items():
             hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
@@ -510,6 +500,15 @@ def lammps_collect_output_parser(
     for k, v in dump_dict.items():
         if len(v) > 0:
             hdf_generic[k] = uc.convert_array_to_pyiron_units(np.array(v), label=k)
+
+    if os.path.exists(log_lammps_full_file_name):
+        raise_exception_if_errors_found(file_name=log_lammps_full_file_name)
+        generic_keys_lst, pressure_dict, df = collect_output_log(
+            file_name=log_lammps_full_file_name,
+            prism=prism,
+        )
+    else:
+        generic_keys_lst, pressure_dict, df = None, None, None
 
     if df is not None and pressure_dict is not None and generic_keys_lst is not None:
         for k, v in df.items():
