@@ -26,7 +26,7 @@ class DumpData:
     computes: Dict = field(default_factory=lambda: {})
 
 
-def collect_output_log(file_name, prism):
+def _collect_output_log(file_name, prism):
     """
     general purpose routine to extract static from a lammps log file
 
@@ -157,7 +157,7 @@ def collect_output_log(file_name, prism):
     return generic_keys_lst, pressure_dict, df
 
 
-def collect_h5md_file(file_name, prism):
+def _collect_h5md_file(file_name, prism):
     """
 
     Args:
@@ -183,7 +183,7 @@ def collect_h5md_file(file_name, prism):
         return forces, positions, steps, cell
 
 
-def raise_exception_if_errors_found(file_name: str) -> None:
+def _raise_exception_if_errors_found(file_name: str) -> None:
     """
     Raises a `RuntimeError` if the `"ERROR"` tag is found in the file.
 
@@ -199,7 +199,7 @@ def raise_exception_if_errors_found(file_name: str) -> None:
         raise RuntimeError("Run time error occurred: " + str(error))
 
 
-def collect_dump_file(file_name, prism, structure, potential_elements):
+def _collect_dump_file(file_name, prism, structure, potential_elements):
     """
     general purpose routine to extract static from a lammps dump file
 
@@ -521,7 +521,7 @@ def _parse_dump_to_dict(
     dump_dict = {}
 
     if os.path.isfile(dump_h5_full_file_name):
-        forces, positions, steps, cells = collect_h5md_file(
+        forces, positions, steps, cells = _collect_h5md_file(
             file_name=dump_h5_full_file_name,
             prism=prism,
         )
@@ -532,7 +532,7 @@ def _parse_dump_to_dict(
             "cells": cells,
         }
     elif os.path.exists(dump_out_full_file_name):
-        dump_dict = collect_dump_file(
+        dump_dict = _collect_dump_file(
             file_name=dump_out_full_file_name,
             prism=prism,
             structure=structure,
@@ -558,8 +558,8 @@ def _parse_log_file_if_it_exists(log_lammps_full_file_name, prism):
         (RuntimeError): If there are "ERROR" tags in the log.
     """
     if os.path.exists(log_lammps_full_file_name):
-        raise_exception_if_errors_found(file_name=log_lammps_full_file_name)
-        return collect_output_log(
+        _raise_exception_if_errors_found(file_name=log_lammps_full_file_name)
+        return _collect_output_log(
             file_name=log_lammps_full_file_name,
             prism=prism,
         )
