@@ -132,7 +132,7 @@ def collect_output_log(file_name, prism):
     if "mean_pressure[1]" in df.columns:
         pressures = (
             np.stack(
-                (
+                tuple(
                     df[f"mean_pressure{i}"]
                     for i in [1, 4, 5, 4, 2, 6, 5, 6, 3]
                 ),
