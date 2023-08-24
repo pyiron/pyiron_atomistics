@@ -283,6 +283,31 @@ def _collect_dump_from_text(file_name, prism, structure, potential_elements) -> 
         return asdict(dump)
 
 
+def _parse_log(log_lammps_full_file_name, prism):
+    """
+
+    Args:
+        log_lammps_full_file_name:
+        prism:
+
+    Returns:
+        (list | None): Generic keys
+        (dict | None): Pressures
+        (pandas.DataFrame | None):
+
+    Raises:
+        (RuntimeError): If there are "ERROR" tags in the log.
+    """
+    if os.path.exists(log_lammps_full_file_name):
+        _raise_exception_if_errors_found(file_name=log_lammps_full_file_name)
+        return _collect_output_log(
+            file_name=log_lammps_full_file_name,
+            prism=prism,
+        )
+    else:
+        return None, None, None
+
+
 def _collect_output_log(file_name, prism):
     """
     general purpose routine to extract static from a lammps log file
@@ -537,28 +562,3 @@ def remap_indices(lammps_indices, potential_elements, structure):
     # TODO: Vectorize this for-loop for computational efficiency
 
     return structure_indices
-
-
-def _parse_log(log_lammps_full_file_name, prism):
-    """
-
-    Args:
-        log_lammps_full_file_name:
-        prism:
-
-    Returns:
-        (list | None): Generic keys
-        (dict | None): Pressures
-        (pandas.DataFrame | None):
-
-    Raises:
-        (RuntimeError): If there are "ERROR" tags in the log.
-    """
-    if os.path.exists(log_lammps_full_file_name):
-        _raise_exception_if_errors_found(file_name=log_lammps_full_file_name)
-        return _collect_output_log(
-            file_name=log_lammps_full_file_name,
-            prism=prism,
-        )
-    else:
-        return None, None, None
