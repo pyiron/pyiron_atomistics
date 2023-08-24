@@ -523,22 +523,20 @@ def _parse_dump(
         structure,
         potential_elements
 ) -> Dict:
-    dump_dict = {}
-
     if os.path.isfile(dump_h5_full_file_name):
-        dump_dict = _collect_h5md_file(
+        return _collect_h5md_file(
             file_name=dump_h5_full_file_name,
             prism=prism,
         )
     elif os.path.exists(dump_out_full_file_name):
-        dump_dict = _collect_dump_file(
+        return _collect_dump_file(
             file_name=dump_out_full_file_name,
             prism=prism,
             structure=structure,
             potential_elements=potential_elements,
         )
-
-    return dump_dict
+    else:
+        return {}
 
 
 def _parse_log_file_if_it_exists(log_lammps_full_file_name, prism):
