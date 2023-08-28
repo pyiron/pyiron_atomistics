@@ -872,7 +872,7 @@ class LammpsBase(AtomisticGenericJob):
 
     def _set_selective_dynamics(self):
         if "selective_dynamics" in self.structure.arrays.keys():
-            sel_dyn = np.logical_not(self.structure.selective_dynamics)
+            sel_dyn = np.logical_not(np.stack(self.structure.selective_dynamics))
             # Enter loop only if constraints present
             if len(np.argwhere(np.any(sel_dyn, axis=1)).flatten()) != 0:
                 all_indices = np.arange(len(self.structure), dtype=int)
