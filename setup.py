@@ -59,7 +59,7 @@ setup(
         'seekpath==2.1.0',
         'scikit-learn==1.3.0',
         'spglib==2.0.2',
-        'structuretoolkit==0.0.8'
+        'structuretoolkit==0.0.9'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
