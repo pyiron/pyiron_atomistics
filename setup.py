@@ -50,7 +50,7 @@ setup(
         'mendeleev==0.14.0',
         'mp-api==0.35.1',
         'numpy==1.24.3',
-        'pandas==2.0.3',
+        'pandas==2.1.0',
         'phonopy==2.20.0',
         'pint==0.22',
         'pyiron_base==0.6.4',
