@@ -10,11 +10,10 @@ import numpy as np
 import posixpath
 import scipy.constants
 from phonopy import Phonopy
-from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.units import VaspToTHz
 from phonopy.file_IO import write_FORCE_CONSTANTS
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_atomistics.atomistics.structure.phonopy import (
     publication as phonopy_publication,
@@ -65,7 +64,9 @@ class PhonopyJobGenerator(JobGenerator):
         return [
             [
                 "{}_{}".format(self._master.ref_job.job_name, ind),
-                self._restore_magmoms(structuretoolkit.common.phonopy_to_atoms(sc)),
+                self._restore_magmoms(
+                    ase_to_pyiron(structuretoolkit.common.phonopy_to_atoms(sc))
+                ),
             ]
             for ind, sc in enumerate(supercells)
         ]
