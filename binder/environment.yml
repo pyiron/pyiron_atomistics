@@ -16,4 +16,4 @@ dependencies:
 - jupyterlab
 - pyiron-data >=0.0.22
 - sqsgenerator
-- pymatgen
+- structuretoolkit
