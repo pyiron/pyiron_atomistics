@@ -25,13 +25,10 @@ from pyiron_atomistics.lammps.structure import (
     UnfoldingPrism,
     structure_to_lammps,
 )
-from pyiron_atomistics.lammps.units import UnitConverter, LAMMPS_UNIT_CONVERSIONS
+from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
 from pyiron_atomistics.lammps.output import (
-    collect_output_log,
-    collect_h5md_file,
-    collect_dump_file,
-    collect_errors,
     remap_indices,
+    parse_lammps_output,
 )
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
@@ -177,6 +174,36 @@ class LammpsBase(AtomisticGenericJob):
         """
         self._cutoff_radius = cutoff
 
+    @staticmethod
+    def _potential_file_to_potential(potential_filename):
+        if isinstance(potential_filename, str):
+            potential_filename = potential_filename.split(".lmp")[0]
+            return LammpsPotentialFile().find_by_name(potential_filename)
+        elif isinstance(potential_filename, pd.DataFrame):
+            return potential_filename
+        elif hasattr(potential_filename, "get_df"):
+            return potential_filename.get_df()
+        else:
+            raise TypeError("Potentials have to be strings or pandas dataframes.")
+
+    @staticmethod
+    def _check_potential_elements(structure_elements, potential_elements):
+        if not set(structure_elements).issubset(potential_elements):
+            raise ValueError(
+                f"Potential {potential_elements} does not support elements "
+                f"in structure {structure_elements}."
+            )
+
+    @staticmethod
+    def _get_potential_citations(potential):
+        pot_pub_dict = {}
+        pub_lst = potential["Citations"].values[0]
+        if isinstance(pub_lst, str) and len(pub_lst) > 0:
+            for p in ast.literal_eval(pub_lst):
+                for k in p.keys():
+                    pot_pub_dict[k] = p[k]
+        return {"lammps_potential": pot_pub_dict}
+
     @property
     def potential(self):
         """
@@ -198,44 +225,23 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        stringtypes = str
-        if isinstance(potential_filename, stringtypes):
-            if ".lmp" in potential_filename:
-                potential_filename = potential_filename.split(".lmp")[0]
-            potential_db = LammpsPotentialFile()
-            potential = potential_db.find_by_name(potential_filename)
-        elif isinstance(potential_filename, pd.DataFrame):
-            potential = potential_filename
-        elif hasattr(potential_filename, "get_df"):
-            potential = potential_filename.get_df()
-        else:
-            raise TypeError("Potentials have to be strings or pandas dataframes.")
-        if self.structure:
-            structure_elements = self.structure.get_species_symbols()
-            potential_elements = list(potential["Species"])[0]
-            if not set(structure_elements).issubset(potential_elements):
-                raise ValueError(
-                    "Potential {} does not support elements "
-                    "in structure {}.".format(potential_elements, structure_elements)
-                )
+        potential = self._potential_file_to_potential(potential_filename)
+        if self.structure is not None:
+            self._check_potential_elements(
+                self.structure.get_species_symbols(), list(potential["Species"])[0]
+            )
         self.input.potential.df = potential
         if "Citations" in potential.columns.values:
-            pot_pub_dict = {}
-            pub_lst = potential["Citations"].values[0]
-            if isinstance(pub_lst, str) and len(pub_lst) > 0:
-                for p in ast.literal_eval(pub_lst):
-                    for k in p.keys():
-                        pot_pub_dict[k] = p[k]
-            state.publications.add({"lammps_potential": pot_pub_dict})
+            state.publications.add(self._get_potential_citations(potential))
         for val in ["units", "atom_style", "dimension"]:
             v = self.input.potential[val]
             if v is not None:
                 self.input.control[val] = v
-                if val == "units" and v != "metal":
-                    warnings.warn(
-                        "WARNING: Non-'metal' units are not fully supported. Your calculation should run OK, but "
-                        "results may not be saved in pyiron units."
-                    )
+        if self.input.potential["units"] not in ("metal", None):
+            warnings.warn(
+                "Non-'metal' units are not fully supported. Your calculation should run OK, but "
+                "results may not be saved in pyiron units."
+            )
         self.input.potential.remove_structure_block()
 
     @property
@@ -377,20 +383,7 @@ class LammpsBase(AtomisticGenericJob):
             structure=self.structure, cutoff_radius=self.cutoff_radius
         )
         lmp_structure.write_file(file_name="structure.inp", cwd=self.working_directory)
-        version_int_lst = self._get_executable_version_number()
         update_input_hdf5 = False
-        if (
-            version_int_lst is not None
-            and "dump_modify" in self.input.control._dataset["Parameter"]
-            and (
-                version_int_lst[0] < 2016
-                or (version_int_lst[0] == 2016 and version_int_lst[1] < 11)
-            )
-        ):
-            self.input.control["dump_modify"] = self.input.control[
-                "dump_modify"
-            ].replace(" line ", " ")
-            update_input_hdf5 = True
         if not all(self.structure.pbc):
             self.input.control["boundary"] = " ".join(
                 ["p" if coord else "f" for coord in self.structure.pbc]
@@ -406,25 +399,6 @@ class LammpsBase(AtomisticGenericJob):
             file_name="potential.inp", cwd=self.working_directory
         )
         self.input.potential.copy_pot_files(self.working_directory)
-
-    def _get_executable_version_number(self):
-        """
-        Get the version of the executable
-
-        Returns:
-            list: List of integers defining the version number
-        """
-        if self.executable.version:
-            return [
-                l
-                for l in [
-                    [int(i) for i in sv.split(".") if i.isdigit()]
-                    for sv in self.executable.version.split("/")[-1].split("_")
-                ]
-                if len(l) > 0
-            ][0]
-        else:
-            return None
 
     @property
     def publication(self):
@@ -445,6 +419,30 @@ class LammpsBase(AtomisticGenericJob):
             }
         }
 
+    def collect_output_parser(
+        self,
+        cwd,
+        dump_h5_file_name="dump.h5",
+        dump_out_file_name="dump.out",
+        log_lammps_file_name="log.lammps",
+    ):
+        # Parse output files
+        return parse_lammps_output(
+            dump_h5_full_file_name=self.job_file_name(
+                file_name=dump_h5_file_name, cwd=cwd
+            ),
+            dump_out_full_file_name=self.job_file_name(
+                file_name=dump_out_file_name, cwd=cwd
+            ),
+            log_lammps_full_file_name=self.job_file_name(
+                file_name=log_lammps_file_name, cwd=cwd
+            ),
+            prism=self._prism,
+            structure=self.structure,
+            potential_elements=self.input.potential.get_element_lst(),
+            units=self.units,
+        )
+
     def collect_output(self):
         """
 
@@ -452,13 +450,22 @@ class LammpsBase(AtomisticGenericJob):
 
         """
         self.input.from_hdf(self._hdf5)
-        if os.path.isfile(
-            self.job_file_name(file_name="dump.h5", cwd=self.working_directory)
-        ):
-            self.collect_h5md_file(file_name="dump.h5", cwd=self.working_directory)
-        else:
-            self.collect_dump_file(file_name="dump.out", cwd=self.working_directory)
-        self.collect_output_log(file_name="log.lammps", cwd=self.working_directory)
+        hdf_dict = self.collect_output_parser(
+            cwd=self.working_directory,
+            dump_h5_file_name="dump.h5",
+            dump_out_file_name="dump.out",
+            log_lammps_file_name="log.lammps",
+        )
+
+        # Write to hdf
+        with self.project_hdf5.open("output/generic") as hdf_output:
+            for k, v in hdf_dict["generic"].items():
+                hdf_output[k] = v
+
+        with self.project_hdf5.open("output/lammps") as hdf_output:
+            for k, v in hdf_dict["lammps"].items():
+                hdf_output[k] = v
+
         if len(self.output.cells) > 0:
             final_structure = self.get_structure(iteration_step=-1)
             if final_structure is not None:
@@ -489,34 +496,6 @@ class LammpsBase(AtomisticGenericJob):
         """
         return
 
-    # TODO: make rotation of all vectors back to the original as in self.collect_dump_file
-    def collect_h5md_file(self, file_name="dump.h5", cwd=None):
-        """
-
-        Args:
-            file_name:
-            cwd:
-
-        Returns:
-
-        """
-        uc = UnitConverter(self.units)
-        forces, positions, steps, cell = collect_h5md_file(
-            file_name=self.job_file_name(file_name=file_name, cwd=cwd),
-            prism=self._prism,
-        )
-        with self.project_hdf5.open("output/generic") as h5_file:
-            h5_file["forces"] = uc.convert_array_to_pyiron_units(
-                np.array(forces), "forces"
-            )
-            h5_file["positions"] = uc.convert_array_to_pyiron_units(
-                np.array(positions), "positions"
-            )
-            h5_file["steps"] = uc.convert_array_to_pyiron_units(
-                np.array(steps), "steps"
-            )
-            h5_file["cells"] = uc.convert_array_to_pyiron_units(np.array(cell), "cells")
-
     def remap_indices(self, lammps_indices):
         """
         Give the Lammps-dumped indices, re-maps these back onto the structure's indices to preserve the species.
@@ -537,46 +516,6 @@ class LammpsBase(AtomisticGenericJob):
             potential_elements=self.input.potential.get_element_lst(),
             structure=self.structure,
         )
-
-    def collect_output_log(self, file_name="log.lammps", cwd=None):
-        """
-        general purpose routine to extract static from a lammps log file
-
-        Args:
-            file_name:
-            cwd:
-
-        Returns:
-
-        """
-        file_name = self.job_file_name(file_name=file_name, cwd=cwd)
-        collect_errors(file_name=file_name)
-        if os.path.exists(file_name):
-            generic_keys_lst, pressure_dict, df = collect_output_log(
-                file_name=file_name,
-                prism=self._prism,
-            )
-            uc = UnitConverter(self.units)
-            with self.project_hdf5.open("output/generic") as hdf_output:
-                # This is a hack for backward comparability
-                for k, v in df.items():
-                    if k in generic_keys_lst:
-                        hdf_output[k] = uc.convert_array_to_pyiron_units(
-                            np.array(v), label=k
-                        )
-                # Store pressures as numpy arrays
-                for key, val in pressure_dict.items():
-                    hdf_output[key] = uc.convert_array_to_pyiron_units(val, label=key)
-
-            with self.project_hdf5.open("output/lammps") as hdf_output:
-                # This is a hack for backward comparability
-                for k, v in df.items():
-                    if k not in generic_keys_lst:
-                        hdf_output[k] = uc.convert_array_to_pyiron_units(
-                            np.array(v), label=k
-                        )
-        else:
-            warnings.warn("LAMMPS warning: No log.lammps output file found.")
 
     def calc_minimize(
         self,
@@ -852,47 +791,6 @@ class LammpsBase(AtomisticGenericJob):
             ["dimension", "read_data", "boundary", "atom_style", "velocity"]
         )
 
-    def collect_dump_file(self, file_name="dump.out", cwd=None):
-        """
-        general purpose routine to extract static from a lammps dump file
-
-        Args:
-            file_name:
-            cwd:
-
-        Returns:
-
-        """
-        uc = UnitConverter(self.units)
-        file_name = self.job_file_name(file_name=file_name, cwd=cwd)
-
-        if os.path.exists(file_name):
-            dump_dict = collect_dump_file(
-                file_name=file_name,
-                prism=self._prism,
-                structure=self.structure,
-                potential_elements=self.input.potential.get_element_lst(),
-            )
-            # Write to hdf
-            with self.project_hdf5.open("output/generic") as hdf_output:
-                for k, v in dump_dict.pop("computes").items():
-                    hdf_output[k] = uc.convert_array_to_pyiron_units(
-                        np.array(v), label=k
-                    )
-
-                hdf_output["steps"] = uc.convert_array_to_pyiron_units(
-                    np.array(dump_dict.pop("steps"), dtype=int), label="steps"
-                )
-
-                for k, v in dump_dict.items():
-                    if len(v) > 0:
-                        hdf_output[k] = uc.convert_array_to_pyiron_units(
-                            np.array(v), label=k
-                        )
-
-        else:
-            warnings.warn("LAMMPS warning: No dump.out output file found.")
-
     # Outdated functions:
     def set_potential(self, file_name):
         """
@@ -974,7 +872,7 @@ class LammpsBase(AtomisticGenericJob):
 
     def _set_selective_dynamics(self):
         if "selective_dynamics" in self.structure.arrays.keys():
-            sel_dyn = np.logical_not(self.structure.selective_dynamics)
+            sel_dyn = np.logical_not(np.stack(self.structure.selective_dynamics))
             # Enter loop only if constraints present
             if len(np.argwhere(np.any(sel_dyn, axis=1)).flatten()) != 0:
                 all_indices = np.arange(len(self.structure), dtype=int)

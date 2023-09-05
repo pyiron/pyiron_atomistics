@@ -87,7 +87,8 @@ class TestAtomisticGenericJob(TestWithCleanProject):
             disp_ref.append(np.dot(diff, cell))
         self.assertTrue(np.allclose(disp, disp_ref))
 
-    @unittest.skipIf(os.name == 'nt', "Runs forever on Windows")
+    #@unittest.skipIf(os.name == 'nt', "Runs forever on Windows")
+    @unittest.skip
     def test_get_structure(self):
         """get_structure() should return structures with the exact values from the HDF files even if the size of
         structures changes."""

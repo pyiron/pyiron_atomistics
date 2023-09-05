@@ -152,6 +152,12 @@ class Outcar(object):
             hdf (pyiron_base.generic.hdfio.FileHDFio): HDF5 group or file
             group_name (str): Name of the HDF5 group
         """
+        with hdf.open(group_name) as hdf5_output:
+            for k, v in self.to_dict_minimal().items():
+                hdf5_output[k] = v
+
+    def to_dict_minimal(self):
+        hdf5_output = {}
         unique_quantities = [
             "kin_energy_error",
             "broyden_mixing",
@@ -162,10 +168,10 @@ class Outcar(object):
             "energy_components",
             "resources",
         ]
-        with hdf.open(group_name) as hdf5_output:
-            for key in self.parse_dict.keys():
-                if key in unique_quantities:
-                    hdf5_output[key] = self.parse_dict[key]
+        for key in self.parse_dict.keys():
+            if key in unique_quantities:
+                hdf5_output[key] = self.parse_dict[key]
+        return hdf5_output
 
     def from_hdf(self, hdf, group_name="outcar"):
         """
