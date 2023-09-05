@@ -19,7 +19,11 @@ from structuretoolkit.analyse import (
     get_distances_array,
     find_mic,
 )
-from structuretoolkit.common import center_coordinates_in_unit_cell
+from structuretoolkit.common import (
+    center_coordinates_in_unit_cell,
+    ase_to_pymatgen,
+    pymatgen_to_ase,
+)
 from structuretoolkit.visualize import plot3d
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
@@ -30,9 +34,9 @@ from pyiron_atomistics.atomistics.structure.analyse import Analyse
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
+    chemical_element_dict_to_hdf,
 )
 from pyiron_base import state, deprecate
-from pymatgen.io.ase import AseAtomsAdaptor
 from collections.abc import Sequence
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
@@ -444,6 +448,54 @@ class Atoms(ASEAtoms):
         """
         return self.__copy__()
 
+    def to_dict(self):
+        hdf_structure = {
+            "TYPE": str(type(self)),
+            "units": self.units,
+            "dimension": self.dimension,
+            "positions": self.positions,
+            "info": self.info,
+        }
+        for el in self.species:
+            if isinstance(el.tags, dict):
+                if "new_species" not in hdf_structure.keys():
+                    hdf_structure["new_species"] = {}
+                hdf_structure["new_species"][el.Abbreviation] = el.to_dict()
+        hdf_structure["species"] = [el.Abbreviation for el in self.species]
+        hdf_structure["indices"] = self.indices
+
+        for tag, value in self.arrays.items():
+            if tag in ["positions", "numbers", "indices"]:
+                continue
+            if "tags" not in hdf_structure.keys():
+                hdf_structure["tags"] = {}
+            hdf_structure["tags"][tag] = value.tolist()
+
+        if self.cell is not None:
+            # Convert ASE cell object to numpy array before storing
+            hdf_structure["cell"] = {"cell": np.array(self.cell), "pbc": self.pbc}
+
+        if self.has("initial_magmoms"):
+            hdf_structure["spins"] = self.spins
+        # potentials with explicit bonds (TIP3P, harmonic, etc.)
+        if self.bonds is not None:
+            hdf_structure["explicit_bonds"] = self.bonds
+
+        if self._high_symmetry_points is not None:
+            hdf_structure["high_symmetry_points"] = self._high_symmetry_points
+
+        if self._high_symmetry_path is not None:
+            hdf_structure["high_symmetry_path"] = self._high_symmetry_path
+
+        if self.calc is not None:
+            calc_dict = self.calc.todict()
+            calc_dict["label"] = self.calc.label
+            calc_dict["class"] = (
+                self.calc.__class__.__module__ + "." + self.calc.__class__.__name__
+            )
+            hdf_structure["calculator"] = calc_dict
+        return hdf_structure
+
     def to_hdf(self, hdf, group_name="structure"):
         """
         Save the object in a HDF5 file
@@ -454,53 +506,7 @@ class Atoms(ASEAtoms):
                 Group name with which the object should be stored. This same name should be used to retrieve the object
 
         """
-        # import time
-        with hdf.open(group_name) as hdf_structure:
-            hdf_structure["TYPE"] = str(type(self))
-            for el in self.species:
-                if isinstance(el.tags, dict):
-                    with hdf_structure.open("new_species") as hdf_species:
-                        el.to_hdf(hdf_species)
-            hdf_structure["species"] = [el.Abbreviation for el in self.species]
-            hdf_structure["indices"] = self.indices
-
-            with hdf_structure.open("tags") as hdf_tags:
-                for tag, value in self.arrays.items():
-                    if tag in ["positions", "numbers", "indices"]:
-                        continue
-                    hdf_tags[tag] = value.tolist()
-            hdf_structure["units"] = self.units
-            hdf_structure["dimension"] = self.dimension
-
-            if self.cell is not None:
-                with hdf_structure.open("cell") as hdf_cell:
-                    # Convert ASE cell object to numpy array before storing
-                    hdf_cell["cell"] = np.array(self.cell)
-                    hdf_cell["pbc"] = self.pbc
-
-            # hdf_structure["coordinates"] = self.positions  # "Atomic coordinates"
-            hdf_structure["positions"] = self.positions  # "Atomic coordinates"
-            if self.has("initial_magmoms"):
-                hdf_structure["spins"] = self.spins
-            # potentials with explicit bonds (TIP3P, harmonic, etc.)
-            if self.bonds is not None:
-                hdf_structure["explicit_bonds"] = self.bonds
-
-            if self._high_symmetry_points is not None:
-                hdf_structure["high_symmetry_points"] = self._high_symmetry_points
-
-            if self._high_symmetry_path is not None:
-                hdf_structure["high_symmetry_path"] = self._high_symmetry_path
-
-            hdf_structure["info"] = self.info
-
-            if self.calc is not None:
-                calc_dict = self.calc.todict()
-                calc_dict["label"] = self.calc.label
-                calc_dict["class"] = (
-                    self.calc.__class__.__module__ + "." + self.calc.__class__.__name__
-                )
-                hdf_structure["calculator"] = calc_dict
+        structure_dict_to_hdf(data_dict=self.to_dict(), hdf=hdf, group_name=group_name)
 
     def from_hdf(self, hdf, group_name="structure"):
         """
@@ -3202,12 +3208,12 @@ def pymatgen_to_pyiron(structure):
         sel_dyn_list = structure.site_properties["selective_dynamics"]
         struct = structure.copy()
         struct.remove_site_property("selective_dynamics")
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=struct))
+        pyiron_atoms = ase_to_pyiron(pymatgen_to_ase(structure=struct))
         pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
         for i, _ in enumerate(pyiron_atoms):
             pyiron_atoms.selective_dynamics[i] = sel_dyn_list[i]
     else:
-        pyiron_atoms = ase_to_pyiron(AseAtomsAdaptor().get_atoms(structure=structure))
+        pyiron_atoms = ase_to_pyiron(pymatgen_to_ase(structure=structure))
     return pyiron_atoms
 
 
@@ -3229,14 +3235,14 @@ def pyiron_to_pymatgen(pyiron_obj):
         sel_dyn_list = pyiron_obj.selective_dynamics
         pyiron_obj_conv.selective_dynamics = [True, True, True]
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
-        pymatgen_obj_conv = AseAtomsAdaptor().get_structure(atoms=ase_obj)
+        pymatgen_obj_conv = ase_to_pymatgen(structure=ase_obj)
         new_site_properties = pymatgen_obj_conv.site_properties
         new_site_properties["selective_dynamics"] = sel_dyn_list
         pymatgen_obj = pymatgen_obj_conv.copy(site_properties=new_site_properties)
     else:
         ase_obj = pyiron_to_ase(pyiron_obj_conv)
         _check_if_simple_atoms(atoms=ase_obj)
-        pymatgen_obj = AseAtomsAdaptor().get_structure(atoms=ase_obj)
+        pymatgen_obj = ase_to_pymatgen(structure=ase_obj)
     return pymatgen_obj
 
 
@@ -3436,3 +3442,26 @@ class Symbols(ASESymbols):
             )
             for i, el in enumerate(replace_elements):
                 self._structure[index_array[i]] = el
+
+
+def structure_dict_to_hdf(data_dict, hdf, group_name="structure"):
+    with hdf.open(group_name) as hdf_structure:
+        for k, v in data_dict.items():
+            if k not in ["new_species", "cell", "tags"]:
+                hdf_structure[k] = v
+
+        if "new_species" in data_dict.keys():
+            for el, el_dict in data_dict["new_species"].items():
+                chemical_element_dict_to_hdf(
+                    data_dict=el_dict, hdf=hdf_structure, group_name="new_species/" + el
+                )
+
+        dict_group_to_hdf(data_dict=data_dict, hdf=hdf_structure, group="tags")
+        dict_group_to_hdf(data_dict=data_dict, hdf=hdf_structure, group="cell")
+
+
+def dict_group_to_hdf(data_dict, hdf, group):
+    if group in data_dict.keys():
+        with hdf.open(group) as hdf_tags:
+            for k, v in data_dict[group].items():
+                hdf_tags[k] = v
