@@ -1,34 +1,3 @@
-pyiron
-======
-
-.. image:: https://coveralls.io/repos/github/pyiron/pyiron_atomistics/badge.svg?branch=main
-    :target: https://coveralls.io/github/pyiron/pyiron_atomistics?branch=main
-    :alt: Coverage Status
-
-.. image:: https://api.codacy.com/project/badge/Grade/c513254f10004df5a1f5c76425c6584b
-    :target: https://app.codacy.com/app/pyiron-runner/pyiron?utm_source=github.com&utm_medium=referral&utm_content=pyiron/pyiron&utm_campaign=Badge_Grade_Settings
-    :alt: Codacy Badge
-
-.. image:: https://anaconda.org/conda-forge/pyiron_atomistics/badges/latest_release_date.svg
-    :target: https://anaconda.org/conda-forge/pyiron_atomistics/
-    :alt: Release_Date
-
-.. image:: https://github.com/pyiron/pyiron_atomistics/workflows/Python%20package/badge.svg
-    :target: https://github.com/pyiron/pyiron_atomistics/actions
-    :alt: Build Status
-
-.. image:: https://anaconda.org/conda-forge/pyiron_atomistics/badges/downloads.svg
-    :target: https://anaconda.org/conda-forge/pyiron_atomistics/
-    :alt: Downloads
-
-.. image:: https://readthedocs.org/projects/pyiron/badge/?version=latest
-    :target: https://pyiron.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
-
-
-.. image:: docs/_static/screenshot.png
-    :align: center
-    :alt: Screenshot of pyiron running inside jupyterlab.
 
 
 pyiron - an integrated development environment (IDE) for computational materials science. It combines several tools in a common platform:
