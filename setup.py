@@ -43,7 +43,7 @@ setup(
     ]),
     install_requires=[
         'ase==3.22.1',
-        'atomistics==0.0.2',
+        'atomistics==0.0.3',
         'defusedxml==0.7.1',
         'h5py==3.9.0',
         'matplotlib==3.7.2',
@@ -58,7 +58,7 @@ setup(
         'seekpath==2.1.0',
         'scikit-learn==1.3.0',
         'spglib==2.0.2',
-        'structuretoolkit==0.0.10'
+        'structuretoolkit==0.0.11'
     ],
     cmdclass=versioneer.get_cmdclass(),
 

@@ -2,7 +2,7 @@ channels:
 - conda-forge
 dependencies:
 - ase =3.22.1
-- atomistics =0.0.2
+- atomistics =0.0.3
 - coveralls
 - coverage
 - codacy-coverage
@@ -21,8 +21,4 @@ dependencies:
 - scipy =1.11.2
 - seekpath =2.1.0
 - spglib =2.0.2
-<<<<<<< HEAD
-- structuretoolkit =0.0.10
-=======
-- structuretoolkit =0.0.9
->>>>>>> 9a21a304 (Add empty line again to main)
+- structuretoolkit =0.0.11
