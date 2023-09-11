@@ -13,8 +13,6 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
     CrystalStructure,
     ase_to_pyiron,
-    pymatgen_to_pyiron,
-    pyiron_to_pymatgen,
 )
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 from pyiron_atomistics.atomistics.structure.periodic_table import (
@@ -26,7 +24,6 @@ from pyiron_base import ProjectHDFio, Project
 from ase.cell import Cell as ASECell
 from ase.atoms import Atoms as ASEAtoms
 from ase.build import molecule
-from pymatgen.core import Structure, Lattice
 
 from ase.calculators.morse import MorsePotential
 
@@ -1772,161 +1769,6 @@ class TestAtoms(unittest.TestCase):
             dt65 / dt76,
             expected_speedup_factor,
             "Atom creation not speed up to the required level by caches!",
-        )
-
-    def test_pymatgen_to_pyiron_conversion(self):
-        """
-        Tests pymatgen_to_pyiron conversion functionality (implemented conversion path is pymatgen->ASE->pyiron)
-        Tests:
-        1. If conversion works with no site-specific properties
-        2. Equivalence in selective dynamics tags after conversion if only sel dyn is present
-        3. Checks if other tags are affected when sel dyn is present (magmom is checked)
-        4. Checks if other tags are affected when sel dyn is not present (magmom is checked)
-        """
-
-        coords = [[0, 0, 0], [0.75, 0.5, 0.75]]
-        lattice = Lattice.from_parameters(
-            a=4.2, b=4.2, c=4.2, alpha=120, beta=90, gamma=60
-        )
-        struct = Structure(lattice, ["Fe", "Fe"], coords)
-
-        # First test make sure it actually works for structures without sel-dyn
-        pyiron_atoms_no_sd = pymatgen_to_pyiron(struct)
-
-        # Check that it doesn't have any selective dynamics tags attached when it shouldn't
-        self.assertFalse(
-            hasattr(pyiron_atoms_no_sd, "selective_dynamics"),
-            "It's adding selective dynamics after conversion even when original object doesn't have it",
-        )
-
-        # Second test for equivalence in selective dynamics tags in pyiron Atoms vs pymatgen Structure
-
-        struct_with_sd = struct.copy()
-        new_site_properties = struct.site_properties
-        new_site_properties["selective_dynamics"] = [
-            [True, False, False] for site in struct
-        ]
-        struct_with_sd = struct.copy(site_properties=new_site_properties)
-
-        pyiron_atoms_sd = pymatgen_to_pyiron(struct_with_sd)
-
-        sd_equivalent = struct_with_sd.site_properties["selective_dynamics"] == [
-            x.selective_dynamics.tolist() for x in pyiron_atoms_sd
-        ]
-        self.assertTrue(
-            sd_equivalent,
-            "Failed equivalence test of selective dynamics tags after conversion",
-        )
-
-        # Third test make sure no tags are erased (e.g. magmom) if selective dynamics are present
-        new_site_properties = struct.site_properties
-        new_site_properties["selective_dynamics"] = [
-            [True, False, False] for site in struct
-        ]
-        new_site_properties["magmom"] = [0.61 for site in struct]
-        new_site_properties["magmom"][1] = 3.0
-        struct_with_sd_magmom = struct.copy(site_properties=new_site_properties)
-        pyiron_atoms_sd_magmom = pymatgen_to_pyiron(struct_with_sd_magmom)
-        magmom_equivalent = struct_with_sd_magmom.site_properties["magmom"] == [
-            x.spin for x in pyiron_atoms_sd_magmom
-        ]
-        sd_equivalent = struct_with_sd_magmom.site_properties["selective_dynamics"] == [
-            x.selective_dynamics.tolist() for x in pyiron_atoms_sd_magmom
-        ]
-        self.assertTrue(
-            magmom_equivalent,
-            "Failed equivalence test of magnetic moment tags if selective dynamics present after conversion (it's messing with other site-specific properties)",
-        )
-        self.assertTrue(
-            sd_equivalent,
-            "Failed equivalence test of selective dynamics tags if magmom site property is also present",
-        )
-
-        # Fourth test, make sure if other traits are present (e.g. magmom) but no sel dyn, the conversion works properly (check if magmom is transferred)
-        new_site_properties = struct.site_properties
-        new_site_properties["magmom"] = [0.61 for site in struct]
-        new_site_properties["magmom"][1] = 3.0
-        struct_with_magmom = struct.copy(site_properties=new_site_properties)
-        pyiron_atoms_magmom = pymatgen_to_pyiron(struct_with_magmom)
-        magmom_equivalent = struct_with_magmom.site_properties["magmom"] == [
-            x.spin for x in pyiron_atoms_magmom
-        ]
-        self.assertTrue(
-            magmom_equivalent,
-            "Failed to convert site-specific properties (checked magmom spin) when no selective dynamics was present)",
-        )
-        # Make sure no sel dyn tags are added unnecessarily
-        self.assertFalse(
-            hasattr(pyiron_atoms_magmom, "selective_dynamics"),
-            "selective dynamics are added when there was none in original pymatgen Structure",
-        )
-
-    def test_pyiron_to_pymatgen_conversion(self):
-        """
-        Tests pyiron_to_pymatgen conversion functionality (implemented conversion path is pyiron->ASE->pymatgen)
-
-        Tests:
-        1. If conversion works with no site-specific properties
-        2. Equivalence in selective dynamics tags after conversion if only sel dyn is present
-        3. Checks if other tags are affected when sel dyn is present (magmom is checked)
-        4. Checks if other tags are affected when sel dyn is not present (magmom is checked)
-        """
-        pyiron_atoms = StructureFactory().bulk(
-            name="Fe", crystalstructure="bcc", a=4.182
-        ) * [1, 2, 1]
-
-        # First, check conversion actually works
-        struct = pyiron_to_pymatgen(pyiron_atoms)
-        # Ensure no random selective dynamics are added
-        self.assertFalse("selective_dynamics" in struct.site_properties)
-
-        # Second, ensure that when only sel_dyn is present (no other site-props present), conversion works
-        pyiron_atoms_sd = pyiron_atoms.copy()
-        pyiron_atoms_sd.add_tag(selective_dynamics=[False, True, True])
-        pyiron_atoms_sd.selective_dynamics[1] = [True, False, False]
-
-        struct_sd = pyiron_to_pymatgen(pyiron_atoms_sd)
-        self.assertTrue(
-            np.array_equal(
-                struct_sd.site_properties["selective_dynamics"],
-                pyiron_atoms_sd.selective_dynamics
-            ),
-            "Failed to produce equivalent selective dynamics after conversion!",
-        )
-
-        # Third, ensure when magnetic moment is present without selective dynamics, conversion works and magmom is transferred
-        pyiron_atoms_magmom = pyiron_atoms.copy()
-        pyiron_atoms_magmom.add_tag(spin=0.61)
-        pyiron_atoms_magmom.spin[1] = 3
-
-        struct_magmom = pyiron_to_pymatgen(pyiron_atoms_magmom)
-        self.assertTrue(
-            struct_magmom.site_properties["magmom"]
-            == [x.spin for x in pyiron_atoms_magmom],
-            "Failed to produce equivalent magmom when only magmom and no sel_dyn are present!",
-        )
-        self.assertFalse(
-            "selective_dynamics" in struct_magmom.site_properties,
-            "Failed because selective dynamics was randomly added after conversion!",
-        )
-
-        # Fourth, ensure when both magmom and sd are present, conversion works and magmom+selective dynamics are transferred properly
-        pyiron_atoms_sd_magmom = pyiron_atoms_sd.copy()
-        pyiron_atoms_sd_magmom.add_tag(spin=0.61)
-        pyiron_atoms_sd_magmom.spin[1] = 3
-
-        struct_sd_magmom = pyiron_to_pymatgen(pyiron_atoms_sd_magmom)
-        self.assertTrue(
-            struct_sd_magmom.site_properties["magmom"]
-            == [x.spin for x in pyiron_atoms_sd_magmom],
-            "Failed to produce equivalent magmom when both magmom + sel_dyn are present!",
-        )
-        self.assertTrue(
-            np.array_equal(
-                struct_sd_magmom.site_properties["selective_dynamics"],
-                pyiron_atoms_sd_magmom.selective_dynamics
-            ),
-            "Failed to produce equivalent sel_dyn when both magmom + sel_dyn are present!",
         )
 
     def test_calc_to_hdf(self):

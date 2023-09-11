@@ -13,9 +13,9 @@ dependencies:
 - pandas
 - phonopy
 - pyiron_base
-- pymatgen
 - pyscal
 - scipy
 - seekpath
 - scikit-learn
 - spglib
+- structuretoolkit

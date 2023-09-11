@@ -29,6 +29,7 @@ from structuretoolkit.build import (
     high_index_surface,
     get_high_index_surface_info,
 )
+from structuretoolkit.common import pymatgen_read_from_file
 from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
 from pyiron_atomistics.atomistics.structure.factories.atomsk import (
     AtomskFactory,
@@ -53,7 +54,6 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     pymatgen_to_pyiron,
     ovito_to_pyiron,
 )
-from pymatgen.core import Structure
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_base import state, PyironFactory, deprecate
 import types
@@ -123,7 +123,7 @@ class StructureFactory(PyironFactory):
     read.__doc__ = AseFactory.read.__doc__
 
     def read_using_pymatgen(self, *args, **kwargs):
-        return pymatgen_to_pyiron(Structure.from_file(*args, **kwargs))
+        return ase_to_pyiron(pymatgen_read_from_file(*args, **kwargs))
 
     def read_using_ase(self, *args, **kwargs):
         return self.ase.read(*args, **kwargs)

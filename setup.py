@@ -43,7 +43,7 @@ setup(
     ]),
     install_requires=[
         'ase==3.22.1',
-        'atomistics==0.0.1',
+        'atomistics==0.0.3',
         'defusedxml==0.7.1',
         'h5py==3.9.0',
         'matplotlib==3.7.2',
@@ -53,13 +53,12 @@ setup(
         'pandas==2.1.0',
         'phonopy==2.20.0',
         'pint==0.22',
-        'pyiron_base==0.6.4',
-        'pymatgen==2023.8.10',
+        'pyiron_base==0.6.5',
         'scipy==1.11.2',
         'seekpath==2.1.0',
         'scikit-learn==1.3.0',
         'spglib==2.0.2',
-        'structuretoolkit==0.0.9'
+        'structuretoolkit==0.0.11'
     ],
     cmdclass=versioneer.get_cmdclass(),
 
