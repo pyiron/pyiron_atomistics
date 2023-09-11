@@ -2,7 +2,7 @@ channels:
 - conda-forge
 dependencies:
 - ase =3.22.1
-- atomistics =0.0.3
+- atomistics =0.0.4
 - coveralls
 - coverage
 - codacy-coverage
