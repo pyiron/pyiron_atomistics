@@ -5,14 +5,14 @@
 from __future__ import print_function
 from typing import Optional
 
-from atomistics.thermo.debye import DebyeModel
-from atomistics.evcurve.fit import (
+from atomistics.shared.thermo.debye import DebyeModel
+from atomistics.workflows.evcurve.fit import (
     EnergyVolumeFit,
     fitfunction,
     get_error,
     fit_leastsq_eos,
 )
-from atomistics.evcurve.calculator import _strain_axes
+from atomistics.workflows.evcurve.workflow import _strain_axes
 import matplotlib.pyplot as plt
 import numpy as np
 
