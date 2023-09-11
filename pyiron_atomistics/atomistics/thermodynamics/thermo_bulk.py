@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from atomistics.thermo.thermo import ThermoBulk as AtomisticsThermoBulk
+from atomistics.shared.thermo.thermo import ThermoBulk as AtomisticsThermoBulk
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
