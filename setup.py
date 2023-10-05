@@ -53,7 +53,7 @@ setup(
         'pandas==2.1.1',
         'phonopy==2.20.0',
         'pint==0.22',
-        'pyiron_base==0.6.6',
+        'pyiron_base==0.6.7',
         'scipy==1.11.3',
         'seekpath==2.1.0',
         'scikit-learn==1.3.1',
