@@ -26,7 +26,12 @@ class TestVasp(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        state.update({'resource_paths': os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")})
+        state.update({
+            'resource_paths': state.settings.resource_paths + [
+                os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "../static")
+            ]
+        })
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.execution_path, "test_vasp"))
         cls.job = cls.project.create_job("Vasp", "trial")
