@@ -151,7 +151,11 @@ class PotentialAbstract(object):
         if len(df_lst) > 0:
             return pandas.concat(df_lst)
         else:
-            raise ValueError("Was not able to locate the potential files.")
+            raise ValueError(
+                f"Was not able to locate the potential files. Was searching for file(s)"
+                f"{file_name_lst} under plugin {plugin_name} with backup name "
+                f"{backward_compatibility_name}."
+            )
 
     @staticmethod
     def _get_potential_default_df(
