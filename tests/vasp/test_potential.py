@@ -12,7 +12,11 @@ class TestPotential(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        state.update({'resource_paths': os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")})
+        state.update({
+            'resource_paths': state.settings.resource_paths + [
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")
+            ]
+        })
 
     @classmethod
     def tearDownClass(cls) -> None:
