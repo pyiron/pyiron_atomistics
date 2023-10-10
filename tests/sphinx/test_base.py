@@ -113,22 +113,48 @@ class TestSphinx(unittest.TestCase):
         self.assertEqual(len(self.sphinx.id_spx_to_pyi), len(self.sphinx.structure))
 
     def test_potential(self):
-        self.assertEqual(['Fe_GGA'], self.sphinx.list_potentials())
-        self.assertEqual(['Fe_GGA'], self.sphinx_2_3.list_potentials())
-        # The following sphinx_2_5.list_potentials test depends on the environment
-        # [this probably applies to all list_potentials tests]
-        # Thoughts by C. Freysoldt, 2022-10-24:
-        #   - I think this is unhealthy, as the test environment is NOT controlled by the test
-        #   - there is a discrepancy between mybinder/pyiron_atomistics environment and the
-        #     github/CI environment.
-        # next line is for an environment with Fe_GGA and Ni_GGA (but no other Fe/Ni)
-        # self.assertEqual(['Fe_GGA', 'Ni_GGA'], sorted(self.sphinx_2_5.list_potentials()))
-        # next line is for the github/CI test environment (only Fe_GGA, no Ni, no other Fe)
-        self.assertEqual(['Fe_GGA'], self.sphinx_2_5.list_potentials())
-        self.sphinx_2_3.potential.Fe = 'Fe_GGA'
-        self.sphinx_2_5.potential["Fe"] = 'Fe_GGA'
-        self.assertEqual('Fe_GGA', list(self.sphinx_2_3.potential.to_dict().values())[0])
-        self.assertEqual('Fe_GGA', list(self.sphinx_2_5.potential.to_dict().values())[0])
+        # We now include pyiron-data in the conda dependencies,
+        # so all the sphinx potentials there are a guaranteed subset of potentials
+        # available to those who conda install pyiron_atomistics (including our CI)
+        with self.subTest("list_potentials can find all species"):
+            for job in [self.sphinx, self.sphinx_2_3]:
+                for element in job.structure.get_chemical_symbols():
+                    self.assertTrue(
+                        any(element in p for p in job.list_potentials()),
+                        msg="Elements should be findable in the potential name"
+                    )
+
+        with self.subTest(
+            "list_potentials should find potentials _only_ for species that have one"
+        ):
+            job = self.project.create_job("Sphinx", "sphinx_has_no_uranium_potential")
+            job.structure = Atoms(
+                elements=["Fe", "U"],
+                scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+                cell=2.83 * np.eye(3),
+            )
+            self.assertEqual(
+                len(job.list_potentials()),
+                1,
+                msg="At time of test writing, no U potential is available in "
+                    "pyiron-data, so we're expecting only the Fe potential to make it "
+                    "through"
+            )
+            self.assertIn(
+                "Fe",
+                job.list_potentials()[0],
+                msg="The element symbol is expected in the potential name"
+            )
+
+        with self.subTest("Check that syntactic sugar is working"):
+            self.sphinx_2_3.potential.Fe = 'Fe_GGA'
+            self.sphinx_2_5.potential["Fe"] = 'Fe_GGA'
+            self.assertEqual(
+                'Fe_GGA', list(self.sphinx_2_3.potential.to_dict().values())[0]
+            )
+            self.assertEqual(
+                'Fe_GGA', list(self.sphinx_2_5.potential.to_dict().values())[0]
+            )
 
     def test_write_input(self):
 
