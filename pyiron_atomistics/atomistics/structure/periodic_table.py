@@ -3,12 +3,12 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function, unicode_literals
+import pkgutil
+import io
 import numpy as np
-import os
 import mendeleev
 import pandas
 from functools import lru_cache
-import pyiron_atomistics
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Martin Boeckmann"
 __copyright__ = (
@@ -397,10 +397,8 @@ class PeriodicTable:
         """
         if not file_name:
             return pandas.read_csv(
-                os.path.join(
-                    os.path.dirname(pyiron_atomistics.__file__),
-                    "_data",
-                    "periodic_table.csv",
+                io.BytesIO(
+                    pkgutil.get_data("pyiron_atomistics", "_data/periodic_table.csv")
                 ),
                 index_col=0,
             )
