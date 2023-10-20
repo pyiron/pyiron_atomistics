@@ -643,7 +643,12 @@ class Outcar(object):
             for j in trigger_indices:
                 line = lines[j].strip()
                 line = _clean_line(line)
-                temperatures.append(float(line.split()[-2]))
+                output_string = line.split('temperature')[-1].split()[0]
+                try:
+                    temperatures.append(float(output_string))
+                except ValueError:
+                    warnings.warn(f"Temperature too high. Vasp output: {line}") 
+                    temperatures.append(np.nan)
         else:
             temperatures = np.zeros(
                 len(
