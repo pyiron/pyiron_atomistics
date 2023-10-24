@@ -3,9 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function, unicode_literals
+import pkgutil
+import io
 import numpy as np
-import os
-from pyiron_base import state
 import mendeleev
 import pandas
 from functools import lru_cache
@@ -204,7 +204,7 @@ class ChemicalElement(object):
                         self.sub["tags"] = tag_dic
 
 
-class PeriodicTable(object):
+class PeriodicTable:
     """
     An Object which stores an elementary table which can be modified for the current session
     """
@@ -396,27 +396,12 @@ class PeriodicTable(object):
 
         """
         if not file_name:
-            for resource_path in state.settings.resource_paths:
-                if os.path.exists(os.path.join(resource_path, "atomistics")):
-                    resource_path = os.path.join(resource_path, "atomistics")
-                for path, folder_lst, file_lst in os.walk(resource_path):
-                    for periodic_table_file_name in {"periodic_table.csv"}:
-                        if (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".csv")
-                        ):
-                            return pandas.read_csv(
-                                os.path.join(path, periodic_table_file_name),
-                                index_col=0,
-                            )
-                        elif (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".h5")
-                        ):
-                            return pandas.read_hdf(
-                                os.path.join(path, periodic_table_file_name), mode="r"
-                            )
-            raise ValueError("Was not able to locate a periodic table. ")
+            return pandas.read_csv(
+                io.BytesIO(
+                    pkgutil.get_data("pyiron_atomistics", "data/periodic_table.csv")
+                ),
+                index_col=0,
+            )
         else:
             if file_name.endswith(".h5"):
                 return pandas.read_hdf(file_name, mode="r")

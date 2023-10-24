@@ -61,5 +61,5 @@ setup(
         'structuretoolkit==0.0.11'
     ],
     cmdclass=versioneer.get_cmdclass(),
-
+    package_data={'': ['data/*.csv']},
     )
