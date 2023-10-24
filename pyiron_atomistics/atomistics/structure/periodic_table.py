@@ -398,7 +398,7 @@ class PeriodicTable:
         if not file_name:
             return pandas.read_csv(
                 io.BytesIO(
-                    pkgutil.get_data("pyiron_atomistics", "_data/periodic_table.csv")
+                    pkgutil.get_data("pyiron_atomistics", "data/periodic_table.csv")
                 ),
                 index_col=0,
             )
