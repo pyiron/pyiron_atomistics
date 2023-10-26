@@ -533,6 +533,7 @@ class Calphy(GenericJob, HasStructure):
 
         self.input.temperature = temperature
         self.input.pressure = pressure
+        self.input.npt = pressure is not None
         self.input.reference_phase = reference_phase
         self.input.n_equilibration_steps = n_equilibration_steps
         self.input.n_switching_steps = n_switching_steps
@@ -566,6 +567,7 @@ class Calphy(GenericJob, HasStructure):
 
         self.input.temperature = temperature
         self.input.pressure = pressure
+        self.input.npt = pressure is not None
         self.input.reference_phase = reference_phase
         self.input.n_equilibration_steps = n_equilibration_steps
         self.input.n_switching_steps = n_switching_steps
@@ -596,6 +598,7 @@ class Calphy(GenericJob, HasStructure):
             raise ValueError("provide a temperature")
         self.input.temperature = temperature
         self.input.pressure = pressure
+        self.input.npt = pressure is not None
         self.input.reference_phase = reference_phase
         self.input.n_equilibration_steps = n_equilibration_steps
         self.input.n_switching_steps = n_switching_steps
@@ -629,6 +632,7 @@ class Calphy(GenericJob, HasStructure):
 
         self.input.temperature = temperature
         self.input.pressure = pressure
+        self.input.npt = True
         self.input.reference_phase = reference_phase
         self.input.n_equilibration_steps = n_equilibration_steps
         self.input.n_switching_steps = n_switching_steps
@@ -659,6 +663,7 @@ class Calphy(GenericJob, HasStructure):
             raise ValueError("provide a temperature")
         self.input.temperature = temperature
         self.input.pressure = pressure
+        self.input.npt = pressure is not None
         self.input.reference_phase = reference_phase
         self.input.n_equilibration_steps = n_equilibration_steps
         self.input.n_switching_steps = n_switching_steps
