@@ -647,7 +647,7 @@ class Outcar(object):
                 try:
                     temperatures.append(float(output_string))
                 except ValueError:
-                    warnings.warn(f"Temperature too high. Vasp output: {line}") 
+                    warnings.warn(f"Temperature too high. Vasp output: {line}")
                     temperatures.append(np.nan)
         else:
             temperatures = np.zeros(
