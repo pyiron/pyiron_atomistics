@@ -183,10 +183,17 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
                 fit_funct=fit, x=v, save_range=0.0, return_ind=True
             )
 
-            v0_lst.append(v0)
-            free_eng_lst.append(fit([v0]))
-            entropy_lst.append(entropy[ind])
-            cv_lst.append(cv[ind])
+            if v0 is not None:
+                v0_lst.append(v0)
+                free_eng_lst.append(fit(v0))
+                entropy_lst.append(entropy[ind])
+                cv_lst.append(cv[ind])
+            else:
+                v0_lst.append(np.nan)
+                free_eng_lst.append(np.nan)
+                entropy_lst.append(np.nan)
+                cv_lst.append(np.nan)
+
         return v0_lst, free_eng_lst, entropy_lst, cv_lst
 
     def plot_free_energy_volume_temperature(
