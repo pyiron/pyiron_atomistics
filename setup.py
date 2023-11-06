@@ -46,7 +46,7 @@ setup(
         'atomistics==0.0.6',
         'defusedxml==0.7.1',
         'h5py==3.10.0',
-        'matplotlib==3.8.0',
+        'matplotlib==3.8.1',
         'mendeleev==0.14.0',
         'mp-api==0.37.5',
         'numpy==1.26.0',
