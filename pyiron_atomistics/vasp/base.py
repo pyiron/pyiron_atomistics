@@ -2019,8 +2019,8 @@ class Output:
                 "n_elect"
             ]
             if len(self.outcar.parse_dict["magnetization"]) > 0:
-                magnetization = np.array(self.outcar.parse_dict["magnetization"]).copy()
-                final_magmoms = np.array(self.outcar.parse_dict["final_magmoms"]).copy()
+                magnetization = np.array(self.outcar.parse_dict["magnetization"], dtype=object)
+                final_magmoms = np.array(self.outcar.parse_dict["final_magmoms"], dtype=object)
                 # magnetization[sorted_indices] = magnetization.copy()
                 if len(final_magmoms) != 0:
                     if len(final_magmoms.shape) == 3:
