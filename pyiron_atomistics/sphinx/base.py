@@ -9,11 +9,15 @@ import os
 import posixpath
 import re
 import stat
-from shutil import copyfile
+from shutil import copyfile, move as movefile
 import scipy.constants
 import warnings
 import json
 import spglib
+import subprocess
+from subprocess import PIPE
+import tarfile
+from tempfile import TemporaryDirectory
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
@@ -28,9 +32,9 @@ from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
+from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
-from pyiron_base import HasGroups
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -66,15 +70,15 @@ class SphinxBase(GenericDFTJob):
 
     ```python
     # Modify/add a new parameter via
-    job.input.PAWHamiltonian.nEmptyStates = 15
-    job.input.PAWHamiltonian.dipoleCorrection = True
+    job.input.sphinx.PAWHamiltonian.nEmptyStates = 15
+    job.input.sphinx.PAWHamiltonian.dipoleCorrection = True
     # or
-    job.input.PAWHamiltonian.set("nEmptyStates", 15)
-    job.input.PAWHamiltonian.set("dipoleCorrection", True)
+    job.input.sphinx.PAWHamiltonian.set("nEmptyStates", 15)
+    job.input.sphinx.PAWHamiltonian.set("dipoleCorrection", True)
     # Modify/add a sub-group via
-    job.input.initialGuess.rho.charged = {"charge": 2, "z": 25}
+    job.input.sphinx.initialGuess.rho.charged = {"charge": 2, "z": 25}
     # or
-    job.input.initialGuess.rho.set("charged", {"charge": 2, "z": 25})
+    job.input.sphinx.initialGuess.rho.set("charged", {"charge": 2, "z": 25})
     ```
 
     Args:
@@ -94,8 +98,7 @@ class SphinxBase(GenericDFTJob):
         # input groups
         self.input = Group(table_name="parameters", lazy=True)
         self.load_default_input()
-        self._save_memory = False
-        self._output_parser = Output(self)
+        self.output = Output(job=self)
         self.input_writer = InputWriter()
         self._potential = VaspPotentialSetter([])
         if self.check_vasp_potentials():
@@ -106,7 +109,7 @@ class SphinxBase(GenericDFTJob):
         self._generic_input["fix_spin_constraint"] = False
 
     def update_sphinx(self):
-        if self._output_parser.old_version:
+        if self.output.old_version:
             _update_datacontainer(self)
 
     def __getitem__(self, item):
@@ -180,7 +183,9 @@ class SphinxBase(GenericDFTJob):
         if not isinstance(boolean, bool):
             raise ValueError("fix_spin_constraint has to be a boolean")
         self._generic_input["fix_spin_constraint"] = boolean
-        self.structure.add_tag(spin_constraint=boolean)
+        self.structure.set_array(
+            "spin_constraint", np.array(len(self.structure) * [boolean])
+        )
 
     @plane_wave_cutoff.setter
     def plane_wave_cutoff(self, val):
@@ -331,52 +336,11 @@ class SphinxBase(GenericDFTJob):
         Args:
             keep_angstrom (bool): Store distances in Angstroms or Bohr
         """
-        if keep_angstrom:
-            structure_group = Group({"cell": np.array(self.structure.cell)})
-        else:
-            structure_group = Group(
-                {
-                    "cell": np.array(self.structure.cell * 1 / BOHR_TO_ANGSTROM),
-                }
-            )
-        if "selective_dynamics" in self.structure._tag_list.keys():
-            selective_dynamics_list = self.structure.selective_dynamics.list()
-        else:
-            selective_dynamics_list = [3 * [False]] * len(self.structure.positions)
-        species = structure_group.create_group("species")
-        for elm_species in self.structure.get_species_objects():
-            if elm_species.Parent:
-                element = elm_species.Parent
-            else:
-                element = elm_species.Abbreviation
-            species.append(Group({"element": '"' + str(element) + '"'}))
-            elm_list = np.array(
-                self.structure.get_chemical_symbols() == elm_species.Abbreviation
-            )
-            atom_group = species[-1].create_group("atom")
-            for elm_pos, elm_magmon, selective in zip(
-                self.structure.positions[elm_list],
-                np.array(self.structure.get_initial_magnetic_moments())[elm_list],
-                np.array(selective_dynamics_list)[elm_list],
-            ):
-                atom_group.append(Group())
-                if self._spin_enabled:
-                    atom_group[-1]["label"] = '"spin_' + str(elm_magmon) + '"'
-                if keep_angstrom:
-                    atom_group[-1]["coords"] = np.array(elm_pos)
-                else:
-                    atom_group[-1]["coords"] = np.array(elm_pos * 1 / BOHR_TO_ANGSTROM)
-                if all(selective):
-                    atom_group[-1]["movable"] = True
-                elif any(selective):
-                    for ss, xx in zip(selective, ["X", "Y", "Z"]):
-                        if ss:
-                            atom_group[-1]["movable" + xx] = True
-        if not self.fix_symmetry:
-            structure_group.symmetry = Group(
-                {"operator": {"S": "[[1,0,0],[0,1,0],[0,0,1]]"}}
-            )
-        return structure_group
+        return get_structure_group(
+            structure=self.structure,
+            use_symmetry=self.fix_symmetry,
+            keep_angstrom=keep_angstrom,
+        )
 
     def load_default_input(self):
         """
@@ -600,34 +564,32 @@ class SphinxBase(GenericDFTJob):
         if charge_density_file is None:
             if wave_function_file is None:
                 guess.rho.setdefault("atomicOrbitals", True)
+                if self._spin_enabled:
+                    init_spins = self.structure.get_initial_magnetic_moments()
+                    # --- validate that initial spin moments are scalar
+                    for spin in init_spins:
+                        if isinstance(spin, list) or isinstance(spin, np.ndarray):
+                            raise ValueError("SPHInX only supports collinear spins.")
+                    guess.rho.get("atomicSpin", create=True)
+                    if update_spins:
+                        guess.rho.atomicSpin.clear()
+                    # --- create initial spins if needed
+                    if len(guess.rho.atomicSpin) == 0:
+                        # set initial spin via label for each unique value of spin
+                        # dict.from_keys (...).keys () deduplicates
+                        for spin in dict.fromkeys(init_spins).keys():
+                            guess.rho["atomicSpin"].append(
+                                Group(
+                                    {
+                                        "label": '"spin_' + str(spin) + '"',
+                                        "spin": str(spin),
+                                    }
+                                )
+                            )
             else:
                 guess.rho.setdefault("fromWaves", True)
         else:
             guess.rho.setdefault("file", '"' + charge_density_file + '"')
-        if self._spin_enabled:
-            if any(
-                [
-                    True
-                    if isinstance(spin, list) or isinstance(spin, np.ndarray)
-                    else False
-                    for spin in self.structure.get_initial_magnetic_moments()
-                ]
-            ):
-                raise ValueError("SPHInX only supports collinear spins.")
-            else:
-                rho = guess.rho
-                rho.get("atomicSpin", create=True)
-                if update_spins:
-                    rho.atomicSpin.clear()
-                if len(rho.atomicSpin) == 0:
-                    for spin in self.structure.get_initial_magnetic_moments()[
-                        self.id_pyi_to_spx
-                    ]:
-                        rho["atomicSpin"].append(
-                            Group(
-                                {"label": '"spin_' + str(spin) + '"', "spin": str(spin)}
-                            )
-                        )
 
         if "noWavesStorage" not in guess:
             guess["noWavesStorage"] = not self.input["WriteWaves"]
@@ -770,7 +732,7 @@ class SphinxBase(GenericDFTJob):
             pyiron_atomistics.sphinx.sphinx.sphinx: new job instance
         """
         return self.restart_from_charge_density(
-            job_name=job_name, job_type=None, band_structure_calc=True
+            job_name=job_name, band_structure_calc=True
         )
 
     def restart_from_charge_density(
@@ -797,6 +759,16 @@ class SphinxBase(GenericDFTJob):
         )
         if band_structure_calc:
             ham_new._generic_input["restart_for_band_structure"] = True
+            # --- clean up minimization related settings
+            for setting in ["Istep", "dF", "dE"]:
+                if setting in ham_new.input:
+                    del ham_new.input[setting]
+            # remove optimization-related stuff from GenericDFTJob
+            super(SphinxBase, self).calc_static()
+            # --- recreate main group
+            del ham_new.input.sphinx["main"]
+            ham_new.input.sphinx.create_group("main")
+            ham_new.load_main_group()
         return ham_new
 
     def restart_from_wave_functions(
@@ -901,7 +873,7 @@ class SphinxBase(GenericDFTJob):
         self._structure_to_hdf()
         with self._hdf5.open("input") as hdf:
             self.input.to_hdf(hdf)
-        self._output_parser.to_hdf(self._hdf5)
+        self.output.to_hdf(self._hdf5)
 
     def from_hdf(self, hdf=None, group_name=None):
         """
@@ -925,12 +897,11 @@ class SphinxBase(GenericDFTJob):
             self._structure_from_hdf()
             with self._hdf5.open("input") as hdf:
                 self.input.from_hdf(hdf, group_name="parameters")
-        self._output_parser.from_hdf(self._hdf5)
+        self.output.from_hdf(self._hdf5)
 
     def from_directory(self, directory, file_name="structure.sx"):
         try:
             if not self.status.finished:
-
                 file_path = posixpath.join(directory, file_name)
                 if os.path.isfile(file_path):
                     self.structure = read_atoms(file_path)
@@ -940,10 +911,10 @@ class SphinxBase(GenericDFTJob):
                         "Please double check the directory and file name."
                     )
 
-                self._output_parser.collect(directory=directory)
+                self.output.collect(directory=directory)
                 self.to_hdf(self._hdf5)
             else:
-                self._output_parser.from_hdf(self._hdf5)
+                self.output.from_hdf(self._hdf5)
             self.status.finished = True
         except Exception as err:
             print(err)
@@ -1433,8 +1404,8 @@ class SphinxBase(GenericDFTJob):
         if self.is_compressed():
             warnings.warn("Job already compressed - output not collected")
             return
-        self._output_parser.collect(directory=self.working_directory)
-        self._output_parser.to_hdf(self._hdf5, force_update=force_update)
+        self.output.collect(directory=self.working_directory)
+        self.output.to_hdf(self._hdf5, force_update=force_update)
         if compress_files:
             self.compress()
 
@@ -1450,7 +1421,7 @@ class SphinxBase(GenericDFTJob):
         # Checks if sufficient empty states are present
         if not self.nbands_convergence_check():
             return False
-        return self._output_parser.generic.dft.scf_convergence[-1]
+        return self.output.generic.dft.scf_convergence[-1]
 
     def collect_logfiles(self):
         """
@@ -1481,7 +1452,7 @@ class SphinxBase(GenericDFTJob):
         positions = self.structure.get_scaled_positions()
         numbers = self.structure.get_atomic_numbers()
         if ignore_magmoms:
-            magmoms = np.zeros(len(magmoms))
+            magmoms = np.zeros(len(positions))
         else:
             magmoms = self.structure.get_initial_magnetic_moments()
         mag_num = np.array(list(zip(magmoms, numbers)))
@@ -1499,9 +1470,7 @@ class SphinxBase(GenericDFTJob):
         return len(np.unique(mapping))
 
     def check_setup(self):
-
         with warnings.catch_warnings(record=True) as w:
-
             # Check for parameters that were not modified but
             # possibly should have (encut, kpoints, smearing, etc.),
             # or were set to nonsensical values.
@@ -1636,7 +1605,6 @@ class SphinxBase(GenericDFTJob):
                 and np.array(self.input.KpointFolding).tolist()
                 != np.array(self.input.sphinx.basis.folding).tolist()
             ):
-
                 warnings.warn(
                     "job.input.basis.kPoint was modified directly. "
                     "It is recommended to set all k-point settings via "
@@ -1706,6 +1674,206 @@ class SphinxBase(GenericDFTJob):
                 for p in state.settings.resource_paths
             ]
         )
+
+    def run_addon(
+        self,
+        addon,
+        args=None,
+        from_tar=None,
+        silent=False,
+        log=True,
+        version=None,
+        debug=False,
+    ):
+        """Run a SPHInX addon
+
+        addon          - name of addon (str)
+        args           - arguments (str or list)
+        from_tar       - if job is compressed, extract these files (list)
+        silent         - do not print output for successful runs?
+        log            - produce log file?
+        version        - which sphinx version to load (str or None)
+        debug          - return subprocess.CompletedProcess ?
+
+        """
+        if self.is_compressed() and from_tar is None:
+            raise FileNotFoundError(
+                "Cannot run add-on on compressed job without 'from_tar' parameter.\n"
+                + "   Solution 1: Run .decompress () first.\n"
+                + "   Solution 2: specify from_tar list to run in temporary directory\n"
+                + "   Solution 3: run with from_tar=[] if no files from tar are needed\n"
+            )
+
+        # prepare argument list
+        if args is None:
+            args = ""
+        elif isinstance(args, list):
+            args = " ".join(args)
+        if log:
+            args += " --log"
+
+        cmd = addon + " " + args
+
+        # --- handle versions
+        sxv = sxversions()
+        if (
+            version is None
+            and self.executable.version is not None
+            and self.executable.version in sxv.keys()
+        ):
+            version = self.executable.version
+            if not silent:
+                print("Taking version '" + version + "' from job._executable version")
+        if isinstance(version, str):
+            if version in sxv.keys():
+                cmd = sxv[version] + " && " + cmd
+            elif version != "":
+                raise KeyError(
+                    "version '"
+                    + version
+                    + "' not found. Available versions are: '"
+                    + "', '".join(sxv.keys())
+                    + "'."
+                )
+            # version="" overrides job.executable_version
+        elif version is not None:
+            raise TypeError("version must be str or None")
+
+        if isinstance(from_tar, str):
+            from_tar = [from_tar]
+        if self.is_compressed() and isinstance(from_tar, list):
+            # run addon in temporary directory
+            with TemporaryDirectory() as tempd:
+                if not silent:
+                    print("Running {} in temporary directory {}".format(addon, tempd))
+
+                # --- extract files from list
+                # note: tf should be obtained from JobCore to ensure encapsulation
+                tarfilename = os.path.join(
+                    self.working_directory, self.job_name + ".tar.bz2"
+                )
+                with tarfile.open(tarfilename, "r:bz2") as tf:
+                    for file in from_tar:
+                        try:
+                            tf.extract(file, path=tempd)
+                        except:
+                            print("Cannot extract " + file + " from " + tarfilename)
+
+                # --- link other files
+                linkfiles = []
+                for file in self.list_files():
+                    linkfile = os.path.join(tempd, file)
+                    if not os.path.isfile(linkfile):
+                        os.symlink(
+                            os.path.join(self.working_directory, file),
+                            linkfile,
+                            target_is_directory=True,
+                        )
+                        linkfiles.append(linkfile)
+                # now run
+                out = subprocess.run(
+                    cmd, cwd=tempd, shell=True, stdout=PIPE, stderr=PIPE, text=True
+                )
+
+                # now clean tempdir
+                for file in from_tar:
+                    try:
+                        os.remove(os.path.join(tempd, file))
+                    except FileNotFoundError:
+                        pass
+                for linkfile in linkfiles:
+                    if os.path.islink:
+                        os.remove(linkfile)
+
+                # move output to working directory for successful runs
+                if out.returncode == 0:
+                    for file in os.listdir(tempd):
+                        movefile(os.path.join(tempd, file), self.working_directory)
+                        if not silent:
+                            print("Copying " + file + " to " + self.working_directory)
+                else:
+                    print(addon + " crashed - potential output files are not kept.")
+
+        else:
+            out = subprocess.run(
+                cmd,
+                cwd=self.working_directory,
+                shell=True,
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            if out.returncode != 0:
+                print(addon + " crashed.")
+
+        # print output
+        if not silent or out.returncode != 0:
+            if out.returncode != 0:
+                print(addon + " output:\n\n")
+            print(out.stdout)
+            if out.returncode != 0:
+                print(out.stderr)
+        return out if debug else None
+
+
+def get_structure_group(structure, use_symmetry=True, keep_angstrom=False):
+    """
+    create a SPHInX Group object based on structure
+
+    Args:
+        structure (pyiron_atomistics.atomistics.structure.atoms) structure
+        use_symmetry (bool): Whether or not consider internal symmetry
+        keep_angstrom (bool): Store distances in Angstroms or Bohr
+
+    Returns:
+        (Group): structure group
+    """
+    if keep_angstrom:
+        structure_group = Group({"cell": np.array(structure.cell)})
+    else:
+        structure_group = Group(
+            {
+                "cell": np.array(structure.cell * 1 / BOHR_TO_ANGSTROM),
+            }
+        )
+    if "selective_dynamics" in structure.arrays:
+        selective_dynamics_list = list(structure.selective_dynamics)
+    else:
+        selective_dynamics_list = [3 * [False]] * len(structure.positions)
+    species = structure_group.create_group("species")
+    for elm_species in structure.get_species_objects():
+        if elm_species.Parent:
+            element = elm_species.Parent
+        else:
+            element = elm_species.Abbreviation
+        species.append(Group({"element": '"' + str(element) + '"'}))
+        elm_list = np.array(
+            structure.get_chemical_symbols() == elm_species.Abbreviation
+        )
+        atom_group = species[-1].create_group("atom")
+        for elm_pos, elm_magmon, selective in zip(
+            structure.positions[elm_list],
+            np.array(structure.get_initial_magnetic_moments())[elm_list],
+            np.array(selective_dynamics_list)[elm_list],
+        ):
+            atom_group.append(Group())
+            if structure.has("initial_magmoms"):
+                atom_group[-1]["label"] = '"spin_' + str(elm_magmon) + '"'
+            if keep_angstrom:
+                atom_group[-1]["coords"] = np.array(elm_pos)
+            else:
+                atom_group[-1]["coords"] = np.array(elm_pos * 1 / BOHR_TO_ANGSTROM)
+            if all(selective):
+                atom_group[-1]["movable"] = True
+            elif any(selective):
+                for ss, xx in zip(selective, ["X", "Y", "Z"]):
+                    if ss:
+                        atom_group[-1]["movable" + xx] = True
+    if not use_symmetry:
+        structure_group.symmetry = Group(
+            {"operator": {"S": "[[1,0,0],[0,1,0],[0,0,1]]"}}
+        )
+    return structure_group
 
 
 class InputWriter(object):
@@ -1921,7 +2089,6 @@ class Group(DataContainer):
             del self[name]
 
     def to_sphinx(self, content="__self__", indent=0):
-
         if content == "__self__":
             content = self
 
@@ -1967,8 +2134,6 @@ class _SphinxLogParser:
     def __init__(self, log_file):
         self.log_file = log_file
         self._check_enter_scf()
-        self._k_points = None
-        self._log_k_points = None
         self._log_main = None
         self._counter = None
         self._n_atoms = None
@@ -1977,18 +2142,14 @@ class _SphinxLogParser:
 
     @property
     def spin_enabled(self):
-        if self._spin_enabled is None:
-            self._spin_enabled = (
-                len(re.findall("The spin for the label", self.log_file)) > 0
-            )
-        return self._spin_enabled
+        return len(re.findall("The spin for the label", self.log_file)) > 0
 
     @property
     def log_main(self):
         if self._log_main is None:
             match = re.search("Enter Main Loop", self.log_file)
-            self._log_main = self.log_file[match.end() + 1 :]
-        return self._log_main
+            self._log_main = match.end() + 1
+        return self.log_file[self._log_main :]
 
     @property
     def job_finished(self):
@@ -1996,7 +2157,7 @@ class _SphinxLogParser:
             len(re.findall("Program exited normally.", self.log_file, re.MULTILINE))
             == 0
         ):
-            warnings.warn("Log file created but first scf loop not reached")
+            warnings.warn("scf loops did not converge")
             return False
         return True
 
@@ -2014,15 +2175,13 @@ class _SphinxLogParser:
 
     @property
     def log_k_points(self):
-        if self._log_k_points is None:
-            start_match = re.search(
-                "-ik-     -x-      -y-       -z-    \|  -weight-    -nG-    -label-",
-                self.log_file,
-            )
-            log_part = self.log_file[start_match.end() + 1 :]
-            log_part = log_part[: re.search("^\n", log_part, re.MULTILINE).start()]
-            self._log_k_points = log_part.split("\n")[:-2]
-        return self._log_k_points
+        start_match = re.search(
+            "-ik-     -x-      -y-       -z-    \|  -weight-    -nG-    -label-",
+            self.log_file,
+        )
+        log_part = self.log_file[start_match.end() + 1 :]
+        log_part = log_part[: re.search("^\n", log_part, re.MULTILINE).start()]
+        return log_part.split("\n")[:-2]
 
     def get_bands_k_weights(self):
         return np.array([float(kk.split()[6]) for kk in self.log_k_points])
@@ -2040,14 +2199,9 @@ class _SphinxLogParser:
 
     @property
     def k_points(self):
-        if self._k_points is None:
-            self._k_points = np.array(
-                [
-                    [float(kk.split()[i]) for i in range(2, 5)]
-                    for kk in self.log_k_points
-                ]
-            )
-        return self._k_points
+        return np.array(
+            [[float(kk.split()[i]) for i in range(2, 5)] for kk in self.log_k_points]
+        )
 
     def get_volume(self):
         volume = re.findall("Omega:.*$", self.log_file, re.MULTILINE)
@@ -2136,7 +2290,7 @@ class _SphinxLogParser:
         return arr.reshape(shape)
 
     def get_band_energy(self):
-        return self._parse_band(f"final eig \[eV\]:(.*)$")
+        return self._parse_band("final eig \[eV\]:(.*)$")
 
     def get_occupancy(self):
         return self._parse_band("final focc:(.*)$")
@@ -2169,8 +2323,8 @@ class Output:
     """
 
     def __init__(self, job):
-        self.generic = DataContainer(table_name="output/generic")
         self._job = job
+        self.generic = DataContainer(table_name="output/generic")
         self.charge_density = SphinxVolumetricData()
         self.electrostatic_potential = SphinxVolumetricData()
         self.generic.create_group("dft")
@@ -2280,15 +2434,12 @@ class Output:
                 np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
             )
 
-    def collect_sphinx_log(
-        self, file_name="sphinx.log", cwd=None, check_consistency=True
-    ):
+    def collect_sphinx_log(self, file_name="sphinx.log", cwd=None):
         """
 
         Args:
             file_name:
             cwd:
-            check_consistency (bool):
 
         Returns:
 
@@ -2491,11 +2642,11 @@ class Output:
 
 
 def _update_datacontainer(job):
-    job._output_parser.generic.create_group("dft")
+    job.output.generic.create_group("dft")
     for node in job["output/generic/dft"].list_nodes():
-        job._output_parser.generic.dft[node] = job["output/generic/dft"][node]
+        job.output.generic.dft[node] = job["output/generic/dft"][node]
     for node in job["output/generic"].list_nodes():
-        job._output_parser.generic[node] = job["output/generic"][node]
+        job.output.generic[node] = job["output/generic"][node]
     job["output/generic"].remove_group()
-    job._output_parser.generic.to_hdf(hdf=job.project_hdf5)
-    job._output_parser.old_version = False
+    job.output.generic.to_hdf(hdf=job.project_hdf5)
+    job.output.old_version = False

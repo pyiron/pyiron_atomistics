@@ -154,11 +154,10 @@ class VaspInteractive(VaspBase, GenericInteractive):
         algorithm=None,
         retain_charge_density=False,
         retain_electrostatic_potential=False,
-        ionic_energy=None,
-        ionic_forces=None,
         ionic_energy_tolerance=None,
         ionic_force_tolerance=None,
         volume_only=False,
+        cell_only=False,
     ):
         """
         Function to setup the hamiltonian to perform ionic relaxations using DFT. The ISIF tag has to be supplied
@@ -174,9 +173,8 @@ class VaspInteractive(VaspBase, GenericInteractive):
             retain_electrostatic_potential (boolean): True if the electrostatic potential should be written
             ionic_energy_tolerance (float): Ionic energy convergence criteria (eV)
             ionic_force_tolerance (float): Ionic forces convergence criteria (overwrites ionic energy) (ev/A)
-            ionic_energy (float): Same as ionic_energy_tolerance (deprecated)
-            ionic_forces (float): Same as ionic_force_tolerance (deprecated)
             volume_only (bool): Option to relax only the volume (keeping the relative coordinates fixed
+            cell_only (bool): Option to relax only the cell parameters (keeping the relative coordinates fixed)
         """
         if (
             self.server.run_mode.interactive
@@ -194,9 +192,10 @@ class VaspInteractive(VaspBase, GenericInteractive):
                 algorithm=algorithm,
                 retain_charge_density=retain_charge_density,
                 retain_electrostatic_potential=retain_electrostatic_potential,
-                ionic_energy=ionic_energy,
-                ionic_forces=ionic_forces,
+                ionic_energy_tolerance=ionic_energy_tolerance,
+                ionic_force_tolerance=ionic_force_tolerance,
                 volume_only=volume_only,
+                cell_only=cell_only,
             )
 
     def calc_md(

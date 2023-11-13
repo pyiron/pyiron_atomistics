@@ -5,34 +5,17 @@
 import random
 import warnings
 import itertools
-from multiprocessing import cpu_count
+from structuretoolkit.build import sqs_structures
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_base import state, DataContainer, GenericParameters, ImportAlarm
-from pyiron_atomistics.atomistics.structure.periodic_table import ChemicalElement
-from pyiron_atomistics.atomistics.structure.atoms import (
-    Atoms,
-    ase_to_pyiron,
-    pyiron_to_ase,
-)
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 import numpy as np
 
-try:
-    from sqsgenerator.core.sqs import ParallelSqsIterator
-
-    import_alarm = ImportAlarm(
-        "SQSJob relies on the [sqsgenerator module](https://github.com/dgehringer/sqsgenerator) module. The package "
-        "got a major update (0.0.5 -> 0.1) recently. Please consider to update the package, e. g. with "
-        "`conda update -c conda-forge sqsgenerator`"
-    )
-    DEPRECATED_SQS_API = True
-except ImportError:
-    DEPRECATED_SQS_API = None
 
 try:
     from sqsgenerator.settings import BadSettings
     from sqsgenerator import sqs_optimize, process_settings, IterationMode
 
-    DEPRECATED_SQS_API = False
     import_alarm = ImportAlarm()
 except ImportError:
     import_alarm = ImportAlarm(
@@ -40,13 +23,9 @@ except ImportError:
         "python environment contains the [sqsgenerator module](https://github.com/dgehringer/sqsgenerator), e.g. with "
         "`conda install -c conda-forge sqsgenerator`."
     )
-    DEPRECATED_SQS_API = DEPRECATED_SQS_API or None
 
 
-from typing import Dict, Optional, Union, Iterable
-
-if DEPRECATED_SQS_API:
-    from pymatgen.io.ase import AseAtomsAdaptor
+from typing import Dict
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -127,125 +106,6 @@ def mole_fractions_to_composition(
         )
 
     return composition
-
-
-if DEPRECATED_SQS_API:
-
-    def pyiron_to_pymatgen(structure):
-        return AseAtomsAdaptor.get_structure(pyiron_to_ase(structure))
-
-    def pymatgen_to_pyiron(structure):
-        return ase_to_pyiron(AseAtomsAdaptor.get_atoms(structure))
-
-    def get_sqs_structures(
-        structure,
-        mole_fractions,
-        weights=None,
-        objective=0.0,
-        iterations=1e6,
-        output_structures=10,
-        num_threads=None,
-    ):
-        structure = pyiron_to_pymatgen(structure)
-        if not weights:
-            weights = {i: 1.0 / i for i in range(1, 7)}
-        if not num_threads:
-            # Thats default behaviour
-            num_threads = cpu_count()
-
-        # preprocess mole-fractions, to print warnings is necessary
-        num_atoms = len(structure)
-        composition = mole_fractions_to_composition(mole_fractions, num_atoms)
-        mole_fractions = map_dict(lambda n: n / num_atoms, composition)
-
-        iterator = ParallelSqsIterator(
-            structure, mole_fractions, weights, num_threads=num_threads
-        )
-        structures, decmp, iter_, cycle_time = iterator.iteration(
-            iterations=iterations,
-            output_structures=output_structures,
-            objective=objective,
-        )
-        return [pymatgen_to_pyiron(s) for s in structures], decmp, iter_, cycle_time
-
-else:
-
-    def remap_sro(species: Iterable[str], array: np.ndarray):
-        # remaps computed short-range order parameters to style of sqsgenerator=v0.0.5
-        species = tuple(
-            sorted(species, key=lambda abbr: ChemicalElement(abbr).atomic_number)
-        )
-        return {
-            "{}-{}".format(si, sj): array[:, i, j].tolist()
-            for (i, si), (j, sj) in itertools.product(
-                enumerate(species), enumerate(species)
-            )
-            if j >= i
-        }
-
-    def remap_sqs_results(result):
-        # makes new interface compatible with old one
-        pyiron_structure = ase_to_pyiron(result["structure"])
-        return pyiron_structure, remap_sro(
-            set(pyiron_structure.get_chemical_symbols()), result["parameters"]
-        )
-
-    def transpose(it):
-        return zip(*it)
-
-    def get_sqs_structures(
-        structure: Atoms,
-        mole_fractions: Dict[str, Union[float, int]],
-        weights: Optional[Dict[int, float]] = None,
-        objective: Union[float, np.ndarray] = 0.0,
-        iterations: Union[float, int] = 1e6,
-        output_structures: int = 10,
-        mode: str = "random",
-        num_threads: Optional[int] = None,
-        prefactors: Optional[Union[float, np.ndarray]] = None,
-        pair_weights: Optional[np.ndarray] = None,
-        rtol: Optional[float] = None,
-        atol: Optional[float] = None,
-        which: Optional[Iterable[int]] = None,
-        shell_distances: Optional[Iterable[int]] = None,
-        minimal: Optional[bool] = True,
-        similar: Optional[bool] = True,
-    ):
-
-        structure = pyiron_to_ase(structure)
-        composition = mole_fractions_to_composition(mole_fractions, len(structure))
-
-        settings = dict(
-            atol=atol,
-            rtol=rtol,
-            mode=mode,
-            which=which,
-            structure=structure,
-            prefactors=prefactors,
-            shell_weights=weights,
-            iterations=iterations,
-            composition=composition,
-            pair_weights=pair_weights,
-            target_objective=objective,
-            shell_distances=shell_distances,
-            threads_per_rank=num_threads or cpu_count(),
-            max_output_configurations=output_structures,
-        )
-        # not specifying a parameter in settings causes sqsgenerator to choose a "sensible" default,
-        # hence we remove all entries with a None value
-
-        results, timings = sqs_optimize(
-            {param: value for param, value in settings.items() if value is not None},
-            minimal=minimal,
-            similar=similar,
-            make_structures=True,
-            structure_format="ase",
-        )
-
-        structures, sro_breakdown = transpose(map(remap_sqs_results, results.values()))
-        num_iterations = iterations
-        cycle_time = np.average(list(map_dict(np.average, timings).values()))
-        return structures, sro_breakdown, num_iterations, cycle_time
 
 
 class SQSJob(AtomisticGenericJob):
@@ -378,7 +238,7 @@ class SQSJob(AtomisticGenericJob):
 
     # This function is executed
     def run_static(self):
-        self._lst_of_struct, decmp, iterations, cycle_time = get_sqs_structures(
+        structure_lst, decmp, iterations, cycle_time = sqs_structures(
             structure=self.structure,
             mole_fractions={k: v for k, v in self.input.mole_fractions.items()},
             weights=self.input.weights,
@@ -386,7 +246,9 @@ class SQSJob(AtomisticGenericJob):
             iterations=self.input.iterations,
             output_structures=self.input.n_output_structures,
             num_threads=self.server.cores,
+            return_statistics=True,
         )
+        self._lst_of_struct = [ase_to_pyiron(s) for s in structure_lst]
         for i, structure in enumerate(self._lst_of_struct):
             with self.project_hdf5.open("output/structures/structure_" + str(i)) as h5:
                 structure.to_hdf(h5)

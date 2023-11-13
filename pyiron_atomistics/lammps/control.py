@@ -246,6 +246,11 @@ class LammpsControl(GenericParameters):
         ionic_force_tolerance *= force_units
 
         if pressure is not None:
+            if rotation_matrix is None:
+                raise ValueError(
+                    "No rotation matrix given while trying to convert pressure. "
+                    "This is most likely due to no structure being defined."
+                )
             self._force_skewed = False
             pressure = self.pressure_to_lammps(pressure, rotation_matrix)
             if np.isscalar(pressure):
@@ -759,11 +764,20 @@ class LammpsControl(GenericParameters):
 
     def energy_pot_per_atom(self):
         """
-        Enable the output of atomic energies.  This will add an additional key 'energy_pot_per_atom' to the HDF output.
+        Enable the output of per atom potential energies.  This will add an additional key 'energy_pot_per_atom' to the HDF output.
         """
         if self["compute___energy_pot_per_atom"] is None:
             self["compute___energy_pot_per_atom"] = "all pe/atom"
             self["dump___1"] += " c_energy_pot_per_atom"
+            self["dump_modify___1"] = self["dump_modify___1"][:-1] + ' %20.15g"'
+
+    def energy_kin_per_atom(self):
+        """
+        Enable the output of per atom kinetic energies.  This will add an additional key 'energy_kin_per_atom' to the HDF output.
+        """
+        if self["compute___energy_kin_per_atom"] is None:
+            self["compute___energy_kin_per_atom"] = "all ke/atom"
+            self["dump___1"] += " c_energy_kin_per_atom"
             self["dump_modify___1"] = self["dump_modify___1"][:-1] + ' %20.15g"'
 
     def _set_group_by_id(self, group_name, ids):

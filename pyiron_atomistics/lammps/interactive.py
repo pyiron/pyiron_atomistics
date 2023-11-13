@@ -10,7 +10,8 @@ import pandas as pd
 import warnings
 from scipy import constants
 
-from pyiron_atomistics.lammps.base import LammpsBase, _check_ortho_prism
+from pyiron_atomistics.lammps.base import LammpsBase
+from pyiron_atomistics.lammps.output import _check_ortho_prism
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
@@ -41,6 +42,7 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         self._interactive_run_command = None
         self._interactive_grand_canonical = True
         self._interactive_water_bonds = False
+        self._interactive_mpi_communicator = None
         self._user_fix_external = None
         self._log_file = None
         if "stress" in self.interactive_output_functions.keys():
@@ -64,6 +66,14 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         if not isinstance(reset, bool):
             raise AssertionError()
         self._interactive_water_bonds = reset
+
+    @property
+    def interactive_mpi_communicator(self):
+        return self._interactive_mpi_communicator
+
+    @interactive_mpi_communicator.setter
+    def interactive_mpi_communicator(self, comm):
+        self._interactive_mpi_communicator = comm
 
     def _interactive_lib_command(self, command):
         self._logger.debug("Lammps library: " + command)
@@ -233,7 +243,8 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
             if self._log_file is None:
                 self._log_file = os.path.join(self.working_directory, "log.lammps")
             self._interactive_library = lammps(
-                cmdargs=["-screen", "none", "-log", self._log_file]
+                cmdargs=["-screen", "none", "-log", self._log_file],
+                comm=self._interactive_mpi_communicator,
             )
         else:
             self._interactive_library = LammpsLibrary(

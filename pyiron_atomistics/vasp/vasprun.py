@@ -47,7 +47,6 @@ class Vasprun(object):
 
     def __init__(self):
         self.vasprun_dict = dict()
-        self.root = None
 
     def from_file(self, filename="vasprun.xml"):
         """
@@ -59,19 +58,16 @@ class Vasprun(object):
         if not (os.path.isfile(filename)):
             raise AssertionError()
         try:
-            self.root = ETree.parse(filename).getroot()
+            self.parse_root_to_dict(filename)
         except ParseError:
             raise VasprunError(
                 "The vasprun.xml file is either corrupted or the simulation has failed"
             )
 
-        self.parse_root_to_dict()
-
-    def parse_root_to_dict(self):
+    def parse_root_to_dict(self, filename):
         """
         Parses from the main xml root.
         """
-        node = self.root
         d = self.vasprun_dict
         d["scf_energies"] = list()
         d["scf_fr_energies"] = list()
@@ -84,7 +80,7 @@ class Vasprun(object):
         d["total_fr_energies"] = list()
         d["total_0_energies"] = list()
         d["stress_tensors"] = list()
-        for leaf in node:
+        for _, leaf in ETree.iterparse(filename):
             if leaf.tag in ["generator", "incar"]:
                 d[leaf.tag] = dict()
                 for items in leaf:
@@ -95,12 +91,13 @@ class Vasprun(object):
             if leaf.tag in ["atominfo"]:
                 d[leaf.tag] = dict()
                 self.parse_atom_information_to_dict(leaf, d[leaf.tag])
-            if leaf.tag in ["structure"] and leaf.attrib["name"] == "initialpos":
-                d["init_structure"] = dict()
-                self.parse_structure_to_dict(leaf, d["init_structure"])
-            if leaf.tag in ["structure"] and leaf.attrib["name"] == "finalpos":
-                d["final_structure"] = dict()
-                self.parse_structure_to_dict(leaf, d["final_structure"])
+            if leaf.tag in ["structure"] and "name" in leaf.keys():
+                if "initialpos" in leaf.attrib["name"]:
+                    d["init_structure"] = dict()
+                    self.parse_structure_to_dict(leaf, d["init_structure"])
+                elif "finalpos" in leaf.attrib["name"]:
+                    d["final_structure"] = dict()
+                    self.parse_structure_to_dict(leaf, d["final_structure"])
             if leaf.tag in ["calculation"]:
                 self.parse_calc_to_dict(leaf, d)
             if leaf.tag in ["parameters"]:

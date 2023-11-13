@@ -2,11 +2,8 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from aimsgb import GrainBoundary, Grain, GBInformation
-from pyiron_atomistics.atomistics.structure.atoms import (
-    pyiron_to_pymatgen,
-    pymatgen_to_pyiron,
-)
+from structuretoolkit.build import grainboundary, get_grainboundary_info
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 __author__ = "Ujjal Saikia"
 __copyright__ = (
@@ -42,7 +39,7 @@ class AimsgbFactory:
         To construct the grain boundary select a GB plane and sigma value from the list and pass it to the
         GBBuilder.gb_build() function along with the rotational axis and initial bulk structure.
         """
-        return GBInformation(axis=axis, max_sigma=max_sigma)
+        return get_grainboundary_info(axis=axis, max_sigma=max_sigma)
 
     @staticmethod
     def build(
@@ -81,23 +78,16 @@ class AimsgbFactory:
         Returns:
             :class:`.Atoms`: final grain boundary structure
         """
-        basis_pymatgen = pyiron_to_pymatgen(initial_struct)
-        grain_init = Grain(
-            basis_pymatgen.lattice, basis_pymatgen.species, basis_pymatgen.frac_coords
-        )
-        gb_obj = GrainBoundary(
-            axis=axis,
-            sigma=sigma,
-            plane=plane,
-            initial_struct=grain_init,
-            uc_a=uc_a,
-            uc_b=uc_b,
-        )
-
-        return pymatgen_to_pyiron(
-            gb_obj.build_gb(
+        return ase_to_pyiron(
+            grainboundary(
+                axis=axis,
+                sigma=sigma,
+                plane=plane,
+                initial_struct=initial_struct,
                 to_primitive=to_primitive,
                 delete_layer=delete_layer,
                 add_if_dist=add_if_dist,
+                uc_a=uc_a,
+                uc_b=uc_b,
             )
         )

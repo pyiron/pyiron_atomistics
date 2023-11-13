@@ -40,7 +40,7 @@ class SerialMaster(SerialMasterBase, AtomisticGenericJob):
     Methods:
 
         .. method:: get_structure
-            dispatches to :method:`.AtomisticGenericJob._get_structure` of the final job, i.e. allows you to access the
+            dispatches to :meth:`.AtomisticGenericJob._get_structure` of the final job, i.e. allows you to access the
             structures of the final job.
     """
 

@@ -14,6 +14,6 @@ dependencies:
 - seaborn
 - pyscal
 - jupyterlab
-- pyiron-data >=0.0.5
+- pyiron-data >=0.0.22
 - sqsgenerator
-- pymatgen
+- structuretoolkit

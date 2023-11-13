@@ -10,10 +10,12 @@ from io import StringIO
 from pyiron_base import state, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
-from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism, to_amat
+from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
+from pyiron_atomistics.lammps.output import to_amat
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 import ase.units as units
 from pyiron_base._tests import TestWithCleanProject
+import unittest
 
 
 class TestLammps(TestWithCleanProject):
@@ -57,10 +59,6 @@ class TestLammps(TestWithCleanProject):
     def test_selective_dynamics(self):
         atoms = Atoms("Fe8", positions=np.zeros((8, 3)), cell=np.eye(3))
         atoms.add_tag(selective_dynamics=[True, True, True])
-        self.job.structure = atoms
-        self.job._set_selective_dynamics()
-        self.assertFalse("group" in self.job.input.control._dataset["Parameter"])
-        atoms.add_tag(selective_dynamics=None)
         atoms.selective_dynamics[1] = [True, True, False]
         atoms.selective_dynamics[2] = [True, False, True]
         atoms.selective_dynamics[3] = [False, True, True]
@@ -83,11 +81,11 @@ class TestLammps(TestWithCleanProject):
         lmp_structure._el_eam_lst = ["Fe"]
         lmp_structure.structure = atoms
         self.assertEqual(
-            lmp_structure._dataset["Value"],
+            lmp_structure._string_input.split("\n"),
             [
-                "Start File for LAMMPS",
-                "1 atoms",
-                "1 atom types",
+                "Start File for LAMMPS ",
+                "1 atoms ",
+                "1 atom types ",
                 "",
                 "0. 1.000000000000000 xlo xhi",
                 "0. 1.000000000000000 ylo yhi",
@@ -95,11 +93,12 @@ class TestLammps(TestWithCleanProject):
                 "",
                 "Masses",
                 "",
-                "1 55.845000",
+                "  1 55.845000",
                 "",
                 "Atoms",
                 "",
                 "1 1 0.000000000000000 0.000000000000000 0.000000000000000",
+                "",
                 "",
             ],
         )
@@ -112,11 +111,11 @@ class TestLammps(TestWithCleanProject):
         lmp_structure._el_eam_lst = ["Fe"]
         lmp_structure.structure = atoms
         self.assertEqual(
-            lmp_structure._dataset["Value"],
+            lmp_structure._string_input.split("\n"),
             [
-                "Start File for LAMMPS",
-                "1 atoms",
-                "1 atom types",
+                "Start File for LAMMPS ",
+                "1 atoms ",
+                "1 atom types ",
                 "",
                 "0. 1.000000000000000 xlo xhi",
                 "0. 1.000000000000000 ylo yhi",
@@ -124,38 +123,15 @@ class TestLammps(TestWithCleanProject):
                 "",
                 "Masses",
                 "",
-                "1 55.845000",
+                "  1 55.845000",
                 "",
                 "Atoms",
                 "",
                 "1 1 2.000000 0.000000000000000 0.000000000000000 0.000000000000000",
                 "",
+                "",
             ],
         )
-
-    def test_avilable_versions(self):
-        self.job.executable = os.path.abspath(
-            os.path.join(
-                self.execution_path,
-                "..",
-                "static",
-                "lammps",
-                "bin",
-                "run_lammps_2018.03.16.sh",
-            )
-        )
-        self.assertTrue([2018, 3, 16] == self.job._get_executable_version_number())
-        self.job.executable = os.path.abspath(
-            os.path.join(
-                self.execution_path,
-                "..",
-                "static",
-                "lammps",
-                "bin",
-                "run_lammps_2018.03.16_mpi.sh",
-            )
-        )
-        self.assertTrue([2018, 3, 16] == self.job._get_executable_version_number())
 
     def _build_water(self, y0_shift=0.0):
         density = 1.0e-24  # g/A^3
@@ -448,25 +424,31 @@ class TestLammps(TestWithCleanProject):
         file_directory = os.path.join(
             self.execution_path, "..", "static", "lammps_test_files"
         )
-        self.job.collect_dump_file(cwd=file_directory, file_name="dump_static.out")
-        self.assertTrue(
-            np.array_equal(self.job["output/generic/forces"].shape, (1, 2, 3))
+        output_dict = self.job.collect_output_parser(
+            cwd=file_directory,
+            dump_out_file_name="dump_static.out",
+            log_lammps_file_name="log_not_available"
         )
         self.assertTrue(
-            np.array_equal(self.job["output/generic/positions"].shape, (1, 2, 3))
+            np.array_equal(output_dict["generic"]["forces"].shape, (1, 2, 3))
         )
         self.assertTrue(
-            np.array_equal(self.job["output/generic/cells"].shape, (1, 3, 3))
+            np.array_equal(output_dict["generic"]["positions"].shape, (1, 2, 3))
         )
         self.assertTrue(
-            np.array_equal(self.job["output/generic/indices"].shape, (1, 2))
+            np.array_equal(output_dict["generic"]["cells"].shape, (1, 3, 3))
+        )
+        self.assertTrue(
+            np.array_equal(output_dict["generic"]["indices"].shape, (1, 2))
         )
         # compare to old dump parser
-        old_output = collect_dump_file_old(job=self.job, cwd=file_directory, file_name="dump_static.out")
-        with self.job.project_hdf5.open("output/generic") as hdf_out:
-            for k, v in old_output.items():
-                self.assertTrue(np.all(v == hdf_out[k]))
-
+        old_output = collect_dump_file_old(
+            job=self.job,
+            cwd=file_directory,
+            file_name="dump_static.out"
+        )
+        for k, v in old_output.items():
+            self.assertTrue(np.all(v == output_dict["generic"][k]))
 
     def test_vcsgc_input(self):
         unit_cell = Atoms(
@@ -749,8 +731,11 @@ class TestLammps(TestWithCleanProject):
         file_directory = os.path.join(
             self.execution_path, "..", "static", "lammps_test_files"
         )
-        self.job.collect_dump_file(cwd=file_directory, file_name="dump_average.out")
-        self.job.collect_output_log(cwd=file_directory, file_name="log_average.lammps")
+        _ = self.job.collect_output_parser(
+            cwd=file_directory,
+            dump_out_file_name="dump_average.out",
+            log_lammps_file_name="log_average.lammps"
+        )
 
     def test_validate(self):
         with self.assertRaises(ValueError):
@@ -1002,3 +987,7 @@ def collect_dump_file_old(job, file_name="dump.out", cwd=None):
         output[k] = uc.convert_array_to_pyiron_units(array=v, label=k)
 
     return output
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -367,7 +367,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             snapshot_indices=snapshot_indices,
         )
         if repeat is not None:
-            traj = traj.transform(lambda s: s.repeat(repeat))
+            traj = traj.transform_structures(lambda s: s.repeat(repeat))
 
         if self.structure.cell is None:
             show_cell = False
@@ -759,7 +759,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             if cell is not None:
                 snapshot.cell = cell
             if indices is not None:
-                snapshot.indices = indices
+                snapshot.set_array("indices", indices)
         if self.output.positions is not None:
             if wrap_atoms:
                 snapshot.positions = self.output.positions[frame]
@@ -882,7 +882,7 @@ class Trajectory(HasStructure):
             if self._cells is not None:
                 new_structure.cell = self._cells[item]
             if self._indices is not None:
-                new_structure.indices = self._indices[item]
+                new_structure.set_array("indices", self._indices[item])
             new_structure.positions = self._positions[item]
             # This step is necessary for using ase.io.write for trajectories
             new_structure.arrays["positions"] = new_structure.positions
@@ -959,56 +959,6 @@ class Trajectory(HasStructure):
         return self.get_neighbors_snapshots(
             snapshot_indices=snapshot_indices, num_neighbors=num_neighbors, **kwargs
         )
-
-    def transform(self, transform: Callable[[Atoms], Atoms]):
-        """
-        Return new trajectory with transformed structures.
-
-        Args:
-            transform (function): takes a structure and must return a structure.
-
-        Returns:
-            :class:`~.TransformTrajectory`: trajectory that contains the transformed structures
-        """
-        return TransformTrajectory(self, transform)
-
-
-class TransformTrajectory(HasStructure):
-    """
-    Wrapper around :class:`.Trajectory` that returns structures after passing them through a transforming function.
-
-    Has to be compatible to ase.io.Trajectory.
-    """
-
-    def __init__(
-        self,
-        trajectory: Union["TransformTrajectory", Trajectory],
-        transform: Callable[[Atoms], Atoms] = lambda x: x,
-    ):
-        self._trajectory = trajectory
-        self._transform = transform
-
-    def _number_of_structures(self):
-        return self._trajectory.number_of_structures
-
-    def _get_structure(self, frame=-1, wrap_atoms=True):
-        return self._transform(
-            self._trajectory.get_structure(frame=frame, wrap_atoms=wrap_atoms)
-        )
-
-    def __getitem__(self, item):
-        if isinstance(item, numbers.Integral):
-            return self._get_structure(item)
-        elif isinstance(item, (list, np.ndarray, slice)):
-            return TransformTrajectory(self._trajectory[item], self._transform)
-        else:
-            raise TypeError("item must be integral number, list, array or slice.")
-
-    def __len__(self):
-        return self._trajectory.number_of_structures
-
-    def __iter__(self):
-        yield from self.iter_structures()
 
 
 class GenericInput(GenericParameters):

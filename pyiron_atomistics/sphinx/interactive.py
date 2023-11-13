@@ -8,7 +8,7 @@ import scipy.constants
 import subprocess
 import warnings
 import time
-from pyiron_atomistics.sphinx.base import SphinxBase, Group
+from pyiron_atomistics.sphinx.base import SphinxBase, Group, Output
 from pyiron_atomistics.atomistics.job.interactive import (
     GenericInteractive,
     GenericInteractiveOutput,
@@ -36,11 +36,11 @@ __date__ = "Sep 1, 2017"
 class SphinxInteractive(SphinxBase, GenericInteractive):
     def __init__(self, project, job_name):
         super(SphinxInteractive, self).__init__(project, job_name)
-        self.output = SphinxOutput(job=self)
         self._interactive_write_input_files = True
         self._interactive_library_read = None
         self._interactive_fetch_completed = True
         self.interactive_flush_frequency = 1
+        self.output = SphinxOutput(job=self)
 
     @property
     def structure(self):
@@ -202,12 +202,12 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
         with self.project_hdf5.open("output") as h5:
             if "interactive" in h5.list_groups():
                 for key in ["positions", "cells", "indices", "cells", "forces"]:
-                    self._output_parser.generic[key] = h5["interactive/" + key]
+                    self.output.generic[key] = h5["interactive/" + key]
                 if "atom_spin_constraints" in h5["interactive"].list_nodes():
-                    self._output_parser.generic.dft.atom_spin_constraints = h5[
+                    self.output.generic.dft.atom_spin_constraints = h5[
                         "interactive/atom_spin_constraints"
                     ]
-                self._output_parser.generic.to_hdf(hdf=self.project_hdf5)
+                self.output.generic.to_hdf(hdf=self.project_hdf5)
 
     def collect_output(self, force_update=False, compress_files=True):
         super(SphinxInteractive, self).collect_output(
@@ -358,9 +358,10 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
             super(SphinxInteractive, self).load_main_group()
 
 
-class SphinxOutput(GenericInteractiveOutput):
-    def __init__(self, job):
-        super(SphinxOutput, self).__init__(job)
+class SphinxOutput(Output, GenericInteractiveOutput):
+    """
+    Handles the output from a SPHInX simulation.
+    """
 
     def check_band_occupancy(self, plot=True):
         """

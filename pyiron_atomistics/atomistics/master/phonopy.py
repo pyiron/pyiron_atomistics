@@ -10,16 +10,16 @@ import numpy as np
 import posixpath
 import scipy.constants
 from phonopy import Phonopy
-from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.units import VaspToTHz
 from phonopy.file_IO import write_FORCE_CONSTANTS
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_atomistics.atomistics.structure.phonopy import (
     publication as phonopy_publication,
 )
 from pyiron_base import state, JobGenerator, ImportAlarm, deprecate
+import structuretoolkit
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"
 __copyright__ = (
@@ -46,45 +46,10 @@ class Thermal:
     """
 
     def __init__(self, temperatures, free_energies, entropy, cv):
-
         self.temperatures = temperatures
         self.free_energies = free_energies
         self.entropy = entropy
         self.cv = cv
-
-
-def phonopy_to_atoms(ph_atoms):
-    """
-    Convert Phonopy Atoms to ASE-like Atoms
-    Args:
-        ph_atoms: Phonopy Atoms object
-
-    Returns: ASE-like Atoms object
-
-    """
-    return Atoms(
-        symbols=list(ph_atoms.get_chemical_symbols()),
-        positions=list(ph_atoms.get_positions()),
-        cell=list(ph_atoms.get_cell()),
-        pbc=True,
-    )
-
-
-def atoms_to_phonopy(atom):
-    """
-    Convert ASE-like Atoms to Phonopy Atoms
-    Args:
-        atom: ASE-like Atoms
-
-    Returns:
-        Phonopy Atoms
-
-    """
-    return PhonopyAtoms(
-        symbols=list(atom.get_chemical_symbols()),
-        scaled_positions=list(atom.get_scaled_positions()),
-        cell=list(atom.get_cell()),
-    )
 
 
 class PhonopyJobGenerator(JobGenerator):
@@ -99,7 +64,9 @@ class PhonopyJobGenerator(JobGenerator):
         return [
             [
                 "{}_{}".format(self._master.ref_job.job_name, ind),
-                self._restore_magmoms(phonopy_to_atoms(sc)),
+                self._restore_magmoms(
+                    ase_to_pyiron(structuretoolkit.common.phonopy_to_atoms(sc))
+                ),
             ]
             for ind, sc in enumerate(supercells)
         ]
@@ -112,7 +79,7 @@ class PhonopyJobGenerator(JobGenerator):
         Returns:
             structure (pyiron_atomistics.atomistics.structure.atoms): output structure with magnetic moments
         """
-        if any(self._master.structure.get_initial_magnetic_moments() != None):
+        if self._master.structure.has("initial_magmoms"):
             magmoms = self._master.structure.get_initial_magnetic_moments()
             magmoms = np.tile(
                 magmoms,
@@ -194,7 +161,7 @@ class PhonopyJob(AtomisticParallelMaster):
     @property
     def _phonopy_unit_cell(self):
         if self.structure is not None:
-            return atoms_to_phonopy(self.structure)
+            return structuretoolkit.common.atoms_to_phonopy(self.structure)
         else:
             return None
 
@@ -500,9 +467,9 @@ class PhonopyJob(AtomisticParallelMaster):
         self, axis=None, *args, label: Optional[str] = None, **kwargs
     ):
         """
-        Plot bandstructure calculated with :method:`.get_bandstructure`.
+        Plot bandstructure calculated with :meth:`.get_bandstructure`.
 
-        If :method:`.get_bandstructure` hasn't been called before, it is automatically called with the default arguments.
+        If :meth:`.get_bandstructure` hasn't been called before, it is automatically called with the default arguments.
 
         If `label` is passed a legend is added automatically.
 

@@ -133,6 +133,7 @@ _conversion_dict["energy"] = [
     "energy_tot",
     "energy_pot",
     "energy_pot_per_atom",
+    "energy_kin_per_atom",
     "mean_energy_pot",
 ]
 _conversion_dict["temperature"] = ["temperature", "temperatures"]
@@ -155,9 +156,9 @@ for key, val in _conversion_dict.items():
     for v in val:
         # Everything except dimensionless integer quantities are stored as floats
         if key in ["dimensionless_integer_quantity"]:
-            dtype_dict[v] = np.int
+            dtype_dict[v] = int
         else:
-            dtype_dict[v] = np.float
+            dtype_dict[v] = np.float64
 
 
 class UnitConverter:

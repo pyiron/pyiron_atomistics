@@ -2,7 +2,7 @@ channels:
 - conda-forge
 dependencies:
 - nbsphinx
-- aimsgb
+- sphinx <6.1
 - ase
 - defusedxml
 - future
@@ -13,9 +13,9 @@ dependencies:
 - pandas
 - phonopy
 - pyiron_base
-- pymatgen
 - pyscal
 - scipy
 - seekpath
 - scikit-learn
 - spglib
+- structuretoolkit

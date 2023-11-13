@@ -16,7 +16,12 @@ from pyiron_atomistics.vasp.potential import (
     Potcar,
     strip_xc_from_potential_name,
 )
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.atomistics.structure.atoms import (
+    Atoms,
+    CrystalStructure,
+    structure_dict_to_hdf,
+    dict_group_to_hdf,
+)
 from pyiron_base import state, GenericParameters, deprecate
 from pyiron_atomistics.vasp.outcar import Outcar
 from pyiron_atomistics.vasp.oszicar import Oszicar
@@ -24,9 +29,15 @@ from pyiron_atomistics.vasp.procar import Procar
 from pyiron_atomistics.vasp.structure import read_atoms, write_poscar, vasp_sorter
 from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
 from pyiron_atomistics.vasp.vasprun import VasprunError, VasprunWarning
-from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
+from pyiron_atomistics.vasp.volumetric_data import (
+    VaspVolumetricData,
+    volumetric_data_dict_to_hdf,
+)
 from pyiron_atomistics.vasp.potential import get_enmax_among_potentials
-from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
+from pyiron_atomistics.dft.waves.electronic import (
+    ElectronicStructure,
+    electronic_structure_dict_to_hdf,
+)
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
 from pyiron_atomistics.dft.bader import Bader
 import warnings
@@ -376,21 +387,24 @@ class VaspBase(GenericDFTJob):
             modified_elements=modified_elements,
         )
 
-    # define routines that collect all output files
-    def collect_output(self):
+    def collect_output_parser(self, cwd):
         """
         Collects the outputs and stores them to the hdf file
         """
         if self.structure is None or len(self.structure) == 0:
             try:
-                self.structure = self.get_final_structure_from_file(filename="CONTCAR")
+                self.structure = self.get_final_structure_from_file(
+                    cwd=cwd, filename="CONTCAR"
+                )
             except IOError:
-                self.structure = self.get_final_structure_from_file(filename="POSCAR")
+                self.structure = self.get_final_structure_from_file(
+                    cwd=cwd, filename="POSCAR"
+                )
             self._sorted_indices = np.array(range(len(self.structure)))
         self._output_parser.structure = self.structure.copy()
         try:
             self._output_parser.collect(
-                directory=self.working_directory, sorted_indices=self.sorted_indices
+                directory=cwd, sorted_indices=self.sorted_indices
             )
         except VaspCollectError:
             self.status.aborted = True
@@ -398,15 +412,16 @@ class VaspBase(GenericDFTJob):
         # Try getting high precision positions from CONTCAR
         try:
             self._output_parser.structure = self.get_final_structure_from_file(
-                filename="CONTCAR"
+                cwd=cwd,
+                filename="CONTCAR",
             )
         except (IOError, ValueError, FileNotFoundError):
             pass
 
         # Bader analysis
-        if os.path.isfile(
-            os.path.join(self.working_directory, "AECCAR0")
-        ) and os.path.isfile(os.path.join(self.working_directory, "AECCAR2")):
+        if os.path.isfile(os.path.join(cwd, "AECCAR0")) and os.path.isfile(
+            os.path.join(cwd, "AECCAR2")
+        ):
             bader = Bader(self)
             try:
                 charges_orig, volumes_orig = bader.compute_bader_charges()
@@ -431,7 +446,18 @@ class VaspBase(GenericDFTJob):
                 self._output_parser.generic_output.dft_log_dict[
                     "bader_volumes"
                 ] = volumes
-        self._output_parser.to_hdf(self._hdf5)
+        return self._output_parser.to_dict()
+
+    # define routines that collect all output files
+    def collect_output(self):
+        """
+        Collects the outputs and stores them to the hdf file
+        """
+        output_dict_to_hdf(
+            data_dict=self.collect_output_parser(cwd=self.working_directory),
+            hdf=self._hdf5,
+            group_name="output",
+        )
         if len(self._exclude_groups_hdf) > 0 or len(self._exclude_nodes_hdf) > 0:
             self.project_hdf5.rewrite_hdf5()
 
@@ -766,7 +792,7 @@ class VaspBase(GenericDFTJob):
         """
         self._output_parser = Output()
 
-    def get_final_structure_from_file(self, filename="CONTCAR"):
+    def get_final_structure_from_file(self, cwd, filename="CONTCAR"):
         """
         Get the final structure of the simulation usually from the CONTCAR file
 
@@ -776,7 +802,7 @@ class VaspBase(GenericDFTJob):
         Returns:
             pyiron.atomistics.structure.atoms.Atoms: The final structure
         """
-        filename = posixpath.join(self.working_directory, filename)
+        filename = posixpath.join(cwd, filename)
         if self.structure is None:
             try:
                 output_structure = read_atoms(filename=filename)
@@ -802,7 +828,7 @@ class VaspBase(GenericDFTJob):
         """
         Write the magnetic moments in INCAR from that assigned to the species
         """
-        if any(self.structure.get_initial_magnetic_moments().flatten()):
+        if self.structure.has("initial_magmoms"):
             if "ISPIN" not in self.input.incar._dataset["Parameter"]:
                 self.input.incar["ISPIN"] = 2
             if self.input.incar["ISPIN"] != 1:
@@ -953,8 +979,6 @@ class VaspBase(GenericDFTJob):
         algorithm=None,
         retain_charge_density=False,
         retain_electrostatic_potential=False,
-        ionic_energy=None,
-        ionic_forces=None,
         ionic_energy_tolerance=None,
         ionic_force_tolerance=None,
         volume_only=False,
@@ -974,8 +998,6 @@ class VaspBase(GenericDFTJob):
             retain_electrostatic_potential (boolean): True if the electrostatic potential should be written
             ionic_energy_tolerance (float): Ionic energy convergence criteria (eV)
             ionic_force_tolerance (float): Ionic forces convergence criteria (overwrites ionic energy) (ev/A)
-            ionic_energy (float): Same as ionic_energy_tolerance (deprecated)
-            ionic_forces (float): Same as ionic_force_tolerance (deprecated)
             volume_only (bool): Option to relax only the volume (keeping the relative coordinates fixed)
             cell_only (bool): Option to relax only the cell parameters (keeping the relative coordinates fixed)
         """
@@ -1019,8 +1041,6 @@ class VaspBase(GenericDFTJob):
         self.set_convergence_precision(
             ionic_force_tolerance=ionic_force_tolerance,
             ionic_energy_tolerance=ionic_energy_tolerance,
-            ionic_energy=ionic_energy,
-            ionic_forces=ionic_forces,
             electronic_energy=None,
         )
 
@@ -1253,17 +1273,11 @@ class VaspBase(GenericDFTJob):
             reciprocal=False,
         )
 
-    @deprecate(
-        ionic_forces="Use ionic_force_tolerance",
-        ionic_energy="use ionic_energy_tolerance",
-    )
     def set_convergence_precision(
         self,
         ionic_energy_tolerance=1.0e-3,
         electronic_energy=1.0e-7,
         ionic_force_tolerance=1.0e-2,
-        ionic_energy=None,
-        ionic_forces=None,
     ):
         """
         Sets the electronic and ionic convergence precision. For ionic convergence either the energy or the force
@@ -1273,15 +1287,7 @@ class VaspBase(GenericDFTJob):
             ionic_energy_tolerance (float): Ionic energy convergence precision (eV)
             electronic_energy (float/NoneType): Electronic energy convergence precision (eV)
             ionic_force_tolerance (float): Ionic force convergence precision (eV/A)
-            ionic_energy (float/NoneType): Same as ionic_energy_tolerance (deprecated)
-            ionic_forces (float/NoneType): Same as ionic_force_tolerance (deprecated)
         """
-        if ionic_forces is not None:
-            if ionic_force_tolerance is None:
-                ionic_force_tolerance = ionic_forces
-        if ionic_energy is not None:
-            if ionic_energy_tolerance is None:
-                ionic_energy_tolerance = ionic_energy
         if ionic_force_tolerance is not None:
             self.input.incar["EDIFFG"] = -1.0 * abs(ionic_force_tolerance)
         elif ionic_energy_tolerance is not None:
@@ -1693,7 +1699,6 @@ class VaspBase(GenericDFTJob):
         super(VaspBase, self).compress(files_to_compress=files_to_compress)
 
     def restart_from_wave_functions(self, job_name=None, job_type=None, istart=1):
-
         """
         Restart a new job created from an existing Vasp calculation by reading the wave functions.
 
@@ -1799,7 +1804,7 @@ class VaspBase(GenericDFTJob):
 
     def validate_ready_to_run(self):
         super(VaspBase, self).validate_ready_to_run()
-        if "spin_constraint" in self.structure._tag_list.keys():
+        if "spin_constraint" in self.structure.arrays.keys():
             raise NotImplementedError(
                 "The spin_constraint tag is not supported by VASP."
             )
@@ -2014,8 +2019,8 @@ class Output:
                 "n_elect"
             ]
             if len(self.outcar.parse_dict["magnetization"]) > 0:
-                magnetization = np.array(self.outcar.parse_dict["magnetization"]).copy()
-                final_magmoms = np.array(self.outcar.parse_dict["final_magmoms"]).copy()
+                magnetization = np.array(self.outcar.parse_dict["magnetization"], dtype=object)
+                final_magmoms = np.array(self.outcar.parse_dict["final_magmoms"], dtype=object)
                 # magnetization[sorted_indices] = magnetization.copy()
                 if len(final_magmoms) != 0:
                     if len(final_magmoms.shape) == 3:
@@ -2220,6 +2225,30 @@ class Output:
             )
         self.generic_output.bands = self.electronic_structure
 
+    def to_dict(self):
+        hdf5_output = {
+            "description": self.description,
+            "generic": self.generic_output.to_dict(),
+        }
+
+        if self._structure is not None:
+            hdf5_output["structure"] = self.structure.to_dict()
+
+        if self.electrostatic_potential.total_data is not None:
+            hdf5_output[
+                "electrostatic_potential"
+            ] = self.electrostatic_potential.to_dict()
+
+        if self.charge_density.total_data is not None:
+            hdf5_output["charge_density"] = self.charge_density.to_dict()
+
+        if len(self.electronic_structure.kpoint_list) > 0:
+            hdf5_output["electronic_structure"] = self.electronic_structure.to_dict()
+
+        if len(self.outcar.parse_dict.keys()) > 0:
+            hdf5_output["outcar"] = self.outcar.to_dict_minimal()
+        return hdf5_output
+
     def to_hdf(self, hdf):
         """
         Save the object in a HDF5 file
@@ -2228,34 +2257,7 @@ class Output:
             hdf (pyiron_base.generic.hdfio.ProjectHDFio): HDF path to which the object is to be saved
 
         """
-        with hdf.open("output") as hdf5_output:
-            hdf5_output["description"] = self.description
-            self.generic_output.to_hdf(hdf5_output)
-            try:
-                self.structure.to_hdf(hdf5_output)
-            except AttributeError:
-                pass
-
-            # with hdf5_output.open("vasprun") as hvr:
-            #  if self.vasprun.dict_vasprun is not None:
-            #     for key, val in self.vasprun.dict_vasprun.items():
-            #        hvr[key] = val
-
-            if self.electrostatic_potential.total_data is not None:
-                self.electrostatic_potential.to_hdf(
-                    hdf5_output, group_name="electrostatic_potential"
-                )
-
-            if self.charge_density.total_data is not None:
-                self.charge_density.to_hdf(hdf5_output, group_name="charge_density")
-
-            if len(self.electronic_structure.kpoint_list) > 0:
-                self.electronic_structure.to_hdf(
-                    hdf=hdf5_output, group_name="electronic_structure"
-                )
-
-            if len(self.outcar.parse_dict.keys()) > 0:
-                self.outcar.to_hdf_minimal(hdf=hdf5_output, group_name="outcar")
+        output_dict_to_hdf(data_dict=self.to_dict(), hdf=hdf, group_name="output")
 
     def from_hdf(self, hdf):
         """
@@ -2318,15 +2320,20 @@ class GenericOutput:
             hdf (pyiron_base.generic.hdfio.ProjectHDFio): HDF path to which the object is to be saved
 
         """
-        with hdf.open("generic") as hdf_go:
-            # hdf_go["description"] = self.description
-            for key, val in self.log_dict.items():
-                hdf_go[key] = val
-            with hdf_go.open("dft") as hdf_dft:
-                for key, val in self.dft_log_dict.items():
-                    hdf_dft[key] = val
-                if self.bands.eigenvalue_matrix is not None:
-                    self.bands.to_hdf(hdf_dft, "bands")
+        generic_output_dict_to_hdf(
+            data_dict=self.to_dict(), hdf=hdf, group_name="generic"
+        )
+
+    def to_dict(self):
+        hdf_go, hdf_dft = {}, {}
+        for key, val in self.log_dict.items():
+            hdf_go[key] = val
+        for key, val in self.dft_log_dict.items():
+            hdf_dft[key] = val
+        hdf_go["dft"] = hdf_dft
+        if self.bands.eigenvalue_matrix is not None:
+            hdf_go["dft"]["bands"] = self.bands.to_dict()
+        return hdf_go
 
     def from_hdf(self, hdf):
         """
@@ -2548,3 +2555,73 @@ def get_k_mesh_by_cell(cell, kspace_per_in_ang=0.10):
 
 class VaspCollectError(ValueError):
     pass
+
+
+def generic_output_dict_to_hdf(data_dict, hdf, group_name="generic"):
+    with hdf.open(group_name) as hdf_go:
+        for k, v in data_dict.items():
+            if k not in ["dft"]:
+                hdf_go[k] = v
+
+        with hdf_go.open("dft") as hdf_dft:
+            for k, v in data_dict["dft"].items():
+                if k not in ["bands"]:
+                    hdf_dft[k] = v
+
+            if "bands" in data_dict["dft"].keys():
+                electronic_structure_dict_to_hdf(
+                    data_dict=data_dict["dft"]["bands"],
+                    hdf=hdf_dft,
+                    group_name="bands",
+                )
+
+
+def output_dict_to_hdf(data_dict, hdf, group_name="output"):
+    with hdf.open(group_name) as hdf5_output:
+        for k, v in data_dict.items():
+            if k not in [
+                "generic",
+                "structure",
+                "electrostatic_potential",
+                "charge_density",
+                "electronic_structure",
+                "outcar",
+            ]:
+                hdf5_output[k] = v
+
+        if "generic" in data_dict.keys():
+            generic_output_dict_to_hdf(
+                data_dict=data_dict["generic"],
+                hdf=hdf5_output,
+                group_name="generic",
+            )
+
+        if "structure" in data_dict.keys():
+            structure_dict_to_hdf(
+                data_dict=data_dict["structure"],
+                hdf=hdf5_output,
+                group_name="structure",
+            )
+
+        if "electrostatic_potential" in data_dict.keys():
+            volumetric_data_dict_to_hdf(
+                data_dict=data_dict["electrostatic_potential"],
+                hdf=hdf5_output,
+                group_name="electrostatic_potential",
+            )
+
+        if "charge_density" in data_dict.keys():
+            volumetric_data_dict_to_hdf(
+                data_dict=data_dict["charge_density"],
+                hdf=hdf5_output,
+                group_name="charge_density",
+            )
+
+        if "electronic_structure" in data_dict.keys():
+            electronic_structure_dict_to_hdf(
+                data_dict=data_dict["electronic_structure"],
+                hdf=hdf5_output,
+                group_name="electronic_structure",
+            )
+
+        dict_group_to_hdf(data_dict=data_dict, hdf=hdf5_output, group="outcar")

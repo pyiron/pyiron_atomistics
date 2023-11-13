@@ -59,7 +59,7 @@ class MaterialsProjectFactory:
     Convenience interface to the Materials Project Structure Database.
 
     Usage is only possible with an API key obtained from the Materials Project.  To do this, create an account with
-    them, login and access `this webpage <https://next-gen.materialsproject.org/ap://next-gen.materialsproject.org/api#api-key>`_.
+    them, login and access `this webpage <https://next-gen.materialsproject.org/api#api-key>`.
 
     Once you have a key, either pass it as the `api_key` parameter in the methods of this object or export an
     environment variable, called `MP_API_KEY`, in your shell setup.
@@ -120,7 +120,12 @@ class MaterialsProjectFactory:
         return MPQueryResults(results)
 
     @staticmethod
-    def by_id(material_id: Union[str, int], api_key=None) -> Atoms:
+    def by_id(
+        material_id: Union[str, int],
+        final: bool = True,
+        conventional_unit_cell: bool = False,
+        api_key=None,
+    ) -> Union[Atoms, List[Atoms]]:
         """
         Retrieve a structure by material id.
 
@@ -139,9 +144,14 @@ class MaterialsProjectFactory:
         Args:
             material_id (str): the id assigned to a structure by the materials project
             api_key (str, optional): if your API key is not exported in the environment flag MP_API_KEY, pass it here
+            final (bool, optional): if set to False, returns the list of initial structures,
+            else returns the final structure. (Default is True)
+            conventional_unit_cell (bool, optional): if set to True, returns the standard conventional unit cell.
+            (Default is False)
 
         Returns:
-            :class:`~.Atoms`: requested structure
+            :class:`~.Atoms`: requested final structure if final is True
+            list of :class:~.Atoms`:  a list of initial (pre-relaxation) structures if final is False
 
         Raises:
             ValueError: material id does not exist
@@ -152,4 +162,22 @@ class MaterialsProjectFactory:
         if api_key is not None:
             rest_kwargs["api_key"] = api_key
         with MPRester(**rest_kwargs) as mpr:
-            return pymatgen_to_pyiron(mpr.get_structure_by_material_id(material_id))
+            if final:
+                return pymatgen_to_pyiron(
+                    mpr.get_structure_by_material_id(
+                        material_id=material_id,
+                        final=final,
+                        conventional_unit_cell=conventional_unit_cell,
+                    )
+                )
+            else:
+                return [
+                    pymatgen_to_pyiron(mpr_structure)
+                    for mpr_structure in (
+                        mpr.get_structure_by_material_id(
+                            material_id=material_id,
+                            final=final,
+                            conventional_unit_cell=conventional_unit_cell,
+                        )
+                    )
+                ]

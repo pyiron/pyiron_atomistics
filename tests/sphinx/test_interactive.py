@@ -29,7 +29,7 @@ class TestSphinx(unittest.TestCase):
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.file_location, "../static/sphinx"))
-        cls.sphinx = cls.project.create_job("Sphinx", "job_sphinx")
+        cls.sphinx = cls.project.create_job("Sphinx", "job_sphinx_interactive")
         cls.sphinx.structure = Atoms(
             elements=["Fe"] * 2,
             scaled_positions=[3 * [0.0], 3 * [0.5]],
@@ -53,17 +53,17 @@ class TestSphinx(unittest.TestCase):
         os.remove(
             os.path.join(
                 cls.file_location,
-                "../static/sphinx/job_sphinx_hdf5/job_sphinx/input.sx",
+                "../static/sphinx/job_sphinx_interactive_hdf5/job_sphinx_interactive/input.sx",
             )
         )
         os.remove(
             os.path.join(
                 cls.file_location,
-                "../static/sphinx/job_sphinx_hdf5/job_sphinx/Fe_GGA.atomicdata",
+                "../static/sphinx/job_sphinx_interactive_hdf5/job_sphinx_interactive/Fe_GGA.atomicdata",
             )
         )
         shutil.rmtree(
-            os.path.join(cls.file_location, "../static/sphinx/job_sphinx_hdf5")
+            os.path.join(cls.file_location, "../static/sphinx/job_sphinx_interactive_hdf5")
         )
 
     def test_interactive_cells_setter(self):

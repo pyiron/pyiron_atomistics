@@ -15,9 +15,9 @@ import pandas as pd
 from pyiron_base import FlattenedStorage, ImportAlarm
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.symmetry import SymmetryError
+from structuretoolkit.common.error import SymmetryError
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
-from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+import pyiron_atomistics.atomistics.structure.has_structure as pa_has_structure
 
 with ImportAlarm(
     "Some plotting functionality requires the seaborn library."
@@ -25,7 +25,7 @@ with ImportAlarm(
     import seaborn as sns
 
 
-class StructureStorage(FlattenedStorage, HasStructure):
+class StructureStorage(FlattenedStorage, pa_has_structure.HasStructure):
     """
     Class that can write and read lots of structures from and to hdf quickly.
 
@@ -34,14 +34,14 @@ class StructureStorage(FlattenedStorage, HasStructure):
     the number of structures and the total number of atoms in all structures, but re-allocates memory as necessary when
     more (or larger) structures are added than initially anticipated.
 
-    You can add structures and a human-readable name with :method:`.add_structure()`.
+    You can add structures and a human-readable name with :meth:`.add_structure()`.
 
     >>> container = StructureStorage()
     >>> container.add_structure(Atoms(...), "fcc")
     >>> container.add_structure(Atoms(...), "hcp")
     >>> container.add_structure(Atoms(...), "bcc")
 
-    Accessing stored structures works with :method:`.get_strucure()`.  You can either pass the identifier you passed
+    Accessing stored structures works with :meth:`.get_strucure()`.  You can either pass the identifier you passed
     when adding the structure or the numeric index
 
     >>> container.get_structure(frame=0) == container.get_structure(frame="fcc")
@@ -53,18 +53,18 @@ class StructureStorage(FlattenedStorage, HasStructure):
 
     (chunk means structure in this case, see below and :class:`.FlattenedStorage`)
 
-    You can then pass arrays of the corresponding shape to :method:`add_structure()`
+    You can then pass arrays of the corresponding shape to :meth:`add_structure()`
 
     >>> container.add_structure(Atoms(...), "grain_boundary", energy=3.14)
 
-    Saved arrays are accessed with :method:`.get_array()`
+    Saved arrays are accessed with :meth:`.get_array()`
 
     >>> container.get_array("energy", 3)
     3.14
     >>> container.get_array("energy", 0)
     -1
 
-    It is also possible to use the same names in :method:`.get_array()` as in :method:`.get_structure()`.
+    It is also possible to use the same names in :meth:`.get_array()` as in :meth:`.get_structure()`.
 
     >>> container.get_array("energy", 0) == container.get_array("energy", "fcc")
     True
@@ -153,7 +153,7 @@ class StructureStorage(FlattenedStorage, HasStructure):
 
         Args:
             name (str): name of array to set
-            frame (int, str): selects structure to set, as in :method:`.get_strucure()`
+            frame (int, str): selects structure to set, as in :meth:`.get_strucure()`
             value: value (for per chunk) or array of values (for per element); type and shape as per :meth:`.hasarray()`.
 
         Raises:
@@ -212,9 +212,7 @@ class StructureStorage(FlattenedStorage, HasStructure):
         if structure.has("initial_magmoms"):
             arrays["spins"] = structure.spins
         if "selective_dynamics" in structure.get_tags():
-            arrays["selective_dynamics"] = getattr(
-                structure, "selective_dynamics"
-            ).list()
+            arrays["selective_dynamics"] = structure.selective_dynamics
 
         self.add_chunk(
             len(structure),
@@ -281,6 +279,18 @@ class StructurePlots:
     def __init__(self, store: StructureStorage):
         self._store = store
         self._neigh = None
+
+    def atoms(self):
+        """
+        Plot a histogram of the number of atoms in each structure.
+        """
+        length = self._store["length"]
+        lo = length.min()
+        hi = length.max()
+        # make the bins fall in between whole numbers and include hi
+        plt.hist(length, bins=np.arange(lo, hi + 2) - 0.5)
+        plt.xlabel("#Atoms")
+        plt.ylabel("Count")
 
     def cell(self, angle_in_degrees=True):
         """
@@ -509,21 +519,38 @@ class StructurePlots:
         plt.legend(title="Shell")
         plt.title("Neighbor Coordination in Shells")
 
-    def distances(self, bins=50, num_neighbors=None):
+    def distances(
+        self,
+        bins: int = 50,
+        num_neighbors: int = None,
+        normalize: bool = False,
+    ):
         """
         Plot a histogram of the neighbor distances.
+
+        Setting `normalize` plots the radial distribution function.
 
         Args:
             bins (int): number of bins
             num_neighbors (int): maximum number of neighbors to calculate, when 'shells' or 'distances' are not defined in storage
                                  default is the value from the previous call or 36
+            normalize (bool): normalize the distribution by the surface area of
+                              the radial bin, 4pi r^2
         """
         neigh = self._calc_neighbors(num_neighbors=num_neighbors)
-        distances = neigh["distances"]
+        distances = neigh["distances"].flatten()
 
-        plt.hist(distances.flatten(), bins=bins)
-        plt.xlabel(r"Distance [$\AA$]")
-        plt.ylabel("Neighbor count")
+        if normalize:
+            plt.hist(
+                distances,
+                bins=bins,
+                weights=1 / (4 * np.pi * distances**2),
+            )
+            plt.ylabel("Neighbor density [$\mathrm{\AA}^{-2}$]")
+        else:
+            plt.hist(distances, bins=bins)
+            plt.ylabel("Neighbor count")
+        plt.xlabel(r"Distance [$\mathrm{\AA}$]")
 
     def shell_distances(self, num_shells=4, num_neighbors=None):
         """
@@ -546,3 +573,38 @@ class StructurePlots:
         sns.violinplot(y=d.shells, x=d.distance, scale="width", orient="h")
         plt.xlabel(r"Distance [$\AA$]")
         plt.ylabel("Shell")
+
+    def concentration(self, elements: List[str] = None, **kwargs) -> pd.DataFrame:
+        """
+        Plot histograms of the concentrations in each structure.
+
+        Args:
+            elements (list of str): elements to plot the histograms for; default is for all elements in the container
+            **kwargs: passed through to `seaborn.histplot`
+
+        Returns:
+            `pandas.DataFrame`: table of concentrations in each structure; column headers are the element names
+        """
+        if elements is not None:
+            for elem in elements:
+                if elem not in self._store.get_elements():
+                    raise ValueError(f"Element {elem} not present in storage!")
+        else:
+            elements = self._store.get_elements()
+
+        df = pd.DataFrame(
+            [
+                {elem: sum(elem == sym) / len(sym) for elem in elements}
+                for sym in self._store.get_array_ragged("symbols")
+            ]
+        )
+
+        sns.histplot(
+            data=df.melt(var_name="element", value_name="concentration"),
+            x="concentration",
+            hue="element",
+            multiple="dodge",
+            **kwargs,
+        )
+
+        return df
