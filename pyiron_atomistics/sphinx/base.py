@@ -2284,10 +2284,10 @@ class _SphinxLogParser:
 
     def _parse_band(self, term):
         arr = np.loadtxt(re.findall(term, self.log_main, re.MULTILINE))
-        shape = (-1, len(self.k_points), arr.shape[-1])
+        shape = (-1, len(self.k_points), 1, arr.shape[-1])
         if self.spin_enabled:
-            shape = (-1, 2, len(self.k_points), shape[-1])
-        return arr.reshape(shape)
+            shape = (-1, len(self.k_points), 2, shape[-1])
+        return arr.reshape(shape).transpose(0,2,1,3)
 
     def get_band_energy(self):
         return self._parse_band("final eig \[eV\]:(.*)$")
