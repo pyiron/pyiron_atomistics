@@ -56,8 +56,8 @@ setup(
         'pint==0.22',
         'pyiron_base==0.6.8',
         'scipy==1.11.3',
-        'seekpath==2.1.0',
         'scikit-learn==1.3.2',
+        'seekpath==2.1.0',
         'spglib==2.1.0',
         'structuretoolkit==0.0.11'
     ],
