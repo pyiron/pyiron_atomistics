@@ -17,3 +17,4 @@ dependencies:
 - pyiron-data >=0.0.22
 - sqsgenerator
 - structuretoolkit
+- custodian
