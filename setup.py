@@ -43,7 +43,7 @@ setup(
     ]),
     install_requires=[
         'ase==3.22.1',
-        'atomistics==0.0.6',
+        'atomistics==0.1.2',
         'defusedxml==0.7.1',
         'h5py==3.10.0',
         'matplotlib==3.8.1',
@@ -58,7 +58,7 @@ setup(
         'seekpath==2.1.0',
         'scikit-learn==1.3.2',
         'spglib==2.1.0',
-        'structuretoolkit==0.0.11'
+        'structuretoolkit==0.0.12'
     ],
     cmdclass=versioneer.get_cmdclass(),
     package_data={'': ['data/*.csv']},
