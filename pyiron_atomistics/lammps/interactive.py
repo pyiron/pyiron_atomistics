@@ -127,11 +127,6 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
     def interactive_cells_setter(self, cell):
         self._prism = UnfoldingPrism(cell)
         lx, ly, lz, xy, xz, yz = self._prism.get_lammps_prism()
-        if _check_ortho_prism(prism=self._prism):
-            warnings.warn(
-                "Warning: setting upper trangular matrix might slow down the calculation"
-            )
-
         is_skewed = self._structure_current.is_skewed(tolerance=1.0e-8)
         was_skewed = self._structure_previous.is_skewed(tolerance=1.0e-8)
 
