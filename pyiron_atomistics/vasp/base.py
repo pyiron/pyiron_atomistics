@@ -23,8 +23,8 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     dict_group_to_hdf,
 )
 from pyiron_base import state, GenericParameters, deprecate
-from pyiron_atomistics.vasp.outcar import Outcar
-from pyiron_atomistics.vasp.oszicar import Oszicar
+from pyiron_atomistics.vasp.parser.outcar import Outcar
+from pyiron_atomistics.vasp.parser.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
 from pyiron_atomistics.vasp.structure import read_atoms, write_poscar, vasp_sorter
 from pyiron_atomistics.vasp.vasprun import Vasprun as Vr

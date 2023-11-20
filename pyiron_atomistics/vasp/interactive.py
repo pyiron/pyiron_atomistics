@@ -6,7 +6,7 @@ import numpy as np
 import os
 from subprocess import Popen, PIPE
 
-from pyiron_atomistics.vasp.outcar import Outcar
+from pyiron_atomistics.vasp.parser.outcar import Outcar
 from pyiron_atomistics.vasp.base import VaspBase
 from pyiron_atomistics.vasp.structure import vasp_sorter
 from pyiron_atomistics.vasp.potential import VaspPotentialSetter
