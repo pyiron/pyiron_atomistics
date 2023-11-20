@@ -34,6 +34,7 @@ from pyiron_atomistics.atomistics.structure.analyse import Analyse
 from pyiron_atomistics.atomistics.structure.periodic_table import (
     PeriodicTable,
     ChemicalElement,
+    chemical_element_dict_to_hdf,
 )
 from pyiron_base import state, deprecate
 from collections.abc import Sequence
@@ -447,6 +448,54 @@ class Atoms(ASEAtoms):
         """
         return self.__copy__()
 
+    def to_dict(self):
+        hdf_structure = {
+            "TYPE": str(type(self)),
+            "units": self.units,
+            "dimension": self.dimension,
+            "positions": self.positions,
+            "info": self.info,
+        }
+        for el in self.species:
+            if isinstance(el.tags, dict):
+                if "new_species" not in hdf_structure.keys():
+                    hdf_structure["new_species"] = {}
+                hdf_structure["new_species"][el.Abbreviation] = el.to_dict()
+        hdf_structure["species"] = [el.Abbreviation for el in self.species]
+        hdf_structure["indices"] = self.indices
+
+        for tag, value in self.arrays.items():
+            if tag in ["positions", "numbers", "indices"]:
+                continue
+            if "tags" not in hdf_structure.keys():
+                hdf_structure["tags"] = {}
+            hdf_structure["tags"][tag] = value.tolist()
+
+        if self.cell is not None:
+            # Convert ASE cell object to numpy array before storing
+            hdf_structure["cell"] = {"cell": np.array(self.cell), "pbc": self.pbc}
+
+        if self.has("initial_magmoms"):
+            hdf_structure["spins"] = self.spins
+        # potentials with explicit bonds (TIP3P, harmonic, etc.)
+        if self.bonds is not None:
+            hdf_structure["explicit_bonds"] = self.bonds
+
+        if self._high_symmetry_points is not None:
+            hdf_structure["high_symmetry_points"] = self._high_symmetry_points
+
+        if self._high_symmetry_path is not None:
+            hdf_structure["high_symmetry_path"] = self._high_symmetry_path
+
+        if self.calc is not None:
+            calc_dict = self.calc.todict()
+            calc_dict["label"] = self.calc.label
+            calc_dict["class"] = (
+                self.calc.__class__.__module__ + "." + self.calc.__class__.__name__
+            )
+            hdf_structure["calculator"] = calc_dict
+        return hdf_structure
+
     def to_hdf(self, hdf, group_name="structure"):
         """
         Save the object in a HDF5 file
@@ -457,53 +506,7 @@ class Atoms(ASEAtoms):
                 Group name with which the object should be stored. This same name should be used to retrieve the object
 
         """
-        # import time
-        with hdf.open(group_name) as hdf_structure:
-            hdf_structure["TYPE"] = str(type(self))
-            for el in self.species:
-                if isinstance(el.tags, dict):
-                    with hdf_structure.open("new_species") as hdf_species:
-                        el.to_hdf(hdf_species)
-            hdf_structure["species"] = [el.Abbreviation for el in self.species]
-            hdf_structure["indices"] = self.indices
-
-            with hdf_structure.open("tags") as hdf_tags:
-                for tag, value in self.arrays.items():
-                    if tag in ["positions", "numbers", "indices"]:
-                        continue
-                    hdf_tags[tag] = value.tolist()
-            hdf_structure["units"] = self.units
-            hdf_structure["dimension"] = self.dimension
-
-            if self.cell is not None:
-                with hdf_structure.open("cell") as hdf_cell:
-                    # Convert ASE cell object to numpy array before storing
-                    hdf_cell["cell"] = np.array(self.cell)
-                    hdf_cell["pbc"] = self.pbc
-
-            # hdf_structure["coordinates"] = self.positions  # "Atomic coordinates"
-            hdf_structure["positions"] = self.positions  # "Atomic coordinates"
-            if self.has("initial_magmoms"):
-                hdf_structure["spins"] = self.spins
-            # potentials with explicit bonds (TIP3P, harmonic, etc.)
-            if self.bonds is not None:
-                hdf_structure["explicit_bonds"] = self.bonds
-
-            if self._high_symmetry_points is not None:
-                hdf_structure["high_symmetry_points"] = self._high_symmetry_points
-
-            if self._high_symmetry_path is not None:
-                hdf_structure["high_symmetry_path"] = self._high_symmetry_path
-
-            hdf_structure["info"] = self.info
-
-            if self.calc is not None:
-                calc_dict = self.calc.todict()
-                calc_dict["label"] = self.calc.label
-                calc_dict["class"] = (
-                    self.calc.__class__.__module__ + "." + self.calc.__class__.__name__
-                )
-                hdf_structure["calculator"] = calc_dict
+        structure_dict_to_hdf(data_dict=self.to_dict(), hdf=hdf, group_name=group_name)
 
     def from_hdf(self, hdf, group_name="structure"):
         """
@@ -3439,3 +3442,26 @@ class Symbols(ASESymbols):
             )
             for i, el in enumerate(replace_elements):
                 self._structure[index_array[i]] = el
+
+
+def structure_dict_to_hdf(data_dict, hdf, group_name="structure"):
+    with hdf.open(group_name) as hdf_structure:
+        for k, v in data_dict.items():
+            if k not in ["new_species", "cell", "tags"]:
+                hdf_structure[k] = v
+
+        if "new_species" in data_dict.keys():
+            for el, el_dict in data_dict["new_species"].items():
+                chemical_element_dict_to_hdf(
+                    data_dict=el_dict, hdf=hdf_structure, group_name="new_species/" + el
+                )
+
+        dict_group_to_hdf(data_dict=data_dict, hdf=hdf_structure, group="tags")
+        dict_group_to_hdf(data_dict=data_dict, hdf=hdf_structure, group="cell")
+
+
+def dict_group_to_hdf(data_dict, hdf, group):
+    if group in data_dict.keys():
+        with hdf.open(group) as hdf_tags:
+            for k, v in data_dict[group].items():
+                hdf_tags[k] = v

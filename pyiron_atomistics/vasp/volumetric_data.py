@@ -277,6 +277,15 @@ class VaspVolumetricData(VolumetricData):
     def diff_data(self, val):
         self._diff_data = val
 
+    def to_dict(self):
+        volumetric_data_dict = {
+            "TYPE": str(type(self)),
+            "total": self.total_data,
+        }
+        if self.diff_data is not None:
+            volumetric_data_dict["diff"] = self.diff_data
+        return volumetric_data_dict
+
     def to_hdf(self, hdf, group_name="volumetric_data"):
         """
         Writes the data as a group to a HDF5 file
@@ -286,11 +295,11 @@ class VaspVolumetricData(VolumetricData):
             group_name (str): The name of the group under which the data must be stored as
 
         """
-        with hdf.open(group_name) as hdf_vd:
-            hdf_vd["TYPE"] = str(type(self))
-            hdf_vd["total"] = self.total_data
-            if self.diff_data is not None:
-                hdf_vd["diff"] = self.diff_data
+        volumetric_data_dict_to_hdf(
+            data_dict=self.to_dict(),
+            hdf=hdf,
+            group_name=group_name,
+        )
 
     def from_hdf(self, hdf, group_name="volumetric_data"):
         """
@@ -308,3 +317,9 @@ class VaspVolumetricData(VolumetricData):
             self._total_data = hdf_vd["total"]
             if "diff" in hdf_vd.list_nodes():
                 self._diff_data = hdf_vd["diff"]
+
+
+def volumetric_data_dict_to_hdf(data_dict, hdf, group_name="volumetric_data"):
+    with hdf.open(group_name) as hdf_vd:
+        for k, v in data_dict.items():
+            hdf_vd[k] = v

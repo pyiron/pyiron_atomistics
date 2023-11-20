@@ -3,9 +3,9 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function, unicode_literals
+import pkgutil
+import io
 import numpy as np
-import os
-from pyiron_base import state
 import mendeleev
 import pandas
 from functools import lru_cache
@@ -154,22 +154,25 @@ class ChemicalElement(object):
         """
         (self.sub["tags"]).update(tag_dic)
 
+    def to_dict(self):
+        hdf_el = {}
+        # TODO: save all parameters that are different from the parent (e.g. modified mass)
+        if self.Parent is not None:
+            self._dataset = {"Parameter": ["Parent"], "Value": [self.Parent]}
+            hdf_el["elementData"] = self._dataset
+        # "Dictionary of element tag static"
+        hdf_el["tagData"] = {key: self.tags[key] for key in self.tags.keys()}
+        return hdf_el
+
     def to_hdf(self, hdf):
         """
         saves the element with his parameters into his hdf5 job file
         Args:
             hdf (Hdfio): Hdfio object which will be used
         """
-        with hdf.open(self.Abbreviation) as hdf_el:  # "Symbol of the chemical element"
-            # TODO: save all parameters that are different from the parent (e.g. modified mass)
-            if self.Parent is not None:
-                self._dataset = {"Parameter": ["Parent"], "Value": [self.Parent]}
-                hdf_el["elementData"] = self._dataset
-            with hdf_el.open(
-                "tagData"
-            ) as hdf_tag:  # "Dictionary of element tag static"
-                for key in self.tags.keys():
-                    hdf_tag[key] = self.tags[key]
+        chemical_element_dict_to_hdf(
+            data_dict=self.to_dict(), hdf=hdf, group_name=self.Abbreviation
+        )
 
     def from_hdf(self, hdf):
         """
@@ -201,7 +204,7 @@ class ChemicalElement(object):
                         self.sub["tags"] = tag_dic
 
 
-class PeriodicTable(object):
+class PeriodicTable:
     """
     An Object which stores an elementary table which can be modified for the current session
     """
@@ -393,27 +396,12 @@ class PeriodicTable(object):
 
         """
         if not file_name:
-            for resource_path in state.settings.resource_paths:
-                if os.path.exists(os.path.join(resource_path, "atomistics")):
-                    resource_path = os.path.join(resource_path, "atomistics")
-                for path, folder_lst, file_lst in os.walk(resource_path):
-                    for periodic_table_file_name in {"periodic_table.csv"}:
-                        if (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".csv")
-                        ):
-                            return pandas.read_csv(
-                                os.path.join(path, periodic_table_file_name),
-                                index_col=0,
-                            )
-                        elif (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".h5")
-                        ):
-                            return pandas.read_hdf(
-                                os.path.join(path, periodic_table_file_name), mode="r"
-                            )
-            raise ValueError("Was not able to locate a periodic table. ")
+            return pandas.read_csv(
+                io.BytesIO(
+                    pkgutil.get_data("pyiron_atomistics", "data/periodic_table.csv")
+                ),
+                index_col=0,
+            )
         else:
             if file_name.endswith(".h5"):
                 return pandas.read_hdf(file_name, mode="r")
@@ -424,3 +412,13 @@ class PeriodicTable(object):
                 + file_name
                 + " supported file formats are csv, h5."
             )
+
+
+def chemical_element_dict_to_hdf(data_dict, hdf, group_name):
+    with hdf.open(group_name) as hdf_el:
+        if "elementData" in data_dict.keys():
+            hdf_el["elementData"] = data_dict["elementData"]
+        with hdf_el.open("tagData") as hdf_tag:
+            if "tagData" in data_dict.keys():
+                for k, v in data_dict["tagData"].items():
+                    hdf_tag[k] = v
