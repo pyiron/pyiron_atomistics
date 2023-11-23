@@ -318,8 +318,19 @@ def view_potentials(structure: Atoms) -> pd.DataFrame:
     Returns:
         pandas.Dataframe: Dataframe including all potential parameters.
     """
+    lpf = LammpsPotentialFile()
+    if len(lpf.list()) == 0:
+        state.logger.warning(
+            "It looks like your potential database is empty. In order to"
+            " install the standard pyiron library, run:\n\n"
+            "conda install -c conda-forge pyiron-data\n\n"
+            "Depending on the circumstances, you might have to change the"
+            " RESOURCE_PATHS of your .pyiron file. It is typically located in"
+            " your home directory. More can be found on the installation page"
+            " of the pyiron website."
+        )
     list_of_elements = set(structure.get_chemical_symbols())
-    return LammpsPotentialFile().find(list_of_elements)
+    return lpf.find(list_of_elements)
 
 
 def list_potentials(structure: Atoms) -> List[str]:
