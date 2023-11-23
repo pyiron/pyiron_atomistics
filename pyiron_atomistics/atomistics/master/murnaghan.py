@@ -96,7 +96,9 @@ class MurnaghanJobGenerator(JobGenerator):
             )
         for strain in strains:
             basis = _strain_axes(
-                self._master.structure, self._master.input["axes"], strain
+                structure=self._master.structure,
+                axes=self._master.input["axes"],
+                volume_strain=strain,
             )
             parameter_lst.append([1 + np.round(strain, 7), basis])
         return parameter_lst
@@ -151,7 +153,7 @@ class Murnaghan(AtomisticParallelMaster):
             "relative volume variation around volume defined by ref_ham",
         )
         self.input["axes"] = (
-            ["x", "y", "z"],
+            ("x", "y", "z"),
             "Axes along which the strain will be applied",
         )
         self.input["strains"] = (
@@ -465,7 +467,11 @@ class Murnaghan(AtomisticParallelMaster):
             old_vol = self.structure.get_volume()
             new_vol = self["output/equilibrium_volume"]
             vol_strain = new_vol / old_vol - 1
-            return _strain_axes(self.structure, self.input["axes"], vol_strain)
+            return _strain_axes(
+                structure=self.structure,
+                axes=self.input["axes"],
+                volume_strain=vol_strain,
+            )
         elif frame == 0:
             return self.structure
 

@@ -43,7 +43,7 @@ setup(
     ]),
     install_requires=[
         'ase==3.22.1',
-        'atomistics==0.1.2',
+        'atomistics==0.1.3',
         'defusedxml==0.7.1',
         'h5py==3.10.0',
         'matplotlib==3.8.2',
