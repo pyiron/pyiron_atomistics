@@ -98,7 +98,7 @@ class MurnaghanJobGenerator(JobGenerator):
             basis = _strain_axes(
                 structure=self._master.structure,
                 axes=self._master.input["axes"],
-                volume_strain=strain
+                volume_strain=strain,
             )
             parameter_lst.append([1 + np.round(strain, 7), basis])
         return parameter_lst
@@ -470,7 +470,7 @@ class Murnaghan(AtomisticParallelMaster):
             return _strain_axes(
                 structure=self.structure,
                 axes=self.input["axes"],
-                volume_strain=vol_strain
+                volume_strain=vol_strain,
             )
         elif frame == 0:
             return self.structure
