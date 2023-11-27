@@ -1,4 +1,5 @@
 import numpy as np
+import re
 
 def splitter(arr, counter):
     if len(arr) == 0 or len(counter) == 0:
