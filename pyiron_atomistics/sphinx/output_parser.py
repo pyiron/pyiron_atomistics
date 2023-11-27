@@ -30,7 +30,6 @@ class _SphinxLogParser:
         self._counter = None
         self._n_atoms = None
         self._n_steps = None
-        self._spin_enabled = None
 
     @property
     def spin_enabled(self):
