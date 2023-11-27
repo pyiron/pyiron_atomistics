@@ -11,7 +11,7 @@ def splitter(arr, counter):
     return arr_new
 
 
-class _SphinxLogParser:
+class SphinxLogParser:
     def __init__(self, log_file):
         """
         Args:
