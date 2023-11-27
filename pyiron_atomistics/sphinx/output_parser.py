@@ -152,12 +152,13 @@ class SphinxLogParser:
     def get_forces(self, spx_to_pyi=None):
         str_fl = "([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)"
         pattern = r"Atom: (\d+)\t{" + ",".join(3 * [str_fl]) + r"\}"
-        arr = np.array(re.findall(pattern, data))
+        arr = np.array(re.findall(pattern, self.log_file))
         if len(arr) == 0:
             return []
         indices = arr[:, 0].astype(int)
         indices = indices.reshape(-1, max(indices) + 1)
         forces = arr[:, 1:].astype(float).reshape(indices.shape + (3, ))
+        forces *= HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
         if spx_to_pyi is not None:
             for ii, ff in enumerate(forces):
                 forces[ii] = ff[spx_to_pyi]
