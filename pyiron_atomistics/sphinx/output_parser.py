@@ -150,17 +150,17 @@ class SphinxLogParser:
         return self._n_atoms
 
     def get_forces(self, spx_to_pyi=None):
-        forces = [
-            float(re.split("{|}", line)[1].split(",")[i])
-            * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-            for line in re.findall("^Species.*$", self.log_main, re.MULTILINE)
-            for i in range(3)
-        ]
-        if len(forces) != 0:
-            forces = np.array(forces).reshape(-1, self.n_atoms, 3)
-            if spx_to_pyi is not None:
-                for ii, ff in enumerate(forces):
-                    forces[ii] = ff[spx_to_pyi]
+        str_fl = "([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)"
+        pattern = r"Atom: (\d+)\t{" + ",".join(3 * [str_fl]) + r"\}"
+        arr = np.array(re.findall(pattern, data))
+        if len(arr) == 0:
+            return []
+        indices = arr[:, 0].astype(int)
+        indices = indices.reshape(-1, max(indices) + 1)
+        forces = arr[:, 1:].astype(float).reshape(indices.shape + (3, ))
+        if spx_to_pyi is not None:
+            for ii, ff in enumerate(forces):
+                forces[ii] = ff[spx_to_pyi]
         return forces
 
     def get_magnetic_forces(self, spx_to_pyi=None):
