@@ -59,7 +59,7 @@ setup(
         'seekpath==2.1.0',
         'scikit-learn==1.3.2',
         'spglib==2.1.0',
-        'structuretoolkit==0.0.12'
+        'structuretoolkit==0.0.14'
     ],
     cmdclass=versioneer.get_cmdclass(),
     package_data={'': ['data/*.csv']},
