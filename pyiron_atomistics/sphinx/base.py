@@ -2449,7 +2449,7 @@ class Output:
             return None
 
         with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
-            log_file = "".join(sphinx_log_file.readlines())
+            log_file = sphinx_log_file.read()
         try:
             self._spx_log_parser = _SphinxLogParser(log_file)
         except AssertionError as e:
