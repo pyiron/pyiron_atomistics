@@ -1,5 +1,14 @@
 import numpy as np
 import re
+import scipy.constants
+
+
+BOHR_TO_ANGSTROM = (
+    scipy.constants.physical_constants["Bohr radius"][0] / scipy.constants.angstrom
+)
+HARTREE_TO_EV = scipy.constants.physical_constants["Hartree energy in eV"][0]
+HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM = HARTREE_TO_EV / BOHR_TO_ANGSTROM
+
 
 def splitter(arr, counter):
     if len(arr) == 0 or len(counter) == 0:
@@ -66,7 +75,7 @@ class SphinxLogParser:
         }
 
     @property
-    def log_k_points(self):
+    def _log_k_points(self):
         start_match = re.search(
             "-ik-     -x-      -y-       -z-    \|  -weight-    -nG-    -label-",
             self.log_file,
@@ -76,7 +85,7 @@ class SphinxLogParser:
         return log_part.split("\n")[:-2]
 
     def get_bands_k_weights(self):
-        return np.array([float(kk.split()[6]) for kk in self.log_k_points])
+        return np.array([float(kk.split()[6]) for kk in self._log_k_points])
 
     @property
     def _rec_cell(self):
@@ -92,7 +101,7 @@ class SphinxLogParser:
     @property
     def k_points(self):
         return np.array(
-            [[float(kk.split()[i]) for i in range(2, 5)] for kk in self.log_k_points]
+            [[float(kk.split()[i]) for i in range(2, 5)] for kk in self._log_k_points]
         )
 
     def get_volume(self):
