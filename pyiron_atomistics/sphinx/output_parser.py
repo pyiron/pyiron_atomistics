@@ -211,9 +211,5 @@ class SphinxLogParser:
         return convergence
 
     def get_fermi(self):
-        return np.array(
-            [
-                float(line.split()[2])
-                for line in re.findall("Fermi energy:.*$", self.log_main, re.MULTILINE)
-            ]
-        )
+        pattern = r"Fermi energy:\s+(\d+\.\d+)\s+eV"
+        return np.array(re.findall(pattern, self.log_main)).astype(float)
