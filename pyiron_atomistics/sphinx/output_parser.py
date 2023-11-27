@@ -122,24 +122,15 @@ class SphinxLogParser:
             ]
         return self._counter
 
+    def _get_energy(self, pattern):
+        c, F = np.array(re.findall(pattern, self.log_main, re.MULTILINE)).T
+        return splitter(F.astype(float) * HARTREE_TO_EV, c.astype(int))
+
     def get_energy_free(self):
-        return splitter(
-            [
-                float(line.split("=")[1]) * HARTREE_TO_EV
-                for line in re.findall("F\(.*$", self.log_main, re.MULTILINE)
-            ],
-            self.counter,
-        )
+        return self._get_energy(pattern=r'F\((\d+)\)=(-?\d+\.\d+)')
 
     def get_energy_int(self):
-        return splitter(
-            [
-                float(line.replace("=", " ").replace(",", " ").split()[1])
-                * HARTREE_TO_EV
-                for line in re.findall("^eTot\([0-9].*$", self.log_main, re.MULTILINE)
-            ],
-            self.counter,
-        )
+        return self._get_energy(pattern=r'eTot\((\d+)\)=(-?\d+\.\d+)')
 
     @property
     def n_atoms(self):
