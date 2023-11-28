@@ -29,7 +29,7 @@ from pyiron_atomistics.vasp.potential import (
 )
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
-from pyiron_atomistics.sphinx.output_parser import SphinxLogParser, collect_energy_dat, collect_residue_dat, collect_spins_dat
+from pyiron_atomistics.sphinx.output_parser import SphinxLogParser, collect_energy_dat, collect_residue_dat, collect_spins_dat, collect_relaxed_hist
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
@@ -2281,41 +2281,16 @@ class Output:
         Returns:
 
         """
-        file_name = posixpath.join(cwd, file_name)
-        if not os.path.isfile(file_name):
-            return None
-        with open(file_name, "r") as f:
-            file_content = "".join(f.readlines())
-        natoms = len(self._job.id_spx_to_pyi)
-
-        def get_value(term, file_content=file_content, natoms=natoms):
-            value = (
-                np.array(
-                    [
-                        re.split("\[|\]", line)[1].split(",")
-                        for line in re.findall(term, file_content, re.MULTILINE)
-                    ]
-                )
-                .astype(float)
-                .reshape(-1, natoms, 3)
+        try:
+            results = collect_relaxed_hist(
+                file_name=file_name,
+                cwd=cwd,
+                index_permutation=self._job.id_spx_to_pyi
             )
-            return np.array([ff[self._job.id_spx_to_pyi] for ff in value])
-
-        self.generic.positions = get_value("coords.*$") * BOHR_TO_ANGSTROM
-        self.generic.forces = (
-            get_value("force.*$") * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-        )
-        self.generic.cells = (
-            np.array(
-                [
-                    json.loads(line)
-                    for line in re.findall(
-                        "cell =(.*?);", file_content.replace("\n", ""), re.MULTILINE
-                    )
-                ]
-            )
-            * BOHR_TO_ANGSTROM
-        )
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic[k] = v
 
     def collect_charge_density(self, file_name, cwd):
         if (
