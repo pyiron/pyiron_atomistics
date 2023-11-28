@@ -58,6 +58,28 @@ def collect_energy_dat(file_name="energy.dat", cwd=None):
     return results
 
 
+def collect_residue_dat(self, file_name="residue.dat", cwd=None):
+    """
+
+    Args:
+        file_name (str): file name
+        cwd (str|None): directory path
+
+    Returns:
+        (dict): results
+
+    """
+    if cwd is None:
+        cwd = "."
+    path = Path(cwd) / Path(file_name)
+    if not path.exists():
+        return None
+    residue = np.loadtxt(str(path))
+    if len(residue) == 0:
+        return None
+    return {"scf_residue": splitter(residue[:, 1:].squeeze(), residue[:, 0])}
+
+
 def check_permutation(index_permutation):
     if index_permutation is None:
         return

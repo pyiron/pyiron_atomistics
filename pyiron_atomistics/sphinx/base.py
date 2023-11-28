@@ -29,7 +29,7 @@ from pyiron_atomistics.vasp.potential import (
 )
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
-from pyiron_atomistics.sphinx.output_parser import SphinxLogParser, splitter, collect_energy_dat
+from pyiron_atomistics.sphinx.output_parser import SphinxLogParser, splitter, collect_energy_dat, collect_residue_dat, collect_spins_dat
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
@@ -2143,7 +2143,11 @@ class Output:
         Returns:
 
         """
-        results = collect_spins_dat(file_name=file_name, cwd=cwd)
+        results = collect_spins_dat(
+            file_name=file_name,
+            cwd=cwd,
+            index_permutation=self._job.id_spx_to_pyi
+        )
         if results is not None:
             for k, v in results.items():
                 self.generic.dft[k] = v
@@ -2173,15 +2177,10 @@ class Output:
         Returns:
 
         """
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-        residue = np.loadtxt(posixpath.join(cwd, file_name))
-        if len(residue) == 0:
-            return None
-        if len(residue[0]) == 2:
-            self.generic.dft.scf_residue = splitter(residue[:, 1], residue[:, 0])
-        else:
-            self.generic.dft.scf_residue = splitter(residue[:, 1:], residue[:, 0])
+        results = collect_residue_dat(file_name=file_name, cwd=cwd)
+        if results is not None:
+            for k, v in results.items():
+                self.generic.dft[k] = v
 
     def collect_eps_dat(self, file_name="eps.dat", cwd=None):
         """
