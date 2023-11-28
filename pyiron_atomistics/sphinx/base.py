@@ -29,7 +29,7 @@ from pyiron_atomistics.vasp.potential import (
 )
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
-from pyiron_atomistics.sphinx.output_parser import SphinxLogParser, splitter
+from pyiron_atomistics.sphinx.output_parser import SphinxLogParser, splitter, collect_energy_dat
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
@@ -2160,24 +2160,10 @@ class Output:
         Returns:
 
         """
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-        energies = np.loadtxt(posixpath.join(cwd, file_name))
-        self.generic.dft.scf_computation_time = splitter(energies[:, 1], energies[:, 0])
-        self.generic.dft.scf_energy_int = splitter(
-            energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
-        )
-
-        def en_split(e, counter=energies[:, 0]):
-            return splitter(e * HARTREE_TO_EV, counter)
-
-        if len(energies[0]) == 7:
-            self.generic.dft.scf_energy_free = en_split(energies[:, 3])
-            self.generic.dft.scf_energy_zero = en_split(energies[:, 4])
-            self.generic.dft.scf_energy_band = en_split(energies[:, 5])
-            self.generic.dft.scf_electronic_entropy = en_split(energies[:, 6])
-        else:
-            self.generic.dft.scf_energy_band = en_split(energies[:, 3])
+        results = collect_energy_dat(file_name=file_name, cwd=cwd)
+        if results is not None:
+            for k, v in results.items():
+                self.generic.dft[k] = v
 
     def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         """

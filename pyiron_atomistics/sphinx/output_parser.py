@@ -2,6 +2,7 @@ import numpy as np
 import re
 import scipy.constants
 import warnings
+from pathlib import Path
 
 
 BOHR_TO_ANGSTROM = (
@@ -21,6 +22,30 @@ def splitter(arr, counter):
         arr_new.append(np.array(arr[ll : spl_loc[ii + 1]]).tolist())
     return arr_new
 
+
+def collect_energy_dat(file_name="energy.dat", cwd=None):
+    if cwd is None:
+        cwd = "."
+    path = Path(cwd) / Path(file_name)
+    if not path.exists():
+        return None
+    energies = np.loadtxt(str(path))
+    results = {"scf_computation_time": splitter(energies[:, 1], energies[:, 0])}
+    results["scf_energy_int"] = splitter(
+        energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
+    )
+
+    def en_split(e, counter=energies[:, 0]):
+        return splitter(e * HARTREE_TO_EV, counter)
+
+    if len(energies[0]) == 7:
+        results["scf_energy_free"] = en_split(energies[:, 3])
+        results["scf_energy_zero"] = en_split(energies[:, 4])
+        results["scf_energy_band"] = en_split(energies[:, 5])
+        results["scf_electronic_entropy"] = en_split(energies[:, 6])
+    else:
+        results["scf_energy_band"] = en_split(energies[:, 3])
+    return results
 
 def check_permutation(index_permutation):
     if index_permutation is None:
