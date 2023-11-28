@@ -23,12 +23,12 @@ def splitter(arr, counter):
     return arr_new
 
 
-def collect_energy_dat(file_name="energy.dat", cwd=None):
+def collect_energy_dat(file_name="energy.dat", cwd="."):
     """
 
     Args:
         file_name (str): file name
-        cwd (str|None): directory path
+        cwd (str): directory path
 
     Returns:
         (dict): results
@@ -36,10 +36,7 @@ def collect_energy_dat(file_name="energy.dat", cwd=None):
     """
     if cwd is None:
         cwd = "."
-    path = Path(cwd) / Path(file_name)
-    if not path.exists():
-        return {}
-    energies = np.loadtxt(str(path))
+    energies = np.loadtxt(str(Path(cwd) / Path(file_name)))
     results = {"scf_computation_time": splitter(energies[:, 1], energies[:, 0])}
     results["scf_energy_int"] = splitter(
         energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
@@ -58,12 +55,12 @@ def collect_energy_dat(file_name="energy.dat", cwd=None):
     return results
 
 
-def collect_residue_dat(self, file_name="residue.dat", cwd=None):
+def collect_residue_dat(self, file_name="residue.dat", cwd="."):
     """
 
     Args:
         file_name (str): file name
-        cwd (str|None): directory path
+        cwd (str): directory path
 
     Returns:
         (dict): results
@@ -71,10 +68,7 @@ def collect_residue_dat(self, file_name="residue.dat", cwd=None):
     """
     if cwd is None:
         cwd = "."
-    path = Path(cwd) / Path(file_name)
-    if not path.exists():
-        return {}
-    residue = np.loadtxt(str(path))
+    residue = np.loadtxt(str(Path(cwd) / Path(file_name)))
     if len(residue) == 0:
         return {}
     return {"scf_residue": splitter(residue[:, 1:].squeeze(), residue[:, 0])}
@@ -91,13 +85,13 @@ def check_permutation(index_permutation):
 
 
 def collect_spins_dat(
-    self, file_name="spins.dat", cwd=None, index_permutation=None
+    self, file_name="spins.dat", cwd=".", index_permutation=None
 ):
     """
 
     Args:
         file_name (str): file name
-        cwd (str|None): directory path
+        cwd (str): directory path
         index_permutation (numpy.ndarray): Indices for the permutation
 
     Returns:
@@ -107,10 +101,7 @@ def collect_spins_dat(
     check_permutation(index_permutation)
     if cwd is None:
         cwd = "."
-    path = Path(cwd) / Path(file_name)
-    if not path.exists():
-        return {}
-    spins = np.loadtxt(str(path))
+    spins = np.loadtxt(str(Path(cwd) / Path(file_name)))
     if index_permutation is not None:
         s = np.array([ss[index_permutation] for ss in spins[:, 1:]])
     else:

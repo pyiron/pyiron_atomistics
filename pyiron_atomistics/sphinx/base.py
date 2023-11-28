@@ -2143,11 +2143,14 @@ class Output:
         Returns:
 
         """
-        results = collect_spins_dat(
-            file_name=file_name,
-            cwd=cwd,
-            index_permutation=self._job.id_spx_to_pyi
-        )
+        try:
+            results = collect_spins_dat(
+                file_name=file_name,
+                cwd=cwd,
+                index_permutation=self._job.id_spx_to_pyi
+            )
+        except FileNotFoundError:
+            return
         for k, v in results.items():
             self.generic.dft[k] = v
 
@@ -2161,7 +2164,10 @@ class Output:
         Returns:
 
         """
-        results = collect_energy_dat(file_name=file_name, cwd=cwd)
+        try:
+            results = collect_energy_dat(file_name=file_name, cwd=cwd)
+        except FileNotFoundError:
+            return
         for k, v in results.items():
             self.generic.dft[k] = v
 
@@ -2175,7 +2181,10 @@ class Output:
         Returns:
 
         """
-        results = collect_residue_dat(file_name=file_name, cwd=cwd)
+        try:
+            results = collect_residue_dat(file_name=file_name, cwd=cwd)
+        except FileNotFoundError:
+            return
         for k, v in results.items():
             self.generic.dft[k] = v
 
