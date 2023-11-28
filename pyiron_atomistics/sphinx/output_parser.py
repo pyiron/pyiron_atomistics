@@ -128,10 +128,10 @@ class SphinxLogParser:
         return splitter(F.astype(float) * HARTREE_TO_EV, c.astype(int))
 
     def get_energy_free(self):
-        return self._get_energy(pattern=r'F\((\d+)\)=(-?\d+\.\d+)')
+        return self._get_energy(pattern=r"F\((\d+)\)=(-?\d+\.\d+)")
 
     def get_energy_int(self):
-        return self._get_energy(pattern=r'eTot\((\d+)\)=(-?\d+\.\d+)')
+        return self._get_energy(pattern=r"eTot\((\d+)\)=(-?\d+\.\d+)")
 
     @property
     def n_atoms(self):
@@ -149,7 +149,7 @@ class SphinxLogParser:
             return []
         indices = arr[:, 0].astype(int)
         indices = indices.reshape(-1, max(indices) + 1)
-        forces = arr[:, 1:].astype(float).reshape(indices.shape + (3, ))
+        forces = arr[:, 1:].astype(float).reshape(indices.shape + (3,))
         forces *= HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
         if spx_to_pyi is not None:
             for ii, ff in enumerate(forces):
