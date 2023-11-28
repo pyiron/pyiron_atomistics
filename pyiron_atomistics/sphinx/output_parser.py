@@ -76,6 +76,7 @@ def collect_spins_dat(
     Args:
         file_name (str): file name
         cwd (str|None): directory path
+        index_permutation (numpy.ndarray): Indices for the permutation
 
     Returns:
         (dict): results
