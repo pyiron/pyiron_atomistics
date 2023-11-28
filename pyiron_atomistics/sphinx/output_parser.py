@@ -145,6 +145,9 @@ class SphinxLogParser:
         """
         Args:
             index_permutation (numpy.ndarray): Indices for the permutation
+
+        Returns:
+            (numpy.ndarray): Forces of the shape (n_steps, n_atoms, 3)
         """
         str_fl = "([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)"
         pattern = r"Atom: (\d+)\t{" + ",".join(3 * [str_fl]) + r"\}"
@@ -161,6 +164,13 @@ class SphinxLogParser:
         return forces
 
     def get_magnetic_forces(self, index_permutation=None):
+        """
+        Args:
+            index_permutation (numpy.ndarray): Indices for the permutation
+
+        Returns:
+            (numpy.ndarray): Magnetic forces of the shape (n_steps, n_atoms)
+        """
         magnetic_forces = [
             HARTREE_TO_EV * float(line.split()[-1])
             for line in re.findall("^nu\(.*$", self.log_main, re.MULTILINE)
