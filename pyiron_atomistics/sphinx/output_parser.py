@@ -322,9 +322,7 @@ class SphinxLogParser:
         arr = np.array(re.findall(pattern, self.log_file))
         if len(arr) == 0:
             return []
-        indices = arr[:, 0].astype(int)
-        indices = indices.reshape(-1, max(indices) + 1)
-        forces = arr[:, 1:].astype(float).reshape(indices.shape + (3,))
+        forces = arr[:, 1:].astype(float).reshape(-1, self.n_atoms, 3)
         forces *= HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
         if index_permutation is not None:
             for ii, ff in enumerate(forces):
