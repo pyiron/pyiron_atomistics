@@ -1,7 +1,7 @@
 import numpy as np
 import re
 import scipy.constants
-from pyiron_base import state
+import warnings
 
 
 BOHR_TO_ANGSTROM = (
@@ -41,6 +41,7 @@ class SphinxLogParser:
         example via:
 
         >>> with open("sphinx.log", "r") as f:
+from pyiron_base import state
         >>>     log_file = f.read()
 
         """
@@ -68,7 +69,7 @@ class SphinxLogParser:
             len(re.findall("Program exited normally.", self.log_file, re.MULTILINE))
             == 0
         ):
-            state.logger.warning("scf loops did not converge")
+            warnings.warn("scf loops did not converge")
             return False
         return True
 
