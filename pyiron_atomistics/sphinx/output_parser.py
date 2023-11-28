@@ -38,7 +38,7 @@ def collect_energy_dat(file_name="energy.dat", cwd=None):
         cwd = "."
     path = Path(cwd) / Path(file_name)
     if not path.exists():
-        return None
+        return {}
     energies = np.loadtxt(str(path))
     results = {"scf_computation_time": splitter(energies[:, 1], energies[:, 0])}
     results["scf_energy_int"] = splitter(
@@ -73,10 +73,10 @@ def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         cwd = "."
     path = Path(cwd) / Path(file_name)
     if not path.exists():
-        return None
+        return {}
     residue = np.loadtxt(str(path))
     if len(residue) == 0:
-        return None
+        return {}
     return {"scf_residue": splitter(residue[:, 1:].squeeze(), residue[:, 0])}
 
 
@@ -109,7 +109,7 @@ def collect_spins_dat(
         cwd = "."
     path = Path(cwd) / Path(file_name)
     if not path.exists():
-        return None
+        return {}
     spins = np.loadtxt(str(path))
     if index_permutation is not None:
         s = np.array([ss[index_permutation] for ss in spins[:, 1:]])

@@ -2148,9 +2148,8 @@ class Output:
             cwd=cwd,
             index_permutation=self._job.id_spx_to_pyi
         )
-        if results is not None:
-            for k, v in results.items():
-                self.generic.dft[k] = v
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
     def collect_energy_dat(self, file_name="energy.dat", cwd=None):
         """
@@ -2163,9 +2162,8 @@ class Output:
 
         """
         results = collect_energy_dat(file_name=file_name, cwd=cwd)
-        if results is not None:
-            for k, v in results.items():
-                self.generic.dft[k] = v
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
     def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         """
@@ -2178,9 +2176,8 @@ class Output:
 
         """
         results = collect_residue_dat(file_name=file_name, cwd=cwd)
-        if results is not None:
-            for k, v in results.items():
-                self.generic.dft[k] = v
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
     def collect_eps_dat(self, file_name="eps.dat", cwd=None):
         """
