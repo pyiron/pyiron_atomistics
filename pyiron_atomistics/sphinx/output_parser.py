@@ -168,7 +168,7 @@ def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None, index_permutation=N
         cwd = "."
     with open(file_name, "r") as f:
         file_content = "".join(f.readlines())
-    n_steps = len(re.findall("// --- step \d", file__content, re.MULTILINE))
+    n_steps = len(re.findall("// --- step \d", file_content, re.MULTILINE))
     f_v = ",".join(3 * [r"\s*([\d.-]+)"])
 
     def get_value(term, f=file_content, n=n_steps, p=index_permutation):
