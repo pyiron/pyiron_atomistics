@@ -24,6 +24,16 @@ def splitter(arr, counter):
 
 
 def collect_energy_dat(file_name="energy.dat", cwd=None):
+    """
+
+    Args:
+        file_name (str): file name
+        cwd (str|None): directory path
+
+    Returns:
+        (dict): results
+
+    """
     if cwd is None:
         cwd = "."
     path = Path(cwd) / Path(file_name)
@@ -55,6 +65,33 @@ def check_permutation(index_permutation):
         raise ValueError("multiple entries in the index_permutation")
     if np.any(np.diff(np.sort(indices)) != 1):
         raise ValueError("missing entries in the index_permutation")
+
+
+def collect_spins_dat(
+    self, file_name="spins.dat", cwd=None, index_permutation=None
+):
+    """
+
+    Args:
+        file_name (str): file name
+        cwd (str|None): directory path
+
+    Returns:
+        (dict): results
+
+    """
+    check_permutation(index_permutation)
+    if cwd is None:
+        cwd = "."
+    path = Path(cwd) / Path(file_name)
+    if not path.exists():
+        return None
+    spins = np.loadtxt(str(path))
+    if index_permutation is not None:
+        s = np.array([ss[index_permutation] for ss in spins[:, 1:]])
+    else:
+        s = spins[:, 1:]
+    return {"atom_scf_spins": splitter(s, spins[:, 0])}
 
 
 class SphinxLogParser:

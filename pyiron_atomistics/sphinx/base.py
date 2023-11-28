@@ -2143,12 +2143,10 @@ class Output:
         Returns:
 
         """
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-        spins = np.loadtxt(posixpath.join(cwd, file_name))
-        self.generic.dft.atom_scf_spins = splitter(
-            np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]), spins[:, 0]
-        )
+        results = collect_spins_dat(file_name=file_name, cwd=cwd)
+        if results is not None:
+            for k, v in results.items():
+                self.generic.dft[k] = v
 
     def collect_energy_dat(self, file_name="energy.dat", cwd=None):
         """
