@@ -142,7 +142,6 @@ def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None, index_permutation=N
     check_permutation(index_permutation)
     if cwd is None:
         cwd = "."
-    spins = np.loadtxt(str(Path(cwd) / Path(file_name)))
     with open(file_name, "r") as f:
         file_content = "".join(f.readlines())
     n_steps = len(re.findall("// --- step \d", file__content, re.MULTILINE))

@@ -2140,7 +2140,7 @@ class Output:
         self.generic.create_group("dft")
         self.old_version = False
 
-    def collect_spins_dat(self, file_name="spins.dat", cwd=None):
+    def collect_spins_dat(self, file_name="spins.dat", cwd="."):
         """
 
         Args:
@@ -2152,14 +2152,16 @@ class Output:
         """
         try:
             results = collect_spins_dat(
-                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
+                file_name=file_name,
+                cwd=cwd,
+                index_permutation=self._job.id_spx_to_pyi
             )
         except FileNotFoundError:
             return
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_energy_dat(self, file_name="energy.dat", cwd=None):
+    def collect_energy_dat(self, file_name="energy.dat", cwd="."):
         """
 
         Args:
@@ -2176,7 +2178,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_residue_dat(self, file_name="residue.dat", cwd=None):
+    def collect_residue_dat(self, file_name="residue.dat", cwd="."):
         """
 
         Args:
@@ -2332,7 +2334,7 @@ class Output:
             es.generate_from_matrices()
         return es
 
-    def collect(self, directory=os.getcwd()):
+    def collect(self, directory="."):
         """
         The collect function, collects all the output from a SPHInX simulation.
 
