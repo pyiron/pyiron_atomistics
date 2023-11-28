@@ -141,7 +141,11 @@ class SphinxLogParser:
             )
         return self._n_atoms
 
-    def get_forces(self, spx_to_pyi=None):
+    def get_forces(self, index_permutation=None):
+        """
+        Args:
+            index_permutation (numpy.ndarray): Indices for the permutation
+        """
         str_fl = "([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)"
         pattern = r"Atom: (\d+)\t{" + ",".join(3 * [str_fl]) + r"\}"
         arr = np.array(re.findall(pattern, self.log_file))
@@ -151,21 +155,21 @@ class SphinxLogParser:
         indices = indices.reshape(-1, max(indices) + 1)
         forces = arr[:, 1:].astype(float).reshape(indices.shape + (3, ))
         forces *= HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-        if spx_to_pyi is not None:
+        if index_permutation is not None:
             for ii, ff in enumerate(forces):
-                forces[ii] = ff[spx_to_pyi]
+                forces[ii] = ff[index_permutation]
         return forces
 
-    def get_magnetic_forces(self, spx_to_pyi=None):
+    def get_magnetic_forces(self, index_permutation=None):
         magnetic_forces = [
             HARTREE_TO_EV * float(line.split()[-1])
             for line in re.findall("^nu\(.*$", self.log_main, re.MULTILINE)
         ]
         if len(magnetic_forces) != 0:
             magnetic_forces = np.array(magnetic_forces).reshape(-1, self.n_atoms)
-            if spx_to_pyi is not None:
+            if index_permutation is not None:
                 for ii, mm in enumerate(magnetic_forces):
-                    magnetic_forces[ii] = mm[spx_to_pyi]
+                    magnetic_forces[ii] = mm[index_permutation]
         return splitter(magnetic_forces, self.counter)
 
     @property

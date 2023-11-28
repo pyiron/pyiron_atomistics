@@ -2276,11 +2276,13 @@ class Output:
             self.generic.dft.scf_energy_free = self._spx_log_parser.get_energy_free()
         if "forces" in self.generic.list_nodes():
             self.generic.forces = self._spx_log_parser.get_forces(
-                self._job.id_spx_to_pyi
+                index_permutation=self._job.id_spx_to_pyi
             )
         if "scf_magnetic_forces" not in self.generic.dft.list_nodes():
             self.generic.dft.scf_magnetic_forces = (
-                self._spx_log_parser.get_magnetic_forces(self._job.id_spx_to_pyi)
+                self._spx_log_parser.get_magnetic_forces(
+                    index_permutation=self._job.id_spx_to_pyi
+                )
             )
 
     def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=None):
