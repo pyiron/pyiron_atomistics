@@ -35,6 +35,7 @@ from pyiron_atomistics.sphinx.output_parser import (
     collect_residue_dat,
     collect_spins_dat,
     collect_relaxed_hist,
+    collect_energy_struct,
 )
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
@@ -2224,11 +2225,12 @@ class Output:
         Returns:
 
         """
-        file_name = posixpath.join(cwd, file_name)
-        if os.path.isfile(file_name):
-            self.generic.dft.energy_free = (
-                np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
-            )
+        try:
+            results = collect_energy_struct(file_name=file_name, cwd=cwd)
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
     def collect_sphinx_log(self, file_name="sphinx.log", cwd="."):
         """
