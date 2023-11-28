@@ -22,6 +22,15 @@ def splitter(arr, counter):
     return arr_new
 
 
+def check_permutation(index_permutation):
+    if index_permutation is None:
+        return
+    indices, counter = np.unique(index_permutation, return_counts=True)
+    if np.any(counter != 1):
+        raise ValueError("multiple entries in the index_permutation")
+    if np.any(np.diff(np.sort(indices)) != 1):
+        raise ValueError("missing entries in the index_permutation")
+
 class SphinxLogParser:
     def __init__(self, log_file):
         """
@@ -149,6 +158,7 @@ class SphinxLogParser:
         Returns:
             (numpy.ndarray): Forces of the shape (n_steps, n_atoms, 3)
         """
+        check_permutation(index_permutation)
         str_fl = "([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)"
         pattern = r"Atom: (\d+)\t{" + ",".join(3 * [str_fl]) + r"\}"
         arr = np.array(re.findall(pattern, self.log_file))
@@ -171,6 +181,7 @@ class SphinxLogParser:
         Returns:
             (numpy.ndarray): Magnetic forces of the shape (n_steps, n_atoms)
         """
+        check_permutation(index_permutation)
         magnetic_forces = [
             HARTREE_TO_EV * float(line.split()[-1])
             for line in re.findall("^nu\(.*$", self.log_main, re.MULTILINE)
