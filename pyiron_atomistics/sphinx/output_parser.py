@@ -109,7 +109,9 @@ def collect_spins_dat(
     return {"atom_scf_spins": splitter(s, spins[:, 0])}
 
 
-def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None):
+def collect_relaxed_hist(
+    file_name="relaxHist.sx", cwd=None, index_permutation=None
+):
     """
 
     Args:
@@ -127,37 +129,30 @@ def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None):
     spins = np.loadtxt(str(Path(cwd) / Path(file_name)))
     with open(file_name, "r") as f:
         file_content = "".join(f.readlines())
-    natoms = len(self._job.id_spx_to_pyi)
+    n_steps = len(re.findall("// --- step \d", file__content, re.MULTILINE))
+    f_v = ",".join(3 * [r"\s*([\d.-]+)"])
 
-    def get_value(term, file_content=file_content, natoms=natoms):
-        value = (
-            np.array(
-                [
-                    re.split("\[|\]", line)[1].split(",")
-                    for line in re.findall(term, file_content, re.MULTILINE)
-                ]
-            )
-            .astype(float)
-            .reshape(-1, natoms, 3)
-        )
-        return np.array([ff[self._job.id_spx_to_pyi] for ff in value])
+    def get_value(
+        term, f=file_content, n=n_steps, p=index_permutation
+    ):
+        value = np.array(
+            re.findall(p, f, re.MULTILINE)
+        ).astype(float).reshape(n, -1, 3)
+        if p is not None:
+            value = np.array([ff[p] for ff in value])
+        return value
 
-    self.generic.positions = get_value("coords.*$") * BOHR_TO_ANGSTROM
-    self.generic.forces = (
-        get_value("force.*$") * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+    cell = re.findall(
+        r"cell = \[\[" + r"\],\n\s*\[".join(3 * [f_v]) + r"\]\];",
+        file_content,
+        re.MULTILINE
     )
-    self.generic.cells = (
-        np.array(
-            [
-                json.loads(line)
-                for line in re.findall(
-                    "cell =(.*?);", file_content.replace("\n", ""), re.MULTILINE
-                )
-            ]
-        )
-        * BOHR_TO_ANGSTROM
-    )
-
+    cell = np.array(cell).astype(float).reshape(n_steps, 3, 3) * BOHR_TO_ANGSTROM
+    return {
+        "positions": get_value(r"atom {coords = \[" + f_v + r"\];") * BOHR_TO_ANGSTROM,
+        "forces": get_value(r"force  = \[" + f_v + r"\]; }"),
+        "cell": cell
+    }
 
 class SphinxLogParser:
     def __init__(self, file_name="sphinx.log", cwd="."):
