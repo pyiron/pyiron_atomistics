@@ -44,8 +44,6 @@ class SphinxLogParser:
         if cwd is None:
             cwd = "."
         path = Path(cwd) / Path(file_name)
-        if not path.exists():
-            raise FileNotFoundError("sphinx.log not found")
         with open(str(path), "r") as sphinx_log_file:
             self.log_file = sphinx_log_file.read()
         self._check_enter_scf()
