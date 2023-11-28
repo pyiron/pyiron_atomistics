@@ -72,7 +72,6 @@ def collect_residue_dat(file_name="residue.dat", cwd="."):
     return {"scf_residue": splitter(residue[:, 1:].squeeze(), residue[:, 0])}
 
 
-
 def collect_energy_struct(file_name="energy-structOpt.dat", cwd="."):
     """
 
@@ -87,9 +86,8 @@ def collect_energy_struct(file_name="energy-structOpt.dat", cwd="."):
     if cwd is None:
         cwd = "."
     return {
-        "energy_free": np.loadtxt(
-            str(Path(cwd) / Path(file_name))
-        ).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
+        "energy_free": np.loadtxt(str(Path(cwd) / Path(file_name))).reshape(-1, 2)[:, 1]
+        * HARTREE_TO_EV
     }
 
 
