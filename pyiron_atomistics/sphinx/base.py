@@ -36,6 +36,7 @@ from pyiron_atomistics.sphinx.output_parser import (
     collect_spins_dat,
     collect_relaxed_hist,
     collect_energy_struct,
+    collect_eps_dat,
 )
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
@@ -2195,7 +2196,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_eps_dat(self, file_name="eps.dat", cwd=None):
+    def collect_eps_dat(self, file_name=None, cwd="."):
         """
 
         Args:
@@ -2205,17 +2206,15 @@ class Output:
         Returns:
 
         """
-        if isinstance(file_name, str):
-            file_name = [file_name]
-        values = []
-        for f in file_name:
-            file_tmp = posixpath.join(cwd, f)
-            if not os.path.isfile(file_tmp):
-                return
-            values.append(np.loadtxt(file_tmp)[..., 1:])
-        values = np.stack(values, axis=0)
-        if "bands_eigen_values" not in self.generic.dft.list_nodes():
-            self.generic.dft.bands_eigen_values = values.reshape((-1,) + values.shape)
+        try:
+            results = collect_eps_dat(
+                file_name=file_name, cwd=cwd, spins=self._job._spin_enabled
+            )
+            for k, v in results.items():
+                if k not in self.generic.dft:
+                    self.generic.dft[k] = v
+        except FileNotFoundError:
+            return
 
     def collect_energy_struct(self, file_name="energy-structOpt.dat", cwd=None):
         """
@@ -2334,23 +2333,20 @@ class Output:
             es.generate_from_matrices()
         return es
 
-    def collect(self, directory="."):
+    def collect(self, directory=None):
         """
         The collect function, collects all the output from a SPHInX simulation.
 
         Args:
             directory (str): the directory to collect the output from.
         """
+        if directory is None:
+            directory = self._job.working_directory
         self.collect_energy_struct(file_name="energy-structOpt.dat", cwd=directory)
         self.collect_sphinx_log(file_name="sphinx.log", cwd=directory)
         self.collect_energy_dat(file_name="energy.dat", cwd=directory)
         self.collect_residue_dat(file_name="residue.dat", cwd=directory)
-        if self._job._spin_enabled:
-            self.collect_eps_dat(file_name="eps.dat", cwd=directory)
-        else:
-            self.collect_eps_dat(
-                file_name=[f"eps.{i}.dat" for i in [0, 1]], cwd=directory
-            )
+        self.collect_eps_dat(file_name=None, cwd=directory)
         self.collect_spins_dat(file_name="spins.dat", cwd=directory)
         self.collect_relaxed_hist(file_name="relaxHist.sx", cwd=directory)
         self.collect_electrostatic_potential(file_name="vElStat-eV.sxb", cwd=directory)

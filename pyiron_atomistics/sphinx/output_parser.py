@@ -72,6 +72,36 @@ def collect_residue_dat(file_name="residue.dat", cwd="."):
     return {"scf_residue": splitter(residue[:, 1:].squeeze(), residue[:, 0])}
 
 
+def _collect_eps_dat(file_name="eps.dat", cwd="."):
+    """
+
+    Args:
+        file_name:
+        cwd:
+
+    Returns:
+
+    """
+    if cwd is None:
+        cwd = "."
+    return np.loadtxt(str(Path(cwd) / Path(file_name)))[..., 1:]
+
+
+def collect_eps_dat(file_name=None, cwd=".", spins=True):
+    if file_name is not None:
+        values = [_collect_eps_dat(file_name=file_name, cwd=cwd)]
+    elif spins:
+        values = [
+            _collect_eps_dat(file_name=f"eps.{i}.dat", cwd=cwd).values()
+            for i in [0, 1]
+        ]
+    else:
+        values = [_collect_eps_dat(file_name="eps.dat", cwd=cwd)]
+    values = np.stack(values, axis=0)
+    return {
+        "bands_eigen_values": values.reshape((-1,) + values.shape)
+    }
+
 
 def collect_energy_struct(file_name="energy-structOpt.dat", cwd="."):
     """
