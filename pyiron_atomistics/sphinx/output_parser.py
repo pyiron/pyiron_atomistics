@@ -57,6 +57,7 @@ def collect_energy_dat(file_name="energy.dat", cwd=None):
         results["scf_energy_band"] = en_split(energies[:, 3])
     return results
 
+
 def check_permutation(index_permutation):
     if index_permutation is None:
         return
@@ -97,15 +98,14 @@ def collect_spins_dat(
 class SphinxLogParser:
     def __init__(self, log_file):
         """
-                Args:
-                    log_file (str): content of the log files
+        Args:
+            log_file (str): content of the log files
 
-                Log file should contain the plain text of the log. You can get it for
-                example via:
+        Log file should contain the plain text of the log. You can get it for
+        example via:
 
-                >>> with open("sphinx.log", "r") as f:
-        from pyiron_base import state
-                >>>     log_file = f.read()
+        >>> with open("sphinx.log", "r") as f:
+        >>>     log_file = f.read()
 
         """
         self.log_file = log_file
