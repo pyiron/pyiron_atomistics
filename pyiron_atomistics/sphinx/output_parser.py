@@ -35,15 +35,14 @@ def check_permutation(index_permutation):
 class SphinxLogParser:
     def __init__(self, log_file):
         """
-                Args:
-                    log_file (str): content of the log files
+        Args:
+            log_file (str): content of the log files
 
-                Log file should contain the plain text of the log. You can get it for
-                example via:
+        Log file should contain the plain text of the log. You can get it for
+        example via:
 
-                >>> with open("sphinx.log", "r") as f:
-        from pyiron_base import state
-                >>>     log_file = f.read()
+        >>> with open("sphinx.log", "r") as f:
+        >>>     log_file = f.read()
 
         """
         self.log_file = log_file
