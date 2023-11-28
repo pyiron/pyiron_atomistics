@@ -1,8 +1,8 @@
 import numpy as np
 import re
 import scipy.constants
-import warnings
 from pathlib import Path
+import warnings
 
 
 BOHR_TO_ANGSTROM = (
@@ -119,19 +119,20 @@ def collect_spins_dat(
 
 
 class SphinxLogParser:
-    def __init__(self, log_file):
+    def __init__(self, file_name="sphinx.log", cwd="."):
         """
         Args:
-            log_file (str): content of the log files
-
-        Log file should contain the plain text of the log. You can get it for
-        example via:
-
-        >>> with open("sphinx.log", "r") as f:
-        >>>     log_file = f.read()
+            file_name (str): file name
+            cwd (str): directory path
 
         """
-        self.log_file = log_file
+        if cwd is None:
+            cwd = "."
+        path = Path(cwd) / Path(file_name)
+        if not path.exists():
+            raise FileNotFoundError("sphinx.log not found")
+        with open(str(path), "r") as sphinx_log_file:
+            self.log_file = sphinx_log_file.read()
         self._check_enter_scf()
         self._log_main = None
         self._counter = None
