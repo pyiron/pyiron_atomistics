@@ -2267,7 +2267,7 @@ class Output:
             self.generic.dft.scf_energy_int = self._spx_log_parser.get_energy_int()
         if "scf_energy_free" not in self.generic.dft.list_nodes():
             self.generic.dft.scf_energy_free = self._spx_log_parser.get_energy_free()
-        if "forces" in self.generic.list_nodes():
+        if "forces" not in self.generic.list_nodes():
             self.generic.forces = self._spx_log_parser.get_forces(
                 index_permutation=self._job.id_spx_to_pyi
             )
