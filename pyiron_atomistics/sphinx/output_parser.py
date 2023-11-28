@@ -55,7 +55,7 @@ def collect_energy_dat(file_name="energy.dat", cwd="."):
     return results
 
 
-def collect_residue_dat(self, file_name="residue.dat", cwd="."):
+def collect_residue_dat(file_name="residue.dat", cwd="."):
     """
 
     Args:
@@ -85,7 +85,7 @@ def check_permutation(index_permutation):
 
 
 def collect_spins_dat(
-    self, file_name="spins.dat", cwd=".", index_permutation=None
+    file_name="spins.dat", cwd=".", index_permutation=None
 ):
     """
 
@@ -107,6 +107,56 @@ def collect_spins_dat(
     else:
         s = spins[:, 1:]
     return {"atom_scf_spins": splitter(s, spins[:, 0])}
+
+
+def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None):
+    """
+
+    Args:
+        file_name (str): file name
+        cwd (str): directory path
+        index_permutation (numpy.ndarray): Indices for the permutation
+
+    Returns:
+        (dict): results
+
+    """
+    check_permutation(index_permutation)
+    if cwd is None:
+        cwd = "."
+    spins = np.loadtxt(str(Path(cwd) / Path(file_name)))
+    with open(file_name, "r") as f:
+        file_content = "".join(f.readlines())
+    natoms = len(self._job.id_spx_to_pyi)
+
+    def get_value(term, file_content=file_content, natoms=natoms):
+        value = (
+            np.array(
+                [
+                    re.split("\[|\]", line)[1].split(",")
+                    for line in re.findall(term, file_content, re.MULTILINE)
+                ]
+            )
+            .astype(float)
+            .reshape(-1, natoms, 3)
+        )
+        return np.array([ff[self._job.id_spx_to_pyi] for ff in value])
+
+    self.generic.positions = get_value("coords.*$") * BOHR_TO_ANGSTROM
+    self.generic.forces = (
+        get_value("force.*$") * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+    )
+    self.generic.cells = (
+        np.array(
+            [
+                json.loads(line)
+                for line in re.findall(
+                    "cell =(.*?);", file_content.replace("\n", ""), re.MULTILINE
+                )
+            ]
+        )
+        * BOHR_TO_ANGSTROM
+    )
 
 
 class SphinxLogParser:
