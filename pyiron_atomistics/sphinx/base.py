@@ -2153,9 +2153,7 @@ class Output:
         """
         try:
             results = collect_spins_dat(
-                file_name=file_name,
-                cwd=cwd,
-                index_permutation=self._job.id_spx_to_pyi
+                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
             )
         except FileNotFoundError:
             return
