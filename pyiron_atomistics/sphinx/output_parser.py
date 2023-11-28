@@ -122,6 +122,7 @@ def collect_relaxed_hist(
     Returns:
         (dict): results
 
+    # TODO: parse movable, elements, species etc.
     """
     check_permutation(index_permutation)
     if cwd is None:
