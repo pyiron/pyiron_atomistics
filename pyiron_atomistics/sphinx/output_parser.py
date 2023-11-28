@@ -91,15 +91,11 @@ def collect_eps_dat(file_name=None, cwd=".", spins=True):
     if file_name is not None:
         values = [_collect_eps_dat(file_name=file_name, cwd=cwd)]
     elif spins:
-        values = [
-            _collect_eps_dat(file_name=f"eps.{i}.dat", cwd=cwd) for i in [0, 1]
-        ]
+        values = [_collect_eps_dat(file_name=f"eps.{i}.dat", cwd=cwd) for i in [0, 1]]
     else:
         values = [_collect_eps_dat(file_name="eps.dat", cwd=cwd)]
     values = np.stack(values, axis=0)
-    return {
-        "bands_eigen_values": values.reshape((-1,) + values.shape)
-    }
+    return {"bands_eigen_values": values.reshape((-1,) + values.shape)}
 
 
 def collect_energy_struct(file_name="energy-structOpt.dat", cwd="."):
