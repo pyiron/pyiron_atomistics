@@ -2237,7 +2237,7 @@ class Output:
                 np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
             )
 
-    def collect_sphinx_log(self, file_name="sphinx.log", cwd=None):
+    def collect_sphinx_log(self, file_name="sphinx.log", cwd="."):
         """
 
         Args:
@@ -2248,16 +2248,13 @@ class Output:
 
         """
 
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-
-        with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
-            log_file = sphinx_log_file.read()
         try:
-            self._spx_log_parser = SphinxLogParser(log_file)
+            self._spx_log_parser = SphinxLogParser(file_name=file_name, cwd=cwd)
         except AssertionError as e:
             self._job.status.aborted = True
             raise AssertionError(e)
+        except FileNotFoundError:
+            return None
         if not self._spx_log_parser.job_finished:
             self._job.status.aborted = True
         self.generic.dft.n_valence = self._spx_log_parser.get_n_valence()
