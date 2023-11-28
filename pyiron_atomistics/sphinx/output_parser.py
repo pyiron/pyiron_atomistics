@@ -1,6 +1,7 @@
 import numpy as np
 import re
 import scipy.constants
+from pyiron_base import state
 
 
 BOHR_TO_ANGSTROM = (
@@ -58,7 +59,7 @@ class SphinxLogParser:
             len(re.findall("Program exited normally.", self.log_file, re.MULTILINE))
             == 0
         ):
-            warnings.warn("scf loops did not converge")
+            state.logger.warning("scf loops did not converge")
             return False
         return True
 
