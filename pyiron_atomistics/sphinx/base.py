@@ -29,7 +29,7 @@ from pyiron_atomistics.vasp.potential import (
 )
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
-from pyiron_atomistics.sphinx.output_parser import SphinxLogParser
+from pyiron_atomistics.sphinx.output_parser import SphinxLogParser, splitter
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
