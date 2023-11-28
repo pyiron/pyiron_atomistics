@@ -29,7 +29,13 @@ from pyiron_atomistics.vasp.potential import (
 )
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
-from pyiron_atomistics.sphinx.output_parser import SphinxLogParser, collect_energy_dat, collect_residue_dat, collect_spins_dat, collect_relaxed_hist
+from pyiron_atomistics.sphinx.output_parser import (
+    SphinxLogParser,
+    collect_energy_dat,
+    collect_residue_dat,
+    collect_spins_dat,
+    collect_relaxed_hist,
+)
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
@@ -2145,9 +2151,7 @@ class Output:
         """
         try:
             results = collect_spins_dat(
-                file_name=file_name,
-                cwd=cwd,
-                index_permutation=self._job.id_spx_to_pyi
+                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
             )
         except FileNotFoundError:
             return
@@ -2283,9 +2287,7 @@ class Output:
         """
         try:
             results = collect_relaxed_hist(
-                file_name=file_name,
-                cwd=cwd,
-                index_permutation=self._job.id_spx_to_pyi
+                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
             )
         except FileNotFoundError:
             return

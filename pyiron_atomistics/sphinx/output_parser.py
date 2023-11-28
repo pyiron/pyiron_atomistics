@@ -38,9 +38,7 @@ def collect_energy_dat(file_name="energy.dat", cwd="."):
         cwd = "."
     energies = np.loadtxt(str(Path(cwd) / Path(file_name)))
     results = {"scf_computation_time": splitter(energies[:, 1], energies[:, 0])}
-    results["scf_energy_int"] = splitter(
-        energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
-    )
+    results["scf_energy_int"] = splitter(energies[:, 2] * HARTREE_TO_EV, energies[:, 0])
 
     def en_split(e, counter=energies[:, 0]):
         return splitter(e * HARTREE_TO_EV, counter)
@@ -84,9 +82,7 @@ def check_permutation(index_permutation):
         raise ValueError("missing entries in the index_permutation")
 
 
-def collect_spins_dat(
-    file_name="spins.dat", cwd=".", index_permutation=None
-):
+def collect_spins_dat(file_name="spins.dat", cwd=".", index_permutation=None):
     """
 
     Args:
@@ -109,9 +105,7 @@ def collect_spins_dat(
     return {"atom_scf_spins": splitter(s, spins[:, 0])}
 
 
-def collect_relaxed_hist(
-    file_name="relaxHist.sx", cwd=None, index_permutation=None
-):
+def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None, index_permutation=None):
     """
 
     Args:
@@ -133,12 +127,8 @@ def collect_relaxed_hist(
     n_steps = len(re.findall("// --- step \d", file__content, re.MULTILINE))
     f_v = ",".join(3 * [r"\s*([\d.-]+)"])
 
-    def get_value(
-        term, f=file_content, n=n_steps, p=index_permutation
-    ):
-        value = np.array(
-            re.findall(p, f, re.MULTILINE)
-        ).astype(float).reshape(n, -1, 3)
+    def get_value(term, f=file_content, n=n_steps, p=index_permutation):
+        value = np.array(re.findall(p, f, re.MULTILINE)).astype(float).reshape(n, -1, 3)
         if p is not None:
             value = np.array([ff[p] for ff in value])
         return value
@@ -146,14 +136,15 @@ def collect_relaxed_hist(
     cell = re.findall(
         r"cell = \[\[" + r"\],\n\s*\[".join(3 * [f_v]) + r"\]\];",
         file_content,
-        re.MULTILINE
+        re.MULTILINE,
     )
     cell = np.array(cell).astype(float).reshape(n_steps, 3, 3) * BOHR_TO_ANGSTROM
     return {
         "positions": get_value(r"atom {coords = \[" + f_v + r"\];") * BOHR_TO_ANGSTROM,
         "forces": get_value(r"force  = \[" + f_v + r"\]; }"),
-        "cell": cell
+        "cell": cell,
     }
+
 
 class SphinxLogParser:
     def __init__(self, file_name="sphinx.log", cwd="."):
