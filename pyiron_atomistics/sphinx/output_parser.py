@@ -92,8 +92,7 @@ def collect_eps_dat(file_name=None, cwd=".", spins=True):
         values = [_collect_eps_dat(file_name=file_name, cwd=cwd)]
     elif spins:
         values = [
-            _collect_eps_dat(file_name=f"eps.{i}.dat", cwd=cwd).values()
-            for i in [0, 1]
+            _collect_eps_dat(file_name=f"eps.{i}.dat", cwd=cwd) for i in [0, 1]
         ]
     else:
         values = [_collect_eps_dat(file_name="eps.dat", cwd=cwd)]
@@ -117,9 +116,8 @@ def collect_energy_struct(file_name="energy-structOpt.dat", cwd="."):
     if cwd is None:
         cwd = "."
     return {
-        "energy_free": np.loadtxt(
-            str(Path(cwd) / Path(file_name))
-        ).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
+        "energy_free": np.loadtxt(str(Path(cwd) / Path(file_name))).reshape(-1, 2)[:, 1]
+        * HARTREE_TO_EV
     }
 
 
