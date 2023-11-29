@@ -170,11 +170,15 @@ def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None, index_permutation=N
         path = Path(cwd) / path
     with open(str(path), "r") as f:
         file_content = "".join(f.readlines())
-    n_steps = len(re.findall("// --- step \d", file_content, re.MULTILINE))
+    n_steps = max(
+        len(re.findall("// --- step \d", file_content, re.MULTILINE)), 1
+    )
     f_v = ",".join(3 * [r"\s*([\d.-]+)"])
 
     def get_value(term, f=file_content, n=n_steps, p=index_permutation):
-        value = np.array(re.findall(p, f, re.MULTILINE)).astype(float).reshape(n, -1, 3)
+        value = np.array(
+            re.findall(term, f, re.MULTILINE)
+        ).astype(float).reshape(n, -1, 3)
         if p is not None:
             value = np.array([ff[p] for ff in value])
         return value
