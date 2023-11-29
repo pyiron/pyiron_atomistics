@@ -3,7 +3,6 @@ import re
 import scipy.constants
 from pathlib import Path
 import numba
-import netCDF4
 import h5py
 import warnings
 
