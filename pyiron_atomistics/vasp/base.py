@@ -6,7 +6,9 @@ from __future__ import print_function
 import os
 import posixpath
 import subprocess
+import enum
 import numpy as np
+from typing import Union
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.vasp.potential import (
@@ -404,7 +406,8 @@ class VaspBase(GenericDFTJob):
         self._output_parser.structure = self.structure.copy()
         try:
             self._output_parser.collect(
-                directory=cwd, sorted_indices=self.sorted_indices
+                directory=cwd, sorted_indices=self.sorted_indices,
+                energy_kind=self.input._energy_kind
             )
         except VaspCollectError:
             self.status.aborted = True
@@ -1822,6 +1825,15 @@ class VaspBase(GenericDFTJob):
         pass
 
 
+class DftEnergyKind(enum.Enum):
+    ENERGY_FREE = "FREE"
+    """The full free energy of the electronic system, i.e. smeared internal energy plus entropy."""
+    ENERGY_INTERNAL = "INTERNAL"
+    """The smeared internal energy of the electronic system."""
+    ENERGY_ZERO = "ZERO"
+    """The internal energy of the electronic system, extrapolated to zero smearing."""
+
+
 class Input:
     """
     Handles setting the input parameters for a VASP job.
@@ -1848,7 +1860,7 @@ class Input:
         self.incar = Incar(table_name="incar")
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
-
+        self._energy_kind = None
         self._eddrmm = "warn"
 
     def write(self, structure, modified_elements, directory=None):
@@ -1893,11 +1905,12 @@ class Input:
 
             if "vasp_dict" in hdf5_input.list_nodes():
                 vasp_dict = hdf5_input["vasp_dict"]
-                vasp_dict.update({"eddrmm_handling": self._eddrmm})
-                hdf5_input["vasp_dict"] = vasp_dict
             else:
-                vasp_dict = {"eddrmm_handling": self._eddrmm}
-                hdf5_input["vasp_dict"] = vasp_dict
+                vasp_dict = {}
+            vasp_dict["eddrmm_handling"] = self._eddrmm
+            if self._energy_kind is not None:
+                vasp_dict["energy_kind"] = self._energy_kind.value
+            hdf5_input["vasp_dict"] = vasp_dict
 
     def from_hdf(self, hdf):
         """
@@ -1914,10 +1927,12 @@ class Input:
             self._eddrmm = "ignore"
             if "vasp_dict" in hdf5_input.list_nodes():
                 vasp_dict = hdf5_input["vasp_dict"]
-                if "eddrmm_handling" in vasp_dict.keys():
+                if "eddrmm_handling" in vasp_dict:
                     self._eddrmm = self._eddrmm_backwards_compatibility(
                         vasp_dict["eddrmm_handling"]
                     )
+                if "energy_kind" in vasp_dict:
+                    self._energy_kind = DftEnergyKind(vasp_dict["energy_kind"])
 
     @staticmethod
     def _eddrmm_backwards_compatibility(eddrmm_value):
@@ -1927,14 +1942,24 @@ class Input:
         else:
             return eddrmm_value
 
-import enum
-class DftEnergyKind(enum.Enum):
-    ENERGY_FREE = enum.auto()
-    """The full free energy of the electronic system, i.e. smeared internal energy plus entropy."""
-    ENERGY_INTERNAL = enum.auto()
-    """The smeared internal energy of the electronic system."""
-    ENERGY_ZERO = enum.auto()
-    """The internal energy of the electronic system, extrapolated to zero smearing."""
+    @property
+    def energy_kind(self) -> DftEnergyKind:
+        """str or :class:`.DftEnergyKind`: which DFT energy to parse as the generic energy_pot
+
+        The energy saved in the generic job output `output/generic/energy_pot` can be either the smeared internal
+        energy ('INTERNAL'), the full electronic free energy ('FREE') or the energy extrapolated to zero ('ZERO').
+        """
+        return self._energy_kind
+
+    @energy_kind.setter
+    def energy_kind(self, value: Union[str, DftEnergyKind]):
+        if isinstance(value, str):
+            try:
+                value = DftEnergyKind(value)
+            except ValueError:
+                raise ValueError(f"must be one of [{', '.join(DftEnergyKind.values)}]!") from None
+        self._energy_kind = value
+
 
 class Output:
     """
@@ -1946,9 +1971,8 @@ class Output:
         charge_density: Gives the charge density of the system
     """
 
-    def __init__(self, energy_kind=None):
+    def __init__(self):
         self._structure = None
-        self._energy_kind = energy_kind
         self.outcar = Outcar()
         self.oszicar = Oszicar()
         self.generic_output = GenericOutput()
@@ -1975,7 +1999,7 @@ class Output:
         """
         self._structure = atoms
 
-    def collect(self, directory=os.getcwd(), sorted_indices=None):
+    def collect(self, directory=os.getcwd(), sorted_indices=None, energy_kind: DftEnergyKind = None):
         """
         Collects output from the working directory
 
@@ -2063,14 +2087,14 @@ class Output:
             # A bug in the xml output of 5.4.4 renders total_*_energies useless
             # https://www.vasp.at/forum/viewtopic.php?p=19264&hilit=vasprun+energy#p19264
             # log_dict["total_energies"] = self.vp_new.vasprun_dict["total_energies"]
-            if self._energy_kind is None:
-                self._energy_kind = DftEnergyKind.ENERGY_ZERO
+            if energy_kind is None:
+                energy_kind = DftEnergyKind.ENERGY_ZERO
             VASPRUN_ENERGY_KIND_KEYS = {
                     DftEnergyKind.ENERGY_FREE: "scf_fr_energies",
                     DftEnergyKind.ENERGY_INTERNAL: "scf_energies",
                     DftEnergyKind.ENERGY_ZERO: "scf_0_energies",
             }
-            energy_key = VASPRUN_ENERGY_KIND_KEYS[self._energy_kind]
+            energy_key = VASPRUN_ENERGY_KIND_KEYS[energy_kind]
             log_dict["energy_tot"] = np.array([
                     energy[-1] for energy in self.vp_new.vasprun_dict[energy_key]
             ])
@@ -2113,14 +2137,14 @@ class Output:
             # log_dict = self.outcar.parse_dict.copy()
             if len(self.outcar.parse_dict["energies"]) == 0:
                 raise VaspCollectError("Error in parsing OUTCAR")
-            if self._energy_kind is None:
-                self._energy_kind = DftEnergyKind.ENERGY_FREE
+            if energy_kind is None:
+                energy_kind = DftEnergyKind.ENERGY_FREE
             OUTCAR_ENERGY_KIND_KEYS = {
                     DftEnergyKind.ENERGY_FREE: "energies",
                     DftEnergyKind.ENERGY_INTERNAL: "energies_int",
                     DftEnergyKind.ENERGY_ZERO: "energies_zero",
             }
-            energy_key = OUTCAR_ENERGY_KIND_KEYS[self._energy_kind]
+            energy_key = OUTCAR_ENERGY_KIND_KEYS[energy_kind]
             log_dict["energy_tot"] = self.outcar.parse_dict[energy_key]
             log_dict["temperature"] = self.outcar.parse_dict["temperatures"]
             log_dict["stresses"] = self.outcar.parse_dict["stresses"]
