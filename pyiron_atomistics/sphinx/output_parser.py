@@ -193,11 +193,18 @@ def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None, index_permutation=N
 
 
 class SphinxLogParser:
-    def __init__(self, file_name="sphinx.log", cwd=None):
+    def __init__(
+        self,
+        file_name="sphinx.log",
+        cwd=None,
+        index_permutation=self._job.id_spx_to_pyi
+    ):
+                
         """
         Args:
             file_name (str): file name
             cwd (str): directory path
+            index_permutation (numpy.ndarray): Indices for the permutation
 
         """
         path = Path(file_name)
@@ -207,9 +214,30 @@ class SphinxLogParser:
             self.log_file = sphinx_log_file.read()
         self._check_enter_scf()
         self._log_main = None
-        self._counter = None
         self._n_atoms = None
-        self._n_steps = None
+        check_permutation(index_permutation)
+        self._index_permutation = index_permutation
+        self.generic_dict = {
+            "volume": self.get_volume,
+            "forces": self.get_forces,
+            "job_finished": self.job_finished,
+        }
+        self.dft_dict = {
+            "n_valence": self.get_n_valence,
+            "bands_k_weights": self.get_bands_k_weights,
+            "kpoints_cartesian": self.get_kpoints_cartesian,
+            "bands_e_fermi": self.get_fermi,
+            "bands_occ": self.get_occupancy,
+            "bands_eigen_values": self.get_band_energy,
+            "scf_convergence": self.get_convergence,
+            "scf_energy_int": self.get_energy_int,
+            "scf_energy_free": self.get_energy_free,
+            "scf_magnetic_forces": self.get_magnetic_forces
+        }
+
+    @property
+    def index_permutation(self):
+        return self._index_permutation
 
     @property
     def spin_enabled(self):
@@ -222,7 +250,6 @@ class SphinxLogParser:
             self._log_main = match.end() + 1
         return self.log_file[self._log_main :]
 
-    @property
     def job_finished(self):
         if (
             len(re.findall("Program exited normally.", self.log_file, re.MULTILINE))
@@ -285,12 +312,10 @@ class SphinxLogParser:
 
     @property
     def counter(self):
-        if self._counter is None:
-            self._counter = [
-                int(re.sub("[^0-9]", "", line.split("=")[0]))
-                for line in re.findall("F\(.*$", self.log_main, re.MULTILINE)
-            ]
-        return self._counter
+        return [
+            int(re.sub("[^0-9]", "", line.split("=")[0]))
+            for line in re.findall("F\(.*$", self.log_main, re.MULTILINE)
+        ]
 
     def _get_energy(self, pattern):
         c, F = np.array(re.findall(pattern, self.log_main, re.MULTILINE)).T
@@ -310,15 +335,11 @@ class SphinxLogParser:
             )
         return self._n_atoms
 
-    def get_forces(self, index_permutation=None):
+    def get_forces(self):
         """
-        Args:
-            index_permutation (numpy.ndarray): Indices for the permutation
-
         Returns:
             (numpy.ndarray): Forces of the shape (n_steps, n_atoms, 3)
         """
-        check_permutation(index_permutation)
         str_fl = "([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)"
         pattern = r"Atom: (\d+)\t{" + ",".join(3 * [str_fl]) + r"\}"
         arr = np.array(re.findall(pattern, self.log_file))
@@ -326,38 +347,32 @@ class SphinxLogParser:
             return []
         forces = arr[:, 1:].astype(float).reshape(-1, self.n_atoms, 3)
         forces *= HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-        if index_permutation is not None:
+        if self.index_permutation is not None:
             for ii, ff in enumerate(forces):
-                forces[ii] = ff[index_permutation]
+                forces[ii] = ff[self.index_permutation]
         return forces
 
-    def get_magnetic_forces(self, index_permutation=None):
+    def get_magnetic_forces(self):
         """
-        Args:
-            index_permutation (numpy.ndarray): Indices for the permutation
-
         Returns:
             (numpy.ndarray): Magnetic forces of the shape (n_steps, n_atoms)
         """
-        check_permutation(index_permutation)
         magnetic_forces = [
             HARTREE_TO_EV * float(line.split()[-1])
             for line in re.findall("^nu\(.*$", self.log_main, re.MULTILINE)
         ]
         if len(magnetic_forces) != 0:
             magnetic_forces = np.array(magnetic_forces).reshape(-1, self.n_atoms)
-            if index_permutation is not None:
+            if self.index_permutation is not None:
                 for ii, mm in enumerate(magnetic_forces):
-                    magnetic_forces[ii] = mm[index_permutation]
+                    magnetic_forces[ii] = mm[self.index_permutation]
         return splitter(magnetic_forces, self.counter)
 
     @property
     def n_steps(self):
-        if self._n_steps is None:
-            self._n_steps = len(
-                re.findall("\| SCF calculation", self.log_file, re.MULTILINE)
-            )
-        return self._n_steps
+        return len(
+            re.findall("\| SCF calculation", self.log_file, re.MULTILINE)
+        )
 
     def _parse_band(self, term):
         arr = np.loadtxt(re.findall(term, self.log_main, re.MULTILINE))
@@ -390,3 +405,15 @@ class SphinxLogParser:
     def get_fermi(self):
         pattern = r"Fermi energy:\s+(\d+\.\d+)\s+eV"
         return np.array(re.findall(pattern, self.log_main)).astype(float)
+
+    @property
+    def results(self):
+        results = {"generic": {}, "dft": {}}
+        for key, func in self.generic_dict.items():
+            value = func()
+            if len(value) > 0 or key == "job_finished":
+                results["generic"][key] = value
+        for key, func in self.dft_dict.items():
+            value = func()
+            if len(value) > 0:
+                results["dft"][key] = value
