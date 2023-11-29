@@ -404,8 +404,6 @@ class SphinxWavesParser:
             file_name (str): file name
             cwd (str): directory path
         """
-        if cwd is None:
-            cwd = "."
         path = Path(cwd) / Path(file_name)
         self.load(path)
         
