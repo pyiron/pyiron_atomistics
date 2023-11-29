@@ -2141,7 +2141,7 @@ class Output:
         self.generic.create_group("dft")
         self.old_version = False
 
-    def collect_spins_dat(self, file_name="spins.dat", cwd="."):
+    def collect_spins_dat(self, file_name="spins.dat", cwd=None):
         """
 
         Args:
@@ -2160,7 +2160,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_energy_dat(self, file_name="energy.dat", cwd="."):
+    def collect_energy_dat(self, file_name="energy.dat", cwd=None):
         """
 
         Args:
@@ -2177,7 +2177,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_residue_dat(self, file_name="residue.dat", cwd="."):
+    def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         """
 
         Args:
@@ -2194,7 +2194,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_eps_dat(self, file_name=None, cwd="."):
+    def collect_eps_dat(self, file_name=None, cwd=None):
         """
 
         Args:
@@ -2231,7 +2231,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_sphinx_log(self, file_name="sphinx.log", cwd="."):
+    def collect_sphinx_log(self, file_name="sphinx.log", cwd=None):
         """
 
         Args:
