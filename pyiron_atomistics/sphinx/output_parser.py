@@ -2,7 +2,6 @@ import numpy as np
 import re
 import scipy.constants
 from pathlib import Path
-import numba
 import h5py
 import warnings
 
