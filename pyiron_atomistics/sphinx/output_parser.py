@@ -114,10 +114,7 @@ def collect_energy_struct(file_name="energy-structOpt.dat", cwd=None):
     path = Path(file_name)
     if cwd is not None:
         path = Path(cwd) / path
-    return {
-        "energy_free": np.loadtxt(str(path)).reshape(-1, 2)[:, 1]
-        * HARTREE_TO_EV
-    }
+    return {"energy_free": np.loadtxt(str(path)).reshape(-1, 2)[:, 1] * HARTREE_TO_EV}
 
 
 def check_permutation(index_permutation):
