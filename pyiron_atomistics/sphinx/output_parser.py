@@ -422,8 +422,7 @@ class SphinxWavesParser:
     def _read(self):
         self._check_loaded ()
         # load various dimensions
-        self.mesh = self.wfile['meshDim'][:]
-        self.Nx, self.Ny, self.Nz = self.mesh
+        self.Nx, self.Ny, self.Nz = self.wfile['meshDim'][:]
         # load the fft_idx to map from condensed psi to FFT mesh
         # (different mapping per k)
         self._fft_idx=[]
@@ -432,6 +431,10 @@ class SphinxWavesParser:
         for ngk in self._n_gk:
             self._fft_idx.append (self.wfile['fftIdx'][off:off+ngk])
             off += ngk
+
+    @property
+    def mesh(self):
+        return self.wfile['meshDim'][:]        
         
     @property
     def n_states(self):
@@ -443,7 +446,7 @@ class SphinxWavesParser:
 
     @property
     def k_weights(self):
-        return self.k_weights = self.wfile['kWeights'][:]
+        return self.wfile['kWeights'][:]
 
     @property
     def k_vec(self):
