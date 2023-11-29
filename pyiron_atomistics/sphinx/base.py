@@ -29,7 +29,15 @@ from pyiron_atomistics.vasp.potential import (
 )
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
-from pyiron_atomistics.sphinx.output_parser import SphinxLogParser, splitter
+from pyiron_atomistics.sphinx.output_parser import (
+    SphinxLogParser,
+    collect_energy_dat,
+    collect_residue_dat,
+    collect_spins_dat,
+    collect_relaxed_hist,
+    collect_energy_struct,
+    collect_eps_dat,
+)
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
@@ -2133,7 +2141,7 @@ class Output:
         self.generic.create_group("dft")
         self.old_version = False
 
-    def collect_spins_dat(self, file_name="spins.dat", cwd=None):
+    def collect_spins_dat(self, file_name="spins.dat", cwd="."):
         """
 
         Args:
@@ -2143,14 +2151,16 @@ class Output:
         Returns:
 
         """
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-        spins = np.loadtxt(posixpath.join(cwd, file_name))
-        self.generic.dft.atom_scf_spins = splitter(
-            np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]), spins[:, 0]
-        )
+        try:
+            results = collect_spins_dat(
+                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
+            )
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
-    def collect_energy_dat(self, file_name="energy.dat", cwd=None):
+    def collect_energy_dat(self, file_name="energy.dat", cwd="."):
         """
 
         Args:
@@ -2160,26 +2170,14 @@ class Output:
         Returns:
 
         """
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-        energies = np.loadtxt(posixpath.join(cwd, file_name))
-        self.generic.dft.scf_computation_time = splitter(energies[:, 1], energies[:, 0])
-        self.generic.dft.scf_energy_int = splitter(
-            energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
-        )
+        try:
+            results = collect_energy_dat(file_name=file_name, cwd=cwd)
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
-        def en_split(e, counter=energies[:, 0]):
-            return splitter(e * HARTREE_TO_EV, counter)
-
-        if len(energies[0]) == 7:
-            self.generic.dft.scf_energy_free = en_split(energies[:, 3])
-            self.generic.dft.scf_energy_zero = en_split(energies[:, 4])
-            self.generic.dft.scf_energy_band = en_split(energies[:, 5])
-            self.generic.dft.scf_electronic_entropy = en_split(energies[:, 6])
-        else:
-            self.generic.dft.scf_energy_band = en_split(energies[:, 3])
-
-    def collect_residue_dat(self, file_name="residue.dat", cwd=None):
+    def collect_residue_dat(self, file_name="residue.dat", cwd="."):
         """
 
         Args:
@@ -2189,17 +2187,14 @@ class Output:
         Returns:
 
         """
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-        residue = np.loadtxt(posixpath.join(cwd, file_name))
-        if len(residue) == 0:
-            return None
-        if len(residue[0]) == 2:
-            self.generic.dft.scf_residue = splitter(residue[:, 1], residue[:, 0])
-        else:
-            self.generic.dft.scf_residue = splitter(residue[:, 1:], residue[:, 0])
+        try:
+            results = collect_residue_dat(file_name=file_name, cwd=cwd)
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
-    def collect_eps_dat(self, file_name="eps.dat", cwd=None):
+    def collect_eps_dat(self, file_name=None, cwd="."):
         """
 
         Args:
@@ -2209,17 +2204,15 @@ class Output:
         Returns:
 
         """
-        if isinstance(file_name, str):
-            file_name = [file_name]
-        values = []
-        for f in file_name:
-            file_tmp = posixpath.join(cwd, f)
-            if not os.path.isfile(file_tmp):
-                return
-            values.append(np.loadtxt(file_tmp)[..., 1:])
-        values = np.stack(values, axis=0)
-        if "bands_eigen_values" not in self.generic.dft.list_nodes():
-            self.generic.dft.bands_eigen_values = values.reshape((-1,) + values.shape)
+        try:
+            results = collect_eps_dat(
+                file_name=file_name, cwd=cwd, spins=self._job._spin_enabled
+            )
+            for k, v in results.items():
+                if k not in self.generic.dft:
+                    self.generic.dft[k] = v
+        except FileNotFoundError:
+            return
 
     def collect_energy_struct(self, file_name="energy-structOpt.dat", cwd=None):
         """
@@ -2231,11 +2224,12 @@ class Output:
         Returns:
 
         """
-        file_name = posixpath.join(cwd, file_name)
-        if os.path.isfile(file_name):
-            self.generic.dft.energy_free = (
-                np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
-            )
+        try:
+            results = collect_energy_struct(file_name=file_name, cwd=cwd)
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
     def collect_sphinx_log(self, file_name="sphinx.log", cwd="."):
         """
@@ -2271,7 +2265,7 @@ class Output:
             self.generic.dft.scf_energy_int = self._spx_log_parser.get_energy_int()
         if "scf_energy_free" not in self.generic.dft.list_nodes():
             self.generic.dft.scf_energy_free = self._spx_log_parser.get_energy_free()
-        if "forces" in self.generic.list_nodes():
+        if "forces" not in self.generic.list_nodes():
             self.generic.forces = self._spx_log_parser.get_forces(
                 index_permutation=self._job.id_spx_to_pyi
             )
@@ -2292,41 +2286,14 @@ class Output:
         Returns:
 
         """
-        file_name = posixpath.join(cwd, file_name)
-        if not os.path.isfile(file_name):
-            return None
-        with open(file_name, "r") as f:
-            file_content = "".join(f.readlines())
-        natoms = len(self._job.id_spx_to_pyi)
-
-        def get_value(term, file_content=file_content, natoms=natoms):
-            value = (
-                np.array(
-                    [
-                        re.split("\[|\]", line)[1].split(",")
-                        for line in re.findall(term, file_content, re.MULTILINE)
-                    ]
-                )
-                .astype(float)
-                .reshape(-1, natoms, 3)
+        try:
+            results = collect_relaxed_hist(
+                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
             )
-            return np.array([ff[self._job.id_spx_to_pyi] for ff in value])
-
-        self.generic.positions = get_value("coords.*$") * BOHR_TO_ANGSTROM
-        self.generic.forces = (
-            get_value("force.*$") * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-        )
-        self.generic.cells = (
-            np.array(
-                [
-                    json.loads(line)
-                    for line in re.findall(
-                        "cell =(.*?);", file_content.replace("\n", ""), re.MULTILINE
-                    )
-                ]
-            )
-            * BOHR_TO_ANGSTROM
-        )
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic[k] = v
 
     def collect_charge_density(self, file_name, cwd):
         if (
@@ -2364,23 +2331,20 @@ class Output:
             es.generate_from_matrices()
         return es
 
-    def collect(self, directory=os.getcwd()):
+    def collect(self, directory=None):
         """
         The collect function, collects all the output from a SPHInX simulation.
 
         Args:
             directory (str): the directory to collect the output from.
         """
+        if directory is None:
+            directory = self._job.working_directory
         self.collect_energy_struct(file_name="energy-structOpt.dat", cwd=directory)
         self.collect_sphinx_log(file_name="sphinx.log", cwd=directory)
         self.collect_energy_dat(file_name="energy.dat", cwd=directory)
         self.collect_residue_dat(file_name="residue.dat", cwd=directory)
-        if self._job._spin_enabled:
-            self.collect_eps_dat(file_name="eps.dat", cwd=directory)
-        else:
-            self.collect_eps_dat(
-                file_name=[f"eps.{i}.dat" for i in [0, 1]], cwd=directory
-            )
+        self.collect_eps_dat(file_name=None, cwd=directory)
         self.collect_spins_dat(file_name="spins.dat", cwd=directory)
         self.collect_relaxed_hist(file_name="relaxHist.sx", cwd=directory)
         self.collect_electrostatic_potential(file_name="vElStat-eV.sxb", cwd=directory)

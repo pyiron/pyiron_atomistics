@@ -23,6 +23,100 @@ def splitter(arr, counter):
     return arr_new
 
 
+def collect_energy_dat(file_name="energy.dat", cwd="."):
+    """
+
+    Args:
+        file_name (str): file name
+        cwd (str): directory path
+
+    Returns:
+        (dict): results
+
+    """
+    if cwd is None:
+        cwd = "."
+    energies = np.loadtxt(str(Path(cwd) / Path(file_name)))
+    results = {"scf_computation_time": splitter(energies[:, 1], energies[:, 0])}
+    results["scf_energy_int"] = splitter(energies[:, 2] * HARTREE_TO_EV, energies[:, 0])
+
+    def en_split(e, counter=energies[:, 0]):
+        return splitter(e * HARTREE_TO_EV, counter)
+
+    if len(energies[0]) == 7:
+        results["scf_energy_free"] = en_split(energies[:, 3])
+        results["scf_energy_zero"] = en_split(energies[:, 4])
+        results["scf_energy_band"] = en_split(energies[:, 5])
+        results["scf_electronic_entropy"] = en_split(energies[:, 6])
+    else:
+        results["scf_energy_band"] = en_split(energies[:, 3])
+    return results
+
+
+def collect_residue_dat(file_name="residue.dat", cwd="."):
+    """
+
+    Args:
+        file_name (str): file name
+        cwd (str): directory path
+
+    Returns:
+        (dict): results
+
+    """
+    if cwd is None:
+        cwd = "."
+    residue = np.loadtxt(str(Path(cwd) / Path(file_name)))
+    if len(residue) == 0:
+        return {}
+    return {"scf_residue": splitter(residue[:, 1:].squeeze(), residue[:, 0])}
+
+
+def _collect_eps_dat(file_name="eps.dat", cwd="."):
+    """
+
+    Args:
+        file_name:
+        cwd:
+
+    Returns:
+
+    """
+    if cwd is None:
+        cwd = "."
+    return np.loadtxt(str(Path(cwd) / Path(file_name)))[..., 1:]
+
+
+def collect_eps_dat(file_name=None, cwd=".", spins=True):
+    if file_name is not None:
+        values = [_collect_eps_dat(file_name=file_name, cwd=cwd)]
+    elif spins:
+        values = [_collect_eps_dat(file_name=f"eps.{i}.dat", cwd=cwd) for i in [0, 1]]
+    else:
+        values = [_collect_eps_dat(file_name="eps.dat", cwd=cwd)]
+    values = np.stack(values, axis=0)
+    return {"bands_eigen_values": values.reshape((-1,) + values.shape)}
+
+
+def collect_energy_struct(file_name="energy-structOpt.dat", cwd="."):
+    """
+
+    Args:
+        file_name (str): file name
+        cwd (str): directory path
+
+    Returns:
+        (dict): results
+
+    """
+    if cwd is None:
+        cwd = "."
+    return {
+        "energy_free": np.loadtxt(str(Path(cwd) / Path(file_name))).reshape(-1, 2)[:, 1]
+        * HARTREE_TO_EV
+    }
+
+
 def check_permutation(index_permutation):
     if index_permutation is None:
         return
@@ -31,6 +125,69 @@ def check_permutation(index_permutation):
         raise ValueError("multiple entries in the index_permutation")
     if np.any(np.diff(np.sort(indices)) != 1):
         raise ValueError("missing entries in the index_permutation")
+
+
+def collect_spins_dat(file_name="spins.dat", cwd=".", index_permutation=None):
+    """
+
+    Args:
+        file_name (str): file name
+        cwd (str): directory path
+        index_permutation (numpy.ndarray): Indices for the permutation
+
+    Returns:
+        (dict): results
+
+    """
+    check_permutation(index_permutation)
+    if cwd is None:
+        cwd = "."
+    spins = np.loadtxt(str(Path(cwd) / Path(file_name)))
+    if index_permutation is not None:
+        s = np.array([ss[index_permutation] for ss in spins[:, 1:]])
+    else:
+        s = spins[:, 1:]
+    return {"atom_scf_spins": splitter(s, spins[:, 0])}
+
+
+def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None, index_permutation=None):
+    """
+
+    Args:
+        file_name (str): file name
+        cwd (str): directory path
+        index_permutation (numpy.ndarray): Indices for the permutation
+
+    Returns:
+        (dict): results
+
+    # TODO: parse movable, elements, species etc.
+    """
+    check_permutation(index_permutation)
+    if cwd is None:
+        cwd = "."
+    with open(file_name, "r") as f:
+        file_content = "".join(f.readlines())
+    n_steps = len(re.findall("// --- step \d", file_content, re.MULTILINE))
+    f_v = ",".join(3 * [r"\s*([\d.-]+)"])
+
+    def get_value(term, f=file_content, n=n_steps, p=index_permutation):
+        value = np.array(re.findall(p, f, re.MULTILINE)).astype(float).reshape(n, -1, 3)
+        if p is not None:
+            value = np.array([ff[p] for ff in value])
+        return value
+
+    cell = re.findall(
+        r"cell = \[\[" + r"\],\n\s*\[".join(3 * [f_v]) + r"\]\];",
+        file_content,
+        re.MULTILINE,
+    )
+    cell = np.array(cell).astype(float).reshape(n_steps, 3, 3) * BOHR_TO_ANGSTROM
+    return {
+        "positions": get_value(r"atom {coords = \[" + f_v + r"\];") * BOHR_TO_ANGSTROM,
+        "forces": get_value(r"force  = \[" + f_v + r"\]; }"),
+        "cell": cell,
+    }
 
 
 class SphinxLogParser:
@@ -165,9 +322,7 @@ class SphinxLogParser:
         arr = np.array(re.findall(pattern, self.log_file))
         if len(arr) == 0:
             return []
-        indices = arr[:, 0].astype(int)
-        indices = indices.reshape(-1, max(indices) + 1)
-        forces = arr[:, 1:].astype(float).reshape(indices.shape + (3,))
+        forces = arr[:, 1:].astype(float).reshape(-1, self.n_atoms, 3)
         forces *= HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
         if index_permutation is not None:
             for ii, ff in enumerate(forces):
