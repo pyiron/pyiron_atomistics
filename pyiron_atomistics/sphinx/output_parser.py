@@ -197,7 +197,7 @@ class SphinxLogParser:
         self,
         file_name="sphinx.log",
         cwd=None,
-        index_permutation=self._job.id_spx_to_pyi
+        index_permutation=None
     ):
                 
         """
