@@ -409,7 +409,7 @@ class SphinxLogParser:
         results = {"generic": {}, "dft": {}}
         for key, func in self.generic_dict.items():
             value = func()
-            if len(value) > 0 or key == "job_finished":
+            if key == "job_finished" or len(value) > 0:
                 results["generic"][key] = value
         for key, func in self.dft_dict.items():
             value = func()

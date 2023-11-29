@@ -2251,7 +2251,7 @@ class Output:
         if len(results) == 0:
             self._job.status.aborted = True
             return None
-        if not results.pop("job_finished"):
+        if not results["generic"].pop("job_finished"):
             self._job.status.aborted = True
         for key, value in results["generic"].items():
             if key not in self.generic:
