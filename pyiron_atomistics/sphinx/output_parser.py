@@ -463,16 +463,6 @@ class SphinxWavesParser:
             self._eps = self.wfile['eps'][:].reshape (-1,self.n_spin,self.n_states)
         return self._eps.T #change
 
-    # Define as separate method and speed it up with numba
-    @staticmethod
-    #@numba.jit
-    def _fillin(res,psire,psiim,fft_idx):
-        """Distributes condensed psi (real, imag) on full FFT mesh"""
-        #rflat=res.flat
-        res.flat[fft_idx] = psire +1j * psiim
-        # for ig in range(fft_idx.shape[0]):
-        #     rflat[fft_idx[ig]] = complex(psire[ig], psiim[ig])
-
     def get_psi_rec(self,i, ispin, ik):
         """Loads a single wavefunction on full FFT mesh"""
         if (i<0 or i >= self.n_states):
@@ -486,7 +476,7 @@ class SphinxWavesParser:
         off = self._n_gk[ik] * (i + ispin * self.n_states)
         psire=self.wfile[f"psi-{ik+1}.re"][off:off+self._n_gk[ik]]
         psiim=self.wfile[f"psi-{ik+1}.im"][off:off+self._n_gk[ik]]
-        self._fillin(res,psire,psiim,self._fft_idx[ik])
+        res.flat[self._fft_idx[ik]] = psire +1j * psiim
         return res
     
     @property
