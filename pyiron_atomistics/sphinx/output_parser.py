@@ -195,13 +195,7 @@ def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None, index_permutation=N
 
 
 class SphinxLogParser:
-    def __init__(
-        self,
-        file_name="sphinx.log",
-        cwd=None,
-        index_permutation=None
-    ):
-                
+    def __init__(self, file_name="sphinx.log", cwd=None, index_permutation=None):
         """
         Args:
             file_name (str): file name
@@ -235,7 +229,7 @@ class SphinxLogParser:
             "scf_convergence": self.get_convergence,
             "scf_energy_int": self.get_energy_int,
             "scf_energy_free": self.get_energy_free,
-            "scf_magnetic_forces": self.get_magnetic_forces
+            "scf_magnetic_forces": self.get_magnetic_forces,
         }
 
     @property
@@ -374,9 +368,7 @@ class SphinxLogParser:
 
     @property
     def n_steps(self):
-        return len(
-            re.findall("\| SCF calculation", self.log_file, re.MULTILINE)
-        )
+        return len(re.findall("\| SCF calculation", self.log_file, re.MULTILINE))
 
     def _parse_band(self, term):
         arr = np.loadtxt(re.findall(term, self.log_main, re.MULTILINE))
