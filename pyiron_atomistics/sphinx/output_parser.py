@@ -422,7 +422,7 @@ class SphinxWavesParser:
 
     @property
     def _n_gk(self):
-        return self.wfile[“meshDim”][0]  
+        return self.wfile['meshDim'][0]  
     
     @property
     def _fft_idx(self):
@@ -439,15 +439,15 @@ class SphinxWavesParser:
 
     @property
     def Nx(self):
-        return self.wfile[“meshDim”][0]  
+        return self.wfile['meshDim'][0]  
 
     @property
     def Ny(self):
-        return self.wfile[“meshDim”][1]  
+        return self.wfile['meshDim'][1]  
 
     @property
     def Nz(self):
-        return self.wfile[“meshDim”][2]        
+        return self.wfile['meshDim'][2]        
         
     @property
     def n_states(self):
