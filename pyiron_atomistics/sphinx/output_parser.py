@@ -421,11 +421,6 @@ class SphinxWavesParser():
         # load various dimensions
         self.mesh = self.wfile['meshDim'][:]
         self.Nx, self.Ny, self.Nz = self.mesh
-
-        self.n_states  = self.wfile['nPerK'][0]
-        self.n_spin    = self.wfile['nSpin'].shape[0]
-        self.k_weights = self.wfile['kWeights'][:]
-
         # load the fft_idx to map from condensed psi to FFT mesh
         # (different mapping per k)
         self._fft_idx=[]
@@ -435,8 +430,23 @@ class SphinxWavesParser():
             self._fft_idx.append (self.wfile['fftIdx'][off:off+ngk])
             off += ngk
         
-        self.k_vec = self.wfile['kVec'][:]
-    
+
+    @property
+    def n_states(self):
+        return self.wfile["nPerK"][0]
+
+    @property
+    def n_spin(self):
+        return self.wfile['nSpin'].shape[0]
+
+    @property
+    def k_weights(self):
+        return self.k_weights = self.wfile['kWeights'][:]
+
+    @property
+    def k_vec(self):
+        return self.wfile['kVec'][:]
+
     @property
     def eps(self):
         """All eigenvalues (in Hartree) as (nk,n_states) block"""
