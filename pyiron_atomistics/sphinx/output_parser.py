@@ -414,7 +414,7 @@ class SphinxWavesParser():
     # Internal: check that wfile is set
     def _check_loaded (self):
         if not isinstance (self.wfile, h5py.File):
-            raise "No waves file loaded"
+            raise FileNotFoundError("No waves file loaded")
 
     def _read(self):
         self._check_loaded ()
