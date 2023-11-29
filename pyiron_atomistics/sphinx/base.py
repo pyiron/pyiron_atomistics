@@ -2252,6 +2252,7 @@ class Output:
             return None
         if len(results) == 0:
             self._job.status.aborted = True
+            return None
         if not results.pop("job_finished"):
             self._job.status.aborted = True
         for key, value in results["generic"].items():
