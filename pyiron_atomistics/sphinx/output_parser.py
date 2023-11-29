@@ -388,88 +388,87 @@ class SphinxLogParser:
         return np.array(re.findall(pattern, self.log_main)).astype(float)
 
 
-class SphinxWavesParser():
-    """ Class to read SPHInX waves.sxb files (HDF5 format)
-    
-        Initialize with waves.sxb filename, or use load ()
-    
+class SphinxWavesParser:
+    """Class to read SPHInX waves.sxb files (HDF5 format)
+
+    Initialize with waves.sxb filename, or use load ()
+
     """
-    
-    def __init__(self, fname = None):
-        if (fname is not None):
-            self.load (fname)
-    
+
+    def __init__(self, fname=None):
+        if fname is not None:
+            self.load(fname)
+
     def load(self, filename):
-        """ Load a waves.sxb file (HDF5 format)
-        
-            filename: file name
+        """Load a waves.sxb file (HDF5 format)
+
+        filename: file name
         """
-        self.wfile = h5py.File (filename)
+        self.wfile = h5py.File(filename)
         self._eps = None
-        self._read ()
-    
+        self._read()
+
     # Internal: check that wfile is set
-    def _check_loaded (self):
-        if not isinstance (self.wfile, h5py.File):
+    def _check_loaded(self):
+        if not isinstance(self.wfile, h5py.File):
             raise "No waves file loaded"
 
     def _read(self):
-        self._check_loaded ()
+        self._check_loaded()
         # load various dimensions
-        self.mesh = self.wfile['meshDim'][:]
+        self.mesh = self.wfile["meshDim"][:]
         self.Nx, self.Ny, self.Nz = self.mesh
 
-        self.n_states  = self.wfile['nPerK'][0]
-        self.n_spin    = self.wfile['nSpin'].shape[0]
-        self.k_weights = self.wfile['kWeights'][:]
+        self.n_states = self.wfile["nPerK"][0]
+        self.n_spin = self.wfile["nSpin"].shape[0]
+        self.k_weights = self.wfile["kWeights"][:]
 
         # load the fft_idx to map from condensed psi to FFT mesh
         # (different mapping per k)
-        self._fft_idx=[]
-        self._n_gk = self.wfile['nGk'][:]
-        off=0
+        self._fft_idx = []
+        self._n_gk = self.wfile["nGk"][:]
+        off = 0
         for ngk in self._n_gk:
-            self._fft_idx.append (self.wfile['fftIdx'][off:off+ngk])
+            self._fft_idx.append(self.wfile["fftIdx"][off : off + ngk])
             off += ngk
-        
-        self.k_vec = self.wfile['kVec'][:]
-    
+
+        self.k_vec = self.wfile["kVec"][:]
+
     @property
     def eps(self):
         """All eigenvalues (in Hartree) as (nk,n_states) block"""
-        if (self._eps is None):
-            self._check_loaded ()
-            self._eps = self.wfile['eps'][:].reshape (-1,self.n_spin,self.n_states)
-        return self._eps.T #change
+        if self._eps is None:
+            self._check_loaded()
+            self._eps = self.wfile["eps"][:].reshape(-1, self.n_spin, self.n_states)
+        return self._eps.T  # change
 
     # Define as separate method and speed it up with numba
     @staticmethod
     @numba.jit
-    def _fillin(res,psire,psiim,fft_idx):
+    def _fillin(res, psire, psiim, fft_idx):
         """Distributes condensed psi (real, imag) on full FFT mesh"""
-        rflat=res.flat
+        rflat = res.flat
         for ig in range(fft_idx.shape[0]):
             rflat[fft_idx[ig]] = complex(psire[ig], psiim[ig])
 
-    def get_psi_rec(self,i, ispin, ik):
+    def get_psi_rec(self, i, ispin, ik):
         """Loads a single wavefunction on full FFT mesh"""
-        if (i<0 or i >= self.n_states):
-            raise IndexError (f"i={i} fails 0 <= i < n_states={self.n_states}")
-        if (ispin<0 or ispin >= self.n_spin):
-            raise IndexError (f"ispin={ispin} fails 0 <= ispin < n_spin={self.n_spin}")
-        if (ik<0 or ik >= self.nk):
-            raise IndexError (f"ik={ik} fails 0 <= ik < nk={self.nk}")
-            
+        if i < 0 or i >= self.n_states:
+            raise IndexError(f"i={i} fails 0 <= i < n_states={self.n_states}")
+        if ispin < 0 or ispin >= self.n_spin:
+            raise IndexError(f"ispin={ispin} fails 0 <= ispin < n_spin={self.n_spin}")
+        if ik < 0 or ik >= self.nk:
+            raise IndexError(f"ik={ik} fails 0 <= ik < nk={self.nk}")
+
         res = np.zeros(shape=self.mesh, dtype=np.complex128)
         off = self._n_gk[ik] * (i + ispin * self.n_states)
-        psire=self.wfile[f"psi-{ik+1}.re"][off:off+self._n_gk[ik]]
-        psiim=self.wfile[f"psi-{ik+1}.im"][off:off+self._n_gk[ik]]
-        self._fillin(res,psire,psiim,self._fft_idx[ik])
+        psire = self.wfile[f"psi-{ik+1}.re"][off : off + self._n_gk[ik]]
+        psiim = self.wfile[f"psi-{ik+1}.im"][off : off + self._n_gk[ik]]
+        self._fillin(res, psire, psiim, self._fft_idx[ik])
         return res
-    
+
     @property
     def nk(self):
         """Number of k-points"""
-        self._check_loaded ()
+        self._check_loaded()
         return self.k_weights.shape[0]
-    
