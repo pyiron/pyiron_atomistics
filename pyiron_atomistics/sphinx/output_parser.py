@@ -212,6 +212,7 @@ class SphinxLogParser:
             path = Path(cwd) / path
         with open(str(path), "r") as sphinx_log_file:
             self.log_file = sphinx_log_file.read()
+        self._scf_not_entered = False
         self._check_enter_scf()
         self._log_main = None
         self._n_atoms = None
@@ -261,7 +262,8 @@ class SphinxLogParser:
 
     def _check_enter_scf(self):
         if len(re.findall("Enter Main Loop", self.log_file, re.MULTILINE)) == 0:
-            raise AssertionError("Log file created but first scf loop not reached")
+            warnings.warn("Log file created but first scf loop not reached")
+            self._scf_not_entered = True
 
     def get_n_valence(self):
         log = self.log_file.split("\n")
@@ -408,6 +410,8 @@ class SphinxLogParser:
 
     @property
     def results(self):
+        if self._scf_not_entered:
+            return {}
         results = {"generic": {}, "dft": {}}
         for key, func in self.generic_dict.items():
             value = func()
