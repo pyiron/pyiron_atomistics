@@ -169,7 +169,7 @@ def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None, index_permutation=N
     check_permutation(index_permutation)
     if cwd is None:
         cwd = "."
-    with open(file_name, "r") as f:
+    with open(file_name, "r") as f:eng
         file_content = "".join(f.readlines())
     n_steps = len(re.findall("// --- step \d", file_content, re.MULTILINE))
     f_v = ",".join(3 * [r"\s*([\d.-]+)"])
@@ -391,17 +391,25 @@ class SphinxLogParser:
         return np.array(re.findall(pattern, self.log_main)).astype(float)
 
 
-class SphinxWavesParser():
+class SphinxWavesParser:
     """ Class to read SPHInX waves.sxb files (HDF5 format)
     
         Initialize with waves.sxb filename, or use load ()
     
     """
     
-    def __init__(self, fname = None):
-        if (fname is not None):
-            self.load (fname)
-    
+    def __init__(self, file_name="waves.sxb", cwd="."):
+        """
+        Args:
+            file_name (str): file name
+            cwd (str): directory path
+        """
+        if cwd is None:
+            cwd = "."
+        path = Path(cwd) / Path(file_name)
+        self.load(path)
+        
+
     def load(self, filename):
         """ Load a waves.sxb file (HDF5 format)
         
@@ -410,11 +418,6 @@ class SphinxWavesParser():
         self.wfile = h5py.File (filename)
         self._eps = None
         self._read ()
-    
-    # Internal: check that wfile is set
-    def _check_loaded (self):
-        if not isinstance (self.wfile, h5py.File):
-            raise FileNotFoundError("No waves file loaded")
 
     def _read(self):
         self._check_loaded ()
@@ -430,7 +433,6 @@ class SphinxWavesParser():
             self._fft_idx.append (self.wfile['fftIdx'][off:off+ngk])
             off += ngk
         
-
     @property
     def n_states(self):
         return self.wfile["nPerK"][0]
