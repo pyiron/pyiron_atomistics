@@ -403,21 +403,13 @@ class SphinxWavesParser:
             file_name (str): file name
             cwd (str): directory path
         """
+        self._eps = None
         if Path(file_name).is_absolute():
-            self.load(Path(file_name))
+            self.wfile = h5py.File(Path(file_name))
         else:
             path = Path(cwd) / Path(file_name)
-            self.load(path)
+            self.wfile = h5py.File(path)
         
-        
-
-    def load(self, filename):
-        """ Load a waves.sxb file (HDF5 format)
-        
-            filename: file name
-        """
-        self.wfile = h5py.File (filename)
-        self._eps = None
 
     @property
     def _n_gk(self):
