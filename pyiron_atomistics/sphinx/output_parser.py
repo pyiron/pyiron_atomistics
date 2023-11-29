@@ -169,7 +169,7 @@ def collect_relaxed_hist(file_name="relaxHist.sx", cwd=None, index_permutation=N
     check_permutation(index_permutation)
     if cwd is None:
         cwd = "."
-    with open(file_name, "r") as f:eng
+    with open(file_name, "r") as f:
         file_content = "".join(f.readlines())
     n_steps = len(re.findall("// --- step \d", file_content, re.MULTILINE))
     f_v = ",".join(3 * [r"\s*([\d.-]+)"])
@@ -404,8 +404,12 @@ class SphinxWavesParser:
             file_name (str): file name
             cwd (str): directory path
         """
-        path = Path(cwd) / Path(file_name)
-        self.load(path)
+        if Path(file_name).is_absolute():
+            self.load(Path(file_name))
+        else:
+            path = Path(cwd) / Path(file_name)
+            self.load(path)
+        
         
 
     def load(self, filename):
@@ -415,24 +419,35 @@ class SphinxWavesParser:
         """
         self.wfile = h5py.File (filename)
         self._eps = None
-        self._read ()
-
-    def _read(self):
-        self._check_loaded ()
-        # load various dimensions
-        self.Nx, self.Ny, self.Nz = self.wfile['meshDim'][:]
-        # load the fft_idx to map from condensed psi to FFT mesh
-        # (different mapping per k)
-        self._fft_idx=[]
-        self._n_gk = self.wfile['nGk'][:]
-        off=0
-        for ngk in self._n_gk:
-            self._fft_idx.append (self.wfile['fftIdx'][off:off+ngk])
-            off += ngk
 
     @property
+    def _n_gk(self):
+        return self.wfile[“meshDim”][0]  
+    
+    @property
+    def _fft_idx(self):
+        fft_idx=[]
+        off=0
+        for ngk in self._n_gk:
+            fft_idx.append (self.wfile['fftIdx'][off:off+ngk])
+            off += ngk
+        return fft_idx
+    
+    @property
     def mesh(self):
-        return self.wfile['meshDim'][:]        
+        return self.wfile['meshDim'][:]
+
+    @property
+    def Nx(self):
+        return self.wfile[“meshDim”][0]  
+
+    @property
+    def Ny(self):
+        return self.wfile[“meshDim”][1]  
+
+    @property
+    def Nz(self):
+        return self.wfile[“meshDim”][2]        
         
     @property
     def n_states(self):
@@ -454,7 +469,6 @@ class SphinxWavesParser:
     def eps(self):
         """All eigenvalues (in Hartree) as (nk,n_states) block"""
         if (self._eps is None):
-            self._check_loaded ()
             self._eps = self.wfile['eps'][:].reshape (-1,self.n_spin,self.n_states)
         return self._eps.T #change
 
@@ -486,6 +500,5 @@ class SphinxWavesParser:
     @property
     def nk(self):
         """Number of k-points"""
-        self._check_loaded ()
         return self.k_weights.shape[0]
     
