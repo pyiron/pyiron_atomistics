@@ -1927,6 +1927,14 @@ class Input:
         else:
             return eddrmm_value
 
+import enum
+class DftEnergyKind(enum.Enum):
+    ENERGY_FREE = enum.auto()
+    """The full free energy of the electronic system, i.e. smeared internal energy plus entropy."""
+    ENERGY_INTERNAL = enum.auto()
+    """The smeared internal energy of the electronic system."""
+    ENERGY_ZERO = enum.auto()
+    """The internal energy of the electronic system, extrapolated to zero smearing."""
 
 class Output:
     """
@@ -1938,8 +1946,9 @@ class Output:
         charge_density: Gives the charge density of the system
     """
 
-    def __init__(self):
+    def __init__(self, energy_kind=None):
         self._structure = None
+        self._energy_kind = energy_kind
         self.outcar = Outcar()
         self.oszicar = Oszicar()
         self.generic_output = GenericOutput()
@@ -2051,8 +2060,20 @@ class Output:
             log_dict["forces"] = self.vp_new.vasprun_dict["forces"]
             log_dict["cells"] = self.vp_new.vasprun_dict["cells"]
             log_dict["volume"] = np.linalg.det(self.vp_new.vasprun_dict["cells"])
+            # A bug in the xml output of 5.4.4 renders total_*_energies useless
+            # https://www.vasp.at/forum/viewtopic.php?p=19264&hilit=vasprun+energy#p19264
             # log_dict["total_energies"] = self.vp_new.vasprun_dict["total_energies"]
-            log_dict["energy_tot"] = self.vp_new.vasprun_dict["total_energies"]
+            if self._energy_kind is None:
+                self._energy_kind = DftEnergyKind.ENERGY_ZERO
+            VASPRUN_ENERGY_KIND_KEYS = {
+                    DftEnergyKind.ENERGY_FREE: "scf_fr_energies",
+                    DftEnergyKind.ENERGY_INTERNAL: "scf_energies",
+                    DftEnergyKind.ENERGY_ZERO: "scf_0_energies",
+            }
+            energy_key = VASPRUN_ENERGY_KIND_KEYS[self._energy_kind]
+            log_dict["energy_tot"] = np.array([
+                    energy[-1] for energy in self.vp_new.vasprun_dict[energy_key]
+            ])
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
                 log_dict["energy_pot"] = (
                     log_dict["energy_tot"]
@@ -2092,7 +2113,15 @@ class Output:
             # log_dict = self.outcar.parse_dict.copy()
             if len(self.outcar.parse_dict["energies"]) == 0:
                 raise VaspCollectError("Error in parsing OUTCAR")
-            log_dict["energy_tot"] = self.outcar.parse_dict["energies"]
+            if self._energy_kind is None:
+                self._energy_kind = DftEnergyKind.ENERGY_FREE
+            OUTCAR_ENERGY_KIND_KEYS = {
+                    DftEnergyKind.ENERGY_FREE: "energies",
+                    DftEnergyKind.ENERGY_INTERNAL: "energies_int",
+                    DftEnergyKind.ENERGY_ZERO: "energies_zero",
+            }
+            energy_key = OUTCAR_ENERGY_KIND_KEYS[self._energy_kind]
+            log_dict["energy_tot"] = self.outcar.parse_dict[energy_key]
             log_dict["temperature"] = self.outcar.parse_dict["temperatures"]
             log_dict["stresses"] = self.outcar.parse_dict["stresses"]
             log_dict["pressures"] = self.outcar.parse_dict["pressures"]
