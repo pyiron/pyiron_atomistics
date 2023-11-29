@@ -413,7 +413,7 @@ class SphinxWavesParser:
 
     @property
     def _n_gk(self):
-        return self.wfile['meshDim'][0]  
+        return self.wfile['nGk'][:] 
     
     @property
     def _fft_idx(self):
@@ -465,12 +465,13 @@ class SphinxWavesParser:
 
     # Define as separate method and speed it up with numba
     @staticmethod
-    @numba.jit
+    #@numba.jit
     def _fillin(res,psire,psiim,fft_idx):
         """Distributes condensed psi (real, imag) on full FFT mesh"""
-        rflat=res.flat
-        for ig in range(fft_idx.shape[0]):
-            rflat[fft_idx[ig]] = complex(psire[ig], psiim[ig])
+        #rflat=res.flat
+        res.flat[fft_idx] = psire +1j * psiim
+        # for ig in range(fft_idx.shape[0]):
+        #     rflat[fft_idx[ig]] = complex(psire[ig], psiim[ig])
 
     def get_psi_rec(self,i, ispin, ik):
         """Loads a single wavefunction on full FFT mesh"""
