@@ -19,7 +19,7 @@ from pyiron_atomistics.sphinx.output_parser import (
 class TestSphinx(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.directory = Path(__file__).absolute() / "../static/sphinx"
+        cls.directory = Path(__file__).parent.absolute() / "../static/sphinx"
 
     def get_path(self, name):
         return self.directory / f"{name}_hdf5" / f"{name}"
