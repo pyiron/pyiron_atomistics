@@ -592,6 +592,7 @@ class TestSphinx(unittest.TestCase):
 
     def test_collect_aborted(self):
         self.sphinx_aborted.collect_output()
+        self.sphinx_aborted.decompress()
         self.assertTrue(self.sphinx_aborted.status.aborted)
 
     def test_collect_2_5(self):
