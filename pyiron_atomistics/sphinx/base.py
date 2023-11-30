@@ -2141,7 +2141,7 @@ class Output:
         self.generic.create_group("dft")
         self.old_version = False
 
-    def collect_spins_dat(self, file_name="spins.dat", cwd="."):
+    def collect_spins_dat(self, file_name="spins.dat", cwd=None):
         """
 
         Args:
@@ -2160,7 +2160,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_energy_dat(self, file_name="energy.dat", cwd="."):
+    def collect_energy_dat(self, file_name="energy.dat", cwd=None):
         """
 
         Args:
@@ -2177,7 +2177,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_residue_dat(self, file_name="residue.dat", cwd="."):
+    def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         """
 
         Args:
@@ -2194,7 +2194,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_eps_dat(self, file_name=None, cwd="."):
+    def collect_eps_dat(self, file_name=None, cwd=None):
         """
 
         Args:
@@ -2231,7 +2231,7 @@ class Output:
         for k, v in results.items():
             self.generic.dft[k] = v
 
-    def collect_sphinx_log(self, file_name="sphinx.log", cwd="."):
+    def collect_sphinx_log(self, file_name="sphinx.log", cwd=None):
         """
 
         Args:
@@ -2243,38 +2243,22 @@ class Output:
         """
 
         try:
-            self._spx_log_parser = SphinxLogParser(file_name=file_name, cwd=cwd)
-        except AssertionError as e:
-            self._job.status.aborted = True
-            raise AssertionError(e)
+            results = SphinxLogParser(
+                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
+            ).results
         except FileNotFoundError:
             return None
-        if not self._spx_log_parser.job_finished:
+        if len(results) == 0:
             self._job.status.aborted = True
-        self.generic.dft.n_valence = self._spx_log_parser.get_n_valence()
-        self.generic.dft.bands_k_weights = self._spx_log_parser.get_bands_k_weights()
-        self.generic.dft.kpoints_cartesian = (
-            self._spx_log_parser.get_kpoints_cartesian()
-        )
-        self.generic.volume = self._spx_log_parser.get_volume()
-        self.generic.dft.bands_e_fermi = self._spx_log_parser.get_fermi()
-        self.generic.dft.bands_occ = self._spx_log_parser.get_occupancy()
-        self.generic.dft.bands_eigen_values = self._spx_log_parser.get_band_energy()
-        self.generic.dft.scf_convergence = self._spx_log_parser.get_convergence()
-        if "scf_energy_int" not in self.generic.dft.list_nodes():
-            self.generic.dft.scf_energy_int = self._spx_log_parser.get_energy_int()
-        if "scf_energy_free" not in self.generic.dft.list_nodes():
-            self.generic.dft.scf_energy_free = self._spx_log_parser.get_energy_free()
-        if "forces" not in self.generic.list_nodes():
-            self.generic.forces = self._spx_log_parser.get_forces(
-                index_permutation=self._job.id_spx_to_pyi
-            )
-        if "scf_magnetic_forces" not in self.generic.dft.list_nodes():
-            self.generic.dft.scf_magnetic_forces = (
-                self._spx_log_parser.get_magnetic_forces(
-                    index_permutation=self._job.id_spx_to_pyi
-                )
-            )
+            return None
+        if not results["generic"].pop("job_finished"):
+            self._job.status.aborted = True
+        for key, value in results["generic"].items():
+            if key not in self.generic:
+                self.generic[key] = value
+        for key, value in results["dft"].items():
+            if key not in self.generic.dft:
+                self.generic.dft[key] = value
 
     def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=None):
         """
@@ -2315,20 +2299,19 @@ class Output:
 
     def _get_electronic_structure_object(self):
         es = ElectronicStructure()
-        if "bands_eigen_values" in self.generic.dft.list_nodes():
-            eig_mat = self.generic.dft.bands_eigen_values[-1]
-            occ_mat = self.generic.dft.bands_occ[-1]
-            if len(eig_mat.shape) == 3:
-                es.eigenvalue_matrix = eig_mat
-                es.occupancy_matrix = occ_mat
-            else:
-                es.eigenvalue_matrix = np.array([eig_mat])
-                es.occupancy_matrix = np.array([occ_mat])
-            es.efermi = self.generic.dft.bands_e_fermi[-1]
-            es.n_spins = len(es.occupancy_matrix)
-            es.kpoint_list = self.generic.dft.kpoints_cartesian
-            es.kpoint_weights = self.generic.dft.bands_k_weights
-            es.generate_from_matrices()
+        eig_mat = self.generic.dft.bands_eigen_values[-1]
+        occ_mat = self.generic.dft.bands_occ[-1]
+        if len(eig_mat.shape) == 3:
+            es.eigenvalue_matrix = eig_mat
+            es.occupancy_matrix = occ_mat
+        else:
+            es.eigenvalue_matrix = np.array([eig_mat])
+            es.occupancy_matrix = np.array([occ_mat])
+        es.efermi = self.generic.dft.bands_e_fermi[-1]
+        es.n_spins = len(es.occupancy_matrix)
+        es.kpoint_list = self.generic.dft.kpoints_cartesian
+        es.kpoint_weights = self.generic.dft.bands_k_weights
+        es.generate_from_matrices()
         return es
 
     def collect(self, directory=None):
@@ -2381,7 +2364,7 @@ class Output:
                 )
             if self.charge_density.total_data is not None:
                 self.charge_density.to_hdf(hdf5_output, group_name="charge_density")
-            if "bands_eigen_values" in self.generic.dft.list_nodes():
+            if "bands_occ" in self.generic.dft:
                 es = self._get_electronic_structure_object()
                 if len(es.kpoint_list) > 0:
                     es.to_hdf(hdf5_output)
