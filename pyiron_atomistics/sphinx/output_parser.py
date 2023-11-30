@@ -390,12 +390,12 @@ class SphinxLogParser:
 
 
 class SphinxWavesParser:
-    """ Class to read SPHInX waves.sxb files (HDF5 format)
-    
-        Initialize with waves.sxb filename, or use load ()
-    
+    """Class to read SPHInX waves.sxb files (HDF5 format)
+
+    Initialize with waves.sxb filename, or use load ()
+
     """
-    
+
     def __init__(self, file_name="waves.sxb", cwd="."):
         """
         Args:
@@ -408,7 +408,6 @@ class SphinxWavesParser:
         else:
             path = Path(cwd) / Path(file_name)
             self.wfile = h5py.File(path)
-        
 
     @property
     def _n_gk(self):
@@ -416,7 +415,7 @@ class SphinxWavesParser:
     
     @property
     def mesh(self):
-        return self.wfile['meshDim'][:]
+        return self.wfile["meshDim"][:]
 
     @property
     def Nx(self):
@@ -436,15 +435,15 @@ class SphinxWavesParser:
 
     @property
     def n_spin(self):
-        return self.wfile['nSpin'].shape[0]
+        return self.wfile["nSpin"].shape[0]
 
     @property
     def k_weights(self):
-        return self.wfile['kWeights'][:]
+        return self.wfile["kWeights"][:]
 
     @property
     def k_vec(self):
-        return self.wfile['kVec'][:]
+        return self.wfile["kVec"][:]
 
     @property
     def eps(self):
@@ -453,24 +452,23 @@ class SphinxWavesParser:
             self._eps = self.wfile['eps'][:].reshape(-1,self.n_spin,self.n_states)
         return self._eps.T #change
 
-    def get_psi_rec(self,i, ispin, ik):
+    def get_psi_rec(self, i, ispin, ik):
         """Loads a single wavefunction on full FFT mesh"""
-        if (i<0 or i >= self.n_states):
-            raise IndexError (f"i={i} fails 0 <= i < n_states={self.n_states}")
-        if (ispin<0 or ispin >= self.n_spin):
-            raise IndexError (f"ispin={ispin} fails 0 <= ispin < n_spin={self.n_spin}")
-        if (ik<0 or ik >= self.nk):
-            raise IndexError (f"ik={ik} fails 0 <= ik < nk={self.nk}")
-            
+        if i < 0 or i >= self.n_states:
+            raise IndexError(f"i={i} fails 0 <= i < n_states={self.n_states}")
+        if ispin < 0 or ispin >= self.n_spin:
+            raise IndexError(f"ispin={ispin} fails 0 <= ispin < n_spin={self.n_spin}")
+        if ik < 0 or ik >= self.nk:
+            raise IndexError(f"ik={ik} fails 0 <= ik < nk={self.nk}")
+
         res = np.zeros(shape=self.mesh, dtype=np.complex128)
         off = self._n_gk[ik] * (i + ispin * self.n_states)
-        psire=self.wfile[f"psi-{ik+1}.re"][off:off+self._n_gk[ik]]
-        psiim=self.wfile[f"psi-{ik+1}.im"][off:off+self._n_gk[ik]]
-        res.flat[self.wfile["fftIdx"][off : off + self._n_gk[ik]]] = psire +1j * psiim
+        psire = self.wfile[f"psi-{ik+1}.re"][off : off + self._n_gk[ik]]
+        psiim = self.wfile[f"psi-{ik+1}.im"][off : off + self._n_gk[ik]]
+        res.flat[self.wfile["fftIdx"][off : off + self._n_gk[ik]]] = psire + 1j * psiim
         return res
-    
+
     @property
     def nk(self):
         """Number of k-points"""
         return self.k_weights.shape[0]
-    
