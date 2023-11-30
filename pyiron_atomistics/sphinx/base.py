@@ -2247,7 +2247,7 @@ class Output:
                 file_name=file_name,
                 cwd=cwd,
                 index_permutation=self._job.id_spx_to_pyi
-            )
+            ).results
         except FileNotFoundError:
             return None
         if len(results) == 0:
