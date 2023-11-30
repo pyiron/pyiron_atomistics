@@ -371,9 +371,10 @@ class SphinxLogParser:
         return len(re.findall("\| SCF calculation", self.log_file, re.MULTILINE))
 
     def _parse_band(self, term):
-        arr = np.loadtxt(re.findall(term, self.log_main, re.MULTILINE))
-        if len(arr) == 0:
+        content = re.findall(term, self.log_main, re.MULTILINE)
+        if len(content) == 0:
             return []
+        arr = np.loadtxt(content)
         shape = (-1, len(self.k_points), arr.shape[-1])
         if self.spin_enabled:
             shape = (-1, 2, len(self.k_points), shape[-1])
