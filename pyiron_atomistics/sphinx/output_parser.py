@@ -412,16 +412,7 @@ class SphinxWavesParser:
 
     @property
     def _n_gk(self):
-        return self.wfile['nGk'][:] 
-    
-    @property
-    def _fft_idx(self):
-        fft_idx=[]
-        off=0
-        for ngk in self._n_gk:
-            fft_idx.append (self.wfile['fftIdx'][off:off+ngk])
-            off += ngk
-        return fft_idx
+        return self.wfile['nGk'][:]
     
     @property
     def mesh(self):
@@ -429,16 +420,16 @@ class SphinxWavesParser:
 
     @property
     def Nx(self):
-        return self.wfile['meshDim'][0]  
+        return self.wfile['meshDim'][0]
 
     @property
     def Ny(self):
-        return self.wfile['meshDim'][1]  
+        return self.wfile['meshDim'][1]
 
     @property
     def Nz(self):
-        return self.wfile['meshDim'][2]        
-        
+        return self.wfile['meshDim'][2]
+
     @property
     def n_states(self):
         return self.wfile["nPerK"][0]
@@ -459,7 +450,7 @@ class SphinxWavesParser:
     def eps(self):
         """All eigenvalues (in Hartree) as (nk,n_states) block"""
         if (self._eps is None):
-            self._eps = self.wfile['eps'][:].reshape (-1,self.n_spin,self.n_states)
+            self._eps = self.wfile['eps'][:].reshape(-1,self.n_spin,self.n_states)
         return self._eps.T #change
 
     def get_psi_rec(self,i, ispin, ik):
@@ -475,7 +466,7 @@ class SphinxWavesParser:
         off = self._n_gk[ik] * (i + ispin * self.n_states)
         psire=self.wfile[f"psi-{ik+1}.re"][off:off+self._n_gk[ik]]
         psiim=self.wfile[f"psi-{ik+1}.im"][off:off+self._n_gk[ik]]
-        res.flat[self._fft_idx[ik]] = psire +1j * psiim
+        res.flat[self.wfile["fftIdx"][off : off + self._n_gk[ik]]] = psire +1j * psiim
         return res
     
     @property
