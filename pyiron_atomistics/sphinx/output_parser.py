@@ -415,3 +415,4 @@ class SphinxLogParser:
             value = func()
             if len(value) > 0:
                 results["dft"][key] = value
+        return results
