@@ -37,7 +37,7 @@ def collect_energy_dat(file_name="energy.dat", cwd=None):
     path = Path(file_name)
     if cwd is not None:
         path = Path(cwd) / path
-    energies = np.loadtxt(str(path))
+    energies = np.loadtxt(str(path), ndmin=2)
     results = {"scf_computation_time": splitter(energies[:, 1], energies[:, 0])}
     results["scf_energy_int"] = splitter(energies[:, 2] * HARTREE_TO_EV, energies[:, 0])
 
@@ -67,7 +67,7 @@ def collect_residue_dat(file_name="residue.dat", cwd="."):
     """
     if cwd is None:
         cwd = "."
-    residue = np.loadtxt(str(Path(cwd) / Path(file_name)))
+    residue = np.loadtxt(str(Path(cwd) / Path(file_name)), ndmin=2)
     if len(residue) == 0:
         return {}
     return {"scf_residue": splitter(residue[:, 1:].squeeze(), residue[:, 0])}
@@ -86,7 +86,7 @@ def _collect_eps_dat(file_name="eps.dat", cwd=None):
     path = Path(file_name)
     if cwd is not None:
         path = Path(cwd) / path
-    return np.loadtxt(str(path))[..., 1:]
+    return np.loadtxt(str(path), ndmin=2)[..., 1:]
 
 
 def collect_eps_dat(file_name=None, cwd=None, spins=True):
@@ -114,7 +114,7 @@ def collect_energy_struct(file_name="energy-structOpt.dat", cwd=None):
     path = Path(file_name)
     if cwd is not None:
         path = Path(cwd) / path
-    return {"energy_free": np.loadtxt(str(path)).reshape(-1, 2)[:, 1] * HARTREE_TO_EV}
+    return {"energy_free": np.loadtxt(str(path), ndmin=2).reshape(-1, 2)[:, 1] * HARTREE_TO_EV}
 
 
 def check_permutation(index_permutation):
@@ -143,7 +143,7 @@ def collect_spins_dat(file_name="spins.dat", cwd=None, index_permutation=None):
     path = Path(file_name)
     if cwd is not None:
         path = Path(cwd) / path
-    spins = np.loadtxt(str(path))
+    spins = np.loadtxt(str(path), ndmin=2)
     if index_permutation is not None:
         s = np.array([ss[index_permutation] for ss in spins[:, 1:]])
     else:
@@ -374,7 +374,7 @@ class SphinxLogParser:
         content = re.findall(term, self.log_main, re.MULTILINE)
         if len(content) == 0:
             return []
-        arr = np.loadtxt(content)
+        arr = np.loadtxt(content, ndmin=2)
         shape = (-1, len(self.k_points), arr.shape[-1])
         if self.spin_enabled:
             shape = (-1, 2, len(self.k_points), shape[-1])
