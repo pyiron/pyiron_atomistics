@@ -1,3 +1,4 @@
+from functools import cached_property
 import numpy as np
 import re
 import scipy.constants
@@ -482,6 +483,15 @@ class SphinxWavesParser:
             self._eps = self.wfile['eps'][:].reshape(-1,self.n_spin,self.n_states)
         return self._eps.T #change
 
+    @cached_property
+    def _fft_idx(self):
+        fft_idx = []
+        off = 0
+        for ngk in self._n_gk:
+            fft_idx.append(self.wfile["fftIdx"][off : off + ngk])
+            off += ngk
+        return fft_idx
+
     def get_psi_rec(self, i, ispin, ik):
         """Loads a single wavefunction on full FFT mesh"""
         if i < 0 or i >= self.n_states:
@@ -495,7 +505,7 @@ class SphinxWavesParser:
         off = self._n_gk[ik] * (i + ispin * self.n_states)
         psire = self.wfile[f"psi-{ik+1}.re"][off : off + self._n_gk[ik]]
         psiim = self.wfile[f"psi-{ik+1}.im"][off : off + self._n_gk[ik]]
-        res.flat[self.wfile["fftIdx"][off : off + self._n_gk[ik]]] = psire + 1j * psiim
+        res.flat[self._fft_idx[ik]] = psire + 1j * psiim
         return res
 
     @property
