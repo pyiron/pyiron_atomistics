@@ -5,7 +5,7 @@
 from __future__ import print_function
 from typing import Optional
 
-from atomistics.shared.thermo.debye import DebyeModel
+from atomistics.workflows.evcurve.debye import DebyeModel
 from atomistics.workflows.evcurve.fit import (
     EnergyVolumeFit,
     fitfunction,
