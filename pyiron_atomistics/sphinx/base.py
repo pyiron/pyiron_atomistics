@@ -2299,20 +2299,19 @@ class Output:
 
     def _get_electronic_structure_object(self):
         es = ElectronicStructure()
-        if "bands_eigen_values" in self.generic.dft.list_nodes():
-            eig_mat = self.generic.dft.bands_eigen_values[-1]
-            occ_mat = self.generic.dft.bands_occ[-1]
-            if len(eig_mat.shape) == 3:
-                es.eigenvalue_matrix = eig_mat
-                es.occupancy_matrix = occ_mat
-            else:
-                es.eigenvalue_matrix = np.array([eig_mat])
-                es.occupancy_matrix = np.array([occ_mat])
-            es.efermi = self.generic.dft.bands_e_fermi[-1]
-            es.n_spins = len(es.occupancy_matrix)
-            es.kpoint_list = self.generic.dft.kpoints_cartesian
-            es.kpoint_weights = self.generic.dft.bands_k_weights
-            es.generate_from_matrices()
+        eig_mat = self.generic.dft.bands_eigen_values[-1]
+        occ_mat = self.generic.dft.bands_occ[-1]
+        if len(eig_mat.shape) == 3:
+            es.eigenvalue_matrix = eig_mat
+            es.occupancy_matrix = occ_mat
+        else:
+            es.eigenvalue_matrix = np.array([eig_mat])
+            es.occupancy_matrix = np.array([occ_mat])
+        es.efermi = self.generic.dft.bands_e_fermi[-1]
+        es.n_spins = len(es.occupancy_matrix)
+        es.kpoint_list = self.generic.dft.kpoints_cartesian
+        es.kpoint_weights = self.generic.dft.bands_k_weights
+        es.generate_from_matrices()
         return es
 
     def collect(self, directory=None):
@@ -2365,7 +2364,7 @@ class Output:
                 )
             if self.charge_density.total_data is not None:
                 self.charge_density.to_hdf(hdf5_output, group_name="charge_density")
-            if "bands_eigen_values" in self.generic.dft.list_nodes():
+            if "bands_occ" in self.generic.dft:
                 es = self._get_electronic_structure_object()
                 if len(es.kpoint_list) > 0:
                     es.to_hdf(hdf5_output)
