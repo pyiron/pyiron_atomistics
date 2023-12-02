@@ -24,3 +24,4 @@ dependencies:
 - seekpath =2.1.0
 - spglib =2.1.0
 - structuretoolkit =0.0.15
+- python-blosc2  # required by pytables
