@@ -206,7 +206,7 @@ class VaspInteractive(VaspBase, GenericInteractive):
         time_step=1.0,
         retain_charge_density=False,
         retain_electrostatic_potential=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Sets appropriate tags for molecular dynamics in VASP
@@ -234,7 +234,7 @@ class VaspInteractive(VaspBase, GenericInteractive):
                 n_print=n_print,
                 retain_charge_density=retain_charge_density,
                 retain_electrostatic_potential=retain_electrostatic_potential,
-                **kwargs
+                **kwargs,
             )
 
     def run_if_interactive_non_modal(self):
