@@ -7,7 +7,8 @@ for t in tests/backwards/*save.py; do
     python $t
 done
 
-pip install --no-deps .
+pip install versioneer[toml]==0.29
+pip install . --no-deps --no-build-isolation
 i=0;
 echo "Before loading";
 for t in tests/backwards/*load.py; do

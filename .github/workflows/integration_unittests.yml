@@ -15,28 +15,27 @@ jobs:
     if: |
       github.event_name == 'push' ||
       ( github.event_name == 'pull_request'  && contains(github.event.pull_request.labels.*.name, 'integration' ))
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Merge Environments
       shell: bash -l {0}
       run: |
-        awk 'NR>3{ print $0 }' .ci_support/environment-notebooks.yml >> .ci_support/environment.yml
-    - uses: conda-incubator/setup-miniconda@v2.2.0
+        cp .ci_support/environment.yml environment.yml
+        tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
+    - name: Setup Mambaforge
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: 3.9
-        mamba-version: "*"
+        python-version: '3.11'
+        miniforge-variant: Mambaforge
         channels: conda-forge
         channel-priority: strict
-        auto-update-conda: true  
-        environment-file: .ci_support/environment.yml
-        miniforge-variant: Mambaforge
-    - name: Setup
-      shell: bash -l {0}
-      run: |
-        pip install --no-deps .
+        activate-environment: my-env
+        environment-file: environment.yml
+        use-mamba: true
     - name: Tests
       shell: bash -l {0}
-      run: coverage run --omit pyiron_atomistics/_version.py -m unittest discover test_integration
+      run: |
+        pip install versioneer[toml]==0.29
+        pip install . --no-deps --no-build-isolation
+        python -m unittest discover test_integration

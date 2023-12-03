@@ -26,5 +26,6 @@ jobs:
       timeout-minutes: 30
       run: |
         python .ci_support/pyironconfig.py
-        pip install --no-deps .
+        pip install versioneer[toml]==0.29
+        pip install . --no-deps --no-build-isolation
         python -m unittest discover tests
