@@ -2,7 +2,7 @@ channels:
 - conda-forge
 dependencies:
 - nbsphinx
-- sphinx <6.1
+- sphinx
 - ase
 - defusedxml
 - future

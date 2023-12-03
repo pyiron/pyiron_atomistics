@@ -15,34 +15,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Merge Notebook environment
+      - name: Merge environment
         run: |
-          python .ci_support/condamerge.py --base .ci_support/environment.yml --add .ci_support/environment-notebooks.yml > environment.yml
+          cp .ci_support/environment.yml environment.yml
+          tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
       - name: Setup Mambaforge
         uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: "3.10"
+          python-version: '3.11'
           miniforge-variant: Mambaforge
           channels: conda-forge
           channel-priority: strict
           activate-environment: my-env
+          environment-file: environment.yml
           use-mamba: true
-      - name: Set cache date and number
-        run: |
-          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-          cat .github/variables/cache_number.env >> $GITHUB_ENV
-      - uses: actions/cache@v2
-        with:
-          path: /usr/share/miniconda3/envs/my-env
-          key: linux-64-py-3-10-conda-${{ hashFiles('environment.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
-        id: cache
-      - name: Update environment
-        run: mamba env update -n my-env -f environment.yml
-        if: steps.cache.outputs.cache-hit != 'true'
-      - name: Setup
-        shell: bash -l {0}
-        run: |
-          pip install --no-deps .
       - name: Test
         shell: bash -l {0}
-        run: ./.ci_support/build_notebooks.sh
+        run: |
+          pip install versioneer[toml]==0.29
+          pip install . --no-deps --no-build-isolation
+          ./.ci_support/build_notebooks.sh
