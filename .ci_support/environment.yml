@@ -4,7 +4,6 @@ dependencies:
 - aimsgb =1.1.0
 - ase =3.22.1
 - atomistics =0.1.12
-- coveralls
 - coverage
 - codacy-coverage
 - defusedxml =0.7.1
