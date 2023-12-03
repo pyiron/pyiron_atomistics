@@ -1,0 +1,30 @@
+name: Unittest Lower Bound
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Mambaforge
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version: '3.9'
+        miniforge-variant: Mambaforge
+        channels: conda-forge
+        channel-priority: strict
+        activate-environment: my-env
+        environment-file: .ci_support/environment-old.yml
+        use-mamba: true
+    - name: Test
+      shell: bash -l {0}
+      timeout-minutes: 30
+      run: |
+        python .ci_support/pyironconfig.py
+        pip install --no-deps .
+        python -m unittest discover tests
