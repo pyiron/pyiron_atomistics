@@ -7,7 +7,7 @@ dependencies:
 - defusedxml =0.7.0
 - h5py =3.9.0
 - matplotlib-base =3.8.2
-- mendeleev =0.10.0
+- mendeleev =0.12.0
 - mp-api =0.37.0
 - numpy =1.26.0
 - pandas =2.0.0
