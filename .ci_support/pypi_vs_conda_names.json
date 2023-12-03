@@ -6,6 +6,6 @@
   "pyiron-experimental": "pyiron_experimental",
   "pyiron-continuum": "pyiron_continuum",
   "pyiron-gpl": "pyiron_gpl",
-  "pyiron-gui": "pyiron_gui"
+  "pyiron-gui": "pyiron_gui",
   "matplotlib": "matplotlib-base"
 }
