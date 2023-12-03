@@ -22,11 +22,11 @@ def get_env_version(env_content):
         if 'dependencies:' in l:
             read_flag = True
         elif read_flag:
-            lst = l.replace('-', '').replace(' ', '').replace('\n', '').split("=")
+            lst = l.replace('- ', '').replace(' ', '').replace('\n', '').split("=")
             if len(lst) == 2:
                 depend_lst.append(lst[0])
                 version_lst.append(lst[1])
-    return {d:v for d, v in zip(depend_lst, version_lst)}
+    return {d: v for d, v in zip(depend_lst, version_lst)}
 
 
 def update_dependencies(setup_content, version_low_dict, version_high_dict):
@@ -38,7 +38,7 @@ def update_dependencies(setup_content, version_low_dict, version_high_dict):
             version_combo_dict[dep] = dep + "==" + ver
 
     setup_content_new = ""
-    pattern_dict = {d:d + "==" + v for d, v in version_high_dict.items()}
+    pattern_dict = {d: d + "==" + v for d, v in version_high_dict.items()}
     for l in setup_content:
         for k, v in pattern_dict.items():
             if v in l:
