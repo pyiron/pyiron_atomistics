@@ -205,7 +205,7 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         color_map="coolwarm",
         axis=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot volume vs free energy curves for defined temperatures. If no Murnaghan job is assigned, plots free energy without total electronic energy at T=0.

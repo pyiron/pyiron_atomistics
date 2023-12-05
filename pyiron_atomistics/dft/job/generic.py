@@ -354,7 +354,7 @@ class GenericDFTJob(AtomisticGenericJob):
         time_step=1.0,
         retain_charge_density=False,
         retain_electrostatic_potential=False,
-        **kwargs
+        **kwargs,
     ):
         self._generic_input["fix_symmetry"] = False
         super(GenericDFTJob, self).calc_md(

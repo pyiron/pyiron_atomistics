@@ -1,6 +1,4 @@
-# This workflow is used to test, if the installation of the pypi package works
-
-name: Pip check
+name: Unittest Lower Bound
 
 on:
   push:
@@ -16,16 +14,18 @@ jobs:
     - name: Setup Mambaforge
       uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: '3.11'
+        python-version: '3.9'
         miniforge-variant: Mambaforge
         channels: conda-forge
         channel-priority: strict
         activate-environment: my-env
-        environment-file: .ci_support/environment.yml
+        environment-file: .ci_support/environment-old.yml
         use-mamba: true
-    - name: Pip check
+    - name: Test
       shell: bash -l {0}
+      timeout-minutes: 30
       run: |
+        python .ci_support/pyironconfig.py
         pip install versioneer[toml]==0.29
         pip install . --no-deps --no-build-isolation
-        pip check
+        python -m unittest discover tests

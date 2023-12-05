@@ -9,11 +9,9 @@ on:
 jobs:
   build:
     if: contains(github.event.pull_request.labels.*.name, 'format_black' )
-    
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         token: ${{ secrets.DEPENDABOT_WORKFLOW_TOKEN }}
         ref: ${{ github.event.pull_request.head.ref }} # Check out the head of the actual branch, not the PR
@@ -22,12 +20,12 @@ jobs:
       uses: psf/black@stable
       with:
         options: ""
-        src: "./pyiron_atomistics"
+        src: "./${{ github.event.repository.name }}"
     - name: commit
       run: |
         git config --local user.email "pyiron@mpie.de"
         git config --local user.name "pyiron-runner"
-        git commit -m "Format black" -a || exit 0
+        git commit -m "Format black" -a
     - name: push
       uses: ad-m/github-push-action@master
       with:
