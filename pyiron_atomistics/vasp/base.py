@@ -53,6 +53,17 @@ __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+def _vasp_generic_energy_free_affected(job):
+    """
+    Checks whether the value saved in output/generic/energy_pot matches the electronic free energy.
+    """
+    if self.project_hdf5.get("HDF_VERSION", "0.1.0") == "0.1.0":
+        energy_free = np.array([e[-1] for e in self.project_hdf5["output/generic/dft/scf_energy_pot"]])
+        energy_pot = self.project_hdf5["output/generic/energy_pot"]
+        return not np.allclose(energy_free, energy_pot)
+    else:
+        return False
+
 
 class VaspBase(GenericDFTJob):
     """
@@ -98,6 +109,7 @@ class VaspBase(GenericDFTJob):
         self._compress_by_default = True
         self.get_enmax_among_species = get_enmax_among_potentials
         state.publications.add(self.publication)
+        self.__hdf_version__ = "0.2.0"
 
     @property
     def structure(self):
@@ -767,6 +779,13 @@ class VaspBase(GenericDFTJob):
         self._structure_to_hdf()
         self.input.to_hdf(self._hdf5)
         self._output_parser.to_hdf(self._hdf5)
+        if _vasp_generic_energy_free_affected(self):
+            self.logger.warn(
+                "Generic energy_pot does not match electronic free energy! "
+                "Generic energies is not consistent to generic forces and stress, "
+                "call project.maintenance.local.vasp_energy_pot_as_free_energy() "
+                "to correct generic energy!"
+            )
 
     def from_hdf(self, hdf=None, group_name=None):
         """

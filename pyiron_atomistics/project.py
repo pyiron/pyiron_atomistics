@@ -17,6 +17,9 @@ from pyiron_base import (
     Creator as CreatorCore,
     deprecate,
 )
+from pyiron_base import (
+    Maintenance, LocalMaintenance
+)
 
 try:
     from pyiron_base import ProjectGUI
@@ -29,6 +32,7 @@ from pyiron_atomistics.atomistics.generic.object_type import (
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile
 from pyiron_atomistics.vasp.potential import VaspPotential
+from pyiron_atomistics.vasp.base import _vasp_generic_energy_free_affected
 import pyiron_atomistics.atomistics.structure.pyironase as ase
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
@@ -48,6 +52,27 @@ __date__ = "Sep 1, 2017"
 
 if not (isinstance(ase.__file__, str)):
     raise AssertionError()
+
+class AtomisticsLocalMaintenance(LocalMaintenance):
+
+    def vasp_energy_pot_as_free_energy(self, recursive: bool = True, progress: bool = True, **kwargs):
+        kwargs["hamilton"] = "Vasp"
+        for job in self._project.iter_jobs(
+            recursive=recursive, progress=progress, convert_to_object=False, **kwargs
+        ):
+            if _vasp_generic_energy_free_affected(job):
+                job.project_hdf5["output/generic/energy_pot"] = \
+                        np.array([e[-1] for e in job.project_hdf5["output/generic/dft/scf_energy_free"]])
+
+class AtomisticsMaintenance(Maintenance):
+
+    def __init__(self, project):
+        """
+        Args:
+            (project): pyiron project to do maintenance on
+        """
+        super().__init__(project=project)
+        self._local = AtomisticsLocalMaintenance(project)
 
 
 class Project(ProjectCore):
@@ -139,6 +164,12 @@ class Project(ProjectCore):
         self._creator = Creator(self)
         # TODO: instead of re-initialzing, auto-update pyiron_base creator with factories, like we update job class
         #  creation
+
+    @property
+    def maintenance(self):
+        if self._maintenance is None:
+            self._maintenance = AtomisticsMaintenance(self)
+        return self._maintenance
 
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
