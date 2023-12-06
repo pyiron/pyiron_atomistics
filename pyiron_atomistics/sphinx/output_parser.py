@@ -491,7 +491,15 @@ class SphinxWavesReader:
         return fft_idx
 
     def get_psi_rec(self, i, ispin, ik):
-        """Loads a single wavefunction on full FFT mesh"""
+        """
+        Loads a single wavefunction on full FFT mesh of shape mesh.
+
+        params: i: state index (int)
+               ispin: spin index (int)
+               ik: k index (int)
+        returns:
+            res: complex valued wavefunction indexed by (i,ispin,ik) loaded on to the FFT mesh.
+        """
         if i < 0 or i >= self.n_states:
             raise IndexError(f"i={i} fails 0 <= i < n_states={self.n_states}")
         if ispin < 0 or ispin >= self.n_spin:
