@@ -404,6 +404,7 @@ class SphinxLogParser:
     def get_fermi(self):
         pattern = r"Fermi energy:\s+(\d+\.\d+)\s+eV"
         return np.array(re.findall(pattern, self.log_main)).astype(float)
+
     @property
     def results(self):
         if self._scf_not_entered:
