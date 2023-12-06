@@ -17,7 +17,7 @@ from pyiron_base import (
     Creator as CreatorCore,
     deprecate,
 )
-from pyiron_base import (
+from pyiron_base.project.maintenance import (
     Maintenance, LocalMaintenance
 )
 
