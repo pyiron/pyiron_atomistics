@@ -500,12 +500,10 @@ class SphinxWavesReader:
         returns:
             res: complex valued wavefunction indexed by (i,ispin,ik) loaded on to the FFT mesh.
         """
-        if i < 0 or i >= self.n_states:
-            raise IndexError(f"i={i} fails 0 <= i < n_states={self.n_states}")
-        if ispin < 0 or ispin >= self.n_spin:
-            raise IndexError(f"ispin={ispin} fails 0 <= ispin < n_spin={self.n_spin}")
-        if ik < 0 or ik >= self.nk:
-            raise IndexError(f"ik={ik} fails 0 <= ik < nk={self.nk}")
+        #translate indices to pythonic style. 
+        i = np.arange(self.n_states)[i]
+        ik = np.arange(self.nk)[ik]
+        ispin = np.arange(self.n_spin)[ispin]
 
         res = np.zeros(shape=self.mesh, dtype=np.complex128)
         off = self._n_gk[ik] * (i + ispin * self.n_states)
