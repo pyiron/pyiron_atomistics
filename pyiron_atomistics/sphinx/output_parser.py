@@ -490,17 +490,19 @@ class SphinxWavesReader:
             off += ngk
         return fft_idx
 
-    def get_psi_rec(self, i, ispin, ik):
+    def get_psi_rec(self, i, ispin, ik, compact=False):
         """
         Loads a single wavefunction on full FFT mesh of shape mesh.
 
         params: i: state index (int)
                ispin: spin index (int)
                ik: k index (int)
+               compact: (bool)
         returns:
             res: complex valued wavefunction indexed by (i,ispin,ik) loaded on to the FFT mesh.
+            compact_wave: compact wavefunctions, without loading on FFT mesh.
         """
-        #translate indices to pythonic style. 
+        #translate indices to pythonic style.
         i = np.arange(self.n_states)[i]
         ik = np.arange(self.nk)[ik]
         ispin = np.arange(self.n_spin)[ispin]
@@ -510,6 +512,9 @@ class SphinxWavesReader:
         psire = self.wfile[f"psi-{ik+1}.re"][off : off + self._n_gk[ik]]
         psiim = self.wfile[f"psi-{ik+1}.im"][off : off + self._n_gk[ik]]
         res.flat[self._fft_idx[ik]] = psire + 1j * psiim
+        if compact:
+            compact_wave = psire + 1j * psiim
+            return compact_wave
         return res
 
     @property
