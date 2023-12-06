@@ -403,6 +403,7 @@ class SphinxLogParser:
 
     def get_fermi(self):
         pattern = r"Fermi energy:\s+(\d+\.\d+)\s+eV"
+        return np.array(re.findall(pattern, self.log_main)).astype(float)
  
     @property
     def results(self):
@@ -420,7 +421,7 @@ class SphinxLogParser:
         return results
 
 
-class SphinxWavesParser:
+class SphinxWavesReader:
     """Class to read SPHInX waves.sxb files (HDF5 format)
 
     Initialize with waves.sxb filename, or use load ()
@@ -433,7 +434,6 @@ class SphinxWavesParser:
             file_name (str): file name
             cwd (str): directory path
         """
-        self._eps = None
         if Path(file_name).is_absolute():
             self.wfile = h5py.File(Path(file_name))
         else:
@@ -444,44 +444,42 @@ class SphinxWavesParser:
     def _n_gk(self):
         return self.wfile['nGk'][:]
     
-    @property
+    @cached_property
     def mesh(self):
         return self.wfile["meshDim"][:]
 
     @property
     def Nx(self):
-        return self.wfile['meshDim'][0]
+        return self.mesh[0]
 
     @property
     def Ny(self):
-        return self.wfile['meshDim'][1]
+        return self.mesh[1]
 
     @property
     def Nz(self):
-        return self.wfile['meshDim'][2]
+        return self.mesh[2]
 
-    @property
+    @cached_property
     def n_states(self):
         return self.wfile["nPerK"][0]
 
-    @property
+    @cached_property
     def n_spin(self):
         return self.wfile["nSpin"].shape[0]
 
-    @property
+    @cached_property
     def k_weights(self):
         return self.wfile["kWeights"][:]
 
-    @property
+    @cached_property
     def k_vec(self):
         return self.wfile["kVec"][:]
 
-    @property
+    @cached_property
     def eps(self):
         """All eigenvalues (in Hartree) as (nk,n_states) block"""
-        if (self._eps is None):
-            self._eps = self.wfile['eps'][:].reshape(-1,self.n_spin,self.n_states)
-        return self._eps.T #change
+        return (self.wfile['eps'][:].reshape(-1, self.n_spin, self.n_states)).T
 
     @cached_property
     def _fft_idx(self):
