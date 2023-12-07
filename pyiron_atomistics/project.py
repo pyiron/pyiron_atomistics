@@ -17,6 +17,7 @@ from pyiron_base import (
     Creator as CreatorCore,
     deprecate,
 )
+from pyiron_base.state.logger import logger
 from pyiron_base.project.maintenance import Maintenance, LocalMaintenance
 
 try:
@@ -53,6 +54,11 @@ if not (isinstance(ase.__file__, str)):
     raise AssertionError()
 
 
+def _vasp_energy_kin_affected(job):
+    e_kin = job.project_hdf5["output/generic/dft/scf_energy_kin"]
+    return e_kin is not None and not isinstance(e_kin, np.ndarray)
+
+
 class AtomisticsLocalMaintenance(LocalMaintenance):
     def vasp_energy_pot_as_free_energy(
         self, recursive: bool = True, progress: bool = True, **kwargs
@@ -73,6 +79,9 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
         """
         kwargs["hamilton"] = "Vasp"
         kwargs["status"] = "finished"
+
+        found_energy_kin_job = False
+
         for job in self._project.iter_jobs(
             recursive=recursive, progress=progress, convert_to_object=False, **kwargs
         ):
@@ -83,6 +92,10 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
                         for e in job.project_hdf5["output/generic/dft/scf_energy_free"]
                     ]
                 )
+                found_energy_kin_job |= _vasp_energy_kin_affected(job)
+
+        if found_energy_kin_job:
+            logger.warn("Found at least one Vasp MD job with wrong kinetic energy.  Apply vasp_correct_energy_kin to fix!")
 
     def vasp_correct_energy_kin(
         self, recursive: bool = True, progress: bool = True, **kwargs
@@ -109,11 +122,7 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
             # only Vasp jobs of version 0.1.0 were affected
             if job["HDF_VERSION"] != "0.1.0":
                 continue
-            # not an MD job
-            if "scf_energy_kin" not in job["output/generic/dft"].list_nodes():
-                continue
-            # apparently already fixed in a previous call of this method
-            if isinstance(job["output/generic/dft/scf_energy_kin"], np.ndarray):
+            if not _vasp_energy_kin_affected(job):
                 continue
 
             job.decompress()
