@@ -38,6 +38,7 @@ from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 from pyiron_atomistics.atomistics.master.parallel import pipe
 
+import numpy as np
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -71,6 +72,7 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
                             instances of any character
         """
         kwargs["hamilton"] = "Vasp"
+        kwargs["status"] = "finished"
         for job in self._project.iter_jobs(
             recursive=recursive, progress=progress, convert_to_object=False, **kwargs
         ):
@@ -94,6 +96,7 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
                             instances of any character
         """
         kwargs["hamilton"] = "Vasp"
+        kwargs["status"] = "finished"
         for job in self._project.iter_jobs(
             recursive=recursive, progress=progress, convert_to_object=False, **kwargs
         ):
@@ -102,7 +105,7 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
             # not an MD job
             if "scf_energy_kin" not in job["output/generic/dft"].list_nodes(): continue
             # apparently already fixed in a previous call of this method
-            if not np.isinstance(job["output/generic/dft/scf_energy_kin"], np.ndarray): continue
+            if isinstance(job["output/generic/dft/scf_energy_kin"], np.ndarray): continue
 
             job.decompress()
             job.status.collect = True
