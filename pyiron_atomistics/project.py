@@ -64,6 +64,23 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
                 job.project_hdf5["output/generic/energy_pot"] = \
                         np.array([e[-1] for e in job.project_hdf5["output/generic/dft/scf_energy_free"]])
 
+    def vasp_correct_energy_kin(self, recursive: bool = True, progress: bool = True, **kwargs):
+        kwargs["hamilton"] = "Vasp"
+        for job in self._project.iter_jobs(
+            recursive=recursive, progress=progress, convert_to_object=False, **kwargs
+        ):
+            # only Vasp jobs of version 0.1.0 were affected
+            if job["HDF_VERSION"] != "0.1.0": continue
+            # not an MD job
+            if "scf_energy_kin" not in job["output/generic/dft"].list_nodes(): continue
+            # apparently already fixed in a previous call of this method
+            if not np.isinstance(job["output/generic/dft/scf_energy_kin"], np.ndarray): continue
+
+            job.decompress()
+            job.status.collect = True
+            job.run()
+
+
 class AtomisticsMaintenance(Maintenance):
 
     def __init__(self, project):
