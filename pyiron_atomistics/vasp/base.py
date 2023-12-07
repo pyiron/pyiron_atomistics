@@ -2070,14 +2070,16 @@ class Output:
             log_dict["forces"] = self.vp_new.vasprun_dict["forces"]
             log_dict["cells"] = self.vp_new.vasprun_dict["cells"]
             log_dict["volume"] = np.linalg.det(self.vp_new.vasprun_dict["cells"])
-            log_dict["energy_tot"] = self.vp_new.vasprun_dict["total_energies"]
+            # total energies refers here to the total energy of the electronic system, not the total system of
+            # electrons plus (potentially) moving ions; hence this is the energy_pot
+            log_dict["energy_pot"] = self.vp_new.vasprun_dict["total_energies"]
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
-                log_dict["energy_pot"] = (
-                    log_dict["energy_tot"]
-                    - self.vp_new.vasprun_dict["kinetic_energies"]
+                log_dict["energy_tot"] = (
+                    log_dict["energy_pot"]
+                    + self.vp_new.vasprun_dict["kinetic_energies"]
                 )
             else:
-                log_dict["energy_pot"] = log_dict["energy_tot"]
+                log_dict["energy_tot"] = log_dict["energy_pot"]
             log_dict["steps"] = np.arange(len(log_dict["energy_tot"]))
             log_dict["positions"] = self.vp_new.vasprun_dict["positions"]
             log_dict["forces"][:, sorted_indices] = log_dict["forces"].copy()

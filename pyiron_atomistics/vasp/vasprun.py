@@ -79,6 +79,7 @@ class Vasprun(object):
         d["total_energies"] = list()
         d["total_fr_energies"] = list()
         d["total_0_energies"] = list()
+        d["kinetic_energies"] = list()
         d["stress_tensors"] = list()
         for _, leaf in ETree.iterparse(filename):
             if leaf.tag in ["generator", "incar"]:
@@ -115,6 +116,7 @@ class Vasprun(object):
         d["total_energies"] = np.array(d["total_energies"])
         d["total_fr_energies"] = np.array(d["total_fr_energies"])
         d["total_0_energies"] = np.array(d["total_0_energies"])
+        d["kinetic_energies"] = np.array(d["kinetic_energies"])
         d["scf_energies"] = d["scf_energies"]
         d["scf_dipole_moments"] = d["scf_dipole_moments"]
         d["scf_fr_energies"] = d["scf_fr_energies"]
@@ -441,7 +443,7 @@ class Vasprun(object):
                     if i.attrib["name"] == "e_0_energy":
                         d["total_0_energies"].append(float(i.text))
                     if i.attrib["name"] == "kinetic":
-                        d["kinetic_energies"] = float(i.text)
+                        d["kinetic_energies"].append(float(i.text))
             if item.tag == "eigenvalues":
                 self.parse_eigenvalues_to_dict(item, d)
 
