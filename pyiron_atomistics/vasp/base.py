@@ -58,9 +58,9 @@ def _vasp_generic_energy_free_affected(job):
     """
     Checks whether the value saved in output/generic/energy_pot matches the electronic free energy.
     """
-    if self.project_hdf5.get("HDF_VERSION", "0.1.0") == "0.1.0":
+    if job.project_hdf5.get("HDF_VERSION", "0.1.0") == "0.1.0":
         energy_free = np.array(
-            [e[-1] for e in self.project_hdf5["output/generic/dft/scf_energy_free"]]
+            [e[-1] for e in job.project_hdf5["output/generic/dft/scf_energy_free"]]
         )
         energy_pot = self.project_hdf5["output/generic/energy_pot"]
         return not np.allclose(energy_free, energy_pot)
