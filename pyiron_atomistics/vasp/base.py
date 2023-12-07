@@ -2070,7 +2070,6 @@ class Output:
             log_dict["forces"] = self.vp_new.vasprun_dict["forces"]
             log_dict["cells"] = self.vp_new.vasprun_dict["cells"]
             log_dict["volume"] = np.linalg.det(self.vp_new.vasprun_dict["cells"])
-            # log_dict["total_energies"] = self.vp_new.vasprun_dict["total_energies"]
             log_dict["energy_tot"] = self.vp_new.vasprun_dict["total_energies"]
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
                 log_dict["energy_pot"] = (
