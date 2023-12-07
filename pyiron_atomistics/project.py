@@ -56,6 +56,20 @@ if not (isinstance(ase.__file__, str)):
 class AtomisticsLocalMaintenance(LocalMaintenance):
 
     def vasp_energy_pot_as_free_energy(self, recursive: bool = True, progress: bool = True, **kwargs):
+        """
+        Ensure generic potential energy is the electronic free energy.
+
+        This ensures that the energy is consistent with the forces and stresses.
+        In version 0.1.0 of the Vasp job (pyiron_atomistics<=0.3.10) a combination of bugs in Vasp and pyiron caused the
+        potential energy reported to be the internal energy of electronic system extrapolated to zero smearing instead.
+
+        Args:
+            recursive (bool): search subprojects [True/False] - True by default
+            progress (bool): if True (default), add an interactive progress bar to the iteration
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
+        """
         kwargs["hamilton"] = "Vasp"
         for job in self._project.iter_jobs(
             recursive=recursive, progress=progress, convert_to_object=False, **kwargs
@@ -65,6 +79,20 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
                         np.array([e[-1] for e in job.project_hdf5["output/generic/dft/scf_energy_free"]])
 
     def vasp_correct_energy_kin(self, recursive: bool = True, progress: bool = True, **kwargs):
+        """
+        Ensure kinetic and potential energy are correctly parsed for AIMD Vasp jobs.
+
+        Version 0.1.0 of the Vasp job (pyiron_atomistics<=0.3.10) incorrectly parsed the kinetic energy during MD runs,
+        such that it only reported the kinetic energy of the final ionic step and subtracted it from the electronic
+        energy instead of adding it.
+
+        Args:
+            recursive (bool): search subprojects [True/False] - True by default
+            progress (bool): if True (default), add an interactive progress bar to the iteration
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
+        """
         kwargs["hamilton"] = "Vasp"
         for job in self._project.iter_jobs(
             recursive=recursive, progress=progress, convert_to_object=False, **kwargs
