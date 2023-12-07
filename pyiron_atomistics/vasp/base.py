@@ -2070,9 +2070,22 @@ class Output:
             log_dict["forces"] = self.vp_new.vasprun_dict["forces"]
             log_dict["cells"] = self.vp_new.vasprun_dict["cells"]
             log_dict["volume"] = np.linalg.det(self.vp_new.vasprun_dict["cells"])
-            # total energies refers here to the total energy of the electronic system, not the total system of
-            # electrons plus (potentially) moving ions; hence this is the energy_pot
-            log_dict["energy_pot"] = self.vp_new.vasprun_dict["total_energies"]
+            # The vasprun parser also returns the energies printed again after the final SCF cycle under the key
+            # "total_energies", but due to a bug in the VASP output, the energies reported there are wrong in Vasp 5.*;
+            # instead use the last energy from the scf cycle energies
+            # BUG link: https://ww.vasp.at/forum/viewtopic.php?p=19242
+            try:
+                # bug report is not specific to which Vasp5 versions are affected; be safe and workaround for all of
+                # them
+                is_vasp5 = self.vp_new.vasprun_dict["generator"]["version"].startswith("5.")
+            except KeyError: # in case the parser didn't read the version info
+                is_vasp5 = True
+            if is_vasp5:
+                log_dict["energy_pot"] = np.array([e[-1] for e in self.vp_new.vasprun_dict["scf_fr_energies"]])
+            else:
+                # total energies refers here to the total energy of the electronic system, not the total system of
+                # electrons plus (potentially) moving ions; hence this is the energy_pot
+                log_dict["energy_pot"] = self.vp_new.vasprun_dict["total_energies"]
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
                 log_dict["energy_tot"] = (
                     log_dict["energy_pot"]
