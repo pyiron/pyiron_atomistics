@@ -53,12 +53,15 @@ __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+
 def _vasp_generic_energy_free_affected(job):
     """
     Checks whether the value saved in output/generic/energy_pot matches the electronic free energy.
     """
     if self.project_hdf5.get("HDF_VERSION", "0.1.0") == "0.1.0":
-        energy_free = np.array([e[-1] for e in self.project_hdf5["output/generic/dft/scf_energy_free"]])
+        energy_free = np.array(
+            [e[-1] for e in self.project_hdf5["output/generic/dft/scf_energy_free"]]
+        )
         energy_pot = self.project_hdf5["output/generic/energy_pot"]
         return not np.allclose(energy_free, energy_pot)
     else:
@@ -2077,11 +2080,15 @@ class Output:
             try:
                 # bug report is not specific to which Vasp5 versions are affected; be safe and workaround for all of
                 # them
-                is_vasp5 = self.vp_new.vasprun_dict["generator"]["version"].startswith("5.")
-            except KeyError: # in case the parser didn't read the version info
+                is_vasp5 = self.vp_new.vasprun_dict["generator"]["version"].startswith(
+                    "5."
+                )
+            except KeyError:  # in case the parser didn't read the version info
                 is_vasp5 = True
             if is_vasp5:
-                log_dict["energy_pot"] = np.array([e[-1] for e in self.vp_new.vasprun_dict["scf_fr_energies"]])
+                log_dict["energy_pot"] = np.array(
+                    [e[-1] for e in self.vp_new.vasprun_dict["scf_fr_energies"]]
+                )
             else:
                 # total energies refers here to the total energy of the electronic system, not the total system of
                 # electrons plus (potentially) moving ions; hence this is the energy_pot
@@ -2242,7 +2249,7 @@ class Output:
                 self.vp_new.vasprun_dict["parameters"]["electronic"]["NELECT"]
             )
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
-                # scf_energy_kin is for backwards compatibility 
+                # scf_energy_kin is for backwards compatibility
                 self.generic_output.dft_log_dict[
                     "scf_energy_kin"
                 ] = self.vp_new.vasprun_dict["kinetic_energies"]

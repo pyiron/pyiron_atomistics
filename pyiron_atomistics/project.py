@@ -17,9 +17,7 @@ from pyiron_base import (
     Creator as CreatorCore,
     deprecate,
 )
-from pyiron_base.project.maintenance import (
-    Maintenance, LocalMaintenance
-)
+from pyiron_base.project.maintenance import Maintenance, LocalMaintenance
 
 try:
     from pyiron_base import ProjectGUI
@@ -54,9 +52,11 @@ __date__ = "Sep 1, 2017"
 if not (isinstance(ase.__file__, str)):
     raise AssertionError()
 
-class AtomisticsLocalMaintenance(LocalMaintenance):
 
-    def vasp_energy_pot_as_free_energy(self, recursive: bool = True, progress: bool = True, **kwargs):
+class AtomisticsLocalMaintenance(LocalMaintenance):
+    def vasp_energy_pot_as_free_energy(
+        self, recursive: bool = True, progress: bool = True, **kwargs
+    ):
         """
         Ensure generic potential energy is the electronic free energy.
 
@@ -77,10 +77,16 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
             recursive=recursive, progress=progress, convert_to_object=False, **kwargs
         ):
             if _vasp_generic_energy_free_affected(job):
-                job.project_hdf5["output/generic/energy_pot"] = \
-                        np.array([e[-1] for e in job.project_hdf5["output/generic/dft/scf_energy_free"]])
+                job.project_hdf5["output/generic/energy_pot"] = np.array(
+                    [
+                        e[-1]
+                        for e in job.project_hdf5["output/generic/dft/scf_energy_free"]
+                    ]
+                )
 
-    def vasp_correct_energy_kin(self, recursive: bool = True, progress: bool = True, **kwargs):
+    def vasp_correct_energy_kin(
+        self, recursive: bool = True, progress: bool = True, **kwargs
+    ):
         """
         Ensure kinetic and potential energy are correctly parsed for AIMD Vasp jobs.
 
@@ -101,11 +107,14 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
             recursive=recursive, progress=progress, convert_to_object=False, **kwargs
         ):
             # only Vasp jobs of version 0.1.0 were affected
-            if job["HDF_VERSION"] != "0.1.0": continue
+            if job["HDF_VERSION"] != "0.1.0":
+                continue
             # not an MD job
-            if "scf_energy_kin" not in job["output/generic/dft"].list_nodes(): continue
+            if "scf_energy_kin" not in job["output/generic/dft"].list_nodes():
+                continue
             # apparently already fixed in a previous call of this method
-            if isinstance(job["output/generic/dft/scf_energy_kin"], np.ndarray): continue
+            if isinstance(job["output/generic/dft/scf_energy_kin"], np.ndarray):
+                continue
 
             job.decompress()
             job = job.to_object()
@@ -114,7 +123,6 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
 
 
 class AtomisticsMaintenance(Maintenance):
-
     def __init__(self, project):
         """
         Args:
