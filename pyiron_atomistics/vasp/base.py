@@ -2242,8 +2242,12 @@ class Output:
                 self.vp_new.vasprun_dict["parameters"]["electronic"]["NELECT"]
             )
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
+                # scf_energy_kin is for backwards compatibility 
                 self.generic_output.dft_log_dict[
                     "scf_energy_kin"
+                ] = self.vp_new.vasprun_dict["kinetic_energies"]
+                self.generic_output.dft_log_dict[
+                    "energy_kin"
                 ] = self.vp_new.vasprun_dict["kinetic_energies"]
 
         if (
