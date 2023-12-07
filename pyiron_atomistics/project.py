@@ -108,6 +108,7 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
             if isinstance(job["output/generic/dft/scf_energy_kin"], np.ndarray): continue
 
             job.decompress()
+            job = job.to_object()
             job.status.collect = True
             job.run()
 
