@@ -507,14 +507,14 @@ class SphinxWavesReader:
         ik = np.arange(self.nk)[ik]
         ispin = np.arange(self.n_spin)[ispin]
 
-        res = np.zeros(shape=self.mesh, dtype=np.complex128)
         off = self._n_gk[ik] * (i + ispin * self.n_states)
         psire = self.wfile[f"psi-{ik+1}.re"][off : off + self._n_gk[ik]]
         psiim = self.wfile[f"psi-{ik+1}.im"][off : off + self._n_gk[ik]]
-        res.flat[self._fft_idx[ik]] = psire + 1j * psiim
+        compact_wave = psire + 1j * psiim
         if compact:
-            compact_wave = psire + 1j * psiim
             return compact_wave
+        res = np.zeros(shape=self.mesh, dtype=np.complex128)
+        res.flat[self._fft_idx[ik]] = compact_wave
         return res
 
     @property
