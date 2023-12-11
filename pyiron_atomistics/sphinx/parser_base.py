@@ -89,11 +89,14 @@ class KeywordTreeParser:
                 except StopIteration:
                     break
         self._cleanup(self.keylevels[0])
-        if hasattr(self, "finalize"):
-            self.finalize()
+        # call optional finalize routine
+        self.finalize()
         close(filehandle)
         # clean up object properties that only exist during parsing
         del (self.filename, self.line, self.lineno, self.line_from, self.lineview)
+
+    def finalize(self):
+        pass
 
     def location(self):
         """Return the current parsing location (for error messages)"""
