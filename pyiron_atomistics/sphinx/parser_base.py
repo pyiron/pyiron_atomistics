@@ -17,7 +17,7 @@ import re
 from types import GeneratorType
 import numpy
 
-class keyword_tree_parser:
+class KeywordTreeParser:
     """
     A base class to parse files block by block via keyword-triggered
     parsing routines organized in a tree. Parsing routines can
@@ -33,7 +33,7 @@ class keyword_tree_parser:
 
     A typical use will be
 
-    class my_parser(keyword_tree_parser):
+    class my_parser(KeywordTreeParser):
         def __init__(self,file)
             super ().__init__({
                     "key1" : self.parse_key1,
@@ -60,10 +60,12 @@ class keyword_tree_parser:
         if len(self.keylevels) == 0:
            raise KeyError("No parsing functions available in keylevels")
         filehandle = open(filename)
+        # the following properties only exist while parsing
         self.line = filehandle.__iter__ ()
         self.lineview = ''
         self.filename = filename
         self.lineno = 0
+        self.line_from = 0
         while True:
             for keymap in self.keylevels:
                 for key,func in keymap.items ():
@@ -87,6 +89,9 @@ class keyword_tree_parser:
         self._cleanup(self.keylevels[0])
         if (hasattr(self,'finalize')):
             self.finalize ()
+        close(filehandle)
+        # clean up object properties that only exist during parsing
+        del (self.filename, self.line, self.lineno, self.line_from, self.lineview)
 
     def location(self):
         """ Return the current parsing location (for error messages)"""
@@ -105,7 +110,7 @@ class keyword_tree_parser:
         while not match in self.lineview:
             self.lineview += next(self.line)
             self.lineno += 1
-            self.lineFrom = self.line
+            self.line_from = self.line
 
     def extract_via_regex(self, regex):
         """

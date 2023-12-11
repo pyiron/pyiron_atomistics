@@ -5,7 +5,7 @@
 import re
 import numpy as np
 import scipy.constants
-from pyiron_atomistics.atomistics.structure.parser_base import keyword_tree_parser
+from pyiron_atomistics.atomistics.structure.parser_base import KeywordTreeParser
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 
@@ -24,7 +24,7 @@ BOHR_TO_ANGSTROM = (
     scipy.constants.physical_constants["Bohr radius"][0] / scipy.constants.angstrom
 )
 
-class struct_parser(keyword_tree_parser):
+class StructParser(KeywordTreeParser):
     """
     This class reads one or more structures in sx format.
     """
@@ -96,5 +96,5 @@ def read_atoms(filename="structure.sx"):
         pyiron_atomistics.objects.structure.atoms.Atoms instance (or a list of them)
 
     """
-    configs = struct_parser(filename).configs
+    configs = StructParser(filename).configs
     return configs[0] if len(configs) == 1 else configs
