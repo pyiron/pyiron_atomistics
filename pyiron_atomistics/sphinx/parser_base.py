@@ -15,7 +15,7 @@ __date__ = "Dec 8, 2023"
 
 import re
 from types import GeneratorType
-import numpy
+import numpy as np
 
 
 class KeywordTreeParser:
@@ -181,7 +181,7 @@ class KeywordTreeParser:
             )
         # remove special characters [] , ; =
         vecstring = re.sub(r"[][=,;$]", " ", vecstring)
-        return numpy.fromstring(vecstring, sep=" ")
+        return np.fromstring(vecstring, sep=" ")
 
     def extract_var(self, key, startend="=;"):
         """
