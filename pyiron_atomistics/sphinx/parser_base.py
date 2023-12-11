@@ -17,6 +17,7 @@ import re
 from types import GeneratorType
 import numpy
 
+
 class KeywordTreeParser:
     """
     A base class to parse files block by block via keyword-triggered
@@ -41,14 +42,15 @@ class KeywordTreeParser:
             self.parse (file)
 
     """
-    def __init__ (self,keylevels=[]):
-        if isinstance(keylevels,dict):
-            keylevels = [ keylevels ]
-        elif not isinstance(keylevels,list):
+
+    def __init__(self, keylevels=[]):
+        if isinstance(keylevels, dict):
+            keylevels = [keylevels]
+        elif not isinstance(keylevels, list):
             raise TypeError
         self.keylevels = keylevels
 
-    def parse(self,filename):
+    def parse(self, filename):
         """
         Parse a file using the current keylevels
 
@@ -58,23 +60,23 @@ class KeywordTreeParser:
         """
         # --- initialization
         if len(self.keylevels) == 0:
-           raise KeyError("No parsing functions available in keylevels")
+            raise KeyError("No parsing functions available in keylevels")
         filehandle = open(filename)
         # the following properties only exist while parsing
-        self.line = filehandle.__iter__ ()
-        self.lineview = ''
+        self.line = filehandle.__iter__()
+        self.lineview = ""
         self.filename = filename
         self.lineno = 0
         self.line_from = 0
         while True:
             for keymap in self.keylevels:
-                for key,func in keymap.items ():
+                for key, func in keymap.items():
                     if key in self.lineview:
                         self._cleanup(keymap)
-                        res = func ()
-                        if isinstance(res,GeneratorType):
-                            res.send (None)
-                            keymap['%finalize!'] = res
+                        res = func()
+                        if isinstance(res, GeneratorType):
+                            res.send(None)
+                            keymap["%finalize!"] = res
                         break
                 else:
                     continue
@@ -87,17 +89,19 @@ class KeywordTreeParser:
                 except StopIteration:
                     break
         self._cleanup(self.keylevels[0])
-        if (hasattr(self,'finalize')):
-            self.finalize ()
+        if hasattr(self, "finalize"):
+            self.finalize()
         close(filehandle)
         # clean up object properties that only exist during parsing
         del (self.filename, self.line, self.lineno, self.line_from, self.lineview)
 
     def location(self):
-        """ Return the current parsing location (for error messages)"""
-        return f"in file '{self.filename}' line" + \
-               ( f" {self.lineno}" if self.lineno == self.line_from else
-                 f"s {self.line_from}..{self.lineno}" )
+        """Return the current parsing location (for error messages)"""
+        return f"in file '{self.filename}' line" + (
+            f" {self.lineno}"
+            if self.lineno == self.line_from
+            else f"s {self.line_from}..{self.lineno}"
+        )
 
     def read_until(self, match):
         """
@@ -122,14 +126,17 @@ class KeywordTreeParser:
            the extracted text
         """
         if isinstance(regex, str):
-            regex = re.compile (regex, re.DOTALL)
+            regex = re.compile(regex, re.DOTALL)
         result = regex.search(self.lineview)
         if result is None:
-            raise RuntimeError(f"Failed to extract '{regex.pattern}' "
-                               + self.location ()
-                               + "\n" + self.lineview)
-        self.lineview = regex.sub ('',self.lineview, count=1)
-        return result.group ()
+            raise RuntimeError(
+                f"Failed to extract '{regex.pattern}' "
+                + self.location()
+                + "\n"
+                + self.lineview
+            )
+        self.lineview = regex.sub("", self.lineview, count=1)
+        return result.group()
 
     def _cleanup(self, active):
         """
@@ -141,21 +148,23 @@ class KeywordTreeParser:
         Returns:
            the extracted text
         """
+
         def try_finalize(keymap):
-            if '%finalize!' in keymap:
+            if "%finalize!" in keymap:
                 try:
-                    next(keymap['%finalize!'])
+                    next(keymap["%finalize!"])
                 except StopIteration:
                     pass
-                del keymap['%finalize!']
+                del keymap["%finalize!"]
+
         # roll back keylevels until active level
-        while (self.keylevels[-1] is not active):
-            try_finalize (self.keylevels[-1])
+        while self.keylevels[-1] is not active:
+            try_finalize(self.keylevels[-1])
             del self.keylevels[-1]
         # and call optional finalize of currently active level
         try_finalize(active)
 
-    def get_vector (self, key, txt):
+    def get_vector(self, key, txt):
         """
         (auxiliary function) Get a vector from 'key = [ ... ] ;'
 
@@ -165,15 +174,16 @@ class KeywordTreeParser:
            one-dimensional vector containing the numbers
         """
         # get the relevant part between '=' and ';'
-        vecstring = re.sub ('.*' + key + r"\s*=\s*([^;]+);.*", r"\1", txt)
+        vecstring = re.sub(".*" + key + r"\s*=\s*([^;]+);.*", r"\1", txt)
         if vecstring is None:
-            raise RuntimeError(f"Cannot parse {key} from '{txt}' as vector "
-                               + self.location ())
+            raise RuntimeError(
+                f"Cannot parse {key} from '{txt}' as vector " + self.location()
+            )
         # remove special characters [] , ; =
-        vecstring = re.sub(r"[][=,;$]",' ',vecstring)
-        return numpy.fromstring(vecstring, sep=' ')
+        vecstring = re.sub(r"[][=,;$]", " ", vecstring)
+        return numpy.fromstring(vecstring, sep=" ")
 
-    def extract_var(self, key, startend='=;'):
+    def extract_var(self, key, startend="=;"):
         """
         Extract a block 'key = ... ;'
 
@@ -185,9 +195,7 @@ class KeywordTreeParser:
         Returns:
             the extracted block
         """
-        self.read_until (startend[1])
-        return self.extract_via_regex (key + r"\s*" + startend[0]
-                                       + r"\s*[^" + startend[1] + ']+'
-                                       + startend[1])
-
-
+        self.read_until(startend[1])
+        return self.extract_via_regex(
+            key + r"\s*" + startend[0] + r"\s*[^" + startend[1] + "]+" + startend[1]
+        )

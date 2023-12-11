@@ -24,67 +24,64 @@ BOHR_TO_ANGSTROM = (
     scipy.constants.physical_constants["Bohr radius"][0] / scipy.constants.angstrom
 )
 
+
 class StructParser(KeywordTreeParser):
     """
     This class reads one or more structures in sx format.
     """
-    def __init__ (self, file):
-        super().__init__({'structure': self.parse_structure})
+
+    def __init__(self, file):
+        super().__init__({"structure": self.parse_structure})
         self.configs = []
-        self.parse (file)
+        self.parse(file)
 
     def parse_structure(self):
-        """ Parses structure{} blocks"""
-        self.keylevels.append ({
-            'cell': self.parse_cell,
-            'species' : self.parse_species})
-        self.extract_via_regex('structure')
+        """Parses structure{} blocks"""
+        self.keylevels.append({"cell": self.parse_cell, "species": self.parse_species})
+        self.extract_via_regex("structure")
         # --- initialize for next structure
         self.cell = None
         self.positions = []
         self.species = []
         self.indices = []
-        self.ispecies=-1
+        self.ispecies = -1
         # continue parsing
         yield
         # create Atoms object and append it to configs
         pse = PeriodicTable()
         atoms = Atoms(
-            species=[pse.element (s) for s in self.species],
+            species=[pse.element(s) for s in self.species],
             indices=self.indices,
             cell=self.cell * BOHR_TO_ANGSTROM,
             positions=np.array(self.positions) * BOHR_TO_ANGSTROM,
-            pbc=True
+            pbc=True,
         )
-        self.configs.append (atoms)
+        self.configs.append(atoms)
 
-    def parse_cell (self):
-        """ Read the cell"""
-        txt = self.extract_var('cell')
-        self.cell = self.get_vector('cell', txt).reshape (3,3)
+    def parse_cell(self):
+        """Read the cell"""
+        txt = self.extract_var("cell")
+        self.cell = self.get_vector("cell", txt).reshape(3, 3)
 
-    def parse_species (self):
-        """ Parses species{} blocks"""
-        self.extract_via_regex('species')
-        self.keylevels.append ({
-            'element' : self.get_element,
-            'atom' : self.read_atom})
+    def parse_species(self):
+        """Parses species{} blocks"""
+        self.extract_via_regex("species")
+        self.keylevels.append({"element": self.get_element, "atom": self.read_atom})
         self.ispecies += 1
 
-    def get_element (self):
+    def get_element(self):
         """Read element"""
-        txt=self.extract_var ('element')
-        self.species.append (re.sub ('.*"([^"]*)".*',r"\1",txt))
+        txt = self.extract_var("element")
+        self.species.append(re.sub('.*"([^"]*)".*', r"\1", txt))
 
     def read_atom(self):
         """Read atomic coordinates from an atom block"""
-        txt=self.extract_var ('atom', '{}')
-        self.positions.append (self.get_vector('coords',txt))
-        self.indices.append (self.ispecies)
-        if 'label' in txt:
-            label = re.sub (r'.*label\s*=\s*"([^"]+)"\s*;.*', r"\1", txt)
-            print (f"atom {len(self.positions)} label={label}")
-
+        txt = self.extract_var("atom", "{}")
+        self.positions.append(self.get_vector("coords", txt))
+        self.indices.append(self.ispecies)
+        if "label" in txt:
+            label = re.sub(r'.*label\s*=\s*"([^"]+)"\s*;.*', r"\1", txt)
+            print(f"atom {len(self.positions)} label={label}")
 
 
 def read_atoms(filename="structure.sx"):
