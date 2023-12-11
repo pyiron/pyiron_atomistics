@@ -1,6 +1,3 @@
-__version__ = "0.1"
-__all__ = []
-
 from pyiron_atomistics.project import Project
 from pyiron_atomistics.toolkit import AtomisticsTools
 from pyiron_atomistics.atomistics.structure.atoms import (
@@ -66,7 +63,6 @@ JOB_CLASS_DICT.update(
 from ._version import get_versions
 
 __version__ = get_versions()["version"]
-del get_versions
 
 
 def install():

@@ -2299,6 +2299,9 @@ class Output:
 
     def _get_electronic_structure_object(self):
         es = ElectronicStructure()
+        # This line won't be necessary in the newer version of sphinx parser
+        if len(self.generic.dft.bands_eigen_values) == 0:
+            return es
         eig_mat = self.generic.dft.bands_eigen_values[-1]
         occ_mat = self.generic.dft.bands_occ[-1]
         if len(eig_mat.shape) == 3:

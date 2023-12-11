@@ -526,7 +526,7 @@ class Project(ProjectCore):
         vacuum=1.0,
         center=False,
         pbc=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Generate a surface based on the ase.build.surface module.
@@ -558,7 +558,7 @@ class Project(ProjectCore):
             vacuum=vacuum,
             center=center,
             pbc=pbc,
-            **kwargs
+            **kwargs,
         )
 
     @deprecate("Use create.structure.atoms instead")
@@ -583,7 +583,7 @@ class Project(ProjectCore):
         elements=None,
         dimension=None,
         species=None,
-        **qwargs
+        **qwargs,
     ):
         """
         Creates a atomistics.structure.atoms.Atoms instance.
@@ -637,7 +637,7 @@ class Project(ProjectCore):
             elements=elements,
             dimension=dimension,
             species=species,
-            **qwargs
+            **qwargs,
         )
 
     @deprecate("Use create.structure.element instead")
