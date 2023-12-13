@@ -116,7 +116,10 @@ class Vasprun(object):
         d["total_energies"] = np.array(d["total_energies"])
         d["total_fr_energies"] = np.array(d["total_fr_energies"])
         d["total_0_energies"] = np.array(d["total_0_energies"])
-        d["kinetic_energies"] = np.array(d["kinetic_energies"])
+        if len(d["kinetic_energies"]) > 0:
+            d["kinetic_energies"] = np.array(d["kinetic_energies"])
+        else:
+            del d["kinetic_energies"]
         d["scf_energies"] = d["scf_energies"]
         d["scf_dipole_moments"] = d["scf_dipole_moments"]
         d["scf_fr_energies"] = d["scf_fr_energies"]
