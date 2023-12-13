@@ -62,7 +62,7 @@ def _vasp_generic_energy_free_affected(job):
         energy_free = np.array(
             [e[-1] for e in job.project_hdf5["output/generic/dft/scf_energy_free"]]
         )
-        energy_pot = self.project_hdf5["output/generic/energy_pot"]
+        energy_pot = job.project_hdf5["output/generic/energy_pot"]
         return not np.allclose(energy_free, energy_pot)
     else:
         return False
