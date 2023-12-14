@@ -95,7 +95,9 @@ class AtomisticsLocalMaintenance(LocalMaintenance):
                 found_energy_kin_job |= _vasp_energy_kin_affected(job)
 
         if found_energy_kin_job:
-            logger.warn("Found at least one Vasp MD job with wrong kinetic energy.  Apply vasp_correct_energy_kin to fix!")
+            logger.warn(
+                "Found at least one Vasp MD job with wrong kinetic energy.  Apply vasp_correct_energy_kin to fix!"
+            )
 
     def vasp_correct_energy_kin(
         self, recursive: bool = True, progress: bool = True, **kwargs
