@@ -318,7 +318,7 @@ def _collect_output_log(
             l = l.lstrip()
 
             if read_thermo:
-                if l.startswith("Loop"):
+                if l.startswith("Loop") or l.startswith("ERROR"):
                     read_thermo = False
                     continue
                 thermo_lines += l
@@ -429,7 +429,7 @@ def _raise_exception_if_errors_found(file_name: str) -> None:
     error = extract_data_from_file(file_name, tag="ERROR", num_args=1000)
     if len(error) > 0:
         error = " ".join(error[0])
-        raise RuntimeError("Run time error occurred: " + str(error))
+        warnings.warn(str(error), RuntimeWarning)
 
 
 def _check_ortho_prism(
