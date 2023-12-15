@@ -14,8 +14,7 @@ from pyiron_atomistics.sphinx.output_parser import (
     collect_relaxed_hist,
     collect_energy_struct,
     collect_eps_dat,
-    SphinxWavesReader,
-    get_psi_rec
+    SphinxWavesReader
 )
 
 class TestSphinx(unittest.TestCase):
@@ -40,9 +39,11 @@ class TestSphinx(unittest.TestCase):
         )
         self.assertTrue("scf_energy_free" not in E_dict)
 
-    def test_waves(self,name):
-        waves = SphinxWavesReader(self.get_path('sphinx_test_waves'))
-        self.assertTrue(waves.nk>1)
+    def test_waves(self):
+        test_path = Path(__file__).parents[2-1]
+        waves_path = Path.joinpath(test_path,'static/sphinx/sphinx_test_waves')
+        waves = SphinxWavesReader('fake.sxb',cwd=waves_path)
+        self.assertTrue(waves.nk==1)
         self.assertTrue(np.mean(waves.get_psi_rec(0,0,0))>0)
 
 
