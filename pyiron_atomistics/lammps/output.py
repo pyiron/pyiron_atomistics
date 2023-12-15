@@ -318,8 +318,10 @@ def _collect_output_log(
             l = l.lstrip()
 
             if read_thermo:
-                if l.startswith("Loop"):
+                if l.startswith("Loop") or l.startswith("ERROR"):
                     read_thermo = False
+                    if l.startswith("ERROR"):
+                        warnings.warn(f"{l}")
                     continue
                 thermo_lines += l
 
