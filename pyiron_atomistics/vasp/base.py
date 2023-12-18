@@ -2092,7 +2092,7 @@ class Output:
             else:
                 # total energies refers here to the total energy of the electronic system, not the total system of
                 # electrons plus (potentially) moving ions; hence this is the energy_pot
-                log_dict["energy_pot"] = self.vp_new.vasprun_dict["total_energies"]
+                log_dict["energy_pot"] = self.vp_new.vasprun_dict["total_fr_energies"]
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
                 log_dict["energy_tot"] = (
                     log_dict["energy_pot"]
