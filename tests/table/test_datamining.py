@@ -67,14 +67,14 @@ class TestDatamining(unittest.TestCase):
         self.assertEqual(df["majority_element"].values[0], "Fe")
         self.assertEqual(df["minority_element_list"].values[0], [])
         self.assertEqual(df["job_name"].values[0], "full_job_sample")
-        self.assertEqual(df["energy_tot"].values[0], -17.7331698)
-        self.assertEqual(df["energy_free"].values[0], -17.7379867884)
-        self.assertEqual(df["energy_int"].values[0], -17.72353582)
-        self.assertEqual(df["alat"].values[0], 0.0)
+        self.assertAlmostEqual(df["energy_tot"].values[0], -17.73798679)
+        self.assertAlmostEqual(df["energy_free"].values[0], -17.73798679)
+        self.assertAlmostEqual(df["energy_int"].values[0], -17.72353582)
+        self.assertAlmostEqual(df["alat"].values[0], 0.0)
         self.assertEqual(df["magnetic_structure"].values[0], "ferro-magnetic")
-        self.assertEqual(df["avg. plane waves"].values[0], 196.375)
-        self.assertEqual(df["energy_tot_wo_kin_corr"].values[0], -17.6003698)
-        self.assertTrue(np.isclose(df["volume"].values[0], 21.95199999999999))
+        self.assertAlmostEqual(df["avg. plane waves"].values[0], 196.375)
+        self.assertAlmostEqual(df["energy_tot_wo_kin_corr"].values[0], -17.60518679)
+        self.assertAlmostEqual(df["volume"].values[0], 21.95199999999999)
 
 
 def get_alat(job):

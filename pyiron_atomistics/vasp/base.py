@@ -54,6 +54,20 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 
+def _vasp_generic_energy_free_affected(job):
+    """
+    Checks whether the value saved in output/generic/energy_pot matches the electronic free energy.
+    """
+    if job.project_hdf5.get("HDF_VERSION", "0.1.0") == "0.1.0":
+        energy_free = np.array(
+            [e[-1] for e in job.project_hdf5["output/generic/dft/scf_energy_free"]]
+        )
+        energy_pot = job.project_hdf5["output/generic/energy_pot"]
+        return not np.allclose(energy_free, energy_pot)
+    else:
+        return False
+
+
 class VaspBase(GenericDFTJob):
     """
     Class to setup and run and analyze VASP simulations which is a derivative of pyiron_atomistics.objects.job.generic.GenericJob.
@@ -98,6 +112,7 @@ class VaspBase(GenericDFTJob):
         self._compress_by_default = True
         self.get_enmax_among_species = get_enmax_among_potentials
         state.publications.add(self.publication)
+        self.__hdf_version__ = "0.2.0"
 
     @property
     def structure(self):
@@ -767,6 +782,13 @@ class VaspBase(GenericDFTJob):
         self._structure_to_hdf()
         self.input.to_hdf(self._hdf5)
         self._output_parser.to_hdf(self._hdf5)
+        if _vasp_generic_energy_free_affected(self):
+            self.logger.warn(
+                "Generic energy_pot does not match electronic free energy! "
+                "Generic energies is not consistent to generic forces and stress, "
+                "call project.maintenance.local.vasp_energy_pot_as_free_energy() "
+                "to correct generic energy!"
+            )
 
     def from_hdf(self, hdf=None, group_name=None):
         """
@@ -2051,15 +2073,33 @@ class Output:
             log_dict["forces"] = self.vp_new.vasprun_dict["forces"]
             log_dict["cells"] = self.vp_new.vasprun_dict["cells"]
             log_dict["volume"] = np.linalg.det(self.vp_new.vasprun_dict["cells"])
-            # log_dict["total_energies"] = self.vp_new.vasprun_dict["total_energies"]
-            log_dict["energy_tot"] = self.vp_new.vasprun_dict["total_energies"]
-            if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
-                log_dict["energy_pot"] = (
-                    log_dict["energy_tot"]
-                    - self.vp_new.vasprun_dict["kinetic_energies"]
+            # The vasprun parser also returns the energies printed again after the final SCF cycle under the key
+            # "total_energies", but due to a bug in the VASP output, the energies reported there are wrong in Vasp 5.*;
+            # instead use the last energy from the scf cycle energies
+            # BUG link: https://ww.vasp.at/forum/viewtopic.php?p=19242
+            try:
+                # bug report is not specific to which Vasp5 versions are affected; be safe and workaround for all of
+                # them
+                is_vasp5 = self.vp_new.vasprun_dict["generator"]["version"].startswith(
+                    "5."
+                )
+            except KeyError:  # in case the parser didn't read the version info
+                is_vasp5 = True
+            if is_vasp5:
+                log_dict["energy_pot"] = np.array(
+                    [e[-1] for e in self.vp_new.vasprun_dict["scf_fr_energies"]]
                 )
             else:
-                log_dict["energy_pot"] = log_dict["energy_tot"]
+                # total energies refers here to the total energy of the electronic system, not the total system of
+                # electrons plus (potentially) moving ions; hence this is the energy_pot
+                log_dict["energy_pot"] = self.vp_new.vasprun_dict["total_fr_energies"]
+            if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
+                log_dict["energy_tot"] = (
+                    log_dict["energy_pot"]
+                    + self.vp_new.vasprun_dict["kinetic_energies"]
+                )
+            else:
+                log_dict["energy_tot"] = log_dict["energy_pot"]
             log_dict["steps"] = np.arange(len(log_dict["energy_tot"]))
             log_dict["positions"] = self.vp_new.vasprun_dict["positions"]
             log_dict["forces"][:, sorted_indices] = log_dict["forces"].copy()
@@ -2209,8 +2249,12 @@ class Output:
                 self.vp_new.vasprun_dict["parameters"]["electronic"]["NELECT"]
             )
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
+                # scf_energy_kin is for backwards compatibility
                 self.generic_output.dft_log_dict[
                     "scf_energy_kin"
+                ] = self.vp_new.vasprun_dict["kinetic_energies"]
+                self.generic_output.dft_log_dict[
+                    "energy_kin"
                 ] = self.vp_new.vasprun_dict["kinetic_energies"]
 
         if (
