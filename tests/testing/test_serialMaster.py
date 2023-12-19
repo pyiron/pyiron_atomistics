@@ -56,16 +56,15 @@ class TestSerialMaster(unittest.TestCase):
         )
         ham = self.project.create_job(self.project.job_type.ExampleJob, "job_multi")
         job_ser.append(ham)
-        job_ser.run()
+        job_ser.save()
         job_id = job_ser.job_id
-        for i in range(1):
-            job_ser_reload = self.project.load(job_id)
-            ham = self.project.create_job(
-                self.project.job_type.ExampleJob, "job_multi_" + str(i)
-            )
-            job_ser_reload.append(ham)
-            job_ser_reload.status.created = True
-            job_ser_reload.run()
+        job_ser_reload = self.project.load(job_id)
+        ham = self.project.create_job(
+            self.project.job_type.ExampleJob, "job_multi_" + str(i)
+        )
+        job_ser_reload.append(ham)
+        job_ser_reload.status.created = True
+        job_ser_reload.run()
         self.assertTrue(job_ser_reload.status.finished)
         self.assertTrue(job_ser_reload[0].status.finished)
         self.assertTrue(job_ser_reload[1].status.finished)
