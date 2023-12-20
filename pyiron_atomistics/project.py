@@ -209,10 +209,10 @@ class Project(ProjectCore):
 
             Job Type object with all the available job types: ['StructureContainer’, ‘StructurePipeline’, ‘AtomisticExampleJob’,
                                              ‘ExampleJob’, ‘Lammps’, ‘KMC’, ‘Sphinx’, ‘Vasp’, ‘GenericMaster’,
-                                             ‘SerialMaster’, ‘AtomisticSerialMaster’, ‘ParallelMaster’, ‘KmcMaster’,
+                                             ‘ParallelMaster’, ‘KmcMaster’,
                                              ‘ThermoLambdaMaster’, ‘RandomSeedMaster’, ‘MeamFit’, ‘Murnaghan’,
-                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’, ‘ConvergenceVolume’,
-                                             ‘ConvergenceEncutParallel’, ‘ConvergenceKpointParallel’, ’PhonopyMaster’,
+                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’,
+                                             ‘ConvergenceKpointParallel’, ’PhonopyMaster’,
                                              ‘DefectFormationEnergy’, ‘LammpsASE’, ‘PipelineMaster’,
                                              ’TransformationPath’, ‘ThermoIntEamQh’, ‘ThermoIntDftEam’, ‘ScriptJob’,
                                              ‘ListMaster']
@@ -251,8 +251,6 @@ class Project(ProjectCore):
         - ‘Sphinx’:
         - ‘Vasp’:
         - ‘GenericMaster’:
-        - ‘SerialMaster’: series of jobs run in serial
-        - ‘AtomisticSerialMaster’:
         - ‘ParallelMaster’: series of jobs run in parallel
         - ‘KmcMaster’:
         - ‘ThermoLambdaMaster’:
@@ -261,7 +259,6 @@ class Project(ProjectCore):
         - ‘Murnaghan’:
         - ‘MinimizeMurnaghan’:
         - ‘ElasticMatrix’:
-        - ‘ConvergenceVolume’:
         - ‘ConvergenceEncutParallel’:
         - ‘ConvergenceKpointParallel’:
         - ’PhonopyMaster’:
@@ -277,9 +274,9 @@ class Project(ProjectCore):
         Args:
             job_type (str): job type can be ['StructureContainer’, ‘StructurePipeline’, ‘AtomisticExampleJob’,
                                              ‘ExampleJob’, ‘Lammps’, ‘KMC’, ‘Sphinx’, ‘Vasp’, ‘GenericMaster’,
-                                             ‘SerialMaster’, ‘AtomisticSerialMaster’, ‘ParallelMaster’, ‘KmcMaster’,
+                                             ‘ParallelMaster’, ‘KmcMaster’,
                                              ‘ThermoLambdaMaster’, ‘RandomSeedMaster’, ‘MeamFit’, ‘Murnaghan’,
-                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’, ‘ConvergenceVolume’,
+                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’,
                                              ‘ConvergenceEncutParallel’, ‘ConvergenceKpointParallel’, ’PhonopyMaster’,
                                              ‘DefectFormationEnergy’, ‘LammpsASE’, ‘PipelineMaster’,
                                              ’TransformationPath’, ‘ThermoIntEamQh’, ‘ThermoIntDftEam’, ‘ScriptJob’,
