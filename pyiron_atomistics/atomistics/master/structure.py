@@ -155,7 +155,7 @@ class StructureListMaster(ParallelMaster):
 
         .. attribute:: job_type
 
-            Job type object with all the available job types: ['ExampleJob', 'SerialMaster', 'ParallelMaster',
+            Job type object with all the available job types: ['ExampleJob', 'ParallelMaster',
                                                                'ScriptJob', 'ListMaster']
 
         .. attribute:: child_names

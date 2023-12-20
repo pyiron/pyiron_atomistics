@@ -62,23 +62,6 @@ class TestMurnaghan(TestWithCleanProject):
         self.assertFalse(murn.convergence_check())
         self.assertTrue(murn.status.not_converged)
 
-    def test_run(self):
-        job = self.project.create_job(
-            'AtomisticExampleJob', "job_test"
-        )
-        job.structure = self.basis
-        job_ser = self.project.create_job(
-            self.project.job_type.SerialMaster, "murn_iter"
-        )
-        job_ser.append(job)
-        job_ser.set_goal(convergence_goal, eps=0.4)
-        murn = self.project.create_job("Murnaghan", "murnaghan")
-        murn.ref_job = job_ser
-        murn.input['num_points'] = 3
-        murn.run()
-        # This converges only occasionally. Probably need to design a better test
-        self.assertTrue(murn.status.not_converged or murn.status.finished)
-
     def test_fitting_routines(self):
         ref_job = self.project.create.job.Lammps('ref')
         murn = ref_job.create_job('Murnaghan', 'murn')
