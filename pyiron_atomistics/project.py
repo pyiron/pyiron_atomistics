@@ -55,7 +55,7 @@ if not (isinstance(ase.__file__, str)):
 
 
 def _vasp_energy_kin_affected(job):
-    e_kin = job.project_hdf5["output/generic/dft/scf_energy_kin"]
+    e_kin = job["output/generic/dft/scf_energy_kin"]
     return e_kin is not None and not isinstance(e_kin, np.ndarray)
 
 
