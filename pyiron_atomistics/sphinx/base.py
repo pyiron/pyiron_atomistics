@@ -7,12 +7,10 @@ from __future__ import print_function, division
 import numpy as np
 import os
 import posixpath
-import re
 import stat
 from shutil import move as movefile
 import scipy.constants
 import warnings
-import json
 import spglib
 import subprocess
 from subprocess import PIPE
@@ -24,13 +22,11 @@ from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.vasp.potential import (
     VaspPotentialFile,
     strip_xc_from_potential_name,
-    find_potential_file as find_potential_file_vasp,
     VaspPotentialSetter,
 )
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.output_parser import (
-    SphinxLogParser,
     collect_energy_dat,
     collect_residue_dat,
     collect_spins_dat,
@@ -38,6 +34,7 @@ from pyiron_atomistics.sphinx.output_parser import (
     collect_energy_struct,
     collect_eps_dat,
 )
+from pyiron_atomistics.sphinx.input_writer import InputWriter
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
