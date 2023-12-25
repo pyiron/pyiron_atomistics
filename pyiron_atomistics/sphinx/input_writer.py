@@ -46,6 +46,15 @@ class InputWriter(object):
         for i, p in enumerate(self._id_pyi_to_spx):
             self._id_spx_to_pyi[p] = i
 
+    def copy_potentials(self, origins, destinations):
+        """
+        Args:
+            origins (list): list of paths to potentials
+            destinations (list): list of paths to copy potentials to
+        """
+        for ori, des in zip(origins, destinations):
+            copyfile(ori, des)
+
     def write_spin_constraints(self, file_name="spins.in", cwd=None, spins_list=None):
         """
         Write a text file containing a list of all spins named spins.in -

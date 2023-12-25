@@ -1318,7 +1318,7 @@ class SphinxBase(GenericDFTJob):
         else:
             raise ValueError("Only JTH and VASP potentials are supported!")
 
-        results = {}
+        ori_paths, des_paths = [], []
         for species_obj in self.structure.get_species_objects():
             if species_obj.Parent is not None:
                 elem = species_obj.Parent
@@ -1348,15 +1348,16 @@ class SphinxBase(GenericDFTJob):
                         ]
                     )
             else:
-                potential_path = find_potential_file(
-                    path=potentials.find_default(elem)["Filename"].values[0][0]
+                ori_paths.append(
+                    find_potential_file(
+                        path=potentials.find_default(elem)["Filename"].values[0][0]
+                    )
                 )
             if potformat == "JTH":
-                p = posixpath.join(cwd, elem + "_POTCAR")
+                des_paths.append(posixpath.join(cwd, elem + "_POTCAR"))
             else:
-                p = posixpath.join(cwd, elem + "_GGA.atomicdata")
-            results[elem] = [potential_path, p]
-        return results
+                des_paths.append(posixpath.join(cwd, elem + "_GGA.atomicdata"))
+        return {"origins": ori_paths, "destinations": des_paths}
 
     def write_input(self):
         """
@@ -1401,10 +1402,12 @@ class SphinxBase(GenericDFTJob):
 
         self.input_writer.structure = self.structure
         self.input_writer.copy_potentials(
-            potformat=potformat,
-            xc=self.input["Xcorr"],
-            cwd=self.working_directory,
-            modified_elements=modified_elements,
+            **self._get_potential_path(
+                potformat=potformat,
+                xc=self.input["Xcorr"],
+                cwd=self.working_directory,
+                modified_elements=modified_elements,
+            )
         )
 
         # Write spin constraints, if set via _generic_input.
