@@ -1444,7 +1444,7 @@ class SphinxBase(GenericDFTJob):
             self.input.sphinx.main,
         ]
 
-        if self._generic_input["fix_spin_constraint"]:
+        if self._generic_input["fix_spin_constraint"] and self.structure.has("initial_magmoms"):
             self.input.sphinx.spinConstraint = Group()
             all_groups.append(self.input.sphinx.spinConstraint)
             write_spin_constraints(

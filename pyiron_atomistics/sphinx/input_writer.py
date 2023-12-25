@@ -26,24 +26,13 @@ def write_spin_constraints(
         cwd (str): the current working directory (optinal)
         spins_list (list): list of spins
     """
-    if self.structure.has("initial_magmoms"):
-        if any(
-            [
-                True
-                if isinstance(spin, list) or isinstance(spin, np.ndarray)
-                else False
-                for spin in self.structure.get_initial_magnetic_moments()
-            ]
-        ):
+    for spin in magmoms:
+        if isinstance(spin, list) or isinstance(spin, np.ndarray):
             raise ValueError("SPHInX only supports collinear spins at the moment.")
-        else:
-            constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
-            if spins_list is None or len(spins_list) == 0:
-                spins_list = self.structure.get_initial_magnetic_moments()
-            spins = spins_list[self.id_pyi_to_spx].astype(str)
-            spins[~np.asarray(constraint)] = "X"
-            spins_str = "\n".join(spins) + "\n"
-            if cwd is not None:
-                file_name = posixpath.join(cwd, file_name)
-            with open(file_name, "w") as f:
-                f.write(spins_str)
+    spins = np.array(magmoms).astype(str)
+    spins[~np.asarray(constraints)] = "X"
+    spins_str = "\n".join(spins) + "\n"
+    if cwd is not None:
+        file_name = posixpath.join(cwd, file_name)
+    with open(file_name, "w") as f:
+        f.write(spins_str)
