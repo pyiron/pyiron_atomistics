@@ -14,7 +14,6 @@ class InputWriter(object):
         self.structure = None
         self._id_pyi_to_spx = []
         self._id_spx_to_pyi = []
-        self.file_dict = {}
 
     @property
     def id_spx_to_pyi(self):
