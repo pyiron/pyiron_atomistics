@@ -22,7 +22,11 @@ from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.vasp.potential import (
     VaspPotentialFile,
     strip_xc_from_potential_name,
+    find_potential_file as find_potential_file_vasp,
     VaspPotentialSetter,
+)
+from pyiron_atomistics.sphinx.potential import (
+    find_potential_file as find_potential_file_jth,
 )
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
