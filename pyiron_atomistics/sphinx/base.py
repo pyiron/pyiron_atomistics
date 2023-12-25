@@ -33,6 +33,7 @@ from pyiron_atomistics.sphinx.output_parser import (
     collect_relaxed_hist,
     collect_energy_struct,
     collect_eps_dat,
+    SphinxLogParser,
 )
 from pyiron_atomistics.sphinx.input_writer import InputWriter
 from pyiron_atomistics.sphinx.util import sxversions
@@ -1284,6 +1285,78 @@ class SphinxBase(GenericDFTJob):
            list: a list of available potentials
         """
         return self.potential_list
+
+    def _get_potential_path(
+        self,
+        potformat="JTH",
+        xc=None,
+        pot_path_dict=None,
+        modified_elements=None,
+    ):
+        """
+        Copy potential files
+
+        Args:
+            potformat (str):
+            xc (str/None):
+            pot_path_dict (dict):
+            modified_elements (dict):
+        """
+
+        if pot_path_dict is None:
+            pot_path_dict = {}
+
+        if potformat == "JTH":
+            potentials = SphinxJTHPotentialFile(xc=xc)
+            find_potential_file = find_potential_file_jth
+            pot_path_dict.setdefault("PBE", "jth-gga-pbe")
+        elif potformat == "VASP":
+            potentials = VaspPotentialFile(xc=xc)
+            find_potential_file = find_potential_file_vasp
+            pot_path_dict.setdefault("PBE", "paw-gga-pbe")
+            pot_path_dict.setdefault("LDA", "paw-lda")
+        else:
+            raise ValueError("Only JTH and VASP potentials are supported!")
+
+        results = {}
+        for species_obj in self.structure.get_species_objects():
+            if species_obj.Parent is not None:
+                elem = species_obj.Parent
+            else:
+                elem = species_obj.Abbreviation
+
+            if "pseudo_potcar_file" in species_obj.tags.keys():
+                new_element = species_obj.tags["pseudo_potcar_file"]
+                potentials.add_new_element(parent_element=elem, new_element=new_element)
+                potential_path = find_potential_file(
+                    path=potentials.find_default(new_element)["Filename"].values[0][0]
+                )
+                assert os.path.isfile(
+                    potential_path
+                ), "such a file does not exist in the pp directory"
+            elif elem in modified_elements.keys():
+                new_element = modified_elements[elem]
+                if os.path.isabs(new_element):
+                    potential_path = new_element
+                else:
+                    potentials.add_new_element(
+                        parent_element=elem, new_element=new_element
+                    )
+                    potential_path = find_potential_file(
+                        path=potentials.find_default(new_element)["Filename"].values[0][
+                            0
+                        ]
+                    )
+            else:
+                potential_path = find_potential_file(
+                    path=potentials.find_default(elem)["Filename"].values[0][0]
+                )
+            if potformat == "JTH":
+                p = posixpath.join(cwd, elem + "_POTCAR")
+            else:
+                p = posixpath.join(cwd, elem + "_GGA.atomicdata")
+            results[elem] = [potential_path, p]
+        return results
 
     def write_input(self):
         """
