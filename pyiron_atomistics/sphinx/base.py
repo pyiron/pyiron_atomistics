@@ -1290,6 +1290,7 @@ class SphinxBase(GenericDFTJob):
         self,
         potformat="JTH",
         xc=None,
+        cwd=None,
         pot_path_dict=None,
         modified_elements=None,
     ):
@@ -1299,6 +1300,7 @@ class SphinxBase(GenericDFTJob):
         Args:
             potformat (str):
             xc (str/None):
+            cwd (str/None):
             pot_path_dict (dict):
             modified_elements (dict):
         """
