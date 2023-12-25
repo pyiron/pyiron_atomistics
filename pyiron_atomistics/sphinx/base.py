@@ -39,7 +39,9 @@ from pyiron_atomistics.sphinx.output_parser import (
     collect_eps_dat,
     SphinxLogParser,
 )
-from pyiron_atomistics.sphinx.input_writer import InputWriter
+from pyiron_atomistics.sphinx.input_writer import (
+    write_spin_constraints, copy_potentials
+)
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
 from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
@@ -107,8 +109,9 @@ class SphinxBase(GenericDFTJob):
         self.input = Group(table_name="parameters", lazy=True)
         self.load_default_input()
         self.output = Output(job=self)
-        self.input_writer = InputWriter()
         self._potential = VaspPotentialSetter([])
+        self._id_pyi_to_spx = None
+        self._id_spx_to_pyi = None
         if self.check_vasp_potentials():
             self.input["VaspPot"] = True  # use VASP potentials if available
         self._generic_input["restart_for_band_structure"] = False
@@ -165,15 +168,31 @@ class SphinxBase(GenericDFTJob):
 
     @property
     def id_pyi_to_spx(self):
-        if self.input_writer.id_pyi_to_spx is None:
-            self.input_writer.structure = self.structure
-        return self.input_writer.id_pyi_to_spx
+        if self._id_pyi_to_spx is None:
+            if self.structure is None:
+                return None
+            self._id_pyi_to_spx = []
+            for elm_species in self.structure.get_species_objects():
+                self._id_pyi_to_spx.append(
+                    np.arange(len(self.structure))[
+                        self.structure.get_chemical_symbols() == elm_species.Abbreviation
+                    ]
+                )
+            self._id_pyi_to_spx = np.array(
+                [ooo for oo in self._id_pyi_to_spx for ooo in oo]
+            )
+        return self._id_pyi_to_spx
 
     @property
     def id_spx_to_pyi(self):
-        if self.input_writer.id_spx_to_pyi is None:
-            self.input_writer.structure = self.structure
-        return self.input_writer.id_spx_to_pyi
+        if self._id_spx_to_pyi is None:
+            if self.structure is None:
+                return None
+            self._id_spx_to_pyi = np.array([0] * len(self.id_pyi_to_spx))
+            for i, p in enumerate(self.id_pyi_to_spx):
+                self.id_spx_to_pyi[p] = i
+        return self.id_spx_to_pyi
+
 
     @property
     def plane_wave_cutoff(self):
@@ -1406,8 +1425,7 @@ class SphinxBase(GenericDFTJob):
             if value is not None
         }
 
-        self.input_writer.structure = self.structure
-        self.input_writer.copy_potentials(
+        copy_potentials(
             **self._get_potential_path(
                 potformat=potformat,
                 xc=self.input["Xcorr"],
@@ -1429,7 +1447,11 @@ class SphinxBase(GenericDFTJob):
         if self._generic_input["fix_spin_constraint"]:
             self.input.sphinx.spinConstraint = Group()
             all_groups.append(self.input.sphinx.spinConstraint)
-            self.input_writer.write_spin_constraints(cwd=self.working_directory)
+            write_spin_constraints(
+                cwd=self.working_directory,
+                magmoms=self.structure.get_initial_magnetic_moments()[self.id_pyi_to_spx],
+                constraints=self.structure.spin_constraint[self.id_pyi_to_spx]
+            )
             self.input.sphinx.spinConstraint.setdefault("file", '"spins.in"')
 
         # In case the entire group was
