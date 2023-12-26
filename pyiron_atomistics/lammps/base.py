@@ -1082,9 +1082,8 @@ class Input:
             hdf5:
         Returns:
         """
-        with hdf5.open("input") as hdf5_input:
-            self.from_dict(
-                data_dict=hdf5_input.read_dict_from_hdf(
-                    ["input", "input/control_inp", "input/potential_inp"]
-                )
+        self.from_dict(
+            data_dict=hdf5.read_dict_from_hdf(
+                ["input", "input/control_inp", "input/potential_inp"]
             )
+        )
