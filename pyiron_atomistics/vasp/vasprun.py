@@ -84,8 +84,7 @@ class Vasprun(object):
         for _, leaf in ETree.iterparse(filename):
             if leaf.tag in ["generator", "incar"]:
                 d[leaf.tag] = dict()
-                for items in leaf:
-                    d[leaf.tag] = self.parse_item_to_dict(items, d[leaf.tag])
+                d[leaf.tag] = self.parse_container_element(leaf, d[leaf.tag])
             if leaf.tag in ["kpoints"]:
                 d[leaf.tag] = dict()
                 self.parse_kpoints_to_dict(leaf, d[leaf.tag])
@@ -538,18 +537,41 @@ class Vasprun(object):
 
             if leaf.tag == "varray" and leaf.attrib["name"] == "selective":
                 d["selective_dynamics"] = self._parse_2d_matrix(leaf, vec_type=bool)
+                
+    def parse_container_element(self, container, d):
+        """
+        Parses XML container elements into a dictionary. This method is specifically 
+        designed to handle elements within 'generator' and 'incar' tags of a VASP XML file. 
+        It processes elements with 'i' and 'v' tags, using different parsing methods for each.
 
+        Args:
+            container (xml.etree.Element): An XML element that contains child elements to be parsed. 
+                                        Typically, this would be a 'generator' or 'incar' element.
+
+        Returns:
+            dict: A dictionary containing parsed data from the XML container. Keys are the names 
+                of the elements, and values are the parsed data, which could be a simple value 
+                or a list, depending on the element type.
+        """
+        for item in container:
+            if item.tag == 'i':
+                d.update(self.parse_item_to_dict(item, d))
+            elif item.tag == 'v':
+                d[item.attrib["name"]] = self.parse_INCAR_vector_to_list(item)
+        return d
+    
     @staticmethod
     def parse_item_to_dict(node, d):
         """
-        Parses values from an item to a dictionary
+        Parses an XML element with the tag 'i' into a dictionary. The method handles different 
+        data types specified in the 'type' attribute of the element (e.g., string, float, int, logical).
 
         Args:
-            node (etree.Element instance): Node to be parsed
-            d (dict): The dictionary to which data is to be parsed
+            node (xml.etree.Element): An XML element with the tag 'i', containing data to be parsed.
 
         Returns:
-            d (dictionary)
+            dict: A dictionary with a single key-value pair. The key is the 'name' attribute of the element,
+                and the value is the parsed data, converted to the appropriate Python data type.
         """
         type_dict = {"string": str, "float": float, "int": int, "logical": bool}
         logical_dict = {"T": True, "F": False}
@@ -562,6 +584,70 @@ class Vasprun(object):
             d[node.attrib["name"]] = node.text
         return d
 
+    @staticmethod
+    def parse_INCAR_vector_to_list(node, filename=None):
+        """
+        Parses an XML element with the tag 'v' into a list. This method is robust to conversion errors and 
+        is specifically tailored for parsing vector data from the INCAR section of a VASP XML file. In case of 
+        conversion errors, it can optionally read correct values from an INCAR file.
+
+        Args:
+            node (xml.etree.Element): An XML element with the tag 'v', containing vector data to be parsed.
+            filename (str, optional): The path to an INCAR file used for error handling. If provided, 
+                                    the method will attempt to read correct values from this file in case 
+                                    of conversion errors. Defaults to None.
+
+        Returns:
+            list: A list of parsed values. Each value is converted to the appropriate Python data type 
+                based on the 'type' attribute of the element.
+        """
+        val_type = node.attrib.get("type", "string")
+        values = node.text.strip().split() if node.text else []
+        parsed_values = []
+        for val in values:
+            try:
+                if val_type == "logical":
+                    parsed_values.append(val == "T")
+                elif val_type == "int":
+                    parsed_values.append(int(val))
+                elif val_type == "float":
+                    parsed_values.append(float(val))
+                else:  # Default case for string type
+                    parsed_values.append(val)
+            except ValueError:
+                # Handle conversion error - placeholder for special handling
+                # For example, read from an INCAR file or set to a default value
+                # This part needs to be adapted based on your specific requirements
+                parsed_value = Vasprun.read_from_incar(filename, node.attrib["name"], val_type, val)
+                if parsed_value is not None:
+                    parsed_values.append(parsed_value)
+                else:
+                    raise ValueError(f"Error parsing value '{val}' in {node.attrib['name']}")
+
+        return parsed_values
+
+    @staticmethod
+    def read_from_incar(filename, param_name, val_type, val):
+        """
+        Placeholder method for reading and parsing parameter values from an INCAR file. This method is intended 
+        to be used for handling special cases where values in the VASP XML file are not correctly formatted.
+
+        Args:
+            filename (str): The path to the INCAR file.
+            param_name (str): The name of the parameter to be read.
+            val_type (str): The expected data type of the parameter ('string', 'float', 'int', 'logical').
+            val (str): The original value from the XML file that needs special handling.
+
+        Returns:
+            The correct value read from the INCAR file, or None if the value cannot be determined. The return
+            type should match the expected `val_type`.
+        """
+        pass
+        # Placeholder for special handling logic
+        # Adapt this method based on specific handling logic for irregular values
+        # For example, read from an INCAR file or set to a default value
+        return None
+    
     def parse_parameters(self, node, d):
         """
         Parses parameter data from a node to a dictionary
