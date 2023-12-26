@@ -469,7 +469,8 @@ class Atoms(ASEAtoms):
 
         if self.cell is not None:
             # Convert ASE cell object to numpy array before storing
-            hdf_structure["cell"] = {"cell": np.array(self.cell), "pbc": self.pbc}
+            hdf_structure["cell/cell"] = np.array(self.cell)
+            hdf_structure["cell/pbc"] = self.pbc
 
         if self.has("initial_magmoms"):
             hdf_structure["spins"] = self.spins

@@ -798,9 +798,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
 
     def _structure_to_dict(self):
         if self.structure is not None and self._generic_input["structure"] == "atoms":
-            return resolve_hierachical_dict(
-                data_dict=self.structure.to_dict(), group_name="structure"
-            )
+            return {"structure/" + k: v for k, v in self.structure.to_dict().items()}
         else:
             return None
 
@@ -1121,16 +1119,3 @@ class GenericOutput(object):
             return hdf5_path.list_nodes()
         else:
             return []
-
-
-def resolve_hierachical_dict(data_dict, group_name=""):
-    return_dict = {}
-    if len(group_name) > 0 and group_name[-1] != "/":
-        group_name = group_name + "/"
-    for k, v in data_dict.items():
-        if isinstance(v, dict):
-            for sk, sv in v.items():
-                return_dict[group_name + k + "/" + sk] = sv
-        else:
-            return_dict[group_name + k] = v
-    return return_dict

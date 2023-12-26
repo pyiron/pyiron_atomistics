@@ -17,10 +17,7 @@ from pyiron_atomistics.lammps.potential import (
     view_potentials,
     list_potentials,
 )
-from pyiron_atomistics.atomistics.job.atomistic import (
-    AtomisticGenericJob,
-    resolve_hierachical_dict,
-)
+from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import (
@@ -467,10 +464,10 @@ class LammpsBase(AtomisticGenericJob):
             final_structure = self.get_structure(iteration_step=-1)
             if final_structure is not None:
                 hdf_dict.update(
-                    resolve_hierachical_dict(
-                        data_dict=final_structure.to_dict(),
-                        group_name="output/structure",
-                    )
+                    {
+                        "output/structure/" + k: v
+                        for k, v in final_structure.to_dict().items()
+                    }
                 )
         self.project_hdf5.write_dict_to_hdf(data_dict=hdf_dict)
 
@@ -1087,3 +1084,16 @@ class Input:
                 ["input", "input/control_inp", "input/potential_inp"]
             )
         )
+
+
+def resolve_hierachical_dict(data_dict, group_name=""):
+    return_dict = {}
+    if len(group_name) > 0 and group_name[-1] != "/":
+        group_name = group_name + "/"
+    for k, v in data_dict.items():
+        if isinstance(v, dict):
+            for sk, sv in v.items():
+                return_dict[group_name + k + "/" + sk] = sv
+        else:
+            return_dict[group_name + k] = v
+    return return_dict
