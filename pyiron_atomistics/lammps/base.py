@@ -17,7 +17,10 @@ from pyiron_atomistics.lammps.potential import (
     view_potentials,
     list_potentials,
 )
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
+from pyiron_atomistics.atomistics.job.atomistic import (
+    AtomisticGenericJob,
+    resolve_hierachical_dict,
+)
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.potential import LammpsPotential
 from pyiron_atomistics.lammps.structure import (
@@ -449,28 +452,26 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        self.input.from_hdf(self._hdf5)
-        hdf_dict = self.collect_output_parser(
-            cwd=self.working_directory,
-            dump_h5_file_name="dump.h5",
-            dump_out_file_name="dump.out",
-            log_lammps_file_name="log.lammps",
+        hdf_dict = resolve_hierachical_dict(
+            data_dict=self.collect_output_parser(
+                cwd=self.working_directory,
+                dump_h5_file_name="dump.h5",
+                dump_out_file_name="dump.out",
+                log_lammps_file_name="log.lammps",
+            ),
+            group_name="output",
         )
-
-        # Write to hdf
-        with self.project_hdf5.open("output/generic") as hdf_output:
-            for k, v in hdf_dict["generic"].items():
-                hdf_output[k] = v
-
-        with self.project_hdf5.open("output/lammps") as hdf_output:
-            for k, v in hdf_dict["lammps"].items():
-                hdf_output[k] = v
 
         if len(self.output.cells) > 0:
             final_structure = self.get_structure(iteration_step=-1)
             if final_structure is not None:
-                with self.project_hdf5.open("output") as hdf_output:
-                    final_structure.to_hdf(hdf_output)
+                hdf_dict.update(
+                    resolve_hierachical_dict(
+                        data_dict=final_structure.to_dict(),
+                        group_name="output/structure",
+                    )
+                )
+        self.project_hdf5.write_dict_to_hdf(data_dict=hdf_dict)
 
     def convergence_check(self):
         if self._generic_input["calc_mode"] == "minimize":
@@ -722,21 +723,13 @@ class LammpsBase(AtomisticGenericJob):
             rotation_matrix=rotation_matrix,
         )
 
-    # define hdf5 input and output
-    def to_hdf(self, hdf=None, group_name=None):
-        """
+    def to_dict(self):
+        data_dict = super(LammpsBase, self).to_dict()
+        lammps_dict = self._structure_to_dict() | self.input.to_dict()
+        data_dict.update({"input/" + k: v for k, v in lammps_dict.items()})
+        return data_dict
 
-        Args:
-            hdf:
-            group_name:
-
-        Returns:
-
-        """
-        super(LammpsBase, self).to_hdf(hdf=hdf, group_name=group_name)
-        self._structure_to_hdf()
-        self.input.to_hdf(self._hdf5)
-
+    # define hdf5 output
     def from_hdf(self, hdf=None, group_name=None):  # TODO: group_name should be removed
         """
 
@@ -749,7 +742,11 @@ class LammpsBase(AtomisticGenericJob):
         """
         super(LammpsBase, self).from_hdf(hdf=hdf, group_name=group_name)
         self._structure_from_hdf()
-        self.input.from_hdf(self._hdf5)
+        self.input.from_dict(
+            data_dict=self._hdf5.read_dict_from_hdf(
+                group_paths=["input", "input/control_inp", "input/potential_inp"]
+            )
+        )
 
     def write_restart_file(self, filename="restart.out"):
         """
@@ -1054,30 +1051,17 @@ class Input:
         self.bond_dict["O"]["bond_type_list"] = [1]
         self.bond_dict["O"]["angle_type_list"] = [1]
 
-    def to_hdf(self, hdf5):
-        """
+    def from_dict(self, data_dict):
+        self.control.from_dict(data_dict["input"]["control_inp"])
+        self.potential.from_dict(data_dict["input"]["potential_inp"])
+        if "bond_dict" in data_dict["input"].keys():
+            self.bond_dict = data_dict["input"]["bond_dict"]
 
-        Args:
-            hdf5:
-
-        Returns:
-
-        """
-        with hdf5.open("input") as hdf5_input:
-            self.control.to_hdf(hdf5_input)
-            self.potential.to_hdf(hdf5_input)
-
-    def from_hdf(self, hdf5):
-        """
-
-        Args:
-            hdf5:
-
-        Returns:
-
-        """
-        with hdf5.open("input") as hdf5_input:
-            self.control.from_hdf(hdf5_input)
-            self.potential.from_hdf(hdf5_input)
-            if "bond_dict" in hdf5_input.list_nodes():
-                self.bond_dict = hdf5_input["bond_dict"]
+    def to_dict(self):
+        return {
+            self.control.table_name + "/" + k: v
+            for k, v in self.control.to_dict().items()
+        } | {
+            self.potential.table_name + "/" + k: v
+            for k, v in self.potential.to_dict().items()
+        }

@@ -801,10 +801,19 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         ProjectGUI(self)
 
-    def _structure_to_hdf(self):
+    def _structure_to_dict(self):
         if self.structure is not None and self._generic_input["structure"] == "atoms":
+            return resolve_hierachical_dict(
+                data_dict=self.structure.to_dict(), group_name="structure"
+            )
+        else:
+            return None
+
+    def _structure_to_hdf(self):
+        data_dict = self._structure_to_dict()
+        if data_dict is not None:
             with self.project_hdf5.open("input") as hdf5_input:
-                self.structure.to_hdf(hdf5_input)
+                hdf5_input.write_dict_to_hdf(data_dict)
 
     def _structure_from_hdf(self):
         if (
@@ -1117,3 +1126,16 @@ class GenericOutput(object):
             return hdf5_path.list_nodes()
         else:
             return []
+
+
+def resolve_hierachical_dict(data_dict, group_name=""):
+    return_dict = {}
+    if len(group_name) > 0 and group_name[-1] != "/":
+        group_name = group_name + "/"
+    for k, v in data_dict.items():
+        if isinstance(v, dict):
+            for sk, sv in v.items():
+                return_dict[group_name + k + "/" + sk] = sv
+        else:
+            return_dict[group_name + k] = v
+    return return_dict
