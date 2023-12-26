@@ -57,7 +57,7 @@ class Vasprun(object):
         """
         if not (os.path.isfile(filename)):
             raise AssertionError()
-        self.filename=filename
+        self.filename = filename
         try:
             self.parse_root_to_dict(filename)
         except ParseError:
@@ -537,7 +537,7 @@ class Vasprun(object):
 
             if leaf.tag == "varray" and leaf.attrib["name"] == "selective":
                 d["selective_dynamics"] = self._parse_2d_matrix(leaf, vec_type=bool)
-    
+
     def _parse_INCAR_generator_parameters(self, val_type, val):
         """
         Helper function to convert a Vasprun parameter into the proper type.
@@ -555,8 +555,9 @@ class Vasprun(object):
             return val.strip()
         return float(val)
 
-
-    def _parse_INCAR_generator_vector_parameters(self, val_type, val, filename, param_name):
+    def _parse_INCAR_generator_vector_parameters(
+        self, val_type, val, filename, param_name
+    ):
         """
         Helper function to convert a Vasprun array-type parameter into the proper
         type. Boolean, int and float types are converted.
@@ -615,9 +616,13 @@ class Vasprun(object):
                 val = c.text.strip() if c.text else ""
                 try:
                     if c.tag == "i":
-                        params[name] = self._parse_INCAR_generator_parameters(ptype, val)
+                        params[name] = self._parse_INCAR_generator_parameters(
+                            ptype, val
+                        )
                     else:
-                        params[name] = self._parse_INCAR_generator_vector_parameters(ptype, val, self.filename, name)
+                        params[name] = self._parse_INCAR_generator_vector_parameters(
+                            ptype, val, self.filename, name
+                        )
                 except Exception as exc:
                     if name == "RANDOM_SEED":
                         # Handles the case where RANDOM SEED > 99999, which results in *****
@@ -626,11 +631,11 @@ class Vasprun(object):
                         raise exc
         elem.clear()
         return params
-    
+
     @staticmethod
     def parse_item_to_dict(node, d):
         """
-        Parses an XML element with the tag 'i' into a dictionary. The method handles different 
+        Parses an XML element with the tag 'i' into a dictionary. The method handles different
         data types specified in the 'type' attribute of the element (e.g., string, float, int, logical).
 
         Args:
@@ -653,7 +658,7 @@ class Vasprun(object):
 
     def _parse_from_incar(self, param_name, val_type, val):
         """
-        Placeholder method for reading and parsing parameter values from an INCAR file. This method is intended 
+        Placeholder method for reading and parsing parameter values from an INCAR file. This method is intended
         to be used for handling special cases where values in the VASP XML file are not correctly formatted.
 
         Args:
@@ -671,7 +676,7 @@ class Vasprun(object):
         # Adapt this method based on specific handling logic for irregular values
         # For example, read from an INCAR file or set to a default value
         return None
-    
+
     def parse_parameters(self, node, d):
         """
         Parses parameter data from a node to a dictionary
