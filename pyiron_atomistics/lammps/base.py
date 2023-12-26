@@ -452,6 +452,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
+        self.input.from_hdf(self._hdf5)
         hdf_dict = resolve_hierachical_dict(
             data_dict=self.collect_output_parser(
                 cwd=self.working_directory,
@@ -1065,3 +1066,25 @@ class Input:
             self.potential.table_name + "/" + k: v
             for k, v in self.potential.to_dict().items()
         }
+
+    def to_hdf(self, hdf5):
+        """
+        Args:
+            hdf5:
+        Returns:
+        """
+        with hdf5.open("input") as hdf5_input:
+            hdf5_input.write_dict_to_hdf(data_dict=self.to_dict())
+
+    def from_hdf(self, hdf5):
+        """
+        Args:
+            hdf5:
+        Returns:
+        """
+        with hdf5.open("input") as hdf5_input:
+            self.from_dict(
+                data_dict=hdf5_input.read_dict_from_hdf(
+                    ["input", "input/control_inp", "input/potential_inp"]
+                )
+            )
