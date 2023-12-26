@@ -458,7 +458,8 @@ class Atoms(ASEAtoms):
         }
         for el in self.species:
             if isinstance(el.tags, dict):
-                hdf_structure["new_species/" + el.Abbreviation] = el.to_dict()
+                for k, v in el.to_dict().items():
+                    hdf_structure["new_species/" + el.Abbreviation + "/" + k] = v
         hdf_structure["species"] = [el.Abbreviation for el in self.species]
         hdf_structure["indices"] = self.indices
 
