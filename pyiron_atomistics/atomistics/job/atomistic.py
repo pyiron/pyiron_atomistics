@@ -286,17 +286,12 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             except ValueError:
                 pass
 
-    def to_hdf(self, hdf=None, group_name=None):
-        """
-        Store the GenericJob in an HDF5 file
-
-        Args:
-            hdf (ProjectHDFio): HDF5 group object - optional
-            group_name (str): HDF5 subgroup name - optional
-        """
-        super(AtomisticGenericJob, self).to_hdf(hdf=hdf, group_name=group_name)
-        with self._hdf5.open("input") as hdf5_input:
-            self._generic_input.to_hdf(hdf5_input)
+    def to_dict(self):
+        data_dict = super(AtomisticGenericJob, self).to_dict()
+        data_dict.update(
+            {"input/generic/" + k: v for k, v in self._generic_input.to_dict().items()}
+        )
+        return data_dict
 
     def store_structure(self):
         """
@@ -801,10 +796,17 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         """
         ProjectGUI(self)
 
-    def _structure_to_hdf(self):
+    def _structure_to_dict(self):
         if self.structure is not None and self._generic_input["structure"] == "atoms":
+            return {"structure/" + k: v for k, v in self.structure.to_dict().items()}
+        else:
+            return None
+
+    def _structure_to_hdf(self):
+        data_dict = self._structure_to_dict()
+        if data_dict is not None:
             with self.project_hdf5.open("input") as hdf5_input:
-                self.structure.to_hdf(hdf5_input)
+                hdf5_input.write_dict_to_hdf(data_dict)
 
     def _structure_from_hdf(self):
         if (
