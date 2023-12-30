@@ -74,7 +74,7 @@ def copy_potentials(origins, destinations):
 
 
 def write_spin_constraints(
-    self, file_name="spins.in", cwd=None, magmoms=None, constraints=None
+    file_name="spins.in", cwd=None, magmoms=None, constraints=None
 ):
     """
     Write a text file containing a list of all spins named spins.in -
