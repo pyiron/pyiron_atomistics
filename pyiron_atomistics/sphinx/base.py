@@ -111,8 +111,6 @@ class SphinxBase(GenericDFTJob):
         self.load_default_input()
         self.output = Output(job=self)
         self._potential = VaspPotentialSetter([])
-        self._id_pyi_to_spx = None
-        self._id_spx_to_pyi = None
         if self.check_vasp_potentials():
             self.input["VaspPot"] = True  # use VASP potentials if available
         self._generic_input["restart_for_band_structure"] = False
@@ -169,31 +167,15 @@ class SphinxBase(GenericDFTJob):
 
     @property
     def id_pyi_to_spx(self):
-        if self._id_pyi_to_spx is None:
-            if self.structure is None:
-                return None
-            self._id_pyi_to_spx = []
-            for elm_species in self.structure.get_species_objects():
-                self._id_pyi_to_spx.append(
-                    np.arange(len(self.structure))[
-                        self.structure.get_chemical_symbols() == elm_species.Abbreviation
-                    ]
-                )
-            self._id_pyi_to_spx = np.array(
-                [ooo for oo in self._id_pyi_to_spx for ooo in oo]
-            )
-        return self._id_pyi_to_spx
+        if self.structure is None:
+            raise ValueError("Structure not set")
+        return np.argsort(self.structure.get_chemical_symbols())
 
     @property
     def id_spx_to_pyi(self):
-        if self._id_spx_to_pyi is None:
-            if self.structure is None:
-                return None
-            self._id_spx_to_pyi = np.array([0] * len(self.id_pyi_to_spx))
-            for i, p in enumerate(self.id_pyi_to_spx):
-                self._id_spx_to_pyi[p] = i
-        return self._id_spx_to_pyi
-
+        if self.structure is None:
+            raise ValueError("Structure not set")
+        return np.argsort(self.id_pyi_to_spx)
 
     @property
     def plane_wave_cutoff(self):
