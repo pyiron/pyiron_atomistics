@@ -44,18 +44,6 @@ class Group(DataContainer):
         """
         self[flag] = val
 
-    def set_parameter(self, parameter, val):
-        """
-        Set a new parameter in SPHInX input.
-
-        Args:
-            parameter (str): name of the flag
-            val (float): parameter value
-
-        This creates an input parameter of the type `parameter = val`.
-        """
-        self[parameter] = val
-
     def to_sphinx(self, content="__self__", indent=0):
         if content == "__self__":
             content = self

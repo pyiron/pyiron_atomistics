@@ -322,12 +322,8 @@ class SphinxBase(GenericDFTJob):
             ]
         else:
             scf_group.create_group("preconditioner")["type"] = "KERKER"
-            scf_group.preconditioner.set_parameter(
-                "scaling", self.input["rhoResidualScaling"]
-            )
-            scf_group.preconditioner.set_parameter(
-                "spinScaling", self.input["spinResidualScaling"]
-            )
+            scf_group.preconditioner["scaling"] = self.input["rhoResidualScaling"]
+            scf_group.preconditioner["spinScaling"] = self.input["spinResidualScaling"]
         scf_group.create_group(algorithm)
         if "maxStepsCCG" in self.input:
             scf_group[algorithm]["maxStepsCCG"] = self.input["maxStepsCCG"]
