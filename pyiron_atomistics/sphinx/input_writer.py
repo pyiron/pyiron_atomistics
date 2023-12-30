@@ -56,10 +56,6 @@ class Group(DataContainer):
         """
         self[parameter] = val
 
-    def remove(self, name):
-        if name in self.keys():
-            del self[name]
-
     def to_sphinx(self, content="__self__", indent=0):
         if content == "__self__":
             content = self
