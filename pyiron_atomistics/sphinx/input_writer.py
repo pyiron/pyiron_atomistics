@@ -32,18 +32,6 @@ class Group(DataContainer):
         else:
             self[name] = content
 
-    def set_flag(self, flag, val=True):
-        """
-        Set a new flag in SPHInX input.
-
-        Args:
-            flag (str): name of the flag
-            val (bool): boolean value
-
-        This creates an input flag of the type `name = val`.
-        """
-        self[flag] = val
-
     def to_sphinx(self, content="__self__", indent=0):
         if content == "__self__":
             content = self
