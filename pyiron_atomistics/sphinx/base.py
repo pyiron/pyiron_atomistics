@@ -1358,9 +1358,9 @@ class SphinxBase(GenericDFTJob):
                     )
                 )
             if potformat == "JTH":
-                des_paths.append(posixpath.join(cwd, elem + "_POTCAR"))
-            else:
                 des_paths.append(posixpath.join(cwd, elem + "_GGA.atomicdata"))
+            else:
+                des_paths.append(posixpath.join(cwd, elem + "_POTCAR"))
         return {"origins": ori_paths, "destinations": des_paths}
 
     def write_input(self):
