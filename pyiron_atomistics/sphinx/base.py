@@ -16,6 +16,7 @@ import subprocess
 from subprocess import PIPE
 import tarfile
 from tempfile import TemporaryDirectory
+from functools import cached_property
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
@@ -190,8 +191,8 @@ class SphinxBase(GenericDFTJob):
                 return None
             self._id_spx_to_pyi = np.array([0] * len(self.id_pyi_to_spx))
             for i, p in enumerate(self.id_pyi_to_spx):
-                self.id_spx_to_pyi[p] = i
-        return self.id_spx_to_pyi
+                self._id_spx_to_pyi[p] = i
+        return self._id_spx_to_pyi
 
 
     @property
