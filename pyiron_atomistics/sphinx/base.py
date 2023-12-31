@@ -345,14 +345,12 @@ class SphinxBase(GenericDFTJob):
         Args:
             keep_angstrom (bool): Store distances in Angstroms or Bohr
         """
-        selective_dynamics = None
-        if "selective_dynamics" in self.structure.arrays:
-            selective_dynamics = self.structure.arrays["selective_dynamics"]
         return get_structure_group(
             positions=self.structure.positions,
             cell=self.structure.cell,
             chemical_symbols=self.structure.get_chemical_symbols(),
-            selective_dynamics=selective_dynamics,
+            movable=self.structure.arrays.get("selective_dynamics", None),
+            labels=self.structure.get_initial_magnetic_moments(),
             use_symmetry=self.fix_symmetry,
             keep_angstrom=keep_angstrom,
         )

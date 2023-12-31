@@ -3,6 +3,12 @@ import os
 import posixpath
 import numpy as np
 from pyiron_base import DataContainer
+import scipy.constants
+
+
+BOHR_TO_ANGSTROM = (
+    scipy.constants.physical_constants["Bohr radius"][0] / scipy.constants.angstrom
+)
 
 
 class Group(DataContainer):
@@ -67,8 +73,8 @@ def get_structure_group(
     positions,
     cell,
     chemical_symbols,
-    selective_dynamics=None,
-    magmoms=None,
+    movable=None,
+    labels=None,
     use_symmetry=True,
     keep_angstrom=False
 ):
@@ -79,9 +85,10 @@ def get_structure_group(
         positions ((n, 3)-list/numpy.ndarray): xyz-coordinates of the atoms
         cell ((3, 3)-list/numpy.ndarray): Simulation box cdimensions
         chemical_symbols ((n,)-list/numpy.ndarray): Chemical symbols
-        selective_dynamics (None/(n, 3)-list/nump.ndarray): Whether to fix the
+        movable (None/(n, 3)-list/nump.ndarray): Whether to fix the
             movement of the atoms in given directions
-        magmoms (None/(n,)-list/numpy.ndarray): Initial magnetic moments
+        labels (None/(n,)-list/numpy.ndarray): Extra labels to distinguish
+            atoms for symmetries (mainly for magnetic moments)
         use_symmetry (bool): Whether or not consider internal symmetry
         keep_angstrom (bool): Store distances in Angstroms or Bohr
 
@@ -94,12 +101,12 @@ def get_structure_group(
         cell /= BOHR_TO_ANGSTROM
         positions /= BOHR_TO_ANGSTROM
     structure_group = Group({"cell": np.array(cell)})
-    if selective_dynamics is not None:
-        selective_dynamics = np.array(selective_dynamics)
+    if movable is not None:
+        movable = np.array(movable)
     else:
-        selective_dynamics = np.full(shape=positions.shape, fill_value=False)
-    if positions.shape != selective_dynamics.shape:
-        raise ValueError("positions.shape != selective_dynamics.shape")
+        movable = np.full(shape=positions.shape, fill_value=True)
+    if positions.shape != movable.shape:
+        raise ValueError("positions.shape != movable.shape")
     if magmoms is not None:
         magmoms = np.array(magmoms)
     else:
@@ -114,7 +121,7 @@ def get_structure_group(
         for elm_pos, elm_magmom, selective in zip(
             positions[elm_list],
             magmoms[elm_list],
-            selective_dynamics[elm_list],
+            movable[elm_list],
         ):
             atom_group.append(Group())
             if elm_magmom is not None:
