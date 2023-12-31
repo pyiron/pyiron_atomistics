@@ -41,7 +41,9 @@ from pyiron_atomistics.sphinx.output_parser import (
     SphinxLogParser,
 )
 from pyiron_atomistics.sphinx.input_writer import (
-    write_spin_constraints, copy_potentials, Group
+    write_spin_constraints,
+    copy_potentials,
+    Group,
 )
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
@@ -1423,13 +1425,17 @@ class SphinxBase(GenericDFTJob):
             self.input.sphinx.main,
         ]
 
-        if self._generic_input["fix_spin_constraint"] and self.structure.has("initial_magmoms"):
+        if self._generic_input["fix_spin_constraint"] and self.structure.has(
+            "initial_magmoms"
+        ):
             self.input.sphinx.spinConstraint = Group()
             all_groups.append(self.input.sphinx.spinConstraint)
             write_spin_constraints(
                 cwd=self.working_directory,
-                magmoms=self.structure.get_initial_magnetic_moments()[self.id_pyi_to_spx],
-                constraints=self.structure.spin_constraint[self.id_pyi_to_spx]
+                magmoms=self.structure.get_initial_magnetic_moments()[
+                    self.id_pyi_to_spx
+                ],
+                constraints=self.structure.spin_constraint[self.id_pyi_to_spx],
             )
             self.input.sphinx.spinConstraint.setdefault("file", '"spins.in"')
 
