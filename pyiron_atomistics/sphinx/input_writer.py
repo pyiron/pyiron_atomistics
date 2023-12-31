@@ -63,6 +63,75 @@ class Group(DataContainer):
         return line
 
 
+def get_structure_group(
+    positions,
+    cell,
+    chemical_symbols,
+    selective_dynamics=None,
+    magmoms=None,
+    use_symmetry=True,
+    keep_angstrom=False
+):
+    """
+    create a SPHInX Group object based on structure
+
+    Args:
+        positions ((n, 3)-list/numpy.ndarray): xyz-coordinates of the atoms
+        cell ((3, 3)-list/numpy.ndarray): Simulation box cdimensions
+        chemical_symbols ((n,)-list/numpy.ndarray): Chemical symbols
+        selective_dynamics (None/(n, 3)-list/nump.ndarray): Whether to fix the
+            movement of the atoms in given directions
+        magmoms (None/(n,)-list/numpy.ndarray): Initial magnetic moments
+        use_symmetry (bool): Whether or not consider internal symmetry
+        keep_angstrom (bool): Store distances in Angstroms or Bohr
+
+    Returns:
+        (Group): structure group
+    """
+    positions = np.asarray(positions)
+    cell = np.asarray(cell)
+    if not keep_angstrom:
+        cell /= BOHR_TO_ANGSTROM
+        positions /= BOHR_TO_ANGSTROM
+    structure_group = Group({"cell": np.array(cell)})
+    if selective_dynamics is not None:
+        selective_dynamics = np.array(selective_dynamics)
+    else:
+        selective_dynamics = np.full(shape=positions.shape, fill_value=False)
+    if positions.shape != selective_dynamics.shape:
+        raise ValueError("positions.shape != selective_dynamics.shape")
+    if magmoms is not None:
+        magmoms = np.array(magmoms)
+    else:
+        magmoms = np.full(shape=(len(positions),), fill_value=None)
+    if (len(positions),) != magmoms.shape:
+        raise ValueError("len(positions) != magmoms.shape")
+    species = structure_group.create_group("species")
+    for elm_species in np.unique(chemical_symbols):
+        species.append(Group({"element": '"' + str(elm_species) + '"'}))
+        elm_list = chemical_symbols == elm_species
+        atom_group = species[-1].create_group("atom")
+        for elm_pos, elm_magmom, selective in zip(
+            positions[elm_list],
+            magmoms[elm_list],
+            selective_dynamics[elm_list],
+        ):
+            atom_group.append(Group())
+            if elm_magmom is not None:
+                atom_group[-1]["label"] = '"spin_' + str(elm_magmom) + '"'
+            atom_group[-1]["coords"] = np.array(elm_pos)
+            if all(selective):
+                atom_group[-1]["movable"] = True
+            elif any(selective):
+                for xx in np.array(["X", "Y", "Z"])[selective]:
+                    atom_group[-1]["movable" + xx] = True
+    if not use_symmetry:
+        structure_group.symmetry = Group(
+            {"operator": {"S": "[[1,0,0],[0,1,0],[0,0,1]]"}}
+        )
+    return structure_group
+
+
 def copy_potentials(origins, destinations):
     """
     Args:
