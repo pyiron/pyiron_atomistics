@@ -72,7 +72,7 @@ class Group(DataContainer):
 def get_structure_group(
     positions,
     cell,
-    chemical_symbols,
+    elements,
     movable=None,
     labels=None,
     use_symmetry=True,
@@ -84,7 +84,7 @@ def get_structure_group(
     Args:
         positions ((n, 3)-list/numpy.ndarray): xyz-coordinates of the atoms
         cell ((3, 3)-list/numpy.ndarray): Simulation box cdimensions
-        chemical_symbols ((n,)-list/numpy.ndarray): Chemical symbols
+        elements ((n,)-list/numpy.ndarray): Chemical symbols
         movable (None/(n, 3)-list/nump.ndarray): Whether to fix the
             movement of the atoms in given directions
         labels (None/(n,)-list/numpy.ndarray): Extra labels to distinguish
@@ -107,20 +107,20 @@ def get_structure_group(
         movable = np.full(shape=positions.shape, fill_value=True)
     if positions.shape != movable.shape:
         raise ValueError("positions.shape != movable.shape")
-    if magmoms is not None:
-        magmoms = np.array(magmoms)
+    if labels is not None:
+        labels = np.array(labels)
     else:
-        magmoms = np.full(shape=(len(positions),), fill_value=None)
-    if (len(positions),) != magmoms.shape:
-        raise ValueError("len(positions) != magmoms.shape")
+        labels = np.full(shape=(len(positions),), fill_value=None)
+    if (len(positions),) != labels.shape:
+        raise ValueError("len(positions) != labels.shape")
     species = structure_group.create_group("species")
-    for elm_species in np.unique(chemical_symbols):
+    for elm_species in np.unique(elements):
         species.append(Group({"element": '"' + str(elm_species) + '"'}))
-        elm_list = chemical_symbols == elm_species
+        elm_list = elements == elm_species
         atom_group = species[-1].create_group("atom")
         for elm_pos, elm_magmom, selective in zip(
             positions[elm_list],
-            magmoms[elm_list],
+            labels[elm_list],
             movable[elm_list],
         ):
             atom_group.append(Group())

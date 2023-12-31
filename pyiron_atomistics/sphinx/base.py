@@ -348,7 +348,7 @@ class SphinxBase(GenericDFTJob):
         return get_structure_group(
             positions=self.structure.positions,
             cell=self.structure.cell,
-            chemical_symbols=self.structure.get_chemical_symbols(),
+            elements=self.structure.get_chemical_symbols(),
             movable=self.structure.arrays.get("selective_dynamics", None),
             labels=self.structure.get_initial_magnetic_moments(),
             use_symmetry=self.fix_symmetry,
