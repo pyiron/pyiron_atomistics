@@ -75,7 +75,7 @@ def get_structure_group(
     movable=None,
     labels=None,
     use_symmetry=True,
-    keep_angstrom=False
+    keep_angstrom=False,
 ):
     """
     create a SPHInX Group object based on structure
