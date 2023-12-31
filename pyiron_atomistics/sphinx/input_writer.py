@@ -95,8 +95,8 @@ def get_structure_group(
     Returns:
         (Group): structure group
     """
-    positions = np.asarray(positions)
-    cell = np.asarray(cell)
+    positions = np.array(positions)
+    cell = np.array(cell)
     if not keep_angstrom:
         cell /= BOHR_TO_ANGSTROM
         positions /= BOHR_TO_ANGSTROM
