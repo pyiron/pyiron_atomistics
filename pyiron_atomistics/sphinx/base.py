@@ -16,7 +16,6 @@ import subprocess
 from subprocess import PIPE
 import tarfile
 from tempfile import TemporaryDirectory
-from functools import cached_property
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
@@ -32,13 +31,13 @@ from pyiron_atomistics.sphinx.potential import (
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.output_parser import (
+    SphinxLogParser,
     collect_energy_dat,
     collect_residue_dat,
     collect_spins_dat,
     collect_relaxed_hist,
     collect_energy_struct,
     collect_eps_dat,
-    SphinxLogParser,
 )
 from pyiron_atomistics.sphinx.input_writer import (
     write_spin_constraints,

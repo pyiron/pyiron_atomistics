@@ -1,5 +1,4 @@
 from shutil import copyfile
-import os
 import posixpath
 import numpy as np
 from pyiron_base import DataContainer
