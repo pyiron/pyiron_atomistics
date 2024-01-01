@@ -22,21 +22,6 @@ class Group(DataContainer):
     expected by the given DFT code in its input files.
     """
 
-    def set_group(self, name, content=None):
-        """
-        Set a new group in SPHInX input.
-
-        Args:
-            name (str): name of the group
-            content: content to append
-
-        This creates an input group of the type `name { content }`.
-        """
-        if content is None:
-            self.create_group(name)
-        else:
-            self[name] = content
-
     def to_sphinx(self, content="__self__", indent=0):
         if content == "__self__":
             content = self
