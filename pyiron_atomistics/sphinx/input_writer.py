@@ -28,10 +28,7 @@ class Group(DataContainer):
 
         def format_value(v):
             if isinstance(v, bool):
-                if v:
-                    return ";"
-                else:
-                    return " = false;"
+                return f"{v};".lower()
             elif isinstance(v, Group):
                 if len(v) == 0:
                     return " {}"

@@ -352,7 +352,7 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
                 ]
             )
             self.input.sphinx.main.extControl = Group()
-            self.input.sphinx.main.extControl.set_group("bornOppenheimer")
+            self.input.sphinx.main.extControl.create_group("bornOppenheimer")
             self.input.sphinx.main.extControl.bornOppenheimer = commands
         else:
             super(SphinxInteractive, self).load_main_group()
