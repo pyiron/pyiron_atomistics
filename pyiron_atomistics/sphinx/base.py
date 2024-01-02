@@ -321,12 +321,8 @@ class SphinxBase(GenericDFTJob):
             ]
         else:
             scf_group.create_group("preconditioner")["type"] = "KERKER"
-            scf_group.preconditioner.set_parameter(
-                "scaling", self.input["rhoResidualScaling"]
-            )
-            scf_group.preconditioner.set_parameter(
-                "spinScaling", self.input["spinResidualScaling"]
-            )
+            scf_group.preconditioner["scaling"] = self.input["rhoResidualScaling"]
+            scf_group.preconditioner["spinScaling"] = self.input["spinResidualScaling"]
         scf_group.create_group(algorithm)
         if "maxStepsCCG" in self.input:
             scf_group[algorithm]["maxStepsCCG"] = self.input["maxStepsCCG"]
@@ -2051,62 +2047,13 @@ class Group(DataContainer):
     expected by the given DFT code in its input files.
     """
 
-    def set(self, name, content):
-        self[name] = content
-
-    def set_group(self, name, content=None):
-        """
-        Set a new group in SPHInX input.
-
-        Args:
-            name (str): name of the group
-            content: content to append
-
-        This creates an input group of the type `name { content }`.
-        """
-        if content is None:
-            self.create_group(name)
-        else:
-            self.set(name, content)
-
-    def set_flag(self, flag, val=True):
-        """
-        Set a new flag in SPHInX input.
-
-        Args:
-            flag (str): name of the flag
-            val (bool): boolean value
-
-        This creates an input flag of the type `name = val`.
-        """
-        self.set(flag, val)
-
-    def set_parameter(self, parameter, val):
-        """
-        Set a new parameter in SPHInX input.
-
-        Args:
-            parameter (str): name of the flag
-            val (float): parameter value
-
-        This creates an input parameter of the type `parameter = val`.
-        """
-        self.set(parameter, val)
-
-    def remove(self, name):
-        if name in self.keys():
-            del self[name]
-
     def to_sphinx(self, content="__self__", indent=0):
         if content == "__self__":
             content = self
 
         def format_value(v):
             if isinstance(v, bool):
-                if v:
-                    return ";"
-                else:
-                    return " = false;"
+                return f" = {v};".lower()
             elif isinstance(v, Group):
                 if len(v) == 0:
                     return " {}"
