@@ -458,22 +458,20 @@ class Atoms(ASEAtoms):
         }
         for el in self.species:
             if isinstance(el.tags, dict):
-                if "new_species" not in hdf_structure.keys():
-                    hdf_structure["new_species"] = {}
-                hdf_structure["new_species"][el.Abbreviation] = el.to_dict()
+                for k, v in el.to_dict().items():
+                    hdf_structure["new_species/" + el.Abbreviation + "/" + k] = v
         hdf_structure["species"] = [el.Abbreviation for el in self.species]
         hdf_structure["indices"] = self.indices
 
         for tag, value in self.arrays.items():
             if tag in ["positions", "numbers", "indices"]:
                 continue
-            if "tags" not in hdf_structure.keys():
-                hdf_structure["tags"] = {}
-            hdf_structure["tags"][tag] = value.tolist()
+            hdf_structure["tags/" + tag] = value.tolist()
 
         if self.cell is not None:
             # Convert ASE cell object to numpy array before storing
-            hdf_structure["cell"] = {"cell": np.array(self.cell), "pbc": self.pbc}
+            hdf_structure["cell/cell"] = np.array(self.cell)
+            hdf_structure["cell/pbc"] = self.pbc
 
         if self.has("initial_magmoms"):
             hdf_structure["spins"] = self.spins
