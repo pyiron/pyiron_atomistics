@@ -22,4 +22,4 @@ dependencies:
 - scipy =1.11.4
 - seekpath =2.1.0
 - spglib =2.2.0
-- structuretoolkit =0.0.15
+- structuretoolkit =0.0.16
