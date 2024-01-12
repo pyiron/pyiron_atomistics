@@ -4,7 +4,7 @@ dependencies:
 - gpaw >=20
 - jupyter
 - lammps >=2021.05.27
-- lammps =*=*openmpi*
+- lammps =*=*hf0e8f25_openmpi*
 - nglview
 - ipywidgets <8  # conflict with NGLview
 - papermill
