@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "ase==3.22.1",
-    "atomistics==0.1.20",
+    "atomistics==0.1.21",
     "defusedxml==0.7.1",
     "h5py==3.10.0",
     "matplotlib==3.8.2",
@@ -37,11 +37,11 @@ dependencies = [
     "pint==0.23",
     "pyiron_base==0.7.1",
     "pylammpsmpi==0.2.11",
-    "scipy==1.11.4",
+    "scipy==1.12.0",
     "scikit-learn==1.4.0",
     "seekpath==2.1.0",
     "spglib==2.2.0",
-    "structuretoolkit==0.0.17",
+    "structuretoolkit==0.0.18",
 ]
 dynamic = ["version"]
 
