@@ -12,10 +12,10 @@ dependencies:
 - mendeleev =0.15.0
 - mp-api =0.39.5
 - numpy =1.26.3
-- pandas =2.1.4
+- pandas =2.2.0
 - phonopy =2.21.0
 - pint =0.23
-- pyiron_base =0.7.0
+- pyiron_base =0.7.1
 - pylammpsmpi =0.2.11
 - pyscal =2.10.18
 - scikit-learn =1.4.0
