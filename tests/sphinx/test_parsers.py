@@ -44,7 +44,7 @@ class TestSphinx(unittest.TestCase):
         waves_path = Path.joinpath(test_path,'static/sphinx/sphinx_test_waves')
         waves = SphinxWavesReader('waves.sxb',cwd=waves_path)
         self.assertTrue(waves.nk==1)
-        self.assertTrue(np.mean(waves.get_psi_rec(0,0,0))>0)
+        self.assertTrue(np.mean(np.abs(waves.get_psi_rec(0,0,0)))>0)
 
 
 if __name__ == "__main__":
