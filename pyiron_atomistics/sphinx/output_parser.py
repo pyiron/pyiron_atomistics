@@ -442,8 +442,8 @@ class SphinxWavesReader:
 
     @property
     def _n_gk(self):
-        return self.wfile['nGk'][:]
-    
+        return self.wfile["nGk"][:]
+
     @cached_property
     def mesh(self):
         return self.wfile["meshDim"][:]
@@ -479,7 +479,7 @@ class SphinxWavesReader:
     @cached_property
     def eps(self):
         """All eigenvalues (in Hartree) as (nk,n_states) block"""
-        return (self.wfile['eps'][:].reshape(-1, self.n_spin, self.n_states)).T
+        return (self.wfile["eps"][:].reshape(-1, self.n_spin, self.n_states)).T
 
     @cached_property
     def _fft_idx(self):
@@ -502,7 +502,7 @@ class SphinxWavesReader:
             res: complex valued wavefunction indexed by (i,ispin,ik) loaded on to the FFT mesh.
             compact_wave: compact wavefunctions, without loading on FFT mesh.
         """
-        #translate indices to pythonic style.
+        # translate indices to pythonic style.
         i = np.arange(self.n_states)[i]
         ik = np.arange(self.nk)[ik]
         ispin = np.arange(self.n_spin)[ispin]
@@ -521,4 +521,3 @@ class SphinxWavesReader:
     def nk(self):
         """Number of k-points"""
         return self.k_weights.shape[0]
-
