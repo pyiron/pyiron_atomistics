@@ -7,6 +7,29 @@ from pyiron_atomistics.atomistics.job.interactivewrapper import (
 )
 
 
+def get_SR(dx, dg, H_tmp, threshold=1e-4):
+    denominator = np.dot(H_tmp, dx)
+    if np.absolute(denominator) < threshold:
+        denominator += threshold
+    return np.outer(H_tmp, H_tmp) / denominator
+
+
+def get_PSB(dx, dg, H_tmp):
+    dxdx = np.einsum("i,i->", dx, dx)
+    dH = np.einsum("i,j->ij", H_tmp, dx)
+    dH = (dH + dH.T) / dxdx
+    return (
+        dH
+        - np.einsum("i,i,j,k->jk", dx, H_tmp, dx, dx, optimize="optimal")
+        / dxdx**2
+    )
+
+
+def get_BFGS(dx, dg, H):
+    Hx = H.dot(dx)
+    return np.outer(dg, dg) / dg.dot(dx) - np.outer(Hx, Hx) / dx.dot(Hx)
+
+
 class QuasiNewtonInteractive:
     """
     Interactive class of Quasi Newton. This class can be used without a pyiron job definition.
@@ -144,29 +167,6 @@ class QuasiNewtonInteractive:
             )
         return self.dx
 
-    @staticmethod
-    def _get_SR(dx, dg, H_tmp, threshold=1e-4):
-        denominator = np.dot(H_tmp, dx)
-        if np.absolute(denominator) < threshold:
-            denominator += threshold
-        return np.outer(H_tmp, H_tmp) / denominator
-
-    @staticmethod
-    def _get_PSB(dx, dg, H_tmp):
-        dxdx = np.einsum("i,i->", dx, dx)
-        dH = np.einsum("i,j->ij", H_tmp, dx)
-        dH = (dH + dH.T) / dxdx
-        return (
-            dH
-            - np.einsum("i,i,j,k->jk", dx, H_tmp, dx, dx, optimize="optimal")
-            / dxdx**2
-        )
-
-    @staticmethod
-    def _get_BFGS(dx, dg, H):
-        Hx = H.dot(dx)
-        return np.outer(dg, dg) / dg.dot(dx) - np.outer(Hx, Hx) / dx.dot(Hx)
-
     def update_hessian(self, g, threshold=1e-4, mode="PSB"):
         if self.g_old is None:
             self.g_old = g
@@ -175,11 +175,11 @@ class QuasiNewtonInteractive:
         dx = self.dx.flatten()
         H_tmp = dg - np.einsum("ij,j->i", self.hessian, dx)
         if mode == "SR":
-            self.hessian = self._get_SR(dx, dg, H_tmp) + self.hessian
+            self.hessian = get_SR(dx, dg, H_tmp) + self.hessian
         elif mode == "PSB":
-            self.hessian = self._get_PSB(dx, dg, H_tmp) + self.hessian
+            self.hessian = get_PSB(dx, dg, H_tmp) + self.hessian
         elif mode == "BFGS":
-            self.hessian = self._get_BFGS(dx, dg, self.hessian) + self.hessian
+            self.hessian = get_BFGS(dx, dg, self.hessian) + self.hessian
         else:
             raise ValueError(
                 "Mode not recognized: {}. Choose from `SR`, `PSB` and `BFGS`".format(
