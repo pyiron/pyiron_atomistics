@@ -41,9 +41,7 @@ def get_PSB(dx, dg, H):
     dH = np.einsum("i,j->ij", H_tmp, dx)
     dH = (dH + dH.T) / dxdx
     return (
-        dH
-        - np.einsum("i,i,j,k->jk", dx, H_tmp, dx, dx, optimize="optimal")
-        / dxdx**2
+        dH - np.einsum("i,i,j,k->jk", dx, H_tmp, dx, dx, optimize="optimal") / dxdx**2
     ) + H
 
 
