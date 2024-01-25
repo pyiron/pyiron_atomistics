@@ -1,7 +1,9 @@
+from functools import cached_property
 import numpy as np
 import re
 import scipy.constants
 from pathlib import Path
+import h5py
 import warnings
 
 
@@ -420,3 +422,105 @@ class SphinxLogParser:
             if len(value) > 0:
                 results["dft"][key] = value
         return results
+
+
+class SphinxWavesReader:
+    """Class to read SPHInX waves.sxb files (HDF5 format)
+
+    Initialize with waves.sxb filename, or use load ()
+
+    """
+
+    def __init__(self, file_name="waves.sxb", cwd="."):
+        """
+        Args:
+            file_name (str): file name
+            cwd (str): directory path
+        """
+        if Path(file_name).is_absolute():
+            self.wfile = h5py.File(Path(file_name))
+        else:
+            path = Path(cwd) / Path(file_name)
+            self.wfile = h5py.File(path)
+
+    @property
+    def _n_gk(self):
+        return self.wfile["nGk"][:]
+
+    @cached_property
+    def mesh(self):
+        return self.wfile["meshDim"][:]
+
+    @property
+    def Nx(self):
+        return self.mesh[0]
+
+    @property
+    def Ny(self):
+        return self.mesh[1]
+
+    @property
+    def Nz(self):
+        return self.mesh[2]
+
+    @cached_property
+    def n_states(self):
+        return self.wfile["nPerK"][0]
+
+    @cached_property
+    def n_spin(self):
+        return self.wfile["nSpin"].shape[0]
+
+    @cached_property
+    def k_weights(self):
+        return self.wfile["kWeights"][:]
+
+    @cached_property
+    def k_vec(self):
+        return self.wfile["kVec"][:]
+
+    @cached_property
+    def eps(self):
+        """All eigenvalues (in Hartree) as (nk,n_states) block"""
+        return (self.wfile["eps"][:].reshape(-1, self.n_spin, self.n_states)).T
+
+    @cached_property
+    def _fft_idx(self):
+        fft_idx = []
+        off = 0
+        for ngk in self._n_gk:
+            fft_idx.append(self.wfile["fftIdx"][off : off + ngk])
+            off += ngk
+        return fft_idx
+
+    def get_psi_rec(self, i, ispin, ik, compact=False):
+        """
+        Loads a single wavefunction on full FFT mesh of shape mesh.
+
+        params: i: state index (int)
+               ispin: spin index (int)
+               ik: k index (int)
+               compact: (bool)
+        returns:
+            res: complex valued wavefunction indexed by (i,ispin,ik) loaded on to the FFT mesh.
+            compact_wave: compact wavefunctions, without loading on FFT mesh.
+        """
+        # translate indices to pythonic style.
+        i = np.arange(self.n_states)[i]
+        ik = np.arange(self.nk)[ik]
+        ispin = np.arange(self.n_spin)[ispin]
+
+        off = self._n_gk[ik] * (i + ispin * self.n_states)
+        psire = self.wfile[f"psi-{ik+1}.re"][off : off + self._n_gk[ik]]
+        psiim = self.wfile[f"psi-{ik+1}.im"][off : off + self._n_gk[ik]]
+        compact_wave = psire + 1j * psiim
+        if compact:
+            return compact_wave
+        res = np.zeros(shape=self.mesh, dtype=np.complex128)
+        res.flat[self._fft_idx[ik]] = compact_wave
+        return res
+
+    @property
+    def nk(self):
+        """Number of k-points"""
+        return self.k_weights.shape[0]
