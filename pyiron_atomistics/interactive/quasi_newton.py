@@ -91,8 +91,7 @@ class QuasiNewtonInteractive:
             return np.einsum(
                 "ik,k,jk->ij",
                 self.eigenvectors,
-                self.eigenvalues
-                / (self.eigenvalues**2 + np.exp(self.regularization)),
+                self.eigenvalues / (self.eigenvalues**2 + np.exp(self.regularization)),
                 self.eigenvectors,
             )
         else:
@@ -158,8 +157,7 @@ class QuasiNewtonInteractive:
         dH = (dH + dH.T) / dxdx
         return (
             dH
-            - np.einsum("i,i,j,k->jk", dx, H_tmp, dx, dx, optimize="optimal")
-            / dxdx**2
+            - np.einsum("i,i,j,k->jk", dx, H_tmp, dx, dx, optimize="optimal") / dxdx**2
         )
 
     @staticmethod
@@ -255,7 +253,6 @@ def run_qn(
 
 
 class QuasiNewton(InteractiveWrapper):
-
     """
     Structure optimization scheme via Quasi-Newton algorithm.
 

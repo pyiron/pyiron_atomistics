@@ -29,7 +29,6 @@ __date__ = "Sep 1, 2017"
 
 
 class Vasprun(object):
-
     """
     This module is used to parse vasprun.xml files and store the data consistent with the pyiron input/output storage
     formats.
@@ -228,9 +227,9 @@ class Vasprun(object):
                                         species_dict[special_element]["n_atoms"] = int(
                                             elements[0].text
                                         )
-                                        species_dict[special_element][
-                                            "valence"
-                                        ] = float(elements[3].text)
+                                        species_dict[special_element]["valence"] = (
+                                            float(elements[3].text)
+                                        )
                                 else:
                                     species_key = elements[1].text
                                     species_dict[species_key] = dict()

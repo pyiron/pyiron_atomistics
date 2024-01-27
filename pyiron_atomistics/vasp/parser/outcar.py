@@ -1150,12 +1150,14 @@ class Outcar(object):
                     [
                         np.hstack(
                             [
-                                float(lines[ind + i].split()[-1])
-                                if i != 7
-                                else [
-                                    float(lines[ind_lst[-1] + 7].split()[-2]),
-                                    float(lines[ind_lst[-1] + 7].split()[-1]),
-                                ]
+                                (
+                                    float(lines[ind + i].split()[-1])
+                                    if i != 7
+                                    else [
+                                        float(lines[ind_lst[-1] + 7].split()[-2]),
+                                        float(lines[ind_lst[-1] + 7].split()[-1]),
+                                    ]
+                                )
                                 for i in range(2, 12)
                             ]
                         )
@@ -1205,9 +1207,11 @@ def _split_indices(ind_ionic_lst, ind_elec_lst):
     """
     ind_elec_array = np.array(ind_elec_lst)
     return [
-        ind_elec_array[(ind_elec_array < j2) & (j1 < ind_elec_array)]
-        if j1 < j2
-        else ind_elec_array[(ind_elec_array < j2)]
+        (
+            ind_elec_array[(ind_elec_array < j2) & (j1 < ind_elec_array)]
+            if j1 < j2
+            else ind_elec_array[(ind_elec_array < j2)]
+        )
         for j1, j2 in zip(np.roll(ind_ionic_lst, 1), ind_ionic_lst)
     ]
 

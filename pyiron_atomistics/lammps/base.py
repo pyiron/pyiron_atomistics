@@ -366,9 +366,9 @@ class LammpsBase(AtomisticGenericJob):
         """
         del self.input.control["dump_modify___1"]
         del self.input.control["dump___1"]
-        self.input.control[
-            "dump___1"
-        ] = "all h5md ${dumptime} dump.h5 position force create_group yes"
+        self.input.control["dump___1"] = (
+            "all h5md ${dumptime} dump.h5 position force create_group yes"
+        )
 
     def write_input(self):
         """
@@ -902,79 +902,79 @@ class LammpsBase(AtomisticGenericJob):
                     self.input.control["group___constraintxyz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_xyz]
                     )
-                    self.input.control[
-                        "fix___constraintxyz"
-                    ] = "constraintxyz setforce 0.0 0.0 0.0"
+                    self.input.control["fix___constraintxyz"] = (
+                        "constraintxyz setforce 0.0 0.0 0.0"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintxyz"
-                        ] = "set 0.0 0.0 0.0"
+                        self.input.control["velocity___constraintxyz"] = (
+                            "set 0.0 0.0 0.0"
+                        )
                 if len(constraint_xy) > 0:
                     self.input.control["group___constraintxy"] = "id " + " ".join(
                         [str(ind) for ind in constraint_xy]
                     )
-                    self.input.control[
-                        "fix___constraintxy"
-                    ] = "constraintxy setforce 0.0 0.0 NULL"
+                    self.input.control["fix___constraintxy"] = (
+                        "constraintxy setforce 0.0 0.0 NULL"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintxy"
-                        ] = "set 0.0 0.0 NULL"
+                        self.input.control["velocity___constraintxy"] = (
+                            "set 0.0 0.0 NULL"
+                        )
                 if len(constraint_yz) > 0:
                     self.input.control["group___constraintyz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_yz]
                     )
-                    self.input.control[
-                        "fix___constraintyz"
-                    ] = "constraintyz setforce NULL 0.0 0.0"
+                    self.input.control["fix___constraintyz"] = (
+                        "constraintyz setforce NULL 0.0 0.0"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintyz"
-                        ] = "set NULL 0.0 0.0"
+                        self.input.control["velocity___constraintyz"] = (
+                            "set NULL 0.0 0.0"
+                        )
                 if len(constraint_zx) > 0:
                     self.input.control["group___constraintxz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_zx]
                     )
-                    self.input.control[
-                        "fix___constraintxz"
-                    ] = "constraintxz setforce 0.0 NULL 0.0"
+                    self.input.control["fix___constraintxz"] = (
+                        "constraintxz setforce 0.0 NULL 0.0"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintxz"
-                        ] = "set 0.0 NULL 0.0"
+                        self.input.control["velocity___constraintxz"] = (
+                            "set 0.0 NULL 0.0"
+                        )
                 if len(constraint_x) > 0:
                     self.input.control["group___constraintx"] = "id " + " ".join(
                         [str(ind) for ind in constraint_x]
                     )
-                    self.input.control[
-                        "fix___constraintx"
-                    ] = "constraintx setforce 0.0 NULL NULL"
+                    self.input.control["fix___constraintx"] = (
+                        "constraintx setforce 0.0 NULL NULL"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintx"
-                        ] = "set 0.0 NULL NULL"
+                        self.input.control["velocity___constraintx"] = (
+                            "set 0.0 NULL NULL"
+                        )
                 if len(constraint_y) > 0:
                     self.input.control["group___constrainty"] = "id " + " ".join(
                         [str(ind) for ind in constraint_y]
                     )
-                    self.input.control[
-                        "fix___constrainty"
-                    ] = "constrainty setforce NULL 0.0 NULL"
+                    self.input.control["fix___constrainty"] = (
+                        "constrainty setforce NULL 0.0 NULL"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constrainty"
-                        ] = "set NULL 0.0 NULL"
+                        self.input.control["velocity___constrainty"] = (
+                            "set NULL 0.0 NULL"
+                        )
                 if len(constraint_z) > 0:
                     self.input.control["group___constraintz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_z]
                     )
-                    self.input.control[
-                        "fix___constraintz"
-                    ] = "constraintz setforce NULL NULL 0.0"
+                    self.input.control["fix___constraintz"] = (
+                        "constraintz setforce NULL NULL 0.0"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintz"
-                        ] = "set NULL NULL 0.0"
+                        self.input.control["velocity___constraintz"] = (
+                            "set NULL NULL 0.0"
+                        )
 
     @staticmethod
     def _modify_structure_to_allow_requested_deformation(

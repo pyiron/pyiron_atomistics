@@ -2017,9 +2017,11 @@ class InputWriter(object):
         if self.structure.has("initial_magmoms"):
             if any(
                 [
-                    True
-                    if isinstance(spin, list) or isinstance(spin, np.ndarray)
-                    else False
+                    (
+                        True
+                        if isinstance(spin, list) or isinstance(spin, np.ndarray)
+                        else False
+                    )
                     for spin in self.structure.get_initial_magnetic_moments()
                 ]
             ):

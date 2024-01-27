@@ -2446,15 +2446,17 @@ class Atoms(ASEAtoms):
                 ):
                     return np.array(
                         [
-                            [
-                                float(spin_dir)
-                                for spin_dir in spin.replace("[", "")
-                                .replace("]", "")
-                                .replace(",", "")
-                                .split()
-                            ]
-                            if spin
-                            else [0.0, 0.0, 0.0]
+                            (
+                                [
+                                    float(spin_dir)
+                                    for spin_dir in spin.replace("[", "")
+                                    .replace("]", "")
+                                    .replace(",", "")
+                                    .split()
+                                ]
+                                if spin
+                                else [0.0, 0.0, 0.0]
+                            )
                             for spin in spin_lst
                         ]
                     )
@@ -3133,9 +3135,9 @@ def ase_to_pyiron(ase_obj):
             elif constraint_dict["name"] == "FixScaled":
                 if "selective_dynamics" not in pyiron_atoms.arrays.keys():
                     pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
-                pyiron_atoms.selective_dynamics[
-                    constraint_dict["kwargs"]["a"]
-                ] = constraint_dict["kwargs"]["mask"]
+                pyiron_atoms.selective_dynamics[constraint_dict["kwargs"]["a"]] = (
+                    constraint_dict["kwargs"]["mask"]
+                )
             else:
                 warnings.warn("Unsupported ASE constraint: " + constraint_dict["name"])
     return pyiron_atoms
@@ -3404,7 +3406,6 @@ def default(data, dflt):
 
 
 class Symbols(ASESymbols):
-
     """
     Derived from the ase symbols class which has the following docs:
 

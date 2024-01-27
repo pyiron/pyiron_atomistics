@@ -26,7 +26,6 @@ __date__ = "Sep 1, 2017"
 
 
 class LammpsPotential(GenericParameters):
-
     """
     This module helps write commands which help in the control of parameters related to the potential used in LAMMPS
     simulations
