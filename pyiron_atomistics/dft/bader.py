@@ -19,7 +19,6 @@ __date__ = "May 1, 2021"
 
 
 class Bader:
-
     """
     Module to apply the Bader charge partitioning scheme to finished DFT jobs. This module is interfaced with the
     `Bader code`_ from the Greame Henkelmann group.

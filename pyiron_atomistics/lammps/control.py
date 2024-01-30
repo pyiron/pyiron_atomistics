@@ -816,9 +816,9 @@ class LammpsControl(GenericParameters):
                 vector[i] = str(v * conversion)
         name = str(hash(tuple(ids))).replace("-", "m")  # A unique name for the group
         self._set_group_by_id(name, ids)
-        self[
-            "fix___{}_{}".format(fix_string.replace(" ", "_"), name)
-        ] = "{} {} {}".format(name, fix_string, " ".join(vector))
+        self["fix___{}_{}".format(fix_string.replace(" ", "_"), name)] = (
+            "{} {} {}".format(name, fix_string, " ".join(vector))
+        )
 
     def fix_move_linear_by_id(self, ids, velocity):
         """
