@@ -18,7 +18,6 @@ __date__ = "Sep 1, 2017"
 
 
 class Dos(object):
-
     """
     The DOS class stores all information to store and retrieve the total and resolved density of states from an
     electronic structure calculation.

@@ -458,9 +458,9 @@ class VaspBase(GenericDFTJob):
                     self._output_parser.generic_output.dft_log_dict["bader_charges"] = (
                         valence_charges - charges
                     )
-                self._output_parser.generic_output.dft_log_dict[
-                    "bader_volumes"
-                ] = volumes
+                self._output_parser.generic_output.dft_log_dict["bader_volumes"] = (
+                    volumes
+                )
         return self._output_parser.to_dict()
 
     # define routines that collect all output files
@@ -839,9 +839,9 @@ class VaspBase(GenericDFTJob):
                     species_list=input_structure.get_parent_symbols(),
                 )
                 input_structure.cell = output_structure.cell.copy()
-                input_structure.positions[
-                    self.sorted_indices
-                ] = output_structure.positions
+                input_structure.positions[self.sorted_indices] = (
+                    output_structure.positions
+                )
             except (IndexError, ValueError, IOError):
                 raise IOError("Unable to read output structure")
         return input_structure
@@ -856,9 +856,11 @@ class VaspBase(GenericDFTJob):
             if self.input.incar["ISPIN"] != 1:
                 final_cmd = "   ".join(
                     [
-                        " ".join([str(spinmom) for spinmom in spin])
-                        if isinstance(spin, (list, np.ndarray))
-                        else str(spin)
+                        (
+                            " ".join([str(spinmom) for spinmom in spin])
+                            if isinstance(spin, (list, np.ndarray))
+                            else str(spin)
+                        )
                         for spin in self.structure.get_initial_magnetic_moments()[
                             self.sorted_indices
                         ]
@@ -2053,12 +2055,12 @@ class Output:
                         final_magmoms[:, sorted_indices, :] = final_magmoms.copy()
                     else:
                         final_magmoms[:, sorted_indices] = final_magmoms.copy()
-                self.generic_output.dft_log_dict[
-                    "magnetization"
-                ] = magnetization.tolist()
-                self.generic_output.dft_log_dict[
-                    "final_magmoms"
-                ] = final_magmoms.tolist()
+                self.generic_output.dft_log_dict["magnetization"] = (
+                    magnetization.tolist()
+                )
+                self.generic_output.dft_log_dict["final_magmoms"] = (
+                    final_magmoms.tolist()
+                )
             self.generic_output.dft_log_dict["e_fermi_list"] = self.outcar.parse_dict[
                 "e_fermi_list"
             ]
@@ -2120,9 +2122,9 @@ class Output:
                 ] = self.electronic_structure.resolved_densities[:, :, :, :].copy()
             self.structure.positions = log_dict["positions"][-1]
             self.structure.set_cell(log_dict["cells"][-1])
-            self.generic_output.dft_log_dict[
-                "potentiostat_output"
-            ] = self.vp_new.get_potentiostat_output()
+            self.generic_output.dft_log_dict["potentiostat_output"] = (
+                self.vp_new.get_potentiostat_output()
+            )
             valence_charges_orig = self.vp_new.get_valence_electrons_per_atom()
             valence_charges = valence_charges_orig.copy()
             valence_charges[sorted_indices] = valence_charges_orig
@@ -2154,9 +2156,9 @@ class Output:
             log_dict["volume"] = np.array(
                 [np.linalg.det(cell) for cell in self.outcar.parse_dict["cells"]]
             )
-            self.generic_output.dft_log_dict[
-                "scf_energy_free"
-            ] = self.outcar.parse_dict["scf_energies"]
+            self.generic_output.dft_log_dict["scf_energy_free"] = (
+                self.outcar.parse_dict["scf_energies"]
+            )
             self.generic_output.dft_log_dict["scf_dipole_mom"] = self.outcar.parse_dict[
                 "scf_dipole_moments"
             ]
@@ -2198,9 +2200,9 @@ class Output:
         self.generic_output.log_dict = log_dict
         if vasprun_working:
             # self.dft_output.log_dict["parameters"] = self.vp_new.vasprun_dict["parameters"]
-            self.generic_output.dft_log_dict[
-                "scf_dipole_mom"
-            ] = self.vp_new.vasprun_dict["scf_dipole_moments"]
+            self.generic_output.dft_log_dict["scf_dipole_mom"] = (
+                self.vp_new.vasprun_dict["scf_dipole_moments"]
+            )
             if len(self.generic_output.dft_log_dict["scf_dipole_mom"][0]) > 0:
                 total_dipole_moments = np.array(
                     [
@@ -2209,15 +2211,15 @@ class Output:
                     ]
                 )
                 self.generic_output.dft_log_dict["dipole_mom"] = total_dipole_moments
-            self.generic_output.dft_log_dict[
-                "scf_energy_int"
-            ] = self.vp_new.vasprun_dict["scf_energies"]
-            self.generic_output.dft_log_dict[
-                "scf_energy_free"
-            ] = self.vp_new.vasprun_dict["scf_fr_energies"]
-            self.generic_output.dft_log_dict[
-                "scf_energy_zero"
-            ] = self.vp_new.vasprun_dict["scf_0_energies"]
+            self.generic_output.dft_log_dict["scf_energy_int"] = (
+                self.vp_new.vasprun_dict["scf_energies"]
+            )
+            self.generic_output.dft_log_dict["scf_energy_free"] = (
+                self.vp_new.vasprun_dict["scf_fr_energies"]
+            )
+            self.generic_output.dft_log_dict["scf_energy_zero"] = (
+                self.vp_new.vasprun_dict["scf_0_energies"]
+            )
             self.generic_output.dft_log_dict["energy_int"] = np.array(
                 [
                     e_int[-1]
@@ -2236,9 +2238,9 @@ class Output:
                     self.generic_output.dft_log_dict["energy_free"],
                     np.round(self.oszicar.parse_dict["energy_pot"], 8),
                 ):
-                    self.generic_output.dft_log_dict[
-                        "energy_free"
-                    ] = self.oszicar.parse_dict["energy_pot"]
+                    self.generic_output.dft_log_dict["energy_free"] = (
+                        self.oszicar.parse_dict["energy_pot"]
+                    )
             self.generic_output.dft_log_dict["energy_zero"] = np.array(
                 [
                     e_zero[-1]
@@ -2250,12 +2252,12 @@ class Output:
             )
             if "kinetic_energies" in self.vp_new.vasprun_dict.keys():
                 # scf_energy_kin is for backwards compatibility
-                self.generic_output.dft_log_dict[
-                    "scf_energy_kin"
-                ] = self.vp_new.vasprun_dict["kinetic_energies"]
-                self.generic_output.dft_log_dict[
-                    "energy_kin"
-                ] = self.vp_new.vasprun_dict["kinetic_energies"]
+                self.generic_output.dft_log_dict["scf_energy_kin"] = (
+                    self.vp_new.vasprun_dict["kinetic_energies"]
+                )
+                self.generic_output.dft_log_dict["energy_kin"] = (
+                    self.vp_new.vasprun_dict["kinetic_energies"]
+                )
 
         if (
             "LOCPOT" in files_present
@@ -2283,9 +2285,9 @@ class Output:
             hdf5_output["structure"] = self.structure.to_dict()
 
         if self.electrostatic_potential.total_data is not None:
-            hdf5_output[
-                "electrostatic_potential"
-            ] = self.electrostatic_potential.to_dict()
+            hdf5_output["electrostatic_potential"] = (
+                self.electrostatic_potential.to_dict()
+            )
 
         if self.charge_density.total_data is not None:
             hdf5_output["charge_density"] = self.charge_density.to_dict()

@@ -3,7 +3,7 @@ channels:
 dependencies:
 - aimsgb =1.1.0
 - ase =3.22.1
-- atomistics =0.1.21
+- atomistics =0.1.22
 - coverage
 - codacy-coverage
 - defusedxml =0.7.1
@@ -21,5 +21,5 @@ dependencies:
 - scikit-learn =1.4.0
 - scipy =1.12.0
 - seekpath =2.1.0
-- spglib =2.2.0
+- spglib =2.3.0
 - structuretoolkit =0.0.18

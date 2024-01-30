@@ -274,9 +274,9 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         if not self.server.run_mode.interactive:
             raise AssertionError("Callback works only in interactive mode")
         self._user_fix_external = _FixExternal(function)
-        self.input.control[
-            "fix___fix_external"
-        ] = "all external pf/callback {} {}".format(n_call, n_apply)
+        self.input.control["fix___fix_external"] = (
+            "all external pf/callback {} {}".format(n_call, n_apply)
+        )
         if overload_internal_fix_external:
             self._user_fix_external.fix_external = function
 
