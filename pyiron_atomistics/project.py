@@ -511,9 +511,16 @@ class Project(ProjectCore):
     def inspect_periodic_table():
         return PeriodicTable()
 
+ @staticmethod
+    def inspect_empirical_potentials():
+        return LammpsPotentialFile()
+
     @staticmethod
     def inspect_emperical_potentials():
-        return LammpsPotentialFile()
+        """
+        For backwards compatibility, calls inspect_empirical_potentials()
+        """
+        return inspect_empirical_potentials()
 
     @staticmethod
     def inspect_pseudo_potentials():
