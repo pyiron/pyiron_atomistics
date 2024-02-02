@@ -826,8 +826,9 @@ class LammpsBase(AtomisticGenericJob):
         new_ham = super(LammpsBase, self).restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
             new_ham.potential = self.potential
-            new_ham.read_restart_file(filename="restart.out")
-            new_ham.restart_file_list.append(self.get_workdir_file("restart.out"))
+            if "restart.out" in self.list_files():
+                new_ham.read_restart_file(filename="restart.out")
+                new_ham.restart_file_list.append(self.get_workdir_file("restart.out"))
         return new_ham
 
     @staticmethod
