@@ -1873,7 +1873,7 @@ class Input:
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
 
-        self._eddrmm = "warn"
+        self._eddrmm = "ignore"
 
     def write(self, structure, modified_elements, directory=None):
         """
