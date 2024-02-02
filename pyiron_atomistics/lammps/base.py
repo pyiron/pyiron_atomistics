@@ -740,16 +740,9 @@ class LammpsBase(AtomisticGenericJob):
         """
         super(LammpsBase, self).from_hdf(hdf=hdf, group_name=group_name)
         self._structure_from_hdf()
-        data_input_dict = self._hdf5.read_dict_from_hdf(
-            ["input", "input/control_inp", "input/potential_inp"]
-        )
-        data_potential_dict = self._hdf5.read_dict_from_hdf(
-            ["input/potential_inp/potential"]
-        )
-        data_input_dict["input"]["potential_inp"]["potential"] = data_potential_dict[
-            "input"
-        ]["potential_inp"]["potential"]
-        self.input.from_dict(data_dict=data_input_dict)
+        self.input.from_dict(data_dict=self._hdf5.read_dict_from_hdf(
+            ["input", "input/control_inp", "input/potential_inp", "input/potential_inp/potential"]
+        ))
 
     def write_restart_file(self, filename="restart.out"):
         """
@@ -1085,14 +1078,9 @@ class Input:
             hdf5:
         Returns:
         """
-        data_input_dict = hdf5.read_dict_from_hdf(
-            ["input", "input/control_inp", "input/potential_inp"]
-        )
-        data_potential_dict = hdf5.read_dict_from_hdf(["input/potential_inp/potential"])
-        data_input_dict["input"]["potential_inp"]["potential"] = data_potential_dict[
-            "input"
-        ]["potential_inp"]["potential"]
-        self.from_dict(data_dict=data_input_dict)
+        self.from_dict(data_dict=hdf5.read_dict_from_hdf(
+            ["input", "input/control_inp", "input/potential_inp", "input/potential_inp/potential"]
+        ))
 
 
 def resolve_hierachical_dict(data_dict, group_name=""):
