@@ -187,10 +187,12 @@ class LammpsPotential(GenericParameters):
     def to_dict(self):
         super_dict = super(LammpsPotential, self).to_dict()
         if self._df is not None:
-            super_dict.update({
-                "potential/" + key: self._df[key].values[0]
-                for key in ["Config", "Filename", "Name", "Model", "Species"]
-            })
+            super_dict.update(
+                {
+                    "potential/" + key: self._df[key].values[0]
+                    for key in ["Config", "Filename", "Name", "Model", "Species"]
+                }
+            )
             if "Citations" in self._df.columns.values:
                 super_dict["potential/Citations"] = self._df["Citations"].values[0]
         return super_dict

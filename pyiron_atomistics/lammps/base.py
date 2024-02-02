@@ -746,8 +746,9 @@ class LammpsBase(AtomisticGenericJob):
         data_potential_dict = self._hdf5.read_dict_from_hdf(
             ["input/potential_inp/potential"]
         )
-        data_input_dict["input"]["potential_inp"]["potential"] = data_potential_dict["input"]["potential_inp"][
-            "potential"]
+        data_input_dict["input"]["potential_inp"]["potential"] = data_potential_dict[
+            "input"
+        ]["potential_inp"]["potential"]
         self.input.from_dict(data_dict=data_input_dict)
 
     def write_restart_file(self, filename="restart.out"):
@@ -1086,10 +1087,10 @@ class Input:
         data_input_dict = hdf5.read_dict_from_hdf(
             ["input", "input/control_inp", "input/potential_inp"]
         )
-        data_potential_dict = hdf5.read_dict_from_hdf(
-            ["input/potential_inp/potential"]
-        )
-        data_input_dict["input"]["potential_inp"]["potential"] = data_potential_dict["input"]["potential_inp"]["potential"]
+        data_potential_dict = hdf5.read_dict_from_hdf(["input/potential_inp/potential"])
+        data_input_dict["input"]["potential_inp"]["potential"] = data_potential_dict[
+            "input"
+        ]["potential_inp"]["potential"]
         self.from_dict(data_dict=data_input_dict)
 
 
