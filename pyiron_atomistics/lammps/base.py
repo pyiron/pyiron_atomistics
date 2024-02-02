@@ -742,7 +742,12 @@ class LammpsBase(AtomisticGenericJob):
         self._structure_from_hdf()
         self.input.from_dict(
             data_dict=self._hdf5.read_dict_from_hdf(
-                group_paths=["input", "input/control_inp", "input/potential_inp"]
+                [
+                    "input",
+                    "input/control_inp",
+                    "input/potential_inp",
+                    "input/potential_inp/potential",
+                ]
             )
         )
 
@@ -1082,7 +1087,12 @@ class Input:
         """
         self.from_dict(
             data_dict=hdf5.read_dict_from_hdf(
-                ["input", "input/control_inp", "input/potential_inp"]
+                [
+                    "input",
+                    "input/control_inp",
+                    "input/potential_inp",
+                    "input/potential_inp/potential",
+                ]
             )
         )
 
