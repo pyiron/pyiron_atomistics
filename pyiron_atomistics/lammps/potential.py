@@ -199,7 +199,7 @@ class LammpsPotential(GenericParameters):
 
     def from_dict(self, obj_dict, version: str = None):
         super(LammpsPotential, self).from_dict(obj_dict=obj_dict, version=version)
-        if "potential" in obj_dict.keys():
+        if "potential" in obj_dict.keys() and "Config" in obj_dict["potential"].keys():
             entry_dict = {
                 key: [obj_dict["potential"][key]]
                 for key in ["Config", "Filename", "Name", "Model", "Species"]
