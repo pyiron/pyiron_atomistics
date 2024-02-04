@@ -567,5 +567,6 @@ class StructureFactory(PyironFactory):
             from pyiron_atomistics.atomistics.structure.factories.materialsproject import (
                 MaterialsProjectFactory,
             )
+
             self._materialsproject = MaterialsProjectFactory()
         return self._materialsproject
