@@ -6,7 +6,6 @@ from __future__ import print_function, unicode_literals
 import pkgutil
 import io
 import numpy as np
-import mendeleev
 import pandas
 from functools import lru_cache
 
@@ -24,8 +23,127 @@ __date__ = "Sep 1, 2017"
 pandas.options.mode.chained_assignment = None
 
 
+MENDELEEV_PROPERTY_LIST = [
+    "abundance_crust",
+    "abundance_sea",
+    "annotation",
+    "atomic_number",
+    "atomic_radius",
+    "atomic_radius_rahm",
+    "atomic_volume",
+    "atomic_weight",
+    "atomic_weight_uncertainty",
+    "block",
+    "boiling_point",
+    "c6",
+    "c6_gb",
+    "cas",
+    "covalent_radius",
+    "covalent_radius_bragg",
+    "covalent_radius_cordero",
+    "covalent_radius_pyykko",
+    "covalent_radius_pyykko_double",
+    "covalent_radius_pyykko_triple",
+    "cpk_color",
+    "density",
+    "description",
+    "dipole_polarizability",
+    "dipole_polarizability_unc",
+    "discoverers",
+    "discovery_location",
+    "discovery_year",
+    "ec",
+    "econf",
+    "electron_affinity",
+    "electronegativity",
+    "electronegativity_allen",
+    "electronegativity_allred_rochow",
+    "electronegativity_cottrell_sutton",
+    "electronegativity_ghosh",
+    "electronegativity_gordy",
+    "electronegativity_li_xue",
+    "electronegativity_martynov_batsanov",
+    "electronegativity_mulliken",
+    "electronegativity_nagle",
+    "electronegativity_pauling",
+    "electronegativity_sanderson",
+    "electronegativity_scales",
+    "electrons",
+    "electrophilicity",
+    "en_allen",
+    "en_ghosh",
+    "en_pauling",
+    "evaporation_heat",
+    "fusion_heat",
+    "gas_basicity",
+    "geochemical_class",
+    "glawe_number",
+    "goldschmidt_class",
+    "group",
+    "group_id",
+    "hardness",
+    "heat_of_formation",
+    "inchi",
+    "init_on_load",
+    "ionenergies",
+    "ionic_radii",
+    "is_monoisotopic",
+    "is_radioactive",
+    "isotopes",
+    "jmol_color",
+    "lattice_constant",
+    "lattice_structure",
+    "mass",
+    "mass_number",
+    "mass_str",
+    "melting_point",
+    "mendeleev_number",
+    "metadata",
+    "metallic_radius",
+    "metallic_radius_c12",
+    "molar_heat_capacity",
+    "molcas_gv_color",
+    "name",
+    "name_origin",
+    "neutrons",
+    "nist_webbook_url",
+    "nvalence",
+    "oxidation_states",
+    "oxides",
+    "oxistates",
+    "period",
+    "pettifor_number",
+    "phase_transitions",
+    "proton_affinity",
+    "protons",
+    "registry",
+    "sconst",
+    "screening_constants",
+    "series",
+    "softness",
+    "sources",
+    "specific_heat",
+    "specific_heat_capacity",
+    "symbol",
+    "thermal_conductivity",
+    "uses",
+    "vdw_radius",
+    "vdw_radius_alvarez",
+    "vdw_radius_batsanov",
+    "vdw_radius_bondi",
+    "vdw_radius_dreiding",
+    "vdw_radius_mm3",
+    "vdw_radius_rt",
+    "vdw_radius_truhlar",
+    "vdw_radius_uff",
+    "zeff",
+]
+
+
 @lru_cache(maxsize=118)
 def element(*args):
+    import mendeleev
+
     return mendeleev.element(*args)
 
 
@@ -40,15 +158,14 @@ class ChemicalElement(object):
         """
         self._dataset = None
         self.sub = sub
-        self._mendeleev_element = None
-        self._mendeleev_property_lst = None
+        self._element_str = None
         stringtypes = str
         if isinstance(self.sub, stringtypes):
-            self._init_mendeleev(self.sub)
+            self._element_str = self.sub
         elif "Parent" in self.sub.index and isinstance(self.sub.Parent, stringtypes):
-            self._init_mendeleev(self.sub.Parent)
+            self._element_str = self.sub.Parent
         elif len(self.sub) > 0:
-            self._init_mendeleev(self.sub.Abbreviation)
+            self._element_str = self.sub.Abbreviation
 
         self._mendeleev_translation_dict = {
             "AtomicNumber": "atomic_number",
@@ -70,12 +187,6 @@ class ChemicalElement(object):
         }
         self.el = None
 
-    def _init_mendeleev(self, element_str):
-        self._mendeleev_element = element(str(element_str))
-        self._mendeleev_property_lst = [
-            s for s in dir(self._mendeleev_element) if not s.startswith("_")
-        ]
-
     def __getattr__(self, item):
         if item in ["__array_struct__", "__array_interface__", "__array__"]:
             raise AttributeError
@@ -84,8 +195,8 @@ class ChemicalElement(object):
     def __getitem__(self, item):
         if item in self._mendeleev_translation_dict.keys():
             item = self._mendeleev_translation_dict[item]
-        if item in self._mendeleev_property_lst:
-            return getattr(self._mendeleev_element, item)
+        if item in MENDELEEV_PROPERTY_LIST:
+            return getattr(element(self._element_str), item)
         if item in self.sub.index:
             return self.sub[item]
 
@@ -189,10 +300,10 @@ class ChemicalElement(object):
                     if key in "Parent":
                         self.sub = pse.dataframe.loc[val]
                         self.sub["Parent"] = val
-                        self._init_mendeleev(val)
+                        self._element_str = val
                     else:
                         self.sub["Parent"] = None
-                        self._init_mendeleev(elname)
+                        self._element_str = elname
                     self.sub.name = elname
             if "tagData" in hdf_el.list_groups():
                 with hdf_el.open(
