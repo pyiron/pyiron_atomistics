@@ -16,6 +16,7 @@ from pyiron_atomistics.atomistics.structure.atoms import (
 )
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 from pyiron_atomistics.atomistics.structure.periodic_table import (
+    element,
     PeriodicTable,
     ChemicalElement,
 )
@@ -1720,6 +1721,7 @@ class TestAtoms(unittest.TestCase):
         n_timing_loop = 1
         t1, t2, t3, t4, t5, t6, t7 = [np.array([0.0] * n_timing_loop) for _ in range(7)]
         for i in range(n_timing_loop):
+            element.cache_clear()
             PeriodicTable._get_periodic_table_df.cache_clear()
             t1[i] = time.perf_counter()
             Atoms(symbols="Al", positions=pos, cell=cell)
