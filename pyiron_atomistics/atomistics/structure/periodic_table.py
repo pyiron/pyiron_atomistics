@@ -23,6 +23,12 @@ __date__ = "Sep 1, 2017"
 pandas.options.mode.chained_assignment = None
 
 
+@lru_cache(maxsize=118)
+def element(*args):
+    import mendeleev
+    return mendeleev.element(*args)
+
+
 class ChemicalElement(object):
     """
     An Object which contains the element specific parameters
@@ -187,9 +193,7 @@ class ChemicalElement(object):
         if item in self._mendeleev_translation_dict.keys():
             item = self._mendeleev_translation_dict[item]
         if item in self._mendeleev_property_lst:
-            import mendeleev
-
-            return getattr(mendeleev.element(self._element_str), item)
+            return getattr(element(self._element_str), item)
         if item in self.sub.index:
             return self.sub[item]
 
