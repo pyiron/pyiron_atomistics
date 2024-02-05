@@ -22,17 +22,17 @@ class TestAtoms(unittest.TestCase):
             element.cache_clear()
             PeriodicTable._get_periodic_table_df.cache_clear()
             t1[i] = time.perf_counter()
-            Atoms(symbols="Al", positions=pos, cell=cell)
+            Atoms(symbols="Al", positions=pos, cell=cell).species[0].melting_point
             t2[i] = time.perf_counter()
-            Atoms(symbols="Al", positions=pos, cell=cell)
+            Atoms(symbols="Al", positions=pos, cell=cell).species[0].melting_point
             t3[i] = time.perf_counter()
-            Atoms(symbols="Cu", positions=pos, cell=cell)
+            Atoms(symbols="Cu", positions=pos, cell=cell).species[0].melting_point
             t4[i] = time.perf_counter()
-            Atoms(symbols="CuAl", positions=[[0., 0., 0.], [0.5, 0.5, 0.5]], cell=cell)
+            Atoms(symbols="CuAl", positions=[[0., 0., 0.], [0.5, 0.5, 0.5]], cell=cell).species[0].melting_point
             t5[i] = time.perf_counter()
-            Atoms(symbols="MgO", positions=[[0., 0., 0.], [0.5, 0.5, 0.5]], cell=cell)
+            Atoms(symbols="MgO", positions=[[0., 0., 0.], [0.5, 0.5, 0.5]], cell=cell).species[0].melting_point
             t6[i] = time.perf_counter()
-            Atoms(symbols="AlMgO", positions=[[0., 0., 0.], [0.5, 0.5, 0.5], [0.5, 0.5, 0.]], cell=cell)
+            Atoms(symbols="AlMgO", positions=[[0., 0., 0.], [0.5, 0.5, 0.5], [0.5, 0.5, 0.]], cell=cell).species[0].melting_point
             t7[i] = time.perf_counter()
         dt21 = np.mean(t2 - t1)
         dt32 = np.mean(t3 - t2)
