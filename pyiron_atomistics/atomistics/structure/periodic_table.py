@@ -143,6 +143,7 @@ MENDELEEV_PROPERTY_LIST = [
 @lru_cache(maxsize=118)
 def element(*args):
     import mendeleev
+
     return mendeleev.element(*args)
 
 
