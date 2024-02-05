@@ -511,11 +511,12 @@ class Project(ProjectCore):
     def inspect_periodic_table():
         return PeriodicTable()
 
- @staticmethod
+    @staticmethod
     def inspect_empirical_potentials():
         return LammpsPotentialFile()
 
     @staticmethod
+    @deprecate("Use inspect_empirical_potentials instead!")
     def inspect_emperical_potentials():
         """
         For backwards compatibility, calls inspect_empirical_potentials()
