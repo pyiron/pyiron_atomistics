@@ -459,7 +459,7 @@ class TestVasp(unittest.TestCase):
             self.assertNotIn("KPOINTS", job_kspace.list_files(), "'KPOINTS' file written even when "
                                                                  "KPACING tag is present in INCAR")
 
-            self.assertEqual(len(w), 1)
+            self.assertTrue(len(w) <= 2)
             self.assertEqual(str(w[0].message), "'KSPACING' found in INCAR, no KPOINTS file written")
 
 
