@@ -3,7 +3,7 @@ channels:
 dependencies:
 - aimsgb =1.1.0
 - ase =3.22.1
-- atomistics =0.1.22
+- atomistics =0.1.23
 - coverage
 - codacy-coverage
 - defusedxml =0.7.1
@@ -11,15 +11,15 @@ dependencies:
 - matplotlib-base =3.8.2
 - mendeleev =0.15.0
 - mp-api =0.39.5
-- numpy =1.26.3
+- numpy =1.26.4
 - pandas =2.2.0
 - phonopy =2.21.0
 - pint =0.23
-- pyiron_base =0.7.4
-- pylammpsmpi =0.2.12
+- pyiron_base =0.7.5
+- pylammpsmpi =0.2.13
 - pyscal =2.10.18
 - scikit-learn =1.4.0
 - scipy =1.12.0
 - seekpath =2.1.0
-- spglib =2.3.0
+- spglib =2.3.1
 - structuretoolkit =0.0.21
