@@ -35,13 +35,13 @@ dependencies = [
     "pandas==2.2.0",
     "phonopy==2.21.0",
     "pint==0.23",
-    "pyiron_base==0.7.4",
+    "pyiron_base==0.7.5",
     "pylammpsmpi==0.2.12",
     "scipy==1.12.0",
     "scikit-learn==1.4.0",
     "seekpath==2.1.0",
-    "spglib==2.3.0",
-    "structuretoolkit==0.0.18",
+    "spglib==2.3.1",
+    "structuretoolkit==0.0.21",
 ]
 dynamic = ["version"]
 
