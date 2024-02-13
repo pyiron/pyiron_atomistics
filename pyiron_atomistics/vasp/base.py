@@ -1631,7 +1631,7 @@ class VaspBase(GenericDFTJob):
         new_ham = self.restart(job_name=job_name, job_type=job_type)
 
         if new_ham.__name__ == self.__name__:
-            new_ham.restart_file_list.append(self.get_workdir_file("CHGCAR"))
+            new_ham.restart_file_list.append(self.files["CHGCAR"])
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
                 self_consistent_calc=self_consistent_calc,
@@ -1680,8 +1680,8 @@ class VaspBase(GenericDFTJob):
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
-            new_ham.restart_file_list.append(self.get_workdir_file("CHGCAR"))
-            new_ham.restart_file_list.append(self.get_workdir_file("WAVECAR"))
+            new_ham.restart_file_list.append(self.files["CHGCAR"])
+            new_ham.restart_file_list.append(self.files["WAVECAR"])
             new_ham.input.incar["ISTART"] = istart
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
@@ -1736,7 +1736,7 @@ class VaspBase(GenericDFTJob):
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
-            new_ham.restart_file_list.append(self.get_workdir_file("WAVECAR"))
+            new_ham.restart_file_list.append(self.files["WAVECAR"])
             new_ham.input.incar["ISTART"] = istart
         return new_ham
 

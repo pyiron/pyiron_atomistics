@@ -833,7 +833,7 @@ class LammpsBase(AtomisticGenericJob):
             new_ham.potential = self.potential
             if "restart.out" in self.list_files():
                 new_ham.read_restart_file(filename="restart.out")
-                new_ham.restart_file_list.append(self.get_workdir_file("restart.out"))
+                new_ham.restart_file_list.append(self.files["restart.out"])
         return new_ham
 
     @staticmethod
