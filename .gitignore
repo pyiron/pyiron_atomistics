@@ -10,3 +10,4 @@ _build/
 apidoc/
 .ipynb_checkpoints/
 test_times.dat
+core.*

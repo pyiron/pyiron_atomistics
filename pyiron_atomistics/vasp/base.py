@@ -1873,7 +1873,9 @@ class Input:
         self.kpoints = Kpoints(table_name="kpoints")
         self.potcar = Potcar(table_name="potcar")
 
-        self._eddrmm = "warn"
+        # "official" recommendation of VASP devs is to just ignore this warning
+        # https://www.vasp.at/forum/viewtopic.php?f=3&t=17822
+        self._eddrmm = "ignore"
 
     def write(self, structure, modified_elements, directory=None):
         """
