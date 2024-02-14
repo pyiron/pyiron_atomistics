@@ -402,9 +402,9 @@ class TestVasp(unittest.TestCase):
         job.status.collect = True
         job.run()
         # Check if error raised if the files don't exist
-        self.assertRaises(FileNotFoundError, job.restart_from_wave_functions, "wave_restart")
-        self.assertRaises(FileNotFoundError, job.restart_from_charge_density, "chg_restart")
-        self.assertRaises(FileNotFoundError, job.restart_from_wave_and_charge, "wave_chg_restart")
+        self.assertRaises(KeyError, job.restart_from_wave_functions, "wave_restart")
+        self.assertRaises(KeyError, job.restart_from_charge_density, "chg_restart")
+        self.assertRaises(KeyError, job.restart_from_wave_and_charge, "wave_chg_restart")
 
     def test_vasp_metadyn(self):
         self.job_metadyn.set_primitive_constraint("bond_1", "bond", atom_indices=[0, 2], increment=1e-4)
@@ -456,7 +456,7 @@ class TestVasp(unittest.TestCase):
         job_kspace.input.incar["KSPACING"] = 0.5
         with warnings.catch_warnings(record=True) as w:
             job_kspace.run(run_mode="manual")
-            self.assertNotIn("KPOINTS", job_kspace.list_files(), "'KPOINTS' file written even when "
+            self.assertNotIn("KPOINTS", job_kspace.files.list(), "'KPOINTS' file written even when "
                                                                  "KPACING tag is present in INCAR")
 
             self.assertTrue(len(w) <= 2)

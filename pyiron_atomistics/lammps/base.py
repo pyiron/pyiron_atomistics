@@ -771,7 +771,7 @@ class LammpsBase(AtomisticGenericJob):
         """
         if files_to_compress is None:
             files_to_compress = [
-                f for f in list(self.list_files()) if f not in ["restart.out"]
+                f for f in self.files.list() if f not in ["restart.out"]
             ]
         super(LammpsBase, self).compress(files_to_compress=files_to_compress)
 

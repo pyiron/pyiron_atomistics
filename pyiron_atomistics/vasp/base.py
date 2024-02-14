@@ -533,8 +533,7 @@ class VaspBase(GenericDFTJob):
         """
         Removes excess files (by default: WAVECAR, CHGCAR, CHG)
         """
-        list_files = self.list_files()
-        for file in list_files:
+        for file in self.files.list():
             if file in files_to_remove:
                 abs_file_path = os.path.join(self.working_directory, file)
                 os.remove(abs_file_path)
@@ -1699,7 +1698,7 @@ class VaspBase(GenericDFTJob):
         if files_to_compress is None:
             files_to_compress = [
                 f
-                for f in list(self.list_files())
+                for f in self.files.list()
                 if f
                 not in [
                     "CHGCAR",
@@ -1712,7 +1711,7 @@ class VaspBase(GenericDFTJob):
                 ]
             ]
         # delete empty files
-        for f in list(self.list_files()):
+        for f in self.files.list():
             filename = os.path.join(self.working_directory, f)
             if (
                 f not in files_to_compress

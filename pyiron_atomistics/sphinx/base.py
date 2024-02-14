@@ -1742,7 +1742,7 @@ class SphinxBase(GenericDFTJob):
         if files_to_compress is None:
             files_to_compress = [
                 f
-                for f in list(self.list_files())
+                for f in self.files.list()
                 if (
                     f not in ["rho.sxb", "waves.sxb"]
                     and not stat.S_ISFIFO(
@@ -1750,7 +1750,7 @@ class SphinxBase(GenericDFTJob):
                     )
                 )
             ]
-        for f in list(self.list_files()):
+        for f in self.files.list():
             filename = os.path.join(self.working_directory, f)
             if (
                 f not in files_to_compress
@@ -1857,7 +1857,7 @@ class SphinxBase(GenericDFTJob):
 
                 # --- link other files
                 linkfiles = []
-                for file in self.list_files():
+                for file in self.files.list():
                     linkfile = os.path.join(tempd, file)
                     if not os.path.isfile(linkfile):
                         os.symlink(
