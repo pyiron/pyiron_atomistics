@@ -53,7 +53,7 @@ class Atom(ASEAtom):
         index=None,
         pse=None,
         element=None,
-        **qwargs
+        **qwargs,
     ):
         if element is None:
             element = symbol

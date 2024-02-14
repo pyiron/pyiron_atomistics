@@ -1,6 +1,3 @@
-__version__ = "0.1"
-__all__ = []
-
 from pyiron_atomistics.project import Project
 from pyiron_atomistics.toolkit import AtomisticsTools
 from pyiron_atomistics.atomistics.structure.atoms import (
@@ -30,8 +27,6 @@ JOB_CLASS_DICT.update(
         "AtomisticExampleJob": "pyiron_atomistics.testing.randomatomistic",
         "Calphy": "pyiron_atomistics.calphy.job",
         "ConvEncutParallel": "pyiron_atomistics.dft.master.convergence_encut_parallel",
-        "ConvEncutSerial": "pyiron_atomistics.dft.master.convergence_encut_serial",
-        "ConvergenceVolume": "pyiron_atomistics.atomistics.master.convergence_volume",
         "ConvKpointParallel": "pyiron_atomistics.dft.master.convergence_kpoint_parallel",
         "ElasticTensor": "pyiron_atomistics.atomistics.master.elastic",
         "ExampleJob": "pyiron_atomistics.testing.randomatomistic",
@@ -45,7 +40,6 @@ JOB_CLASS_DICT.update(
         "QuasiHarmonicJob": "pyiron_atomistics.atomistics.master.quasi",
         "QuasiNewton": "pyiron_atomistics.interactive.quasi_newton",
         "ScipyMinimizer": "pyiron_atomistics.interactive.scipy_minimizer",
-        "SerialMaster": "pyiron_atomistics.atomistics.master.serial",
         "Sphinx": "pyiron_atomistics.sphinx.sphinx",
         "StructureContainer": "pyiron_atomistics.atomistics.job.structurecontainer",
         "StructureListMaster": "pyiron_atomistics.atomistics.master.structure",
@@ -66,7 +60,6 @@ JOB_CLASS_DICT.update(
 from ._version import get_versions
 
 __version__ = get_versions()["version"]
-del get_versions
 
 
 def install():

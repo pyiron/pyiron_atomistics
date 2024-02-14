@@ -7,12 +7,10 @@ from __future__ import print_function, division
 import numpy as np
 import os
 import posixpath
-import re
 import stat
-from shutil import copyfile, move as movefile
+from shutil import move as movefile
 import scipy.constants
 import warnings
-import json
 import spglib
 import subprocess
 from subprocess import PIPE
@@ -27,10 +25,25 @@ from pyiron_atomistics.vasp.potential import (
     find_potential_file as find_potential_file_vasp,
     VaspPotentialSetter,
 )
-from pyiron_atomistics.sphinx.structure import read_atoms
-from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
+)
+from pyiron_atomistics.sphinx.structure import read_atoms
+from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
+from pyiron_atomistics.sphinx.output_parser import (
+    SphinxLogParser,
+    collect_energy_dat,
+    collect_residue_dat,
+    collect_spins_dat,
+    collect_relaxed_hist,
+    collect_energy_struct,
+    collect_eps_dat,
+)
+from pyiron_atomistics.sphinx.input_writer import (
+    write_spin_constraints,
+    copy_potentials,
+    Group,
+    get_structure_group,
 )
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
@@ -99,7 +112,6 @@ class SphinxBase(GenericDFTJob):
         self.input = Group(table_name="parameters", lazy=True)
         self.load_default_input()
         self.output = Output(job=self)
-        self.input_writer = InputWriter()
         self._potential = VaspPotentialSetter([])
         if self.check_vasp_potentials():
             self.input["VaspPot"] = True  # use VASP potentials if available
@@ -157,15 +169,15 @@ class SphinxBase(GenericDFTJob):
 
     @property
     def id_pyi_to_spx(self):
-        if self.input_writer.id_pyi_to_spx is None:
-            self.input_writer.structure = self.structure
-        return self.input_writer.id_pyi_to_spx
+        if self.structure is None:
+            raise ValueError("Structure not set")
+        return np.argsort(self.structure.get_chemical_symbols())
 
     @property
     def id_spx_to_pyi(self):
-        if self.input_writer.id_spx_to_pyi is None:
-            self.input_writer.structure = self.structure
-        return self.input_writer.id_spx_to_pyi
+        if self.structure is None:
+            raise ValueError("Structure not set")
+        return np.argsort(self.id_pyi_to_spx)
 
     @property
     def plane_wave_cutoff(self):
@@ -312,12 +324,8 @@ class SphinxBase(GenericDFTJob):
             ]
         else:
             scf_group.create_group("preconditioner")["type"] = "KERKER"
-            scf_group.preconditioner.set_parameter(
-                "scaling", self.input["rhoResidualScaling"]
-            )
-            scf_group.preconditioner.set_parameter(
-                "spinScaling", self.input["spinResidualScaling"]
-            )
+            scf_group.preconditioner["scaling"] = self.input["rhoResidualScaling"]
+            scf_group.preconditioner["spinScaling"] = self.input["spinResidualScaling"]
         scf_group.create_group(algorithm)
         if "maxStepsCCG" in self.input:
             scf_group[algorithm]["maxStepsCCG"] = self.input["maxStepsCCG"]
@@ -337,7 +345,11 @@ class SphinxBase(GenericDFTJob):
             keep_angstrom (bool): Store distances in Angstroms or Bohr
         """
         return get_structure_group(
-            structure=self.structure,
+            positions=self.structure.positions,
+            cell=self.structure.cell,
+            elements=self.structure.get_chemical_symbols(),
+            movable=self.structure.arrays.get("selective_dynamics", None),
+            labels=self.structure.get_initial_magnetic_moments(),
             use_symmetry=self.fix_symmetry,
             keep_angstrom=keep_angstrom,
         )
@@ -1282,6 +1294,81 @@ class SphinxBase(GenericDFTJob):
         """
         return self.potential_list
 
+    def _get_potential_path(
+        self,
+        potformat="JTH",
+        xc=None,
+        cwd=None,
+        pot_path_dict=None,
+        modified_elements=None,
+    ):
+        """
+        Copy potential files
+
+        Args:
+            potformat (str):
+            xc (str/None):
+            cwd (str/None):
+            pot_path_dict (dict):
+            modified_elements (dict):
+        """
+
+        if pot_path_dict is None:
+            pot_path_dict = {}
+
+        if potformat == "JTH":
+            potentials = SphinxJTHPotentialFile(xc=xc)
+            find_potential_file = find_potential_file_jth
+            pot_path_dict.setdefault("PBE", "jth-gga-pbe")
+        elif potformat == "VASP":
+            potentials = VaspPotentialFile(xc=xc)
+            find_potential_file = find_potential_file_vasp
+            pot_path_dict.setdefault("PBE", "paw-gga-pbe")
+            pot_path_dict.setdefault("LDA", "paw-lda")
+        else:
+            raise ValueError("Only JTH and VASP potentials are supported!")
+
+        ori_paths, des_paths = [], []
+        for species_obj in self.structure.get_species_objects():
+            if species_obj.Parent is not None:
+                elem = species_obj.Parent
+            else:
+                elem = species_obj.Abbreviation
+
+            if "pseudo_potcar_file" in species_obj.tags.keys():
+                new_element = species_obj.tags["pseudo_potcar_file"]
+                potentials.add_new_element(parent_element=elem, new_element=new_element)
+                potential_path = find_potential_file(
+                    path=potentials.find_default(new_element)["Filename"].values[0][0]
+                )
+                assert os.path.isfile(
+                    potential_path
+                ), "such a file does not exist in the pp directory"
+            elif elem in modified_elements.keys():
+                new_element = modified_elements[elem]
+                if os.path.isabs(new_element):
+                    potential_path = new_element
+                else:
+                    potentials.add_new_element(
+                        parent_element=elem, new_element=new_element
+                    )
+                    potential_path = find_potential_file(
+                        path=potentials.find_default(new_element)["Filename"].values[0][
+                            0
+                        ]
+                    )
+            else:
+                ori_paths.append(
+                    find_potential_file(
+                        path=potentials.find_default(elem)["Filename"].values[0][0]
+                    )
+                )
+            if potformat == "JTH":
+                des_paths.append(posixpath.join(cwd, elem + "_GGA.atomicdata"))
+            else:
+                des_paths.append(posixpath.join(cwd, elem + "_POTCAR"))
+        return {"origins": ori_paths, "destinations": des_paths}
+
     def write_input(self):
         """
         Generate all the required input files for the SPHInX job.
@@ -1323,12 +1410,13 @@ class SphinxBase(GenericDFTJob):
             if value is not None
         }
 
-        self.input_writer.structure = self.structure
-        self.input_writer.copy_potentials(
-            potformat=potformat,
-            xc=self.input["Xcorr"],
-            cwd=self.working_directory,
-            modified_elements=modified_elements,
+        copy_potentials(
+            **self._get_potential_path(
+                potformat=potformat,
+                xc=self.input["Xcorr"],
+                cwd=self.working_directory,
+                modified_elements=modified_elements,
+            )
         )
 
         # Write spin constraints, if set via _generic_input.
@@ -1341,10 +1429,18 @@ class SphinxBase(GenericDFTJob):
             self.input.sphinx.main,
         ]
 
-        if self._generic_input["fix_spin_constraint"]:
+        if self._generic_input["fix_spin_constraint"] and self.structure.has(
+            "initial_magmoms"
+        ):
             self.input.sphinx.spinConstraint = Group()
             all_groups.append(self.input.sphinx.spinConstraint)
-            self.input_writer.write_spin_constraints(cwd=self.working_directory)
+            write_spin_constraints(
+                cwd=self.working_directory,
+                magmoms=self.structure.get_initial_magnetic_moments()[
+                    self.id_pyi_to_spx
+                ],
+                constraints=self.structure.spin_constraint[self.id_pyi_to_spx],
+            )
             self.input.sphinx.spinConstraint.setdefault("file", '"spins.in"')
 
         # In case the entire group was
@@ -1816,507 +1912,6 @@ class SphinxBase(GenericDFTJob):
         return out if debug else None
 
 
-def get_structure_group(structure, use_symmetry=True, keep_angstrom=False):
-    """
-    create a SPHInX Group object based on structure
-
-    Args:
-        structure (pyiron_atomistics.atomistics.structure.atoms) structure
-        use_symmetry (bool): Whether or not consider internal symmetry
-        keep_angstrom (bool): Store distances in Angstroms or Bohr
-
-    Returns:
-        (Group): structure group
-    """
-    if keep_angstrom:
-        structure_group = Group({"cell": np.array(structure.cell)})
-    else:
-        structure_group = Group(
-            {
-                "cell": np.array(structure.cell * 1 / BOHR_TO_ANGSTROM),
-            }
-        )
-    if "selective_dynamics" in structure.arrays:
-        selective_dynamics_list = list(structure.selective_dynamics)
-    else:
-        selective_dynamics_list = [3 * [False]] * len(structure.positions)
-    species = structure_group.create_group("species")
-    for elm_species in structure.get_species_objects():
-        if elm_species.Parent:
-            element = elm_species.Parent
-        else:
-            element = elm_species.Abbreviation
-        species.append(Group({"element": '"' + str(element) + '"'}))
-        elm_list = np.array(
-            structure.get_chemical_symbols() == elm_species.Abbreviation
-        )
-        atom_group = species[-1].create_group("atom")
-        for elm_pos, elm_magmon, selective in zip(
-            structure.positions[elm_list],
-            np.array(structure.get_initial_magnetic_moments())[elm_list],
-            np.array(selective_dynamics_list)[elm_list],
-        ):
-            atom_group.append(Group())
-            if structure.has("initial_magmoms"):
-                atom_group[-1]["label"] = '"spin_' + str(elm_magmon) + '"'
-            if keep_angstrom:
-                atom_group[-1]["coords"] = np.array(elm_pos)
-            else:
-                atom_group[-1]["coords"] = np.array(elm_pos * 1 / BOHR_TO_ANGSTROM)
-            if all(selective):
-                atom_group[-1]["movable"] = True
-            elif any(selective):
-                for ss, xx in zip(selective, ["X", "Y", "Z"]):
-                    if ss:
-                        atom_group[-1]["movable" + xx] = True
-    if not use_symmetry:
-        structure_group.symmetry = Group(
-            {"operator": {"S": "[[1,0,0],[0,1,0],[0,0,1]]"}}
-        )
-    return structure_group
-
-
-class InputWriter(object):
-    """
-    The SPHInX Input writer is called to write the
-    SPHInX specific input files.
-    """
-
-    def __init__(self):
-        self.structure = None
-        self._id_pyi_to_spx = []
-        self._id_spx_to_pyi = []
-        self.file_dict = {}
-
-    def copy_potentials(
-        self,
-        potformat="JTH",
-        xc=None,
-        cwd=None,
-        pot_path_dict=None,
-        modified_elements=None,
-    ):
-        """
-        Copy potential files
-
-        Args:
-            potformat (str):
-            xc (str/None):
-            cwd (str/None):
-            pot_path_dict (dict):
-            modified_elements (dict):
-        """
-
-        if pot_path_dict is None:
-            pot_path_dict = {}
-
-        if potformat == "JTH":
-            potentials = SphinxJTHPotentialFile(xc=xc)
-            find_potential_file = find_potential_file_jth
-            pot_path_dict.setdefault("PBE", "jth-gga-pbe")
-        elif potformat == "VASP":
-            potentials = VaspPotentialFile(xc=xc)
-            find_potential_file = find_potential_file_vasp
-            pot_path_dict.setdefault("PBE", "paw-gga-pbe")
-            pot_path_dict.setdefault("LDA", "paw-lda")
-        else:
-            raise ValueError("Only JTH and VASP potentials are supported!")
-
-        for species_obj in self.structure.get_species_objects():
-            if species_obj.Parent is not None:
-                elem = species_obj.Parent
-            else:
-                elem = species_obj.Abbreviation
-
-            if "pseudo_potcar_file" in species_obj.tags.keys():
-                new_element = species_obj.tags["pseudo_potcar_file"]
-                potentials.add_new_element(parent_element=elem, new_element=new_element)
-                potential_path = find_potential_file(
-                    path=potentials.find_default(new_element)["Filename"].values[0][0]
-                )
-                assert os.path.isfile(
-                    potential_path
-                ), "such a file does not exist in the pp directory"
-            elif elem in modified_elements.keys():
-                new_element = modified_elements[elem]
-                if os.path.isabs(new_element):
-                    potential_path = new_element
-                else:
-                    potentials.add_new_element(
-                        parent_element=elem, new_element=new_element
-                    )
-                    potential_path = find_potential_file(
-                        path=potentials.find_default(new_element)["Filename"].values[0][
-                            0
-                        ]
-                    )
-            else:
-                potential_path = find_potential_file(
-                    path=potentials.find_default(elem)["Filename"].values[0][0]
-                )
-            if potformat == "JTH":
-                copyfile(potential_path, posixpath.join(cwd, elem + "_GGA.atomicdata"))
-            else:
-                copyfile(potential_path, posixpath.join(cwd, elem + "_POTCAR"))
-
-    @property
-    def id_spx_to_pyi(self):
-        if self.structure is None:
-            return None
-        if len(self._id_spx_to_pyi) == 0:
-            self._initialize_order()
-        return self._id_spx_to_pyi
-
-    @property
-    def id_pyi_to_spx(self):
-        if self.structure is None:
-            return None
-        if len(self._id_pyi_to_spx) == 0:
-            self._initialize_order()
-        return self._id_pyi_to_spx
-
-    def _initialize_order(self):
-        for elm_species in self.structure.get_species_objects():
-            self._id_pyi_to_spx.append(
-                np.arange(len(self.structure))[
-                    self.structure.get_chemical_symbols() == elm_species.Abbreviation
-                ]
-            )
-        self._id_pyi_to_spx = np.array(
-            [ooo for oo in self._id_pyi_to_spx for ooo in oo]
-        )
-        self._id_spx_to_pyi = np.array([0] * len(self._id_pyi_to_spx))
-        for i, p in enumerate(self._id_pyi_to_spx):
-            self._id_spx_to_pyi[p] = i
-
-    def write_spin_constraints(self, file_name="spins.in", cwd=None, spins_list=None):
-        """
-        Write a text file containing a list of all spins named spins.in -
-        which is used for the external control scripts.
-
-        Args:
-            file_name (str): name of the file to be written (optional)
-            cwd (str): the current working directory (optinal)
-            spins_list (list): the input to write, if no input is
-                given the default input will be written. (optional)
-        """
-        state.logger.debug(f"Writing {file_name}")
-        state.logger.debug(
-            "Getting magnetic moments via \
-            get_initial_magnetic_moments"
-        )
-        if self.structure.has("initial_magmoms"):
-            if any(
-                [
-                    True
-                    if isinstance(spin, list) or isinstance(spin, np.ndarray)
-                    else False
-                    for spin in self.structure.get_initial_magnetic_moments()
-                ]
-            ):
-                raise ValueError("SPHInX only supports collinear spins at the moment.")
-            else:
-                constraint = self.structure.spin_constraint[self.id_pyi_to_spx]
-                if spins_list is None or len(spins_list) == 0:
-                    spins_list = self.structure.get_initial_magnetic_moments()
-                spins = spins_list[self.id_pyi_to_spx].astype(str)
-                spins[~np.asarray(constraint)] = "X"
-                spins_str = "\n".join(spins) + "\n"
-                if cwd is not None:
-                    file_name = posixpath.join(cwd, file_name)
-                with open(file_name, "w") as f:
-                    f.write(spins_str)
-        else:
-            state.logger.debug("No magnetic moments")
-
-
-class Group(DataContainer):
-    """
-    Dictionary-like object to store SPHInX inputs.
-
-    Attributes (sub-groups, parameters, & flags) can be set
-    and accessed via dot notation, or as standard dictionary
-    key/values.
-
-    `to_{job_type}` converts the Group to the format
-    expected by the given DFT code in its input files.
-    """
-
-    def set(self, name, content):
-        self[name] = content
-
-    def set_group(self, name, content=None):
-        """
-        Set a new group in SPHInX input.
-
-        Args:
-            name (str): name of the group
-            content: content to append
-
-        This creates an input group of the type `name { content }`.
-        """
-        if content is None:
-            self.create_group(name)
-        else:
-            self.set(name, content)
-
-    def set_flag(self, flag, val=True):
-        """
-        Set a new flag in SPHInX input.
-
-        Args:
-            flag (str): name of the flag
-            val (bool): boolean value
-
-        This creates an input flag of the type `name = val`.
-        """
-        self.set(flag, val)
-
-    def set_parameter(self, parameter, val):
-        """
-        Set a new parameter in SPHInX input.
-
-        Args:
-            parameter (str): name of the flag
-            val (float): parameter value
-
-        This creates an input parameter of the type `parameter = val`.
-        """
-        self.set(parameter, val)
-
-    def remove(self, name):
-        if name in self.keys():
-            del self[name]
-
-    def to_sphinx(self, content="__self__", indent=0):
-        if content == "__self__":
-            content = self
-
-        def format_value(v):
-            if isinstance(v, bool):
-                if v:
-                    return ";"
-                else:
-                    return " = false;"
-            elif isinstance(v, Group):
-                if len(v) == 0:
-                    return " {}"
-                else:
-                    return " {\n" + self.to_sphinx(v, indent + 1) + indent * "\t" + "}"
-            else:
-                if isinstance(v, np.ndarray):
-                    v = v.tolist()
-                return " = {!s};".format(v)
-
-        line = ""
-        for k, v in content.items():
-            if isinstance(v, Group) and len(v) > 0 and not v.has_keys():
-                for vv in v.values():
-                    line += indent * "\t" + str(k) + format_value(vv) + "\n"
-            else:
-                line += indent * "\t" + str(k) + format_value(v) + "\n"
-
-        return line
-
-
-def splitter(arr, counter):
-    if len(arr) == 0 or len(counter) == 0:
-        return []
-    arr_new = []
-    spl_loc = list(np.where(np.array(counter) == min(counter))[0])
-    spl_loc.append(None)
-    for ii, ll in enumerate(spl_loc[:-1]):
-        arr_new.append(np.array(arr[ll : spl_loc[ii + 1]]).tolist())
-    return arr_new
-
-
-class _SphinxLogParser:
-    def __init__(self, log_file):
-        self.log_file = log_file
-        self._check_enter_scf()
-        self._log_main = None
-        self._counter = None
-        self._n_atoms = None
-        self._n_steps = None
-        self._spin_enabled = None
-
-    @property
-    def spin_enabled(self):
-        return len(re.findall("The spin for the label", self.log_file)) > 0
-
-    @property
-    def log_main(self):
-        if self._log_main is None:
-            match = re.search("Enter Main Loop", self.log_file)
-            self._log_main = match.end() + 1
-        return self.log_file[self._log_main :]
-
-    @property
-    def job_finished(self):
-        if (
-            len(re.findall("Program exited normally.", self.log_file, re.MULTILINE))
-            == 0
-        ):
-            warnings.warn("scf loops did not converge")
-            return False
-        return True
-
-    def _check_enter_scf(self):
-        if len(re.findall("Enter Main Loop", self.log_file, re.MULTILINE)) == 0:
-            raise AssertionError("Log file created but first scf loop not reached")
-
-    def get_n_valence(self):
-        log = self.log_file.split("\n")
-        return {
-            log[ii - 1].split()[1]: int(ll.split("=")[-1])
-            for ii, ll in enumerate(log)
-            if ll.startswith("| Z=")
-        }
-
-    @property
-    def log_k_points(self):
-        start_match = re.search(
-            "-ik-     -x-      -y-       -z-    \|  -weight-    -nG-    -label-",
-            self.log_file,
-        )
-        log_part = self.log_file[start_match.end() + 1 :]
-        log_part = log_part[: re.search("^\n", log_part, re.MULTILINE).start()]
-        return log_part.split("\n")[:-2]
-
-    def get_bands_k_weights(self):
-        return np.array([float(kk.split()[6]) for kk in self.log_k_points])
-
-    @property
-    def _rec_cell(self):
-        log_extract = re.findall("b[1-3]:.*$", self.log_file, re.MULTILINE)
-        return (
-            np.array([ll.split()[1:4] for ll in log_extract]).astype(float)
-            / BOHR_TO_ANGSTROM
-        )[:3]
-
-    def get_kpoints_cartesian(self):
-        return np.einsum("ni,ij->nj", self.k_points, self._rec_cell)
-
-    @property
-    def k_points(self):
-        return np.array(
-            [[float(kk.split()[i]) for i in range(2, 5)] for kk in self.log_k_points]
-        )
-
-    def get_volume(self):
-        volume = re.findall("Omega:.*$", self.log_file, re.MULTILINE)
-        if len(volume) > 0:
-            volume = float(volume[0].split()[1])
-            volume *= BOHR_TO_ANGSTROM**3
-        else:
-            volume = 0
-        return np.array(self.n_steps * [volume])
-
-    @property
-    def counter(self):
-        if self._counter is None:
-            self._counter = [
-                int(re.sub("[^0-9]", "", line.split("=")[0]))
-                for line in re.findall("F\(.*$", self.log_main, re.MULTILINE)
-            ]
-        return self._counter
-
-    def get_energy_free(self):
-        return splitter(
-            [
-                float(line.split("=")[1]) * HARTREE_TO_EV
-                for line in re.findall("F\(.*$", self.log_main, re.MULTILINE)
-            ],
-            self.counter,
-        )
-
-    def get_energy_int(self):
-        return splitter(
-            [
-                float(line.replace("=", " ").replace(",", " ").split()[1])
-                * HARTREE_TO_EV
-                for line in re.findall("^eTot\([0-9].*$", self.log_main, re.MULTILINE)
-            ],
-            self.counter,
-        )
-
-    @property
-    def n_atoms(self):
-        if self._n_atoms is None:
-            self._n_atoms = len(
-                np.unique(re.findall("^Species.*\{", self.log_main, re.MULTILINE))
-            )
-        return self._n_atoms
-
-    def get_forces(self, spx_to_pyi=None):
-        forces = [
-            float(re.split("{|}", line)[1].split(",")[i])
-            * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-            for line in re.findall("^Species.*$", self.log_main, re.MULTILINE)
-            for i in range(3)
-        ]
-        if len(forces) != 0:
-            forces = np.array(forces).reshape(-1, self.n_atoms, 3)
-            if spx_to_pyi is not None:
-                for ii, ff in enumerate(forces):
-                    forces[ii] = ff[spx_to_pyi]
-        return forces
-
-    def get_magnetic_forces(self, spx_to_pyi=None):
-        magnetic_forces = [
-            HARTREE_TO_EV * float(line.split()[-1])
-            for line in re.findall("^nu\(.*$", self.log_main, re.MULTILINE)
-        ]
-        if len(magnetic_forces) != 0:
-            magnetic_forces = np.array(magnetic_forces).reshape(-1, self.n_atoms)
-            if spx_to_pyi is not None:
-                for ii, mm in enumerate(magnetic_forces):
-                    magnetic_forces[ii] = mm[spx_to_pyi]
-        return splitter(magnetic_forces, self.counter)
-
-    @property
-    def n_steps(self):
-        if self._n_steps is None:
-            self._n_steps = len(
-                re.findall("\| SCF calculation", self.log_file, re.MULTILINE)
-            )
-        return self._n_steps
-
-    def _parse_band(self, term):
-        arr = np.loadtxt(re.findall(term, self.log_main, re.MULTILINE))
-        shape = (-1, len(self.k_points), arr.shape[-1])
-        if self.spin_enabled:
-            shape = (-1, 2, len(self.k_points), shape[-1])
-        return arr.reshape(shape)
-
-    def get_band_energy(self):
-        return self._parse_band("final eig \[eV\]:(.*)$")
-
-    def get_occupancy(self):
-        return self._parse_band("final focc:(.*)$")
-
-    def get_convergence(self):
-        conv_dict = {
-            "WARNING: Maximum number of steps exceeded": False,
-            "Convergence reached.": True,
-        }
-        key = "|".join(list(conv_dict.keys())).replace(".", "\.")
-        items = re.findall(key, self.log_main, re.MULTILINE)
-        convergence = [conv_dict[k] for k in items]
-        diff = self.n_steps - len(convergence)
-        for _ in range(diff):
-            convergence.append(False)
-        return convergence
-
-    def get_fermi(self):
-        return np.array(
-            [
-                float(line.split()[2])
-                for line in re.findall("Fermi energy:.*$", self.log_main, re.MULTILINE)
-            ]
-        )
-
-
 class Output:
     """
     Handles the output from a SPHInX simulation.
@@ -2340,12 +1935,14 @@ class Output:
         Returns:
 
         """
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-        spins = np.loadtxt(posixpath.join(cwd, file_name))
-        self.generic.dft.atom_scf_spins = splitter(
-            np.array([ss[self._job.id_spx_to_pyi] for ss in spins[:, 1:]]), spins[:, 0]
-        )
+        try:
+            results = collect_spins_dat(
+                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
+            )
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
     def collect_energy_dat(self, file_name="energy.dat", cwd=None):
         """
@@ -2357,24 +1954,12 @@ class Output:
         Returns:
 
         """
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-        energies = np.loadtxt(posixpath.join(cwd, file_name))
-        self.generic.dft.scf_computation_time = splitter(energies[:, 1], energies[:, 0])
-        self.generic.dft.scf_energy_int = splitter(
-            energies[:, 2] * HARTREE_TO_EV, energies[:, 0]
-        )
-
-        def en_split(e, counter=energies[:, 0]):
-            return splitter(e * HARTREE_TO_EV, counter)
-
-        if len(energies[0]) == 7:
-            self.generic.dft.scf_energy_free = en_split(energies[:, 3])
-            self.generic.dft.scf_energy_zero = en_split(energies[:, 4])
-            self.generic.dft.scf_energy_band = en_split(energies[:, 5])
-            self.generic.dft.scf_electronic_entropy = en_split(energies[:, 6])
-        else:
-            self.generic.dft.scf_energy_band = en_split(energies[:, 3])
+        try:
+            results = collect_energy_dat(file_name=file_name, cwd=cwd)
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
     def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         """
@@ -2386,17 +1971,14 @@ class Output:
         Returns:
 
         """
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-        residue = np.loadtxt(posixpath.join(cwd, file_name))
-        if len(residue) == 0:
-            return None
-        if len(residue[0]) == 2:
-            self.generic.dft.scf_residue = splitter(residue[:, 1], residue[:, 0])
-        else:
-            self.generic.dft.scf_residue = splitter(residue[:, 1:], residue[:, 0])
+        try:
+            results = collect_residue_dat(file_name=file_name, cwd=cwd)
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
-    def collect_eps_dat(self, file_name="eps.dat", cwd=None):
+    def collect_eps_dat(self, file_name=None, cwd=None):
         """
 
         Args:
@@ -2406,17 +1988,15 @@ class Output:
         Returns:
 
         """
-        if isinstance(file_name, str):
-            file_name = [file_name]
-        values = []
-        for f in file_name:
-            file_tmp = posixpath.join(cwd, f)
-            if not os.path.isfile(file_tmp):
-                return
-            values.append(np.loadtxt(file_tmp)[..., 1:])
-        values = np.stack(values, axis=0)
-        if "bands_eigen_values" not in self.generic.dft.list_nodes():
-            self.generic.dft.bands_eigen_values = values.reshape((-1,) + values.shape)
+        try:
+            results = collect_eps_dat(
+                file_name=file_name, cwd=cwd, spins=self._job._spin_enabled
+            )
+            for k, v in results.items():
+                if k not in self.generic.dft:
+                    self.generic.dft[k] = v
+        except FileNotFoundError:
+            return
 
     def collect_energy_struct(self, file_name="energy-structOpt.dat", cwd=None):
         """
@@ -2428,11 +2008,12 @@ class Output:
         Returns:
 
         """
-        file_name = posixpath.join(cwd, file_name)
-        if os.path.isfile(file_name):
-            self.generic.dft.energy_free = (
-                np.loadtxt(file_name).reshape(-1, 2)[:, 1] * HARTREE_TO_EV
-            )
+        try:
+            results = collect_energy_struct(file_name=file_name, cwd=cwd)
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic.dft[k] = v
 
     def collect_sphinx_log(self, file_name="sphinx.log", cwd=None):
         """
@@ -2445,40 +2026,23 @@ class Output:
 
         """
 
-        if not os.path.isfile(posixpath.join(cwd, file_name)):
-            return None
-
-        with open(posixpath.join(cwd, file_name), "r") as sphinx_log_file:
-            log_file = "".join(sphinx_log_file.readlines())
         try:
-            self._spx_log_parser = _SphinxLogParser(log_file)
-        except AssertionError as e:
+            results = SphinxLogParser(
+                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
+            ).results
+        except FileNotFoundError:
+            return None
+        if len(results) == 0:
             self._job.status.aborted = True
-            raise AssertionError(e)
-        if not self._spx_log_parser.job_finished:
+            return None
+        if not results["generic"].pop("job_finished"):
             self._job.status.aborted = True
-        self.generic.dft.n_valence = self._spx_log_parser.get_n_valence()
-        self.generic.dft.bands_k_weights = self._spx_log_parser.get_bands_k_weights()
-        self.generic.dft.kpoints_cartesian = (
-            self._spx_log_parser.get_kpoints_cartesian()
-        )
-        self.generic.volume = self._spx_log_parser.get_volume()
-        self.generic.dft.bands_e_fermi = self._spx_log_parser.get_fermi()
-        self.generic.dft.bands_occ = self._spx_log_parser.get_occupancy()
-        self.generic.dft.bands_eigen_values = self._spx_log_parser.get_band_energy()
-        self.generic.dft.scf_convergence = self._spx_log_parser.get_convergence()
-        if "scf_energy_int" not in self.generic.dft.list_nodes():
-            self.generic.dft.scf_energy_int = self._spx_log_parser.get_energy_int()
-        if "scf_energy_free" not in self.generic.dft.list_nodes():
-            self.generic.dft.scf_energy_free = self._spx_log_parser.get_energy_free()
-        if "forces" in self.generic.list_nodes():
-            self.generic.forces = self._spx_log_parser.get_forces(
-                self._job.id_spx_to_pyi
-            )
-        if "scf_magnetic_forces" not in self.generic.dft.list_nodes():
-            self.generic.dft.scf_magnetic_forces = (
-                self._spx_log_parser.get_magnetic_forces(self._job.id_spx_to_pyi)
-            )
+        for key, value in results["generic"].items():
+            if key not in self.generic:
+                self.generic[key] = value
+        for key, value in results["dft"].items():
+            if key not in self.generic.dft:
+                self.generic.dft[key] = value
 
     def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=None):
         """
@@ -2490,41 +2054,14 @@ class Output:
         Returns:
 
         """
-        file_name = posixpath.join(cwd, file_name)
-        if not os.path.isfile(file_name):
-            return None
-        with open(file_name, "r") as f:
-            file_content = "".join(f.readlines())
-        natoms = len(self._job.id_spx_to_pyi)
-
-        def get_value(term, file_content=file_content, natoms=natoms):
-            value = (
-                np.array(
-                    [
-                        re.split("\[|\]", line)[1].split(",")
-                        for line in re.findall(term, file_content, re.MULTILINE)
-                    ]
-                )
-                .astype(float)
-                .reshape(-1, natoms, 3)
+        try:
+            results = collect_relaxed_hist(
+                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
             )
-            return np.array([ff[self._job.id_spx_to_pyi] for ff in value])
-
-        self.generic.positions = get_value("coords.*$") * BOHR_TO_ANGSTROM
-        self.generic.forces = (
-            get_value("force.*$") * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-        )
-        self.generic.cells = (
-            np.array(
-                [
-                    json.loads(line)
-                    for line in re.findall(
-                        "cell =(.*?);", file_content.replace("\n", ""), re.MULTILINE
-                    )
-                ]
-            )
-            * BOHR_TO_ANGSTROM
-        )
+        except FileNotFoundError:
+            return
+        for k, v in results.items():
+            self.generic[k] = v
 
     def collect_charge_density(self, file_name, cwd):
         if (
@@ -2546,39 +2083,38 @@ class Output:
 
     def _get_electronic_structure_object(self):
         es = ElectronicStructure()
-        if "bands_eigen_values" in self.generic.dft.list_nodes():
-            eig_mat = self.generic.dft.bands_eigen_values[-1]
-            occ_mat = self.generic.dft.bands_occ[-1]
-            if len(eig_mat.shape) == 3:
-                es.eigenvalue_matrix = eig_mat
-                es.occupancy_matrix = occ_mat
-            else:
-                es.eigenvalue_matrix = np.array([eig_mat])
-                es.occupancy_matrix = np.array([occ_mat])
-            es.efermi = self.generic.dft.bands_e_fermi[-1]
-            es.n_spins = len(es.occupancy_matrix)
-            es.kpoint_list = self.generic.dft.kpoints_cartesian
-            es.kpoint_weights = self.generic.dft.bands_k_weights
-            es.generate_from_matrices()
+        # This line won't be necessary in the newer version of sphinx parser
+        if len(self.generic.dft.bands_eigen_values) == 0:
+            return es
+        eig_mat = self.generic.dft.bands_eigen_values[-1]
+        occ_mat = self.generic.dft.bands_occ[-1]
+        if len(eig_mat.shape) == 3:
+            es.eigenvalue_matrix = eig_mat
+            es.occupancy_matrix = occ_mat
+        else:
+            es.eigenvalue_matrix = np.array([eig_mat])
+            es.occupancy_matrix = np.array([occ_mat])
+        es.efermi = self.generic.dft.bands_e_fermi[-1]
+        es.n_spins = len(es.occupancy_matrix)
+        es.kpoint_list = self.generic.dft.kpoints_cartesian
+        es.kpoint_weights = self.generic.dft.bands_k_weights
+        es.generate_from_matrices()
         return es
 
-    def collect(self, directory=os.getcwd()):
+    def collect(self, directory=None):
         """
         The collect function, collects all the output from a SPHInX simulation.
 
         Args:
             directory (str): the directory to collect the output from.
         """
+        if directory is None:
+            directory = self._job.working_directory
         self.collect_energy_struct(file_name="energy-structOpt.dat", cwd=directory)
         self.collect_sphinx_log(file_name="sphinx.log", cwd=directory)
         self.collect_energy_dat(file_name="energy.dat", cwd=directory)
         self.collect_residue_dat(file_name="residue.dat", cwd=directory)
-        if self._job._spin_enabled:
-            self.collect_eps_dat(file_name="eps.dat", cwd=directory)
-        else:
-            self.collect_eps_dat(
-                file_name=[f"eps.{i}.dat" for i in [0, 1]], cwd=directory
-            )
+        self.collect_eps_dat(file_name=None, cwd=directory)
         self.collect_spins_dat(file_name="spins.dat", cwd=directory)
         self.collect_relaxed_hist(file_name="relaxHist.sx", cwd=directory)
         self.collect_electrostatic_potential(file_name="vElStat-eV.sxb", cwd=directory)
@@ -2615,7 +2151,7 @@ class Output:
                 )
             if self.charge_density.total_data is not None:
                 self.charge_density.to_hdf(hdf5_output, group_name="charge_density")
-            if "bands_eigen_values" in self.generic.dft.list_nodes():
+            if "bands_occ" in self.generic.dft:
                 es = self._get_electronic_structure_object()
                 if len(es.kpoint_list) > 0:
                     es.to_hdf(hdf5_output)

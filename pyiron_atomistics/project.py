@@ -17,6 +17,8 @@ from pyiron_base import (
     Creator as CreatorCore,
     deprecate,
 )
+from pyiron_base.state.logger import logger
+from pyiron_base.project.maintenance import Maintenance, LocalMaintenance
 
 try:
     from pyiron_base import ProjectGUI
@@ -29,11 +31,13 @@ from pyiron_atomistics.atomistics.generic.object_type import (
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_atomistics.lammps.potential import LammpsPotentialFile
 from pyiron_atomistics.vasp.potential import VaspPotential
+from pyiron_atomistics.vasp.base import _vasp_generic_energy_free_affected
 import pyiron_atomistics.atomistics.structure.pyironase as ase
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 from pyiron_atomistics.atomistics.master.parallel import pipe
 
+import numpy as np
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
@@ -48,6 +52,95 @@ __date__ = "Sep 1, 2017"
 
 if not (isinstance(ase.__file__, str)):
     raise AssertionError()
+
+
+def _vasp_energy_kin_affected(job):
+    e_kin = job["output/generic/dft/scf_energy_kin"]
+    return e_kin is not None and not isinstance(e_kin, np.ndarray)
+
+
+class AtomisticsLocalMaintenance(LocalMaintenance):
+    def vasp_energy_pot_as_free_energy(
+        self, recursive: bool = True, progress: bool = True, **kwargs
+    ):
+        """
+        Ensure generic potential energy is the electronic free energy.
+
+        This ensures that the energy is consistent with the forces and stresses.
+        In version 0.1.0 of the Vasp job (pyiron_atomistics<=0.3.10) a combination of bugs in Vasp and pyiron caused the
+        potential energy reported to be the internal energy of electronic system extrapolated to zero smearing instead.
+
+        Args:
+            recursive (bool): search subprojects [True/False] - True by default
+            progress (bool): if True (default), add an interactive progress bar to the iteration
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
+        """
+        kwargs["hamilton"] = "Vasp"
+        kwargs["status"] = "finished"
+
+        found_energy_kin_job = False
+
+        for job in self._project.iter_jobs(
+            recursive=recursive, progress=progress, convert_to_object=False, **kwargs
+        ):
+            if _vasp_generic_energy_free_affected(job):
+                job.project_hdf5["output/generic/energy_pot"] = np.array(
+                    [
+                        e[-1]
+                        for e in job.project_hdf5["output/generic/dft/scf_energy_free"]
+                    ]
+                )
+                found_energy_kin_job |= _vasp_energy_kin_affected(job)
+
+        if found_energy_kin_job:
+            logger.warn(
+                "Found at least one Vasp MD job with wrong kinetic energy.  Apply vasp_correct_energy_kin to fix!"
+            )
+
+    def vasp_correct_energy_kin(
+        self, recursive: bool = True, progress: bool = True, **kwargs
+    ):
+        """
+        Ensure kinetic and potential energy are correctly parsed for AIMD Vasp jobs.
+
+        Version 0.1.0 of the Vasp job (pyiron_atomistics<=0.3.10) incorrectly parsed the kinetic energy during MD runs,
+        such that it only reported the kinetic energy of the final ionic step and subtracted it from the electronic
+        energy instead of adding it.
+
+        Args:
+            recursive (bool): search subprojects [True/False] - True by default
+            progress (bool): if True (default), add an interactive progress bar to the iteration
+            **kwargs (dict): Optional arguments for filtering with keys matching the project database column name
+                            (eg. status="finished"). Asterisk can be used to denote a wildcard, for zero or more
+                            instances of any character
+        """
+        kwargs["hamilton"] = "Vasp"
+        kwargs["status"] = "finished"
+        for job in self._project.iter_jobs(
+            recursive=recursive, progress=progress, convert_to_object=False, **kwargs
+        ):
+            # only Vasp jobs of version 0.1.0 were affected
+            if job["HDF_VERSION"] != "0.1.0":
+                continue
+            if not _vasp_energy_kin_affected(job):
+                continue
+
+            job.decompress()
+            job = job.to_object()
+            job.status.collect = True
+            job.run()
+
+
+class AtomisticsMaintenance(Maintenance):
+    def __init__(self, project):
+        """
+        Args:
+            (project): pyiron project to do maintenance on
+        """
+        super().__init__(project=project)
+        self._local = AtomisticsLocalMaintenance(project)
 
 
 class Project(ProjectCore):
@@ -116,10 +209,10 @@ class Project(ProjectCore):
 
             Job Type object with all the available job types: ['StructureContainer’, ‘StructurePipeline’, ‘AtomisticExampleJob’,
                                              ‘ExampleJob’, ‘Lammps’, ‘KMC’, ‘Sphinx’, ‘Vasp’, ‘GenericMaster’,
-                                             ‘SerialMaster’, ‘AtomisticSerialMaster’, ‘ParallelMaster’, ‘KmcMaster’,
+                                             ‘ParallelMaster’, ‘KmcMaster’,
                                              ‘ThermoLambdaMaster’, ‘RandomSeedMaster’, ‘MeamFit’, ‘Murnaghan’,
-                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’, ‘ConvergenceVolume’,
-                                             ‘ConvergenceEncutParallel’, ‘ConvergenceKpointParallel’, ’PhonopyMaster’,
+                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’,
+                                             ‘ConvergenceKpointParallel’, ’PhonopyMaster’,
                                              ‘DefectFormationEnergy’, ‘LammpsASE’, ‘PipelineMaster’,
                                              ’TransformationPath’, ‘ThermoIntEamQh’, ‘ThermoIntDftEam’, ‘ScriptJob’,
                                              ‘ListMaster']
@@ -140,6 +233,12 @@ class Project(ProjectCore):
         # TODO: instead of re-initialzing, auto-update pyiron_base creator with factories, like we update job class
         #  creation
 
+    @property
+    def maintenance(self):
+        if self._maintenance is None:
+            self._maintenance = AtomisticsMaintenance(self)
+        return self._maintenance
+
     def create_job(self, job_type, job_name, delete_existing_job=False):
         """
         Create one of the following jobs:
@@ -152,8 +251,6 @@ class Project(ProjectCore):
         - ‘Sphinx’:
         - ‘Vasp’:
         - ‘GenericMaster’:
-        - ‘SerialMaster’: series of jobs run in serial
-        - ‘AtomisticSerialMaster’:
         - ‘ParallelMaster’: series of jobs run in parallel
         - ‘KmcMaster’:
         - ‘ThermoLambdaMaster’:
@@ -162,7 +259,6 @@ class Project(ProjectCore):
         - ‘Murnaghan’:
         - ‘MinimizeMurnaghan’:
         - ‘ElasticMatrix’:
-        - ‘ConvergenceVolume’:
         - ‘ConvergenceEncutParallel’:
         - ‘ConvergenceKpointParallel’:
         - ’PhonopyMaster’:
@@ -178,9 +274,9 @@ class Project(ProjectCore):
         Args:
             job_type (str): job type can be ['StructureContainer’, ‘StructurePipeline’, ‘AtomisticExampleJob’,
                                              ‘ExampleJob’, ‘Lammps’, ‘KMC’, ‘Sphinx’, ‘Vasp’, ‘GenericMaster’,
-                                             ‘SerialMaster’, ‘AtomisticSerialMaster’, ‘ParallelMaster’, ‘KmcMaster’,
+                                             ‘ParallelMaster’, ‘KmcMaster’,
                                              ‘ThermoLambdaMaster’, ‘RandomSeedMaster’, ‘MeamFit’, ‘Murnaghan’,
-                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’, ‘ConvergenceVolume’,
+                                             ‘MinimizeMurnaghan’, ‘ElasticMatrix’,
                                              ‘ConvergenceEncutParallel’, ‘ConvergenceKpointParallel’, ’PhonopyMaster’,
                                              ‘DefectFormationEnergy’, ‘LammpsASE’, ‘PipelineMaster’,
                                              ’TransformationPath’, ‘ThermoIntEamQh’, ‘ThermoIntDftEam’, ‘ScriptJob’,
@@ -416,8 +512,16 @@ class Project(ProjectCore):
         return PeriodicTable()
 
     @staticmethod
-    def inspect_emperical_potentials():
+    def inspect_empirical_potentials():
         return LammpsPotentialFile()
+
+    @staticmethod
+    @deprecate("Use inspect_empirical_potentials instead!")
+    def inspect_emperical_potentials():
+        """
+        For backwards compatibility, calls inspect_empirical_potentials()
+        """
+        return inspect_empirical_potentials()
 
     @staticmethod
     def inspect_pseudo_potentials():
@@ -526,7 +630,7 @@ class Project(ProjectCore):
         vacuum=1.0,
         center=False,
         pbc=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Generate a surface based on the ase.build.surface module.
@@ -558,7 +662,7 @@ class Project(ProjectCore):
             vacuum=vacuum,
             center=center,
             pbc=pbc,
-            **kwargs
+            **kwargs,
         )
 
     @deprecate("Use create.structure.atoms instead")
@@ -583,7 +687,7 @@ class Project(ProjectCore):
         elements=None,
         dimension=None,
         species=None,
-        **qwargs
+        **qwargs,
     ):
         """
         Creates a atomistics.structure.atoms.Atoms instance.
@@ -637,7 +741,7 @@ class Project(ProjectCore):
             elements=elements,
             dimension=dimension,
             species=species,
-            **qwargs
+            **qwargs,
         )
 
     @deprecate("Use create.structure.element instead")

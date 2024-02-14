@@ -1,0 +1,67 @@
+[build-system]
+requires = ["ase", "atomistics", "defusedxml", "h5py", "matplotlib", "mendeleev", "mp-api", "numpy", "pandas", "phonopy", "pint", "pyiron_base", "pylammpsmpi", "scipy", "scikit-learn", "seekpath", "setuptools", "spglib", "structuretoolkit", "versioneer[toml]==0.29"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyiron_atomistics"
+description = "An interface to atomistic simulation codes including but not limited to GPAW, LAMMPS, S/Phi/nX and VASP."
+authors = [
+    { name = "Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department", email = "pyiron@mpie.de" },
+]
+readme = "README.rst"
+license = { file = "LICENSE" }
+keywords = ["pyiron"]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "ase==3.22.1",
+    "atomistics==0.1.23",
+    "defusedxml==0.7.1",
+    "h5py==3.10.0",
+    "matplotlib==3.8.2",
+    "mendeleev==0.15.0",
+    "mp-api==0.39.5",
+    "numpy==1.26.4",
+    "pandas==2.2.0",
+    "phonopy==2.21.0",
+    "pint==0.23",
+    "pyiron_base==0.7.5",
+    "pylammpsmpi==0.2.13",
+    "scipy==1.12.0",
+    "scikit-learn==1.4.0",
+    "seekpath==2.1.0",
+    "spglib==2.3.1",
+    "structuretoolkit==0.0.21",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://pyiron.org"
+Documentation = "https://pyiron.readthedocs.io"
+Repository = "https://github.com/pyiron/pyiron_atomistics"
+
+[tool.setuptools.packages.find]
+include = ["pyiron_atomistics*"]
+
+[tool.setuptools.package-data]
+"*" = ["data/*.csv"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pyiron_atomistics.__version__"}
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440-pre"
+versionfile_source = "pyiron_atomistics/_version.py"
+parentdir_prefix = "pyiron_atomistics"
+tag_prefix = "pyiron_atomistics-"

@@ -110,6 +110,12 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         free_energy_lst, entropy_lst, cv_lst, volume_lst = [], [], [], []
         for job_id in self.child_ids:
             job = self.project_hdf5.load(job_id)
+            # the underlying phonopy job might create a supercell; if its
+            # reference job is interactive this is reflected in its
+            # job.structure and the output quantities, so we need to rescale
+            # all the output here; if the structure did not change the
+            # conversion_factor will simply be 1.
+            conversion_factor = len(self.structure) / len(job.structure)
             thermal_properties = job.get_thermal_properties(
                 temperatures=np.linspace(
                     self.input["temperature_start"],
@@ -117,10 +123,10 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
                     int(self.input["temperature_steps"]),
                 )
             )
-            free_energy_lst.append(thermal_properties.free_energies)
-            entropy_lst.append(thermal_properties.entropy)
-            cv_lst.append(thermal_properties.cv)
-            volume_lst.append(job.structure.get_volume())
+            free_energy_lst.append(thermal_properties.free_energies * conversion_factor)
+            entropy_lst.append(thermal_properties.entropy * conversion_factor)
+            cv_lst.append(thermal_properties.cv * conversion_factor)
+            volume_lst.append(job.structure.get_volume() * conversion_factor)
 
         arg_lst = np.argsort(volume_lst)
 
@@ -177,10 +183,17 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
                 fit_funct=fit, x=v, save_range=0.0, return_ind=True
             )
 
-            v0_lst.append(v0)
-            free_eng_lst.append(fit([v0]))
-            entropy_lst.append(entropy[ind])
-            cv_lst.append(cv[ind])
+            if v0 is not None:
+                v0_lst.append(v0)
+                free_eng_lst.append(fit(v0))
+                entropy_lst.append(entropy[ind])
+                cv_lst.append(cv[ind])
+            else:
+                v0_lst.append(np.nan)
+                free_eng_lst.append(np.nan)
+                entropy_lst.append(np.nan)
+                cv_lst.append(np.nan)
+
         return v0_lst, free_eng_lst, entropy_lst, cv_lst
 
     def plot_free_energy_volume_temperature(
@@ -192,7 +205,7 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         color_map="coolwarm",
         axis=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """
         Plot volume vs free energy curves for defined temperatures. If no Murnaghan job is assigned, plots free energy without total electronic energy at T=0.

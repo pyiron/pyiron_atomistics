@@ -462,9 +462,9 @@ class ElectronicStructure(object):
             for spin in range(self.n_spins):
                 for i, kpt in enumerate(self.kpoints):
                     for j, band in enumerate(kpt.bands):
-                        self._grand_dos_matrix[
-                            spin, i, j, :, :
-                        ] = band.resolved_dos_matrix
+                        self._grand_dos_matrix[spin, i, j, :, :] = (
+                            band.resolved_dos_matrix
+                        )
         return self._grand_dos_matrix
 
     @grand_dos_matrix.setter
@@ -624,9 +624,9 @@ class ElectronicStructure(object):
                     occ = self.occupancy_matrix[spin][i][j]
                     self.kpoints[-1].add_band(eigenvalue=val, occupancy=occ, spin=spin)
                     if self._grand_dos_matrix is not None:
-                        self.kpoints[-1].bands[spin][
-                            -1
-                        ].resolved_dos_matrix = self.grand_dos_matrix[spin, i, j, :, :]
+                        self.kpoints[-1].bands[spin][-1].resolved_dos_matrix = (
+                            self.grand_dos_matrix[spin, i, j, :, :]
+                        )
 
     def get_spin_resolved_dos(self, spin_indices=0):
         """
@@ -751,7 +751,6 @@ class ElectronicStructure(object):
 
 
 class Kpoint(object):
-
     """
     All data related to a single k-point is stored in this module
 

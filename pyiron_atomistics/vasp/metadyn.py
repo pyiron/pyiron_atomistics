@@ -6,7 +6,7 @@ import numpy as np
 from pyiron_base import GenericParameters
 from pyiron_atomistics.vasp.vasp import Vasp
 from pyiron_atomistics.vasp.base import Input, Output
-from pyiron_atomistics.vasp.report import Report
+from pyiron_atomistics.vasp.parser.report import Report
 import os
 import posixpath
 

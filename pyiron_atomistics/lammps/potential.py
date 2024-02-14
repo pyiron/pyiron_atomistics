@@ -26,7 +26,6 @@ __date__ = "Sep 1, 2017"
 
 
 class LammpsPotential(GenericParameters):
-
     """
     This module helps write commands which help in the control of parameters related to the potential used in LAMMPS
     simulations
@@ -184,6 +183,30 @@ class LammpsPotential(GenericParameters):
                 element_symbol
             )
             raise NameError(msg) from None
+
+    def to_dict(self):
+        super_dict = super(LammpsPotential, self).to_dict()
+        if self._df is not None:
+            super_dict.update(
+                {
+                    "potential/" + key: self._df[key].values[0]
+                    for key in ["Config", "Filename", "Name", "Model", "Species"]
+                }
+            )
+            if "Citations" in self._df.columns.values:
+                super_dict["potential/Citations"] = self._df["Citations"].values[0]
+        return super_dict
+
+    def from_dict(self, obj_dict, version: str = None):
+        super(LammpsPotential, self).from_dict(obj_dict=obj_dict, version=version)
+        if "potential" in obj_dict.keys() and "Config" in obj_dict["potential"].keys():
+            entry_dict = {
+                key: [obj_dict["potential"][key]]
+                for key in ["Config", "Filename", "Name", "Model", "Species"]
+            }
+            if "Citations" in obj_dict["potential"].keys():
+                entry_dict["Citations"] = [obj_dict["potential"]["Citations"]]
+            self._df = pd.DataFrame(entry_dict)
 
     def to_hdf(self, hdf, group_name=None):
         if self._df is not None:

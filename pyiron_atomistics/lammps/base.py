@@ -366,9 +366,9 @@ class LammpsBase(AtomisticGenericJob):
         """
         del self.input.control["dump_modify___1"]
         del self.input.control["dump___1"]
-        self.input.control[
-            "dump___1"
-        ] = "all h5md ${dumptime} dump.h5 position force create_group yes"
+        self.input.control["dump___1"] = (
+            "all h5md ${dumptime} dump.h5 position force create_group yes"
+        )
 
     def write_input(self):
         """
@@ -450,27 +450,26 @@ class LammpsBase(AtomisticGenericJob):
 
         """
         self.input.from_hdf(self._hdf5)
-        hdf_dict = self.collect_output_parser(
-            cwd=self.working_directory,
-            dump_h5_file_name="dump.h5",
-            dump_out_file_name="dump.out",
-            log_lammps_file_name="log.lammps",
+        hdf_dict = resolve_hierachical_dict(
+            data_dict=self.collect_output_parser(
+                cwd=self.working_directory,
+                dump_h5_file_name="dump.h5",
+                dump_out_file_name="dump.out",
+                log_lammps_file_name="log.lammps",
+            ),
+            group_name="output",
         )
-
-        # Write to hdf
-        with self.project_hdf5.open("output/generic") as hdf_output:
-            for k, v in hdf_dict["generic"].items():
-                hdf_output[k] = v
-
-        with self.project_hdf5.open("output/lammps") as hdf_output:
-            for k, v in hdf_dict["lammps"].items():
-                hdf_output[k] = v
 
         if len(self.output.cells) > 0:
             final_structure = self.get_structure(iteration_step=-1)
             if final_structure is not None:
-                with self.project_hdf5.open("output") as hdf_output:
-                    final_structure.to_hdf(hdf_output)
+                hdf_dict.update(
+                    {
+                        "output/structure/" + k: v
+                        for k, v in final_structure.to_dict().items()
+                    }
+                )
+        self.project_hdf5.write_dict_to_hdf(data_dict=hdf_dict)
 
     def convergence_check(self):
         if self._generic_input["calc_mode"] == "minimize":
@@ -722,21 +721,13 @@ class LammpsBase(AtomisticGenericJob):
             rotation_matrix=rotation_matrix,
         )
 
-    # define hdf5 input and output
-    def to_hdf(self, hdf=None, group_name=None):
-        """
+    def to_dict(self):
+        data_dict = super(LammpsBase, self).to_dict()
+        lammps_dict = self._structure_to_dict() | self.input.to_dict()
+        data_dict.update({"input/" + k: v for k, v in lammps_dict.items()})
+        return data_dict
 
-        Args:
-            hdf:
-            group_name:
-
-        Returns:
-
-        """
-        super(LammpsBase, self).to_hdf(hdf=hdf, group_name=group_name)
-        self._structure_to_hdf()
-        self.input.to_hdf(self._hdf5)
-
+    # define hdf5 output
     def from_hdf(self, hdf=None, group_name=None):  # TODO: group_name should be removed
         """
 
@@ -749,7 +740,16 @@ class LammpsBase(AtomisticGenericJob):
         """
         super(LammpsBase, self).from_hdf(hdf=hdf, group_name=group_name)
         self._structure_from_hdf()
-        self.input.from_hdf(self._hdf5)
+        self.input.from_dict(
+            data_dict=self._hdf5.read_dict_from_hdf(
+                [
+                    "input",
+                    "input/control_inp",
+                    "input/potential_inp",
+                    "input/potential_inp/potential",
+                ]
+            )
+        )
 
     def write_restart_file(self, filename="restart.out"):
         """
@@ -831,8 +831,9 @@ class LammpsBase(AtomisticGenericJob):
         new_ham = super(LammpsBase, self).restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
             new_ham.potential = self.potential
-            new_ham.read_restart_file(filename="restart.out")
-            new_ham.restart_file_list.append(self.get_workdir_file("restart.out"))
+            if "restart.out" in self.list_files():
+                new_ham.read_restart_file(filename="restart.out")
+                new_ham.restart_file_list.append(self.get_workdir_file("restart.out"))
         return new_ham
 
     @staticmethod
@@ -902,79 +903,79 @@ class LammpsBase(AtomisticGenericJob):
                     self.input.control["group___constraintxyz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_xyz]
                     )
-                    self.input.control[
-                        "fix___constraintxyz"
-                    ] = "constraintxyz setforce 0.0 0.0 0.0"
+                    self.input.control["fix___constraintxyz"] = (
+                        "constraintxyz setforce 0.0 0.0 0.0"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintxyz"
-                        ] = "set 0.0 0.0 0.0"
+                        self.input.control["velocity___constraintxyz"] = (
+                            "set 0.0 0.0 0.0"
+                        )
                 if len(constraint_xy) > 0:
                     self.input.control["group___constraintxy"] = "id " + " ".join(
                         [str(ind) for ind in constraint_xy]
                     )
-                    self.input.control[
-                        "fix___constraintxy"
-                    ] = "constraintxy setforce 0.0 0.0 NULL"
+                    self.input.control["fix___constraintxy"] = (
+                        "constraintxy setforce 0.0 0.0 NULL"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintxy"
-                        ] = "set 0.0 0.0 NULL"
+                        self.input.control["velocity___constraintxy"] = (
+                            "set 0.0 0.0 NULL"
+                        )
                 if len(constraint_yz) > 0:
                     self.input.control["group___constraintyz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_yz]
                     )
-                    self.input.control[
-                        "fix___constraintyz"
-                    ] = "constraintyz setforce NULL 0.0 0.0"
+                    self.input.control["fix___constraintyz"] = (
+                        "constraintyz setforce NULL 0.0 0.0"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintyz"
-                        ] = "set NULL 0.0 0.0"
+                        self.input.control["velocity___constraintyz"] = (
+                            "set NULL 0.0 0.0"
+                        )
                 if len(constraint_zx) > 0:
                     self.input.control["group___constraintxz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_zx]
                     )
-                    self.input.control[
-                        "fix___constraintxz"
-                    ] = "constraintxz setforce 0.0 NULL 0.0"
+                    self.input.control["fix___constraintxz"] = (
+                        "constraintxz setforce 0.0 NULL 0.0"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintxz"
-                        ] = "set 0.0 NULL 0.0"
+                        self.input.control["velocity___constraintxz"] = (
+                            "set 0.0 NULL 0.0"
+                        )
                 if len(constraint_x) > 0:
                     self.input.control["group___constraintx"] = "id " + " ".join(
                         [str(ind) for ind in constraint_x]
                     )
-                    self.input.control[
-                        "fix___constraintx"
-                    ] = "constraintx setforce 0.0 NULL NULL"
+                    self.input.control["fix___constraintx"] = (
+                        "constraintx setforce 0.0 NULL NULL"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintx"
-                        ] = "set 0.0 NULL NULL"
+                        self.input.control["velocity___constraintx"] = (
+                            "set 0.0 NULL NULL"
+                        )
                 if len(constraint_y) > 0:
                     self.input.control["group___constrainty"] = "id " + " ".join(
                         [str(ind) for ind in constraint_y]
                     )
-                    self.input.control[
-                        "fix___constrainty"
-                    ] = "constrainty setforce NULL 0.0 NULL"
+                    self.input.control["fix___constrainty"] = (
+                        "constrainty setforce NULL 0.0 NULL"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constrainty"
-                        ] = "set NULL 0.0 NULL"
+                        self.input.control["velocity___constrainty"] = (
+                            "set NULL 0.0 NULL"
+                        )
                 if len(constraint_z) > 0:
                     self.input.control["group___constraintz"] = "id " + " ".join(
                         [str(ind) for ind in constraint_z]
                     )
-                    self.input.control[
-                        "fix___constraintz"
-                    ] = "constraintz setforce NULL NULL 0.0"
+                    self.input.control["fix___constraintz"] = (
+                        "constraintz setforce NULL NULL 0.0"
+                    )
                     if self._generic_input["calc_mode"] == "md":
-                        self.input.control[
-                            "velocity___constraintz"
-                        ] = "set NULL NULL 0.0"
+                        self.input.control["velocity___constraintz"] = (
+                            "set NULL NULL 0.0"
+                        )
 
     @staticmethod
     def _modify_structure_to_allow_requested_deformation(
@@ -1054,30 +1055,56 @@ class Input:
         self.bond_dict["O"]["bond_type_list"] = [1]
         self.bond_dict["O"]["angle_type_list"] = [1]
 
+    def from_dict(self, data_dict):
+        self.control.from_dict(data_dict["input"]["control_inp"])
+        self.potential.from_dict(data_dict["input"]["potential_inp"])
+        if "bond_dict" in data_dict["input"].keys():
+            self.bond_dict = data_dict["input"]["bond_dict"]
+
+    def to_dict(self):
+        return {
+            self.control.table_name + "/" + k: v
+            for k, v in self.control.to_dict().items()
+        } | {
+            self.potential.table_name + "/" + k: v
+            for k, v in self.potential.to_dict().items()
+        }
+
     def to_hdf(self, hdf5):
         """
-
         Args:
             hdf5:
-
         Returns:
-
         """
         with hdf5.open("input") as hdf5_input:
-            self.control.to_hdf(hdf5_input)
-            self.potential.to_hdf(hdf5_input)
+            hdf5_input.write_dict_to_hdf(data_dict=self.to_dict())
 
     def from_hdf(self, hdf5):
         """
-
         Args:
             hdf5:
-
         Returns:
-
         """
-        with hdf5.open("input") as hdf5_input:
-            self.control.from_hdf(hdf5_input)
-            self.potential.from_hdf(hdf5_input)
-            if "bond_dict" in hdf5_input.list_nodes():
-                self.bond_dict = hdf5_input["bond_dict"]
+        self.from_dict(
+            data_dict=hdf5.read_dict_from_hdf(
+                [
+                    "input",
+                    "input/control_inp",
+                    "input/potential_inp",
+                    "input/potential_inp/potential",
+                ]
+            )
+        )
+
+
+def resolve_hierachical_dict(data_dict, group_name=""):
+    return_dict = {}
+    if len(group_name) > 0 and group_name[-1] != "/":
+        group_name = group_name + "/"
+    for k, v in data_dict.items():
+        if isinstance(v, dict):
+            for sk, sv in v.items():
+                return_dict[group_name + k + "/" + sk] = sv
+        else:
+            return_dict[group_name + k] = v
+    return return_dict

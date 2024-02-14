@@ -458,22 +458,20 @@ class Atoms(ASEAtoms):
         }
         for el in self.species:
             if isinstance(el.tags, dict):
-                if "new_species" not in hdf_structure.keys():
-                    hdf_structure["new_species"] = {}
-                hdf_structure["new_species"][el.Abbreviation] = el.to_dict()
+                for k, v in el.to_dict().items():
+                    hdf_structure["new_species/" + el.Abbreviation + "/" + k] = v
         hdf_structure["species"] = [el.Abbreviation for el in self.species]
         hdf_structure["indices"] = self.indices
 
         for tag, value in self.arrays.items():
             if tag in ["positions", "numbers", "indices"]:
                 continue
-            if "tags" not in hdf_structure.keys():
-                hdf_structure["tags"] = {}
-            hdf_structure["tags"][tag] = value.tolist()
+            hdf_structure["tags/" + tag] = value.tolist()
 
         if self.cell is not None:
             # Convert ASE cell object to numpy array before storing
-            hdf_structure["cell"] = {"cell": np.array(self.cell), "pbc": self.pbc}
+            hdf_structure["cell/cell"] = np.array(self.cell)
+            hdf_structure["cell/pbc"] = self.pbc
 
         if self.has("initial_magmoms"):
             hdf_structure["spins"] = self.spins
@@ -1212,6 +1210,7 @@ class Atoms(ASEAtoms):
         view_plane=np.array([0, 0, 1]),
         distance_from_camera=1.0,
         opacity=1.0,
+        height=None,
     ):
         """
         Plot3d relies on NGLView or plotly to visualize atomic structures. Here, we construct a string in the "protein database"
@@ -1253,6 +1252,8 @@ class Atoms(ASEAtoms):
                 call. (Default is np.array([0, 0, 1]), which is view normal to the x-y plane.)
             distance_from_camera (float): Distance of the camera from the structure. Higher = farther away.
                 (Default is 14, which also seems to be the NGLView default value.)
+            height (int/float/None): height of the plot area in pixel (only
+                available in plotly) Default: 600
 
             Possible NGLView color schemes:
               " ", "picking", "random", "uniform", "atomindex", "residueindex",
@@ -1288,6 +1289,7 @@ class Atoms(ASEAtoms):
             view_plane=view_plane,
             distance_from_camera=distance_from_camera,
             opacity=opacity,
+            height=height,
         )
 
     def pos_xyz(self):
@@ -2446,15 +2448,17 @@ class Atoms(ASEAtoms):
                 ):
                     return np.array(
                         [
-                            [
-                                float(spin_dir)
-                                for spin_dir in spin.replace("[", "")
-                                .replace("]", "")
-                                .replace(",", "")
-                                .split()
-                            ]
-                            if spin
-                            else [0.0, 0.0, 0.0]
+                            (
+                                [
+                                    float(spin_dir)
+                                    for spin_dir in spin.replace("[", "")
+                                    .replace("]", "")
+                                    .replace(",", "")
+                                    .split()
+                                ]
+                                if spin
+                                else [0.0, 0.0, 0.0]
+                            )
                             for spin in spin_lst
                         ]
                     )
@@ -3133,9 +3137,9 @@ def ase_to_pyiron(ase_obj):
             elif constraint_dict["name"] == "FixScaled":
                 if "selective_dynamics" not in pyiron_atoms.arrays.keys():
                     pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
-                pyiron_atoms.selective_dynamics[
-                    constraint_dict["kwargs"]["a"]
-                ] = constraint_dict["kwargs"]["mask"]
+                pyiron_atoms.selective_dynamics[constraint_dict["kwargs"]["a"]] = (
+                    constraint_dict["kwargs"]["mask"]
+                )
             else:
                 warnings.warn("Unsupported ASE constraint: " + constraint_dict["name"])
     return pyiron_atoms
@@ -3404,7 +3408,6 @@ def default(data, dflt):
 
 
 class Symbols(ASESymbols):
-
     """
     Derived from the ase symbols class which has the following docs:
 
