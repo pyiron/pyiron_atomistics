@@ -1631,7 +1631,10 @@ class VaspBase(GenericDFTJob):
 
         if new_ham.__name__ == self.__name__:
             if "CHGCAR" not in self.files.list():
-                raise FileNotFoundError("The CHGCAR has to be available in the working directory: " + self.working_directory)
+                raise FileNotFoundError(
+                    "The CHGCAR has to be available in the working directory: "
+                    + self.working_directory
+                )
             new_ham.restart_file_list.append(self.files.CHGCAR)
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
@@ -1682,7 +1685,10 @@ class VaspBase(GenericDFTJob):
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
             if "CHGCAR" not in self.files.list() or "WAVECAR" not in self.files.list():
-                raise FileNotFoundError("Both the CHGCAR and the WAVECAR have to be available in the working directory: " + self.working_directory)
+                raise FileNotFoundError(
+                    "Both the CHGCAR and the WAVECAR have to be available in the working directory: "
+                    + self.working_directory
+                )
             new_ham.restart_file_list.append(self.files.CHGCAR)
             new_ham.restart_file_list.append(self.files.WAVECAR)
             new_ham.input.incar["ISTART"] = istart
@@ -1740,7 +1746,10 @@ class VaspBase(GenericDFTJob):
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
             if "WAVECAR" not in self.files.list():
-                raise FileNotFoundError("The WAVECAR has to be available in the working directory: " + self.working_directory)
+                raise FileNotFoundError(
+                    "The WAVECAR has to be available in the working directory: "
+                    + self.working_directory
+                )
             new_ham.restart_file_list.append(self.files.WAVECAR)
             new_ham.input.incar["ISTART"] = istart
         return new_ham
