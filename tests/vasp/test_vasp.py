@@ -402,9 +402,9 @@ class TestVasp(unittest.TestCase):
         job.status.collect = True
         job.run()
         # Check if error raised if the files don't exist
-        self.assertRaises(KeyError, job.restart_from_wave_functions, "wave_restart")
-        self.assertRaises(KeyError, job.restart_from_charge_density, "chg_restart")
-        self.assertRaises(KeyError, job.restart_from_wave_and_charge, "wave_chg_restart")
+        self.assertRaises(FileNotFoundError, job.restart_from_wave_functions, "wave_restart")
+        self.assertRaises(FileNotFoundError, job.restart_from_charge_density, "chg_restart")
+        self.assertRaises(FileNotFoundError, job.restart_from_wave_and_charge, "wave_chg_restart")
 
     def test_vasp_metadyn(self):
         self.job_metadyn.set_primitive_constraint("bond_1", "bond", atom_indices=[0, 2], increment=1e-4)
