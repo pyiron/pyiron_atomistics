@@ -533,8 +533,7 @@ class VaspBase(GenericDFTJob):
         """
         Removes excess files (by default: WAVECAR, CHGCAR, CHG)
         """
-        list_files = self.list_files()
-        for file in list_files:
+        for file in self.files.list():
             if file in files_to_remove:
                 abs_file_path = os.path.join(self.working_directory, file)
                 os.remove(abs_file_path)
@@ -1631,7 +1630,7 @@ class VaspBase(GenericDFTJob):
         new_ham = self.restart(job_name=job_name, job_type=job_type)
 
         if new_ham.__name__ == self.__name__:
-            new_ham.restart_file_list.append(self.get_workdir_file("CHGCAR"))
+            new_ham.restart_file_list.append(self.files.CHGCAR)
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
                 self_consistent_calc=self_consistent_calc,
@@ -1680,8 +1679,8 @@ class VaspBase(GenericDFTJob):
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
-            new_ham.restart_file_list.append(self.get_workdir_file("CHGCAR"))
-            new_ham.restart_file_list.append(self.get_workdir_file("WAVECAR"))
+            new_ham.restart_file_list.append(self.files.CHGCAR)
+            new_ham.restart_file_list.append(self.files.WAVECAR)
             new_ham.input.incar["ISTART"] = istart
             new_ham.input.incar["ICHARG"] = self.get_icharg_value(
                 icharg=icharg,
@@ -1699,7 +1698,7 @@ class VaspBase(GenericDFTJob):
         if files_to_compress is None:
             files_to_compress = [
                 f
-                for f in list(self.list_files())
+                for f in self.files.list()
                 if f
                 not in [
                     "CHGCAR",
@@ -1712,7 +1711,7 @@ class VaspBase(GenericDFTJob):
                 ]
             ]
         # delete empty files
-        for f in list(self.list_files()):
+        for f in self.files.list():
             filename = os.path.join(self.working_directory, f)
             if (
                 f not in files_to_compress
@@ -1736,7 +1735,7 @@ class VaspBase(GenericDFTJob):
         """
         new_ham = self.restart(job_name=job_name, job_type=job_type)
         if new_ham.__name__ == self.__name__:
-            new_ham.restart_file_list.append(self.get_workdir_file("WAVECAR"))
+            new_ham.restart_file_list.append(self.files.WAVECAR)
             new_ham.input.incar["ISTART"] = istart
         return new_ham
 

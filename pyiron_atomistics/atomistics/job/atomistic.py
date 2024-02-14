@@ -449,6 +449,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         new_ham._generic_input["structure"] = "atoms"
         return new_ham
 
+    @deprecate("use job.files instead!")
     def get_workdir_file(self, filename: str) -> None:
         """
         Checks if a given file exists within the job's working directory and returns the absolute path to it.

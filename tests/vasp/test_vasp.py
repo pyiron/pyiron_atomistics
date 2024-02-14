@@ -365,7 +365,7 @@ class TestVasp(unittest.TestCase):
         job_chg_den = self.job_complete.restart_from_charge_density(job_name="chg")
         self.assertEqual(job_chg_den.structure, self.job_complete.get_structure(-1))
         self.assertTrue(
-            posixpath.join(self.job_complete.working_directory, "CHGCAR")
+            os.path.join(self.job_complete.working_directory, "CHGCAR")
             in job_chg_den.restart_file_list
         )
 
@@ -380,11 +380,11 @@ class TestVasp(unittest.TestCase):
         )
         self.assertEqual(job_chg_wave.structure, self.job_complete.get_structure(-1))
         self.assertTrue(
-            posixpath.join(self.job_complete.working_directory, "WAVECAR")
+            os.path.join(self.job_complete.working_directory, "WAVECAR")
             in job_chg_wave.restart_file_list
         )
         self.assertTrue(
-            posixpath.join(self.job_complete.working_directory, "CHGCAR")
+            os.path.join(self.job_complete.working_directory, "CHGCAR")
             in job_chg_wave.restart_file_list
         )
         for key, val in job_chg_wave.restart_file_dict.items():
@@ -456,7 +456,7 @@ class TestVasp(unittest.TestCase):
         job_kspace.input.incar["KSPACING"] = 0.5
         with warnings.catch_warnings(record=True) as w:
             job_kspace.run(run_mode="manual")
-            self.assertNotIn("KPOINTS", job_kspace.list_files(), "'KPOINTS' file written even when "
+            self.assertNotIn("KPOINTS", job_kspace.files.list(), "'KPOINTS' file written even when "
                                                                  "KPACING tag is present in INCAR")
 
             self.assertTrue(len(w) <= 2)
