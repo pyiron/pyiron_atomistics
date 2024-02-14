@@ -1,10 +1,12 @@
 from typing import Union, List, Tuple
 import warnings
 
+import ase.atoms
+from structuretoolkit.build import pyxtal as _pyxtal
+
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
 
-from structuretoolkit.build import pyxtal as _pyxtal
 
 publication = {
     "pyxtal": {
@@ -69,7 +71,7 @@ def pyxtal(
         allow_exceptions=allow_exceptions,
         **kwargs,
     )
-    if isinstance(ret, ase.Atoms):
+    if isinstance(ret, ase.atoms.Atoms):
         return ase_to_pyiron(ret)
     else:
         stoich = "".join(f"{s}{n}" for s, n in zip(species, num_ions))
