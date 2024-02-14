@@ -16,6 +16,7 @@ dependencies:
 - pyiron_base =0.7.3
 - pylammpsmpi =0.2.7
 - pyscal =2.10.4
+- pyxtal =0.5.5
 - scikit-learn =1.2.1
 - scipy =1.11.1
 - seekpath =1.9.5
