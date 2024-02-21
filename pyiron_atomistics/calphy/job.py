@@ -131,7 +131,6 @@ class Calphy(GenericJob, HasStructure):
         self.input.potential_final_name = None
         self.input.structure = None
         self.output = DataContainer(table_name="output")
-        self._data = None
         self.input._pot_dict_initial = None
         self.input._pot_dict_final = None
         self.__version__ = calphy_version
@@ -704,8 +703,6 @@ class Calphy(GenericJob, HasStructure):
             routine_pscale(job)
         else:
             raise ValueError("Unknown mode")
-        # self._data = job.report
-        # del self._data["input"]
         self.run()
         self.status.collect = True
         self.run()
