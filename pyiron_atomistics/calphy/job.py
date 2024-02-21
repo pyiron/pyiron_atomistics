@@ -135,6 +135,7 @@ class Calphy(GenericJob, HasStructure):
         self.input._pot_dict_final = None
         self.__version__ = calphy_version
 
+    @property
     def output(self):
         # fast path, if job is finished return output immediately
         # accessing _status_dict breaks API, but exposed API of JobStatus
