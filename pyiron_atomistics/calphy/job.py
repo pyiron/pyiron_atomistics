@@ -462,17 +462,17 @@ class Calphy(GenericJob, HasStructure):
         Create a calc object
         """
         calc = copy.deepcopy(self._default_input)
-        
+
         for key in self._default_input.keys():
             if key not in ["md", "tolerance", "nose_hoover", "berendsen"]:
                 calc[key] = self.input[key]
-        
+
         for key in self._default_input["md"].keys():
             calc["md"][key] = self.input["md"][key]
-        
+
         for key in self._default_input["tolerance"].keys():
             calc["tolerance"][key] = self.input["tolerance"][key]
-        
+
         for key in self._default_input["nose_hoover"].keys():
             calc["nose_hoover"][key] = self.input["nose_hoover"][key]
 
@@ -491,11 +491,11 @@ class Calphy(GenericJob, HasStructure):
 
         calc["queue"] = {}
         calc["queue"]["cores"] = self.server.cores
-        
+
         calculations = {}
         calculations["calculations"] = [calc]
-        
-        with open(os.path.join(self.working_directory, 'input.yaml'), 'w') as fout:
+
+        with open(os.path.join(self.working_directory, "input.yaml"), "w") as fout:
             yaml.safe_dump(calculations, fout)
 
     def write_input(self):
@@ -681,7 +681,7 @@ class Calphy(GenericJob, HasStructure):
                 raise ValueError("provide a reference_phase")
 
     def run_static(self):
-        with open(os.path.join(self.working_directory, 'input.yaml'), 'r') as fin:
+        with open(os.path.join(self.working_directory, "input.yaml"), "r") as fin:
             calc = yaml.safe_load(fin)["calculations"][0]
         calc = Calculation(**calc)
         self.status.running = True
@@ -704,8 +704,8 @@ class Calphy(GenericJob, HasStructure):
             routine_pscale(job)
         else:
             raise ValueError("Unknown mode")
-        #self._data = job.report
-        #del self._data["input"]
+        # self._data = job.report
+        # del self._data["input"]
         self.run()
         self.status.collect = True
         self.run()
@@ -716,13 +716,13 @@ class Calphy(GenericJob, HasStructure):
 
     def _number_of_structures(self):
         return 2
-    
-    #@property
-    #def output(self):
+
+    # @property
+    # def output(self):
     #    if len(self._output) == 0:
     #        self.collect_output()
     #    return self._output
-            
+
     def collect_general_output(self):
         """
         Collect the output from calphy
@@ -734,18 +734,16 @@ class Calphy(GenericJob, HasStructure):
             None
         """
         reportfile = os.path.join(self.working_directory, "report.yaml")
-        
+
         if os.path.exists(reportfile):
-            with open(reportfile, 'r') as fin:
+            with open(reportfile, "r") as fin:
                 data = yaml.safe_load(fin)
-            
+
             concentration = data["input"]["concentration"].split()
             concentration = [float(x) for x in concentration]
-            
+
             if "spring_constant" in data["average"].keys():
-                self.output["spring_constant"] = data["average"][
-                    "spring_constant"
-                ]
+                self.output["spring_constant"] = data["average"]["spring_constant"]
             if "density" in data["average"].keys():
                 self.output["atomic_density"] = data["average"]["density"]
             self.output["atomic_volume"] = data["average"]["vol_atom"]
@@ -769,9 +767,11 @@ class Calphy(GenericJob, HasStructure):
             self.output["fe/backward/lambda"] = list(blambda)
 
             # get final structure
-            aseobj = read(os.path.join(self.working_directory, "conf.equilibration.data"),
-                         format='lammps-data',
-                         style='atomic')
+            aseobj = read(
+                os.path.join(self.working_directory, "conf.equilibration.data"),
+                format="lammps-data",
+                style="atomic",
+            )
             pyiron_atoms = ase_to_pyiron(aseobj)
             self.output["structure_final"] = pyiron_atoms
 
