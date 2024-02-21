@@ -130,10 +130,13 @@ class Calphy(GenericJob, HasStructure):
         self.input.potential_initial_name = None
         self.input.potential_final_name = None
         self.input.structure = None
-        self.output = DataContainer(table_name="output")
+        self._output = DataContainer(table_name="output")
         self.input._pot_dict_initial = None
         self.input._pot_dict_final = None
         self.__version__ = calphy_version
+
+    def output(self):
+        return self._output
 
     @property
     def _default_input(self):
@@ -740,28 +743,28 @@ class Calphy(GenericJob, HasStructure):
             concentration = [float(x) for x in concentration]
 
             if "spring_constant" in data["average"].keys():
-                self.output["spring_constant"] = data["average"]["spring_constant"]
+                self._output["spring_constant"] = data["average"]["spring_constant"]
             if "density" in data["average"].keys():
-                self.output["atomic_density"] = data["average"]["density"]
-            self.output["atomic_volume"] = data["average"]["vol_atom"]
+                self._output["atomic_density"] = data["average"]["density"]
+            self._output["atomic_volume"] = data["average"]["vol_atom"]
 
             # main results from mode fe
-            self.output["temperature"] = self.input.temperature
-            self.output["pressure"] = self.input.pressure
-            self.output["energy_free"] = data["results"]["free_energy"]
-            self.output["energy_free_error"] = data["results"]["error"]
-            self.output["energy_free_harmonic_reference"] = data["results"][
+            self._output["temperature"] = self.input.temperature
+            self._output["pressure"] = self.input.pressure
+            self._output["energy_free"] = data["results"]["free_energy"]
+            self._output["energy_free_error"] = data["results"]["error"]
+            self._output["energy_free_harmonic_reference"] = data["results"][
                 "reference_system"
             ]
-            self.output["energy_work"] = data["results"]["work"]
-            self.output["energy_pressure"] = data["results"]["pv"]
+            self._output["energy_work"] = data["results"]["work"]
+            self._output["energy_pressure"] = data["results"]["pv"]
 
             # collect ediffs and so on
             f_ediff, b_ediff, flambda, blambda = self._collect_ediff(concentration)
-            self.output["fe/forward/energy_diff"] = list(f_ediff)
-            self.output["fe/backward/energy_diff"] = list(b_ediff)
-            self.output["fe/forward/lambda"] = list(flambda)
-            self.output["fe/backward/lambda"] = list(blambda)
+            self._output["fe/forward/energy_diff"] = list(f_ediff)
+            self._output["fe/backward/energy_diff"] = list(b_ediff)
+            self._output["fe/forward/lambda"] = list(flambda)
+            self._output["fe/backward/lambda"] = list(blambda)
 
             # get final structure
             aseobj = read(
@@ -770,16 +773,16 @@ class Calphy(GenericJob, HasStructure):
                 style="atomic",
             )
             pyiron_atoms = ase_to_pyiron(aseobj)
-            self.output["structure_final"] = pyiron_atoms
+            self._output["structure_final"] = pyiron_atoms
 
             if self.input.mode == "ts":
                 datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
                 t, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0, 1, 2))
 
                 # replace the quantities with updates ones
-                self.output["energy_free"] = np.array(fe)
-                self.output["energy_free_error"] = np.array(ferr)
-                self.output["temperature"] = np.array(t)
+                self._output["energy_free"] = np.array(fe)
+                self._output["energy_free_error"] = np.array(ferr)
+                self._output["temperature"] = np.array(t)
 
                 # collect diffs
                 (
@@ -792,14 +795,14 @@ class Calphy(GenericJob, HasStructure):
                     flambda,
                     blambda,
                 ) = self._collect_thermo(mode="ts")
-                self.output["ts/forward/energy_diff"] = list(f_ediff)
-                self.output["ts/backward/energy_diff"] = list(b_ediff)
-                self.output["ts/forward/lambda"] = list(flambda)
-                self.output["ts/backward/lambda"] = list(blambda)
-                self.output["ts/forward/volume"] = list(f_vol)
-                self.output["ts/backward/volume"] = list(b_vol)
-                self.output["ts/forward/pressure"] = list(f_press)
-                self.output["ts/backward/pressure"] = list(b_press)
+                self._output["ts/forward/energy_diff"] = list(f_ediff)
+                self._output["ts/backward/energy_diff"] = list(b_ediff)
+                self._output["ts/forward/lambda"] = list(flambda)
+                self._output["ts/backward/lambda"] = list(blambda)
+                self._output["ts/forward/volume"] = list(f_vol)
+                self._output["ts/backward/volume"] = list(b_vol)
+                self._output["ts/forward/pressure"] = list(f_press)
+                self._output["ts/backward/pressure"] = list(b_press)
 
                 # populate structures
                 (
@@ -808,17 +811,17 @@ class Calphy(GenericJob, HasStructure):
                     fwd_cells,
                     bkd_cells,
                 ) = self._get_positions()
-                self.output["ts/forward/positions"] = fwd_positions
-                self.output["ts/backward/positions"] = bkd_positions
-                self.output["ts/forward/cells"] = fwd_cells
-                self.output["ts/backward/cells"] = bkd_cells
+                self._output["ts/forward/positions"] = fwd_positions
+                self._output["ts/backward/positions"] = bkd_positions
+                self._output["ts/forward/cells"] = fwd_cells
+                self._output["ts/backward/cells"] = bkd_cells
 
             elif self.input.mode == "pscale":
                 datfile = os.path.join(self.working_directory, "pressure_sweep.dat")
                 p, fe, ferr = np.loadtxt(datfile, unpack=True, usecols=(0, 1, 2))
-                self.output["energy_free"] = np.array(fe)
-                self.output["energy_free_error"] = np.array(ferr)
-                self.output["pressure"] = np.array(p)
+                self._output["energy_free"] = np.array(fe)
+                self._output["energy_free_error"] = np.array(ferr)
+                self._output["pressure"] = np.array(p)
 
                 (
                     f_ediff,
@@ -830,14 +833,14 @@ class Calphy(GenericJob, HasStructure):
                     flambda,
                     blambda,
                 ) = self._collect_thermo(mode="pscale")
-                self.output["ps/forward/energy_diff"] = list(f_ediff)
-                self.output["ps/backward/energy_diff"] = list(b_ediff)
-                self.output["ps/forward/lambda"] = list(flambda)
-                self.output["ps/backward/lambda"] = list(blambda)
-                self.output["ps/forward/volume"] = list(f_vol)
-                self.output["ps/backward/volume"] = list(b_vol)
-                self.output["ps/forward/pressure"] = list(f_press)
-                self.output["ps/backward/pressure"] = list(b_press)
+                self._output["ps/forward/energy_diff"] = list(f_ediff)
+                self._output["ps/backward/energy_diff"] = list(b_ediff)
+                self._output["ps/forward/lambda"] = list(flambda)
+                self._output["ps/backward/lambda"] = list(blambda)
+                self._output["ps/forward/volume"] = list(f_vol)
+                self._output["ps/backward/volume"] = list(b_vol)
+                self._output["ps/forward/pressure"] = list(f_press)
+                self._output["ps/backward/pressure"] = list(b_press)
 
     def _collect_ediff(self, concentration):
         """
