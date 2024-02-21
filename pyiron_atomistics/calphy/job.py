@@ -136,7 +136,18 @@ class Calphy(GenericJob, HasStructure):
         self.__version__ = calphy_version
 
     def output(self):
-        return self._output
+        # fast path, if job is finished return output immediately
+        # accessing _status_dict breaks API, but exposed API of JobStatus
+        # automatically reloads the status from the database, which is what we
+        # want to avoid here
+        if self.status._status_dict["finished"]:
+            return self._output
+        # else see if we need to read ourselves from HDF again
+        elif self.status._status_dict["running"]:
+            self.refresh_job_status()
+            if self.status.finished:
+                self.from_hdf()
+        raise RuntimeError("Can only access output when the job is finished!")
 
     @property
     def _default_input(self):
