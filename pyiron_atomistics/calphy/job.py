@@ -2,6 +2,9 @@ import os
 import numpy as np
 from typing import Union, List, Tuple
 import pandas as pd
+import copy
+import yaml
+from ase.io import read
 
 from pyiron_base import DataContainer
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
@@ -137,8 +140,8 @@ class Calphy(GenericJob, HasStructure):
     def _default_input(self):
         return {
             "mode": None,
-            "pressure": None,
-            "temperature": None,
+            "pressure": 0,
+            "temperature": 0,
             "reference_phase": None,
             "npt": None,
             "n_equilibration_steps": 15000,
@@ -146,7 +149,7 @@ class Calphy(GenericJob, HasStructure):
             "n_print_steps": 1000,
             "n_iterations": 1,
             "spring_constants": None,
-            "equilibration_control": None,
+            "equilibration_control": "nose-hoover",
             "melting_cycle": True,
             "md": {
                 "timestep": 0.001,
@@ -299,14 +302,7 @@ class Calphy(GenericJob, HasStructure):
         Returns:
             list: symbols of the elements
         """
-        elements_from_pot = self._potential_initial.get_element_lst()
-        elements_struct_lst = self.structure.get_species_symbols()
-
-        elements = []
-        for element_name in elements_from_pot:
-            if element_name in elements_struct_lst:
-                elements.append(element_name)
-
+        elements = self._potential_initial.get_element_lst()
         return elements
 
     def _get_masses(self) -> List[float]:
@@ -328,10 +324,9 @@ class Calphy(GenericJob, HasStructure):
             if element_name in elements_struct_lst:
                 index = list(elements_struct_lst).index(element_name)
                 masses.append(elements_object_lst[index].AtomicMass)
-
-        # this picks the actual masses, now we should pad with 1s to match length
-        length_diff = len(elements_from_pot) - len(masses)
-        return masses, length_diff
+            else:
+                masses.append(1.0)
+        return masses
 
     def _potential_from_hdf(self):
         """
@@ -466,32 +461,42 @@ class Calphy(GenericJob, HasStructure):
         """
         Create a calc object
         """
-        calc = Calculation()
+        calc = copy.deepcopy(self._default_input)
+        
         for key in self._default_input.keys():
             if key not in ["md", "tolerance", "nose_hoover", "berendsen"]:
-                setattr(calc, key, self.input[key])
+                calc[key] = self.input[key]
+        
         for key in self._default_input["md"].keys():
-            setattr(calc.md, key, self.input["md"][key])
+            calc["md"][key] = self.input["md"][key]
+        
         for key in self._default_input["tolerance"].keys():
-            setattr(calc.tolerance, key, self.input["tolerance"][key])
+            calc["tolerance"][key] = self.input["tolerance"][key]
+        
         for key in self._default_input["nose_hoover"].keys():
-            setattr(calc.nose_hoover, key, self.input["nose_hoover"][key])
-        for key in self._default_input["berendsen"].keys():
-            setattr(calc.berendsen, key, self.input["berendsen"][key])
+            calc["nose_hoover"][key] = self.input["nose_hoover"][key]
 
-        calc.lattice = os.path.join(self.working_directory, "conf.data")
+        for key in self._default_input["berendsen"].keys():
+            calc["berendsen"][key] = self.input["berendsen"][key]
+
+        calc["lattice"] = os.path.join(self.working_directory, "conf.data")
 
         pair_style, pair_coeff = self._prepare_pair_styles()
-        calc._fix_potential_path = False
-        calc.pair_style = pair_style
-        calc.pair_coeff = pair_coeff
+        calc["fix_potential_path"] = False
+        calc["pair_style"] = pair_style
+        calc["pair_coeff"] = pair_coeff
 
-        calc.element = self._get_element_list()
-        calc.mass, ghost_elements = self._get_masses()
-        calc._ghost_element_count = ghost_elements
+        calc["element"] = self._get_element_list()
+        calc["mass"] = self._get_masses()
 
-        calc.queue.cores = self.server.cores
-        return calc
+        calc["queue"] = {}
+        calc["queue"]["cores"] = self.server.cores
+        
+        calculations = {}
+        calculations["calculations"] = [calc]
+        
+        with open(os.path.join(self.working_directory, 'input.yaml'), 'w') as fout:
+            yaml.safe_dump(calculations, fout)
 
     def write_input(self):
         """
@@ -506,6 +511,7 @@ class Calphy(GenericJob, HasStructure):
         file_name = "conf.data"
         self.write_structure(self.structure, file_name, self.working_directory)
         self._copy_pot_files()
+        self._create_calc()
 
     def calc_mode_fe(
         self,
@@ -675,7 +681,9 @@ class Calphy(GenericJob, HasStructure):
                 raise ValueError("provide a reference_phase")
 
     def run_static(self):
-        calc = self._create_calc()
+        with open(os.path.join(self.working_directory, 'input.yaml'), 'r') as fin:
+            calc = yaml.safe_load(fin)["calculations"][0]
+        calc = Calculation(**calc)
         self.status.running = True
         if self.input.reference_phase == "alchemy":
             job = Alchemy(calculation=calc, simfolder=self.working_directory)
@@ -696,10 +704,9 @@ class Calphy(GenericJob, HasStructure):
             routine_pscale(job)
         else:
             raise ValueError("Unknown mode")
-        self._data = job.report
-        # save conc for later use
-        self.input.concentration = job.concentration
-        del self._data["input"]
+        #self._data = job.report
+        #del self._data["input"]
+        self.run()
         self.status.collect = True
         self.run()
 
@@ -709,7 +716,13 @@ class Calphy(GenericJob, HasStructure):
 
     def _number_of_structures(self):
         return 2
-
+    
+    #@property
+    #def output(self):
+    #    if len(self._output) == 0:
+    #        self.collect_output()
+    #    return self._output
+            
     def collect_general_output(self):
         """
         Collect the output from calphy
@@ -720,39 +733,45 @@ class Calphy(GenericJob, HasStructure):
         Returns:
             None
         """
-        if self._data is not None:
-            # solid liquid specific outputs
-            if "spring_constant" in self._data["average"].keys():
-                self.output["spring_constant"] = self._data["average"][
+        reportfile = os.path.join(self.working_directory, "report.yaml")
+        
+        if os.path.exists(reportfile):
+            with open(reportfile, 'r') as fin:
+                data = yaml.safe_load(fin)
+            
+            concentration = data["input"]["concentration"].split()
+            concentration = [float(x) for x in concentration]
+            
+            if "spring_constant" in data["average"].keys():
+                self.output["spring_constant"] = data["average"][
                     "spring_constant"
                 ]
-            if "density" in self._data["average"].keys():
-                self.output["atomic_density"] = self._data["average"]["density"]
-            self.output["atomic_volume"] = self._data["average"]["vol_atom"]
+            if "density" in data["average"].keys():
+                self.output["atomic_density"] = data["average"]["density"]
+            self.output["atomic_volume"] = data["average"]["vol_atom"]
 
             # main results from mode fe
             self.output["temperature"] = self.input.temperature
             self.output["pressure"] = self.input.pressure
-            self.output["energy_free"] = self._data["results"]["free_energy"]
-            self.output["energy_free_error"] = self._data["results"]["error"]
-            self.output["energy_free_harmonic_reference"] = self._data["results"][
+            self.output["energy_free"] = data["results"]["free_energy"]
+            self.output["energy_free_error"] = data["results"]["error"]
+            self.output["energy_free_harmonic_reference"] = data["results"][
                 "reference_system"
             ]
-            self.output["energy_work"] = self._data["results"]["work"]
-            self.output["energy_pressure"] = self._data["results"]["pv"]
+            self.output["energy_work"] = data["results"]["work"]
+            self.output["energy_pressure"] = data["results"]["pv"]
 
             # collect ediffs and so on
-            f_ediff, b_ediff, flambda, blambda = self._collect_ediff()
+            f_ediff, b_ediff, flambda, blambda = self._collect_ediff(concentration)
             self.output["fe/forward/energy_diff"] = list(f_ediff)
             self.output["fe/backward/energy_diff"] = list(b_ediff)
             self.output["fe/forward/lambda"] = list(flambda)
             self.output["fe/backward/lambda"] = list(blambda)
 
             # get final structure
-            traj = PyscalTrajectory(
-                os.path.join(self.working_directory, "conf.equilibration.dump")
-            )
-            aseobj = traj[0].to_ase(species=self._get_element_list())[0]
+            aseobj = read(os.path.join(self.working_directory, "conf.equilibration.data"),
+                         format='lammps-data',
+                         style='atomic')
             pyiron_atoms = ase_to_pyiron(aseobj)
             self.output["structure_final"] = pyiron_atoms
 
@@ -823,7 +842,7 @@ class Calphy(GenericJob, HasStructure):
                 self.output["ps/forward/pressure"] = list(f_press)
                 self.output["ps/backward/pressure"] = list(b_press)
 
-    def _collect_ediff(self):
+    def _collect_ediff(self, concentration):
         """
         Calculate the energy difference between reference system and system of interest
 
@@ -849,10 +868,10 @@ class Calphy(GenericJob, HasStructure):
                 bdur = np.zeros(len(bdui))
 
                 for i in range(nelements):
-                    fdur += self.input.concentration[i] * np.loadtxt(
+                    fdur += concentration[i] * np.loadtxt(
                         fwdfilename, unpack=True, comments="#", usecols=(i + 1,)
                     )
-                    bdur += self.input.concentration[i] * np.loadtxt(
+                    bdur += concentration[i] * np.loadtxt(
                         bkdfilename, unpack=True, comments="#", usecols=(i + 1,)
                     )
 
