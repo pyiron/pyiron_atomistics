@@ -1006,12 +1006,12 @@ class Calphy(GenericJob, HasStructure):
     def to_hdf(self, hdf=None, group_name=None):
         super().to_hdf(hdf=hdf, group_name=group_name)
         self.input.to_hdf(self.project_hdf5)
-        self.output.to_hdf(self.project_hdf5)
+        self._output.to_hdf(self.project_hdf5)
 
     def from_hdf(self, hdf=None, group_name=None):
         super().from_hdf(hdf=hdf, group_name=group_name)
         self.input.from_hdf(self.project_hdf5)
-        self.output.from_hdf(self.project_hdf5)
+        self._output.from_hdf(self.project_hdf5)
         self._potential_from_hdf()
         # self.create_calc()
 
