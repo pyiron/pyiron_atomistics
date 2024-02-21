@@ -778,13 +778,13 @@ class Calphy(GenericJob, HasStructure):
             self._output["fe/backward/lambda"] = list(blambda)
 
             # get final structure
-            aseobj = read(
+            pyiron_atoms = self.project.create.structure.read(
                 os.path.join(self.working_directory, "conf.equilibration.data"),
                 format="lammps-data",
                 style="atomic",
             )
-            pyiron_atoms = ase_to_pyiron(aseobj)
-            self._output["structure_final"] = pyiron_atoms
+
+            self.output["structure_final"] = pyiron_atoms
 
             if self.input.mode == "ts":
                 datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
