@@ -1048,10 +1048,10 @@ class Input:
         self.bond_dict["O"]["angle_type_list"] = [1]
 
     def from_dict(self, data_dict):
-        self.control.from_dict(data_dict["input"]["control_inp"])
-        self.potential.from_dict(data_dict["input"]["potential_inp"])
-        if "bond_dict" in data_dict["input"].keys():
-            self.bond_dict = data_dict["input"]["bond_dict"]
+        self.control.from_dict(data_dict["control_inp"])
+        self.potential.from_dict(data_dict["potential_inp"])
+        if "bond_dict" in data_dict.keys():
+            self.bond_dict = data_dict["bond_dict"]
 
     def to_dict(self):
         return {
@@ -1077,16 +1077,8 @@ class Input:
             hdf5:
         Returns:
         """
-        self.from_dict(
-            data_dict=hdf5.read_dict_from_hdf(
-                [
-                    "input",
-                    "input/control_inp",
-                    "input/potential_inp",
-                    "input/potential_inp/potential",
-                ]
-            )
-        )
+        with hdf5.open("input") as hdf_input:
+            self.from_dict(data_dict=hdf_input.read_dict_from_hdf(recursive=True))
 
 
 def resolve_hierachical_dict(data_dict, group_name=""):
