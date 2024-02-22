@@ -740,16 +740,8 @@ class LammpsBase(AtomisticGenericJob):
         """
         super(LammpsBase, self).from_hdf(hdf=hdf, group_name=group_name)
         self._structure_from_hdf()
-        self.input.from_dict(
-            data_dict=self._hdf5.read_dict_from_hdf(
-                [
-                    "input",
-                    "input/control_inp",
-                    "input/potential_inp",
-                    "input/potential_inp/potential",
-                ]
-            )
-        )
+        with self.project_hdf5.open("input") as hdf_input:
+            self.input.from_dict(data_dict=hdf_input.read_dict_from_hdf(recursive=True))
 
     def write_restart_file(self, filename="restart.out"):
         """
