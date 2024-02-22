@@ -643,7 +643,7 @@ class Outcar(object):
             for j in trigger_indices:
                 line = lines[j].strip()
                 line = _clean_line(line)
-                output_string = line.split('temperature')[-1].split()[0]
+                output_string = line.split("temperature")[-1].split()[0]
                 try:
                     temperatures.append(float(output_string))
                 except ValueError:
