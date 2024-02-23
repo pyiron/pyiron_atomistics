@@ -459,11 +459,11 @@ class LammpsBase(AtomisticGenericJob):
             ),
             group_name="output",
         )
-        if len(hdf_dict['output/generic/cells']) > 0:
+        if len(hdf_dict["output/generic/cells"]) > 0:
             final_structure = self.structure.copy()
-            final_structure.indices = hdf_dict['output/generic/indices'][-1]
-            final_structure.positions = hdf_dict['output/generic/positions'][-1]
-            final_structure.cell = hdf_dict['output/generic/cells'][-1]
+            final_structure.indices = hdf_dict["output/generic/indices"][-1]
+            final_structure.positions = hdf_dict["output/generic/positions"][-1]
+            final_structure.cell = hdf_dict["output/generic/cells"][-1]
             if final_structure is not None:
                 hdf_dict.update(
                     {
