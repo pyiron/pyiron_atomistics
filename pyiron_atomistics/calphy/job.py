@@ -778,7 +778,7 @@ class Calphy(GenericJob, HasStructure):
                 style="atomic",
             )
 
-            self.output["structure_final"] = pyiron_atoms
+            self.output["structure_final"] = ase_to_pyiron(pyiron_atoms)
 
             if self.input.mode == "ts":
                 datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
