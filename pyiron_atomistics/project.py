@@ -521,7 +521,7 @@ class Project(ProjectCore):
         """
         For backwards compatibility, calls inspect_empirical_potentials()
         """
-        return inspect_empirical_potentials()
+        return self.inspect_empirical_potentials()
 
     @staticmethod
     def inspect_pseudo_potentials():
