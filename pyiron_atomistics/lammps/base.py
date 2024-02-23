@@ -1048,8 +1048,8 @@ class Input:
         self.bond_dict["O"]["angle_type_list"] = [1]
 
     def from_dict(self, data_dict):
-        self.control.from_dict(data_dict["control_inp"])
-        self.potential.from_dict(data_dict["potential_inp"])
+        self.control.from_dict(data_dict[self.control.table_name])
+        self.potential.from_dict(data_dict[self.potential.table_name])
         if "bond_dict" in data_dict.keys():
             self.bond_dict = data_dict["bond_dict"]
 
