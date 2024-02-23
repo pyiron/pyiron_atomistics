@@ -137,8 +137,10 @@ class Calphy(GenericJob, HasStructure):
 
     @property
     def output(self):
-        #LHS - status from hdf5, RHS - status from memory
-        if (self["status"] == 'finished') and (self.status._get_status_from_dict() != 'finished'):
+        # LHS - status from hdf5, RHS - status from memory
+        if (self["status"] == "finished") and (
+            self.status._get_status_from_dict() != "finished"
+        ):
             self.from_hdf()
             self.status.finished = True
         return self._output
