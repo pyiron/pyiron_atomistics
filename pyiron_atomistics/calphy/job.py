@@ -137,18 +137,13 @@ class Calphy(GenericJob, HasStructure):
 
     @property
     def output(self):
-        # fast path, if job is finished return output immediately
-        # accessing _status_dict breaks API, but exposed API of JobStatus
-        # automatically reloads the status from the database, which is what we
-        # want to avoid here
-        if self.status._status_dict["finished"]:
-            return self._output
-        # else see if we need to read ourselves from HDF again
-        elif self.status._status_dict["running"]:
-            self.refresh_job_status()
-            if self.status.finished:
-                self.from_hdf()
-        raise RuntimeError("Can only access output when the job is finished!")
+        # LHS - status from hdf5, RHS - status from memory
+        if (self["status"] == "finished") and (
+            self.status._get_status_from_dict() != "finished"
+        ):
+            self.from_hdf()
+            self.status.finished = True
+        return self._output
 
     @property
     def _default_input(self):
@@ -779,13 +774,13 @@ class Calphy(GenericJob, HasStructure):
             self._output["fe/backward/lambda"] = list(blambda)
 
             # get final structure
-            pyiron_atoms = self.project.create.structure.read(
+            pyiron_atoms = read(
                 os.path.join(self.working_directory, "conf.equilibration.data"),
                 format="lammps-data",
                 style="atomic",
             )
 
-            self.output["structure_final"] = pyiron_atoms
+            self.output["structure_final"] = ase_to_pyiron(pyiron_atoms)
 
             if self.input.mode == "ts":
                 datfile = os.path.join(self.working_directory, "temperature_sweep.dat")
