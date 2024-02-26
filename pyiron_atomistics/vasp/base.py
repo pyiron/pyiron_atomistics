@@ -1554,7 +1554,7 @@ class VaspBase(GenericDFTJob):
             try:
                 self.collect_output()
                 self.compress()
-            except ValueError: # parsing crashes
+            except ValueError:  # parsing crashes
                 self.logger.warn(
                     "Tried to automatically recollect job in case it timed out during collection, but it failed."
                 )
