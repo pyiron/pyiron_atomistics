@@ -375,14 +375,15 @@ class SphinxOutput(Output, GenericInteractiveOutput):
         """
         import matplotlib.pylab as plt
 
-        elec_dict = self._job["output/generic/dft"]["n_valence"]
-        if elec_dict is None:
+        try:
+            elec_dict = self._job.project_hdf5["output/generic/dft"]["n_valence"]
+        except ValueError:
             raise AssertionError("Number of electrons not parsed")
         n_elec = np.sum(
             [elec_dict[k] for k in self._job.structure.get_chemical_symbols()]
         )
         n_elec = int(np.ceil(n_elec / 2))
-        bands = self._job["output/generic/dft/bands_occ"][-1]
+        bands = self._job.project_hdf5["output/generic/dft/bands_occ"][-1]
         bands = bands.reshape(-1, bands.shape[-1])
         max_occ = np.sum(~np.isclose(bands, 0), axis=-1).max()
         n_bands = bands.shape[-1]
