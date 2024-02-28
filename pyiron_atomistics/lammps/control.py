@@ -43,6 +43,7 @@ class LammpsControl(GenericParameters):
             "boundary",
             "atom_style",
             "atom_modify",
+            "newton",
         )
         block_dict["structure"] = (
             "read_data",
