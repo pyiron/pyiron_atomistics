@@ -459,18 +459,17 @@ class LammpsBase(AtomisticGenericJob):
             ),
             group_name="output",
         )
-        if len(hdf_dict["output/generic/cells"]) > 0:
-            final_structure = self.structure.copy()
-            final_structure.indices = hdf_dict["output/generic/indices"][-1]
-            final_structure.positions = hdf_dict["output/generic/positions"][-1]
-            final_structure.cell = hdf_dict["output/generic/cells"][-1]
-            if final_structure is not None:
-                hdf_dict.update(
-                    {
-                        "output/structure/" + k: v
-                        for k, v in final_structure.to_dict().items()
-                    }
-                )
+        final_structure = self.structure.copy()
+        final_structure.indices = hdf_dict["output/generic/indices"][-1]
+        final_structure.positions = hdf_dict["output/generic/positions"][-1]
+        final_structure.cell = hdf_dict["output/generic/cells"][-1]
+        if final_structure is not None:
+            hdf_dict.update(
+                {
+                    "output/structure/" + k: v
+                    for k, v in final_structure.to_dict().items()
+                }
+            )
         self.project_hdf5.write_dict_to_hdf(data_dict=hdf_dict)
 
     def convergence_check(self):
