@@ -378,7 +378,7 @@ class SphinxOutput(Output, GenericInteractiveOutput):
         try:
             elec_dict = self._job.project_hdf5["output/generic/dft"]["n_valence"]
         except ValueError:
-            raise AssertionError("Number of electrons not parsed")
+            raise AssertionError("Number of electrons not parsed") from None
         n_elec = np.sum(
             [elec_dict[k] for k in self._job.structure.get_chemical_symbols()]
         )
