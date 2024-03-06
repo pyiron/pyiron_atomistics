@@ -157,6 +157,8 @@ class MaterialsProjectFactory:
         Raises:
             ValueError: material id does not exist
         """
+        from mp_api.client import MPRester
+
         rest_kwargs = {
             "include_user_agent": True,  # send some additional software version info to MP
         }
