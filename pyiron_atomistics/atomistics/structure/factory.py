@@ -575,5 +575,5 @@ class StructureFactory(PyironFactory):
     @staticmethod
     @wraps(pyxtal)
     def pyxtal(*args, **kwargs):
-        state.publications.add(publication_pyxtal())
+        state.publications.add(publication_pyxtal)
         return pyxtal(*args, **kwargs)
