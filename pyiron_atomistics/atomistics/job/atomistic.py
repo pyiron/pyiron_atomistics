@@ -264,7 +264,12 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         langevin=False,
     ):
         self._generic_input["calc_mode"] = "md"
-        self._generic_input["temperature"] = float(temperature)
+        if isinstance(temperature, list):
+            self._generic_input["temperature"] = [float(t) for t in temperature]
+        elif temperature is not None:
+            self._generic_input["temperature"] = float(temperature)
+        else:
+            self._generic_input["temperature"] = temperature
         self._generic_input["n_ionic_steps"] = int(n_ionic_steps)
         self._generic_input["n_print"] = int(n_print)
         self._generic_input["temperature_damping_timescale"] = float(
