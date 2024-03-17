@@ -272,26 +272,16 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             self._generic_input["time_step"] = time_step
         self._generic_input.remove_keys(["max_iter"])
 
-    def from_hdf(self, hdf=None, group_name=None):
-        """
-        Recreates instance from the hdf5 file
-        Args:
-            hdf (str): Path to the hdf5 file
-            group_name (str): Name of the group which contains the object
-        """
-        super(AtomisticGenericJob, self).from_hdf(hdf=hdf, group_name=group_name)
-        with self._hdf5.open("input") as hdf5_input:
-            try:
-                self._generic_input.from_hdf(hdf5_input)
-            except ValueError:
-                pass
+    def from_dict(self, job_dict):
+        super().from_dict(job_dict=job_dict)
+        self._generic_input.from_dict(obj_dict=job_dict["input"]["generic"])
 
     def to_dict(self):
-        data_dict = super(AtomisticGenericJob, self).to_dict()
-        data_dict.update(
+        job_dict = super(AtomisticGenericJob, self).to_dict()
+        job_dict.update(
             {"input/generic/" + k: v for k, v in self._generic_input.to_dict().items()}
         )
-        return data_dict
+        return job_dict
 
     def store_structure(self):
         """
@@ -803,6 +793,15 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         else:
             return None
 
+    def _structure_from_dict(self, job_dict):
+        if (
+            "structure" in job_dict["input"].keys()
+            and self._generic_input["structure"] == "atoms"
+        ):
+            self.structure = Atoms().from_dict(
+                atoms_dict=job_dict["input"]["structure"]
+            )
+
     def _structure_to_hdf(self):
         data_dict = self._structure_to_dict()
         if data_dict is not None:
@@ -814,8 +813,10 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             "structure" in self.project_hdf5["input"].list_groups()
             and self._generic_input["structure"] == "atoms"
         ):
-            with self.project_hdf5.open("input") as hdf5_input:
-                self.structure = Atoms().from_hdf(hdf5_input)
+            with self.project_hdf5.open("input/structure") as hdf5_input:
+                self.structure = Atoms().from_dict(
+                    hdf5_input.read_dict_from_hdf(recursive=True)
+                )
 
     def _write_chemical_formular_to_database(self):
         if self.structure:
