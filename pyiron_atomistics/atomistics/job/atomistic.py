@@ -222,7 +222,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         else:
             self._generic_input["max_iter"] = max_iter
         if isinstance(pressure, list):
-            self._generic_input["pressure"] = [float(p) for p in pressure]
+            self._generic_input["pressure"] = [
+                float(p) if not None else p for p in pressure
+            ]
         elif pressure is not None:
             self._generic_input["pressure"] = float(pressure)
         else:
