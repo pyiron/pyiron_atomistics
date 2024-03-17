@@ -217,8 +217,8 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 "f_tol is deprecated as of vers. 0.3.0. It is not guaranteed to be in service in vers. 0.4.0"
             )
         self._generic_input["calc_mode"] = "minimize"
-        self._generic_input["max_iter"] = max_iter
-        self._generic_input["pressure"] = pressure
+        self._generic_input["max_iter"] = int(max_iter)
+        self._generic_input["pressure"] = float(pressure)
         self._generic_input.remove_keys(
             ["temperature", "n_ionic_steps", "n_print", "velocity"]
         )
@@ -256,20 +256,20 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         langevin=False,
     ):
         self._generic_input["calc_mode"] = "md"
-        self._generic_input["temperature"] = temperature
-        self._generic_input["n_ionic_steps"] = n_ionic_steps
-        self._generic_input["n_print"] = n_print
-        self._generic_input["temperature_damping_timescale"] = (
+        self._generic_input["temperature"] = float(temperature)
+        self._generic_input["n_ionic_steps"] = int(n_ionic_steps)
+        self._generic_input["n_print"] = int(n_print)
+        self._generic_input["temperature_damping_timescale"] = float(
             temperature_damping_timescale
         )
         if pressure is not None:
-            self._generic_input["pressure"] = pressure
+            self._generic_input["pressure"] = float(pressure)
         if pressure_damping_timescale is not None:
-            self._generic_input["pressure_damping_timescale"] = (
+            self._generic_input["pressure_damping_timescale"] = float(
                 pressure_damping_timescale
             )
         if time_step is not None:
-            self._generic_input["time_step"] = time_step
+            self._generic_input["time_step"] = int(time_step)
         self._generic_input.remove_keys(["max_iter"])
 
     def from_dict(self, job_dict):
