@@ -1913,12 +1913,13 @@ class Input:
         )
 
     def to_dict(self):
-        return {
-            "incar": self.incar.to_dict(),
-            "kpoints": self.kpoints.to_dict(),
-            "potcar": self.potcar.to_dict(),
-            "vasp_dict": {"eddrmm_handling": self._eddrmm},
-        }
+        input_dict = {"vasp_dict/eddrmm_handling": self._eddrmm}
+        input_dict.update({"incar/" + k: v for k, v in self.incar.to_dict().items()})
+        input_dict.update(
+            {"kpoints/" + k: v for k, v in self.kpoints.to_dict().items()}
+        )
+        input_dict.update({"potcar/" + k: v for k, v in self.potcar.to_dict().items()})
+        return input_dict
 
     def from_dict(self, input_dict):
         self.incar.from_dict(obj_dict=input_dict["incar"])
