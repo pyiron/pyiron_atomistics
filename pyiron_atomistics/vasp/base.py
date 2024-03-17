@@ -768,6 +768,17 @@ class VaspBase(GenericDFTJob):
             else:
                 f.write("LABORT =.TRUE.\n")
 
+    def to_dict(self):
+        job_dict = super().to_dict()
+        job_dict.update({"input/" + k: v for k, v in self._structure_to_dict().items()})
+        job_dict.update({"input/" + k: v for k, v in self.input.to_dict().items()})
+        return job_dict
+
+    def from_dict(self, job_dict):
+        super().from_dict(job_dict=job_dict)
+        self._structure_from_dict(job_dict=job_dict)
+        self.input.from_dict(input_dict=job_dict["input"])
+
     def to_hdf(self, hdf=None, group_name=None):
         """
         Stores the instance attributes into the hdf5 file
@@ -778,8 +789,6 @@ class VaspBase(GenericDFTJob):
 
         """
         super(VaspBase, self).to_hdf(hdf=hdf, group_name=group_name)
-        self._structure_to_hdf()
-        self.input.to_hdf(self._hdf5)
         self._output_parser.to_hdf(self._hdf5)
         if _vasp_generic_energy_free_affected(self):
             self.logger.warn(
@@ -799,8 +808,6 @@ class VaspBase(GenericDFTJob):
 
         """
         super(VaspBase, self).from_hdf(hdf=hdf, group_name=group_name)
-        self._structure_from_hdf()
-        self.input.from_hdf(self._hdf5)
         if (
             "output" in self.project_hdf5.list_groups()
             and "structure" in self["output"].list_groups()
@@ -1905,47 +1912,25 @@ class Input:
             write_species=not do_not_write_species,
         )
 
-    def to_hdf(self, hdf):
-        """
-        Save the object in a HDF5 file
+    def to_dict(self):
+        return {
+            "incar": self.incar.to_dict(),
+            "kpoints": self.kpoints.to_dict(),
+            "potcar": self.potcar.to_dict(),
+            "vasp_dict": {"eddrmm_handling": self._eddrmm},
+        }
 
-        Args:
-            hdf (pyiron_base.generic.hdfio.ProjectHDFio): HDF path to which the object is to be saved
-
-        """
-
-        with hdf.open("input") as hdf5_input:
-            self.incar.to_hdf(hdf5_input)
-            self.kpoints.to_hdf(hdf5_input)
-            self.potcar.to_hdf(hdf5_input)
-
-            if "vasp_dict" in hdf5_input.list_nodes():
-                vasp_dict = hdf5_input["vasp_dict"]
-                vasp_dict.update({"eddrmm_handling": self._eddrmm})
-                hdf5_input["vasp_dict"] = vasp_dict
-            else:
-                vasp_dict = {"eddrmm_handling": self._eddrmm}
-                hdf5_input["vasp_dict"] = vasp_dict
-
-    def from_hdf(self, hdf):
-        """
-        Reads the attributes and reconstructs the object from a hdf file
-
-        Args:
-            hdf: The hdf5 instance
-        """
-        with hdf.open("input") as hdf5_input:
-            self.incar.from_hdf(hdf5_input)
-            self.kpoints.from_hdf(hdf5_input)
-            self.potcar.from_hdf(hdf5_input)
-
-            self._eddrmm = "ignore"
-            if "vasp_dict" in hdf5_input.list_nodes():
-                vasp_dict = hdf5_input["vasp_dict"]
-                if "eddrmm_handling" in vasp_dict.keys():
-                    self._eddrmm = self._eddrmm_backwards_compatibility(
-                        vasp_dict["eddrmm_handling"]
-                    )
+    def from_dict(self, input_dict):
+        self.incar.from_dict(obj_dict=input_dict["incar"])
+        self.kpoints.from_dict(obj_dict=input_dict["kpoints"])
+        self.potcar.from_dict(obj_dict=input_dict["potcar"])
+        self._eddrmm = "ignore"
+        if "vasp_dict" in input_dict.keys():
+            vasp_dict = input_dict["vasp_dict"]
+            if "eddrmm_handling" in vasp_dict.keys():
+                self._eddrmm = self._eddrmm_backwards_compatibility(
+                    vasp_dict["eddrmm_handling"]
+                )
 
     @staticmethod
     def _eddrmm_backwards_compatibility(eddrmm_value):
