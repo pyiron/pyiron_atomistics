@@ -217,8 +217,16 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
                 "f_tol is deprecated as of vers. 0.3.0. It is not guaranteed to be in service in vers. 0.4.0"
             )
         self._generic_input["calc_mode"] = "minimize"
-        self._generic_input["max_iter"] = int(max_iter)
-        self._generic_input["pressure"] = float(pressure)
+        if max_iter is not None:
+            self._generic_input["max_iter"] = int(max_iter)
+        else:
+            self._generic_input["max_iter"] = max_iter
+        if isinstance(pressure, list):
+            self._generic_input["pressure"] = [float(p) for p in pressure]
+        elif pressure is not None:
+            self._generic_input["pressure"] = float(pressure)
+        else:
+            self._generic_input["pressure"] = pressure
         self._generic_input.remove_keys(
             ["temperature", "n_ionic_steps", "n_print", "velocity"]
         )
@@ -262,7 +270,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         self._generic_input["temperature_damping_timescale"] = float(
             temperature_damping_timescale
         )
-        if pressure is not None:
+        if isinstance(pressure, list):
+            self._generic_input["pressure"] = [float(p) for p in pressure]
+        elif pressure is not None:
             self._generic_input["pressure"] = float(pressure)
         if pressure_damping_timescale is not None:
             self._generic_input["pressure_damping_timescale"] = float(
