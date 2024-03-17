@@ -559,9 +559,7 @@ class Atoms(ASEAtoms):
         if "calculator" in atoms_dict.keys():
             calc_dict = atoms_dict["calculator"]
             class_path = calc_dict.pop("class")
-            calc_module = importlib.import_module(
-                ".".join(class_path.split(".")[:-1])
-            )
+            calc_module = importlib.import_module(".".join(class_path.split(".")[:-1]))
             calc_class = getattr(calc_module, class_path.split(".")[-1])
             self.calc = calc_class(**calc_dict)
         return self
@@ -590,7 +588,9 @@ class Atoms(ASEAtoms):
             pyiron_atomistics.structure.atoms.Atoms: The retrieved atoms class
 
         """
-        return self.from_dict(atoms_dict=hdf.open(group_name).read_dict_from_hdf(recursive=True))
+        return self.from_dict(
+            atoms_dict=hdf.open(group_name).read_dict_from_hdf(recursive=True)
+        )
 
     def select_index(self, el):
         """
