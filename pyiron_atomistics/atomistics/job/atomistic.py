@@ -276,7 +276,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             temperature_damping_timescale
         )
         if isinstance(pressure, list):
-            self._generic_input["pressure"] = [float(p) for p in pressure]
+            self._generic_input["pressure"] = [
+                float(p) if not None else p for p in pressure
+            ]
         elif pressure is not None:
             self._generic_input["pressure"] = float(pressure)
         if pressure_damping_timescale is not None:
