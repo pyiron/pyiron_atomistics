@@ -406,7 +406,7 @@ class LammpsStructure(object):
                                 bonds.append([ia + 1, ib + 1, b_type])
 
             self.structure.bonds = np.array(bonds)
-        bonds = self.structure.bond
+        bonds = self.structure.bonds
 
         bonds_str = "Bonds \n\n"
         for i_bond, (i_a, i_b, b_type) in enumerate(bonds):
