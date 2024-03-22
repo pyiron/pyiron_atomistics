@@ -195,6 +195,7 @@ class LammpsStructure(object):
         self._bond_dict = bond_dict
         self._force_skewed = False
         self._job = job
+        self._species_lammps_id_dict = {}
 
     @property
     def potential(self):
@@ -268,6 +269,40 @@ class LammpsStructure(object):
 
         """
         self._el_eam_lst = el_eam_lst
+
+    def _set_lammps_id_dict(self, el_eam_lst=None):
+        if el_eam_lst is None:
+            if len(self.el_eam_list) == 0:
+                raise ValueError(
+                    "el_eam_list is empty. Can not determine order of species"
+                )
+
+            else:
+                el_eam_lst = self.el_eam_lst
+
+        for idx, el in el_eam_lst:
+            self._species_lammps_id_dict[el] = idx + 1
+
+    def lammps_header(self):
+        self._set_lammps_id_dict()
+        atomtypes = (
+            "Start File for LAMMPS \n"
+            + "{0:d} atoms".format(len(self._structure))
+            + " \n"
+            + "{0} atom types".format(len(self._el_eam_lst))
+            + " \n"
+        )  # '{0} atom types'.format(structure.get_number_of_species()) + ' \n'
+
+        cell_dimensions = self.simulation_cell()
+
+        masses = "Masses\n\n"
+
+        masses = "Masses" + "\n\n"
+        for idx, el in self._species_lammps_id_dict.items():
+            mass = self.structure._pse[el].AtomicMass
+            masses += "{0:3d} {1:f}  # ({2}) \n".format(idx + 1, mass, el)
+
+        return atomtypes + "\n" + cell_dimensions + "\n" + masses + "\n"
 
     def simulation_cell(self):
         """
@@ -574,31 +609,12 @@ class LammpsStructure(object):
         Returns: LAMMPS readable structure.
 
         """
-        atomtypes = (
-            "Start File for LAMMPS \n"
-            + "{0:d} atoms".format(self._structure.get_number_of_atoms())
-            + " \n"
-            + "{0} atom types".format(self._structure.get_number_of_species())
-            + " \n"
-        )
-
-        cell_dimesions = self.simulation_cell()
-
-        masses = "Masses\n\n"
-
-        for ind, obj in enumerate(self._structure.get_species_objects()):
-            masses += "{0:3d} {1:f}".format(ind + 1, obj.AtomicMass) + "\n"
-
         atoms = "Atoms\n\n"
-
         coords = self.rotate_positions(self._structure)
         el_charge_lst = self._structure.get_initial_charges()
         el_lst = self._structure.get_chemical_symbols()
-        el_alphabet_dict = {}
-        for ind, el in enumerate(self._structure.get_species_symbols()):
-            el_alphabet_dict[el] = ind + 1
         for id_atom, (el, coord) in enumerate(zip(el_lst, coords)):
-            id_el = el_alphabet_dict[el]
+            id_el = self._species_lammps_id_dict[el]
             dim = self._structure.dimension
             c = np.zeros(3)
             c[:dim] = coord
@@ -608,7 +624,7 @@ class LammpsStructure(object):
                 )
                 + "\n"
             )
-        return atomtypes + "\n" + cell_dimesions + "\n" + masses + "\n" + atoms + "\n"
+        return self.lammps_header() + "\n" + atoms + "\n"
 
     def structure_atomic(self):
         """
@@ -617,53 +633,28 @@ class LammpsStructure(object):
         Returns:
 
         """
-        atomtypes = (
-            "Start File for LAMMPS \n"
-            + "{0:d} atoms".format(len(self._structure))
-            + " \n"
-            + "{0} atom types".format(len(self._el_eam_lst))
-            + " \n"
-        )  # '{0} atom types'.format(structure.get_number_of_species()) + ' \n'
-
-        cell_dimesions = self.simulation_cell()
-
-        masses = "Masses\n\n"
-
-        el_struct_lst = self._structure.get_species_symbols()
-        el_obj_lst = self._structure.get_species_objects()
-        el_dict = {}
-        for id_eam, el_eam in enumerate(self._el_eam_lst):
-            if el_eam in el_struct_lst:
-                id_el = list(el_struct_lst).index(el_eam)
-                el = el_obj_lst[id_el]
-                el_dict[el] = id_eam + 1
-                masses += "{0:3d} {1:f}".format(id_eam + 1, el.AtomicMass) + "\n"
-            else:
-                # element in EAM file but not used in structure, use dummy for atomic mass
-                masses += "{0:3d} {1:f}".format(id_eam + 1, 1.00) + "\n"
 
         atoms = "Atoms\n\n"
-
         coords = self.rotate_positions(self._structure)
 
+        # I think this is checked already elsewhere?
         el_lst = self._structure.get_chemical_elements()
-        for id_atom, (el, coord) in enumerate(zip(el_lst, coords)):
-            if el in el_dict.keys():
-                id_el = el_dict[el]
-            else:
+        for el in el_lst:
+            if not el in self._species_lammps_id_dict.keys():
                 raise ValueError(
                     "Selected potential does not support the existing chemical composition"
                 )
+        for id_atom, (el, coord) in enumerate(zip(el_lst, coords)):
             dim = self._structure.dimension
             c = np.zeros(3)
             c[:dim] = coord
             atoms += (
                 "{0:d} {1:d} {2:.15f} {3:.15f} {4:.15f}".format(
-                    id_atom + 1, id_el, c[0], c[1], c[2]
+                    id_atom + 1, self._species_lammps_id_dict[el], c[0], c[1], c[2]
                 )
                 + "\n"
             )
-        return atomtypes + "\n" + cell_dimesions + "\n" + masses + "\n" + atoms + "\n"
+        return self.lammps_header() + atoms + "\n"
 
     def rotate_positions(self, structure):
         """
