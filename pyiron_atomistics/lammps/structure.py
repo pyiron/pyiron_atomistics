@@ -335,6 +335,44 @@ class LammpsStructure(object):
         coords = self.rotate_positions(self._structure)
 
         elements = self._structure.get_chemical_symbols()
+
+        ## Standard atoms stuff
+        atoms = "Atoms \n\n"
+        # atom_style bond
+        # format: atom-ID, molecule-ID, atom_type, x, y, z
+        format_str = "{0:d} {1:d} {2:d} {3:f} {4:f} {5:f} "
+        if self._structure.dimension == 3:
+            for id_atom, (x, y, z) in enumerate(coords):
+                id_mol = 1
+                atoms += (
+                    format_str.format(
+                        id_atom + 1,
+                        id_mol,
+                        self._species_lammps_id_dict[elements[id_atom]],
+                        x,
+                        y,
+                        z,
+                    )
+                    + "\n"
+                )
+        elif self._structure.dimension == 2:
+            for id_atom, (x, y) in enumerate(coords):
+                id_mol = 1
+                atoms += (
+                    format_str.format(
+                        id_atom + 1,
+                        id_mol,
+                        self._species_lammps_id_dict[elements[id_atom]],
+                        x,
+                        y,
+                        0.0,
+                    )
+                    + "\n"
+                )
+        else:
+            raise ValueError("dimension 1 not yet implemented")
+
+        ## Bond related
         el_list = self._structure.get_species_symbols()
         el_dict = OrderedDict()
         for object_id, el in enumerate(el_list):
@@ -366,48 +404,7 @@ class LammpsStructure(object):
                                 bonds.append([ia + 1, ib + 1, b_type])
 
             self.structure.bonds = np.array(bonds)
-        bonds = self.structure.bonds
-
-        atomtypes = (
-            " Start File for LAMMPS \n"
-            + "{0:d} atoms".format(len(self._structure))
-            + " \n"
-            + "{0:d} bonds".format(len(bonds))
-            + " \n"
-            + "{0} atom types".format(self._structure.get_number_of_species())
-            + " \n"
-            + "{0} bond types".format(np.max(np.array(bonds)[:, 2]))
-            + " \n"
-        )
-
-        cell_dimesions = self.simulation_cell()
-
-        masses = "Masses \n\n"
-        el_obj_list = self._structure.get_species_objects()
-        for object_id, el in enumerate(el_obj_list):
-            masses += "{0:3d} {1:f}".format(object_id + 1, el.AtomicMass) + "\n"
-
-        atoms = "Atoms \n\n"
-
-        # atom_style bond
-        # format: atom-ID, molecule-ID, atom_type, x, y, z
-        format_str = "{0:d} {1:d} {2:d} {3:f} {4:f} {5:f} "
-        if self._structure.dimension == 3:
-            for id_atom, (x, y, z) in enumerate(coords):
-                id_mol, id_species = 1, el_dict[elements[id_atom]]
-                atoms += (
-                    format_str.format(id_atom + 1, id_mol, id_species + 1, x, y, z)
-                    + "\n"
-                )
-        elif self._structure.dimension == 2:
-            for id_atom, (x, y) in enumerate(coords):
-                id_mol, id_species = 1, el_dict[elements[id_atom]]
-                atoms += (
-                    format_str.format(id_atom + 1, id_mol, id_species + 1, x, y, 0.0)
-                    + "\n"
-                )
-        else:
-            raise ValueError("dimension 1 not yet implemented")
+        bonds = self.structure.bond
 
         bonds_str = "Bonds \n\n"
         for i_bond, (i_a, i_b, b_type) in enumerate(bonds):
@@ -416,11 +413,11 @@ class LammpsStructure(object):
             )
 
         return (
-            atomtypes
+            self.lammps_header()
             + "\n"
-            + cell_dimesions
+            + "{0:d} bonds".format(len(bonds))
             + "\n"
-            + masses
+            + "{0} bond types".format(np.max(np.array(bonds)[:, 2]))
             + "\n"
             + atoms
             + "\n"
