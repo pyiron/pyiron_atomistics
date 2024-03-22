@@ -331,6 +331,7 @@ class LammpsStructure(object):
         Returns:
 
         """
+        self._set_lammps_id_dict()
         # analyze structure to get molecule_ids, bonds, angles etc
         coords = self.rotate_positions(self._structure)
 
@@ -372,7 +373,8 @@ class LammpsStructure(object):
         else:
             raise ValueError("dimension 1 not yet implemented")
 
-        ## Bond related
+        ## Bond related.
+        # This seems independent from the lammps atom type ids, because bonds only use atom ids
         el_list = self._structure.get_species_symbols()
         el_dict = OrderedDict()
         for object_id, el in enumerate(el_list):
@@ -638,13 +640,7 @@ class LammpsStructure(object):
         atoms = "Atoms\n\n"
         coords = self.rotate_positions(self._structure)
 
-        # I think this is checked already elsewhere?
         el_lst = self._structure.get_chemical_elements()
-        for el in el_lst:
-            if not el in self._species_lammps_id_dict.keys():
-                raise ValueError(
-                    "Selected potential does not support the existing chemical composition"
-                )
         for id_atom, (el, coord) in enumerate(zip(el_lst, coords)):
             dim = self._structure.dimension
             c = np.zeros(3)
