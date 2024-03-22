@@ -586,19 +586,31 @@ class LammpsStructure(object):
 
         masses = "Masses\n\n"
 
-        for ind, obj in enumerate(self._structure.get_species_objects()):
-            masses += "{0:3d} {1:f}".format(ind + 1, obj.AtomicMass) + "\n"
+        el_struct_lst = self._structure.get_species_symbols()
+        el_obj_lst = self._structure.get_species_objects()
+        el_dict = {}
+        for id_eam, el_eam in enumerate(self._el_eam_lst):
+            if el_eam in el_struct_lst:
+                id_el = list(el_struct_lst).index(el_eam)
+                el = el_obj_lst[id_el]
+                el_dict[el] = id_eam + 1
+                masses += "{0:3d} {1:f}".format(id_eam + 1, el.AtomicMass) + "\n"
+            else:
+                # element in EAM file but not used in structure, use dummy for atomic mass
+                masses += "{0:3d} {1:f}".format(id_eam + 1, 1.00) + "\n"
 
         atoms = "Atoms\n\n"
 
         coords = self.rotate_positions(self._structure)
         el_charge_lst = self._structure.get_initial_charges()
-        el_lst = self._structure.get_chemical_symbols()
-        el_alphabet_dict = {}
-        for ind, el in enumerate(self._structure.get_species_symbols()):
-            el_alphabet_dict[el] = ind + 1
+        el_lst = self._structure.get_chemical_elements()
         for id_atom, (el, coord) in enumerate(zip(el_lst, coords)):
-            id_el = el_alphabet_dict[el]
+            if el in el_dict.keys():
+                id_el = el_dict[el]
+            else:
+                raise ValueError(
+                    "Selected potential does not support the existing chemical composition"
+                )
             dim = self._structure.dimension
             c = np.zeros(3)
             c[:dim] = coord
