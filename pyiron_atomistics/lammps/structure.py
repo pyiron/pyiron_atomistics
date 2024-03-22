@@ -296,7 +296,6 @@ class LammpsStructure(object):
 
         masses = "Masses\n\n"
 
-        masses = "Masses" + "\n\n"
         for el, idx in self._species_lammps_id_dict.items():
             mass = self.structure._pse[el].AtomicMass
             masses += "{0:3d} {1:f}  # ({2}) \n".format(idx, mass, el)
@@ -627,7 +626,7 @@ class LammpsStructure(object):
                 )
                 + "\n"
             )
-        return self.lammps_header() + "\n" + atoms + "\n"
+        return self.lammps_header() + atoms + "\n"
 
     def structure_atomic(self):
         """
