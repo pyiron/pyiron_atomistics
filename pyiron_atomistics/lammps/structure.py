@@ -640,7 +640,7 @@ class LammpsStructure(object):
         atoms = "Atoms\n\n"
         coords = self.rotate_positions(self._structure)
 
-        el_lst = self._structure.get_chemical_elements()
+        el_lst = self._structure.get_chemical_symbols()
         for id_atom, (el, coord) in enumerate(zip(el_lst, coords)):
             dim = self._structure.dimension
             c = np.zeros(3)
