@@ -441,7 +441,7 @@ class LammpsStructure(object):
             species_name = species.Abbreviation
             q_dict[species_name] = self.potential.get_charge(species_name)
 
-        bonds_lst, angles_lst = [], [], []
+        bonds_lst, angles_lst = [], []
         bond_type_lst, angle_type_lst = [], []
         # Using a cutoff distance to draw the bonds instead of the number of neighbors
         # Only if any bonds are defined
