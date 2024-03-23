@@ -283,7 +283,9 @@ class LammpsStructure(object):
         for idx, el in enumerate(el_eam_lst):
             self._species_lammps_id_dict[el] = idx + 1
 
-    def lammps_header(self):
+    def lammps_header(
+        self, nbonds=None, nangles=None, nbond_types=None, nangle_types=None
+    ):
         atomtypes = (
             "Start File for LAMMPS \n"
             + "{0:d} atoms".format(len(self._structure))
@@ -291,11 +293,18 @@ class LammpsStructure(object):
             + "{0} atom types".format(len(self._species_lammps_id_dict.keys()))
             + " \n"
         )  # '{0} atom types'.format(structure.get_number_of_species()) + ' \n'
+        if nbonds is not None:
+            atomtypes += "{0:d} bonds\n".format(len(nbonds))
+        if nangles is not None:
+            atomtypes += "{0:d} angles\n".format(len(nangles))
+        if nbond_types is not None:
+            atomtypes += "{0:d} bond types\n".format(len(nbond_types))
+        if nangle_types is not None:
+            atomtypes += "{0:d} angle types\n".format(len(nangle_types))
 
         cell_dimensions = self.simulation_cell()
 
         masses = "Masses\n\n"
-
         for el, idx in self._species_lammps_id_dict.items():
             mass = self.structure._pse[el].AtomicMass
             masses += "{0:3d} {1:f}  # ({2}) \n".format(idx, mass, el)
@@ -414,11 +423,9 @@ class LammpsStructure(object):
             )
 
         return (
-            self.lammps_header()
-            + "\n"
-            + "{0:d} bonds".format(len(bonds))
-            + "\n"
-            + "{0} bond types".format(np.max(np.array(bonds)[:, 2]))
+            self.lammps_header(
+                nbonds=len(bonds), nbond_types=np.max(np.array(bonds)[:, 2])
+            )
             + "\n"
             + atoms
             + "\n"
@@ -555,14 +562,12 @@ class LammpsStructure(object):
         else:
             angles_str = "\n"
         return (
-            self.lammps_header()
-            + "{0:d} bonds".format(len(bonds_lst))
-            + " \n"
-            + "{0:d} angles".format(len(angles_lst))
-            + " \n"
-            + "{0} bond types".format(num_bond_types)
-            + " \n"
-            + "{0} angle types".format(num_angle_types)
+            self.lammps_header(
+                nbonds=len(bonds_lst),
+                nangles=len(angles_lst),
+                nbond_types=num_bond_types,
+                nangle_types=num_angle_types,
+            )
             + " \n"
             + atoms
             + "\n"
