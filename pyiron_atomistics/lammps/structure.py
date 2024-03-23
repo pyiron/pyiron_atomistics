@@ -433,6 +433,7 @@ class LammpsStructure(object):
         Returns:
 
         """
+        self._set_lammps_id_dict()
         coords = self.rotate_positions(self._structure)
 
         # extract electric charges from potential file
