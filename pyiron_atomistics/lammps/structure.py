@@ -517,7 +517,7 @@ class LammpsStructure(object):
                 format_str.format(
                     id_atom + 1,
                     id_mol,
-                    self._species_lammps_id_dict[id_atom],
+                    self._species_lammps_id_dict[el],
                     q_dict[el],
                     coord[0],
                     coord[1],
