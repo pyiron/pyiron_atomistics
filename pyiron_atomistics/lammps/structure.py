@@ -294,13 +294,13 @@ class LammpsStructure(object):
             + " \n"
         )  # '{0} atom types'.format(structure.get_number_of_species()) + ' \n'
         if nbonds is not None:
-            atomtypes += "{0:d} bonds\n".format(len(nbonds))
+            atomtypes += "{0:d} bonds\n".format(nbonds)
         if nangles is not None:
-            atomtypes += "{0:d} angles\n".format(len(nangles))
+            atomtypes += "{0:d} angles\n".format(nangles)
         if nbond_types is not None:
-            atomtypes += "{0:d} bond types\n".format(len(nbond_types))
+            atomtypes += "{0:d} bond types\n".format(nbond_types)
         if nangle_types is not None:
-            atomtypes += "{0:d} angle types\n".format(len(nangle_types))
+            atomtypes += "{0:d} angle types\n".format(nangle_types)
 
         cell_dimensions = self.simulation_cell()
 
