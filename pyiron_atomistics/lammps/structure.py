@@ -250,6 +250,20 @@ class LammpsStructure(object):
         self._string_input = input_str
 
     @property
+    def molecule_ids(self):
+        return self._molecule_ids
+
+    @molecule_ids.setter
+    def molecule_ids(self, molecule_ids=None):
+        if molecule_ids is None:
+            if "molecule_ids" in self.structure.get_tags():
+                self._molecule_ids = self.structure.molecule_ids
+            else:
+                self._molecule_ids = np.ones(len(self.structure))
+        else:
+            self._molecule_ids = molecule_ids
+
+    @property
     def el_eam_lst(self):
         """
 
@@ -340,6 +354,7 @@ class LammpsStructure(object):
 
         """
         self._set_lammps_id_dict()
+        self.molecule_ids = None
         # analyze structure to get molecule_ids, bonds, angles etc
         coords = self.rotate_positions(self._structure)
 
@@ -352,7 +367,7 @@ class LammpsStructure(object):
         format_str = "{0:d} {1:d} {2:d} {3:f} {4:f} {5:f} "
         if self._structure.dimension == 3:
             for id_atom, (x, y, z) in enumerate(coords):
-                id_mol = 1
+                id_mol = self.molecule_ids[id_atom]
                 atoms += (
                     format_str.format(
                         id_atom + 1,
@@ -366,7 +381,7 @@ class LammpsStructure(object):
                 )
         elif self._structure.dimension == 2:
             for id_atom, (x, y) in enumerate(coords):
-                id_mol = 1
+                id_mol = self.molecule_ids[id_atom]
                 atoms += (
                     format_str.format(
                         id_atom + 1,
@@ -441,6 +456,7 @@ class LammpsStructure(object):
 
         """
         self._set_lammps_id_dict()
+        self.molecule_ids = None
         coords = self.rotate_positions(self._structure)
 
         # extract electric charges from potential file
@@ -462,7 +478,6 @@ class LammpsStructure(object):
             neighbors = self._structure.get_neighbors_by_distance(
                 cutoff_radius=max_cutoff
             )
-            id_mol = 1
 
             # Draw bonds between atoms is defined in self._bond_dict
             # Go through all elements for which bonds are defined
@@ -524,7 +539,7 @@ class LammpsStructure(object):
             atoms += (
                 format_str.format(
                     id_atom + 1,
-                    id_mol,
+                    self.molecule_ids[id_atom],
                     self._species_lammps_id_dict[el],
                     q_dict[el],
                     coord[0],
