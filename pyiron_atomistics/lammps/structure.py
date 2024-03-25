@@ -259,7 +259,7 @@ class LammpsStructure(object):
             if "molecule_ids" in self.structure.get_tags():
                 self._molecule_ids = self.structure.molecule_ids
             else:
-                self._molecule_ids = np.ones(len(self.structure))
+                self._molecule_ids = np.ones(len(self.structure), dtype=int)
         else:
             self._molecule_ids = molecule_ids
 
