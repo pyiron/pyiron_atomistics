@@ -195,7 +195,7 @@ class LammpsStructure(object):
         self._bond_dict = bond_dict
         self._force_skewed = False
         self._job = job
-        self._species_lammps_id_dict = {}
+        self._molecule_ids = []
 
     @property
     def potential(self):
@@ -284,27 +284,27 @@ class LammpsStructure(object):
         """
         self._el_eam_lst = el_eam_lst
 
-    def _set_lammps_id_dict(self, el_eam_lst=None):
-        if el_eam_lst is None:
-            if len(self.el_eam_lst) == 0:
-                raise ValueError(
-                    "el_eam_list is empty. Can not determine order of species"
-                )
+    @staticmethod
+    def get_lammps_id_dict(el_eam_lst):
+        if len(el_eam_lst) == 0:
+            raise ValueError("el_eam_list is empty. Can not determine order of species")
+        return {el: idx + 1 for el, idx in enumerate(el_eam_lst)}
 
-            else:
-                el_eam_lst = self.el_eam_lst
-
-        for idx, el in enumerate(el_eam_lst):
-            self._species_lammps_id_dict[el] = idx + 1
-
+    @staticmethod
     def lammps_header(
-        self, nbonds=None, nangles=None, nbond_types=None, nangle_types=None
+        structure,
+        cell_dimensions,
+        species_lammps_id_dict,
+        nbonds=None,
+        nangles=None,
+        nbond_types=None,
+        nangle_types=None,
     ):
         atomtypes = (
             "Start File for LAMMPS \n"
-            + "{0:d} atoms".format(len(self._structure))
+            + "{0:d} atoms".format(len(structure))
             + " \n"
-            + "{0} atom types".format(len(self._species_lammps_id_dict.keys()))
+            + "{0} atom types".format(len(species_lammps_id_dict.keys()))
             + " \n"
         )  # '{0} atom types'.format(structure.get_number_of_species()) + ' \n'
         if nbonds is not None:
@@ -316,11 +316,9 @@ class LammpsStructure(object):
         if nangle_types is not None:
             atomtypes += "{0:d} angle types\n".format(nangle_types)
 
-        cell_dimensions = self.simulation_cell()
-
         masses = "Masses\n\n"
-        for el, idx in self._species_lammps_id_dict.items():
-            mass = self.structure._pse[el].AtomicMass
+        for el, idx in species_lammps_id_dict.items():
+            mass = structure._pse[el].AtomicMass
             masses += "{0:3d} {1:f}  # ({2}) \n".format(idx, mass, el)
 
         return atomtypes + "\n" + cell_dimensions + "\n" + masses + "\n"
@@ -353,7 +351,7 @@ class LammpsStructure(object):
         Returns:
 
         """
-        self._set_lammps_id_dict()
+        species_lammps_id_dict = self.get_lammps_id_dict(self.el_eam_lst)
         self.molecule_ids = None
         # analyze structure to get molecule_ids, bonds, angles etc
         coords = self.rotate_positions(self._structure)
@@ -372,7 +370,7 @@ class LammpsStructure(object):
                     format_str.format(
                         id_atom + 1,
                         id_mol,
-                        self._species_lammps_id_dict[elements[id_atom]],
+                        species_lammps_id_dict[elements[id_atom]],
                         x,
                         y,
                         z,
@@ -386,7 +384,7 @@ class LammpsStructure(object):
                     format_str.format(
                         id_atom + 1,
                         id_mol,
-                        self._species_lammps_id_dict[elements[id_atom]],
+                        species_lammps_id_dict[elements[id_atom]],
                         x,
                         y,
                         0.0,
@@ -439,7 +437,11 @@ class LammpsStructure(object):
 
         return (
             self.lammps_header(
-                nbonds=len(bonds), nbond_types=np.max(np.array(bonds)[:, 2])
+                structure=self.structure,
+                cell_dimensions=self.simulation_cell(),
+                species_lammps_id_dict=species_lammps_id_dict,
+                nbonds=len(bonds),
+                nbond_types=np.max(np.array(bonds)[:, 2]),
             )
             + "\n"
             + atoms
@@ -455,7 +457,7 @@ class LammpsStructure(object):
         Returns:
 
         """
-        self._set_lammps_id_dict()
+        species_lammps_id_dict = self.get_lammps_id_dict(self.el_eam_lst)
         self.molecule_ids = None
         coords = self.rotate_positions(self._structure)
 
@@ -540,7 +542,7 @@ class LammpsStructure(object):
                 format_str.format(
                     id_atom + 1,
                     self.molecule_ids[id_atom],
-                    self._species_lammps_id_dict[el],
+                    species_lammps_id_dict[el],
                     q_dict[el],
                     coord[0],
                     coord[1],
@@ -578,6 +580,9 @@ class LammpsStructure(object):
             angles_str = "\n"
         return (
             self.lammps_header(
+                structure=self.structure,
+                cell_dimensions=self.simulation_cell(),
+                species_lammps_id_dict=species_lammps_id_dict,
                 nbonds=len(bonds_lst),
                 nangles=len(angles_lst),
                 nbond_types=num_bond_types,
@@ -601,7 +606,7 @@ class LammpsStructure(object):
         Returns: LAMMPS readable structure.
 
         """
-        self._set_lammps_id_dict()
+        species_lammps_id_dict = self.get_lammps_id_dict(self.el_eam_lst)
         atoms = "Atoms\n\n"
         coords = self.rotate_positions(self._structure)
         el_charge_lst = self._structure.get_initial_charges()
@@ -613,7 +618,7 @@ class LammpsStructure(object):
             atoms += (
                 "{0:d} {1:d} {2:f} {3:.15f} {4:.15f} {5:.15f}".format(
                     id_atom + 1,
-                    self._species_lammps_id_dict[el],
+                    species_lammps_id_dict[el],
                     el_charge_lst[id_atom],
                     c[0],
                     c[1],
@@ -621,7 +626,15 @@ class LammpsStructure(object):
                 )
                 + "\n"
             )
-        return self.lammps_header() + atoms + "\n"
+        return (
+            self.lammps_header(
+                structure=self.structure,
+                cell_dimensions=self.simulation_cell(),
+                species_lammps_id_dict=species_lammps_id_dict,
+            )
+            + atoms
+            + "\n"
+        )
 
     def structure_atomic(self):
         """
@@ -630,7 +643,7 @@ class LammpsStructure(object):
         Returns:
 
         """
-        self._set_lammps_id_dict()
+        species_lammps_id_dict = self.get_lammps_id_dict(self.el_eam_lst)
         atoms = "Atoms\n\n"
         coords = self.rotate_positions(self._structure)
 
@@ -641,11 +654,19 @@ class LammpsStructure(object):
             c[:dim] = coord
             atoms += (
                 "{0:d} {1:d} {2:.15f} {3:.15f} {4:.15f}".format(
-                    id_atom + 1, self._species_lammps_id_dict[el], c[0], c[1], c[2]
+                    id_atom + 1, species_lammps_id_dict[el], c[0], c[1], c[2]
                 )
                 + "\n"
             )
-        return self.lammps_header() + atoms + "\n"
+        return (
+            self.lammps_header(
+                structure=self.structure,
+                cell_dimensions=self.simulation_cell(),
+                species_lammps_id_dict=species_lammps_id_dict,
+            )
+            + atoms
+            + "\n"
+        )
 
     def rotate_positions(self, structure):
         """
