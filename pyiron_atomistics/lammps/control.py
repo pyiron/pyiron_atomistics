@@ -48,6 +48,7 @@ class LammpsControl(GenericParameters):
         block_dict["structure"] = (
             "read_data",
             "include",
+            "region"
         )
         block_dict["potential"] = (
             "group",
