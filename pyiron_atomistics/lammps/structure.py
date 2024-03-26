@@ -288,7 +288,7 @@ class LammpsStructure(object):
     def get_lammps_id_dict(el_eam_lst):
         if len(el_eam_lst) == 0:
             raise ValueError("el_eam_list is empty. Can not determine order of species")
-        return {el: idx + 1 for el, idx in enumerate(el_eam_lst)}
+        return {el: idx + 1 for idx, el in enumerate(el_eam_lst)}
 
     @staticmethod
     def lammps_header(
