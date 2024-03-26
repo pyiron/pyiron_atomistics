@@ -54,7 +54,9 @@ class TestLammps(TestWithCleanProject):
 
     def tearDown(self) -> None:
         super().tearDown()
-        self.ref_project.remove_jobs(recursive=True, silently=True)  # cf. comment in setUp
+        self.ref_project.remove_jobs(
+            recursive=True, silently=True
+        )  # cf. comment in setUp
 
     def test_selective_dynamics(self):
         atoms = Atoms("Fe8", positions=np.zeros((8, 3)), cell=np.eye(3))
@@ -93,7 +95,7 @@ class TestLammps(TestWithCleanProject):
                 "",
                 "Masses",
                 "",
-                "  1 55.845000",
+                "  1 55.845001  # (Fe) ",
                 "",
                 "Atoms",
                 "",
@@ -123,7 +125,7 @@ class TestLammps(TestWithCleanProject):
                 "",
                 "Masses",
                 "",
-                "  1 55.845000",
+                "  1 55.845001  # (Fe) ",
                 "",
                 "Atoms",
                 "",
@@ -427,7 +429,7 @@ class TestLammps(TestWithCleanProject):
         output_dict = self.job.collect_output_parser(
             cwd=file_directory,
             dump_out_file_name="dump_static.out",
-            log_lammps_file_name="log_not_available"
+            log_lammps_file_name="log_not_available",
         )
         self.assertTrue(
             np.array_equal(output_dict["generic"]["forces"].shape, (1, 2, 3))
@@ -438,14 +440,10 @@ class TestLammps(TestWithCleanProject):
         self.assertTrue(
             np.array_equal(output_dict["generic"]["cells"].shape, (1, 3, 3))
         )
-        self.assertTrue(
-            np.array_equal(output_dict["generic"]["indices"].shape, (1, 2))
-        )
+        self.assertTrue(np.array_equal(output_dict["generic"]["indices"].shape, (1, 2)))
         # compare to old dump parser
         old_output = collect_dump_file_old(
-            job=self.job,
-            cwd=file_directory,
-            file_name="dump_static.out"
+            job=self.job, cwd=file_directory, file_name="dump_static.out"
         )
         for k, v in old_output.items():
             self.assertTrue(np.all(v == output_dict["generic"][k]))
@@ -734,7 +732,7 @@ class TestLammps(TestWithCleanProject):
         _ = self.job.collect_output_parser(
             cwd=file_directory,
             dump_out_file_name="dump_average.out",
-            log_lammps_file_name="log_average.lammps"
+            log_lammps_file_name="log_average.lammps",
         )
 
     def test_validate(self):
