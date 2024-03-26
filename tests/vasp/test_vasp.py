@@ -364,6 +364,7 @@ class TestVasp(unittest.TestCase):
             self.assertTrue(all([node in hdf_nodes for node in nodes]))
         job_chg_den = self.job_complete.restart_from_charge_density(job_name="chg")
         self.assertEqual(job_chg_den.structure, self.job_complete.get_structure(-1))
+        print(posixpath.join(self.job_complete.working_directory, "CHGCAR"), job_chg_den.restart_file_list)
         self.assertTrue(
             posixpath.join(self.job_complete.working_directory, "CHGCAR")
             in job_chg_den.restart_file_list
