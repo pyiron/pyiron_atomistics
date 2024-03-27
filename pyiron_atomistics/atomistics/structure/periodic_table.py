@@ -275,6 +275,23 @@ class ChemicalElement(object):
         hdf_el.update({"tagData/" + key: self.tags[key] for key in self.tags.keys()})
         return hdf_el
 
+    def from_dict(self, element_dict):
+        pse = PeriodicTable()
+        elname = self.sub.name
+        if "elementData" in element_dict.keys():
+            element_data = element_dict["elementData"]
+            for key, val in zip(element_data["Parameter"], element_data["Value"]):
+                if key in "Parent":
+                    self.sub = pse.dataframe.loc[val]
+                    self.sub["Parent"] = val
+                    self._element_str = val
+                else:
+                    self.sub["Parent"] = None
+                    self._element_str = elname
+                self.sub.name = elname
+        if "tagData" in element_dict.keys():
+            self.sub["tags"] = element_dict["tagData"]
+
     def to_hdf(self, hdf):
         """
         saves the element with his parameters into his hdf5 job file
@@ -291,28 +308,9 @@ class ChemicalElement(object):
         Args:
             hdf (Hdfio): Hdfio object which will be used to read a hdf5 file
         """
-        pse = PeriodicTable()
         elname = self.sub.name
         with hdf.open(elname) as hdf_el:
-            if "elementData" in hdf_el.list_nodes():
-                element_data = hdf_el["elementData"]
-                for key, val in zip(element_data["Parameter"], element_data["Value"]):
-                    if key in "Parent":
-                        self.sub = pse.dataframe.loc[val]
-                        self.sub["Parent"] = val
-                        self._element_str = val
-                    else:
-                        self.sub["Parent"] = None
-                        self._element_str = elname
-                    self.sub.name = elname
-            if "tagData" in hdf_el.list_groups():
-                with hdf_el.open(
-                    "tagData"
-                ) as hdf_tag:  # "Dictionary of element tag static"
-                    tag_dic = {}
-                    for key in hdf_tag.list_nodes():
-                        tag_dic[key] = hdf_tag[key]
-                        self.sub["tags"] = tag_dic
+            self.from_dict(hdf_el.read_dict_from_hdf(recursive=True))
 
 
 class PeriodicTable:
@@ -356,24 +354,12 @@ class PeriodicTable:
         # https://docs.python.org/release/3.11.2/library/pickle.html#object.__getstate__
         return self.__dict__
 
-    def from_hdf(self, hdf):
-        """
-        loads an element with his parameters from the hdf5 job file by creating an Object of the ChemicalElement type.
-        The new element will be stored in the current periodic table.
-        Changes in the tags will also be modified inside the periodic table.
-
-        Args:
-            hdf (Hdfio): Hdfio object which will be used to read the data from a hdf5 file
-
-        Returns:
-
-        """
-        elements = hdf.list_groups()  # ["elements"]
-        for el in elements:
+    def from_dict(self, pse_dict):
+        for el, el_dict in pse_dict.items():
             sub = pandas.Series(dtype=object)
             new_element = ChemicalElement(sub)
             new_element.sub.name = el
-            new_element.from_hdf(hdf)
+            new_element.from_dict(element_dict=el_dict)
             new_element.sub["Abbreviation"] = el
 
             if "sub_tags" in new_element.tags:
@@ -398,6 +384,20 @@ class PeriodicTable:
                 self.dataframe["Parent"] = self.dataframe["Parent"].apply(
                     lambda x: None if pandas.isnull(x) else x
                 )
+
+    def from_hdf(self, hdf):
+        """
+        loads an element with his parameters from the hdf5 job file by creating an Object of the ChemicalElement type.
+        The new element will be stored in the current periodic table.
+        Changes in the tags will also be modified inside the periodic table.
+
+        Args:
+            hdf (Hdfio): Hdfio object which will be used to read the data from a hdf5 file
+
+        Returns:
+
+        """
+        self.from_dict(hdf.read_dict_from_hdf(recursive=True))
 
     def element(self, arg, **qwargs):
         """

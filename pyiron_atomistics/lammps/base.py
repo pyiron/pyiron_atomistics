@@ -728,21 +728,10 @@ class LammpsBase(AtomisticGenericJob):
         data_dict.update({"input/" + k: v for k, v in lammps_dict.items()})
         return data_dict
 
-    # define hdf5 output
-    def from_hdf(self, hdf=None, group_name=None):  # TODO: group_name should be removed
-        """
-
-        Args:
-            hdf:
-            group_name:
-
-        Returns:
-
-        """
-        super(LammpsBase, self).from_hdf(hdf=hdf, group_name=group_name)
-        self._structure_from_hdf()
-        with self.project_hdf5.open("input") as hdf_input:
-            self.input.from_dict(data_dict=hdf_input.read_dict_from_hdf(recursive=True))
+    def from_dict(self, job_dict):
+        super().from_dict(job_dict=job_dict)
+        self._structure_from_dict(job_dict=job_dict)
+        self.input.from_dict(data_dict=job_dict["input"])
 
     def write_restart_file(self, filename="restart.out"):
         """
