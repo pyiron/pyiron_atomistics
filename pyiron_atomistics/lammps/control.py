@@ -45,10 +45,7 @@ class LammpsControl(GenericParameters):
             "atom_modify",
             "newton",
         )
-        block_dict["structure"] = (
-            "read_data",
-            "include",
-        )
+        block_dict["structure"] = ("read_data", "include", "region")
         block_dict["potential"] = (
             "group",
             "set",
