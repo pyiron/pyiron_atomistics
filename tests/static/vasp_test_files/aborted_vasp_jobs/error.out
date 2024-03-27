@@ -1,0 +1,31 @@
+ running on  120 total cores
+ distrk:  each k-point on  120 cores,    1 groups
+ distr:  one band on    8 cores,   15 groups
+ using from now: INCAR     
+ vasp.5.4.4.18Apr17-6-g9f103f2a35 (build Feb 19 2020 16:12:31) complex          
+  
+ POSCAR found type information on POSCAR  N  Nb Ni Ti
+ POSCAR found :  4 types and     253 ions
+ scaLAPACK will be used
+ LDA part: xc-table for Pade appr. of Perdew
+ POSCAR, INCAR and KPOINTS ok, starting setup
+ FFT: planning ...
+ WAVECAR not read
+ entering main loop
+       N       E                     dE             d eps       ncg     rms          rms(c)
+DAV:   1     0.296362671728E+05    0.29636E+05   -0.98805E+05 11700   0.179E+03
+DAV:   2     0.395119288986E+04   -0.25685E+05   -0.24600E+05 11520   0.534E+02
+DAV:   3    -0.119509707778E+04   -0.51463E+04   -0.47549E+04 14325   0.242E+02
+DAV:   4    -0.226037135373E+04   -0.10653E+04   -0.10098E+04 18000   0.964E+01
+DAV:   5    -0.237398256821E+04   -0.11361E+03   -0.11204E+03 19155   0.317E+01    0.192E+02
+DAV:   6    -0.958902747281E+04   -0.72150E+04   -0.37635E+04 19005   0.408E+02    0.158E+03
+DAV:   7    -0.734106361877E+04    0.22480E+04   -0.11457E+04 13515   0.133E+02    0.655E+02
+DAV:   8    -0.877845720459E+04   -0.14374E+04   -0.13234E+05 20430   0.199E+02    0.737E+02
+DAV:   9    -0.579462960328E+04    0.29838E+04   -0.27748E+04 16185   0.163E+02    0.561E+02
+DAV:  10    -0.234624739335E+04    0.34484E+04   -0.96855E+03 19455   0.102E+02    0.416E+02
+Error EDDDAV: Call to ZHEGV failed. Returncode =  14 1  15
+2023-07-25 11:41:13,871 - pyiron_log - INFO - run job: tin_ni_interf_surf_ni_sub_Nb id: 20331947, status: collect
+2023-07-25 11:41:14,111 - pyiron_log - WARNING - Unable to parse the vasprun.xml file. Will attempt to get data from OUTCAR
+2023-07-25 11:41:14,111 - pyiron_log - WARNING - Unable to parse the vasprun.xml file. Will attempt to get data from OUTCAR
+2023-07-25 11:41:14,144 - pyiron_log - INFO - collect_warnings() is not yet implemented for VASP
+2023-07-25 11:41:14,561 - pyiron_log - INFO - update master: None 20331947 queue

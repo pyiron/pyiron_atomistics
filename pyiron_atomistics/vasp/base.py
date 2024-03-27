@@ -1551,8 +1551,13 @@ class VaspBase(GenericDFTJob):
         """
         new_ham = super(VaspBase, self).restart(job_name=job_name, job_type=job_type)
         if not self.is_compressed():
-            self.collect_output()
-            self.compress()
+            try:
+                self.collect_output()
+                self.compress()
+            except ValueError:  # parsing crashes
+                self.logger.warn(
+                    "Tried to automatically recollect job in case it timed out during collection, but it failed."
+                )
         if new_ham.__name__ == self.__name__:
             new_ham.input.potcar["xc"] = self.input.potcar["xc"]
         if new_ham.input.incar["MAGMOM"] is not None:
