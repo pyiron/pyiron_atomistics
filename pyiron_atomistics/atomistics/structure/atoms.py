@@ -494,6 +494,76 @@ class Atoms(ASEAtoms):
             hdf_structure["calculator"] = calc_dict
         return hdf_structure
 
+    def from_dict(self, atoms_dict):
+        if "new_species" in atoms_dict.keys():
+            self._pse.from_dict(pse_dict=atoms_dict["new_species"])
+
+        el_object_list = [
+            self.convert_element(el, self._pse) for el in atoms_dict["species"]
+        ]
+        self.arrays["indices"] = atoms_dict["indices"]
+
+        self.set_species(el_object_list)
+        self.bonds = None
+
+        tr_dict = {1: True, 0: False}
+        self.dimension = atoms_dict["dimension"]
+        self.units = atoms_dict["units"]
+
+        if "cell" in atoms_dict.keys():
+            self.cell = atoms_dict["cell"]["cell"]
+            self.pbc = atoms_dict["cell"]["pbc"]
+
+        # Backward compatibility
+        position_tag = "positions"
+        if position_tag not in atoms_dict.keys():
+            position_tag = "coordinates"
+        self.arrays["positions"] = atoms_dict[position_tag]
+        if (
+            "is_absolute" in atoms_dict.keys()
+            and not tr_dict[atoms_dict["is_absolute"]]
+        ):
+            self.set_scaled_positions(self.arrays["positions"])
+
+        self.arrays["numbers"] = self.get_atomic_numbers()
+
+        if "explicit_bonds" in atoms_dict.keys():
+            # print "bonds: "
+            self.bonds = atoms_dict["explicit_bonds"]
+        if "spins" in atoms_dict.keys():
+            self.spins = atoms_dict["spins"]
+        if "tags" in atoms_dict.keys():
+            tags_dict = atoms_dict["tags"]
+            for tag, tag_item in tags_dict.items():
+                if tag in ["initial_magmoms"]:
+                    continue
+                # tr_dict = {'0': False, '1': True}
+                if isinstance(tag_item, (list, np.ndarray)):
+                    my_list = tag_item
+                else:  # legacy of SparseList
+                    raise NotImplementedError()
+                self.set_array(tag, np.asarray(my_list))
+
+        if "bonds" in atoms_dict.keys():
+            self.bonds = atoms_dict["explicit_bonds"]
+
+        self._high_symmetry_points = None
+        if "high_symmetry_points" in atoms_dict.keys():
+            self._high_symmetry_points = atoms_dict["high_symmetry_points"]
+
+        self._high_symmetry_path = None
+        if "high_symmetry_path" in atoms_dict.keys():
+            self._high_symmetry_path = atoms_dict["high_symmetry_path"]
+        if "info" in atoms_dict.keys():
+            self.info = atoms_dict["info"]
+        if "calculator" in atoms_dict.keys():
+            calc_dict = atoms_dict["calculator"]
+            class_path = calc_dict.pop("class")
+            calc_module = importlib.import_module(".".join(class_path.split(".")[:-1]))
+            calc_class = getattr(calc_module, class_path.split(".")[-1])
+            self.calc = calc_class(**calc_dict)
+        return self
+
     def to_hdf(self, hdf, group_name="structure"):
         """
         Save the object in a HDF5 file
@@ -518,145 +588,9 @@ class Atoms(ASEAtoms):
             pyiron_atomistics.structure.atoms.Atoms: The retrieved atoms class
 
         """
-        if "indices" in hdf[group_name].list_nodes():
-            with hdf.open(group_name) as hdf_atoms:
-                if "new_species" in hdf_atoms.list_groups():
-                    with hdf_atoms.open("new_species") as hdf_species:
-                        self._pse.from_hdf(hdf_species)
-
-                el_object_list = [
-                    self.convert_element(el, self._pse) for el in hdf_atoms["species"]
-                ]
-                self.arrays["indices"] = hdf_atoms["indices"]
-
-                self.set_species(el_object_list)
-                self.bonds = None
-
-                tr_dict = {1: True, 0: False}
-                self.dimension = hdf_atoms["dimension"]
-                self.units = hdf_atoms["units"]
-
-                if "cell" in hdf_atoms.list_groups():
-                    with hdf_atoms.open("cell") as hdf_cell:
-                        self.cell = hdf_cell["cell"]
-                        self.pbc = hdf_cell["pbc"]
-
-                # Backward compatibility
-                position_tag = "positions"
-                if position_tag not in hdf_atoms.list_nodes():
-                    position_tag = "coordinates"
-                self.arrays["positions"] = hdf_atoms[position_tag]
-                if (
-                    "is_absolute" in hdf_atoms.list_nodes()
-                    and not tr_dict[hdf_atoms["is_absolute"]]
-                ):
-                    self.set_scaled_positions(self.arrays["positions"])
-
-                self.arrays["numbers"] = self.get_atomic_numbers()
-
-                if "explicit_bonds" in hdf_atoms.list_nodes():
-                    # print "bonds: "
-                    self.bonds = hdf_atoms["explicit_bonds"]
-                if "spins" in hdf_atoms.list_nodes():
-                    self.spins = hdf_atoms["spins"]
-                if "tags" in hdf_atoms.list_groups():
-                    with hdf_atoms.open("tags") as hdf_tags:
-                        tags = hdf_tags.list_nodes()
-                        for tag in tags:
-                            if tag in ["initial_magmoms"]:
-                                continue
-                            # tr_dict = {'0': False, '1': True}
-                            if isinstance(hdf_tags[tag], (list, np.ndarray)):
-                                my_list = hdf_tags[tag]
-                            else:  # legacy of SparseList
-                                my_dict = hdf_tags.get_pandas(tag).to_dict()
-                                my_list = np.array(my_dict["values"])[
-                                    np.argsort(my_dict["index"])
-                                ]
-                            self.set_array(tag, np.asarray(my_list))
-
-                if "bonds" in hdf_atoms.list_nodes():
-                    self.bonds = hdf_atoms["explicit_bonds"]
-
-                self._high_symmetry_points = None
-                if "high_symmetry_points" in hdf_atoms.list_nodes():
-                    self._high_symmetry_points = hdf_atoms["high_symmetry_points"]
-
-                self._high_symmetry_path = None
-                if "high_symmetry_path" in hdf_atoms.list_nodes():
-                    self._high_symmetry_path = hdf_atoms["high_symmetry_path"]
-                if "info" in hdf_atoms.list_nodes():
-                    self.info = hdf_atoms["info"]
-                if "calculator" in hdf_atoms:
-                    calc_dict = hdf_atoms["calculator"]
-                    class_path = calc_dict.pop("class")
-                    calc_module = importlib.import_module(
-                        ".".join(class_path.split(".")[:-1])
-                    )
-                    calc_class = getattr(calc_module, class_path.split(".")[-1])
-                    self.calc = calc_class(**calc_dict)
-                return self
-
-        else:
-            return self._from_hdf_old(hdf, group_name)
-
-    def _from_hdf_old(self, hdf, group_name="structure"):
-        """
-        This function exits merely for the purpose of backward compatibility
-        """
-        with hdf.open(group_name) as hdf_atoms:
-            self._pse = PeriodicTable()
-            if "species" in hdf_atoms.list_groups():
-                with hdf_atoms.open("species") as hdf_species:
-                    self._pse.from_hdf(hdf_species)
-            chemical_symbols = np.array(hdf_atoms["elements"], dtype=str)
-            el_object_list = [
-                self.convert_element(el, self._pse) for el in chemical_symbols
-            ]
-            self.set_species(list(set(el_object_list)))
-            self.set_array(
-                "indices", [self._species_to_index_dict[el] for el in el_object_list]
-            )
-            self.bonds = None
-            if "explicit_bonds" in hdf_atoms.list_nodes():
-                # print "bonds: "
-                self.bonds = hdf_atoms["explicit_bonds"]
-
-            if "tags" in hdf_atoms.list_groups():
-                with hdf_atoms.open("tags") as hdf_tags:
-                    tags = hdf_tags.list_nodes()
-                    for tag in tags:
-                        # tr_dict = {'0': False, '1': True}
-                        if isinstance(hdf_tags[tag], (list, np.ndarray)):
-                            my_list = hdf_tags[tag]
-                        else:
-                            my_dict = hdf_tags.get_pandas(tag).to_dict()
-                            my_list = np.array(my_dict["values"])[
-                                np.argsort(my_dict["index"])
-                            ]
-                        self.set_array(tag, my_list)
-
-            self.cell = None
-            if "cell" in hdf_atoms.list_groups():
-                with hdf_atoms.open("cell") as hdf_cell:
-                    self.cell = hdf_cell["cell"]
-                    self.pbc = hdf_cell["pbc"]
-
-            tr_dict = {1: True, 0: False}
-            self.dimension = hdf_atoms["dimension"]
-            if "is_absolute" in hdf_atoms and not tr_dict[hdf_atoms["is_absolute"]]:
-                self.positions = hdf_atoms["coordinates"]
-            else:
-                self.set_scaled_positions(hdf_atoms["coordinates"])
-            self.units = hdf_atoms["units"]
-
-            if "bonds" in hdf_atoms.list_nodes():
-                self.bonds = hdf_atoms["explicit_bonds"]
-
-            self._high_symmetry_points = None
-            if "high_symmetry_points" in hdf_atoms.list_nodes():
-                self._high_symmetry_points = hdf_atoms["high_symmetry_points"]
-            return self
+        return self.from_dict(
+            atoms_dict=hdf.open(group_name).read_dict_from_hdf(recursive=True)
+        )
 
     def select_index(self, el):
         """
