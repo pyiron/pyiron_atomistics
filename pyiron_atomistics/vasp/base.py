@@ -423,7 +423,7 @@ class VaspBase(GenericDFTJob):
             )
         except VaspCollectError:
             self.status.aborted = True
-            return
+            raise
         # Try getting high precision positions from CONTCAR
         try:
             self._output_parser.structure = self.get_final_structure_from_file(
@@ -1554,7 +1554,7 @@ class VaspBase(GenericDFTJob):
             try:
                 self.collect_output()
                 self.compress()
-            except ValueError:  # parsing crashes
+            except VaspCollectError:
                 self.logger.warn(
                     "Tried to automatically recollect job in case it timed out during collection, but it failed."
                 )
