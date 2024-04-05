@@ -178,9 +178,9 @@ class SphinxBase(GenericDFTJob):
         if self.structure is None:
             raise ValueError("Structure not set")
         # Translate the chemical symbols into indices
-        indices = np.unique(
-            self.structure.get_chemical_symbols(), return_inverse=True
-        )[1]
+        indices = np.unique(self.structure.get_chemical_symbols(), return_inverse=True)[
+            1
+        ]
         # Add small ramp to ensure order uniqueness
         indices = indices + np.arange(len(indices)) / len(indices)
         return np.argsort(indices)
