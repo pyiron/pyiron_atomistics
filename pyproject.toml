@@ -28,7 +28,7 @@ dependencies = [
     "atomistics==0.1.24",
     "defusedxml==0.7.1",
     "h5py==3.10.0",
-    "matplotlib==3.8.3",
+    "matplotlib==3.8.4",
     "mendeleev==0.15.0",
     "mp-api==0.41.2",
     "numpy==1.26.4",
