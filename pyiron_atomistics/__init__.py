@@ -29,6 +29,7 @@ JOB_CLASS_DICT.update(
         "ConvEncutParallel": "pyiron_atomistics.dft.master.convergence_encut_parallel",
         "ConvKpointParallel": "pyiron_atomistics.dft.master.convergence_kpoint_parallel",
         "ElasticTensor": "pyiron_atomistics.atomistics.master.elastic",
+        "ElasticMatrixJob": "pyiron_atomistics.atomistics.master.elasticmatrix",
         "ExampleJob": "pyiron_atomistics.testing.randomatomistic",
         "Gpaw": "pyiron_atomistics.gpaw.gpaw",
         "HessianJob": "pyiron_atomistics.thermodynamics.hessian",
