@@ -240,4 +240,3 @@ class ElasticMatrixJob(AtomisticParallelMaster):
         super(ElasticMatrixJob, self).to_hdf(hdf=hdf, group_name=group_name)
         with self.project_hdf5.open("output") as hdf5_out:
             hdf5_out[self.hdf_storage_group] = self._data
-  
