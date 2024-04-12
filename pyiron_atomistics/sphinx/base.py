@@ -2147,7 +2147,8 @@ class Output:
         if "positions" not in self.generic.list_nodes():
             self.generic.positions = np.array([self._job.structure.positions])
         if "cells" not in self.generic.list_nodes():
-            self.generic.cells = np.tile(np.array([self._job.structure.cell.tolist()]),(len(self.generic.energy_tot),1,1))
+            self.generic.cells = np.tile(np.array([self._job.structure.cell.tolist()]),
+                                         (len(self.generic.dft.energy_free),1,1))
         self.generic.to_hdf(hdf=hdf)
 
         with hdf.open("output") as hdf5_output:
