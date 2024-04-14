@@ -20,14 +20,19 @@ jobs:
       matrix:
         include:
           - operating-system: macos-latest
-            python-version: '3.11'
-            label: osx-64-py-3-11
+            python-version: '3.12'
+            label: osx-64-py-3-12
             prefix: /Users/runner/miniconda3/envs/my-env
 
           - operating-system: windows-latest
-            python-version: '3.11'
-            label: win-64-py-3-11
+            python-version: '3.12'
+            label: win-64-py-3-12
             prefix: C:\Miniconda3\envs\my-env
+
+          - operating-system: ubuntu-latest
+            python-version: '3.12'
+            label: linux-64-py-3-12
+            prefix: /usr/share/miniconda3/envs/my-env
 
           - operating-system: ubuntu-latest
             python-version: '3.11'
@@ -66,10 +71,10 @@ jobs:
           coverage run --omit="pyiron_atomistics/_version.py,tests/*" -m unittest discover tests
           coverage xml
       - name: Coveralls
-        if: matrix.label == 'linux-64-py-3-11'
+        if: matrix.label == 'linux-64-py-3-12'
         uses: coverallsapp/github-action@v2
       - name: Codacy
-        if:  matrix.label == 'linux-64-py-3-11' && github.event_name != 'push'
+        if:  matrix.label == 'linux-64-py-3-12' && github.event_name != 'push'
         continue-on-error: True
         shell: bash -l {0}
         run: |
