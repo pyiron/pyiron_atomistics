@@ -1,16 +1,15 @@
 channels:
 - conda-forge
 dependencies:
-- gpaw >=20
+- gpaw =24.1.0
 - jupyter
-- lammps >=2021.05.27
+- lammps =2024.02.07
 - nglview
-- ipywidgets <8  # conflict with NGLview
+- ipywidgets
 - papermill
-- seaborn
-- sphinxdft >=3.0
-- sphinxdft-data
-- iprpy-data
-- pyiron-data >=0.0.27
-- sqsgenerator
-- gpaw =23.9.1
+- seaborn =0.13.2
+- sphinxdft =3.1
+- sphinxdft-data =0.0.1
+- iprpy-data =2022.11.02
+- pyiron-data =0.0.29
+- sqsgenerator =0.3
