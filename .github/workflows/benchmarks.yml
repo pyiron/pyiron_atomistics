@@ -15,18 +15,18 @@ jobs:
       matrix:
         include:
           - operating-system: macos-latest
-            python-version: '3.11'
-            label: osx-64-py-3-11
+            python-version: '3.12'
+            label: osx-64-py-3-12
             prefix: /Users/runner/miniconda3/envs/my-env
 
           - operating-system: windows-latest
-            python-version: '3.11'
-            label: win-64-py-3-11
+            python-version: '3.12'
+            label: win-64-py-3-12
             prefix: C:\Miniconda3\envs\my-env
 
           - operating-system: ubuntu-latest
-            python-version: '3.11'
-            label: linux-64-py-3-11
+            python-version: '3.12'
+            label: linux-64-py-3-12
             prefix: /usr/share/miniconda3/envs/my-env
 
     steps:
