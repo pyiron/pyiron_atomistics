@@ -2146,8 +2146,11 @@ class Output:
             self.generic.energy_pot = self.generic.dft.energy_free
         if "positions" not in self.generic.list_nodes():
             self.generic.positions = np.array([self._job.structure.positions])
-        if "cells" not in self.generic.list_nodes():
-            self.generic.cells = np.array([self._job.structure.cell.tolist()])
+        if (
+            "cells" not in self.generic.list_nodes()
+            and "cell" in self.generic.list_nodes()
+        ):
+            self.generic.cells = self.generic.cell
         self.generic.to_hdf(hdf=hdf)
 
         with hdf.open("output") as hdf5_output:
