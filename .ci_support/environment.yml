@@ -15,7 +15,7 @@ dependencies:
 - pandas =2.2.2
 - phonopy =2.22.1
 - pint =0.23
-- pyiron_base =0.8.1
+- pyiron_base =0.8.2
 - pylammpsmpi =0.2.15
 - pyscal =2.10.18
 - scikit-learn =1.4.2
