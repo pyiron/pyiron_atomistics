@@ -23,7 +23,7 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     dict_group_to_hdf,
 )
 from pyiron_base import state, GenericParameters, deprecate
-from pyiron_atomistics.vasp.parser.outcar import Outcar
+from pyiron_atomistics.vasp.parser.outcar import Outcar, OutcarCollectError
 from pyiron_atomistics.vasp.parser.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
 from pyiron_atomistics.vasp.structure import read_atoms, write_poscar, vasp_sorter
@@ -2003,8 +2003,12 @@ class Output:
         if "OSZICAR" in files_present:
             self.oszicar.from_file(filename=posixpath.join(directory, "OSZICAR"))
         if "OUTCAR" in files_present:
-            self.outcar.from_file(filename=posixpath.join(directory, "OUTCAR"))
-            outcar_working = True
+            try:
+                self.outcar.from_file(filename=posixpath.join(directory, "OUTCAR"))
+                outcar_working = True
+            except OutcarCollectError as e:
+                state.logger.warning(f"OUTCAR present, but could not be parsed: {e}!")
+                outcar_working = False
         if "vasprun.xml" in files_present:
             try:
                 with warnings.catch_warnings(record=True) as w:
