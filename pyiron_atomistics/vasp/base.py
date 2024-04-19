@@ -134,7 +134,12 @@ class VaspBase(GenericDFTJob):
 
         """
         GenericDFTJob.structure.fset(self, structure)
-        if structure is not None:
+        if structure is not None and any(
+            [
+                el not in self._potential._potential_dict.keys()
+                for el in set(structure.get_chemical_symbols())
+            ]
+        ):
             self._potential = VaspPotentialSetter(
                 element_lst=structure.get_species_symbols().tolist()
             )
@@ -772,12 +777,17 @@ class VaspBase(GenericDFTJob):
         job_dict = super().to_dict()
         job_dict.update({"input/" + k: v for k, v in self._structure_to_dict().items()})
         job_dict.update({"input/" + k: v for k, v in self.input.to_dict().items()})
+        job_dict["input/potential_dict"] = self._potential.to_dict()
         return job_dict
 
     def from_dict(self, job_dict):
         super().from_dict(job_dict=job_dict)
         self._structure_from_dict(job_dict=job_dict)
         self.input.from_dict(input_dict=job_dict["input"])
+        if "potential_dict" in job_dict["input"].keys():
+            self._potential.from_dict(
+                potential_dict=job_dict["input"]["potential_dict"]
+            )
 
     def to_hdf(self, hdf=None, group_name=None):
         """
