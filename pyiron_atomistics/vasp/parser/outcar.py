@@ -23,9 +23,11 @@ KBAR_TO_EVA = (
     scipy.constants.physical_constants["joule-electron volt relationship"][0] / 1e22
 )
 
+
 # derives from ValueError, because that was the exception previously raised
 class OutcarCollectError(ValueError):
     pass
+
 
 class Outcar(object):
     """
@@ -937,7 +939,9 @@ class Outcar(object):
         if len(trigger_indices) != 0:
             return int(lines[trigger_indices[0]].split(ions_trigger)[-1])
         else:
-            raise OutcarCollectError("Failed to read number of atoms, can't find NIONS!")
+            raise OutcarCollectError(
+                "Failed to read number of atoms, can't find NIONS!"
+            )
 
     @staticmethod
     def get_band_properties(filename="OUTCAR", lines=None):
