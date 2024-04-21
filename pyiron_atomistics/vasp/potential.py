@@ -240,13 +240,12 @@ class VaspPotential(object):
 
 class VaspPotentialSetter(object):
     def __init__(self, element_lst):
-        super(VaspPotentialSetter, self).__setattr__("_element_lst", element_lst)
         super(VaspPotentialSetter, self).__setattr__(
             "_potential_dict", {el: None for el in element_lst}
         )
 
     def __getattr__(self, item):
-        if item in self._element_lst:
+        if item in self._potential_dict.keys():
             return item
         else:
             raise AttributeError
@@ -255,13 +254,17 @@ class VaspPotentialSetter(object):
         self.__setattr__(key=key, value=value)
 
     def __setattr__(self, key, value):
-        if key in self._element_lst:
+        if key in self._potential_dict.keys():
             self._potential_dict[key] = value
         else:
             raise AttributeError
 
     def to_dict(self):
         return self._potential_dict
+
+    def from_dict(self, potential_dict):
+        for key, value in potential_dict.items():
+            self._potential_dict[key] = value
 
     def __repr__(self):
         return self._potential_dict.__repr__()

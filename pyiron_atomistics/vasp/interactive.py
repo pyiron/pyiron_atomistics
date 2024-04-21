@@ -42,10 +42,7 @@ class VaspInteractive(VaspBase, GenericInteractive):
     @structure.setter
     def structure(self, structure):
         GenericInteractive.structure.fset(self, structure)
-        if structure is not None:
-            self._potential = VaspPotentialSetter(
-                element_lst=structure.get_species_symbols().tolist()
-            )
+        self._reinit_potential_setter(structure=structure)
 
     @property
     def interactive_enforce_structure_reset(self):

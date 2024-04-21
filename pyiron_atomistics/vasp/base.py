@@ -134,10 +134,7 @@ class VaspBase(GenericDFTJob):
 
         """
         GenericDFTJob.structure.fset(self, structure)
-        if structure is not None:
-            self._potential = VaspPotentialSetter(
-                element_lst=structure.get_species_symbols().tolist()
-            )
+        self._reinit_potential_setter(structure=structure)
 
     @property
     def potential(self):
@@ -772,12 +769,17 @@ class VaspBase(GenericDFTJob):
         job_dict = super().to_dict()
         job_dict.update({"input/" + k: v for k, v in self._structure_to_dict().items()})
         job_dict.update({"input/" + k: v for k, v in self.input.to_dict().items()})
+        job_dict["input/potential_dict"] = self._potential.to_dict()
         return job_dict
 
     def from_dict(self, job_dict):
         super().from_dict(job_dict=job_dict)
         self._structure_from_dict(job_dict=job_dict)
         self.input.from_dict(input_dict=job_dict["input"])
+        if "potential_dict" in job_dict["input"].keys():
+            self._potential.from_dict(
+                potential_dict=job_dict["input"]["potential_dict"]
+            )
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -1160,117 +1162,6 @@ class VaspBase(GenericDFTJob):
             self.write_electrostatic_potential = retain_electrostatic_potential
         for key in kwargs.keys():
             self.logger.warning("Tag {} not relevant for vasp".format(key))
-
-    def _set_kpoints(
-        self,
-        mesh=None,
-        scheme="MP",
-        center_shift=None,
-        symmetry_reduction=True,
-        manual_kpoints=None,
-        weights=None,
-        reciprocal=True,
-        n_path=None,
-        path_name=None,
-    ):
-        """
-        Function to setup the k-points for the VASP job
-
-        Args:
-            mesh (list): Size of the mesh (in the MP scheme)
-            scheme (str): Type of k-point generation scheme (MP/GC(gamma centered)/GP(gamma point)/Manual/Line)
-            center_shift (list): Shifts the center of the mesh from the gamma point by the given vector
-            symmetry_reduction (boolean): Tells if the symmetry reduction is to be applied to the k-points
-            manual_kpoints (list/numpy.ndarray): Manual list of k-points
-            weights(list/numpy.ndarray): Manually supplied weights to each k-point in case of the manual mode
-            reciprocal (bool): Tells if the supplied values are in reciprocal (direct) or cartesian coordinates (in
-            reciprocal space)
-            n_path (int): Number of points per trace part for line mode
-            path_name (str): Name of high symmetry path used for band structure calculations.
-        """
-        if not symmetry_reduction:
-            self.input.incar["ISYM"] = -1
-        scheme_list = ["MP", "GC", "GP", "Line", "Manual"]
-        if not (scheme in scheme_list):
-            raise AssertionError()
-        if scheme == "MP":
-            if mesh is None:
-                mesh = [int(val) for val in self.input.kpoints[3].split()]
-            self.input.kpoints.set_kpoints_file(size_of_mesh=mesh, shift=center_shift)
-        if scheme == "GC":
-            if mesh is None:
-                mesh = [int(val) for val in self.input.kpoints[3].split()]
-            self.input.kpoints.set_kpoints_file(
-                size_of_mesh=mesh, shift=center_shift, method="Gamma centered"
-            )
-        if scheme == "GP":
-            self.input.kpoints.set_kpoints_file(
-                size_of_mesh=[1, 1, 1], method="Gamma Point"
-            )
-        if scheme == "Line":
-            if n_path is None and self.input.kpoints._n_path is None:
-                raise ValueError("n_path has to be defined")
-            high_symmetry_points = self.structure.get_high_symmetry_points()
-            if high_symmetry_points is None:
-                raise ValueError("high_symmetry_points has to be defined")
-
-            if path_name is None and self.input.kpoints._path_name is None:
-                raise ValueError("path_name has to be defined")
-            if path_name not in self.structure.get_high_symmetry_path().keys():
-                raise ValueError("path_name is not a valid key of high_symmetry_path")
-
-            if path_name is not None:
-                self.input.kpoints._path_name = path_name
-            if n_path is not None:
-                self.input.kpoints._n_path = n_path
-
-            self.input.kpoints.set_kpoints_file(
-                method="Line",
-                n_path=self.input.kpoints._n_path,
-                path=self._get_path_for_kpoints(self.input.kpoints._path_name),
-            )
-        if scheme == "Manual":
-            if manual_kpoints is None:
-                raise ValueError(
-                    "For the manual mode, the kpoints list should be specified"
-                )
-            else:
-                if weights is not None:
-                    if not (len(manual_kpoints) == len(weights)):
-                        raise AssertionError()
-                self.input.kpoints.set_value(line=1, val=str(len(manual_kpoints)))
-                if reciprocal:
-                    self.input.kpoints.set_value(line=2, val="Reciprocal")
-                else:
-                    self.input.kpoints.set_value(line=2, val="Cartesian")
-                for i, kpt in enumerate(manual_kpoints):
-                    if weights is not None:
-                        wt = weights[i]
-                    else:
-                        wt = 1.0
-                    self.input.kpoints.set_value(
-                        line=3 + i,
-                        val=" ".join([str(kpt[0]), str(kpt[1]), str(kpt[2]), str(wt)]),
-                    )
-
-    def _get_path_for_kpoints(self, path_name):
-        """
-        gets the trace for k-points line mode in a VASP readable form.
-
-        Args:
-            path_name (str): Name of the path used for band structure calculation from structure instance.
-
-        Returns:
-            list: list of tuples of position and path name
-        """
-        path = self.structure.get_high_symmetry_path()[path_name]
-
-        k_trace = []
-        for t in path:
-            k_trace.append((self.structure.get_high_symmetry_points()[t[0]], t[0]))
-            k_trace.append((self.structure.get_high_symmetry_points()[t[1]], t[1]))
-
-        return k_trace
 
     def set_for_band_structure_calc(
         self, num_points, structure=None, read_charge_density=True
@@ -1855,6 +1746,127 @@ class VaspBase(GenericDFTJob):
            list: a list of available potentials
         """
         return self.potential_list
+
+    def _set_kpoints(
+        self,
+        mesh=None,
+        scheme="MP",
+        center_shift=None,
+        symmetry_reduction=True,
+        manual_kpoints=None,
+        weights=None,
+        reciprocal=True,
+        n_path=None,
+        path_name=None,
+    ):
+        """
+        Function to setup the k-points for the VASP job
+
+        Args:
+            mesh (list): Size of the mesh (in the MP scheme)
+            scheme (str): Type of k-point generation scheme (MP/GC(gamma centered)/GP(gamma point)/Manual/Line)
+            center_shift (list): Shifts the center of the mesh from the gamma point by the given vector
+            symmetry_reduction (boolean): Tells if the symmetry reduction is to be applied to the k-points
+            manual_kpoints (list/numpy.ndarray): Manual list of k-points
+            weights(list/numpy.ndarray): Manually supplied weights to each k-point in case of the manual mode
+            reciprocal (bool): Tells if the supplied values are in reciprocal (direct) or cartesian coordinates (in
+            reciprocal space)
+            n_path (int): Number of points per trace part for line mode
+            path_name (str): Name of high symmetry path used for band structure calculations.
+        """
+        if not symmetry_reduction:
+            self.input.incar["ISYM"] = -1
+        scheme_list = ["MP", "GC", "GP", "Line", "Manual"]
+        if not (scheme in scheme_list):
+            raise AssertionError()
+        if scheme == "MP":
+            if mesh is None:
+                mesh = [int(val) for val in self.input.kpoints[3].split()]
+            self.input.kpoints.set_kpoints_file(size_of_mesh=mesh, shift=center_shift)
+        if scheme == "GC":
+            if mesh is None:
+                mesh = [int(val) for val in self.input.kpoints[3].split()]
+            self.input.kpoints.set_kpoints_file(
+                size_of_mesh=mesh, shift=center_shift, method="Gamma centered"
+            )
+        if scheme == "GP":
+            self.input.kpoints.set_kpoints_file(
+                size_of_mesh=[1, 1, 1], method="Gamma Point"
+            )
+        if scheme == "Line":
+            if n_path is None and self.input.kpoints._n_path is None:
+                raise ValueError("n_path has to be defined")
+            high_symmetry_points = self.structure.get_high_symmetry_points()
+            if high_symmetry_points is None:
+                raise ValueError("high_symmetry_points has to be defined")
+
+            if path_name is None and self.input.kpoints._path_name is None:
+                raise ValueError("path_name has to be defined")
+            if path_name not in self.structure.get_high_symmetry_path().keys():
+                raise ValueError("path_name is not a valid key of high_symmetry_path")
+
+            if path_name is not None:
+                self.input.kpoints._path_name = path_name
+            if n_path is not None:
+                self.input.kpoints._n_path = n_path
+
+            self.input.kpoints.set_kpoints_file(
+                method="Line",
+                n_path=self.input.kpoints._n_path,
+                path=self._get_path_for_kpoints(self.input.kpoints._path_name),
+            )
+        if scheme == "Manual":
+            if manual_kpoints is None:
+                raise ValueError(
+                    "For the manual mode, the kpoints list should be specified"
+                )
+            else:
+                if weights is not None:
+                    if not (len(manual_kpoints) == len(weights)):
+                        raise AssertionError()
+                self.input.kpoints.set_value(line=1, val=str(len(manual_kpoints)))
+                if reciprocal:
+                    self.input.kpoints.set_value(line=2, val="Reciprocal")
+                else:
+                    self.input.kpoints.set_value(line=2, val="Cartesian")
+                for i, kpt in enumerate(manual_kpoints):
+                    if weights is not None:
+                        wt = weights[i]
+                    else:
+                        wt = 1.0
+                    self.input.kpoints.set_value(
+                        line=3 + i,
+                        val=" ".join([str(kpt[0]), str(kpt[1]), str(kpt[2]), str(wt)]),
+                    )
+
+    def _reinit_potential_setter(self, structure):
+        if structure is not None:
+            self._potential.to_dict().update(
+                {
+                    el: None
+                    for el in set(structure.get_chemical_symbols())
+                    if el not in self._potential.to_dict().keys()
+                }
+            )
+
+    def _get_path_for_kpoints(self, path_name):
+        """
+        gets the trace for k-points line mode in a VASP readable form.
+
+        Args:
+            path_name (str): Name of the path used for band structure calculation from structure instance.
+
+        Returns:
+            list: list of tuples of position and path name
+        """
+        path = self.structure.get_high_symmetry_path()[path_name]
+
+        k_trace = []
+        for t in path:
+            k_trace.append((self.structure.get_high_symmetry_points()[t[0]], t[0]))
+            k_trace.append((self.structure.get_high_symmetry_points()[t[1]], t[1]))
+
+        return k_trace
 
     def __del__(self):
         pass
