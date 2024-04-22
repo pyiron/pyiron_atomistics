@@ -183,7 +183,7 @@ class SphinxBase(GenericDFTJob):
     def id_spx_to_pyi(self):
         if self.structure is None:
             raise ValueError("Structure not set")
-        return np.argsort(id_pyi_to_spx)
+        return np.argsort(self.id_pyi_to_spx)
 
     @property
     def plane_wave_cutoff(self):
