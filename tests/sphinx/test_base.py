@@ -109,8 +109,15 @@ class TestSphinx(unittest.TestCase):
         )
 
     def test_id_pyi_to_spx(self):
-        self.assertEqual(len(self.sphinx.id_pyi_to_spx), len(self.sphinx.structure))
-        self.assertEqual(len(self.sphinx.id_spx_to_pyi), len(self.sphinx.structure))
+        spx = self.project.create_job("Sphinx", "check_order")
+        elements = ["Fe", "C", "Ni", "Fe"]
+        x = np.random.random((len(elements), 3))
+        c = np.eye(3)
+        spx.structure = Atoms(elements=elements, positions=x, cell=c)
+        self.assertTrue(np.all(spx.id_spx_to_pyi == [1, 0, 3, 2]))
+        self.assertTrue(
+            np.all(spx.id_pyi_to_spx[spx.id_spx_to_pyi] == np.arange(len(elements)))
+        )
 
     def test_potential(self):
         self.assertEqual(['Fe_GGA'], self.sphinx.list_potentials())

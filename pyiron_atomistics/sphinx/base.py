@@ -171,12 +171,6 @@ class SphinxBase(GenericDFTJob):
     def id_pyi_to_spx(self):
         if self.structure is None:
             raise ValueError("Structure not set")
-        return np.argsort(self.structure.get_chemical_symbols())
-
-    @property
-    def id_spx_to_pyi(self):
-        if self.structure is None:
-            raise ValueError("Structure not set")
         # Translate the chemical symbols into indices
         indices = np.unique(self.structure.get_chemical_symbols(), return_inverse=True)[
             1
@@ -184,6 +178,12 @@ class SphinxBase(GenericDFTJob):
         # Add small ramp to ensure order uniqueness
         indices = indices + np.arange(len(indices)) / len(indices)
         return np.argsort(indices)
+
+    @property
+    def id_spx_to_pyi(self):
+        if self.structure is None:
+            raise ValueError("Structure not set")
+        return np.argsort(self.id_pyi_to_spx)
 
     @property
     def plane_wave_cutoff(self):
