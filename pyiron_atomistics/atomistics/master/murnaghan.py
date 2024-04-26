@@ -12,7 +12,7 @@ from atomistics.workflows.evcurve.fit import (
     get_error,
     fit_leastsq_eos,
 )
-from atomistics.workflows.evcurve.workflow import _strain_axes
+from atomistics.workflows.evcurve.helper import _strain_axes
 import matplotlib.pyplot as plt
 import numpy as np
 
