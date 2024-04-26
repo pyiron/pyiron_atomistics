@@ -3,7 +3,7 @@ channels:
 dependencies:
 - aimsgb =1.0.2
 - ase =3.22.1
-- atomistics =0.1.12
+- atomistics =0.1.27
 - defusedxml =0.7.0
 - h5py =3.9.0
 - matplotlib-base =3.5.3
