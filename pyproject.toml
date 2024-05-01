@@ -35,7 +35,7 @@ dependencies = [
     "pandas==2.2.2",
     "phonopy==2.22.1",
     "pint==0.23",
-    "pyiron_base==0.8.2",
+    "pyiron_base==0.8.3",
     "pylammpsmpi==0.2.18",
     "scipy==1.13.0",
     "scikit-learn==1.4.2",
