@@ -39,7 +39,7 @@ def freeze_one_half(basis):
     Returns:
         pyiron_atomistics.structure.atoms.Atoms: Atomistic structure object with half of the atoms fixed
     """
-    basis.add_tag(selective_dynamics=None)
+    basis.add_tag(selective_dynamics=[True, True, True])
     _, _, z = basis.scaled_pos_xyz()
     for selector, ind in zip(z < 0.5, range(len(basis))):
         if selector:
