@@ -201,7 +201,7 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
     def _output_interactive_to_generic(self):
         with self.project_hdf5.open("output") as h5:
             if "interactive" in h5.list_groups():
-                for key in ["positions", "cells", "indices", "cells", "forces"]:
+                for key in ["positions", "indices", "cells", "forces"]:
                     self.output.generic[key] = h5["interactive/" + key]
                 if "atom_spin_constraints" in h5["interactive"].list_nodes():
                     self.output.generic.dft.atom_spin_constraints = h5[
