@@ -77,7 +77,7 @@ class ElasticMatrixCalculator(object):
             self._data["e0"],
         ) = analyse_structures_helper(
             output_dict=output_dict,
-            sym_dict=self._data
+            sym_dict=self._data,
             fit_order=self.fit_order,
             zero_strain_job_name=self.zero_strain_job_name,
         )
