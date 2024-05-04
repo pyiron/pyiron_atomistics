@@ -7,13 +7,13 @@
 pyiron - an integrated development environment (IDE) for computational materials science. It combines several tools in
 a common platform:
 
-• Atomic structure objects – compatible to the [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/).
-• Atomistic simulation codes – like [LAMMPS](http://lammps.sandia.gov) and [VASP](https://www.vasp.at).
-• Feedback Loops – to construct dynamic simulation life cycles.
-• Hierarchical data management – interfacing with storage resources like SQL and [HDF5](https://support.hdfgroup.org/HDF5/).
-• Integrated visualization – based on [NGLview](https://github.com/arose/nglview).
-• Interactive simulation protocols - based on [Jupyter notebooks](http://jupyter.org).
-• Object oriented job management – for scaling complex simulation protocols from single jobs to high-throughput simulations.
+* Atomic structure objects – compatible to the [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/).
+* Atomistic simulation codes – like [LAMMPS](http://lammps.sandia.gov) and [VASP](https://www.vasp.at).
+* Feedback Loops – to construct dynamic simulation life cycles.
+* Hierarchical data management – interfacing with storage resources like SQL and [HDF5](https://support.hdfgroup.org/HDF5/).
+* Integrated visualization – based on [NGLview](https://github.com/arose/nglview).
+* Interactive simulation protocols - based on [Jupyter notebooks](http://jupyter.org).
+* Object oriented job management – for scaling complex simulation protocols from single jobs to high-throughput simulations.
 
 ![Screenshot of pyiron running inside jupyterlab.](images/screenshots.png)
 
@@ -63,5 +63,3 @@ If you use pyiron in your research, please consider citing the following work:
     keywords = {Modelling workflow, Integrated development environment, Complex simulation protocols},
 }
 ```
-
-Read more about [citing individual modules/ plugins of pyiron and the implemented simulation codes](source/citation.html).
