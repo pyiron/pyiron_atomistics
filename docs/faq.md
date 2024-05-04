@@ -1,15 +1,10 @@
-.. _faq:
+# FAQ
 
-===
-FAQ
-===
+## How to cite pyiron?
+To cite pyiron and the corresponding codes, please follow the instructions on the [publication page](citation.html).
 
-How to cite pyiron?
-===================
-To cite pyiron and the corresponding codes, please follow the instructions on the `publication page <citation.html>`_.
+## What units does pyiron use?
 
-What units does pyiron use?
-===========================
 * mass = atomic mass units
 * distance = Angstroms
 * time = femtoseconds
@@ -20,28 +15,24 @@ What units does pyiron use?
 * pressure = GPa
 * charge = multiple of electron charge (1.0 is a proton)
 
-How to import existing calculation?
-===================================
-Importing existing calculations is currently only supported for VASP. A tutorial how to import existing calculations is available in the tutorial section. 
+## How to import existing calculation?
+Importing existing calculations is currently only supported for VASP. A tutorial how to import existing calculations is
+available in the tutorial section. 
 
-How to import structures from files or existing databases?
-==========================================================
+## How to import structures from files or existing databases?
 To read structure formats you can use ASE and then convert the structure to a pyiron structure using:
+```python
+from ase.build import bulk
+from pyiron_atomistics import ase_to_pyiron
+pyiron_structure = ase_to_pyiron(bulk("Al")) 
+```
 
-.. code-block::
-
-  from pyiron import ase_to_pyiron
-  pyiron_structure = ase_to_pyiron(ase_structure) 
- 
-
-How to install pyiron?
-======================
+## How to install pyiron?
 pyiron is designed to be installed as centralized service on your local computer cluster, rather than a local installation
 on each individual workstation. To test pyiron online or with a local installation, please follow the instructions on the
-`installation page <installation.html>`_.
+[installation page](installation.html).
 
-How do I install additional codes for pyiron? 
-=============================================
+## How do I install additional codes for pyiron?
 When installing pyiron via conda it is possible to install most opensource codes via conda as well: 
 
 .. list-table:: Install additional codes 
