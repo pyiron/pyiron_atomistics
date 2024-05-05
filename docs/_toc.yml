@@ -1,5 +1,5 @@
 format: jb-book
-root: index
+root: README
 chapters:
 - file: about.md
 - file: installation.md

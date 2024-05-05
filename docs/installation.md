@@ -12,7 +12,7 @@ but also executables for compatible simulation codes like [GPAW](https://wiki.fy
 pseudopotentials and interatomic potentials. To get started you can install pyiron using:
 
 ```
-conda install -c conda-forge pyiron
+conda install -c conda-forge pyiron_atomistics
 ```
 
 ## Optional Dependencies
@@ -628,4 +628,4 @@ ham.run()
 
 ### Next Steps
 To get a better overview of all the available functionality inside pyiron we recommend the examples provided in the 
-examples section - [examples](https://pyiron-atomistics.readthedocs.io/en/jupyterbook/examples.html).
+examples section - [examples](https://pyiron-atomistics.readthedocs.io/en/main/examples.html).

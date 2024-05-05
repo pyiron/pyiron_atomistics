@@ -2,7 +2,7 @@
 
 ## Introduction
 
-![Screenshot of pyiron running inside jupyterlab](images/screenshot.png)
+![Screenshot of pyiron_atomistics running inside jupyterlab](images/screenshot.png)
 
 pyiron is an integrated development environment for implementing, testing, and running simulations in computational 
 materials science. It combines several tools in a common platform:
@@ -14,7 +14,7 @@ materials science. It combines several tools in a common platform:
   [HDF5](https://support.hdfgroup.org/HDF5/).
 * Integrated visualization – based on [NGLview](https://github.com/arose/nglview).
 * Interactive simulation protocols - based on [Jupyter notebooks](http://jupyter.org).
-* Object oriented job management – for scaling complex simulation protocols from single jobs to high-throughput 
+* Object-oriented job management – for scaling complex simulation protocols from single jobs to high-throughput 
   simulations.
 
 pyiron (called pyron) is developed in the [Computational Materials Design department](https://www.mpie.de/CM) of 

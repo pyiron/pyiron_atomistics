@@ -1,9 +1,9 @@
 # FAQ
 
-## How to cite pyiron?
+## How to cite pyiron_atomistics?
 To cite pyiron and the corresponding codes, please follow the instructions on the publication page.
 
-## What units does pyiron use?
+## What units does pyiron_atomistics use?
 
 * mass = atomic mass units
 * distance = Angstroms
@@ -27,12 +27,12 @@ from pyiron_atomistics import ase_to_pyiron
 pyiron_structure = ase_to_pyiron(bulk("Al")) 
 ```
 
-## How to install pyiron?
+## How to install pyiron_atomistics?
 pyiron is designed to be installed as centralized service on your local computer cluster, rather than a local installation
 on each individual workstation. To test pyiron online or with a local installation, please follow the instructions on the
-[installation page](https://pyiron-atomistics.readthedocs.io/en/jupyterbook/installation.html).
+[installation page](https://pyiron-atomistics.readthedocs.io/en/main/installation.html).
 
-## How do I install additional codes for pyiron?
+## How do I install additional codes for pyiron_atomistics?
 When installing pyiron via conda it is possible to install most opensource codes via conda as well: 
 
 | code         | `job_type` | How to install ?                            |
@@ -63,7 +63,7 @@ my_fe = pr.create_element(
 job_vasp.structure[0] = my_fe
 ```
 
-## How to use VASP tags which are not supported by pyiron?
+## How to use VASP tags which are not supported by pyiron_atomistics?
 The underlying input of any simulation code in pyiron can be directly accessed. For VASP you can change the `INCAR` 
 parameters using the VASP specific syntax: 
 
@@ -111,15 +111,15 @@ in the LAMMPS `structure.inp` file.
 
 The potential can then be used by assigning `job.potential = custom_potential`.
 
-## How to extend the potential database inside pyiron?
-By default pyiron provides access to the OpenKIM and NIST databases for interatomic potentials and individual potentials
-can be added as discussed above. While there was an option to extend the default database this option was disabled as it
-decreased the reproducibility of simulation protocols. 
+## How to extend the potential database inside pyiron_atomistics?
+By default, pyiron_atomistics provides access to the OpenKIM and NIST databases for interatomic potentials and 
+individual potentials can be added as discussed above. While there was an option to extend the default database this 
+option was disabled as it decreased the reproducibility of simulation protocols. 
 
 ## How to link your own executable?
-The linking of executables is explained as part of the installation in the section of advanced configuarion options. By
-default pyiron links to the executables provided by conda but you can accelerate you calculation by compiling your own 
-version of a given simulation code which is optimized for your hardware. 
+The linking of executables is explained as part of the installation in the section of advanced configuration options. By
+default, pyiron_atomistics links to the executables provided by conda, but you can accelerate your calculation by 
+compiling your own version of a given simulation code which is optimized for your hardware. 
 
 ## How to send a calculation to the background ?
 While most examples execute calculations inline or in modal mode, it is also possible to send calculation in the 
@@ -147,11 +147,11 @@ job.server.run_time = 3600     # set the run time in seconds
 job.run()
 ```
 
-For the queuing system to be available in pyiron it is necessary to configure it. The configuration of different queuing
-systems is explained in the installation. 
+For the queuing system to be available in pyiron_atomistics it is necessary to configure it. The configuration of 
+different queuing systems is explained in the installation. 
 
 ## How to setup spin constraint calculation?
-pyiron supports setting up spin constrained calculations for VASP using the generic spin_constraint property: 
+pyiron_atomistics supports setting up spin constrained calculations for VASP using the generic spin_constraint property: 
 
 ```python
 job_vasp.spin_constraints = 1
@@ -161,7 +161,7 @@ job_vasp.spin_constraints = 1
 pyiron is the combination of **py** + **iron** connecting Python, the programming language with iron as pyiron was
 initially developed at the Max Planck Institut für Eisenforschung (iron research).
 
-## Which output quantities are stored in pyiron?
+## Which output quantities are stored in pyiron_atomistis?
 Generic
 
 | tag                 | dimension                                   | description                                                                 |   VASP    | SPHInX  | LAMMPS |

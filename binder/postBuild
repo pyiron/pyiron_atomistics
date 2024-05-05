@@ -1,18 +1,12 @@
 # pip install
 pip install .
 
-# ngl view for jupyter
-jupyter nbextension install nglview --py --sys-prefix
-jupyter nbextension enable nglview --py --sys-prefix
-
 # ngl view for jupyter lab
 jupyter labextension install @jupyter-widgets/jupyterlab-manager --no-build
 jupyter labextension install nglview-js-widgets --minimize=False
 
+# copy notebooks
+mv notebooks/*.ipynb .
+
 # clean up
-if [ -d "notebooks" ]; then
-    mv notebooks/* .
-fi
-if [ -d "${HOME}/pyiron" ]; then
-    rm -r ${HOME}/binder ${HOME}/.ci_support ${HOME}/.github ${HOME}/docs ${HOME}/pyiron ${HOME}/tests ${HOME}/notebooks ${HOME}/LICENSE ${HOME}/MANIFEST.in ${HOME}/setup.cfg ${HOME}/setup.py ${HOME}/versioneer.py ${HOME}/CONTRIBUTING.rst ${HOME}/README.rst ${HOME}/CODE_OF_CONDUCT.md
-fi
+rm -rf .ci_support .devcontainer .github binder docs notebooks pyiron_atomistics pyiron_atomistics.egg-info test_benchmark test_integration tests .coveralls.yml .gitattributes .gitignore .gitpod .readthedocs.yml CHANGELOG.md CITATION.cff CODE_OF_CONDUCT.md CONTRIBUTING.rst LICENSE MANIFEST.in README.md pyproject.toml setup.py build

@@ -1,8 +1,8 @@
 # pyiron_atomistics
 
-[![Build Status](https://github.com/pyiron/pyiron/workflows/Python%20package/badge.svg)](https://github.com/pyiron//pyiron/actions)
-![Anaconda](https://anaconda.org/conda-forge/pyiron/badges/downloads.svg)
-![Release](https://anaconda.org/conda-forge/pyiron/badges/latest_release_date.svg)
+[![Build Status](https://github.com/pyiron/pyiron_atomistics/workflows/Python%20package/badge.svg)](https://github.com/pyiron//pyiron/actions)
+![Anaconda](https://anaconda.org/conda-forge/pyiron_atomistics/badges/downloads.svg)
+![Release](https://anaconda.org/conda-forge/pyiron_atomistics/badges/latest_release_date.svg)
 
 pyiron - an integrated development environment (IDE) for computational materials science. It combines several tools in
 a common platform:
@@ -15,7 +15,7 @@ a common platform:
 * Interactive simulation protocols - based on [Jupyter notebooks](http://jupyter.org).
 * Object-oriented job management – for scaling complex simulation protocols from single jobs to high-throughput simulations.
 
-![Screenshot of pyiron running inside jupyterlab.](images/screenshots.png)
+![Screenshot of pyiron_atomistics running inside jupyterlab.](images/screenshots.png)
 
 pyiron (called pyron) is developed in the [Computational Materials Design department](https://www.mpie.de/CM) of
 [Joerg Neugebauer](https://www.mpie.de/person/43010/2763386) at the [Max Planck Institut für Eisenforschung (Max Planck Institute for iron research)](https://www.mpie.de/2281/en).
@@ -28,8 +28,8 @@ framework with a specific focus on high throughput applications. In 2018 pyiron 
 pyiron and want to get an overview head over to [pyiron](https://pyiron.readthedocs.io/en/latest/).  If you're looking
 for the API docs of pyiron_base check [pyiron_base](https://pyiron_base.readthedocs.io/en/latest/).
 
-## Explore pyiron
-We provide various options to install, explore and run pyiron:
+## Explore pyiron_atomistics
+We provide various options to install, explore and run pyiron_atomistics:
 
 * **Workstation Installation (recommeded)**: for Windows, Linux or Mac OS X workstations (interface for local VASP 
   executable, support for the latest jupyterlab based GUI)
@@ -44,7 +44,7 @@ Please contact us if you are interested in using pyiron:
 * implementing high-throughput approaches based on atomistic codes
 * to learn more about method development and Big Data in material science.
 
-Please also check out the pyiron contributing guidelines.
+Please also check out the pyiron_atomistics [contributing guidelines](https://github.com/pyiron/pyiron_atomistics/blob/main/CONTRIBUTING.rst).
 
 ## Citing
 If you use pyiron in your research, please consider citing the following work:

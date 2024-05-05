@@ -1,6 +1,6 @@
 # Importing finished VASP calculations
 
-Finished VASP calculations that were created outside of pyiron can be imported using the following script:
+Finished VASP calculations that were created outside of pyiron_atomistics can be imported using the following script:
 ```python
 from pyiron.project import Project
 pr = Project('imported_jobs')

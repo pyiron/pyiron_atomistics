@@ -22,3 +22,13 @@ dependencies:
 - spglib =2.4.0
 - structuretoolkit =0.0.22
 - pyxtal =0.6.2
+- pyiron-data >=0.0.22
+- sqsgenerator
+- lammps
+- iprpy-data
+- gpaw
+- sphinxdft >=2.7.0
+- sphinxdft-data
+- nglview
+- seaborn
+- pyscal
