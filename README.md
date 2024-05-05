@@ -15,7 +15,7 @@ a common platform:
 * Interactive simulation protocols - based on [Jupyter notebooks](http://jupyter.org).
 * Object-oriented job management – for scaling complex simulation protocols from single jobs to high-throughput simulations.
 
-![Screenshot of pyiron_atomistics running inside jupyterlab.](images/screenshots.png)
+![Screenshot of pyiron_atomistics running inside jupyterlab.](https://pyiron-atomistics.readthedocs.io/en/latest/_images/screenshots.png)
 
 pyiron (called pyron) is developed in the [Computational Materials Design department](https://www.mpie.de/CM) of
 [Joerg Neugebauer](https://www.mpie.de/person/43010/2763386) at the [Max Planck Institut für Eisenforschung (Max Planck Institute for iron research)](https://www.mpie.de/2281/en).
