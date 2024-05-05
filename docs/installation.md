@@ -628,4 +628,4 @@ ham.run()
 
 ### Next Steps
 To get a better overview of all the available functionality inside pyiron we recommend the examples provided in the 
-examples section - [examples](https://pyiron-atomistics.readthedocs.io/en/main/examples.html).
+examples section - [examples](https://pyiron-atomistics.readthedocs.io/en/latest/examples.html).
