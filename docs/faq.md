@@ -30,7 +30,7 @@ pyiron_structure = ase_to_pyiron(bulk("Al"))
 ## How to install pyiron_atomistics?
 pyiron is designed to be installed as centralized service on your local computer cluster, rather than a local installation
 on each individual workstation. To test pyiron online or with a local installation, please follow the instructions on the
-[installation page](https://pyiron-atomistics.readthedocs.io/en/main/installation.html).
+[installation page](https://pyiron-atomistics.readthedocs.io/en/latest/installation.html).
 
 ## How do I install additional codes for pyiron_atomistics?
 When installing pyiron via conda it is possible to install most opensource codes via conda as well: 
