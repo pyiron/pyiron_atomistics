@@ -5,4 +5,4 @@ pip install .
 mv notebooks/*.ipynb .
 
 # clean up
-rm -rf .ci_support .devcontainer .github binder docs notebooks pyiron_atomistics pyiron_atomistics.egg-info test_benchmark test_integration tests .coveralls.yml .gitattributes .gitignore .gitpod .readthedocs.yml CHANGELOG.md CITATION.cff CODE_OF_CONDUCT.md CONTRIBUTING.rst LICENSE MANIFEST.in README.md pyproject.toml setup.py build
+rm -rf .ci_support .devcontainer .github binder docs notebooks pyiron_atomistics pyiron_atomistics.egg-info test_benchmarks test_integration tests .coveralls.yml .gitattributes .gitignore .gitpod .readthedocs.yml CHANGELOG.md CITATION.cff CODE_OF_CONDUCT.md CONTRIBUTING.rst LICENSE MANIFEST.in README.md pyproject.toml setup.py build
