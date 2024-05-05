@@ -421,22 +421,22 @@ queues:
 ```
 
 The `ssh_host` defines the name of the login node, with `ssh_username` the user on the remote machine and `known_hosts` 
-and `ssh_key` the local configuration files to connect to the remote host. Currently pyiron only supports ssh key based 
+and `ssh_key` the local configuration files to connect to the remote host. Currently, pyiron only supports ssh key based 
 authentification for remote calculation. By setting `ssh_continous_connection`, the same connection is reused for data 
 transfers which is commonly more efficient than creating individual connections for each command. Still, this assumes 
 that the connection between the workstation or group server and the remote HPC cluster is stable. If this is not the 
 case - for example, when using a mobile connection - it is recommended to disable this option. The `ssh_remote_config_dir` 
-defines the configuration of the queuing system on the remote cluster. Finally the calculations are copied from the 
+defines the configuration of the queuing system on the remote cluster. Finally, the calculations are copied from the 
 local directory `ssh_local_path` to the remote directory `ssh_remote_path`. In the above example, if a calculation is 
 submitted in the directory `/home/jan/pyiron/projects/first/subproject` then the files are copied to 
 `/u/janj/remote/first/subproject`. By retaining the path when transfering the files it is easier to debug failed 
-calculations. Finally the queues are defined locally to have quick access to the queue configurations, but it is not
+calculations. Finally, the queues are defined locally to have quick access to the queue configurations, but it is not
 necessary to define the submission templates as those are available on the remote machine. In addition the other 
 resources have to be identical on both systems. The easiest way to achieve this is to copy the resource directory once 
 the installation is working on the remote machine.
 
 #### Submit to multiple Remote HPC Clusters
-Finally pyiron also supports configuring multiple HPC clusters. In this case rather than creating a `queue.yaml` file 
+Finally, pyiron also supports configuring multiple HPC clusters. In this case rather than creating a `queue.yaml` file 
 in the queues resource directory we create a `clusters.yaml` file with the following content: 
 
 ```
@@ -459,7 +459,7 @@ cluster, then pyiron can be installed directly from the source code.
 
 ### Install from Source
 For development, it is recommended to first create a conda environment containing all of pyiron's dependencies. The
-dependencies are available in pyiron's [environment.yml](https://github.com/pyiron/pyiron/blob/main/.ci_support/environment.yml) 
+dependencies are available in pyiron's [environment.yml](https://github.com/pyiron/pyiron_atomistics/blob/main/.ci_support/environment.yml) 
 file.
 
 ```
@@ -589,7 +589,7 @@ anaconda installed you can download this installer and get started with just a s
 
 ## Getting Started
 Finally once you have installed pyiron you can quickly test your installation with the following minimalistic example. 
-Many more examples are available in the [Github repository](https://github.com/pyiron/pyiron/tree/main/notebooks).
+Many more examples are available in the [Github repository](https://github.com/pyiron/pyiron_atomistics/tree/main/notebooks).
 
 ### First Calculation
 After the successful configuration you can start your first pyiron calculation. Navigate to the the projects directory 
@@ -628,4 +628,4 @@ ham.run()
 
 ### Next Steps
 To get a better overview of all the available functionality inside pyiron we recommend the examples provided in the 
-examples section - [examples]().
+examples section - [examples](https://pyiron-atomistics.readthedocs.io/en/jupyterbook/examples.html).

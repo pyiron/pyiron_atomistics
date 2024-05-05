@@ -1,4 +1,4 @@
-# pyiron
+# pyiron_atomistics
 
 [![Build Status](https://github.com/pyiron/pyiron/workflows/Python%20package/badge.svg)](https://github.com/pyiron//pyiron/actions)
 ![Anaconda](https://anaconda.org/conda-forge/pyiron/badges/downloads.svg)
@@ -13,7 +13,7 @@ a common platform:
 * Hierarchical data management – interfacing with storage resources like SQL and [HDF5](https://support.hdfgroup.org/HDF5/).
 * Integrated visualization – based on [NGLview](https://github.com/arose/nglview).
 * Interactive simulation protocols - based on [Jupyter notebooks](http://jupyter.org).
-* Object oriented job management – for scaling complex simulation protocols from single jobs to high-throughput simulations.
+* Object-oriented job management – for scaling complex simulation protocols from single jobs to high-throughput simulations.
 
 ![Screenshot of pyiron running inside jupyterlab.](images/screenshots.png)
 
@@ -31,11 +31,11 @@ for the API docs of pyiron_base check [pyiron_base](https://pyiron_base.readthed
 ## Explore pyiron
 We provide various options to install, explore and run pyiron:
 
-* `Workstation Installation (recommeded) <InstallLocal>`: for Windows, Linux or Mac OS X workstations (interface
-  for local VASP executable, support for the latest jupyterlab based GUI)
-* `Mybinder.org (beta) <InstallBinder>`: test pyiron directly in your browser (no VASP license, no visualization,
-  only temporary data storage)
-* `Docker (for demonstration) <InstallDocker>`: requires Docker installation (no VASP license, only temporary data storage)
+* **Workstation Installation (recommeded)**: for Windows, Linux or Mac OS X workstations (interface for local VASP 
+  executable, support for the latest jupyterlab based GUI)
+* **Mybinder.org (beta)**: test pyiron directly in your browser (no VASP license, no visualization, only temporary data
+  storage)
+* **Docker (for demonstration)**: requires Docker installation (no VASP license, only temporary data storage)
 
 ## Join the development
 Please contact us if you are interested in using pyiron:
@@ -44,7 +44,7 @@ Please contact us if you are interested in using pyiron:
 * implementing high-throughput approaches based on atomistic codes
 * to learn more about method development and Big Data in material science.
 
-Please also check out the [pyiron contributing guidelines](source/developers.html)
+Please also check out the pyiron contributing guidelines.
 
 ## Citing
 If you use pyiron in your research, please consider citing the following work:

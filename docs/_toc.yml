@@ -3,7 +3,6 @@ root: index
 chapters:
 - file: about.md
 - file: installation.md
-- file: faq.md
 - file: examples.md
   sections:
     - file: first_steps.ipynb
@@ -14,3 +13,5 @@ chapters:
     - file: hcp_workfunction.ipynb
     - file: water_MD.ipynb
     - file: import.md
+- file: faq.md
+- file: api.rst
