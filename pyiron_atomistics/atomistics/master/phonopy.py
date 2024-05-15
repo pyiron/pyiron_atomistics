@@ -146,12 +146,18 @@ class PhonopyJob(AtomisticParallelMaster):
         )
         self.input["eigenvectors"] = (
             False, 
-            "whether or not to save the eigenvectors of the dynamical matrix at each qpoint. WARNING: "
-            "Setting this to True can result in a very large .h5 file (~GBs) or hit memory limits. Only set to True if you know what you are doing!",
+            "whether or not to save the eigenvectors of the dynamical matrix at each irreducible qpoint, "
+            "which are necessary to obtain the projected DOS (which can be done with a post-processing script). "
+            "They are accessed using job.phonopy.get_mesh_dict()['eigenvectors']. WARNING: "
+            "Setting this to True can result in a very large .h5 file (~GBs) or hit memory limits. "
+            "Only set to True if you know what you are doing!",
         )
         self.input["tetrahedron_method"] = (
             True, 
-            "use the tetrahedron method for the BZ integration. If set to False, the Gaussian smearing method is used.",
+            "use the tetrahedron method for the BZ integration. "
+            "If set to False, the Gaussian smearing method is used. "
+            "The 'sigma' value for the smearing is determined internally by phonopy. "
+            "See https://phonopy.github.io/phonopy/setting-tags.html#sigma .",
         )
 
         self.phonopy = None
