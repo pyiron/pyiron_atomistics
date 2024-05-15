@@ -70,41 +70,13 @@ class ElasticMatrixCalculator(object):
         Returns:
 
         """
-        (
-            elastic_matrix,
-            self._data["A2"],
-            self._data["strain_energy"],
-            self._data["e0"],
-        ) = analyse_structures_helper(
+        sym_dict, elastic = analyse_structures_helper(
             output_dict=output_dict,
-            Lag_strain_list=self._data["Lag_strain_list"],
-            epss=self._data["epss"],
-            v0=self._data["v0"],
-            LC=self._data["LC"],
+            sym_dict=self._data,
             fit_order=self.fit_order,
             zero_strain_job_name=self.zero_strain_job_name,
         )
-        elastic = ElasticProperties(elastic_matrix=elastic_matrix)
-        self._data.update(
-            {
-                "C": elastic.elastic_matrix(),
-                "S": elastic.elastic_matrix_inverse(),
-                "BV": elastic.bulkmodul_voigt(),
-                "BR": elastic.bulkmodul_reuss(),
-                "BH": elastic.bulkmodul_hill(),
-                "GV": elastic.shearmodul_voigt(),
-                "GR": elastic.shearmodul_reuss(),
-                "GH": elastic.shearmodul_hill(),
-                "EV": elastic.youngsmodul_voigt(),
-                "ER": elastic.youngsmodul_reuss(),
-                "EH": elastic.youngsmodul_hill(),
-                "nuV": elastic.poissonsratio_voigt(),
-                "nuR": elastic.poissonsratio_reuss(),
-                "nuH": elastic.poissonsratio_hill(),
-                "AVR": elastic.AVR(),
-                "C_eigval": elastic.elastic_matrix_eigval(),
-            }
-        )
+        self._data.update(elastic)
 
     @staticmethod
     def subjob_name(i, eps):

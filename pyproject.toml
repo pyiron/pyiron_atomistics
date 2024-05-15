@@ -8,7 +8,7 @@ description = "An interface to atomistic simulation codes including but not limi
 authors = [
     { name = "Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department", email = "pyiron@mpie.de" },
 ]
-readme = "README.rst"
+readme = "README.md"
 license = { file = "LICENSE" }
 keywords = ["pyiron"]
 requires-python = ">=3.9, <3.13"
@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "ase==3.22.1",
-    "atomistics==0.1.26",
+    "atomistics==0.1.27",
     "defusedxml==0.7.1",
     "h5py==3.11.0",
     "matplotlib==3.8.4",
@@ -35,7 +35,7 @@ dependencies = [
     "pandas==2.2.2",
     "phonopy==2.22.1",
     "pint==0.23",
-    "pyiron_base==0.8.2",
+    "pyiron_base==0.8.4",
     "pylammpsmpi==0.2.18",
     "scipy==1.13.0",
     "scikit-learn==1.4.2",

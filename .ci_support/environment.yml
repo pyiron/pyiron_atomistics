@@ -3,7 +3,7 @@ channels:
 dependencies:
 - aimsgb =1.1.0
 - ase =3.22.1
-- atomistics =0.1.26
+- atomistics =0.1.27
 - coverage
 - codacy-coverage
 - defusedxml =0.7.1
@@ -15,7 +15,7 @@ dependencies:
 - pandas =2.2.2
 - phonopy =2.22.1
 - pint =0.23
-- pyiron_base =0.8.2
+- pyiron_base =0.8.4
 - pylammpsmpi =0.2.18
 - pyscal =2.10.18
 - scikit-learn =1.4.2

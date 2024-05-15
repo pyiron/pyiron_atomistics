@@ -3,19 +3,27 @@ channels:
 dependencies:
 - nbsphinx
 - sphinx
-- ase
-- defusedxml
-- future
-- h5py
-- matplotlib-base
-- mendeleev
-- numpy
-- pandas
-- phonopy
-- pyiron_base
-- pyscal
-- scipy
-- seekpath
-- scikit-learn
-- spglib
-- structuretoolkit
+- sphinx_rtd_theme
+- myst-parser
+- aimsgb =1.1.0
+- ase =3.22.1
+- atomistics =0.1.27
+- defusedxml =0.7.1
+- h5py =3.11.0
+- matplotlib-base =3.8.4
+- mendeleev =0.15.0
+- mp-api =0.41.2
+- numpy =1.26.4
+- pandas =2.2.2
+- phonopy =2.22.1
+- pint =0.23
+- pyiron_base =0.8.4
+- pylammpsmpi =0.2.18
+- pyscal =2.10.18
+- scikit-learn =1.4.2
+- scipy =1.13.0
+- seekpath =2.1.0
+- spglib =2.4.0
+- structuretoolkit =0.0.22
+- pyxtal =0.6.2
+- jupyter-book =1.0.0
