@@ -31,6 +31,7 @@ class DumpData:
     mean_unwrapped_positions: List = field(default_factory=lambda: [])
     positions: List = field(default_factory=lambda: [])
     computes: Dict = field(default_factory=lambda: {})
+    fixes: Dict = field(default_factory=lambda: {})
 
 
 def parse_lammps_output(
@@ -61,6 +62,10 @@ def parse_lammps_output(
     if "computes" in dump_dict.keys():
         for k, v in dump_dict.pop("computes").items():
             hdf_generic[k] = convert_units(np.array(v), label=k)
+
+    if "fixes" in dump_dict.keys():
+        for k, v in dump_dict.pop("fixes").items():
+            hdf_lammps[k] = convert_units(np.array(v), label=k)
 
     hdf_generic["steps"] = convert_units(
         np.array(dump_dict.pop("steps"), dtype=int), label="steps"
@@ -270,6 +275,10 @@ def _collect_dump_from_text(
                         if kk not in dump.computes.keys():
                             dump.computes[kk] = []
                         dump.computes[kk].append(df[k].array)
+                    elif k.startswith("f_") and not k.startswith("f_mean"):
+                        if k not in dump.fixes.keys():
+                            dump.fixes[k] = []
+                        dump.fixes[k].append(df[k].array)
 
         return asdict(dump)
 
