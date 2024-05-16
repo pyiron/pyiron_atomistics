@@ -1999,8 +1999,7 @@ class Output:
                 file_name=file_name, cwd=cwd, spins=self._job._spin_enabled
             )
             for k, v in results.items():
-                if k not in self.generic.dft:
-                    self.generic.dft[k] = v
+                self.generic.dft[k] = v
         except FileNotFoundError:
             return
 
