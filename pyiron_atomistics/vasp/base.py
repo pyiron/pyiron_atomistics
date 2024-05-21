@@ -867,11 +867,11 @@ class VaspBase(GenericDFTJob):
                 if "LORBIT" not in self.input.incar._dataset["Parameter"]:
                     # If LORBIT is not set, set it to 10
                     self.input.incar["LORBIT"] = 10
-                    warnings.warn("We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarized calculation.")
+                    self.logger.warning("We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarized calculation.")  
                 else:
                     # If LORBIT is set but not in the valid range, set it to 10 and warn
                     if self.input.incar["LORBIT"] not in [0, 1, 2, 5, 10, 11, 12, 13, 14]:
-                        warnings.warn("Invalid LORBIT tag. We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarized calculation.")
+                        self.logger.warning("Invalid LORBIT tag. We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarized calculation.")  
                         self.input.incar["LORBIT"] = 10
 
             if self.input.incar["ISPIN"] != 1:
@@ -926,6 +926,17 @@ class VaspBase(GenericDFTJob):
                     raise ValueError(
                         "Spin constraints are only avilable for non collinear calculations."
                     )
+                # LORBIT MUST BE SET TO WRITE PER-ATOM MAGNETISATIONS
+                # Check if LORBIT is in the INCAR parameters
+                if "LORBIT" not in self.input.incar._dataset["Parameter"]:
+                    # If LORBIT is not set, set it to 10
+                    self.input.incar["LORBIT"] = 10
+                    self.logger.warning("We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarized calculation.")  
+                else:
+                    # If LORBIT is set but not in the valid range, set it to 10 and warn
+                    if self.input.incar["LORBIT"] not in [0, 1, 2, 5, 10, 11, 12, 13, 14]:
+                        self.logger.warning("Invalid LORBIT tag. We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarized calculation.")  
+                        self.input.incar["LORBIT"] = 10
             else:
                 state.logger.debug(
                     "Spin polarized calculation is switched off by the user. No magnetic moments are written."
