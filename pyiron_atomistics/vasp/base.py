@@ -862,10 +862,16 @@ class VaspBase(GenericDFTJob):
             if "ISPIN" not in self.input.incar._dataset["Parameter"]:
                 self.input.incar["ISPIN"] = 2
                 
-                # This ensures per-atom magnetisations are written to OUTCAR
+                # LORBIT MUST BE SET TO WRITE PER-ATOM MAGNETISATIONS
+                # Check if LORBIT is in the INCAR parameters
                 if "LORBIT" not in self.input.incar._dataset["Parameter"]:
+                    # If LORBIT is not set, set it to 10
+                    self.input.incar["LORBIT"] = 10
+                    warnings.warn("We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarized calculation.")
+                else:
+                    # If LORBIT is set but not in the valid range, set it to 10 and warn
                     if self.input.incar["LORBIT"] not in [0, 1, 2, 5, 10, 11, 12, 13, 14]:
-                        warnings.warn("We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarised calc")
+                        warnings.warn("Invalid LORBIT tag. We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarized calculation.")
                         self.input.incar["LORBIT"] = 10
 
             if self.input.incar["ISPIN"] != 1:
