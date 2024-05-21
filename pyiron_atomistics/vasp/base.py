@@ -861,6 +861,13 @@ class VaspBase(GenericDFTJob):
         if self.structure.has("initial_magmoms"):
             if "ISPIN" not in self.input.incar._dataset["Parameter"]:
                 self.input.incar["ISPIN"] = 2
+                
+                # This ensures per-atom magnetisations are written to OUTCAR
+                if "LORBIT" not in self.input.incar._dataset["Parameter"]:
+                    if self.input.incar["LORBIT"] not in [0, 1, 2, 5, 10, 11, 12, 13, 14]:
+                        warnings.warn("We have set LORBIT = 10 to write magmoms to OUTCAR! This is a spin-polarised calc")
+                        self.input.incar["LORBIT"] = 10
+
             if self.input.incar["ISPIN"] != 1:
                 final_cmd = "   ".join(
                     [
