@@ -10,7 +10,7 @@ from pyiron_atomistics.vasp.parser.outcar import Outcar
 from pyiron_atomistics.vasp.base import VaspBase
 from pyiron_atomistics.vasp.structure import vasp_sorter
 from pyiron_atomistics.vasp.potential import VaspPotentialSetter
-from pyiron_atomistics.vasp.base import GenericOutput as GenericOutputBase
+from pyiron_atomistics.vasp.base import GenericOutput
 from pyiron_atomistics.vasp.base import DFTOutput
 from pyiron_atomistics.vasp.base import Output as OutputBase
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
@@ -333,32 +333,3 @@ class Output(OutputBase):
         super(Output, self).__init__()
         self.generic_output = GenericOutput()
         self.dft_output = DFTOutput()
-
-
-class GenericOutput(GenericOutputBase):
-    """
-
-    This class stores the generic output like different structures, energies and forces from a simulation in a highly
-    generic format. Usually the user does not have to access this class.
-
-    Attributes:
-        log_dict (dict): A dictionary of all tags and values of generic data (positions, forces, etc)
-    """
-
-    def to_hdf(self, hdf):
-        """
-        Save the object in a HDF5 file
-
-        Args:
-            hdf (pyiron_base.generic.hdfio.ProjectHDFio): HDF path to which the object is to be saved
-
-        """
-        with hdf.open("generic") as hdf_go:
-            # hdf_go["description"] = self.description
-            for key, val in self.log_dict.items():
-                hdf_go[key] = val
-            with hdf_go.open("dft") as hdf_dft:
-                for key, val in self.dft_log_dict.items():
-                    hdf_dft[key] = val
-                if self.bands.eigenvalue_matrix is not None:
-                    self.bands.to_hdf(hdf_dft, "bands")
