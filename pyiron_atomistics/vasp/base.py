@@ -2026,6 +2026,7 @@ class Output:
         self.outcar = Outcar()
         self.oszicar = Oszicar()
         self.generic_output = GenericOutput()
+        self.dft_output = DFTOutput()
         self.description = (
             "This contains all the output static from this particular vasp run"
         )
