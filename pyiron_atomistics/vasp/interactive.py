@@ -11,7 +11,7 @@ from pyiron_atomistics.vasp.base import VaspBase
 from pyiron_atomistics.vasp.structure import vasp_sorter
 from pyiron_atomistics.vasp.potential import VaspPotentialSetter
 from pyiron_atomistics.vasp.base import GenericOutput as GenericOutputBase
-from pyiron_atomistics.vasp.base import DFTOutput as DFTOutputBase
+from pyiron_atomistics.vasp.base import DFTOutput
 from pyiron_atomistics.vasp.base import Output as OutputBase
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 
@@ -362,24 +362,3 @@ class GenericOutput(GenericOutputBase):
                     hdf_dft[key] = val
                 if self.bands.eigenvalue_matrix is not None:
                     self.bands.to_hdf(hdf_dft, "bands")
-
-
-class DFTOutput(DFTOutputBase):
-    """
-    This class stores the DFT specific output
-
-    Attributes:
-        log_dict (dict): A dictionary of all tags and values of DFT data
-    """
-
-    def to_hdf(self, hdf):
-        """
-        Save the object in a HDF5 file
-
-        Args:
-            hdf (pyiron_base.generic.hdfio.ProjectHDFio): HDF path to which the object is to be saved
-
-        """
-        with hdf.open("dft") as hdf_dft:
-            for key, val in self.log_dict.items():
-                hdf_dft[key] = val
