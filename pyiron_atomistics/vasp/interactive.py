@@ -345,9 +345,6 @@ class GenericOutput(GenericOutputBase):
         log_dict (dict): A dictionary of all tags and values of generic data (positions, forces, etc)
     """
 
-    def __init__(self):
-        super(GenericOutput, self).__init__()
-
     def to_hdf(self, hdf):
         """
         Save the object in a HDF5 file
@@ -374,9 +371,6 @@ class DFTOutput(DFTOutputBase):
     Attributes:
         log_dict (dict): A dictionary of all tags and values of DFT data
     """
-
-    def __init__(self):
-        super(DFTOutput, self).__init__()
 
     def to_hdf(self, hdf):
         """
