@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "ase==3.22.1",
-    "atomistics==0.1.27",
+    "atomistics==0.1.28",
     "defusedxml==0.7.1",
     "h5py==3.11.0",
     "matplotlib==3.8.4",
@@ -33,7 +33,7 @@ dependencies = [
     "mp-api==0.41.2",
     "numpy==1.26.4",
     "pandas==2.2.2",
-    "phonopy==2.22.1",
+    "phonopy==2.23.1",
     "pint==0.23",
     "pyiron_base==0.8.4",
     "pylammpsmpi==0.2.18",
