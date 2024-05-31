@@ -47,7 +47,8 @@ from pyiron_atomistics.sphinx.input_writer import (
 )
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
-from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
+from pyiron_base import state, DataContainer, job_status_successful_lst
+from pyiron_snippets.deprecate import deprecate
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (

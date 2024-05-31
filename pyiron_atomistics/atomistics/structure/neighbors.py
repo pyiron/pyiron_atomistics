@@ -4,7 +4,7 @@
 
 import numpy as np
 from pyiron_base import DataContainer, FlattenedStorage
-from pyiron_base import deprecate
+from pyiron_snippets.deprecate import deprecate
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (

@@ -20,9 +20,7 @@ from structuretoolkit.analyse import (
     get_delaunay_neighbors,
     get_cluster_positions,
 )
-from pyiron_base import Deprecator
-
-deprecate = Deprecator()
+from pyiron_snippets.deprecate import deprecate
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (

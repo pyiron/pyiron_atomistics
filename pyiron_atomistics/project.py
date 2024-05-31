@@ -15,10 +15,10 @@ from pyiron_base import (
     JobTypeChoice,
     Project as ProjectCore,
     Creator as CreatorCore,
-    deprecate,
 )
 from pyiron_base.state.logger import logger
 from pyiron_base.project.maintenance import Maintenance, LocalMaintenance
+from pyiron_snippets.deprecate import deprecate
 
 try:
     from pyiron_base import ProjectGUI
