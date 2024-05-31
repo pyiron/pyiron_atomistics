@@ -14,6 +14,7 @@ dependencies:
 - phonopy =2.20.0
 - pint =0.18
 - pyiron_base =0.7.7
+- pyiron_snippets =0.1.0
 - pylammpsmpi =0.2.7
 - pyscal =2.10.4
 - pyxtal =0.6.1

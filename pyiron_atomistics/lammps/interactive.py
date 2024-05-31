@@ -7,7 +7,7 @@ import os
 import pandas as pd
 import warnings
 
-from pyiron_base import ImportAlarm
+from pyiron_snippets.import_alarm import ImportAlarm
 
 from pyiron_atomistics.lammps.base import LammpsBase
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
