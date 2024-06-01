@@ -15,7 +15,7 @@ dependencies:
 - pint =0.18
 - pyiron_base =0.7.7
 - pylammpsmpi =0.2.7
-- pyscal =2.10.4
+- pyscal =2.10.5
 - pyxtal =0.6.1
 - scikit-learn =1.2.1
 - scipy =1.11.1
