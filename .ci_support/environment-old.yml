@@ -13,7 +13,7 @@ dependencies:
 - pandas =2.0.3
 - phonopy =2.20.0
 - pint =0.18
-- pyiron_base =0.7.10
+- pyiron_base =0.8.1
 - pylammpsmpi =0.2.7
 - pyscal =2.10.15
 - monty =2024.3.31
