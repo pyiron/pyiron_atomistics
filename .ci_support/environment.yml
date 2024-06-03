@@ -2,8 +2,8 @@ channels:
 - conda-forge
 dependencies:
 - aimsgb =1.1.0
-- ase =3.22.1
-- atomistics =0.1.28
+- ase =3.23.0
+- atomistics =0.1.29
 - coverage
 - codacy-coverage
 - defusedxml =0.7.1
@@ -22,5 +22,5 @@ dependencies:
 - scipy =1.13.1
 - seekpath =2.1.0
 - spglib =2.4.0
-- structuretoolkit =0.0.23
+- structuretoolkit =0.0.24
 - pyxtal =0.6.2
