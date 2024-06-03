@@ -18,7 +18,8 @@ from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_atomistics.atomistics.structure.phonopy import (
     publication as phonopy_publication,
 )
-from pyiron_base import state, JobGenerator, deprecate
+from pyiron_base import state, JobGenerator
+from pyiron_snippets.deprecate import deprecate
 from pyiron_snippets.import_alarm import ImportAlarm
 import structuretoolkit
 

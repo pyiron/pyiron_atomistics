@@ -17,8 +17,8 @@ from pyiron_base import (
     GenericParameters,
     GenericMaster,
     GenericJob as GenericJobCore,
-    deprecate,
 )
+from pyiron_snippets.deprecate import deprecate
 
 try:
     from pyiron_base import ProjectGUI

@@ -22,7 +22,8 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     structure_dict_to_hdf,
     dict_group_to_hdf,
 )
-from pyiron_base import state, GenericParameters, deprecate
+from pyiron_base import state, GenericParameters
+from pyiron_snippets.deprecate import deprecate
 from pyiron_atomistics.vasp.parser.outcar import Outcar, OutcarCollectError
 from pyiron_atomistics.vasp.parser.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
