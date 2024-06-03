@@ -18,7 +18,8 @@ from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_atomistics.atomistics.structure.phonopy import (
     publication as phonopy_publication,
 )
-from pyiron_base import state, JobGenerator, ImportAlarm, deprecate
+from pyiron_base import state, JobGenerator, deprecate
+from pyiron_snippets.import_alarm import ImportAlarm
 import structuretoolkit
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"

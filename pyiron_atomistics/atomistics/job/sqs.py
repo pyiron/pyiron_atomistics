@@ -7,7 +7,8 @@ import warnings
 import itertools
 from structuretoolkit.build import sqs_structures
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
-from pyiron_base import state, DataContainer, GenericParameters, ImportAlarm
+from pyiron_base import state, DataContainer, GenericParameters
+from pyiron_snippets.import_alarm import ImportAlarm
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 import numpy as np
 
