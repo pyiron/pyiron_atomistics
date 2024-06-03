@@ -24,8 +24,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "ase==3.22.1",
-    "atomistics==0.1.27",
+    "ase==3.23.0",
+    "atomistics==0.1.29",
     "defusedxml==0.7.1",
     "h5py==3.11.0",
     "matplotlib==3.8.4",
@@ -33,16 +33,16 @@ dependencies = [
     "mp-api==0.41.2",
     "numpy==1.26.4",
     "pandas==2.2.2",
-    "phonopy==2.22.1",
+    "phonopy==2.23.1",
     "pint==0.23",
     "pyiron_base==0.8.4",
-    "pyiron_snippets==0.1.0",
-    "pylammpsmpi==0.2.18",
-    "scipy==1.13.0",
+    "pyiron_snippets==0.1.1",
+    "pylammpsmpi==0.2.19",
+    "scipy==1.13.1",
     "scikit-learn==1.5.0",
     "seekpath==2.1.0",
     "spglib==2.4.0",
-    "structuretoolkit==0.0.23",
+    "structuretoolkit==0.0.24",
 ]
 dynamic = ["version"]
 
