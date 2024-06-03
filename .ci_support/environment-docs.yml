@@ -24,6 +24,6 @@ dependencies:
 - scipy =1.13.1
 - seekpath =2.1.0
 - spglib =2.4.0
-- structuretoolkit =0.0.23
+- structuretoolkit =0.0.24
 - pyxtal =0.6.2
 - jupyter-book =1.0.0
