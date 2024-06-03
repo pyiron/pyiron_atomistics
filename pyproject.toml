@@ -24,7 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "ase==3.22.1",
+    "ase==3.23.0",
     "atomistics==0.1.28",
     "defusedxml==0.7.1",
     "h5py==3.11.0",
