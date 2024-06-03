@@ -6,7 +6,7 @@ dependencies:
 - sphinx_rtd_theme
 - myst-parser
 - aimsgb =1.1.0
-- ase =3.22.1
+- ase =3.23.0
 - atomistics =0.1.28
 - defusedxml =0.7.1
 - h5py =3.11.0
