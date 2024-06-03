@@ -6,8 +6,8 @@ dependencies:
 - sphinx_rtd_theme
 - myst-parser
 - aimsgb =1.1.0
-- ase =3.22.1
-- atomistics =0.1.28
+- ase =3.23.0
+- atomistics =0.1.29
 - defusedxml =0.7.1
 - h5py =3.11.0
 - matplotlib-base =3.8.4
@@ -18,12 +18,12 @@ dependencies:
 - phonopy =2.23.1
 - pint =0.23
 - pyiron_base =0.8.4
-- pylammpsmpi =0.2.18
+- pylammpsmpi =0.2.19
 - pyscal =2.10.18
 - scikit-learn =1.5.0
 - scipy =1.13.1
 - seekpath =2.1.0
 - spglib =2.4.0
-- structuretoolkit =0.0.23
+- structuretoolkit =0.0.24
 - pyxtal =0.6.2
 - jupyter-book =1.0.0
