@@ -16,9 +16,9 @@ from pyiron_base import (
     Project as ProjectCore,
     Creator as CreatorCore,
 )
-from pyiron_base.state.logger import logger
 from pyiron_base.project.maintenance import Maintenance, LocalMaintenance
 from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.logger import logger
 
 try:
     from pyiron_base import ProjectGUI
