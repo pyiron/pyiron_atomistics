@@ -383,7 +383,7 @@ class SphinxOutput(Output, GenericInteractiveOutput):
             [elec_dict[k] for k in self._job.structure.get_chemical_symbols()]
         )
         n_elec = int(np.ceil(n_elec / 2))
-        bands = self._job.content["output/generic/dft/bands_occ"][-1]
+        bands = self._job.content["output/generic/dft"]["bands_occ"][-1]
         bands = bands.reshape(-1, bands.shape[-1])
         max_occ = np.sum(~np.isclose(bands, 0), axis=-1).max()
         n_bands = bands.shape[-1]
