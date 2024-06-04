@@ -21,6 +21,7 @@ from pyiron_base import (
     GenericJob as GenericJobCore,
 )
 from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.logger import logger
 
 try:
     from pyiron_base import ProjectGUI
@@ -1011,6 +1012,7 @@ def _suppress_notfound(meth):
         try:
             return meth(*args, **kwargs)
         except ValueError:
+            logger.warning(f"Could not access {meth.__name__}, returning None!")
             return None
     return f
 
