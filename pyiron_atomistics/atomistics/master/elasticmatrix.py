@@ -124,7 +124,6 @@ class ElasticMatrixJob(AtomisticParallelMaster):
         )
         self.input["fit_order"] = (2, "order of the fit polynom")
         self.input["eps_range"] = (0.005, "strain variation")
-        self.input["relax_atoms"] = (True, "relax atoms in deformed structure")
         self.input["sqrt_eta"] = (
             True,
             "calculate self-consistently sqrt of stress matrix eta",
@@ -149,18 +148,10 @@ class ElasticMatrixJob(AtomisticParallelMaster):
 
     def run_static(self):
         self.create_calculator()
-        if self.input["relax_atoms"]:
-            self.ref_job.calc_minimize(pressure=None)
-        else:
-            self.ref_job.calc_static()
         super(ElasticMatrixJob, self).run_static()
 
     def run_if_interactive(self):
         self.create_calculator()
-        if self.input["relax_atoms"]:
-            self.ref_job.calc_minimize(pressure=None)
-        else:
-            self.ref_job.calc_static()
         super(ElasticMatrixJob, self).run_if_interactive()
 
     def run_if_refresh(self):
