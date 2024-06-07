@@ -1006,6 +1006,7 @@ structure=atoms # atoms, continue_final
 """
         self.load_string(file_content)
 
+
 def _suppress_notfound(meth):
     @wraps(meth)
     def f(*args, **kwargs):
@@ -1014,7 +1015,9 @@ def _suppress_notfound(meth):
         except ValueError:
             logger.warning(f"Could not access {meth.__name__}, returning None!")
             return None
+
     return f
+
 
 class GenericOutput(object):
     def __init__(self, job):
@@ -1076,7 +1079,9 @@ class GenericOutput(object):
     @property
     def unwrapped_positions(self):
         try:
-            unwrapped_positions = self._job.project_hdf5["output/generic/unwrapped_positions"]
+            unwrapped_positions = self._job.project_hdf5[
+                "output/generic/unwrapped_positions"
+            ]
             return unwrapped_positions
         except ValueError:
             return self._job.structure.positions + self.total_displacements
@@ -1102,13 +1107,17 @@ class GenericOutput(object):
                 two snapshots (due to periodic boundary conditions)
         """
         try:
-            unwrapped_positions = self._job.project_hdf5["output/generic/unwrapped_positions"]
+            unwrapped_positions = self._job.project_hdf5[
+                "output/generic/unwrapped_positions"
+            ]
             return np.diff(
                 np.append([self._job.structure.positions], unwrapped_positions, axis=0),
                 axis=0,
             )
         except ValueError:
-            return self.get_displacements(self._job.structure, self.positions, self.cells)
+            return self.get_displacements(
+                self._job.structure, self.positions, self.cells
+            )
 
     @staticmethod
     def get_displacements(structure, positions, cells):
@@ -1154,7 +1163,9 @@ class GenericOutput(object):
                 two snapshots (due to periodic boundary conditions)
         """
         try:
-            unwrapped_positions = self._job.project_hdf5["output/generic/unwrapped_positions"]
+            unwrapped_positions = self._job.project_hdf5[
+                "output/generic/unwrapped_positions"
+            ]
             return unwrapped_positions - self._job.structure.positions
         except ValueError:
             return np.cumsum(self.displacements, axis=0)
