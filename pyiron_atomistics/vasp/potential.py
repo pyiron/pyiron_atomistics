@@ -500,17 +500,16 @@ class Potcar(GenericParameters):
         self._set_potential_paths()
         if cwd is not None:
             file_name = posixpath.join(cwd, file_name)
-        f = open(file_name, "w")
-        for el_file in self.el_path_lst:
-            with open(el_file) as pot_file:
-                for i, line in enumerate(pot_file):
-                    f.write(line)
-                    if i == 1:
-                        self.electrons_per_atom_lst.append(int(float(line)))
-                    elif i == 14:
-                        mystr = line.split()[2][:-1]
-                        self.max_cutoff_lst.append(float(mystr))
-        f.close()
+        with open(file_name, "w") as f:
+            for el_file in self.el_path_lst:
+                with open(el_file) as pot_file:
+                    for i, line in enumerate(pot_file):
+                        f.write(line)
+                        if i == 1:
+                            self.electrons_per_atom_lst.append(int(float(line)))
+                        elif i == 14:
+                            mystr = line.split()[2][:-1]
+                            self.max_cutoff_lst.append(float(mystr))
 
     def load_default(self):
         file_content = """\
