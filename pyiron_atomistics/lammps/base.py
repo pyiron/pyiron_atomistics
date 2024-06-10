@@ -373,6 +373,7 @@ class LammpsBase(AtomisticGenericJob):
         )
 
     def get_input_file_dict(self):
+        input_file_dict = super().get_input_file_dict()
         if self.structure is None:
             raise ValueError("Input structure not set. Use method set_structure()")
         lmp_structure = self._get_lammps_structure(
@@ -388,17 +389,13 @@ class LammpsBase(AtomisticGenericJob):
         if update_input_hdf5:
             self.input.to_hdf(self._hdf5)
         if self.input.potential.files is not None:
-            files_to_copy = {os.path.basename(f): f for f in self.input.potential.files}
-        else:
-            files_to_copy = {}
-        return {
-            "files_to_create": {
-                "structure.inp": lmp_structure._string_input,
-                "control.inp": "".join(self.input.control.get_string_lst()),
-                "potential.inp": "".join(self.input.potential.get_string_lst()),
-            },
-            "files_to_copy": files_to_copy,
-        }
+            input_file_dict["files_to_copy"].update({os.path.basename(f): f for f in self.input.potential.files})
+        input_file_dict["files_to_create"].update({
+            "structure.inp": lmp_structure._string_input,
+            "control.inp": "".join(self.input.control.get_string_lst()),
+            "potential.inp": "".join(self.input.potential.get_string_lst()),
+        })
+        return input_file_dict
 
     def write_input(self):
         """
