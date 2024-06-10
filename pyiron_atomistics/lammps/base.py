@@ -8,6 +8,7 @@ import os
 import ast
 import numpy as np
 import pandas as pd
+import shutil
 import warnings
 
 from pyiron_base import state
@@ -386,10 +387,17 @@ class LammpsBase(AtomisticGenericJob):
         self._set_selective_dynamics()
         if update_input_hdf5:
             self.input.to_hdf(self._hdf5)
+        if self.files is not None:
+            files_to_copy = {os.path.basename(f): f for f in self.input.potential.files}
+        else:
+            files_to_copy = {}
         return {
-            "structure.inp": lmp_structure._string_input,
-            "control.inp": "".join(self.input.control.get_string_lst()),
-            "potential.inp": "".join(self.input.potential.get_string_lst())
+            "files_to_create": {
+                "structure.inp": lmp_structure._string_input,
+                "control.inp": "".join(self.input.control.get_string_lst()),
+                "potential.inp": "".join(self.input.potential.get_string_lst())
+            },
+            "files_to_copy": files_to_copy
         }
 
     def write_input(self):
@@ -399,28 +407,12 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
-        if self.structure is None:
-            raise ValueError("Input structure not set. Use method set_structure()")
-        lmp_structure = self._get_lammps_structure(
-            structure=self.structure, cutoff_radius=self.cutoff_radius
-        )
-        lmp_structure.write_file(file_name="structure.inp", cwd=self.working_directory)
-        update_input_hdf5 = False
-        if not all(self.structure.pbc):
-            self.input.control["boundary"] = " ".join(
-                ["p" if coord else "f" for coord in self.structure.pbc]
-            )
-            update_input_hdf5 = True
-        self._set_selective_dynamics()
-        if update_input_hdf5:
-            self.input.to_hdf(self._hdf5)
-        self.input.control.write_file(
-            file_name="control.inp", cwd=self.working_directory
-        )
-        self.input.potential.write_file(
-            file_name="potential.inp", cwd=self.working_directory
-        )
-        self.input.potential.copy_pot_files(self.working_directory)
+        input_dict = self.get_input_file_dict()
+        for file_name, content in input_dict["files_to_create"].items():
+            with open(os.path.join(self.working_directory, file_name), "w") as f:
+                f.writelines(content)
+        for file_name, source in input_dict["files_to_copy"].items():
+            shutil.copy(source, os.path.join(self.working_directory, file_name))
 
     @property
     def publication(self):
