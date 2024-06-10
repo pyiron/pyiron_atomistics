@@ -119,10 +119,7 @@ def get_poscar_content(structure, write_species=True, cartesian=True):
             x, y, z = vec
             sd_string = " ".join(["T" if sd else "F" for sd in selec_dyn_lst[i]])
             line_lst.append(
-                "{0:.15f} {1:.15f} {2:.15f}".format(x, y, z)
-                + " "
-                + sd_string
-                + endline
+                "{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + " " + sd_string + endline
             )
     else:
         for i, vec in enumerate(sorted_coords):
@@ -143,7 +140,15 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
 
     """
     with open(filename, "w") as f:
-        f.writelines("".join(get_poscar_content(structure=structure, write_species=write_species, cartesian=cartesian)))
+        f.writelines(
+            "".join(
+                get_poscar_content(
+                    structure=structure,
+                    write_species=write_species,
+                    cartesian=cartesian,
+                )
+            )
+        )
 
 
 def atoms_from_string(string, read_velocities=False, species_list=None):

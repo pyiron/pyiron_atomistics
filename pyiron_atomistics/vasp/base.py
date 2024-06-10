@@ -1979,13 +1979,17 @@ class Input:
             structure (atomistics.structure.atoms.Atoms instance): Structure to be written
             directory (str): The working directory for the VASP run
         """
-        files_to_create_dict = self.get_input_file_dict(structure=structure, modified_elements=modified_elements)
+        files_to_create_dict = self.get_input_file_dict(
+            structure=structure, modified_elements=modified_elements
+        )
         for file_name, content in files_to_create_dict.items():
             with open(os.path.join(directory, file_name), "w") as f:
                 f.writelines(content)
 
     def get_input_file_dict(self, structure, modified_elements):
-        self.potcar.potcar_set_structure(structure=structure, modified_elements=modified_elements)
+        self.potcar.potcar_set_structure(
+            structure=structure, modified_elements=modified_elements
+        )
         # Write the species info in the POSCAR file only if there are no user defined species
         is_user_defined = list()
         for species in structure.get_species_objects():
@@ -1994,10 +1998,12 @@ class Input:
         files_to_create = {
             "INCAR": "".join(self.incar.get_string_lst()),
             "POTCAR": "".join(self.potcar.get_file_content()),
-            "POSCAR": "".join(get_poscar_content(
-                structure=structure,
-                write_species=not do_not_write_species,
-                cartesian=True)
+            "POSCAR": "".join(
+                get_poscar_content(
+                    structure=structure,
+                    write_species=not do_not_write_species,
+                    cartesian=True,
+                )
             ),
         }
         if "KSPACING" in self.incar.keys():
