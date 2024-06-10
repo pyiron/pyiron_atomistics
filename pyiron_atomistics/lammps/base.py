@@ -401,20 +401,6 @@ class LammpsBase(AtomisticGenericJob):
         )
         return input_file_dict
 
-    def write_input(self):
-        """
-        Call routines that generate the code specific input files
-
-        Returns:
-
-        """
-        input_dict = self.get_input_file_dict()
-        for file_name, content in input_dict["files_to_create"].items():
-            with open(os.path.join(self.working_directory, file_name), "w") as f:
-                f.writelines(content)
-        for file_name, source in input_dict["files_to_copy"].items():
-            shutil.copy(source, os.path.join(self.working_directory, file_name))
-
     @property
     def publication(self):
         return {
