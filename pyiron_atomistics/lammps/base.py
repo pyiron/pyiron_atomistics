@@ -388,7 +388,7 @@ class LammpsBase(AtomisticGenericJob):
         if update_input_hdf5:
             self.input.to_hdf(self._hdf5)
         if self.files is not None:
-            files_to_copy = {os.path.basename(f): f for f in self.input.potential.files}
+            files_to_copy = {os.path.basename(f): f for f in self.input.potential.files if f is not None}
         else:
             files_to_copy = {}
         return {
