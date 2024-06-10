@@ -389,12 +389,16 @@ class LammpsBase(AtomisticGenericJob):
         if update_input_hdf5:
             self.input.to_hdf(self._hdf5)
         if self.input.potential.files is not None:
-            input_file_dict["files_to_copy"].update({os.path.basename(f): f for f in self.input.potential.files})
-        input_file_dict["files_to_create"].update({
-            "structure.inp": lmp_structure._string_input,
-            "control.inp": "".join(self.input.control.get_string_lst()),
-            "potential.inp": "".join(self.input.potential.get_string_lst()),
-        })
+            input_file_dict["files_to_copy"].update(
+                {os.path.basename(f): f for f in self.input.potential.files}
+            )
+        input_file_dict["files_to_create"].update(
+            {
+                "structure.inp": lmp_structure._string_input,
+                "control.inp": "".join(self.input.control.get_string_lst()),
+                "potential.inp": "".join(self.input.potential.get_string_lst()),
+            }
+        )
         return input_file_dict
 
     def write_input(self):
