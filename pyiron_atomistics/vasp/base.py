@@ -399,13 +399,12 @@ class VaspBase(GenericDFTJob):
                     self.logger.info(
                         "The POSCAR file will be overwritten by the CONTCAR file specified in restart_file_list."
                     )
-        return {
-            "files_to_create": self.input.get_input_file_dict(
-                structure=self.structure,
-                modified_elements=modified_elements,
-            ),
-            "files_to_copy": {},
-        }
+        input_file_dict = super().get_input_file_dict()
+        input_file_dict["files_to_create"].update(self.input.get_input_file_dict(
+            structure=self.structure,
+            modified_elements=modified_elements,
+        ))
+        return input_file_dict
 
     def _store_output(self, output_dict):
         output_dict_to_hdf(
