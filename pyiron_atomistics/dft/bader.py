@@ -6,6 +6,9 @@ import numpy as np
 import os
 import subprocess
 
+from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
+
+
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
     "Copyright 2021, Max-Planck-Institut für Eisenforschung GmbH - "
@@ -26,22 +29,21 @@ class Bader:
     .. _Bader code: http://theory.cm.utexas.edu/henkelman/code/bader
     """
 
-    def __init__(self, job):
+    def __init__(self, structure, working_directory):
         """
         Initialize the Bader module
 
         Args:
             job (pyiron_atomistics.dft.job.generic.GenericDFTJob): A DFT job instance (finished/converged job)
         """
-        self.job = job
-        self._working_directory = job.working_directory
-        self._structure = job.structure
+        self._working_directory = working_directory
+        self._structure = structure
 
     def _create_cube_files(self):
         """
         Create CUBE format files of the total and valce charges to be used by the Bader program
         """
-        cd_val, cd_total = self.job.get_valence_and_total_charge_density()
+        cd_val, cd_total = get_valence_and_total_charge_density(working_directory=self._working_directory)
         cd_val.write_cube_file(
             filename=os.path.join(self._working_directory, "valence_charge.CUBE")
         )
@@ -124,3 +126,22 @@ def parse_charge_vol_file(structure, filename="ACF.dat"):
         charges = np.genfromtxt(lines[2:], max_rows=len(structure))[:, 4]
         volumes = np.genfromtxt(lines[2:], max_rows=len(structure))[:, 6]
     return charges, volumes
+
+
+def get_valence_and_total_charge_density(working_directory):
+    """
+    Gives the valence and total charge densities
+
+    Returns:
+        tuple: The required charge densities
+    """
+    cd_core = VaspVolumetricData()
+    cd_total = VaspVolumetricData()
+    cd_val = VaspVolumetricData()
+    if os.path.isfile(working_directory + "/AECCAR0"):
+        cd_core.from_file(working_directory + "/AECCAR0")
+        cd_val.from_file(working_directory + "/AECCAR2")
+        cd_val.atoms = cd_val.atoms
+        cd_total.total_data = cd_core.total_data + cd_val.total_data
+        cd_total.atoms = cd_val.atoms
+    return cd_val, cd_total

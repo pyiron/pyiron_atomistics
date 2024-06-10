@@ -40,7 +40,7 @@ from pyiron_atomistics.dft.waves.electronic import (
     electronic_structure_dict_to_hdf,
 )
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
-from pyiron_atomistics.dft.bader import Bader
+from pyiron_atomistics.dft.bader import Bader, get_valence_and_total_charge_density
 import warnings
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
@@ -435,7 +435,7 @@ class VaspBase(GenericDFTJob):
         if os.path.isfile(os.path.join(cwd, "AECCAR0")) and os.path.isfile(
             os.path.join(cwd, "AECCAR2")
         ):
-            bader = Bader(self)
+            bader = Bader(working_directory=self.working_directory, structure=self.structure)
             try:
                 charges_orig, volumes_orig = bader.compute_bader_charges()
             except ValueError:
@@ -1460,16 +1460,7 @@ class VaspBase(GenericDFTJob):
         Returns:
             tuple: The required charge densities
         """
-        cd_core = VaspVolumetricData()
-        cd_total = VaspVolumetricData()
-        cd_val = VaspVolumetricData()
-        if os.path.isfile(self.working_directory + "/AECCAR0"):
-            cd_core.from_file(self.working_directory + "/AECCAR0")
-            cd_val.from_file(self.working_directory + "/AECCAR2")
-            cd_val.atoms = cd_val.atoms
-            cd_total.total_data = cd_core.total_data + cd_val.total_data
-            cd_total.atoms = cd_val.atoms
-        return cd_val, cd_total
+        return get_valence_and_total_charge_density(working_directory=self.working_directory)
 
     def get_electrostatic_potential(self):
         """
