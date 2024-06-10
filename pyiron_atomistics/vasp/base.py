@@ -5,6 +5,7 @@
 from __future__ import print_function
 import os
 import posixpath
+import shutil
 import subprocess
 import numpy as np
 
@@ -27,7 +28,7 @@ from pyiron_snippets.deprecate import deprecate
 from pyiron_atomistics.vasp.parser.outcar import Outcar, OutcarCollectError
 from pyiron_atomistics.vasp.parser.oszicar import Oszicar
 from pyiron_atomistics.vasp.procar import Procar
-from pyiron_atomistics.vasp.structure import read_atoms, write_poscar, vasp_sorter
+from pyiron_atomistics.vasp.structure import read_atoms, get_poscar_content, vasp_sorter
 from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
 from pyiron_atomistics.vasp.vasprun import VasprunError, VasprunWarning
 from pyiron_atomistics.vasp.volumetric_data import (
@@ -373,6 +374,18 @@ class VaspBase(GenericDFTJob):
     # Compatibility functions
     def write_input(self):
         """
+        Call routines that generate the code specific input files
+        Returns:
+        """
+        input_dict = self.get_input_file_dict()
+        for file_name, content in input_dict["files_to_create"].items():
+            with open(os.path.join(self.working_directory, file_name), "w") as f:
+                f.writelines(content)
+        for file_name, source in input_dict["files_to_copy"].items():
+            shutil.copy(source, os.path.join(self.working_directory, file_name))
+
+    def get_input_file_dict(self):
+        """
         Call routines that generate the INCAR, POTCAR, KPOINTS and POSCAR input files
         """
         if self.input.incar["SYSTEM"] == "pyiron_jobname":
@@ -394,11 +407,13 @@ class VaspBase(GenericDFTJob):
                     self.logger.info(
                         "The POSCAR file will be overwritten by the CONTCAR file specified in restart_file_list."
                     )
-        self.input.write(
-            structure=self.structure,
-            directory=self.working_directory,
-            modified_elements=modified_elements,
-        )
+        return {
+            "files_to_create": self.input.get_input_file_dict(
+                structure=self.structure,
+                modified_elements=modified_elements,
+            ),
+            "files_to_copy": {},
+        }
 
     def collect_output_parser(self, cwd):
         """
@@ -1964,23 +1979,32 @@ class Input:
             structure (atomistics.structure.atoms.Atoms instance): Structure to be written
             directory (str): The working directory for the VASP run
         """
-        self.incar.write_file(file_name="INCAR", cwd=directory)
-        if "KSPACING" in self.incar.keys():
-            warnings.warn("'KSPACING' found in INCAR, no KPOINTS file written")
-        else:
-            self.kpoints.write_file(file_name="KPOINTS", cwd=directory)
-        self.potcar.potcar_set_structure(structure, modified_elements)
-        self.potcar.write_file(file_name="POTCAR", cwd=directory)
+        files_to_create_dict = self.get_input_file_dict(structure=structure, modified_elements=modified_elements)
+        for file_name, content in files_to_create_dict.items():
+            with open(os.path.join(directory, file_name), "w") as f:
+                f.writelines(content)
+
+    def get_input_file_dict(self, structure, modified_elements):
+        self.potcar.potcar_set_structure(structure=structure, modified_elements=modified_elements)
         # Write the species info in the POSCAR file only if there are no user defined species
         is_user_defined = list()
         for species in structure.get_species_objects():
             is_user_defined.append(species.Parent is not None)
         do_not_write_species = any(is_user_defined)
-        write_poscar(
-            structure,
-            filename=posixpath.join(directory, "POSCAR"),
-            write_species=not do_not_write_species,
-        )
+        files_to_create = {
+            "INCAR": "".join(self.incar.get_string_lst()),
+            "POTCAR": "".join(self.potcar.get_file_content()),
+            "POSCAR": "".join(get_poscar_content(
+                structure=structure,
+                write_species=not do_not_write_species,
+                cartesian=True)
+            ),
+        }
+        if "KSPACING" in self.incar.keys():
+            warnings.warn("'KSPACING' found in INCAR, no KPOINTS file written")
+        else:
+            files_to_create["KPOINTS"] = "".join(self.kpoints.get_string_lst())
+        return files_to_create
 
     def to_dict(self):
         input_dict = {"vasp_dict/eddrmm_handling": self._eddrmm}
