@@ -395,9 +395,9 @@ class LammpsBase(AtomisticGenericJob):
             "files_to_create": {
                 "structure.inp": lmp_structure._string_input,
                 "control.inp": "".join(self.input.control.get_string_lst()),
-                "potential.inp": "".join(self.input.potential.get_string_lst())
+                "potential.inp": "".join(self.input.potential.get_string_lst()),
             },
-            "files_to_copy": files_to_copy
+            "files_to_copy": files_to_copy,
         }
 
     def write_input(self):
