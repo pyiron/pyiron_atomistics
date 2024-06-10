@@ -370,6 +370,27 @@ class LammpsBase(AtomisticGenericJob):
             "all h5md ${dumptime} dump.h5 position force create_group yes"
         )
 
+    def get_input_file_dict(self):
+        if self.structure is None:
+            raise ValueError("Input structure not set. Use method set_structure()")
+        lmp_structure = self._get_lammps_structure(
+            structure=self.structure, cutoff_radius=self.cutoff_radius
+        )
+        update_input_hdf5 = False
+        if not all(self.structure.pbc):
+            self.input.control["boundary"] = " ".join(
+                ["p" if coord else "f" for coord in self.structure.pbc]
+            )
+            update_input_hdf5 = True
+        self._set_selective_dynamics()
+        if update_input_hdf5:
+            self.input.to_hdf(self._hdf5)
+        return {
+            "structure.inp": lmp_structure._string_input,
+            "control.inp": "".join(self.input.control.get_string_lst()),
+            "potential.inp": "".join(self.input.potential.get_string_lst())
+        }
+
     def write_input(self):
         """
         Call routines that generate the code specific input files
