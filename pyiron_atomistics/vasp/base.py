@@ -435,7 +435,9 @@ class VaspBase(GenericDFTJob):
         if os.path.isfile(os.path.join(cwd, "AECCAR0")) and os.path.isfile(
             os.path.join(cwd, "AECCAR2")
         ):
-            bader = Bader(working_directory=self.working_directory, structure=self.structure)
+            bader = Bader(
+                working_directory=self.working_directory, structure=self.structure
+            )
             try:
                 charges_orig, volumes_orig = bader.compute_bader_charges()
             except ValueError:
@@ -1460,7 +1462,9 @@ class VaspBase(GenericDFTJob):
         Returns:
             tuple: The required charge densities
         """
-        return get_valence_and_total_charge_density(working_directory=self.working_directory)
+        return get_valence_and_total_charge_density(
+            working_directory=self.working_directory
+        )
 
     def get_electrostatic_potential(self):
         """
