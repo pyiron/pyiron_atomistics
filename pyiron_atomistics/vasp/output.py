@@ -647,10 +647,7 @@ def parse_vasp_output(working_directory, structure=None, sorted_indices=None):
             charges, volumes = charges_orig.copy(), volumes_orig.copy()
             charges[sorted_indices] = charges_orig
             volumes[sorted_indices] = volumes_orig
-            if (
-                "valence_charges"
-                in output_parser.generic_output.dft_log_dict.keys()
-            ):
+            if "valence_charges" in output_parser.generic_output.dft_log_dict.keys():
                 valence_charges = output_parser.generic_output.dft_log_dict[
                     "valence_charges"
                 ]
@@ -658,13 +655,13 @@ def parse_vasp_output(working_directory, structure=None, sorted_indices=None):
                 output_parser.generic_output.dft_log_dict["bader_charges"] = (
                     valence_charges - charges
                 )
-            output_parser.generic_output.dft_log_dict["bader_volumes"] = (
-                volumes
-            )
+            output_parser.generic_output.dft_log_dict["bader_volumes"] = volumes
     return output_parser.to_dict()
 
 
-def get_final_structure_from_file(working_directory, filename="CONTCAR", structure=None, sorted_indices=None):
+def get_final_structure_from_file(
+    working_directory, filename="CONTCAR", structure=None, sorted_indices=None
+):
     """
     Get the final structure of the simulation usually from the CONTCAR file
 
@@ -691,9 +688,7 @@ def get_final_structure_from_file(working_directory, filename="CONTCAR", structu
                 species_list=input_structure.get_parent_symbols(),
             )
             input_structure.cell = output_structure.cell.copy()
-            input_structure.positions[sorted_indices] = (
-                output_structure.positions
-            )
+            input_structure.positions[sorted_indices] = output_structure.positions
         except (IndexError, ValueError, IOError):
             raise IOError("Unable to read output structure")
     return input_structure

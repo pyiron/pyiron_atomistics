@@ -43,7 +43,9 @@ class Bader:
         """
         Create CUBE format files of the total and valce charges to be used by the Bader program
         """
-        cd_val, cd_total = get_valence_and_total_charge_density(working_directory=self._working_directory)
+        cd_val, cd_total = get_valence_and_total_charge_density(
+            working_directory=self._working_directory
+        )
         cd_val.write_cube_file(
             filename=os.path.join(self._working_directory, "valence_charge.CUBE")
         )
