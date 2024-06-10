@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Tuple, TYPE_CHECKING, Union
+from typing import Dict, List, Tuple, TYPE_CHECKING, Union, Optional
 import h5py
 from io import StringIO
 import numpy as np
@@ -10,11 +10,11 @@ import pandas as pd
 import warnings
 from pyiron_base import extract_data_from_file
 from pyiron_atomistics.lammps.units import UnitConverter
+from pyiron_atomistics.lammps.structure import UnfoldingPrism
 
 
 if TYPE_CHECKING:
     from pyiron_atomistics.atomistics.structure.atoms import Atoms
-    from pyiron_atomistics.lammps.structure import UnfoldingPrism
 
 
 @dataclass
@@ -37,11 +37,13 @@ def parse_lammps_output(
     dump_h5_full_file_name: str,
     dump_out_full_file_name: str,
     log_lammps_full_file_name: str,
-    prism: UnfoldingPrism,
     structure: Atoms,
     potential_elements: Union[np.ndarray, List],
     units: str,
+    prism: Optional[UnfoldingPrism] = None,
 ) -> Dict:
+    if prism is None:
+        prism = UnfoldingPrism(structure.cell)
     dump_dict = _parse_dump(
         dump_h5_full_file_name,
         dump_out_full_file_name,

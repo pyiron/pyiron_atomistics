@@ -454,20 +454,10 @@ class LammpsBase(AtomisticGenericJob):
             units=self.units,
         )
 
-    def collect_output(self):
-        """
-
-        Returns:
-
-        """
+    def _store_output(self, output_dict):
         self.input.from_hdf(self._hdf5)
         hdf_dict = resolve_hierachical_dict(
-            data_dict=self.collect_output_parser(
-                cwd=self.working_directory,
-                dump_h5_file_name="dump.h5",
-                dump_out_file_name="dump.out",
-                log_lammps_file_name="log.lammps",
-            ),
+            data_dict=output_dict,
             group_name="output",
         )
         final_structure = self.structure.copy()
@@ -482,6 +472,21 @@ class LammpsBase(AtomisticGenericJob):
                 }
             )
         self.project_hdf5.write_dict_to_hdf(data_dict=hdf_dict)
+
+    def collect_output(self):
+        """
+
+        Returns:
+
+        """
+        self._store_output(
+            output_dict=self.collect_output_parser(
+                cwd=self.working_directory,
+                dump_h5_file_name="dump.h5",
+                dump_out_file_name="dump.out",
+                log_lammps_file_name="log.lammps",
+            ),
+        )
 
     def convergence_check(self):
         if self._generic_input["calc_mode"] == "minimize":
