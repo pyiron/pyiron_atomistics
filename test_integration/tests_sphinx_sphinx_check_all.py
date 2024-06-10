@@ -19,6 +19,11 @@ class TestSphinx(unittest.TestCase):
     def test_Fe_nonmag(self):
         job = self.project.create_job(self.project.job_type.Sphinx, 'spx_Fe_nonmag')
         job.structure = self.project.create.structure.ase.bulk('Fe', a=self.a_Fe)
+        try:
+            job.structure.arrays.pop("spin")
+            job.structure.arrays.pop("initial_magmoms")
+        except KeyError:
+            pass
         job.calc_static()
         job.run()
         self.assertLess(

@@ -6,7 +6,8 @@ import unittest
 import os
 import posixpath
 import numpy as np
-from pyiron_atomistics.vasp.parser.outcar import Outcar
+from pyiron_atomistics.vasp.base import Output, VaspCollectError
+from pyiron_atomistics.vasp.parser.outcar import Outcar, OutcarCollectError
 
 
 class TestOutcar(unittest.TestCase):
@@ -1203,6 +1204,31 @@ class TestOutcar(unittest.TestCase):
                 self.assertTrue(np.allclose(np.array(vbm_list), np.array([[-7.6374], [0.0219]])))
                 self.assertTrue(np.allclose(np.array(cbm_list), np.array([[-0.1332], [0.0219]])))
 
+
+    def test_error_on_parse(self):
+        """OutcarCollectError should be raised when vital information cannot be read."""
+        with self.assertRaises(OutcarCollectError):
+            Outcar().from_file(os.path.join(self.file_location, "../static/vasp_test_files/outcar_without_nions/OUTCAR"))
+
+    def test_no_error_on_incomplete_collect(self):
+        """Do not raise an error when collecting output and the OUTCAR is incomplete."""
+        # the reason being: VaspBase.restart() tries to collect the job before creating a new copy, but if collect fails
+        # when the OUTCAR is not complete, that would mean this kind of job could not be restarted to apply some fix to
+        # the input to avoid the crash.
+        # We want to be able to restart any job, so errors on collect must be silenced or be of the VaspCollectError,
+        # which is caught during restart
+        test_folders = ["../static/vasp_test_files/full_job_aborted",  "../static/vasp_test_files/outcar_without_nions"]
+        for folder in test_folders:
+            with self.subTest(folder=folder):
+                try:
+                    Output().collect(
+                            os.path.join(self.file_location, folder),
+                            sorted_indices=[] # necessary only because Output object otherwise needs to have a structure defined
+                    )
+                except VaspCollectError:
+                    pass
+                except Exception as e:
+                    self.fail(f"collect_output_parser raised {e}, but should be silent!")
 
 if __name__ == "__main__":
     unittest.main()

@@ -36,7 +36,8 @@ from pyiron_atomistics.atomistics.structure.periodic_table import (
     ChemicalElement,
     chemical_element_dict_to_hdf,
 )
-from pyiron_base import state, deprecate
+from pyiron_base import state
+from pyiron_snippets.deprecate import deprecate
 from collections.abc import Sequence
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"

@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 import warnings
 
-from pyiron_base import state, deprecate
+from pyiron_base import state
+from pyiron_snippets.deprecate import deprecate
 from pyiron_atomistics.lammps.potential import (
     LammpsPotentialFile,
     PotentialAvailable,

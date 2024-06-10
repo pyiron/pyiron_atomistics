@@ -5,7 +5,8 @@
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Callable
 import numbers
-from pyiron_base import deprecate, ImportAlarm
+from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.import_alarm import ImportAlarm
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 with ImportAlarm("Animation of atomic structures requires nglview") as nglview_alarm:

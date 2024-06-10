@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -14,7 +13,7 @@ jobs:
     - name: Setup Mambaforge
       uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: '3.9'
+        python-version: '3.10'
         miniforge-variant: Mambaforge
         channels: conda-forge
         channel-priority: strict

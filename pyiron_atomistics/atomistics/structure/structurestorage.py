@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from pyiron_base import FlattenedStorage, ImportAlarm
+from pyiron_base import FlattenedStorage
+from pyiron_snippets.import_alarm import ImportAlarm
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from structuretoolkit.common.error import SymmetryError

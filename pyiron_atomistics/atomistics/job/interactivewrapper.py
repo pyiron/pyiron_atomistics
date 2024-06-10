@@ -2,7 +2,8 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from pyiron_base import InteractiveWrapper as InteractiveWrapperBase, deprecate
+from pyiron_base import InteractiveWrapper as InteractiveWrapperBase
+from pyiron_snippets.deprecate import deprecate
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.atoms import Atoms as PAtoms
 

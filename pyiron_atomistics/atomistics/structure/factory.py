@@ -55,7 +55,8 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     ovito_to_pyiron,
 )
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_base import state, PyironFactory, deprecate
+from pyiron_base import state, PyironFactory
+from pyiron_snippets.deprecate import deprecate
 import types
 from functools import wraps
 
