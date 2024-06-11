@@ -384,9 +384,15 @@ class VaspBase(GenericDFTJob):
         for file_name, source in input_dict["files_to_copy"].items():
             shutil.copy(source, os.path.join(self.working_directory, file_name))
 
-    def get_input_file_dict(self):
+    def get_input_file_dict(self) -> dict:
         """
-        Call routines that generate the INCAR, POTCAR, KPOINTS and POSCAR input files
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        Returns:
+            dict: hierarchical dictionary of input files
         """
         if self.input.incar["SYSTEM"] == "pyiron_jobname":
             self.input.incar["SYSTEM"] = self.job_name
@@ -1986,7 +1992,20 @@ class Input:
             with open(os.path.join(directory, file_name), "w") as f:
                 f.writelines(content)
 
-    def get_input_file_dict(self, structure, modified_elements):
+    def get_input_file_dict(self, structure: Atoms, modified_elements: list) -> dict:
+        """
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        Args:
+            structure (Atoms):
+            modified_elements (list):
+
+        Returns:
+            dict: hierarchical dictionary of input files
+        """
         self.potcar.potcar_set_structure(
             structure=structure, modified_elements=modified_elements
         )
