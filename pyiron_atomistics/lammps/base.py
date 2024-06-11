@@ -379,6 +379,10 @@ class LammpsBase(AtomisticGenericJob):
         which represent the content which is going to be written to the corresponding file. In files_to_copy the values
         are the paths to the source files to be copied.
 
+        The get_input_file_dict() function is called before the write_input() function to convert the input specified on
+        the job object to strings which can be written to the working directory as well as files which are copied to the
+        working directory. After the write_input() function wrote the input files the executable is called. 
+
         Returns:
             dict: hierarchical dictionary of input files
         """
