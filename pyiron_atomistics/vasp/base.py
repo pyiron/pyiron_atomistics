@@ -392,7 +392,13 @@ class VaspBase(GenericDFTJob):
             modified_elements=modified_elements,
         )
 
-    def _store_output(self, output_dict):
+    def _store_output(self, output_dict: dict):
+        """
+        Internal helper function to store the hierarchical output dictionary in the HDF5 file of the pyiron job object
+
+        Args:
+            output_dict (dict): hierarchical output dictionary
+        """
         output_dict_to_hdf(
             data_dict=output_dict,
             hdf=self._hdf5,
@@ -404,7 +410,10 @@ class VaspBase(GenericDFTJob):
     # define routines that collect all output files
     def collect_output(self):
         """
-        Collects the outputs and stores them to the hdf file
+        The collect_output() method parses the output in the working_directory and stores it in the HDF5 file. It is
+        divided into two functions, the pyiron_atomistics.vasp.output.parse_vasp_output() function, which parses the
+        working directory and returns a dictionary with the output and the job._store_output() function which stores
+        the output dictionary in the HDF5 file.
         """
         self._store_output(
             output_dict=parse_vasp_output(
