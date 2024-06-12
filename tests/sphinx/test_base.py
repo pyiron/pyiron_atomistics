@@ -70,8 +70,8 @@ class TestSphinx(unittest.TestCase):
         cls.sphinx.input["VaspPot"] = False
         cls.sphinx.structure.add_tag(selective_dynamics=(True, True, True))
         cls.sphinx.structure.selective_dynamics[1] = (False, False, False)
-        cls.sphinx.load_default_groups()
         cls.sphinx.fix_symmetry = False
+        cls.sphinx.load_default_groups()
         cls.sphinx.write_input()
         cls.sphinx_2_3.to_hdf()
         cls.sphinx_2_3.decompress()
@@ -590,6 +590,11 @@ class TestSphinx(unittest.TestCase):
             "\tatom {\n",
             '\t\tlabel = "spin_0.5";\n',
             "\t\tcoords = [2.4566439620135014, 2.4566439620135014, 2.4566439620135014];\n",
+            "\t}\n",
+            "}\n",
+            "symmetry {\n",
+            "\toperator {\n",
+            "\t\tS = [[1,0,0],[0,1,0],[0,0,1]];\n",
             "\t}\n",
             "}\n",
         ]
