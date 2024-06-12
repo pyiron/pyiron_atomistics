@@ -330,11 +330,11 @@ class TestSphinx(unittest.TestCase):
         self.assertIsInstance(self.sphinx.fix_spin_constraint, bool)
 
     def test_calc_static(self):
-        self.sphinx.calc_static(algorithm="wrong_algorithm")
+        self.sphinx.calc_static()
         self.assertFalse("keepRho" in self.sphinx.input.sphinx.main.to_sphinx())
         self.assertTrue("blockCCG" in self.sphinx.input.sphinx.main.to_sphinx())
         self.sphinx.restart_file_list.append("randomfile")
-        self.sphinx.calc_static(algorithm="ccg")
+        self.sphinx.calc_static()
         self.assertTrue("keepRho" in self.sphinx.input.sphinx.main.to_sphinx())
         self.assertEqual(self.sphinx.input["Estep"], 100)
         self.assertTrue("CCG" in self.sphinx.input.sphinx.main.to_sphinx())
