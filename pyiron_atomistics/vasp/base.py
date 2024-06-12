@@ -376,9 +376,19 @@ class VaspBase(GenericDFTJob):
         for file_name, source in input_dict["files_to_copy"].items():
             shutil.copy(source, os.path.join(self.working_directory, file_name))
 
-    def get_input_file_dict(self):
+    def get_input_file_dict(self) -> dict:
         """
-        Call routines that generate the INCAR, POTCAR, KPOINTS and POSCAR input files
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        The get_input_file_dict() function is called before the write_input() function to convert the input specified on
+        the job object to strings which can be written to the working directory as well as files which are copied to the
+        working directory. After the write_input() function wrote the input files the executable is called.
+
+        Returns:
+            dict: hierarchical dictionary of input files
         """
         if self.input.incar["SYSTEM"] == "pyiron_jobname":
             self.input.incar["SYSTEM"] = self.job_name
@@ -408,7 +418,13 @@ class VaspBase(GenericDFTJob):
         )
         return input_file_dict
 
-    def _store_output(self, output_dict):
+    def _store_output(self, output_dict: dict):
+        """
+        Internal helper function to store the hierarchical output dictionary in the HDF5 file of the pyiron job object
+
+        Args:
+            output_dict (dict): hierarchical output dictionary
+        """
         output_dict_to_hdf(
             data_dict=output_dict,
             hdf=self._hdf5,
@@ -420,7 +436,10 @@ class VaspBase(GenericDFTJob):
     # define routines that collect all output files
     def collect_output(self):
         """
-        Collects the outputs and stores them to the hdf file
+        The collect_output() method parses the output in the working_directory and stores it in the HDF5 file. It is
+        divided into two functions, the pyiron_atomistics.vasp.output.parse_vasp_output() function, which parses the
+        working directory and returns a dictionary with the output and the job._store_output() function which stores
+        the output dictionary in the HDF5 file.
         """
         self._store_output(
             output_dict=parse_vasp_output(
@@ -1905,7 +1924,20 @@ class Input:
             with open(os.path.join(directory, file_name), "w") as f:
                 f.writelines(content)
 
-    def get_input_file_dict(self, structure, modified_elements):
+    def get_input_file_dict(self, structure: Atoms, modified_elements: list) -> dict:
+        """
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        Args:
+            structure (Atoms):
+            modified_elements (list):
+
+        Returns:
+            dict: hierarchical dictionary of input files
+        """
         self.potcar.potcar_set_structure(
             structure=structure, modified_elements=modified_elements
         )
