@@ -1025,9 +1025,6 @@ class VaspBase(GenericDFTJob):
             ionic_steps=ionic_steps,
             max_iter=max_iter,
             pressure=pressure,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
             ionic_energy_tolerance=ionic_energy_tolerance,
             ionic_force_tolerance=ionic_force_tolerance,
             volume_only=volume_only,
@@ -1079,12 +1076,7 @@ class VaspBase(GenericDFTJob):
             retain_charge_density (bool): True if
             retain_electrostatic_potential (bool): True/False
         """
-        super(VaspBase, self).calc_static(
-            electronic_steps=electronic_steps,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
-        )
+        super().calc_static(electronic_steps=electronic_steps)
         self.input.incar["IBRION"] = -1
         self.input.incar["NELM"] = electronic_steps
         # Make sure vasp runs only 1 ionic step
@@ -1123,8 +1115,6 @@ class VaspBase(GenericDFTJob):
             n_ionic_steps=n_ionic_steps,
             n_print=n_print,
             time_step=time_step,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
             **kwargs,
         )
         if temperature is not None:

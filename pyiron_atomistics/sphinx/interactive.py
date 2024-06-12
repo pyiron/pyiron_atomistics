@@ -232,9 +232,6 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
         ionic_steps=None,
         max_iter=None,
         pressure=None,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
         ionic_energy_tolerance=None,
         ionic_force_tolerance=None,
         ionic_energy=None,
@@ -254,9 +251,6 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
                 ionic_steps=ionic_steps,
                 max_iter=max_iter,
                 pressure=pressure,
-                algorithm=algorithm,
-                retain_charge_density=retain_charge_density,
-                retain_electrostatic_potential=retain_electrostatic_potential,
                 ionic_energy_tolerance=ionic_energy_tolerance,
                 ionic_force_tolerance=ionic_force_tolerance,
                 volume_only=volume_only,
@@ -305,31 +299,6 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
 
     def _interactive_pipe_read(self):
         return self._interactive_library_read.readline()
-
-    def calc_static(
-        self,
-        electronic_steps=100,
-        blockSize=8,
-        dSpinMoment=1e-8,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
-    ):
-        """
-        Function to setup the hamiltonian to perform static SCF DFT runs
-
-        Args:
-            retain_electrostatic_potential:
-            retain_charge_density:
-            algorithm:
-            electronic_steps (int): maximum number of electronic steps, which can be used to achieve convergence
-        """
-        super(SphinxInteractive, self).calc_static(
-            electronic_steps=electronic_steps,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
-        )
 
     def load_main_group(self):
         main_group = Group()
