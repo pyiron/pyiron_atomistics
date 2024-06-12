@@ -705,7 +705,7 @@ class SphinxBase(GenericDFTJob):
         self.load_default_groups()
 
     def calc_md(
-        self
+        self,
         temperature=None,
         n_ionic_steps=1000,
         n_print=1,
