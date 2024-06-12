@@ -703,12 +703,7 @@ class SphinxBase(GenericDFTJob):
         self.load_default_groups()
 
     def calc_md(
-        self,
-        temperature=None,
-        n_ionic_steps=1000,
-        n_print=1,
-        time_step=1.0,
-        **kwargs
+        self, temperature=None, n_ionic_steps=1000, n_print=1, time_step=1.0, **kwargs
     ):
         raise NotImplementedError("calc_md() not implemented in SPHInX.")
 
