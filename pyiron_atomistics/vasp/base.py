@@ -1079,12 +1079,7 @@ class VaspBase(GenericDFTJob):
             retain_charge_density (bool): True if
             retain_electrostatic_potential (bool): True/False
         """
-        super(VaspBase, self).calc_static(
-            electronic_steps=electronic_steps,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
-        )
+        super().calc_static()
         self.input.incar["IBRION"] = -1
         self.input.incar["NELM"] = electronic_steps
         # Make sure vasp runs only 1 ionic step
