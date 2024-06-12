@@ -613,13 +613,7 @@ class SphinxBase(GenericDFTJob):
         if "noWavesStorage" not in guess:
             guess["noWavesStorage"] = not self.input["WriteWaves"]
 
-    def calc_static(
-        self,
-        electronic_steps=100,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
-    ):
+    def calc_static(self, electronic_steps=100):
         """
         Setup the hamiltonian to perform a static SCF run.
 
@@ -628,9 +622,6 @@ class SphinxBase(GenericDFTJob):
 
         Args:
             electronic_steps (float): max # of electronic steps
-            retain_electrostatic_potential:
-            retain_charge_density:
-            algorithm (str): CCG or blockCCG (not implemented)
             electronic_steps (int): maximum number of electronic steps
                 which can be used to achieve convergence
         """
@@ -639,7 +630,7 @@ class SphinxBase(GenericDFTJob):
         for arg in ["Istep", "dF", "dE"]:
             if arg in self.input:
                 del self.input[arg]
-        super().calc_static()
+        super().calc_static(electronic_steps=electronic_steps)
         self.load_default_groups()
 
     def calc_minimize(
@@ -648,9 +639,6 @@ class SphinxBase(GenericDFTJob):
         ionic_steps=None,
         max_iter=None,
         pressure=None,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
         ionic_energy=None,
         ionic_forces=None,
         ionic_energy_tolerance=None,
@@ -672,9 +660,6 @@ class SphinxBase(GenericDFTJob):
             in an error.
 
         Args:
-            retain_electrostatic_potential:
-            retain_charge_density:
-            algorithm:
             pressure:
             max_iter:
             electronic_steps (int): maximum number of electronic steps
@@ -713,25 +698,13 @@ class SphinxBase(GenericDFTJob):
             ionic_steps=ionic_steps,
             max_iter=max_iter,
             pressure=pressure,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
             ionic_energy_tolerance=ionic_energy_tolerance,
             ionic_force_tolerance=ionic_force_tolerance,
             volume_only=volume_only,
         )
         self.load_default_groups()
 
-    def calc_md(
-        self,
-        temperature=None,
-        n_ionic_steps=1000,
-        n_print=1,
-        time_step=1.0,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
-        **kwargs,
-    ):
+    def calc_md(self, **kwargs):
         raise NotImplementedError("calc_md() not implemented in SPHInX.")
 
     def restart_for_band_structure_calculations(self, job_name=None):
