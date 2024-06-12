@@ -318,22 +318,25 @@ class GenericDFTJob(AtomisticGenericJob):
             path_name=path_name,
         )
 
+    def calc_static(
+        self,
+        electronic_steps=60,
+    ):
+        super().calc_static()
+
     def calc_minimize(
         self,
         electronic_steps=60,
         ionic_steps=100,
         max_iter=None,
         pressure=None,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
         ionic_energy_tolerance=None,
         ionic_force_tolerance=None,
         ionic_energy=None,
         ionic_forces=None,
         volume_only=False,
     ):
-        super(GenericDFTJob, self).calc_minimize(max_iter=max_iter, pressure=pressure)
+        super().calc_minimize(max_iter=max_iter, pressure=pressure)
 
     def calc_md(
         self,
@@ -341,12 +344,10 @@ class GenericDFTJob(AtomisticGenericJob):
         n_ionic_steps=1000,
         n_print=1,
         time_step=1.0,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
         **kwargs,
     ):
         self._generic_input["fix_symmetry"] = False
-        super(GenericDFTJob, self).calc_md(
+        super().calc_md(
             temperature=temperature,
             n_ionic_steps=n_ionic_steps,
             n_print=n_print,
