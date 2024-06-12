@@ -621,9 +621,7 @@ class SphinxBase(GenericDFTJob):
         main Group.
 
         Args:
-            electronic_steps (float): max # of electronic steps
-            electronic_steps (int): maximum number of electronic steps
-                which can be used to achieve convergence
+            electronic_steps (int): max # of electronic steps
         """
         if electronic_steps is not None:
             self.input["Estep"] = electronic_steps
