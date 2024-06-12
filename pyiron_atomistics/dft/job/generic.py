@@ -333,7 +333,6 @@ class GenericDFTJob(AtomisticGenericJob):
         ionic_forces=None,
         volume_only=False,
     ):
-        self._generic_input["fix_symmetry"] = True
         super(GenericDFTJob, self).calc_minimize(max_iter=max_iter, pressure=pressure)
 
     def calc_md(
