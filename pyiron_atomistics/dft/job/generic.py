@@ -318,16 +318,6 @@ class GenericDFTJob(AtomisticGenericJob):
             path_name=path_name,
         )
 
-    def calc_static(
-        self,
-        electronic_steps=100,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
-    ):
-        self._generic_input["fix_symmetry"] = True
-        super(GenericDFTJob, self).calc_static()
-
     def calc_minimize(
         self,
         electronic_steps=60,
