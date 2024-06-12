@@ -639,12 +639,6 @@ class SphinxBase(GenericDFTJob):
         for arg in ["Istep", "dF", "dE"]:
             if arg in self.input:
                 del self.input[arg]
-        super(SphinxBase, self).calc_static(
-            electronic_steps=electronic_steps,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
-        )
         self.load_default_groups()
 
     def calc_minimize(
