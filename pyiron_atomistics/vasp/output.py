@@ -600,7 +600,9 @@ def output_dict_to_hdf(data_dict, hdf, group_name="output"):
         dict_group_to_hdf(data_dict=data_dict, hdf=hdf5_output, group="outcar")
 
 
-def parse_vasp_output(working_directory: str, structure: Atoms = None, sorted_indices: list = None) -> dict:
+def parse_vasp_output(
+    working_directory: str, structure: Atoms = None, sorted_indices: list = None
+) -> dict:
     """
     Parse the VASP output in the working_directory and return it as hierachical dictionary.
 
