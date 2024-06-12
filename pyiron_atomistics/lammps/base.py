@@ -386,6 +386,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
             dict: hierarchical dictionary of input files
         """
+        input_file_dict = super().get_input_file_dict()
         if self.structure is None:
             raise ValueError("Input structure not set. Use method set_structure()")
         lmp_structure = self._get_lammps_structure(
@@ -401,31 +402,17 @@ class LammpsBase(AtomisticGenericJob):
         if update_input_hdf5:
             self.input.to_hdf(self._hdf5)
         if self.input.potential.files is not None:
-            files_to_copy = {os.path.basename(f): f for f in self.input.potential.files}
-        else:
-            files_to_copy = {}
-        return {
-            "files_to_create": {
+            input_file_dict["files_to_copy"].update(
+                {os.path.basename(f): f for f in self.input.potential.files}
+            )
+        input_file_dict["files_to_create"].update(
+            {
                 "structure.inp": lmp_structure._string_input,
                 "control.inp": "".join(self.input.control.get_string_lst()),
                 "potential.inp": "".join(self.input.potential.get_string_lst()),
-            },
-            "files_to_copy": files_to_copy,
-        }
-
-    def write_input(self):
-        """
-        Call routines that generate the code specific input files
-
-        Returns:
-
-        """
-        input_dict = self.get_input_file_dict()
-        for file_name, content in input_dict["files_to_create"].items():
-            with open(os.path.join(self.working_directory, file_name), "w") as f:
-                f.writelines(content)
-        for file_name, source in input_dict["files_to_copy"].items():
-            shutil.copy(source, os.path.join(self.working_directory, file_name))
+            }
+        )
+        return input_file_dict
 
     @property
     def publication(self):
@@ -470,20 +457,10 @@ class LammpsBase(AtomisticGenericJob):
             units=self.units,
         )
 
-    def collect_output(self):
-        """
-
-        Returns:
-
-        """
+    def _store_output(self, output_dict):
         self.input.from_hdf(self._hdf5)
         hdf_dict = resolve_hierachical_dict(
-            data_dict=self.collect_output_parser(
-                cwd=self.working_directory,
-                dump_h5_file_name="dump.h5",
-                dump_out_file_name="dump.out",
-                log_lammps_file_name="log.lammps",
-            ),
+            data_dict=output_dict,
             group_name="output",
         )
         final_structure = self.structure.copy()
@@ -498,6 +475,21 @@ class LammpsBase(AtomisticGenericJob):
                 }
             )
         self.project_hdf5.write_dict_to_hdf(data_dict=hdf_dict)
+
+    def collect_output(self):
+        """
+
+        Returns:
+
+        """
+        self._store_output(
+            output_dict=self.collect_output_parser(
+                cwd=self.working_directory,
+                dump_h5_file_name="dump.h5",
+                dump_out_file_name="dump.out",
+                log_lammps_file_name="log.lammps",
+            ),
+        )
 
     def convergence_check(self):
         if self._generic_input["calc_mode"] == "minimize":
