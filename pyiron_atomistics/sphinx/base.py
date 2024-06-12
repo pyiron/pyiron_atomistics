@@ -639,6 +639,7 @@ class SphinxBase(GenericDFTJob):
         for arg in ["Istep", "dF", "dE"]:
             if arg in self.input:
                 del self.input[arg]
+        super().calc_static()
         self.load_default_groups()
 
     def calc_minimize(
