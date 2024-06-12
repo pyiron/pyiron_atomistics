@@ -9,14 +9,11 @@ from subprocess import Popen, PIPE
 from pyiron_atomistics.vasp.parser.outcar import Outcar
 from pyiron_atomistics.vasp.base import VaspBase
 from pyiron_atomistics.vasp.structure import vasp_sorter
-from pyiron_atomistics.vasp.potential import VaspPotentialSetter
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 
 # as of pyiron_atomistics <= 0.5.4 this module defined subclasses that are now removed; the base classes are still
 # imported here in case HDF5 files in the wild refer to them.  The imports can be removed on the next big version bump.
-from pyiron_atomistics.vasp.base import GenericOutput
-from pyiron_atomistics.vasp.base import DFTOutput
-from pyiron_atomistics.vasp.base import Output
+from pyiron_atomistics.vasp.output import Output, DFTOutput, GenericOutput
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
