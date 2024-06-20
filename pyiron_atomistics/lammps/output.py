@@ -34,25 +34,29 @@ class DumpData:
 
 
 def parse_lammps_output(
-    dump_h5_full_file_name: str,
-    dump_out_full_file_name: str,
-    log_lammps_full_file_name: str,
+    working_directory: str,
     structure: Atoms,
     potential_elements: Union[np.ndarray, List],
     units: str,
     prism: Optional[UnfoldingPrism] = None,
+    dump_h5_full_file_name: str = "dump.h5",
+    dump_out_full_file_name: str = "dump.out",
+    log_lammps_full_file_name: str = "log.lammps",
 ) -> Dict:
     if prism is None:
         prism = UnfoldingPrism(structure.cell)
     dump_dict = _parse_dump(
-        dump_h5_full_file_name,
-        dump_out_full_file_name,
-        prism,
-        structure,
-        potential_elements,
+        dump_h5_full_file_name=os.path.join(working_directory, dump_h5_full_file_name),
+        dump_out_full_file_name=os.path.join(working_directory, dump_out_full_file_name),
+        prism=prism,
+        structure=structure,
+        potential_elements=potential_elements,
     )
 
-    generic_keys_lst, pressure_dict, df = _parse_log(log_lammps_full_file_name, prism)
+    generic_keys_lst, pressure_dict, df = _parse_log(
+        log_lammps_full_file_name=os.path.join(working_directory, log_lammps_full_file_name),
+        prism=prism,
+    )
 
     convert_units = UnitConverter(units).convert_array_to_pyiron_units
 

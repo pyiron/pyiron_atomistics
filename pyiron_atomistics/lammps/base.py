@@ -8,7 +8,7 @@ import os
 import ast
 import numpy as np
 import pandas as pd
-import shutil
+from typing import Optional
 import warnings
 
 from pyiron_base import state
@@ -28,10 +28,7 @@ from pyiron_atomistics.lammps.structure import (
     structure_to_lammps,
 )
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
-from pyiron_atomistics.lammps.output import (
-    remap_indices,
-    parse_lammps_output,
-)
+from pyiron_atomistics.lammps.output import parse_lammps_output
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -63,33 +60,13 @@ class LammpsBase(AtomisticGenericJob):
     def __init__(self, project, job_name):
         super(LammpsBase, self).__init__(project, job_name)
         self.input = Input()
+        self._job_with_calculate_function = True
         self._cutoff_radius = None
         self._is_continuation = None
         self._compress_by_default = True
         self._prism = None
+        self._collect_output_funct = parse_lammps_output
         state.publications.add(self.publication)
-
-    @property
-    def units(self):
-        """
-        Type of LAMMPS units used in the calculations. Can be either of 'metal', 'real', 'si', 'cgs', and 'lj'
-
-        Returns:
-            str: Type of LAMMPS unit
-        """
-        if self.input.control["units"] is not None:
-            return self.input.control["units"]
-        else:
-            # Default to metal units
-            return "metal"
-
-    @units.setter
-    def units(self, val):
-        allowed_types = LAMMPS_UNIT_CONVERSIONS.keys()
-        if val in allowed_types:
-            self.input.control["units"] = val
-        else:
-            raise ValueError("'{}' is not a valid LAMMPS unit")
 
     @property
     def bond_dict(self):
@@ -102,58 +79,6 @@ class LammpsBase(AtomisticGenericJob):
 
         """
         return self.input.bond_dict
-
-    def clear_bonds(self) -> None:
-        """
-        Clears all pre-defined bonds
-        """
-        self.input.bond_dict = {}
-
-    def define_bonds(
-        self,
-        species,
-        element_list,
-        cutoff_list,
-        max_bond_list,
-        bond_type_list,
-        angle_type_list=None,
-    ):
-        """
-        Define the nature of bonds between different species. Make sure that the bonds between two species are defined
-        only once (no double counting).
-
-        Args:
-            species (str): Species for which the bonds are to be drawn (e.g. O, H, C ..)
-            element_list (list): List of species to which the bonds are to be made (e.g. O, H, C, ..)
-            cutoff_list (list): Draw bonds only for atoms within this cutoff distance
-            max_bond_list (list): Maximum number of bonds drawn from each molecule
-            bond_type_list (list): Type of the bond as defined in the LAMMPS potential file
-            angle_type_list (list): Type of the angle as defined in the LAMMPS potential file
-
-        Example:
-            The command below defined bonds between O and H atoms within a cutoff raduis of 2 $\AA$ with the bond and
-            angle types 1 defined in the potential file used
-
-            >> job_lammps.define_bonds(species="O", element_list-["H"], cutoff_list=[2.0], bond_type_list=[1],
-            angle_type_list=[1])
-
-        """
-        if isinstance(species, str):
-            if len(element_list) == len(cutoff_list) == bond_type_list == max_bond_list:
-                self.input.bond_dict[species] = dict()
-                self.input.bond_dict[species]["element_list"] = element_list
-                self.input.bond_dict[species]["cutoff_list"] = cutoff_list
-                self.input.bond_dict[species]["bond_type_list"] = bond_type_list
-                self.input.bond_dict[species]["max_bond_list"] = max_bond_list
-                if angle_type_list is not None:
-                    self.input.bond_dict[species]["angle_type_list"] = angle_type_list
-                else:
-                    self.input.bond_dict[species]["angle_type_list"] = [None]
-            else:
-                raise ValueError(
-                    "The element list, cutoff list, max bond list, and the bond type list"
-                    " must have the same length"
-                )
 
     @property
     def cutoff_radius(self):
@@ -175,36 +100,6 @@ class LammpsBase(AtomisticGenericJob):
 
         """
         self._cutoff_radius = cutoff
-
-    @staticmethod
-    def _potential_file_to_potential(potential_filename):
-        if isinstance(potential_filename, str):
-            potential_filename = potential_filename.split(".lmp")[0]
-            return LammpsPotentialFile().find_by_name(potential_filename)
-        elif isinstance(potential_filename, pd.DataFrame):
-            return potential_filename
-        elif hasattr(potential_filename, "get_df"):
-            return potential_filename.get_df()
-        else:
-            raise TypeError("Potentials have to be strings or pandas dataframes.")
-
-    @staticmethod
-    def _check_potential_elements(structure_elements, potential_elements):
-        if not set(structure_elements).issubset(potential_elements):
-            raise ValueError(
-                f"Potential {potential_elements} does not support elements "
-                f"in structure {structure_elements}."
-            )
-
-    @staticmethod
-    def _get_potential_citations(potential):
-        pot_pub_dict = {}
-        pub_lst = potential["Citations"].values[0]
-        if isinstance(pub_lst, str) and len(pub_lst) > 0:
-            for p in ast.literal_eval(pub_lst):
-                for k in p.keys():
-                    pot_pub_dict[k] = p[k]
-        return {"lammps_potential": pot_pub_dict}
 
     @property
     def potential(self):
@@ -274,6 +169,99 @@ class LammpsBase(AtomisticGenericJob):
             pandas.Dataframe: Dataframe including all potential parameters.
         """
         return self.view_potentials()
+
+    @property
+    def units(self):
+        """
+        Type of LAMMPS units used in the calculations. Can be either of 'metal', 'real', 'si', 'cgs', and 'lj'
+
+        Returns:
+            str: Type of LAMMPS unit
+        """
+        if self.input.control["units"] is not None:
+            return self.input.control["units"]
+        else:
+            # Default to metal units
+            return "metal"
+
+    @units.setter
+    def units(self, val):
+        allowed_types = LAMMPS_UNIT_CONVERSIONS.keys()
+        if val in allowed_types:
+            self.input.control["units"] = val
+        else:
+            raise ValueError("'{}' is not a valid LAMMPS unit")
+
+    @property
+    def publication(self):
+        return {
+            "lammps": {
+                "lammps": {
+                    "title": "Fast Parallel Algorithms for Short-Range Molecular Dynamics",
+                    "journal": "Journal of Computational Physics",
+                    "volume": "117",
+                    "number": "1",
+                    "pages": "1-19",
+                    "year": "1995",
+                    "issn": "0021-9991",
+                    "doi": "10.1006/jcph.1995.1039",
+                    "url": "http://www.sciencedirect.com/science/article/pii/S002199918571039X",
+                    "author": ["Steve Plimpton"],
+                }
+            }
+        }
+
+    def clear_bonds(self) -> None:
+        """
+        Clears all pre-defined bonds
+        """
+        self.input.bond_dict = {}
+
+    def define_bonds(
+        self,
+        species,
+        element_list,
+        cutoff_list,
+        max_bond_list,
+        bond_type_list,
+        angle_type_list=None,
+    ):
+        """
+        Define the nature of bonds between different species. Make sure that the bonds between two species are defined
+        only once (no double counting).
+
+        Args:
+            species (str): Species for which the bonds are to be drawn (e.g. O, H, C ..)
+            element_list (list): List of species to which the bonds are to be made (e.g. O, H, C, ..)
+            cutoff_list (list): Draw bonds only for atoms within this cutoff distance
+            max_bond_list (list): Maximum number of bonds drawn from each molecule
+            bond_type_list (list): Type of the bond as defined in the LAMMPS potential file
+            angle_type_list (list): Type of the angle as defined in the LAMMPS potential file
+
+        Example:
+            The command below defined bonds between O and H atoms within a cutoff raduis of 2 $\AA$ with the bond and
+            angle types 1 defined in the potential file used
+
+            >> job_lammps.define_bonds(species="O", element_list-["H"], cutoff_list=[2.0], bond_type_list=[1],
+            angle_type_list=[1])
+
+        """
+        if isinstance(species, str):
+            if len(element_list) == len(cutoff_list) == bond_type_list == max_bond_list:
+                self.input.bond_dict[species] = dict()
+                self.input.bond_dict[species]["element_list"] = element_list
+                self.input.bond_dict[species]["cutoff_list"] = cutoff_list
+                self.input.bond_dict[species]["bond_type_list"] = bond_type_list
+                self.input.bond_dict[species]["max_bond_list"] = max_bond_list
+                if angle_type_list is not None:
+                    self.input.bond_dict[species]["angle_type_list"] = angle_type_list
+                else:
+                    self.input.bond_dict[species]["angle_type_list"] = [None]
+            else:
+                raise ValueError(
+                    "The element list, cutoff list, max bond list, and the bond type list"
+                    " must have the same length"
+                )
 
     def set_input_to_read_only(self):
         """
@@ -372,8 +360,9 @@ class LammpsBase(AtomisticGenericJob):
             "all h5md ${dumptime} dump.h5 position force create_group yes"
         )
 
-    def get_input_file_dict(self):
-        input_file_dict = super().get_input_file_dict()
+    def get_input_parameter_dict(self):
+        self.validate_ready_to_run()
+        input_file_dict = super().get_input_parameter_dict()
         if self.structure is None:
             raise ValueError("Input structure not set. Use method set_structure()")
         lmp_structure = self._get_lammps_structure(
@@ -401,50 +390,19 @@ class LammpsBase(AtomisticGenericJob):
         )
         return input_file_dict
 
-    @property
-    def publication(self):
+    def get_output_parameter_dict(self):
         return {
-            "lammps": {
-                "lammps": {
-                    "title": "Fast Parallel Algorithms for Short-Range Molecular Dynamics",
-                    "journal": "Journal of Computational Physics",
-                    "volume": "117",
-                    "number": "1",
-                    "pages": "1-19",
-                    "year": "1995",
-                    "issn": "0021-9991",
-                    "doi": "10.1006/jcph.1995.1039",
-                    "url": "http://www.sciencedirect.com/science/article/pii/S002199918571039X",
-                    "author": ["Steve Plimpton"],
-                }
-            }
+            "structure": self.structure,
+            "potential_elements": self.input.potential.get_element_lst(),
+            "units": self.units,
+            "prism": self._prism,
+            "dump_h5_full_file_name": "dump.h5",
+            "dump_out_full_file_name": "dump.out",
+            "log_lammps_full_file_name": "log.lammps",
         }
 
-    def collect_output_parser(
-        self,
-        cwd,
-        dump_h5_file_name="dump.h5",
-        dump_out_file_name="dump.out",
-        log_lammps_file_name="log.lammps",
-    ):
-        # Parse output files
-        return parse_lammps_output(
-            dump_h5_full_file_name=self.job_file_name(
-                file_name=dump_h5_file_name, cwd=cwd
-            ),
-            dump_out_full_file_name=self.job_file_name(
-                file_name=dump_out_file_name, cwd=cwd
-            ),
-            log_lammps_full_file_name=self.job_file_name(
-                file_name=log_lammps_file_name, cwd=cwd
-            ),
-            prism=self._prism,
-            structure=self.structure,
-            potential_elements=self.input.potential.get_element_lst(),
-            units=self.units,
-        )
-
-    def _store_output(self, output_dict):
+    def save_output(self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None):
+        _ = shell_output
         self.input.from_hdf(self._hdf5)
         hdf_dict = resolve_hierachical_dict(
             data_dict=output_dict,
@@ -462,21 +420,6 @@ class LammpsBase(AtomisticGenericJob):
                 }
             )
         self.project_hdf5.write_dict_to_hdf(data_dict=hdf_dict)
-
-    def collect_output(self):
-        """
-
-        Returns:
-
-        """
-        self._store_output(
-            output_dict=self.collect_output_parser(
-                cwd=self.working_directory,
-                dump_h5_file_name="dump.h5",
-                dump_out_file_name="dump.out",
-                log_lammps_file_name="log.lammps",
-            ),
-        )
 
     def convergence_check(self):
         if self._generic_input["calc_mode"] == "minimize":
@@ -763,6 +706,19 @@ class LammpsBase(AtomisticGenericJob):
             ]
         super(LammpsBase, self).compress(files_to_compress=files_to_compress)
 
+    def next(self, job_name=None, job_type=None):
+        """
+        Restart a new job created from an existing Lammps calculation.
+        Args:
+            project (pyiron_atomistics.project.Project instance): Project instance at which the new job should be created
+            job_name (str): Job name
+            job_type (str): Job type. If not specified a Lammps job type is assumed
+
+        Returns:
+            new_ham (lammps.lammps.Lammps instance): New job
+        """
+        return super(LammpsBase, self).restart(job_name=job_name, job_type=job_type)
+
     def read_restart_file(self, filename="restart.out"):
         """
 
@@ -778,32 +734,6 @@ class LammpsBase(AtomisticGenericJob):
         self.input.control.remove_keys(
             ["dimension", "read_data", "boundary", "atom_style", "velocity"]
         )
-
-    # Outdated functions:
-    def set_potential(self, file_name):
-        """
-
-        Args:
-            file_name:
-
-        Returns:
-
-        """
-        print("This function is outdated use the potential setter instead!")
-        self.potential = file_name
-
-    def next(self, job_name=None, job_type=None):
-        """
-        Restart a new job created from an existing Lammps calculation.
-        Args:
-            project (pyiron_atomistics.project.Project instance): Project instance at which the new job should be created
-            job_name (str): Job name
-            job_type (str): Job type. If not specified a Lammps job type is assumed
-
-        Returns:
-            new_ham (lammps.lammps.Lammps instance): New job
-        """
-        return super(LammpsBase, self).restart(job_name=job_name, job_type=job_type)
 
     def restart(self, job_name=None, job_type=None):
         """
@@ -824,6 +754,18 @@ class LammpsBase(AtomisticGenericJob):
                 new_ham.restart_file_list.append(self.files.restart_out)
         return new_ham
 
+    def set_potential(self, file_name):
+        """
+
+        Args:
+            file_name:
+
+        Returns:
+
+        """
+        print("This function is outdated use the potential setter instead!")
+        self.potential = file_name
+
     @staticmethod
     def _structure_to_lammps(structure):
         """
@@ -836,28 +778,69 @@ class LammpsBase(AtomisticGenericJob):
         """
         return structure_to_lammps(structure=structure)
 
-    def _get_lammps_structure(self, structure=None, cutoff_radius=None):
-        lmp_structure = LammpsStructure(bond_dict=self.input.bond_dict, job=self)
-        lmp_structure._force_skewed = self.input.control._force_skewed
-        lmp_structure.potential = self.input.potential
-        lmp_structure.atom_type = self.input.control["atom_style"]
-        if cutoff_radius is not None:
-            lmp_structure.cutoff_radius = cutoff_radius
+    @staticmethod
+    def _potential_file_to_potential(potential_filename):
+        if isinstance(potential_filename, str):
+            potential_filename = potential_filename.split(".lmp")[0]
+            return LammpsPotentialFile().find_by_name(potential_filename)
+        elif isinstance(potential_filename, pd.DataFrame):
+            return potential_filename
+        elif hasattr(potential_filename, "get_df"):
+            return potential_filename.get_df()
         else:
-            lmp_structure.cutoff_radius = self.cutoff_radius
-        lmp_structure.el_eam_lst = self.input.potential.get_element_lst()
+            raise TypeError("Potentials have to be strings or pandas dataframes.")
 
-        if structure is not None:
-            lmp_structure.structure = structure_to_lammps(structure)
-        else:
-            lmp_structure.structure = structure_to_lammps(self.structure)
-        if not set(lmp_structure.structure.get_species_symbols()).issubset(
-            set(lmp_structure.el_eam_lst)
-        ):
+    @staticmethod
+    def _check_potential_elements(structure_elements, potential_elements):
+        if not set(structure_elements).issubset(potential_elements):
             raise ValueError(
-                "The selected potentials do not support the given combination of elements."
+                f"Potential {potential_elements} does not support elements "
+                f"in structure {structure_elements}."
             )
-        return lmp_structure
+
+    @staticmethod
+    def _get_potential_citations(potential):
+        pot_pub_dict = {}
+        pub_lst = potential["Citations"].values[0]
+        if isinstance(pub_lst, str) and len(pub_lst) > 0:
+            for p in ast.literal_eval(pub_lst):
+                for k in p.keys():
+                    pot_pub_dict[k] = p[k]
+        return {"lammps_potential": pot_pub_dict}
+
+    @staticmethod
+    def _modify_structure_to_allow_requested_deformation(
+        structure, pressure, prism=None
+    ):
+        """
+        Lammps will not allow xy/xz/yz cell deformations in minimization or MD for non-triclinic cells. In case the
+        requested pressure for a calculation has these non-diagonal entries, we need to make sure it will run. One way
+        to do this is by invoking the lammps `change_box` command, but it is easier to just force our box to to be
+        triclinic by adding a very small cell perturbation (in the case where it isn't triclinic already).
+
+        Args:
+            pressure (float/int/list/numpy.ndarray/tuple): Between three and six pressures for the x, y, z, xy, xz, and
+                yz directions, in that order, or a single value.
+        """
+        if hasattr(pressure, "__len__"):
+            non_diagonal_pressures = np.any([p is not None for p in pressure[3:]])
+
+            if prism is None:
+                prism = UnfoldingPrism(structure.cell)
+
+            if non_diagonal_pressures:
+                try:
+                    if not prism.is_skewed():
+                        skew_structure = structure.copy()
+                        skew_structure.cell[0, 1] += 2 * prism.acc
+                        return skew_structure
+                except AttributeError:
+                    warnings.warn(
+                        "WARNING: Setting a calculation type which uses pressure before setting the structure risks "
+                        + "constraining your cell shape evolution if non-diagonal pressures are used but the structure "
+                        + "is not triclinic from the start of the calculation."
+                    )
+        return structure
 
     def _set_selective_dynamics(self):
         if "selective_dynamics" in self.structure.arrays.keys():
@@ -965,39 +948,28 @@ class LammpsBase(AtomisticGenericJob):
                             "set NULL NULL 0.0"
                         )
 
-    @staticmethod
-    def _modify_structure_to_allow_requested_deformation(
-        structure, pressure, prism=None
-    ):
-        """
-        Lammps will not allow xy/xz/yz cell deformations in minimization or MD for non-triclinic cells. In case the
-        requested pressure for a calculation has these non-diagonal entries, we need to make sure it will run. One way
-        to do this is by invoking the lammps `change_box` command, but it is easier to just force our box to to be
-        triclinic by adding a very small cell perturbation (in the case where it isn't triclinic already).
+    def _get_lammps_structure(self, structure=None, cutoff_radius=None):
+        lmp_structure = LammpsStructure(bond_dict=self.input.bond_dict, job=self)
+        lmp_structure._force_skewed = self.input.control._force_skewed
+        lmp_structure.potential = self.input.potential
+        lmp_structure.atom_type = self.input.control["atom_style"]
+        if cutoff_radius is not None:
+            lmp_structure.cutoff_radius = cutoff_radius
+        else:
+            lmp_structure.cutoff_radius = self.cutoff_radius
+        lmp_structure.el_eam_lst = self.input.potential.get_element_lst()
 
-        Args:
-            pressure (float/int/list/numpy.ndarray/tuple): Between three and six pressures for the x, y, z, xy, xz, and
-                yz directions, in that order, or a single value.
-        """
-        if hasattr(pressure, "__len__"):
-            non_diagonal_pressures = np.any([p is not None for p in pressure[3:]])
-
-            if prism is None:
-                prism = UnfoldingPrism(structure.cell)
-
-            if non_diagonal_pressures:
-                try:
-                    if not prism.is_skewed():
-                        skew_structure = structure.copy()
-                        skew_structure.cell[0, 1] += 2 * prism.acc
-                        return skew_structure
-                except AttributeError:
-                    warnings.warn(
-                        "WARNING: Setting a calculation type which uses pressure before setting the structure risks "
-                        + "constraining your cell shape evolution if non-diagonal pressures are used but the structure "
-                        + "is not triclinic from the start of the calculation."
-                    )
-        return structure
+        if structure is not None:
+            lmp_structure.structure = structure_to_lammps(structure)
+        else:
+            lmp_structure.structure = structure_to_lammps(self.structure)
+        if not set(lmp_structure.structure.get_species_symbols()).issubset(
+            set(lmp_structure.el_eam_lst)
+        ):
+            raise ValueError(
+                "The selected potentials do not support the given combination of elements."
+            )
+        return lmp_structure
 
     def _get_rotation_matrix(self, pressure):
         """
