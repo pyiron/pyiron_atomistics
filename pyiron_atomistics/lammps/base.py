@@ -324,7 +324,7 @@ class LammpsBase(AtomisticGenericJob):
         """
         return self.get_structure(iteration_step=-1)
 
-    def view_potentials(self):
+    def view_potentials(self) -> pandas.DataFrame:
         """
         List all interatomic potentials for the current atomistic structure including all potential parameters.
 
@@ -337,7 +337,7 @@ class LammpsBase(AtomisticGenericJob):
             raise ValueError("No structure set.")
         return view_potentials(self.structure)
 
-    def list_potentials(self):
+    def list_potentials(self) -> list:
         """
         List of interatomic potentials suitable for the current atomic structure.
 
@@ -361,6 +361,19 @@ class LammpsBase(AtomisticGenericJob):
         )
 
     def get_input_parameter_dict(self):
+        """
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        The get_input_file_dict() function is called before the write_input() function to convert the input specified on
+        the job object to strings which can be written to the working directory as well as files which are copied to the
+        working directory. After the write_input() function wrote the input files the executable is called.
+
+        Returns:
+            dict: hierarchical dictionary of input files
+        """
         self.validate_ready_to_run()
         input_file_dict = super().get_input_parameter_dict()
         if self.structure is None:
