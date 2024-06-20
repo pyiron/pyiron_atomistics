@@ -414,7 +414,9 @@ class LammpsBase(AtomisticGenericJob):
             "log_lammps_full_file_name": "log.lammps",
         }
 
-    def save_output(self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None):
+    def save_output(
+        self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+    ):
         _ = shell_output
         self.input.from_hdf(self._hdf5)
         hdf_dict = resolve_hierachical_dict(

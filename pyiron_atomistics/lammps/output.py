@@ -47,14 +47,18 @@ def parse_lammps_output(
         prism = UnfoldingPrism(structure.cell)
     dump_dict = _parse_dump(
         dump_h5_full_file_name=os.path.join(working_directory, dump_h5_full_file_name),
-        dump_out_full_file_name=os.path.join(working_directory, dump_out_full_file_name),
+        dump_out_full_file_name=os.path.join(
+            working_directory, dump_out_full_file_name
+        ),
         prism=prism,
         structure=structure,
         potential_elements=potential_elements,
     )
 
     generic_keys_lst, pressure_dict, df = _parse_log(
-        log_lammps_full_file_name=os.path.join(working_directory, log_lammps_full_file_name),
+        log_lammps_full_file_name=os.path.join(
+            working_directory, log_lammps_full_file_name
+        ),
         prism=prism,
     )
 
