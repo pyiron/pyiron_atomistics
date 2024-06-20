@@ -7,7 +7,7 @@ import os
 
 import ast
 import numpy as np
-import pandas as pd
+import pandas
 from typing import Optional
 import warnings
 
@@ -796,7 +796,7 @@ class LammpsBase(AtomisticGenericJob):
         if isinstance(potential_filename, str):
             potential_filename = potential_filename.split(".lmp")[0]
             return LammpsPotentialFile().find_by_name(potential_filename)
-        elif isinstance(potential_filename, pd.DataFrame):
+        elif isinstance(potential_filename, pandas.DataFrame):
             return potential_filename
         elif hasattr(potential_filename, "get_df"):
             return potential_filename.get_df()
