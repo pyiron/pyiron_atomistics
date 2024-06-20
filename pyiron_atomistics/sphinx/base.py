@@ -2130,9 +2130,12 @@ class Output:
             if self.charge_density.total_data is not None:
                 self.charge_density.to_hdf(hdf5_output, group_name="charge_density")
             if "bands_occ" in self.generic.dft:
-                es = self._get_electronic_structure_object()
-                if len(es.kpoint_list) > 0:
-                    es.to_hdf(hdf5_output)
+                try:
+                    es = self._get_electronic_structure_object()
+                    if len(es.kpoint_list) > 0:
+                        es.to_hdf(hdf5_output)
+                except IndexError:
+                    warnings.warn("Electronic structure parsing failed")
             with hdf5_output.open("electronic_structure") as hdf5_es:
                 if "dos" not in hdf5_es.list_groups():
                     hdf5_es.create_group("dos")
