@@ -499,15 +499,6 @@ class LammpsInteractive(LammpsBase, GenericInteractive):
         super(LammpsInteractive, self).from_hdf(hdf=hdf, group_name=group_name)
         self.species_from_hdf()
 
-    def collect_output(self):
-        if (
-            self.server.run_mode.interactive
-            or self.server.run_mode.interactive_non_modal
-        ):
-            pass
-        else:
-            super(LammpsInteractive, self).collect_output()
-
     def update_potential(self):
         self._interactive_lib_command(self.potential.Config[0][0])
         self._interactive_lib_command(self.potential.Config[0][1])
