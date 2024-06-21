@@ -378,6 +378,7 @@ class LammpsBase(AtomisticGenericJob):
         Returns:
 
         """
+        super().write_input()
         if self.structure is None:
             raise ValueError("Input structure not set. Use method set_structure()")
         lmp_structure = self._get_lammps_structure(

@@ -367,6 +367,7 @@ class VaspBase(GenericDFTJob):
         """
         Call routines that generate the INCAR, POTCAR, KPOINTS and POSCAR input files
         """
+        super().write_input()
         if self.input.incar["SYSTEM"] == "pyiron_jobname":
             self.input.incar["SYSTEM"] = self.job_name
         modified_elements = {

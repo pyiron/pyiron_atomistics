@@ -1356,6 +1356,7 @@ class SphinxBase(GenericDFTJob):
 
         Automatically called by job.run()
         """
+        super().write_input()
 
         # If the structure group was not modified directly by the
         # user, via job.input.structure (which is likely True),
