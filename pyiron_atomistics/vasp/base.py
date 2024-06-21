@@ -5,9 +5,9 @@
 from __future__ import print_function
 import os
 import posixpath
-import shutil
 import subprocess
 import numpy as np
+from typing import Optional
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.vasp.potential import (
@@ -104,6 +104,8 @@ class VaspBase(GenericDFTJob):
         self._output_parser = Output()
         self._potential = VaspPotentialSetter([])
         self._compress_by_default = True
+        self._job_with_calculate_function = True
+        self._collect_output_funct = parse_vasp_output
         self.get_enmax_among_species = get_enmax_among_potentials
         state.publications.add(self.publication)
         self.__hdf_version__ = "0.2.0"
@@ -364,19 +366,7 @@ class VaspBase(GenericDFTJob):
         self.input.potcar.read_only = True
 
     # Compatibility functions
-    def write_input(self):
-        """
-        Call routines that generate the code specific input files
-        Returns:
-        """
-        input_dict = self.get_input_file_dict()
-        for file_name, content in input_dict["files_to_create"].items():
-            with open(os.path.join(self.working_directory, file_name), "w") as f:
-                f.writelines(content)
-        for file_name, source in input_dict["files_to_copy"].items():
-            shutil.copy(source, os.path.join(self.working_directory, file_name))
-
-    def get_input_file_dict(self) -> dict:
+    def get_input_parameter_dict(self) -> dict:
         """
         Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
         and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
@@ -410,22 +400,25 @@ class VaspBase(GenericDFTJob):
                     self.logger.info(
                         "The POSCAR file will be overwritten by the CONTCAR file specified in restart_file_list."
                     )
-        input_file_dict = super().get_input_file_dict()
+        input_file_dict = super().get_input_parameter_dict()
         input_file_dict["files_to_create"].update(
-            self.input.get_input_file_dict(
+            self.input.get_input_parameter_dict(
                 structure=self.structure,
                 modified_elements=modified_elements,
             )
         )
         return input_file_dict
 
-    def _store_output(self, output_dict: dict):
+    def save_output(
+        self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+    ):
         """
         Internal helper function to store the hierarchical output dictionary in the HDF5 file of the pyiron job object
 
         Args:
             output_dict (dict): hierarchical output dictionary
         """
+        _ = shell_output
         output_dict_to_hdf(
             data_dict=output_dict,
             hdf=self._hdf5,
@@ -435,20 +428,11 @@ class VaspBase(GenericDFTJob):
             self.project_hdf5.rewrite_hdf5()
 
     # define routines that collect all output files
-    def collect_output(self):
-        """
-        The collect_output() method parses the output in the working_directory and stores it in the HDF5 file. It is
-        divided into two functions, the pyiron_atomistics.vasp.output.parse_vasp_output() function, which parses the
-        working directory and returns a dictionary with the output and the job._store_output() function which stores
-        the output dictionary in the HDF5 file.
-        """
-        self._store_output(
-            output_dict=parse_vasp_output(
-                working_directory=self.working_directory,
-                structure=self.structure,
-                sorted_indices=self.sorted_indices,
-            ),
-        )
+    def get_output_parameter_dict(self):
+        return {
+            "structure": self.structure,
+            "sorted_indices": self.sorted_indices,
+        }
 
     def convergence_check(self):
         """
@@ -1915,7 +1899,7 @@ class Input:
             with open(os.path.join(directory, file_name), "w") as f:
                 f.writelines(content)
 
-    def get_input_file_dict(self, structure: Atoms, modified_elements: list) -> dict:
+    def get_input_parameter_dict(self, structure: Atoms, modified_elements: list) -> dict:
         """
         Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
         and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
