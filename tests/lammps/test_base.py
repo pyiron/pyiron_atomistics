@@ -13,6 +13,7 @@ from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
 from pyiron_atomistics.lammps.output import to_amat
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
+from pyiron_atomistics.lammps.output import parse_lammps_output
 import ase.units as units
 from pyiron_base._tests import TestWithCleanProject
 import unittest
@@ -426,8 +427,12 @@ class TestLammps(TestWithCleanProject):
         file_directory = os.path.join(
             self.execution_path, "..", "static", "lammps_test_files"
         )
-        output_dict = self.job.collect_output_parser(
-            cwd=file_directory,
+        output_dict = parse_lammps_output(
+            working_directory=file_directory,
+            structure=self.job.structure,
+            potential_elements=self.job.input.potential.get_element_lst(),
+            units=self.job.units,
+            prism=self.job._prism,
             dump_out_file_name="dump_static.out",
             log_lammps_file_name="log_not_available",
         )
@@ -729,8 +734,12 @@ class TestLammps(TestWithCleanProject):
         file_directory = os.path.join(
             self.execution_path, "..", "static", "lammps_test_files"
         )
-        _ = self.job.collect_output_parser(
-            cwd=file_directory,
+        _ = parse_lammps_output(
+            working_directory=file_directory,
+            structure=self.job.structure,
+            potential_elements=self.job.input.potential.get_element_lst(),
+            units=self.job.units,
+            prism=self.job._prism,
             dump_out_file_name="dump_average.out",
             log_lammps_file_name="log_average.lammps",
         )
