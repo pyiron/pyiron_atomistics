@@ -706,7 +706,7 @@ class VaspBase(GenericDFTJob):
             self.save_output(
                 output_dict=self._collect_output_funct(
                     working_directory=self.working_directory,
-                    **self.get_output_parameter_dict()
+                    **self.get_output_parameter_dict(),
                 )
             )
             self.to_hdf()
