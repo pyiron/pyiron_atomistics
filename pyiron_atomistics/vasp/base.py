@@ -1899,7 +1899,9 @@ class Input:
             with open(os.path.join(directory, file_name), "w") as f:
                 f.writelines(content)
 
-    def get_input_parameter_dict(self, structure: Atoms, modified_elements: list) -> dict:
+    def get_input_parameter_dict(
+        self, structure: Atoms, modified_elements: list
+    ) -> dict:
         """
         Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
         and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
