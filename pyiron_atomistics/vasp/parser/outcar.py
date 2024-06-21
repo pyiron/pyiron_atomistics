@@ -112,7 +112,9 @@ class Outcar(object):
         self.parse_dict["dft_steps"] = self.parse_dict["steps"][~is_ml_vec]
 
         ## quantities from both DFT and ML
-        self.parse_dict["energies"] = [energies[i] for i in np.union1d(dft_index, ml_index)]  # remove zeroes
+        self.parse_dict["energies"] = [
+            energies[i] for i in np.union1d(dft_index, ml_index)
+        ]  # remove zeroes
 
         ## quantites from DFT
         self.parse_dict["dft_energies"] = [energies[i] for i in dft_index]
@@ -485,11 +487,11 @@ class Outcar(object):
 
     @staticmethod  # -> new function
     def get_index_type(filename="OUTCAR", lines=None):
-        '''
+        """
         - In the outcar file you have two output for each DFT step (one of which is always zero for the energy and labelled ML) and one output for each ML step
         - This function read all steps from the outcar file and then returns back what is the index of the DFT steps and the index of each ML step
         - return indices of each DFT steps and index of DFT steps (excluding the empty ML output before DFT) from all steps
-        '''
+        """
         trigger_indices, lines = _get_trigger(
             lines=lines,
             filename=filename,
@@ -497,13 +499,11 @@ class Outcar(object):
         )
         full_array = np.array(
             ##boolean array, length: ml_steps + 2 x dft steps, values: true if ml false if dft and additional true for dummy ml steps printed withing dft steps
-            [
-                "ML" in lines[j]
-                for j in trigger_indices
-            ]
+            ["ML" in lines[j] for j in trigger_indices]
         )
-        outcar_ml_index = np.setdiff1d(np.where(full_array)[0], np.where(~full_array)[
-            0] - 1)  ## ml indices of of the full_array dummy ml in dft is removed
+        outcar_ml_index = np.setdiff1d(
+            np.where(full_array)[0], np.where(~full_array)[0] - 1
+        )  ## ml indices of of the full_array dummy ml in dft is removed
         outcar_dft_index = np.where(~full_array)[0]  ## dft indiceds of the full_array
 
         # outcar_index = [steps[i] for i in np.union1d(dft_index, ml_index)]
