@@ -380,7 +380,6 @@ class VaspBase(GenericDFTJob):
         Returns:
             dict: hierarchical dictionary of input files
         """
-        super().write_input()
         if self.input.incar["SYSTEM"] == "pyiron_jobname":
             self.input.incar["SYSTEM"] = self.job_name
         modified_elements = {
