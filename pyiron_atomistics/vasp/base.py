@@ -7,6 +7,7 @@ import os
 import posixpath
 import subprocess
 import numpy as np
+from typing import Optional
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.vasp.potential import (
@@ -16,7 +17,7 @@ from pyiron_atomistics.vasp.potential import (
     Potcar,
     strip_xc_from_potential_name,
 )
-from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_base import state, GenericParameters
 from pyiron_snippets.deprecate import deprecate
 from pyiron_atomistics.vasp.output import (
@@ -26,7 +27,7 @@ from pyiron_atomistics.vasp.output import (
     output_dict_to_hdf,
     parse_vasp_output,
 )
-from pyiron_atomistics.vasp.structure import read_atoms, write_poscar, vasp_sorter
+from pyiron_atomistics.vasp.structure import read_atoms, get_poscar_content, vasp_sorter
 from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
 from pyiron_atomistics.vasp.vasprun import VasprunError
 from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
@@ -103,6 +104,8 @@ class VaspBase(GenericDFTJob):
         self._output_parser = Output()
         self._potential = VaspPotentialSetter([])
         self._compress_by_default = True
+        self._job_with_calculate_function = True
+        self._collect_output_funct = parse_vasp_output
         self.get_enmax_among_species = get_enmax_among_potentials
         state.publications.add(self.publication)
         self.__hdf_version__ = "0.2.0"
@@ -363,11 +366,20 @@ class VaspBase(GenericDFTJob):
         self.input.potcar.read_only = True
 
     # Compatibility functions
-    def write_input(self):
+    def get_input_parameter_dict(self) -> dict:
         """
-        Call routines that generate the INCAR, POTCAR, KPOINTS and POSCAR input files
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        The get_input_file_dict() function is called before the write_input() function to convert the input specified on
+        the job object to strings which can be written to the working directory as well as files which are copied to the
+        working directory. After the write_input() function wrote the input files the executable is called.
+
+        Returns:
+            dict: hierarchical dictionary of input files
         """
-        super().write_input()
         if self.input.incar["SYSTEM"] == "pyiron_jobname":
             self.input.incar["SYSTEM"] = self.job_name
         modified_elements = {
@@ -387,19 +399,25 @@ class VaspBase(GenericDFTJob):
                     self.logger.info(
                         "The POSCAR file will be overwritten by the CONTCAR file specified in restart_file_list."
                     )
-        self.input.write(
-            structure=self.structure,
-            directory=self.working_directory,
-            modified_elements=modified_elements,
+        input_file_dict = super().get_input_parameter_dict()
+        input_file_dict["files_to_create"].update(
+            self.input.get_input_parameter_dict(
+                structure=self.structure,
+                modified_elements=modified_elements,
+            )
         )
+        return input_file_dict
 
-    def _store_output(self, output_dict: dict):
+    def save_output(
+        self, output_dict: Optional[dict] = None, shell_output: Optional[str] = None
+    ):
         """
         Internal helper function to store the hierarchical output dictionary in the HDF5 file of the pyiron job object
 
         Args:
             output_dict (dict): hierarchical output dictionary
         """
+        _ = shell_output
         output_dict_to_hdf(
             data_dict=output_dict,
             hdf=self._hdf5,
@@ -409,20 +427,11 @@ class VaspBase(GenericDFTJob):
             self.project_hdf5.rewrite_hdf5()
 
     # define routines that collect all output files
-    def collect_output(self):
-        """
-        The collect_output() method parses the output in the working_directory and stores it in the HDF5 file. It is
-        divided into two functions, the pyiron_atomistics.vasp.output.parse_vasp_output() function, which parses the
-        working directory and returns a dictionary with the output and the job._store_output() function which stores
-        the output dictionary in the HDF5 file.
-        """
-        self._store_output(
-            output_dict=parse_vasp_output(
-                working_directory=self.working_directory,
-                structure=self.structure,
-                sorted_indices=self.sorted_indices,
-            ),
-        )
+    def get_output_parameter_dict(self):
+        return {
+            "structure": self.structure,
+            "sorted_indices": self.sorted_indices,
+        }
 
     def convergence_check(self):
         """
@@ -694,8 +703,12 @@ class VaspBase(GenericDFTJob):
             self._write_chemical_formular_to_database()
             self._import_directory = directory
             self.status.collect = True
-            # self.to_hdf()
-            self.collect_output()
+            self.save_output(
+                output_dict=self._collect_output_funct(
+                    working_directory=self.working_directory,
+                    **self.get_output_parameter_dict(),
+                )
+            )
             self.to_hdf()
             self.status.finished = True
         else:
@@ -1421,7 +1434,12 @@ class VaspBase(GenericDFTJob):
         new_ham = super(VaspBase, self).restart(job_name=job_name, job_type=job_type)
         if not self.is_compressed():
             try:
-                self.collect_output()
+                self.save_output(
+                    output_dict=self._collect_output_funct(
+                        working_directory=self.working_directory,
+                        **self.get_output_parameter_dict(),
+                    ),
+                )
                 self.compress()
             except VaspCollectError:
                 self.logger.warn(
@@ -1882,23 +1900,53 @@ class Input:
             structure (atomistics.structure.atoms.Atoms instance): Structure to be written
             directory (str): The working directory for the VASP run
         """
-        self.incar.write_file(file_name="INCAR", cwd=directory)
-        if "KSPACING" in self.incar.keys():
-            warnings.warn("'KSPACING' found in INCAR, no KPOINTS file written")
-        else:
-            self.kpoints.write_file(file_name="KPOINTS", cwd=directory)
-        self.potcar.potcar_set_structure(structure, modified_elements)
-        self.potcar.write_file(file_name="POTCAR", cwd=directory)
+        files_to_create_dict = self.get_input_file_dict(
+            structure=structure, modified_elements=modified_elements
+        )
+        for file_name, content in files_to_create_dict.items():
+            with open(os.path.join(directory, file_name), "w") as f:
+                f.writelines(content)
+
+    def get_input_parameter_dict(
+        self, structure: Atoms, modified_elements: list
+    ) -> dict:
+        """
+        Get an hierarchical dictionary of input files. On the first level the dictionary is divided in file_to_create
+        and files_to_copy. Both are dictionaries use the file names as keys. In file_to_create the values are strings
+        which represent the content which is going to be written to the corresponding file. In files_to_copy the values
+        are the paths to the source files to be copied.
+
+        Args:
+            structure (Atoms):
+            modified_elements (list):
+
+        Returns:
+            dict: hierarchical dictionary of input files
+        """
+        self.potcar.potcar_set_structure(
+            structure=structure, modified_elements=modified_elements
+        )
         # Write the species info in the POSCAR file only if there are no user defined species
         is_user_defined = list()
         for species in structure.get_species_objects():
             is_user_defined.append(species.Parent is not None)
         do_not_write_species = any(is_user_defined)
-        write_poscar(
-            structure,
-            filename=posixpath.join(directory, "POSCAR"),
-            write_species=not do_not_write_species,
-        )
+        files_to_create = {
+            "INCAR": "".join(self.incar.get_string_lst()),
+            "POTCAR": "".join(self.potcar.get_file_content()),
+            "POSCAR": "".join(
+                get_poscar_content(
+                    structure=structure,
+                    write_species=not do_not_write_species,
+                    cartesian=True,
+                )
+            ),
+        }
+        if "KSPACING" in self.incar.keys():
+            warnings.warn("'KSPACING' found in INCAR, no KPOINTS file written")
+        else:
+            files_to_create["KPOINTS"] = "".join(self.kpoints.get_string_lst())
+        return files_to_create
 
     def to_dict(self):
         input_dict = {"vasp_dict/eddrmm_handling": self._eddrmm}
