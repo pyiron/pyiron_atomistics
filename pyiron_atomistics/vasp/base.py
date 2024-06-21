@@ -703,8 +703,12 @@ class VaspBase(GenericDFTJob):
             self._write_chemical_formular_to_database()
             self._import_directory = directory
             self.status.collect = True
-            # self.to_hdf()
-            self.collect_output()
+            self.save_output(
+                output_dict=self._collect_output_funct(
+                    working_directory=self.working_directory,
+                    **self.get_output_parameter_dict()
+                )
+            )
             self.to_hdf()
             self.status.finished = True
         else:
