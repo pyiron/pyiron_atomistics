@@ -1434,7 +1434,12 @@ class VaspBase(GenericDFTJob):
         new_ham = super(VaspBase, self).restart(job_name=job_name, job_type=job_type)
         if not self.is_compressed():
             try:
-                self.collect_output()
+                self.save_output(
+                    output_dict=self._collect_output_funct(
+                        working_directory=self.working_directory,
+                        **self.get_output_parameter_dict(),
+                    ),
+                )
                 self.compress()
             except VaspCollectError:
                 self.logger.warn(
