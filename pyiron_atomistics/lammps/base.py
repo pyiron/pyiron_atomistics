@@ -28,7 +28,10 @@ from pyiron_atomistics.lammps.structure import (
     structure_to_lammps,
 )
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
-from pyiron_atomistics.lammps.output import parse_lammps_output
+from pyiron_atomistics.lammps.output import (
+    parse_lammps_output,
+    remap_indices,
+)
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -409,9 +412,9 @@ class LammpsBase(AtomisticGenericJob):
             "potential_elements": self.input.potential.get_element_lst(),
             "units": self.units,
             "prism": self._prism,
-            "dump_h5_full_file_name": "dump.h5",
-            "dump_out_full_file_name": "dump.out",
-            "log_lammps_full_file_name": "log.lammps",
+            "dump_h5_file_name": "dump.h5",
+            "dump_out_file_name": "dump.out",
+            "log_lammps_file_name": "log.lammps",
         }
 
     def save_output(
