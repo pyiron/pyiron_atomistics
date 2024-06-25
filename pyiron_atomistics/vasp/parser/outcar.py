@@ -52,6 +52,7 @@ class Outcar(object):
         energies_int = self.get_energy_without_entropy(filename=filename, lines=lines)
         energies_zero = self.get_energy_sigma_0(filename=filename, lines=lines)
         scf_energies = self.get_all_total_energies(filename=filename, lines=lines)
+        ediel_sol = self.get_ediel_sol(filename=filename, lines=lines)
         n_atoms = self.get_number_of_atoms(filename=filename, lines=lines)
         forces = self.get_forces(filename=filename, lines=lines, n_atoms=n_atoms)
         positions = self.get_positions(filename=filename, lines=lines, n_atoms=n_atoms)
@@ -96,6 +97,7 @@ class Outcar(object):
         self.parse_dict["energies_int"] = energies_int
         self.parse_dict["energies_zero"] = energies_zero
         self.parse_dict["scf_energies"] = scf_energies
+        self.parse_dict["ediel_sol"] = ediel_sol
         self.parse_dict["forces"] = forces
         self.parse_dict["positions"] = positions
         self.parse_dict["cells"] = cells
@@ -478,6 +480,33 @@ class Outcar(object):
         return np.array(
             [get_energy_sigma_0_from_line(lines[j + 4]) for j in trigger_indices]
         )
+
+    @staticmethod
+    def get_ediel_sol(filename="OUTCAR", lines=None):
+        """
+        Gets the ediel_sol for every ionic step from the OUTCAR file
+
+        Args:
+            filename (str): Filename of the OUTCAR file to parse
+            lines (list/None): lines read from the file
+
+        Returns:
+            numpy.ndarray: A 1xM array of the total energies in $eV$
+
+            where M is the number of time steps
+        """
+
+        def get_ediel_sol_from_line(line):
+            return float(_clean_line(line.strip()).split()[-1])
+
+        trigger_indices, lines = _get_trigger(
+            lines=lines,
+            filename=filename,
+            trigger="Solvation  Ediel_sol  = ",
+        )
+        return np.array(
+            [get_ediel_sol_from_line(lines[j]) for j in trigger_indices]
+        )        
 
     @staticmethod
     def get_all_total_energies(filename="OUTCAR", lines=None):
