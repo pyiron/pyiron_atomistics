@@ -19,7 +19,7 @@ dependencies:
 - pint =0.24
 - pyiron_base =0.9.4
 - pyiron_snippets =0.1.2
-- pylammpsmpi =0.2.19
+- pylammpsmpi =0.2.20
 - pyscal =2.10.18
 - scikit-learn =1.5.0
 - scipy =1.14.0
