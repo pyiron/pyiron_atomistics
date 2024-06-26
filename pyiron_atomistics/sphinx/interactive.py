@@ -232,9 +232,6 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
         ionic_steps=None,
         max_iter=None,
         pressure=None,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
         ionic_energy_tolerance=None,
         ionic_force_tolerance=None,
         ionic_energy=None,
@@ -254,9 +251,6 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
                 ionic_steps=ionic_steps,
                 max_iter=max_iter,
                 pressure=pressure,
-                algorithm=algorithm,
-                retain_charge_density=retain_charge_density,
-                retain_electrostatic_potential=retain_electrostatic_potential,
                 ionic_energy_tolerance=ionic_energy_tolerance,
                 ionic_force_tolerance=ionic_force_tolerance,
                 volume_only=volume_only,
@@ -306,31 +300,6 @@ class SphinxInteractive(SphinxBase, GenericInteractive):
     def _interactive_pipe_read(self):
         return self._interactive_library_read.readline()
 
-    def calc_static(
-        self,
-        electronic_steps=100,
-        blockSize=8,
-        dSpinMoment=1e-8,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
-    ):
-        """
-        Function to setup the hamiltonian to perform static SCF DFT runs
-
-        Args:
-            retain_electrostatic_potential:
-            retain_charge_density:
-            algorithm:
-            electronic_steps (int): maximum number of electronic steps, which can be used to achieve convergence
-        """
-        super(SphinxInteractive, self).calc_static(
-            electronic_steps=electronic_steps,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
-        )
-
     def load_main_group(self):
         main_group = Group()
         if (
@@ -375,14 +344,15 @@ class SphinxOutput(Output, GenericInteractiveOutput):
         """
         import matplotlib.pylab as plt
 
-        elec_dict = self._job["output/generic/dft"]["n_valence"]
-        if elec_dict is None:
-            raise AssertionError("Number of electrons not parsed")
+        try:
+            elec_dict = self._job.content["output/generic/dft"]["n_valence"]
+        except ValueError:
+            raise AssertionError("Number of electrons not parsed") from None
         n_elec = np.sum(
             [elec_dict[k] for k in self._job.structure.get_chemical_symbols()]
         )
         n_elec = int(np.ceil(n_elec / 2))
-        bands = self._job["output/generic/dft/bands_occ"][-1]
+        bands = self._job.content["output/generic/dft"]["bands_occ"][-1]
         bands = bands.reshape(-1, bands.shape[-1])
         max_occ = np.sum(~np.isclose(bands, 0), axis=-1).max()
         n_bands = bands.shape[-1]

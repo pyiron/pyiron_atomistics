@@ -13,7 +13,8 @@ __email__ = "poul@mpie.de"
 __status__ = "development"
 __date__ = "Aug 12, 2020"
 
-from pyiron_base import DataContainer, GenericJob, deprecate
+from pyiron_base import DataContainer, GenericJob
+from pyiron_snippets.deprecate import deprecate
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure

@@ -47,7 +47,8 @@ from pyiron_atomistics.sphinx.input_writer import (
 )
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
-from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
+from pyiron_base import state, DataContainer, job_status_successful_lst
+from pyiron_snippets.deprecate import deprecate
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -612,13 +613,7 @@ class SphinxBase(GenericDFTJob):
         if "noWavesStorage" not in guess:
             guess["noWavesStorage"] = not self.input["WriteWaves"]
 
-    def calc_static(
-        self,
-        electronic_steps=100,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
-    ):
+    def calc_static(self, electronic_steps=100):
         """
         Setup the hamiltonian to perform a static SCF run.
 
@@ -626,24 +621,14 @@ class SphinxBase(GenericDFTJob):
         main Group.
 
         Args:
-            electronic_steps (float): max # of electronic steps
-            retain_electrostatic_potential:
-            retain_charge_density:
-            algorithm (str): CCG or blockCCG (not implemented)
-            electronic_steps (int): maximum number of electronic steps
-                which can be used to achieve convergence
+            electronic_steps (int): max # of electronic steps
         """
         if electronic_steps is not None:
             self.input["Estep"] = electronic_steps
         for arg in ["Istep", "dF", "dE"]:
             if arg in self.input:
                 del self.input[arg]
-        super(SphinxBase, self).calc_static(
-            electronic_steps=electronic_steps,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
-        )
+        super().calc_static(electronic_steps=electronic_steps)
         self.load_default_groups()
 
     def calc_minimize(
@@ -652,9 +637,6 @@ class SphinxBase(GenericDFTJob):
         ionic_steps=None,
         max_iter=None,
         pressure=None,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
         ionic_energy=None,
         ionic_forces=None,
         ionic_energy_tolerance=None,
@@ -676,9 +658,6 @@ class SphinxBase(GenericDFTJob):
             in an error.
 
         Args:
-            retain_electrostatic_potential:
-            retain_charge_density:
-            algorithm:
             pressure:
             max_iter:
             electronic_steps (int): maximum number of electronic steps
@@ -717,9 +696,6 @@ class SphinxBase(GenericDFTJob):
             ionic_steps=ionic_steps,
             max_iter=max_iter,
             pressure=pressure,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
             ionic_energy_tolerance=ionic_energy_tolerance,
             ionic_force_tolerance=ionic_force_tolerance,
             volume_only=volume_only,
@@ -727,14 +703,7 @@ class SphinxBase(GenericDFTJob):
         self.load_default_groups()
 
     def calc_md(
-        self,
-        temperature=None,
-        n_ionic_steps=1000,
-        n_print=1,
-        time_step=1.0,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
-        **kwargs,
+        self, temperature=None, n_ionic_steps=1000, n_print=1, time_step=1.0, **kwargs
     ):
         raise NotImplementedError("calc_md() not implemented in SPHInX.")
 
@@ -1387,6 +1356,7 @@ class SphinxBase(GenericDFTJob):
 
         Automatically called by job.run()
         """
+        super().write_input()
 
         # If the structure group was not modified directly by the
         # user, via job.input.structure (which is likely True),
@@ -2161,9 +2131,12 @@ class Output:
             if self.charge_density.total_data is not None:
                 self.charge_density.to_hdf(hdf5_output, group_name="charge_density")
             if "bands_occ" in self.generic.dft:
-                es = self._get_electronic_structure_object()
-                if len(es.kpoint_list) > 0:
-                    es.to_hdf(hdf5_output)
+                try:
+                    es = self._get_electronic_structure_object()
+                    if len(es.kpoint_list) > 0:
+                        es.to_hdf(hdf5_output)
+                except IndexError:
+                    warnings.warn("Electronic structure parsing failed")
             with hdf5_output.open("electronic_structure") as hdf5_es:
                 if "dos" not in hdf5_es.list_groups():
                     hdf5_es.create_group("dos")

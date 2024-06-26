@@ -8,7 +8,8 @@ import os
 import time
 import posixpath
 import warnings
-from pyiron_base import state, GenericParameters, Executable, deprecate
+from pyiron_base import state, GenericParameters, Executable
+from pyiron_snippets.deprecate import deprecate
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
