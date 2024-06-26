@@ -575,6 +575,25 @@ class TestOutcar(unittest.TestCase):
                 memory_usage_dict[int(filename.split("/OUTCAR_")[-1])]
             )
 
+    def test_get_ediel_sol(self):
+        ediel_sol_dict = {
+            1: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            10: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            2: [],
+            3: [],
+            4: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            5: [],
+            6: [],
+            7: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            8: [],
+            9: [0., 0., 0., 0.],
+        }
+        for filename in self.file_list:
+            self.assertTrue(np.all(np.isclose(
+                self.outcar_parser.get_ediel_sol(filename),
+                ediel_sol_dict[int(filename.split("/OUTCAR_")[-1])]
+            )))
+
     def test_get_cpu_time(self):
         cpu_time_dict = {
             1: 3.543,
