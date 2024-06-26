@@ -3,7 +3,7 @@ channels:
 dependencies:
 - aimsgb =1.1.0
 - ase =3.23.0
-- atomistics =0.1.29
+- atomistics =0.1.30
 - defusedxml =0.7.1
 - h5py =3.11.0
 - matplotlib-base =3.8.4
@@ -15,13 +15,13 @@ dependencies:
 - pint =0.24
 - pyiron_base =0.9.4
 - pyiron_snippets =0.1.2
-- pylammpsmpi =0.2.19
+- pylammpsmpi =0.2.20
 - pyscal =2.10.18
 - scikit-learn =1.5.0
-- scipy =1.13.1
+- scipy =1.14.0
 - seekpath =2.1.0
 - spglib =2.4.0
-- structuretoolkit =0.0.25
+- structuretoolkit =0.0.26
 - pyxtal =0.6.2
 - pyiron-data >=0.0.22
 - sqsgenerator
