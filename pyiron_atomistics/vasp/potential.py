@@ -7,7 +7,8 @@ import posixpath
 
 import numpy as np
 import pandas
-from pyiron_base import state, GenericParameters, deprecate
+from pyiron_base import state, GenericParameters
+from pyiron_snippets.deprecate import deprecate
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
     find_potential_file_base,
@@ -487,6 +488,22 @@ class Potcar(GenericParameters):
                 self._dataset["Comment"].append("")
             self.el_path_lst.append(el_path)
 
+    def get_file_content(self):
+        self.electrons_per_atom_lst = list()
+        self.max_cutoff_lst = list()
+        self._set_potential_paths()
+        line_lst = []
+        for el_file in self.el_path_lst:
+            with open(el_file) as pot_file:
+                for i, line in enumerate(pot_file):
+                    line_lst.append(line)
+                    if i == 1:
+                        self.electrons_per_atom_lst.append(int(float(line)))
+                    elif i == 14:
+                        mystr = line.split()[2][:-1]
+                        self.max_cutoff_lst.append(float(mystr))
+        return line_lst
+
     def write_file(self, file_name, cwd=None):
         """
         Args:
@@ -494,22 +511,8 @@ class Potcar(GenericParameters):
             cwd:
         Returns:
         """
-        self.electrons_per_atom_lst = list()
-        self.max_cutoff_lst = list()
-        self._set_potential_paths()
-        if cwd is not None:
-            file_name = posixpath.join(cwd, file_name)
-        f = open(file_name, "w")
-        for el_file in self.el_path_lst:
-            with open(el_file) as pot_file:
-                for i, line in enumerate(pot_file):
-                    f.write(line)
-                    if i == 1:
-                        self.electrons_per_atom_lst.append(int(float(line)))
-                    elif i == 14:
-                        mystr = line.split()[2][:-1]
-                        self.max_cutoff_lst.append(float(mystr))
-        f.close()
+        with open(file_name, "w") as f:
+            f.writelines("".join(self.get_file_content()))
 
     def load_default(self):
         file_content = """\

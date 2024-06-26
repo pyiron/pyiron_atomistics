@@ -70,38 +70,13 @@ class ElasticMatrixCalculator(object):
         Returns:
 
         """
-        (
-            elastic_matrix,
-            self._data["A2"],
-            self._data["strain_energy"],
-            self._data["e0"],
-        ) = analyse_structures_helper(
+        sym_dict, elastic = analyse_structures_helper(
             output_dict=output_dict,
             sym_dict=self._data,
             fit_order=self.fit_order,
             zero_strain_job_name=self.zero_strain_job_name,
         )
-        elastic = ElasticProperties(elastic_matrix=elastic_matrix)
-        self._data.update(
-            {
-                "C": elastic.elastic_matrix(),
-                "S": elastic.elastic_matrix_inverse(),
-                "BV": elastic.bulkmodul_voigt(),
-                "BR": elastic.bulkmodul_reuss(),
-                "BH": elastic.bulkmodul_hill(),
-                "GV": elastic.shearmodul_voigt(),
-                "GR": elastic.shearmodul_reuss(),
-                "GH": elastic.shearmodul_hill(),
-                "EV": elastic.youngsmodul_voigt(),
-                "ER": elastic.youngsmodul_reuss(),
-                "EH": elastic.youngsmodul_hill(),
-                "nuV": elastic.poissonsratio_voigt(),
-                "nuR": elastic.poissonsratio_reuss(),
-                "nuH": elastic.poissonsratio_hill(),
-                "AVR": elastic.AVR(),
-                "C_eigval": elastic.elastic_matrix_eigval(),
-            }
-        )
+        self._data.update(elastic)
 
     @staticmethod
     def subjob_name(i, eps):
@@ -149,7 +124,6 @@ class ElasticMatrixJob(AtomisticParallelMaster):
         )
         self.input["fit_order"] = (2, "order of the fit polynom")
         self.input["eps_range"] = (0.005, "strain variation")
-        self.input["relax_atoms"] = (True, "relax atoms in deformed structure")
         self.input["sqrt_eta"] = (
             True,
             "calculate self-consistently sqrt of stress matrix eta",
@@ -174,18 +148,10 @@ class ElasticMatrixJob(AtomisticParallelMaster):
 
     def run_static(self):
         self.create_calculator()
-        if self.input["relax_atoms"]:
-            self.ref_job.calc_minimize(pressure=None)
-        else:
-            self.ref_job.calc_static()
         super(ElasticMatrixJob, self).run_static()
 
     def run_if_interactive(self):
         self.create_calculator()
-        if self.input["relax_atoms"]:
-            self.ref_job.calc_minimize(pressure=None)
-        else:
-            self.ref_job.calc_static()
         super(ElasticMatrixJob, self).run_if_interactive()
 
     def run_if_refresh(self):

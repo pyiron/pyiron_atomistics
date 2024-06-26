@@ -79,6 +79,55 @@ def get_species_list_from_potcar(filename="POTCAR"):
     return species_list
 
 
+def get_poscar_content(structure, write_species=True, cartesian=True):
+    endline = "\n"
+    selec_dyn = False
+    line_lst = [
+        "Poscar file generated with pyiron" + endline,
+        "1.0" + endline,
+    ]
+    for a_i in structure.get_cell():
+        x, y, z = a_i
+        line_lst.append("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
+    atom_numbers = structure.get_number_species_atoms()
+    if write_species:
+        line_lst.append(" ".join(atom_numbers.keys()) + endline)
+    num_str = [str(val) for val in atom_numbers.values()]
+    line_lst.append(" ".join(num_str))
+    line_lst.append(endline)
+    if "selective_dynamics" in structure.get_tags():
+        selec_dyn = True
+        cartesian = False
+        line_lst.append("Selective dynamics" + endline)
+    sorted_coords = list()
+    selec_dyn_lst = list()
+    for species in atom_numbers.keys():
+        indices = structure.select_index(species)
+        for i in indices:
+            if cartesian:
+                sorted_coords.append(structure.positions[i])
+            else:
+                sorted_coords.append(structure.get_scaled_positions()[i])
+            if selec_dyn:
+                selec_dyn_lst.append(structure.selective_dynamics[i])
+    if cartesian:
+        line_lst.append("Cartesian" + endline)
+    else:
+        line_lst.append("Direct" + endline)
+    if selec_dyn:
+        for i, vec in enumerate(sorted_coords):
+            x, y, z = vec
+            sd_string = " ".join(["T" if sd else "F" for sd in selec_dyn_lst[i]])
+            line_lst.append(
+                "{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + " " + sd_string + endline
+            )
+    else:
+        for i, vec in enumerate(sorted_coords):
+            x, y, z = vec
+            line_lst.append("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
+    return line_lst
+
+
 def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=True):
     """
     Writes a POSCAR type file from a structure object
@@ -90,53 +139,16 @@ def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=Tru
         cartesian (bool): True if the positions are written in Cartesian coordinates
 
     """
-    endline = "\n"
     with open(filename, "w") as f:
-        selec_dyn = False
-        f.write("Poscar file generated with pyiron" + endline)
-        f.write("1.0" + endline)
-        for a_i in structure.get_cell():
-            x, y, z = a_i
-            f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
-        atom_numbers = structure.get_number_species_atoms()
-        if write_species:
-            f.write(" ".join(atom_numbers.keys()) + endline)
-        num_str = [str(val) for val in atom_numbers.values()]
-        f.write(" ".join(num_str))
-        f.write(endline)
-        if "selective_dynamics" in structure.get_tags():
-            selec_dyn = True
-            cartesian = False
-            f.write("Selective dynamics" + endline)
-        sorted_coords = list()
-        selec_dyn_lst = list()
-        for species in atom_numbers.keys():
-            indices = structure.select_index(species)
-            for i in indices:
-                if cartesian:
-                    sorted_coords.append(structure.positions[i])
-                else:
-                    sorted_coords.append(structure.get_scaled_positions()[i])
-                if selec_dyn:
-                    selec_dyn_lst.append(structure.selective_dynamics[i])
-        if cartesian:
-            f.write("Cartesian" + endline)
-        else:
-            f.write("Direct" + endline)
-        if selec_dyn:
-            for i, vec in enumerate(sorted_coords):
-                x, y, z = vec
-                sd_string = " ".join(["T" if sd else "F" for sd in selec_dyn_lst[i]])
-                f.write(
-                    "{0:.15f} {1:.15f} {2:.15f}".format(x, y, z)
-                    + " "
-                    + sd_string
-                    + endline
+        f.writelines(
+            "".join(
+                get_poscar_content(
+                    structure=structure,
+                    write_species=write_species,
+                    cartesian=cartesian,
                 )
-        else:
-            for i, vec in enumerate(sorted_coords):
-                x, y, z = vec
-                f.write("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
+            )
+        )
 
 
 def atoms_from_string(string, read_velocities=False, species_list=None):

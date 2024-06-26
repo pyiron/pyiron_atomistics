@@ -8,7 +8,8 @@ from ase.io import read
 
 from pyiron_base import DataContainer
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
-from pyiron_base import GenericJob, ImportAlarm
+from pyiron_base import GenericJob
+from pyiron_snippets.import_alarm import ImportAlarm
 from pyiron_atomistics.lammps.structure import (
     LammpsStructure,
     UnfoldingPrism,

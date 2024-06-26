@@ -4,7 +4,7 @@
 
 from __future__ import print_function
 from pyiron_atomistics.atomistics.master.murnaghan import Murnaghan, MurnaghanDebyeModel
-from pyiron_base import deprecate
+from pyiron_snippets.deprecate import deprecate
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (
