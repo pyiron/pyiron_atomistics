@@ -150,6 +150,9 @@ class Output:
             self.generic_output.dft_log_dict["cbm_list"] = self.outcar.parse_dict[
                 "cbm_list"
             ]
+            self.generic_output.dft_log_dict["ediel_sol"] = self.outcar.parse_dict[
+                "ediel_sol"
+            ]
 
         if vasprun_working:
             log_dict["forces"] = self.vp_new.vasprun_dict["forces"]
