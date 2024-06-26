@@ -509,9 +509,7 @@ class Outcar(object):
             filename=filename,
             trigger="Solvation  Ediel_sol  = ",
         )
-        return np.array(
-            [get_ediel_sol_from_line(lines[j]) for j in trigger_indices]
-        )        
+        return np.array([get_ediel_sol_from_line(lines[j]) for j in trigger_indices])
 
     @staticmethod
     def get_all_total_energies(filename="OUTCAR", lines=None):
