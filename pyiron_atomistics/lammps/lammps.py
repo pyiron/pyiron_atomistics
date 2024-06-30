@@ -1,6 +1,7 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+import os
 
 from pyiron_base import Project, ProjectHDFio
 
@@ -61,8 +62,10 @@ def lammps_function(
     cutoff_radius=None,
     units="metal",
     bonds_kwargs={},
+    server_kwargs={},
     enable_h5md=False,
 ):
+    os.makedirs(working_directory, exist_ok=True)
     job = Lammps(
         project=ProjectHDFio(
             project=Project(working_directory),
@@ -75,6 +78,9 @@ def lammps_function(
     job.structure = ase_to_pyiron(structure)
     job.potential = potential
     job.cutoff_radius = cutoff_radius
+    server_dict = job.server.to_dict()
+    server_dict.update(server_kwargs)
+    job.server.from_dict(server_dict=server_dict)
     job.units = units
     if calc_mode == "static":
         job.calc_static()
@@ -93,4 +99,4 @@ def lammps_function(
 
     calculate_kwargs = job.calculate_kwargs
     calculate_kwargs["working_directory"] = working_directory
-    return job.get_calculate_function(), calculate_kwargs
+    return job.get_calculate_function()(**calculate_kwargs)
