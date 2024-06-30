@@ -2,7 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import os
-from typing import Optional
+from typing import Optional, Union
 
 from ase.atoms import Atoms
 from pyiron_base import Project, ProjectHDFio
@@ -71,6 +71,7 @@ def lammps_function(
     restart_file: str = "restart.out",
     executable_version: Optional[str] = None,
     executable_path: Optional[str] = None,
+    input_control_file: Optional[Union[str, list, dict]] = None,
 ):
     """
 
@@ -90,6 +91,7 @@ def lammps_function(
         restart_file (str):
         executable_version (str):
         executable_path (str):
+        input_control_file (str|list|dict):
 
     Returns:
         str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
@@ -122,6 +124,13 @@ def lammps_function(
         job.calc_vcsgc(**calc_kwargs)
     else:
         raise ValueError()
+    if input_control_file is not None and isinstance(input_control_file, dict):
+        for k, v in input_control_file.items():
+            job.input.control[k] = v
+    elif input_control_file is not None and (
+            isinstance(input_control_file, str) or isinstance(input_control_file, list)
+    ):
+        job.input.control.load_string(input_str=input_control_file)
     if executable_path is not None:
         job.executable = executable_path
     if executable_version is not None:
