@@ -1202,6 +1202,7 @@ class Atoms(ASEAtoms):
             * The colour interpretation of some hex codes is weird, e.g. 'green'.
         """
         from structuretoolkit.visualize import plot3d
+
         return plot3d(
             structure=pyiron_to_ase(self),
             mode=mode,
