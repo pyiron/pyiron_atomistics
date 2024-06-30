@@ -2,7 +2,9 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 import os
+from typing import Optional
 
+from ase.atoms import Atoms
 from pyiron_base import Project, ProjectHDFio
 
 from pyiron_atomistics.lammps.interactive import LammpsInteractive
@@ -54,17 +56,41 @@ class Lammps(LammpsInteractive):
 
 
 def lammps_function(
-    working_directory,
-    structure,
-    potential,
-    calc_mode="static",
-    calc_kwargs={},
-    cutoff_radius=None,
-    units="metal",
-    bonds_kwargs={},
-    server_kwargs={},
-    enable_h5md=False,
+    working_directory: str,
+    structure: Atoms,
+    potential: str,
+    calc_mode: str = "static",
+    calc_kwargs: dict = {},
+    cutoff_radius: Optional[float] = None,
+    units: str = "metal",
+    bonds_kwargs: dict = {},
+    server_kwargs: dict = {},
+    enable_h5md: bool = False,
+    write_restart_file: bool = False,
+    read_restart_file: bool = False,
+    restart_file: str = "restart.out",
 ):
+    """
+
+    Args:
+        working_directory (str):
+        structure (Atoms):
+        potential (str):
+        calc_mode (str):
+        calc_kwargs (dict):
+        cutoff_radius (float):
+        units (str):
+        bonds_kwargs (dict):
+        server_kwargs (dict):
+        enable_h5md (bool):
+        write_restart_file (bool):
+        read_restart_file (bool):
+        restart_file (str):
+
+    Returns:
+        str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
+                         the execution raised an accepted error.
+    """
     os.makedirs(working_directory, exist_ok=True)
     job = Lammps(
         project=ProjectHDFio(
@@ -94,6 +120,11 @@ def lammps_function(
         raise ValueError()
     if enable_h5md:
         job.enable_h5md()
+    if write_restart_file:
+        job.write_restart_file(filename=restart_file)
+    if read_restart_file:
+        job.read_restart_file(filename=os.path.basename(restart_file))
+        job.restart_file_list.append(restart_file)
     if len(bonds_kwargs) > 0:
         job.define_bonds(**bonds_kwargs)
 
