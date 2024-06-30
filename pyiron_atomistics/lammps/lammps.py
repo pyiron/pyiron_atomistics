@@ -128,7 +128,7 @@ def lammps_function(
         for k, v in input_control_file.items():
             job.input.control[k] = v
     elif input_control_file is not None and (
-            isinstance(input_control_file, str) or isinstance(input_control_file, list)
+        isinstance(input_control_file, str) or isinstance(input_control_file, list)
     ):
         job.input.control.load_string(input_str=input_control_file)
     if executable_path is not None:
