@@ -69,6 +69,8 @@ def lammps_function(
     write_restart_file: bool = False,
     read_restart_file: bool = False,
     restart_file: str = "restart.out",
+    executable_version: Optional[str] = None,
+    executable_path: Optional[str] = None,
 ):
     """
 
@@ -86,6 +88,8 @@ def lammps_function(
         write_restart_file (bool):
         read_restart_file (bool):
         restart_file (str):
+        executable_version (str):
+        executable_path (str):
 
     Returns:
         str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
@@ -118,6 +122,10 @@ def lammps_function(
         job.calc_vcsgc(**calc_kwargs)
     else:
         raise ValueError()
+    if executable_path is not None:
+        job.executable = executable_path
+    if executable_version is not None:
+        job.version = executable_version
     if enable_h5md:
         job.enable_h5md()
     if write_restart_file:
