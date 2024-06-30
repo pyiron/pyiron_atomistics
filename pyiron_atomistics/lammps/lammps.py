@@ -52,11 +52,26 @@ class Lammps(LammpsInteractive):
         self._executable_activate(enforce=True)
 
 
-def lammps_function(working_directory, structure, potential, calc_mode="static", calc_kwargs={}, cutoff_radius=None,
-                    units="metal", bonds_kwargs={}, enable_h5md=False):
+def lammps_function(
+    working_directory,
+    structure,
+    potential,
+    calc_mode="static",
+    calc_kwargs={},
+    cutoff_radius=None,
+    units="metal",
+    bonds_kwargs={},
+    enable_h5md=False,
+):
     job = Lammps(
-        project=ProjectHDFio(project=Project(working_directory), file_name="lmp_funct_job", h5_path=None, mode=None),
-        job_name="lmp_funct_job")
+        project=ProjectHDFio(
+            project=Project(working_directory),
+            file_name="lmp_funct_job",
+            h5_path=None,
+            mode=None,
+        ),
+        job_name="lmp_funct_job",
+    )
     job.structure = ase_to_pyiron(structure)
     job.potential = potential
     job.cutoff_radius = cutoff_radius
@@ -77,5 +92,5 @@ def lammps_function(working_directory, structure, potential, calc_mode="static",
         job.define_bonds(**bonds_kwargs)
 
     calculate_kwargs = job.calculate_kwargs
-    calculate_kwargs['working_directory'] = working_directory
+    calculate_kwargs["working_directory"] = working_directory
     return job.get_calculate_function(), calculate_kwargs
