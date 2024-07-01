@@ -24,7 +24,6 @@ from structuretoolkit.common import (
     ase_to_pymatgen,
     pymatgen_to_ase,
 )
-from structuretoolkit.visualize import plot3d
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
     ase_to_pyiron as ase_to_pyiron_atom,
@@ -1202,6 +1201,8 @@ class Atoms(ASEAtoms):
             * Many features only work with space-filling atoms (e.g. coloring by a scalar field).
             * The colour interpretation of some hex codes is weird, e.g. 'green'.
         """
+        from structuretoolkit.visualize import plot3d
+
         return plot3d(
             structure=pyiron_to_ase(self),
             mode=mode,
