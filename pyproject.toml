@@ -33,7 +33,7 @@ dependencies = [
     "mp-api==0.41.2",
     "numpy==1.26.4",
     "pandas==2.2.2",
-    "phonopy==2.24.3",
+    "phonopy==2.25.0",
     "pint==0.24.1",
     "pyiron_base==0.9.5",
     "pyiron_snippets==0.1.2",
