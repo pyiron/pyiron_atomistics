@@ -64,46 +64,7 @@ class LammpsPotential(GenericParameters):
 
     @property
     def files(self):
-        if len(self._df["Filename"].values[0]) > 0 and self._df["Filename"].values[
-            0
-        ] != [""]:
-            absolute_file_paths = []
-            relative_file_paths = []
-            just_files = []
-            for file in self._df["Filename"].iloc[0]:
-                if os.path.isabs(file):
-                    absolute_file_paths.append(file)
-            else:
-                head, tail = os.path.split(file)
-                if head == '':
-                    just_files.append(tail)
-                else:
-                    relative_file_paths.append(file)
-
-            env = os.environ
-            resource_path_lst = state.settings.resource_paths
-            for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
-                if conda_var in env.keys():  # support iprpy-data package
-                    path_to_add = state.settings.convert_path_to_abs_posix(
-                        os.path.join(env[conda_var], "share", "iprpy")
-                    )
-                    if path_to_add not in resource_path_lst:
-                        resource_path_lst.append(path_to_add)
-            for path in relative_file_paths:
-                absolute_file_paths.append(
-                    find_potential_file_base(
-                        path=path,
-                        resource_path_lst=resource_path_lst,
-                        rel_path=os.path.join("lammps", "potentials"),
-                    )
-                )
-            if len(just_files)!=0:
-                return None
-
-            if len(absolute_file_paths) != len(list(self._df["Filename"])[0]):
-                raise ValueError("Was not able to locate the potentials.")
-            else:
-                return absolute_file_paths
+        return None
 
     def copy_pot_files(self, working_directory):
         if self.files is not None:
