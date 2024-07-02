@@ -1,8 +1,14 @@
 # coding: utf-8
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
+import os
+from typing import Optional, Union
+
+from ase.atoms import Atoms
+from pyiron_base import Project, ProjectHDFio
 
 from pyiron_atomistics.lammps.interactive import LammpsInteractive
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -47,3 +53,98 @@ class Lammps(LammpsInteractive):
         super(Lammps, self).__init__(project, job_name)
 
         self._executable_activate(enforce=True)
+
+
+def lammps_function(
+    working_directory: str,
+    structure: Atoms,
+    potential: str,
+    calc_mode: str = "static",
+    calc_kwargs: dict = {},
+    cutoff_radius: Optional[float] = None,
+    units: str = "metal",
+    bonds_kwargs: dict = {},
+    server_kwargs: dict = {},
+    enable_h5md: bool = False,
+    write_restart_file: bool = False,
+    read_restart_file: bool = False,
+    restart_file: str = "restart.out",
+    executable_version: Optional[str] = None,
+    executable_path: Optional[str] = None,
+    input_control_file: Optional[Union[str, list, dict]] = None,
+):
+    """
+
+    Args:
+        working_directory (str):
+        structure (Atoms):
+        potential (str):
+        calc_mode (str):
+        calc_kwargs (dict):
+        cutoff_radius (float):
+        units (str):
+        bonds_kwargs (dict):
+        server_kwargs (dict):
+        enable_h5md (bool):
+        write_restart_file (bool):
+        read_restart_file (bool):
+        restart_file (str):
+        executable_version (str):
+        executable_path (str):
+        input_control_file (str|list|dict):
+
+    Returns:
+        str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
+                         the execution raised an accepted error.
+    """
+    os.makedirs(working_directory, exist_ok=True)
+    job = Lammps(
+        project=ProjectHDFio(
+            project=Project(working_directory),
+            file_name="lmp_funct_job",
+            h5_path=None,
+            mode=None,
+        ),
+        job_name="lmp_funct_job",
+    )
+    job.structure = ase_to_pyiron(structure)
+    job.potential = potential
+    job.cutoff_radius = cutoff_radius
+    server_dict = job.server.to_dict()
+    server_dict.update(server_kwargs)
+    job.server.from_dict(server_dict=server_dict)
+    job.units = units
+    if calc_mode == "static":
+        job.calc_static()
+    elif calc_mode == "md":
+        job.calc_md(**calc_kwargs)
+    elif calc_mode == "minimize":
+        job.calc_minimize(**calc_kwargs)
+    elif calc_mode == "vcsgc":
+        job.calc_vcsgc(**calc_kwargs)
+    else:
+        raise ValueError()
+    if input_control_file is not None and isinstance(input_control_file, dict):
+        for k, v in input_control_file.items():
+            job.input.control[k] = v
+    elif input_control_file is not None and (
+        isinstance(input_control_file, str) or isinstance(input_control_file, list)
+    ):
+        job.input.control.load_string(input_str=input_control_file)
+    if executable_path is not None:
+        job.executable = executable_path
+    if executable_version is not None:
+        job.version = executable_version
+    if enable_h5md:
+        job.enable_h5md()
+    if write_restart_file:
+        job.write_restart_file(filename=restart_file)
+    if read_restart_file:
+        job.read_restart_file(filename=os.path.basename(restart_file))
+        job.restart_file_list.append(restart_file)
+    if len(bonds_kwargs) > 0:
+        job.define_bonds(**bonds_kwargs)
+
+    calculate_kwargs = job.calculate_kwargs
+    calculate_kwargs["working_directory"] = working_directory
+    return job.get_calculate_function()(**calculate_kwargs)
