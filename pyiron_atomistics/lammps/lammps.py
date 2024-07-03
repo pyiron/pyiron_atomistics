@@ -123,7 +123,7 @@ def lammps_function(
     elif calc_mode == "vcsgc":
         job.calc_vcsgc(**calc_kwargs)
     else:
-        raise ValueError()
+        raise ValueError(f"calc_mode must be one of: static, md, minimize or vcsgc, not {calc_mod}")
     if input_control_file is not None and isinstance(input_control_file, dict):
         for k, v in input_control_file.items():
             job.input.control[k] = v
