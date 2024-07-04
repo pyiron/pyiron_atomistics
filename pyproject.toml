@@ -39,7 +39,7 @@ dependencies = [
     "pyiron_snippets==0.1.2",
     "pylammpsmpi==0.2.20",
     "scipy==1.14.0",
-    "scikit-learn==1.5.0",
+    "scikit-learn==1.5.1",
     "seekpath==2.1.0",
     "spglib==2.4.0",
     "structuretoolkit==0.0.26",
