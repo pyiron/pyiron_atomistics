@@ -254,7 +254,6 @@ class LammpsPotentialFile(PotentialAbstract):
             potential_df = self._get_potential_df(
                 plugin_name="lammps",
                 file_name_lst={"potentials_lammps.csv"},
-                backward_compatibility_name="lammpspotentials",
             )
         super(LammpsPotentialFile, self).__init__(
             potential_df=potential_df,
