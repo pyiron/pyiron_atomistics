@@ -101,13 +101,12 @@ class PotentialAbstract(object):
         return str(self.list())
 
     @staticmethod
-    def _get_potential_df(plugin_name, file_name_lst, backward_compatibility_name):
+    def _get_potential_df(plugin_name, file_name_lst):
         """
 
         Args:
             plugin_name (str):
             file_name_lst (set):
-            backward_compatibility_name (str):
 
         Returns:
             pandas.DataFrame:
@@ -157,14 +156,12 @@ class PotentialAbstract(object):
     def _get_potential_default_df(
         plugin_name,
         file_name_lst={"potentials_vasp_pbe_default.csv"},
-        backward_compatibility_name="defaultvasppbe",
     ):
         """
 
         Args:
             plugin_name (str):
             file_name_lst (set):
-            backward_compatibility_name (str):
 
         Returns:
             pandas.DataFrame:
