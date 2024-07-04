@@ -12,7 +12,6 @@ from pyiron_snippets.deprecate import deprecate
 
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
-    find_potential_file_base,
 )
 
 __author__ = "Jan Janssen"
@@ -268,11 +267,10 @@ class VaspPotentialSetter(object):
 
 
 def find_potential_file(path):
-    return find_potential_file_base(
-        path=path,
-        resource_path_lst=state.settings.resource_paths,
-        rel_path=os.path.join("vasp", "potentials"),
-    )
+    return ResourceResolver(
+            state.settings.resource_paths,
+            "vasp", "potentials",
+    ).first(path)
 
 
 @deprecate(

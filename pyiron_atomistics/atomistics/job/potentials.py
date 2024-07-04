@@ -11,6 +11,7 @@ import os
 
 import pandas
 from pyiron_base import state
+from pyiron_snippets.resources import ResourceResolver, ResourceNotFound
 
 __author__ = "Martin Boeckmann, Jan Janssen"
 __copyright__ = (
@@ -115,44 +116,38 @@ class PotentialAbstract(object):
         """
         env = os.environ
         resource_path_lst = state.settings.resource_paths
-        for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
-            if conda_var in env.keys():  # support iprpy-data package
-                path_to_add = os.path.join(env[conda_var], "share", "iprpy")
-                if path_to_add not in resource_path_lst:
-                    resource_path_lst += [path_to_add]
-        df_lst = []
-        for resource_path in resource_path_lst:
-            if os.path.exists(os.path.join(resource_path, plugin_name, "potentials")):
-                resource_path = os.path.join(resource_path, plugin_name, "potentials")
-            if "potentials" in resource_path or "iprpy" in resource_path:
-                for path, folder_lst, file_lst in os.walk(resource_path):
-                    for periodic_table_file_name in file_name_lst:
-                        if (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".csv")
-                        ):
-                            df_lst.append(
-                                pandas.read_csv(
-                                    os.path.join(path, periodic_table_file_name),
-                                    index_col=0,
-                                    converters={
-                                        "Species": lambda x: x.replace("'", "")
-                                        .strip("[]")
-                                        .split(", "),
-                                        "Config": lambda x: x.replace("'", "")
-                                        .replace("\\n", "\n")
-                                        .strip("[]")
-                                        .split(", "),
-                                        "Filename": lambda x: x.replace("'", "")
-                                        .strip("[]")
-                                        .split(", "),
-                                    },
-                                )
-                            )
-        if len(df_lst) > 0:
-            return pandas.concat(df_lst)
-        else:
-            raise ValueError("Was not able to locate the potential files.")
+        def read_csv(path):
+            return pandas.read_csv(
+                    path,
+                    index_col=0,
+                    converters={
+                        "Species": lambda x: x.replace("'", "")
+                        .strip("[]")
+                        .split(", "),
+                        "Config": lambda x: x.replace("'", "")
+                        .replace("\\n", "\n")
+                        .strip("[]")
+                        .split(", "),
+                        "Filename": lambda x: x.replace("'", "")
+                        .strip("[]")
+                        .split(", "),
+                    },
+            )
+        files = ResourceResolver(
+                resource_path_lst,
+                plugin_name, "potentials",
+            ).chain(
+            # support iprpy-data package; data paths in the iprpy are of a different form than in
+            # pyiron resources, so we cannot add it as an additional path to the resolver above.
+            # Instead make a new resolver and chain it after the first one.
+            # TODO: this is a fix specific for lammps potentials; it could be moved to the lammps
+            # subclass
+            ResourceResolver(
+                [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
+                "share", "iprpy",
+            ),
+        ).search(file_name_lst)
+        return pandas.concat(map(read_csv, files), ignore_index=True)
 
     @staticmethod
     def _get_potential_default_df(
@@ -168,42 +163,26 @@ class PotentialAbstract(object):
         Returns:
             pandas.DataFrame:
         """
-        for resource_path in state.settings.resource_paths:
-            pot_path = os.path.join(resource_path, plugin_name, "potentials")
-            if os.path.exists(pot_path):
-                resource_path = pot_path
-            if "potentials" in resource_path:
-                for path, folder_lst, file_lst in os.walk(resource_path):
-                    for periodic_table_file_name in file_name_lst:
-                        if (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".csv")
-                        ):
-                            return pandas.read_csv(
-                                os.path.join(path, periodic_table_file_name),
-                                index_col=0,
-                            )
-                        elif (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".h5")
-                        ):
-                            return pandas.read_hdf(
-                                os.path.join(path, periodic_table_file_name), mode="r"
-                            )
-        raise ValueError("Was not able to locate the potential files.")
+        try:
+            file = ResourceResolver(
+                    state.settings.resource_paths,
+                    plugin_name, "potentials",
+            ).first(file_name_lst)
+            return pandas.read_csv(file, index_col=0)
+        except ResourceNotFound:
+            raise ValueError("Was not able to locate the potential files.") from None
 
 
 def find_potential_file_base(path, resource_path_lst, rel_path):
-    if path is not None:
-        for resource_path in resource_path_lst:
-            path_direct = os.path.join(resource_path, path)
-            path_indirect = os.path.join(resource_path, rel_path, path)
-            if os.path.exists(path_direct):
-                return path_direct
-            elif os.path.exists(path_indirect):
-                return path_indirect
-    raise ValueError(
-        "Either the filename or the functional has to be defined.",
-        path,
-        resource_path_lst,
-    )
+    try:
+        return ResourceResolver(
+                resource_path_lst,
+                rel_path,
+                name=path
+        ).first()
+    except ResourceNotFound:
+        raise ValueError(
+            "Either the filename or the functional has to be defined.",
+            path,
+            resource_path_lst,
+        ) from None

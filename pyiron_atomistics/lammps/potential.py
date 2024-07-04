@@ -11,9 +11,9 @@ from pyiron_base import GenericParameters, state
 
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
-    find_potential_file_base,
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_snippets.resources import ResourceResolver, ResourceNotFound
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -77,27 +77,24 @@ class LammpsPotential(GenericParameters):
                 for files in list(self._df["Filename"])[0]
                 if not os.path.isabs(files)
             ]
-            env = os.environ
-            resource_path_lst = state.settings.resource_paths
-            for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
-                if conda_var in env.keys():  # support iprpy-data package
-                    path_to_add = state.settings.convert_path_to_abs_posix(
-                        os.path.join(env[conda_var], "share", "iprpy")
-                    )
-                    if path_to_add not in resource_path_lst:
-                        resource_path_lst.append(path_to_add)
             for path in relative_file_paths:
-                absolute_file_paths.append(
-                    find_potential_file_base(
-                        path=path,
-                        resource_path_lst=resource_path_lst,
-                        rel_path=os.path.join("lammps", "potentials"),
-                    )
+                resolver = ResourceResolver(
+                        state.settings.resource_paths,
+                        "lammps", "potentials",
+                    ).chain(
+                    # support iprpy-data package; data paths in the iprpy are of a different form than in
+                    # pyiron resources, so we cannot add it as an additional path to the resolver above.
+                    # Instead make a new resolver and chain it after the first one.
+                    ResourceResolver(
+                        [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
+                        "share", "iprpy",
+                    ),
                 )
-            if len(absolute_file_paths) != len(list(self._df["Filename"])[0]):
-                raise ValueError("Was not able to locate the potentials.")
-            else:
-                return absolute_file_paths
+                try:
+                    absolute_file_paths.append(resolver.first(path))
+                except ResourceNotFound:
+                    raise ValueError("Was not able to locate the potentials.") from None
+            return absolute_file_paths
 
     def copy_pot_files(self, working_directory):
         if self.files is not None:
