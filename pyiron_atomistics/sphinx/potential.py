@@ -35,13 +35,11 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
         potential_df = self._get_potential_df(
             plugin_name="sphinx",
             file_name_lst={"potentials_sphinx.csv"},
-            backward_compatibility_name="sphinxpotentials",
         )
         if xc == "PBE":
             default_df = self._get_potential_default_df(
                 plugin_name="sphinx",
                 file_name_lst={"potentials_sphinx_jth_default.csv"},
-                backward_compatibility_name="defaultsphinxjth",
             )
             potential_df = potential_df[(potential_df["Model"] == "jth-gga-pbe")]
         else:
