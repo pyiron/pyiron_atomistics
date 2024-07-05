@@ -74,24 +74,57 @@ def lammps_function(
     input_control_file: Optional[Union[str, list, dict]] = None,
 ):
     """
+    A single function to execute a LAMMPS calculation based on the LAMMPS job implemented in pyiron
+
+    Examples:
+
+    >>> import os
+    >>> from ase.build import bulk
+    >>> from pyiron_atomistics.lammps.lammps import lammps_function
+    >>>
+    >>> shell_output, parsed_output, job_crashed = lammps_function(
+    ...     working_directory=os.path.abspath("lmp_working_directory"),
+    ...     structure=bulk("Al", cubic=True),
+    ...     potential='2009--Mendelev-M-I--Al-Mg--LAMMPS--ipr1',
+    ...     calc_mode="md",
+    ...     calc_kwargs={"temperature": 500.0, "pressure": 0.0, "n_ionic_steps": 1000, "n_print": 100},
+    ...     cutoff_radius=None,
+    ...     units="metal",
+    ...     bonds_kwargs={},
+    ...      enable_h5md=False,
+    ... )
 
     Args:
-        working_directory (str):
-        structure (Atoms):
-        potential (str):
-        calc_mode (str):
-        calc_kwargs (dict):
-        cutoff_radius (float):
-        units (str):
-        bonds_kwargs (dict):
-        server_kwargs (dict):
-        enable_h5md (bool):
-        write_restart_file (bool):
-        read_restart_file (bool):
-        restart_file (str):
-        executable_version (str):
-        executable_path (str):
-        input_control_file (str|list|dict):
+        working_directory (str): directory in which the LAMMPS calculation is executed
+        structure (Atoms): ase.atoms.Atoms - atomistic structure
+        potential (str): Name of the LAMMPS potential based on the NIST database and the OpenKIM database
+        calc_mode (str): select mode of calculation ["static", "md", "minimize", "vcsgc"]
+        calc_kwargs (dict): key-word arguments for the calculate function, the input parameters depend on the calc_mode:
+          "static": No parameters
+          "md": "temperature", "pressure", "n_ionic_steps", "time_step", "n_print", "temperature_damping_timescale",
+                "pressure_damping_timescale", "seed", "tloop", "initial_temperature", "langevin", "delta_temp",
+                "delta_press", job_name", "rotation_matrix"
+          "minimize": "ionic_energy_tolerance", "ionic_force_tolerance", "max_iter", "pressure", "n_print", "style",
+                      "rotation_matrix"
+          "vcsgc": "mu", "ordered_element_list", "target_concentration", "kappa", "mc_step_interval", "swap_fraction",
+                   "temperature_mc", "window_size", "window_moves", "temperature", "pressure", "n_ionic_steps",
+                   "time_step", "n_print", "temperature_damping_timescale", "pressure_damping_timescale", "seed",
+                   "initial_temperature", "langevin", "job_name", "rotation_matrix"
+        cutoff_radius (float): cut-off radius for the interatomic potential
+        units (str): Units for LAMMPS
+        bonds_kwargs (dict): key-word arguments to create atomistic bonds:
+          "species", "element_list", "cutoff_list", "max_bond_list", "bond_type_list", "angle_type_list",
+        server_kwargs (dict): key-word arguments to create server object - the available parameters are:
+          "user", "host", "run_mode", "queue", "qid", "cores", "threads", "new_h5", "structure_id", "run_time",
+          "memory_limit", "accept_crash", "additional_arguments", "gpus", "conda_environment_name",
+          "conda_environment_path"
+        enable_h5md (bool): activate h5md mode for LAMMPS
+        write_restart_file (bool): enable writing the LAMMPS restart file
+        read_restart_file (bool): enable loading the LAMMPS restart file
+        restart_file (str): file name of the LAMMPS restart file to copy
+        executable_version (str): LAMMPS version to for the execution
+        executable_path (str): path to the LAMMPS executable
+        input_control_file (str|list|dict): Option to modify the LAMMPS input file directly
 
     Returns:
         str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
@@ -124,7 +157,7 @@ def lammps_function(
         job.calc_vcsgc(**calc_kwargs)
     else:
         raise ValueError(
-            f"calc_mode must be one of: static, md, minimize or vcsgc, not {calc_mod}"
+            f"calc_mode must be one of: static, md, minimize or vcsgc, not {calc_mode}"
         )
     if input_control_file is not None and isinstance(input_control_file, dict):
         for k, v in input_control_file.items():
