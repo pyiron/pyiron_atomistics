@@ -51,7 +51,6 @@ class Analyse:
         min_distance=1,
         use_voronoi=False,
         variance_buffer=0.01,
-        n_iterations=2,
         eps=0.1,
     ):
         return get_interstitials(
@@ -61,7 +60,6 @@ class Analyse:
             min_distance=min_distance,
             use_voronoi=use_voronoi,
             variance_buffer=variance_buffer,
-            n_iterations=n_iterations,
             eps=eps,
         )
 
