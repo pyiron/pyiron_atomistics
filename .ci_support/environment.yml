@@ -18,10 +18,10 @@ dependencies:
 - pyiron_base =0.9.6
 - pyiron_snippets =0.1.2
 - pylammpsmpi =0.2.20
-- pyscal =2.10.18
+- pyscal3 =3.2.5
 - scikit-learn =1.5.1
 - scipy =1.14.0
 - seekpath =2.1.0
 - spglib =2.4.0
-- structuretoolkit =0.0.26
+- structuretoolkit =0.0.27
 - pyxtal =0.6.2

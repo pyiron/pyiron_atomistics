@@ -4,7 +4,7 @@
 
 import unittest
 import numpy as np
-import pyscal.core as pc
+import pyscal3 as pc
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from ase.build import bulk
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
@@ -25,8 +25,7 @@ class Testpyscal(TestWithCleanProject):
         """
         Test a simple ase to pyscal conversion
         """
-        sysp = pc.System()
-        sysp.read_inputfile(self.structure, format="ase")
+        sysp = pc.System(self.structure, format="ase")
         self.assertEqual(len(sysp.atoms), 256)
 
     def test_steinhardt_parameters_returns(self):
@@ -210,8 +209,7 @@ class Testpyscalatoms(unittest.TestCase):
 
     def test_analyse_pyscal_diamond_structure(self):
         pyscal_keys = [
-            'others', 'fcc', 'hcp', 'bcc', 'ico',
-            'cubic diamond', 'cubic diamond 1NN', 'cubic diamond 2NN',
+            'others', 'cubic diamond', 'cubic diamond 1NN', 'cubic diamond 2NN',
             'hex diamond', 'hex diamond 1NN', 'hex diamond 2NN'
         ]
         ovito_keys = [
@@ -234,7 +232,7 @@ class Testpyscalatoms(unittest.TestCase):
         self.assertEqual(res_dict_total[pyscal_keys[0]], len(self.ti_hcp))
         res_dict_total = self.si_dia.analyse.pyscal_diamond_structure(mode="total", ovito_compatibility=False)
         self.assertEqual(sum([k in res_dict_total.keys() for k in pyscal_keys]), len(pyscal_keys))
-        self.assertEqual(res_dict_total[pyscal_keys[5]], len(self.si_dia))
+        self.assertEqual(res_dict_total[pyscal_keys[1]], len(self.si_dia))
 
         res_numeric = self.al_fcc.analyse.pyscal_diamond_structure(mode="numeric", ovito_compatibility=False)
         self.assertEqual(len(res_numeric), len(self.al_fcc))
@@ -247,7 +245,7 @@ class Testpyscalatoms(unittest.TestCase):
         self.assertTrue(all([v == 0 for v in res_numeric]))
         res_numeric = self.si_dia.analyse.pyscal_diamond_structure(mode="numeric", ovito_compatibility=False)
         self.assertEqual(len(res_numeric), len(self.si_dia))
-        self.assertTrue(all([v == 5 for v in res_numeric]))
+        self.assertTrue(all([v == 1 for v in res_numeric]))
 
         res_str = self.al_fcc.analyse.pyscal_diamond_structure(mode="str", ovito_compatibility=False)
         self.assertEqual(len(res_str), len(self.al_fcc))
