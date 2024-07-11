@@ -4,7 +4,7 @@
 
 import unittest
 import numpy as np
-import pyscal.core as pc
+import pyscal3 as pc
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from ase.build import bulk
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
@@ -25,8 +25,7 @@ class Testpyscal(TestWithCleanProject):
         """
         Test a simple ase to pyscal conversion
         """
-        sysp = pc.System()
-        sysp.read_inputfile(self.structure, format="ase")
+        sysp = pc.System(self.structure, format="ase")
         self.assertEqual(len(sysp.atoms), 256)
 
     def test_steinhardt_parameters_returns(self):
