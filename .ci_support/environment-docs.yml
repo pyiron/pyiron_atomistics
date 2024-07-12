@@ -20,7 +20,7 @@ dependencies:
 - pyiron_base =0.9.6
 - pyiron_snippets =0.1.2
 - pylammpsmpi =0.2.20
-- pyscal3 =3.2.5
+- pyscal3 =3.2.6
 - scikit-learn =1.5.1
 - scipy =1.14.0
 - seekpath =2.1.0
