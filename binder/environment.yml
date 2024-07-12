@@ -20,7 +20,7 @@ dependencies:
 - scikit-learn =1.5.1
 - scipy =1.14.0
 - seekpath =2.1.0
-- spglib =2.4.0
+- spglib =2.5.0
 - structuretoolkit =0.0.27
 - pyxtal =0.6.2
 - pyiron-data >=0.0.22
