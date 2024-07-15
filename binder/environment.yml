@@ -3,7 +3,7 @@ channels:
 dependencies:
 - aimsgb =1.1.0
 - ase =3.23.0
-- atomistics =0.1.30
+- atomistics =0.1.31
 - defusedxml =0.7.1
 - h5py =3.11.0
 - matplotlib-base =3.9.1
@@ -11,7 +11,7 @@ dependencies:
 - mp-api =0.41.2
 - numpy =1.26.4
 - pandas =2.2.2
-- phonopy =2.26.3
+- phonopy =2.26.5
 - pint =0.24.1
 - pyiron_base =0.9.6
 - pyiron_snippets =0.1.2
