@@ -8,8 +8,8 @@ import numpy as np
 
 from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
-    structure_dict_to_hdf,
     dict_group_to_hdf,
+    structure_dict_to_hdf,
 )
 from pyiron_atomistics.dft.waves.dos import Dos
 
@@ -624,9 +624,9 @@ class ElectronicStructure(object):
                     occ = self.occupancy_matrix[spin][i][j]
                     self.kpoints[-1].add_band(eigenvalue=val, occupancy=occ, spin=spin)
                     if self._grand_dos_matrix is not None:
-                        self.kpoints[-1].bands[spin][-1].resolved_dos_matrix = (
-                            self.grand_dos_matrix[spin, i, j, :, :]
-                        )
+                        self.kpoints[-1].bands[spin][
+                            -1
+                        ].resolved_dos_matrix = self.grand_dos_matrix[spin, i, j, :, :]
 
     def get_spin_resolved_dos(self, spin_indices=0):
         """
@@ -738,9 +738,9 @@ class ElectronicStructure(object):
                     )
                 else:
                     output_string.append(
-                        "spin {}:".format(spin) + " Is a metal: "
-                        "{}".format(is_metal) + " Band gap (ev) "
-                        "{}".format(self.eg[spin])
+                        "spin {}:".format(spin)
+                        + " Is a metal: " "{}".format(is_metal)
+                        + " Band gap (ev) " "{}".format(self.eg[spin])
                     )
         except ValueError:
             pass

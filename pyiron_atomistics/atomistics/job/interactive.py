@@ -2,14 +2,16 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+from collections import defaultdict
+
 import numpy as np
-from pyiron_base import state, InteractiveBase
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
+from pyiron_base import InteractiveBase, state
+
 from pyiron_atomistics.atomistics.job.atomistic import (
     AtomisticGenericJob,
     GenericOutput,
 )
-from collections import defaultdict
+from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (

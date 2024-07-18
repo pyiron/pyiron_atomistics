@@ -7,8 +7,8 @@ from typing import Optional, Union
 from ase.atoms import Atoms
 from pyiron_base import Project, ProjectHDFio
 
-from pyiron_atomistics.lammps.interactive import LammpsInteractive
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.lammps.interactive import LammpsInteractive
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (

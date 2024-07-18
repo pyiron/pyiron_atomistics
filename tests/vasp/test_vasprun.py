@@ -14,7 +14,6 @@ __author__ = "surendralal"
 
 
 class TestVasprun(unittest.TestCase):
-
     """
     Testing the Vasprun() module.
     """

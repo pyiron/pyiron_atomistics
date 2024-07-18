@@ -1,6 +1,8 @@
+import warnings
+
 import numpy as np
 from pyiron_base import GenericParameters
-import warnings
+
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,

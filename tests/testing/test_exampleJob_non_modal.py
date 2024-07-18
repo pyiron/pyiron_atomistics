@@ -52,7 +52,7 @@ class TestExampleJob(unittest.TestCase):
             "sigma 2.4 #distance unit of lennard jones\n",
             "cutoff 4.0 #cutoff length (relative to sigma)\n",
             "write_restart True\n",
-            "read_restart False\n"
+            "read_restart False\n",
         ]
         self.assertEqual(input_lst, lines)
 

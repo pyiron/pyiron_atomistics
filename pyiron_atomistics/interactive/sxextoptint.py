@@ -2,19 +2,21 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import numpy as np
-import subprocess
 import os
-import time
 import posixpath
+import subprocess
+import time
 import warnings
-from pyiron_base import state, GenericParameters, Executable
+
+import numpy as np
+from pyiron_base import Executable, GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
+
+from pyiron_atomistics.atomistics.job.interactive import InteractiveInterface
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
 )
-from pyiron_atomistics.atomistics.job.interactive import InteractiveInterface
 from pyiron_atomistics.sphinx.base import get_structure_group
 
 __author__ = "Jan Janssen, Osamu Waseda"

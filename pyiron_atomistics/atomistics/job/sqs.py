@@ -2,20 +2,21 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import itertools
 import random
 import warnings
-import itertools
-from structuretoolkit.build import sqs_structures
-from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
-from pyiron_base import state, DataContainer, GenericParameters
-from pyiron_snippets.import_alarm import ImportAlarm
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
-import numpy as np
 
+import numpy as np
+from pyiron_base import DataContainer, GenericParameters, state
+from pyiron_snippets.import_alarm import ImportAlarm
+from structuretoolkit.build import sqs_structures
+
+from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 
 try:
+    from sqsgenerator import IterationMode, process_settings, sqs_optimize
     from sqsgenerator.settings import BadSettings
-    from sqsgenerator import sqs_optimize, process_settings, IterationMode
 
     import_alarm = ImportAlarm()
 except ImportError:

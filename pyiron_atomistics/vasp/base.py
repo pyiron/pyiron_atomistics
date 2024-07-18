@@ -3,38 +3,40 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
+
 import os
 import posixpath
 import subprocess
-import numpy as np
+import warnings
 from typing import Optional
 
-from pyiron_atomistics.dft.job.generic import GenericDFTJob
-from pyiron_atomistics.vasp.potential import (
-    VaspPotential,
-    VaspPotentialFile,
-    VaspPotentialSetter,
-    Potcar,
-    strip_xc_from_potential_name,
-)
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_base import state, GenericParameters
+import numpy as np
+from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
+
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.dft.bader import get_valence_and_total_charge_density
+from pyiron_atomistics.dft.job.generic import GenericDFTJob
+from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
 from pyiron_atomistics.vasp.output import (
-    VaspCollectError,
     Output,
+    VaspCollectError,
     get_final_structure_from_file,
     output_dict_to_hdf,
     parse_vasp_output,
 )
-from pyiron_atomistics.vasp.structure import read_atoms, get_poscar_content, vasp_sorter
+from pyiron_atomistics.vasp.potential import (
+    Potcar,
+    VaspPotential,
+    VaspPotentialFile,
+    VaspPotentialSetter,
+    get_enmax_among_potentials,
+    strip_xc_from_potential_name,
+)
+from pyiron_atomistics.vasp.structure import get_poscar_content, read_atoms, vasp_sorter
 from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
 from pyiron_atomistics.vasp.vasprun import VasprunError
 from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
-from pyiron_atomistics.vasp.potential import get_enmax_among_potentials
-from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
-from pyiron_atomistics.dft.bader import get_valence_and_total_charge_density
-import warnings
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
 __copyright__ = (

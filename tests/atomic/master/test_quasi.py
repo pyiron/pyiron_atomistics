@@ -8,10 +8,10 @@ import unittest
 
 class TestQuasi(TestWithCleanProject):
     def test_validate_ready_to_run(self):
-        lmp = self.project.create.job.Lammps('lmp_phono')
-        lmp.structure = self.project.create.structure.bulk('Al', cubic=True)
-        phono = lmp.create_job('PhonopyJob', 'phono')
-        qha = phono.create_job('QuasiHarmonicJob', 'quasi')
+        lmp = self.project.create.job.Lammps("lmp_phono")
+        lmp.structure = self.project.create.structure.bulk("Al", cubic=True)
+        phono = lmp.create_job("PhonopyJob", "phono")
+        qha = phono.create_job("QuasiHarmonicJob", "quasi")
         self.assertEqual(qha.validate_ready_to_run(), None)
 
 

@@ -44,7 +44,9 @@ class TestStructureContainer(unittest.TestCase):
     def test_append_error(self):
         """append() should raise an error if invalid types are given."""
         structure_container = self.project.load(self.project.get_job_ids()[0])
-        with self.assertRaises(TypeError, msg="append() doesn't raise error on invalid type!"):
+        with self.assertRaises(
+            TypeError, msg="append() doesn't raise error on invalid type!"
+        ):
             structure_container.append(5)
 
 

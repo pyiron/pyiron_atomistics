@@ -2,9 +2,10 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.master.parallel import ParallelMaster
 from pyiron_base import JobGenerator
+
+from pyiron_atomistics.atomistics.master.parallel import ParallelMaster
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 """
 The StructureListMaster class is a parallel master consisting of a list of structures which are executed in parallel.

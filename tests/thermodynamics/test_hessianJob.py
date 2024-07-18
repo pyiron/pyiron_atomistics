@@ -13,13 +13,9 @@ class TestHessianJob(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
-        cls.project = Project(
-            os.path.join(cls.file_location, "hessian_class")
-        )
+        cls.project = Project(os.path.join(cls.file_location, "hessian_class"))
         cls.project.remove_jobs(recursive=True, silently=True)
-        cls.job = cls.project.create_job(
-            "HessianJob", "job_test_hessian"
-        )
+        cls.job = cls.project.create_job("HessianJob", "job_test_hessian")
         structure = Atoms(
             positions=[[0, 0, 0], [1, 1, 1]], elements=["Fe", "Fe"], cell=2 * np.eye(3)
         )
@@ -33,7 +29,7 @@ class TestHessianJob(unittest.TestCase):
         cls.job.run()
         cls.job.structure.positions[0, 1] -= 0.1
         cls.job.run()
-        cls.job.structure.positions[0,1] -= 0.1
+        cls.job.structure.positions[0, 1] -= 0.1
         cls.job.run()
 
     @classmethod

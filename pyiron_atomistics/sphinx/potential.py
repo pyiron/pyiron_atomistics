@@ -3,8 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+
 import pandas
 from pyiron_base import state
+
 from pyiron_atomistics.vasp.potential import (
     VaspPotentialAbstract,
     find_potential_file_base,

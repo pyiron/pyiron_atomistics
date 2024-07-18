@@ -2,13 +2,17 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import warnings
+
 import numpy as np
+
 from pyiron_atomistics.atomistics.job.atomistic import (
     AtomisticGenericJob,
+)
+from pyiron_atomistics.atomistics.job.atomistic import (
     MapFunctions as AtomisticMapFunctions,
 )
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
-import warnings
 
 __author__ = "Jan Janssen"
 __copyright__ = (

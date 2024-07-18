@@ -2,10 +2,12 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from collections import OrderedDict
-import numpy as np
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
 import warnings
+from collections import OrderedDict
+
+import numpy as np
+
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (

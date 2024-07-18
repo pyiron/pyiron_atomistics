@@ -12,9 +12,9 @@ class TestToolkit(TestWithProject):
         self.tools = AtomisticsTools(self.project)
 
     def test_job(self):
-        self.tools.job.Lammps('foo')
+        self.tools.job.Lammps("foo")
         with self.assertRaises(AttributeError):
-            self.tools.job.NotAJobAtAll('bar')
+            self.tools.job.NotAJobAtAll("bar")
 
     def test_structure(self):
-        self.tools.structure.bulk('Al')
+        self.tools.structure.bulk("Al")

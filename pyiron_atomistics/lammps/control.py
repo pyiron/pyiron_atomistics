@@ -3,11 +3,14 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from collections import OrderedDict
+
 import hashlib
-import numpy as np
 import warnings
+from collections import OrderedDict
+
+import numpy as np
 from pyiron_base import GenericParameters, state
+
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"

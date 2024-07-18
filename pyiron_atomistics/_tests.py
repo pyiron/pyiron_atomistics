@@ -12,11 +12,12 @@ TODO:
 """
 
 import unittest
-from os.path import split, join
-from os import remove
-from pyiron_atomistics.project import Project
 from abc import ABC
 from inspect import getfile
+from os import remove
+from os.path import join, split
+
+from pyiron_atomistics.project import Project
 
 __author__ = "Liam Huber"
 __copyright__ = (

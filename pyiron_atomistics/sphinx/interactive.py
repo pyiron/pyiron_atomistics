@@ -2,17 +2,19 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import numpy as np
 import os
-import scipy.constants
 import subprocess
-import warnings
 import time
-from pyiron_atomistics.sphinx.base import SphinxBase, Group, Output
+import warnings
+
+import numpy as np
+import scipy.constants
+
 from pyiron_atomistics.atomistics.job.interactive import (
     GenericInteractive,
     GenericInteractiveOutput,
 )
+from pyiron_atomistics.sphinx.base import Group, Output, SphinxBase
 from pyiron_atomistics.vasp.potential import VaspPotentialSetter
 
 BOHR_TO_ANGSTROM = (

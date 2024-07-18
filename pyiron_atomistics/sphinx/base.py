@@ -2,53 +2,56 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH -Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import numpy as np
 import os
 import posixpath
 import stat
-from shutil import move as movefile
-import scipy.constants
-import warnings
-import spglib
 import subprocess
-from subprocess import PIPE
 import tarfile
+import warnings
+from shutil import move as movefile
+from subprocess import PIPE
 from tempfile import TemporaryDirectory
+
+import numpy as np
+import scipy.constants
+import spglib
+from pyiron_base import DataContainer, job_status_successful_lst, state
+from pyiron_snippets.deprecate import deprecate
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
-from pyiron_atomistics.vasp.potential import (
-    VaspPotentialFile,
-    strip_xc_from_potential_name,
-    find_potential_file as find_potential_file_vasp,
-    VaspPotentialSetter,
+from pyiron_atomistics.sphinx.input_writer import (
+    Group,
+    copy_potentials,
+    get_structure_group,
+    write_spin_constraints,
 )
+from pyiron_atomistics.sphinx.output_parser import (
+    SphinxLogParser,
+    collect_energy_dat,
+    collect_energy_struct,
+    collect_eps_dat,
+    collect_relaxed_hist,
+    collect_residue_dat,
+    collect_spins_dat,
+)
+from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.potential import (
     find_potential_file as find_potential_file_jth,
 )
 from pyiron_atomistics.sphinx.structure import read_atoms
-from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
-from pyiron_atomistics.sphinx.output_parser import (
-    SphinxLogParser,
-    collect_energy_dat,
-    collect_residue_dat,
-    collect_spins_dat,
-    collect_relaxed_hist,
-    collect_energy_struct,
-    collect_eps_dat,
-)
-from pyiron_atomistics.sphinx.input_writer import (
-    write_spin_constraints,
-    copy_potentials,
-    Group,
-    get_structure_group,
-)
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
-from pyiron_base import state, DataContainer, job_status_successful_lst
-from pyiron_snippets.deprecate import deprecate
+from pyiron_atomistics.vasp.potential import (
+    VaspPotentialFile,
+    VaspPotentialSetter,
+    strip_xc_from_potential_name,
+)
+from pyiron_atomistics.vasp.potential import (
+    find_potential_file as find_potential_file_vasp,
+)
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -485,9 +488,9 @@ class SphinxBase(GenericDFTJob):
                     self.input["dF"] / HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
                 )
             self.input.sphinx.main[optimizer].create_group("bornOppenheimer")
-            self.input.sphinx.main[optimizer]["bornOppenheimer"][
-                "scfDiag"
-            ] = self.get_scf_group()
+            self.input.sphinx.main[optimizer]["bornOppenheimer"]["scfDiag"] = (
+                self.get_scf_group()
+            )
         else:
             scf = self.input.sphinx.main.get("scfDiag", create=True)
             if self._generic_input["restart_for_band_structure"]:
@@ -496,9 +499,9 @@ class SphinxBase(GenericDFTJob):
                 scf.append(self.get_scf_group())
             if self.executable.version is not None:
                 if self.get_version_float() > 2.5:
-                    self.input.sphinx.main.create_group("evalForces")[
-                        "file"
-                    ] = '"relaxHist.sx"'
+                    self.input.sphinx.main.create_group("evalForces")["file"] = (
+                        '"relaxHist.sx"'
+                    )
             else:
                 warnings.warn("executable version could not be identified")
 

@@ -6,8 +6,10 @@
 An abstract Potential class to provide an easy access for the available potentials. Currently implemented for the
 OpenKim https://openkim.org database.
 """
-import pandas
+
 import os
+
+import pandas
 from pyiron_base import state
 
 __author__ = "Martin Boeckmann, Jan Janssen"

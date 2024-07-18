@@ -3,15 +3,16 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import math
+import os
 
 import numpy as np
-import os
 from pyiron_base import state
+
+from pyiron_atomistics.atomistics.volumetric.generic import VolumetricData
 from pyiron_atomistics.vasp.structure import (
     atoms_from_string,
     get_species_list_from_potcar,
 )
-from pyiron_atomistics.atomistics.volumetric.generic import VolumetricData
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (

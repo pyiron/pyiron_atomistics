@@ -31,7 +31,7 @@ class TestLammpsInteractive(unittest.TestCase):
             comm=None,
             logger=None,
             log_file=None,
-            library=InteractiveLibrary()
+            library=InteractiveLibrary(),
         )
         self.minimize_job._interactive_library = LammpsASELibrary(
             working_directory=self.job.working_directory,
@@ -39,7 +39,7 @@ class TestLammpsInteractive(unittest.TestCase):
             comm=None,
             logger=None,
             log_file=None,
-            library=InteractiveLibrary()
+            library=InteractiveLibrary(),
         )
         self.minimize_control_job._interactive_library = LammpsASELibrary(
             working_directory=self.job.working_directory,
@@ -47,7 +47,7 @@ class TestLammpsInteractive(unittest.TestCase):
             comm=None,
             logger=None,
             log_file=None,
-            library=InteractiveLibrary()
+            library=InteractiveLibrary(),
         )
 
     @classmethod
@@ -109,11 +109,18 @@ class TestLammpsInteractive(unittest.TestCase):
         )
 
     def test_interactive_positions_setter(self):
-        self.job._interactive_library._prism = UnfoldingPrism(cell=self.job.structure.cell)
+        self.job._interactive_library._prism = UnfoldingPrism(
+            cell=self.job.structure.cell
+        )
         self.job.interactive_positions_setter(np.arange(6).reshape(2, 3))
-        self.assertTrue(self.job._interactive_library._interactive_library._command[0].startswith("x 1 3"))
+        self.assertTrue(
+            self.job._interactive_library._interactive_library._command[0].startswith(
+                "x 1 3"
+            )
+        )
         self.assertEqual(
-            self.job._interactive_library._interactive_library._command[1], "change_box all remap"
+            self.job._interactive_library._interactive_library._command[1],
+            "change_box all remap",
         )
 
     def test_interactive_execute(self):
@@ -142,28 +149,41 @@ class TestLammpsInteractive(unittest.TestCase):
 
         self.assertEqual(
             self.minimize_control_job._interactive_library._interactive_library._command,
-            self.minimize_job._interactive_library._interactive_library._command
+            self.minimize_job._interactive_library._interactive_library._command,
         )
 
         # Ensure that pressure inputs are being parsed OK
         self.minimize_job.calc_minimize(pressure=0)
         self.minimize_job._interactive_lammps_input()
-        self.assertTrue(("fix ensemble all box/relax iso 0.0" in
-                         self.minimize_job._interactive_library._interactive_library._command))
+        self.assertTrue(
+            (
+                "fix ensemble all box/relax iso 0.0"
+                in self.minimize_job._interactive_library._interactive_library._command
+            )
+        )
 
         self.minimize_job.calc_minimize(pressure=[0.0, 0.0, 0.0])
         self.minimize_job._interactive_lammps_input()
-        self.assertTrue(("fix ensemble all box/relax x 0.0 y 0.0 z 0.0 couple none" in
-                         self.minimize_job._interactive_library._interactive_library._command))
+        self.assertTrue(
+            (
+                "fix ensemble all box/relax x 0.0 y 0.0 z 0.0 couple none"
+                in self.minimize_job._interactive_library._interactive_library._command
+            )
+        )
 
-        self.minimize_job.calc_minimize(pressure=[1, 2, None, 0., 0., None])
+        self.minimize_job.calc_minimize(pressure=[1, 2, None, 0.0, 0.0, None])
         self.minimize_job._interactive_lammps_input()
-        self.assertTrue(("fix ensemble all box/relax x 10000.0 y 20000.0 xy 0.0 xz 0.0 couple none" in
-                         self.minimize_job._interactive_library._interactive_library._command))
+        self.assertTrue(
+            (
+                "fix ensemble all box/relax x 10000.0 y 20000.0 xy 0.0 xz 0.0 couple none"
+                in self.minimize_job._interactive_library._interactive_library._command
+            )
+        )
 
     def test_fix_external(self):
         def f(x, nt, nl):
             return np.linspace(0, 1, np.prod(x.shape)).reshape(-1, 3)
+
         v = f(self.job.structure.positions, None, None)
         v -= np.mean(v, axis=0)
         self.job.server.run_mode.modal = True
@@ -171,12 +191,14 @@ class TestLammpsInteractive(unittest.TestCase):
         self.job.server.run_mode.interactive = True
         self.job.set_fix_external(f)
         self.assertEqual(
-            self.job.input.control['fix___fix_external'], 'all external pf/callback 1 1'
+            self.job.input.control["fix___fix_external"], "all external pf/callback 1 1"
         )
         fext = np.zeros_like(v)
-        self.job._user_fix_external.fix_external(None, 0, 0, np.arange(len(v)), self.job.structure.positions, fext)
+        self.job._user_fix_external.fix_external(
+            None, 0, 0, np.arange(len(v)), self.job.structure.positions, fext
+        )
         self.assertTrue(np.allclose(v, fext))
-        del self.job.input.control['fix___fix_external']
+        del self.job.input.control["fix___fix_external"]
 
 
 if __name__ == "__main__":

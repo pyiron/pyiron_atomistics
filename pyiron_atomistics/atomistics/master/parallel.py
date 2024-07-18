@@ -3,11 +3,14 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from collections import OrderedDict
+
 import inspect
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_base import ParallelMaster, JobGenerator, get_function_from_string
+from collections import OrderedDict
+
+from pyiron_base import JobGenerator, ParallelMaster, get_function_from_string
+
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 __author__ = "Jan Janssen"
 __copyright__ = (

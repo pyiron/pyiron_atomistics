@@ -5,15 +5,16 @@
 from collections import OrderedDict
 
 import numpy as np
-import spglib
 import scipy.constants
-from atomistics.workflows.elastic.helper import (
-    generate_structures_helper,
-    analyse_structures_helper,
-)
+import spglib
 from atomistics.workflows.elastic.elastic_moduli import ElasticProperties
-from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+from atomistics.workflows.elastic.helper import (
+    analyse_structures_helper,
+    generate_structures_helper,
+)
 from pyiron_base import JobGenerator
+
+from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
 
 __author__ = "Yury Lysogorskiy"
 __copyright__ = "Copyright 2020, Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department"

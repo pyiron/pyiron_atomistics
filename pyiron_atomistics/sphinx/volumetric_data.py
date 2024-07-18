@@ -2,11 +2,13 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import os
+
 import numpy as np
 import scipy
-from scipy.io.netcdf import netcdf_file
-import os
 from pyiron_base import state
+from scipy.io.netcdf import netcdf_file
+
 from pyiron_atomistics.atomistics.volumetric.generic import VolumetricData
 
 __author__ = "Sudarsan Surendralal"
