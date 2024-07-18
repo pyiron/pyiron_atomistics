@@ -31,7 +31,7 @@ dependencies = [
     "matplotlib==3.9.1",
     "mendeleev==0.17.0",
     "mp-api==0.41.2",
-    "numpy==1.26.4",
+    "numpy==2.0.0",
     "pandas==2.2.2",
     "phonopy==2.26.6",
     "pint==0.24.3",
