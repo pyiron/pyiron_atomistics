@@ -487,10 +487,8 @@ class SphinxBase(GenericDFTJob):
                 self.input.sphinx.main[optimizer]["dF"] = str(
                     self.input["dF"] / HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
                 )
-            self.input.sphinx.main[optimizer].create_group("bornOppenheimer")
-            self.input.sphinx.main[optimizer]["bornOppenheimer"]["scfDiag"] = (
-                self.get_scf_group()
-            )
+            bgroup = self.input.sphinx.main[optimizer].create_group("bornOppenheimer")
+            bgroup["scfDiag"] = self.get_scf_group()
         else:
             scf = self.input.sphinx.main.get("scfDiag", create=True)
             if self._generic_input["restart_for_band_structure"]:
@@ -499,9 +497,8 @@ class SphinxBase(GenericDFTJob):
                 scf.append(self.get_scf_group())
             if self.executable.version is not None:
                 if self.get_version_float() > 2.5:
-                    self.input.sphinx.main.create_group("evalForces")["file"] = (
-                        '"relaxHist.sx"'
-                    )
+                    efgroup = self.input.sphinx.main.create_group("evalForces")
+                    efgroup["file"] = '"relaxHist.sx"'
             else:
                 warnings.warn("executable version could not be identified")
 
