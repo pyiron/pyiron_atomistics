@@ -3,11 +3,14 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-from collections import OrderedDict
-import numpy as np
-import posixpath
+
 import decimal as dec
+import posixpath
 import warnings
+from collections import OrderedDict
+
+import numpy as np
+
 from pyiron_atomistics.lammps.units import UnitConverter
 
 try:

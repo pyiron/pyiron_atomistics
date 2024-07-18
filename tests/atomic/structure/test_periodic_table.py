@@ -5,7 +5,11 @@
 import unittest
 import os
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable, MENDELEEV_PROPERTY_LIST, element
+from pyiron_atomistics.atomistics.structure.periodic_table import (
+    PeriodicTable,
+    MENDELEEV_PROPERTY_LIST,
+    element,
+)
 from pyiron_base import Project
 
 
@@ -163,7 +167,10 @@ class TestPeriodicTable(unittest.TestCase):
 
 class TestMendeleevInterface(unittest.TestCase):
     def test_mendeleev_property_list(self):
-        self.assertEqual(MENDELEEV_PROPERTY_LIST, [s for s in dir(element("Al")) if not s.startswith("_")])
+        self.assertEqual(
+            MENDELEEV_PROPERTY_LIST,
+            [s for s in dir(element("Al")) if not s.startswith("_")],
+        )
 
 
 if __name__ == "__main__":

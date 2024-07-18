@@ -16,7 +16,6 @@ import warnings
 
 
 class ToyAtomisticJob(AtomisticGenericJob, ABC):
-
     def _check_if_input_should_be_written(self):
         return False
 
@@ -29,13 +28,14 @@ class ToyAtomisticJob(AtomisticGenericJob, ABC):
         # create some dummy output
         n_steps = 10
         with self.project_hdf5.open("output/generic") as h_out:
-            h_out["positions"] = np.array([self.structure.positions + 0.5 * i for i in range(n_steps)])
+            h_out["positions"] = np.array(
+                [self.structure.positions + 0.5 * i for i in range(n_steps)]
+            )
             h_out["cells"] = np.array([self.structure.cell] * n_steps)
             h_out["indices"] = np.zeros((n_steps, len(self.structure)), dtype=int)
 
 
 class TestAtomisticGenericJob(TestWithCleanProject):
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -58,19 +58,26 @@ class TestAtomisticGenericJob(TestWithCleanProject):
     def test_get_displacements(self):
         n_steps = 10
         # increasing each position by 0.5 at each step
-        positions = np.array([self.job.structure.positions + 0.5 * i for i in range(n_steps)])
+        positions = np.array(
+            [self.job.structure.positions + 0.5 * i for i in range(n_steps)]
+        )
         # constant cell
         cells = np.array([self.job.structure.cell] * n_steps)
-        disp = self.job.output.get_displacements(self.job.structure, positions=positions, cells=cells)
+        disp = self.job.output.get_displacements(
+            self.job.structure, positions=positions, cells=cells
+        )
         disp_ref = np.ones_like(positions) * 0.5
         disp_ref[0] *= 0.0
         self.assertTrue(np.allclose(disp, disp_ref))
         # varying cell
-        cells = np.array([self.job.structure.cell * ((i+1) / 10) for i in range(n_steps)])
+        cells = np.array(
+            [self.job.structure.cell * ((i + 1) / 10) for i in range(n_steps)]
+        )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            disp = self.job.output.get_displacements(self.job.structure,
-                                                     positions=positions, cells=cells)
+            disp = self.job.output.get_displacements(
+                self.job.structure, positions=positions, cells=cells
+            )
             self.assertEqual(len(w), 1)
             self.assertIsInstance(w[-1].message, UserWarning)
         self.assertFalse(np.allclose(disp, disp_ref))
@@ -81,13 +88,13 @@ class TestAtomisticGenericJob(TestWithCleanProject):
             dummy_struct.set_cell(cell, scale_atoms=False)
             dummy_struct.positions = pos
             dummy_struct.center_coordinates_in_unit_cell()
-            diff = dummy_struct.get_scaled_positions()-pos_init
+            diff = dummy_struct.get_scaled_positions() - pos_init
             diff[diff >= 0.5] -= 1.0
             diff[diff <= -0.5] += 1.0
             disp_ref.append(np.dot(diff, cell))
         self.assertTrue(np.allclose(disp, disp_ref))
 
-    #@unittest.skipIf(os.name == 'nt', "Runs forever on Windows")
+    # @unittest.skipIf(os.name == 'nt', "Runs forever on Windows")
     @unittest.skip
     def test_get_structure(self):
         """get_structure() should return structures with the exact values from the HDF files even if the size of
@@ -97,7 +104,12 @@ class TestAtomisticGenericJob(TestWithCleanProject):
         # have to do extra tango because Project.unpack is weird right now
         cwd = os.curdir
         tests_loc = Path(__file__).parents[2]
-        shutil.copy(os.path.join(tests_loc, "static/lammps_test_files/get_structure_test.tar.gz"), cwd)
+        shutil.copy(
+            os.path.join(
+                tests_loc, "static/lammps_test_files/get_structure_test.tar.gz"
+            ),
+            cwd,
+        )
         shutil.copy(os.path.join(tests_loc, "static/lammps_test_files/export.csv"), cwd)
         self.project.unpack("get_structure_test")
         job = self.project.load("inter_calculator")

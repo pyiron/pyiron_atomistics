@@ -39,5 +39,15 @@ class TestOszicar(unittest.TestCase):
                 self.assertTrue(np.array_equal(energies, [-17.7379867884]))
             if "OSZICAR_2" in posixpath.split(filename)[-1]:
                 energies = self.oszicar_parser.parse_dict["energy_pot"]
-                self.assertTrue(np.array_equal(energies, [-1166.23382927, -1166.07589814, -1165.76905678,
-                                                          -1165.69531250, -1165.85096438]))
+                self.assertTrue(
+                    np.array_equal(
+                        energies,
+                        [
+                            -1166.23382927,
+                            -1166.07589814,
+                            -1165.76905678,
+                            -1165.69531250,
+                            -1165.85096438,
+                        ],
+                    )
+                )

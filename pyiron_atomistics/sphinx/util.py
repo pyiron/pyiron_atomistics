@@ -9,12 +9,12 @@ __email__ = "freysoldt@mpie.de"
 __status__ = "development"
 __date__ = "Oct 15, 2022"
 
-from threading import Lock
 import json
-import warnings
 import os.path
-from sys import executable as python_interpreter
 import subprocess
+import warnings
+from sys import executable as python_interpreter
+from threading import Lock
 
 from pyiron_base import Settings
 

@@ -2,63 +2,69 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import types
+from functools import wraps
+
+import numpy as np
 from ase.build import (
     add_adsorbate,
     add_vacuum,
     bcc100,
     bcc110,
     bcc111,
+    bcc111_root,
     diamond100,
     diamond111,
     fcc100,
     fcc110,
     fcc111,
+    fcc111_root,
     fcc211,
     hcp0001,
+    hcp0001_root,
     hcp10m10,
     mx2,
-    hcp0001_root,
-    fcc111_root,
-    bcc111_root,
     root_surface,
     root_surface_analysis,
+)
+from ase.build import (
     surface as ase_surf,
 )
-import numpy as np
+from pyiron_base import PyironFactory, state
+from pyiron_snippets.deprecate import deprecate
 from structuretoolkit.build import (
-    high_index_surface,
     get_high_index_surface_info,
+    high_index_surface,
 )
 from structuretoolkit.common import pymatgen_read_from_file
-from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
-from pyiron_atomistics.atomistics.structure.factories.atomsk import (
-    AtomskFactory,
-    _ATOMSK_EXISTS,
+
+from pyiron_atomistics.atomistics.structure.atoms import (
+    Atoms,
+    CrystalStructure,
+    ase_to_pyiron,
+    ovito_to_pyiron,
+    pymatgen_to_pyiron,
 )
 from pyiron_atomistics.atomistics.structure.factories.aimsgb import AimsgbFactory
+from pyiron_atomistics.atomistics.structure.factories.ase import AseFactory
+from pyiron_atomistics.atomistics.structure.factories.atomsk import (
+    _ATOMSK_EXISTS,
+    AtomskFactory,
+)
 from pyiron_atomistics.atomistics.structure.factories.compound import CompoundFactory
 from pyiron_atomistics.atomistics.structure.factories.materialsproject import (
     MaterialsProjectFactory,
 )
-from pyiron_atomistics.atomistics.structure.pyxtal import (
-    pyxtal,
-    publication as publication_pyxtal,
-)
+from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_atomistics.atomistics.structure.pyironase import (
     publication as publication_ase,
 )
-from pyiron_atomistics.atomistics.structure.atoms import (
-    CrystalStructure,
-    Atoms,
-    ase_to_pyiron,
-    pymatgen_to_pyiron,
-    ovito_to_pyiron,
+from pyiron_atomistics.atomistics.structure.pyxtal import (
+    publication as publication_pyxtal,
 )
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_base import state, PyironFactory
-from pyiron_snippets.deprecate import deprecate
-import types
-from functools import wraps
+from pyiron_atomistics.atomistics.structure.pyxtal import (
+    pyxtal,
+)
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (

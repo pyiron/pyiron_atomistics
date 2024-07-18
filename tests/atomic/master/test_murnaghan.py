@@ -12,6 +12,7 @@ from pyiron_base._tests import TestWithCleanProject
 
 def convergence_goal(self, **qwargs):
     import numpy as np
+
     eps = 0.2
     if "eps" in qwargs:
         eps = qwargs["eps"]
@@ -35,24 +36,29 @@ class TestMurnaghan(TestWithCleanProject):
         )
 
     def setup_hessian_murn_job(self, num_points=5):
-        job = self.project.create_job('HessianJob', 'hessian')
+        job = self.project.create_job("HessianJob", "hessian")
         job.set_reference_structure(self.basis)
         job.set_elastic_moduli(1, 1)
         job.set_force_constants(1)
         job.server.run_mode.interactive = True
-        murn = job.create_job('Murnaghan', 'murn_hessian')
-        murn.input['num_points'] = num_points
-        murn.input['vol_range'] = 1e-5
+        murn = job.create_job("Murnaghan", "murn_hessian")
+        murn.input["num_points"] = num_points
+        murn.input["vol_range"] = 1e-5
         return murn
 
     def test_interactive_run(self):
         murn = self.setup_hessian_murn_job(num_points=5)
         murn.run()
-        self.assertAlmostEqual(self.basis.get_volume(), murn['output/equilibrium_volume'])
+        self.assertAlmostEqual(
+            self.basis.get_volume(), murn["output/equilibrium_volume"]
+        )
 
         optimal = murn.get_structure()
-        self.assertAlmostEqual(optimal.get_volume(), murn['output/equilibrium_volume'],
-                               msg="Output of get_structure should have equilibrium volume")
+        self.assertAlmostEqual(
+            optimal.get_volume(),
+            murn["output/equilibrium_volume"],
+            msg="Output of get_structure should have equilibrium volume",
+        )
         self.assertTrue(murn.convergence_check())
 
     def test_non_converged_run(self):
@@ -63,8 +69,8 @@ class TestMurnaghan(TestWithCleanProject):
         self.assertTrue(murn.status.not_converged)
 
     def test_fitting_routines(self):
-        ref_job = self.project.create.job.Lammps('ref')
-        murn = ref_job.create_job('Murnaghan', 'murn')
+        ref_job = self.project.create.job.Lammps("ref")
+        murn = ref_job.create_job("Murnaghan", "murn")
         murn.structure = self.basis
         # mock murnaghan run with data from:
         #   ref_job = pr.create.job.Lammps('Lammps')
@@ -72,12 +78,36 @@ class TestMurnaghan(TestWithCleanProject):
         #   ref_job.potential = '1995--Angelo-J-E--Ni-Al-H--LAMMPS--ipr1'
         #   murn = ref_job.create_job(ham.job_type.Murnaghan, 'murn')
         #   murn.run()
-        energies = np.array([-88.23691773, -88.96842984, -89.55374317, -90.00642629,
-                             -90.33875009, -90.5618246, -90.68571886, -90.71957679,
-                             -90.67170222, -90.54964935, -90.36029582])
-        volume = np.array([388.79999999, 397.44, 406.08, 414.71999999,
-                           423.35999999, 431.99999999, 440.63999999, 449.27999999,
-                           457.92, 466.55999999, 475.19999999])
+        energies = np.array(
+            [
+                -88.23691773,
+                -88.96842984,
+                -89.55374317,
+                -90.00642629,
+                -90.33875009,
+                -90.5618246,
+                -90.68571886,
+                -90.71957679,
+                -90.67170222,
+                -90.54964935,
+                -90.36029582,
+            ]
+        )
+        volume = np.array(
+            [
+                388.79999999,
+                397.44,
+                406.08,
+                414.71999999,
+                423.35999999,
+                431.99999999,
+                440.63999999,
+                449.27999999,
+                457.92,
+                466.55999999,
+                475.19999999,
+            ]
+        )
         murn._hdf5["output/volume"] = volume
         murn._hdf5["output/energy"] = energies
         murn._hdf5["output/equilibrium_volume"] = 448.4033384110422
@@ -86,7 +116,10 @@ class TestMurnaghan(TestWithCleanProject):
         self.assertIsInstance(murn.plot(plt_show=False), matplotlib.axes.Axes)
         _, ax_list = plt.subplots(ncols=2, nrows=1)
         for i, ax in enumerate(ax_list):
-            ax = murn.plot(ax=ax, plot_kwargs={"color": "black", "label": f"plot{i}", "marker": "x"})
+            ax = murn.plot(
+                ax=ax,
+                plot_kwargs={"color": "black", "label": f"plot{i}", "marker": "x"},
+            )
             ax.set_title(f"Axis {i+1}")
             self.assertEqual(len(ax.lines), 2)
         with self.subTest(msg="standard polynomial fit"):
@@ -98,7 +131,7 @@ class TestMurnaghan(TestWithCleanProject):
             self.assertAlmostEqual(-90.76380033222287, murn.equilibrium_energy)
             self.assertAlmostEqual(449.1529040727273, murn.equilibrium_volume)
 
-        with self.subTest(msg='birchmurnaghan'):
+        with self.subTest(msg="birchmurnaghan"):
             murn.fit_birch_murnaghan()
             self.assertAlmostEqual(-90.72005405262217, murn.equilibrium_energy)
             self.assertAlmostEqual(448.41909755611437, murn.equilibrium_volume)
@@ -108,7 +141,7 @@ class TestMurnaghan(TestWithCleanProject):
             self.assertAlmostEqual(-90.72000006839492, murn.equilibrium_energy)
             self.assertAlmostEqual(448.40333840970357, murn.equilibrium_volume)
 
-        with self.subTest(msg='murnaghan'):
+        with self.subTest(msg="murnaghan"):
             murn.fit_murnaghan()
             self.assertAlmostEqual(-90.72018572197015, murn.equilibrium_energy)
             self.assertAlmostEqual(448.4556825322108, murn.equilibrium_volume)

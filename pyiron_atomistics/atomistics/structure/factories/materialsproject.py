@@ -1,7 +1,8 @@
-from typing import Union, List
+from typing import List, Union
+
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, pymatgen_to_pyiron
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
-from pyiron_atomistics.atomistics.structure.atoms import pymatgen_to_pyiron, Atoms
 
 
 class MPQueryResults(HasStructure):

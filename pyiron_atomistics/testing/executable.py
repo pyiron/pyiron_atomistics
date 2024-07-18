@@ -3,8 +3,10 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
+
 import ast
 import logging
+
 import numpy as np
 
 """

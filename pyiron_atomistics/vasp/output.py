@@ -1,16 +1,24 @@
 from __future__ import print_function
+
 import os
 import posixpath
+import warnings
+
 import numpy as np
+from pyiron_base import state
 
 from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
-    structure_dict_to_hdf,
     dict_group_to_hdf,
+    structure_dict_to_hdf,
 )
-from pyiron_base import state
-from pyiron_atomistics.vasp.parser.outcar import Outcar, OutcarCollectError
+from pyiron_atomistics.dft.bader import Bader
+from pyiron_atomistics.dft.waves.electronic import (
+    ElectronicStructure,
+    electronic_structure_dict_to_hdf,
+)
 from pyiron_atomistics.vasp.parser.oszicar import Oszicar
+from pyiron_atomistics.vasp.parser.outcar import Outcar, OutcarCollectError
 from pyiron_atomistics.vasp.procar import Procar
 from pyiron_atomistics.vasp.structure import read_atoms, vasp_sorter
 from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
@@ -19,12 +27,6 @@ from pyiron_atomistics.vasp.volumetric_data import (
     VaspVolumetricData,
     volumetric_data_dict_to_hdf,
 )
-from pyiron_atomistics.dft.bader import Bader
-from pyiron_atomistics.dft.waves.electronic import (
-    ElectronicStructure,
-    electronic_structure_dict_to_hdf,
-)
-import warnings
 
 
 class Output:

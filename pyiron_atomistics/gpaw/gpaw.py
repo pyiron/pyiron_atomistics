@@ -2,10 +2,11 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from pyiron_atomistics.gpaw.pyiron_ase import AseJob
-from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_base import GenericParameters
 from pyiron_snippets.import_alarm import ImportAlarm
+
+from pyiron_atomistics.dft.job.generic import GenericDFTJob
+from pyiron_atomistics.gpaw.pyiron_ase import AseJob
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -22,7 +23,8 @@ with ImportAlarm(
     "Gpaw relies on the gpaw module but this is unavailable. Please ensure your python environment contains gpaw, "
     "e.g. by running `conda install -c conda-forge gpaw`."
 ) as import_alarm:
-    from gpaw import GPAW as GPAWcode, PW, MethfesselPaxton
+    from gpaw import GPAW as GPAWcode
+    from gpaw import PW, MethfesselPaxton
 
 
 class Gpaw(AseJob, GenericDFTJob):

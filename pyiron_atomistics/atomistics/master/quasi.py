@@ -2,10 +2,11 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import matplotlib
 import numpy as np
+
 from pyiron_atomistics.atomistics.master.murnaghan import MurnaghanJobGenerator
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
-import matplotlib
 
 __author__ = "Jan Janssen"
 __copyright__ = (

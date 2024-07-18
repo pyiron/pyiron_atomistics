@@ -19,7 +19,6 @@ import warnings
 
 
 class TestVaspStructure(unittest.TestCase):
-
     """
     Testing routines in the vasp/structure module.
     """
@@ -51,13 +50,34 @@ class TestVaspStructure(unittest.TestCase):
                         for _ in range(10):
                             atoms = atoms_from_string(string=lines)
                             self.assertEqual(atoms.indices.tolist(), [0, 1, 2])
-                            self.assertEqual(" ".join(atoms.get_chemical_symbols()), " ".join(["Ca", "Mg", "Al"]))
-                            self.assertTrue(np.allclose(atoms.positions[atoms.select_index("Ca")],
-                                                        np.array([6.2262054545, 8.8300000128e-06,  1.9039669849])))
-                            self.assertTrue(np.allclose(atoms.positions[atoms.select_index("Mg")],
-                                                        np.array([0.3113441054, 0.5391959194,  18.3309003343])))
-                            self.assertTrue(np.allclose(atoms.positions[atoms.select_index("Al")],
-                                                        np.array([3.1131124744, 5.3920363513,  12.0213927741])))
+                            self.assertEqual(
+                                " ".join(atoms.get_chemical_symbols()),
+                                " ".join(["Ca", "Mg", "Al"]),
+                            )
+                            self.assertTrue(
+                                np.allclose(
+                                    atoms.positions[atoms.select_index("Ca")],
+                                    np.array(
+                                        [6.2262054545, 8.8300000128e-06, 1.9039669849]
+                                    ),
+                                )
+                            )
+                            self.assertTrue(
+                                np.allclose(
+                                    atoms.positions[atoms.select_index("Mg")],
+                                    np.array(
+                                        [0.3113441054, 0.5391959194, 18.3309003343]
+                                    ),
+                                )
+                            )
+                            self.assertTrue(
+                                np.allclose(
+                                    atoms.positions[atoms.select_index("Al")],
+                                    np.array(
+                                        [3.1131124744, 5.3920363513, 12.0213927741]
+                                    ),
+                                )
+                            )
                     self.assertIsInstance(atoms, Atoms)
 
     def test_read_atoms(self):
@@ -158,9 +178,7 @@ class TestVaspStructure(unittest.TestCase):
         test_atoms = read_atoms(posixpath.join(self.file_location, "POSCAR_test"))
         truth_array = np.empty_like(struct.positions, dtype=bool)
         truth_array[:] = [True, True, True]
-        self.assertTrue(
-            np.array_equal(test_atoms.selective_dynamics, truth_array)
-        )
+        self.assertTrue(np.array_equal(test_atoms.selective_dynamics, truth_array))
         os.remove(posixpath.join(self.file_location, "POSCAR_test"))
         struct = self.structure.copy()
         struct.add_tag(selective_dynamics=[True, True, True])

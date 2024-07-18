@@ -4,24 +4,24 @@
 
 import codecs
 import pickle
+import posixpath
 from typing import Optional
 
 import numpy as np
-import posixpath
 import scipy.constants
+import structuretoolkit
 from phonopy import Phonopy
-from phonopy.units import VaspToTHz
 from phonopy.file_IO import write_FORCE_CONSTANTS
+from phonopy.units import VaspToTHz
+from pyiron_base import JobGenerator, state
+from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.import_alarm import ImportAlarm
 
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.phonopy import (
     publication as phonopy_publication,
 )
-from pyiron_base import state, JobGenerator
-from pyiron_snippets.deprecate import deprecate
-from pyiron_snippets.import_alarm import ImportAlarm
-import structuretoolkit
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"
 __copyright__ = (

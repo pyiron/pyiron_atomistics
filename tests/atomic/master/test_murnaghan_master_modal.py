@@ -27,7 +27,6 @@ def convergence_goal(self, **qwargs):
 
 
 class TestMurnaghan(TestWithCleanProject):
-
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))

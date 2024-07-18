@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Tuple, TYPE_CHECKING, Union, Optional
-import h5py
-from io import StringIO
-import numpy as np
 import os
-import pandas as pd
 import warnings
-from pyiron_base import extract_data_from_file
-from pyiron_atomistics.lammps.units import UnitConverter
-from pyiron_atomistics.lammps.structure import UnfoldingPrism
+from dataclasses import asdict, dataclass, field
+from io import StringIO
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
+import h5py
+import numpy as np
+import pandas as pd
+from pyiron_base import extract_data_from_file
+
+from pyiron_atomistics.lammps.structure import UnfoldingPrism
+from pyiron_atomistics.lammps.units import UnitConverter
 
 if TYPE_CHECKING:
     from pyiron_atomistics.atomistics.structure.atoms import Atoms

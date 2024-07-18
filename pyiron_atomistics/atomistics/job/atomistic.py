@@ -3,25 +3,28 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import copy
-import warnings
-import numpy as np
 import numbers
 import os
-from typing import Callable, Union, Tuple
-from ase.io import write as ase_write
 import posixpath
+import warnings
 from functools import wraps
+from typing import Callable, Tuple, Union
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
-from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+import numpy as np
+from ase.io import write as ase_write
 from pyiron_base import (
-    GenericParameters,
-    GenericMaster,
     GenericJob as GenericJobCore,
+)
+from pyiron_base import (
+    GenericMaster,
+    GenericParameters,
 )
 from pyiron_snippets.deprecate import deprecate
 from pyiron_snippets.logger import logger
+
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 
 try:
     from pyiron_base import ProjectGUI

@@ -4,8 +4,9 @@
 
 import ast
 import json
-import numpy as np
 import warnings
+
+import numpy as np
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, pyiron_to_ase
 

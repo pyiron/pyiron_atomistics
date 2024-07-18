@@ -6,7 +6,6 @@ from pyiron_base._tests import TestWithProject
 
 
 class TestGpaw(TestWithProject):
-
     def test_interactive_run(self):
         """
         Gpaw should run interactively, even if you update the structure to a new object.

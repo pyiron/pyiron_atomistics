@@ -9,6 +9,7 @@ from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_base._tests import TestWithCleanProject
 from pyiron_atomistics.project import Creator
 
+
 # Lammps and pyiron structure clearly require more tests
 class TestLammpsStructure(TestWithCleanProject):
     @classmethod
@@ -46,7 +47,9 @@ class TestLammpsStructure(TestWithCleanProject):
 
     def tearDown(self) -> None:
         super().tearDown()
-        self.ref_project.remove_jobs(recursive=True, silently=True)  # cf. comment in setUp
+        self.ref_project.remove_jobs(
+            recursive=True, silently=True
+        )  # cf. comment in setUp
 
     def test_velocity_basics(self):
         creator = Creator(self.project)
@@ -68,9 +71,6 @@ class TestLammpsStructure(TestWithCleanProject):
         vels = np.array([[1.0, 1.0, 1.0]])
         self.job.structure.velocities = vels
         self.assertTrue(
-            np.allclose(
-                self.job.structure.velocities,
-                vels
-            ),
+            np.allclose(self.job.structure.velocities, vels),
             msg="Velocties of structure are not correctly set",
         )
