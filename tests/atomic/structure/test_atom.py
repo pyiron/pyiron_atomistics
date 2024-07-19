@@ -62,8 +62,10 @@ class TestAtom(unittest.TestCase):
         self.assertEqual(self.Fe_atom, Atom("Fe"))
         self.assertNotEqual(self.Fe_atom, ASEAtom("Fe"))
         self.assertEqual(self.Fe_atom, ase_to_pyiron(ASEAtom("Fe")))
-        self.assertEqual(Atom("Ne", charge=-0.1, momentum=0.5),
-                         ase_to_pyiron(ASEAtom("Ne", charge=-0.1, momentum=0.5)))
+        self.assertEqual(
+            Atom("Ne", charge=-0.1, momentum=0.5),
+            ase_to_pyiron(ASEAtom("Ne", charge=-0.1, momentum=0.5)),
+        )
 
 
 if __name__ == "__main__":

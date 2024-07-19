@@ -2,16 +2,16 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import subprocess
-import tempfile
+import io
 import os.path
 import shutil
-import io
+import subprocess
+import tempfile
+
+import numpy as np
+from ase.io import read, write
 
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
-
-from ase.io import read, write
-import numpy as np
 
 __author__ = "Marvin Poul"
 __copyright__ = (

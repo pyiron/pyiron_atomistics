@@ -3,18 +3,19 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+import warnings
+from collections import OrderedDict
+
+import defusedxml.cElementTree as ETree
 
 # import xml.etree.cElementTree as ETree
 import numpy as np
-from collections import OrderedDict
+from defusedxml.ElementTree import ParseError
+from pyiron_base import state
+
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_base import state
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
-import defusedxml.cElementTree as ETree
-from defusedxml.ElementTree import ParseError
-import warnings
-
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (

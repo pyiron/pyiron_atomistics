@@ -3,22 +3,23 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
+
 from typing import Optional
 
+import matplotlib.pyplot as plt
+import numpy as np
 from atomistics.workflows.evcurve.debye import DebyeModel
 from atomistics.workflows.evcurve.fit import (
     EnergyVolumeFit,
+    fit_leastsq_eos,
     fitfunction,
     get_error,
-    fit_leastsq_eos,
 )
 from atomistics.workflows.evcurve.helper import _strain_axes
-import matplotlib.pyplot as plt
-import numpy as np
+from pyiron_base import JobGenerator
 
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
-from pyiron_base import JobGenerator
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

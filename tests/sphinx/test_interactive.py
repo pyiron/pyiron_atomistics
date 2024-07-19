@@ -63,7 +63,9 @@ class TestSphinx(unittest.TestCase):
             )
         )
         shutil.rmtree(
-            os.path.join(cls.file_location, "../static/sphinx/job_sphinx_interactive_hdf5")
+            os.path.join(
+                cls.file_location, "../static/sphinx/job_sphinx_interactive_hdf5"
+            )
         )
 
     def test_interactive_cells_setter(self):

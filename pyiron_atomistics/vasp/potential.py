@@ -7,8 +7,9 @@ import posixpath
 
 import numpy as np
 import pandas
-from pyiron_base import state, GenericParameters
+from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
+
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
     find_potential_file_base,

@@ -2,7 +2,8 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from structuretoolkit.build import grainboundary, get_grainboundary_info
+from structuretoolkit.build import get_grainboundary_info, grainboundary
+
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 __author__ = "Ujjal Saikia"

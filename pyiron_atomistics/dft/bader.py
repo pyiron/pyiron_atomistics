@@ -2,12 +2,12 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import numpy as np
 import os
 import subprocess
 
-from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
+import numpy as np
 
+from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (

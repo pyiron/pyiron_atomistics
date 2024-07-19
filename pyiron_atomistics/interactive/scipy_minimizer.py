@@ -2,14 +2,16 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import numpy as np
-from pyiron_atomistics.atomistics.job.interactivewrapper import InteractiveWrapper
-from pyiron_base import HasStorage
-from pyiron_atomistics.atomistics.job.interactive import GenericInteractiveOutput
-from scipy.optimize import minimize
-import scipy
-from typing import List, Iterable
 import warnings
+from typing import Iterable, List
+
+import numpy as np
+import scipy
+from pyiron_base import HasStorage
+from scipy.optimize import minimize
+
+from pyiron_atomistics.atomistics.job.interactive import GenericInteractiveOutput
+from pyiron_atomistics.atomistics.job.interactivewrapper import InteractiveWrapper
 
 __author__ = "Osamu Waseda"
 __copyright__ = (

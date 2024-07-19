@@ -45,9 +45,7 @@ class TestElectronicStructure(unittest.TestCase):
         if os.path.isfile(
             os.path.join(file_location, "../../static/dft/test_es_hdf.h5")
         ):
-            os.remove(
-                os.path.join(file_location, "../../static/dft/test_es_hdf.h5")
-            )
+            os.remove(os.path.join(file_location, "../../static/dft/test_es_hdf.h5"))
 
     def test_init(self):
         for es in self.es_list:
@@ -74,7 +72,8 @@ class TestElectronicStructure(unittest.TestCase):
         for es in self.es_list:
             for i in range(es.n_spins):
                 self.assertEqual(
-                    len(es.eigenvalues[i]), np.product(np.shape(es.eigenvalue_matrix[i]))
+                    len(es.eigenvalues[i]),
+                    np.product(np.shape(es.eigenvalue_matrix[i])),
                 )
 
     def test_occupancies(self):
@@ -127,9 +126,7 @@ class TestElectronicStructure(unittest.TestCase):
             np.array_equal(es_obj_new.grand_dos_matrix, es_obj_old.grand_dos_matrix)
         )
         self.assertTrue(
-            np.array_equal(
-                es_obj_new.resolved_densities, es_obj_old.resolved_densities
-            )
+            np.array_equal(es_obj_new.resolved_densities, es_obj_old.resolved_densities)
         )
 
     def test_is_metal(self):

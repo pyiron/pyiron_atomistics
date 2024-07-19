@@ -9,11 +9,12 @@ https://github.com/pyiron/pyiron_meltingpoint
 """
 
 import json
-import numpy as np
 import operator
 import os
-import matplotlib.pylab as plt
 import random
+
+import matplotlib.pylab as plt
+import numpy as np
 from sklearn.neighbors import KernelDensity
 
 __author__ = "Lifang Zhu, Jan Janssen"

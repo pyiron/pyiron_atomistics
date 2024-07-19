@@ -2,18 +2,19 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import numpy as np
 import os
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 
-from pyiron_atomistics.vasp.parser.outcar import Outcar
-from pyiron_atomistics.vasp.base import VaspBase
-from pyiron_atomistics.vasp.structure import vasp_sorter
+import numpy as np
+
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
+from pyiron_atomistics.vasp.base import VaspBase
 
 # as of pyiron_atomistics <= 0.5.4 this module defined subclasses that are now removed; the base classes are still
 # imported here in case HDF5 files in the wild refer to them.  The imports can be removed on the next big version bump.
-from pyiron_atomistics.vasp.output import Output, DFTOutput, GenericOutput
+from pyiron_atomistics.vasp.output import DFTOutput, GenericOutput, Output
+from pyiron_atomistics.vasp.parser.outcar import Outcar
+from pyiron_atomistics.vasp.structure import vasp_sorter
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (

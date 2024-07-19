@@ -2,16 +2,18 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import pandas as pd
-import shutil
 import os
-from pyiron_base import state, GenericParameters
+import shutil
+from typing import List
+
+import pandas as pd
+from pyiron_base import GenericParameters, state
+
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
     find_potential_file_base,
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from typing import List
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (

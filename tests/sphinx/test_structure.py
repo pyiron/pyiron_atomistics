@@ -27,7 +27,6 @@ BOHR_TO_ANGSTROM = (
 
 
 class TestSphinxStructure(unittest.TestCase):
-
     """
     Testing routines in the sphinx/structure module.
     """

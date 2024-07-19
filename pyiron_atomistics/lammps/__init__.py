@@ -1,1 +1,1 @@
-from pyiron_atomistics.lammps.potential import view_potentials, list_potentials
+from pyiron_atomistics.lammps.potential import list_potentials, view_potentials

@@ -3,35 +3,36 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function, unicode_literals
-import os
 
 import ast
+import os
+import warnings
+from typing import Optional
+
 import numpy as np
 import pandas
-from typing import Optional
-import warnings
-
 from pyiron_base import state
 from pyiron_snippets.deprecate import deprecate
-from pyiron_atomistics.lammps.potential import (
-    LammpsPotentialFile,
-    PotentialAvailable,
-    view_potentials,
-    list_potentials,
-)
+
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.lammps.control import LammpsControl
-from pyiron_atomistics.lammps.potential import LammpsPotential
+from pyiron_atomistics.lammps.output import (
+    parse_lammps_output,
+    remap_indices,
+)
+from pyiron_atomistics.lammps.potential import (
+    LammpsPotential,
+    LammpsPotentialFile,
+    PotentialAvailable,
+    list_potentials,
+    view_potentials,
+)
 from pyiron_atomistics.lammps.structure import (
     LammpsStructure,
     UnfoldingPrism,
     structure_to_lammps,
 )
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
-from pyiron_atomistics.lammps.output import (
-    parse_lammps_output,
-    remap_indices,
-)
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (

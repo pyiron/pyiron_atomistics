@@ -2,11 +2,13 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import numbers
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Callable
-import numbers
+
 from pyiron_snippets.deprecate import deprecate
 from pyiron_snippets.import_alarm import ImportAlarm
+
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 with ImportAlarm("Animation of atomic structures requires nglview") as nglview_alarm:

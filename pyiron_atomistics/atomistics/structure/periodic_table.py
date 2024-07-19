@@ -3,11 +3,13 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function, unicode_literals
-import pkgutil
+
 import io
+import pkgutil
+from functools import lru_cache
+
 import numpy as np
 import pandas
-from functools import lru_cache
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Martin Boeckmann"
 __copyright__ = (
