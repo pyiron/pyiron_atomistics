@@ -10,7 +10,7 @@ import pandas as pd
 from pyiron_base import GenericParameters, state
 
 from pyiron_atomistics.atomistics.job.potentials import (
-    PotentialAbstract,
+    PotentialAbstract
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_snippets.resources import ResourceResolver, ResourceNotFound
@@ -25,7 +25,6 @@ __maintainer__ = "Sudarsan Surendralal"
 __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
-
 
 class LammpsPotential(GenericParameters):
     """
@@ -66,6 +65,16 @@ class LammpsPotential(GenericParameters):
 
     @property
     def files(self):
+        env = os.environ
+        resolver = ResourceResolver(
+                    state.settings.resource_paths,
+                    "lammps", "potentials",
+        ).chain(
+            ResourceResolver(
+                [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
+                "share", "iprpy",
+            )
+        )
         if len(self._df["Filename"].values[0]) > 0 and self._df["Filename"].values[
             0
         ] != [""]:
@@ -78,20 +87,10 @@ class LammpsPotential(GenericParameters):
                 if not os.path.isabs(files)
             ]
             for path in relative_file_paths:
-                resolver = ResourceResolver(
-                        state.settings.resource_paths,
-                        "lammps", "potentials",
-                    ).chain(
-                    # support iprpy-data package; data paths in the iprpy are of a different form than in
-                    # pyiron resources, so we cannot add it as an additional path to the resolver above.
-                    # Instead make a new resolver and chain it after the first one.
-                    ResourceResolver(
-                        [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
-                        "share", "iprpy",
-                    ),
-                )
                 try:
-                    absolute_file_paths.append(resolver.first(path))
+                    absolute_file_paths.append(
+                            resolver.first(path)
+                    )
                 except ResourceNotFound:
                     raise ValueError("Was not able to locate the potentials.") from None
             return absolute_file_paths

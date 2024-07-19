@@ -9,6 +9,7 @@ import numpy as np
 import pandas
 from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.resources import ResourceResolver, ResourceNotFound
 
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
@@ -120,16 +121,6 @@ class VaspPotentialAbstract(PotentialAbstract):
         else:
             return []
 
-    @staticmethod
-    def _return_potential_file(file_name):
-        for resource_path in state.settings.resource_paths:
-            resource_path_potcar = os.path.join(
-                resource_path, "vasp", "potentials", file_name
-            )
-            if os.path.exists(resource_path_potcar):
-                return resource_path_potcar
-        return None
-
     def __dir__(self):
         return [val.replace("-", "_") for val in self.list_potential_names()]
 
@@ -137,7 +128,7 @@ class VaspPotentialAbstract(PotentialAbstract):
         item_replace = item.replace("_gga_pbe", "-gga-pbe").replace("_lda", "-lda")
         if item_replace in self.list_potential_names():
             df = self.list()
-            return self._return_potential_file(
+            return return_potential_file(
                 file_name=list(df[df["Name"] == item_replace]["Filename"])[0][0]
             )
         selected_atoms = self._selected_atoms + [item]
@@ -267,10 +258,13 @@ class VaspPotentialSetter(object):
 
 
 def find_potential_file(path):
-    return ResourceResolver(
-            state.settings.resource_paths,
-            "vasp", "potentials",
-    ).first(path)
+    try:
+        return ResourceResolver(
+                state.settings.resource_paths,
+                "vasp", "potentials",
+        ).first(path)
+    except ResourceNotFound:
+        return None
 
 
 @deprecate(

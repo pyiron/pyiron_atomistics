@@ -6,11 +6,8 @@ import os
 
 import pandas
 from pyiron_base import state
-
-from pyiron_atomistics.vasp.potential import (
-    VaspPotentialAbstract,
-    find_potential_file_base,
-)
+from pyiron_atomistics.vasp.potential import VaspPotentialAbstract
+from pyiron_snippets.resources import ResourceResolver, ResourceNotFound
 
 __author__ = "Osamu Waseda"
 __copyright__ = (
@@ -80,14 +77,12 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
 
 def find_potential_file(path):
     env = os.environ
-    resource_path_lst = state.settings.resource_paths
-    for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
-        if conda_var in env.keys():  # support sphinx-data package
-            path_to_add = os.path.join(env[conda_var], "share", "sphinxdft")
-            if path_to_add not in resource_path_lst:
-                resource_path_lst += [path_to_add]
-    return find_potential_file_base(
-        path=path,
-        resource_path_lst=resource_path_lst,
-        rel_path=os.path.join("sphinx", "potentials"),
-    )
+    return ResourceResolver(
+            state.settings.resource_paths,
+            "sphinx", "potentials"
+    ).chain(
+        ResourceResolver(
+            [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
+            "share", "sphinxdft",
+        )
+    ).first(path)

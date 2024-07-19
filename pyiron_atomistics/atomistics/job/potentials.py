@@ -172,14 +172,12 @@ class PotentialAbstract(object):
         except ResourceNotFound:
             raise ValueError("Was not able to locate the potential files.") from None
 
-
 def find_potential_file_base(path, resource_path_lst, rel_path):
     try:
         return ResourceResolver(
                 resource_path_lst,
                 rel_path,
-                name=path
-        ).first()
+        ).first(path)
     except ResourceNotFound:
         raise ValueError(
             "Either the filename or the functional has to be defined.",
