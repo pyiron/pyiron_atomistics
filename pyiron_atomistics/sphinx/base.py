@@ -1558,11 +1558,12 @@ class SphinxBase(GenericDFTJob):
                     "Energy cut-off value wrong or not modified from default "
                     + "340 eV; change it via job.set_encut()"
                 )
-            if not (
-                isinstance(self.input.sphinx.basis["kPoint"]["coords"], np.ndarray)
-                or len(self.input.sphinx.basis["kPoint"]["coords"]) != 3
-            ):
-                warnings.warn("K point coordinates seem to be inappropriate")
+            if "kPoint" in self.input.sphinx.basis:
+                if not (
+                    isinstance(self.input.sphinx.basis["kPoint"]["coords"], np.ndarray)
+                    or len(self.input.sphinx.basis["kPoint"]["coords"]) != 3
+                ):
+                    warnings.warn("K point coordinates seem to be inappropriate")
             if (
                 not (
                     isinstance(self.input.sphinx.PAWHamiltonian["ekt"], int)
