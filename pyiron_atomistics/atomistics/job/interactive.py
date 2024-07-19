@@ -174,7 +174,7 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
                 del self.interactive_input_functions["cell"]
 
     def interactive_positions_organizer(self):
-        if self._generic_input["calc_mode"] != "static" or not np.allclose(
+        if self._generic_input["calc_mode"] != "static" or len(self._structure_current.positions) != len(self._structure_previous.positions) or not np.allclose(
             self._structure_current.positions,
             self._structure_previous.positions,
             rtol=1e-15,
@@ -190,6 +190,7 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
             del self.interactive_input_functions["magnetic_moments"]
         elif (
             None in self._structure_previous.get_initial_magnetic_moments()
+            or len(self._structure_current.get_initial_magnetic_moments()) != len(self._structure_previous.get_initial_magnetic_moments())
             or not np.allclose(
                 self._structure_current.get_initial_magnetic_moments(),
                 self._structure_previous.get_initial_magnetic_moments(),
