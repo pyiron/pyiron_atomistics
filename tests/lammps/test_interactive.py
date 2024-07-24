@@ -16,6 +16,10 @@ class InteractiveLibrary(object):
     def __init__(self):
         self._command = []
 
+    @property
+    def cores(self):
+        return 1
+
     def command(self, command_in):
         self._command.append(command_in)
 
