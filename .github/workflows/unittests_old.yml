@@ -14,12 +14,7 @@ jobs:
       uses: pyiron/actions/cached-miniforge@v3.2.1
       with:
         python-version: '3.9'
-        miniforge-variant: Mambaforge
-        miniforge-channels: conda-forge
-        miniforge-channel-priority: strict
-        env-path: 'cached-miniforge/my-env'
         env-files: .ci_support/environment-old.yml
-        miniforge-use-mamba: true
     - name: Test
       shell: bash -l {0}
       timeout-minutes: 30
