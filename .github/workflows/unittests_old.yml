@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Setup Mambaforge
-      uses: conda-incubator/setup-miniconda@v2
+    - name: Setup Mambaforge or load cache
+      uses: pyiron/actions/cached-miniforge@v3.2.1
       with:
         python-version: '3.9'
         miniforge-variant: Mambaforge
-        channels: conda-forge
-        channel-priority: strict
-        activate-environment: my-env
-        environment-file: .ci_support/environment-old.yml
-        use-mamba: true
+        miniforge-channels: conda-forge
+        miniforge-channel-priority: strict
+        env-path: 'cached-miniforge/my-env'
+        env-files: .ci_support/environment-old.yml
+        miniforge-use-mamba: true
     - name: Test
       shell: bash -l {0}
       timeout-minutes: 30
