@@ -25,7 +25,7 @@ dependencies:
 - pyxtal =0.6.2
 - pyiron-data >=0.0.22
 - sqsgenerator
-- lammps
+- lammps =2024.06.27=*_openmpi_*
 - iprpy-data
 - gpaw
 - sphinxdft >=2.7.0
