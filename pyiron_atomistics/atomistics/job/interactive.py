@@ -420,7 +420,7 @@ class GenericInteractiveOutput(GenericOutput):
 
         """
         try:
-            fetched = self._job.content["output/interactive/" + key]
+            fetched = self._job.project_hdf5["output/interactive/" + key]
         except ValueError:
             fetched = None
         if fetched is None or len(fetched) == 0:
