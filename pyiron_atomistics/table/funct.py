@@ -10,11 +10,13 @@ import numpy as np
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, pyiron_to_ase
 
+
 def _safe_load(job, key):
     try:
         return job.content[key]
     except KeyError:
         return None
+
 
 def _get_value_from_incar(job, key):
     data_dict = _safe_load(job, "input/incar/data_dict")
@@ -59,7 +61,11 @@ def get_encut(job):
 
 
 def get_n_kpts(job):
-    return {"n_kpts": eval(_safe_load(job, "input/kpoints/data_dict")["Value"][3].split()[0])}
+    return {
+        "n_kpts": eval(
+            _safe_load(job, "input/kpoints/data_dict")["Value"][3].split()[0]
+        )
+    }
 
 
 def get_n_equ_kpts(job):
@@ -203,9 +209,14 @@ def get_energy_int(job):
 def get_f_states(job):
     if "occ_matrix" in _safe_load(job, "output/electronic_structure").list_nodes():
         return {
-            "f_states": _safe_load(job, "output/electronic_structure/occ_matrix").flatten().tolist()
+            "f_states": _safe_load(job, "output/electronic_structure/occ_matrix")
+            .flatten()
+            .tolist()
         }
-    elif "occupancy_matrix" in _safe_load(job, "output/electronic_structure").list_nodes():
+    elif (
+        "occupancy_matrix"
+        in _safe_load(job, "output/electronic_structure").list_nodes()
+    ):
         return {
             "f_states": _safe_load(job, "output/electronic_structure/occupancy_matrix")
             .flatten()
@@ -220,9 +231,16 @@ def get_e_band(job):
     if "occ_matrix" in _safe_load(job, "output/electronic_structure").list_nodes():
         f_occ = _safe_load(job, "output/electronic_structure/occ_matrix").flatten()
         ev_mat = _safe_load(job, "output/electronic_structure/eig_matrix").flatten()
-    elif "occupancy_matrix" in _safe_load(job, "output/electronic_structure").list_nodes():
-        f_occ = _safe_load(job, "output/electronic_structure/occupancy_matrix").flatten()
-        ev_mat = _safe_load(job, "output/electronic_structure/eigenvalue_matrix").flatten()
+    elif (
+        "occupancy_matrix"
+        in _safe_load(job, "output/electronic_structure").list_nodes()
+    ):
+        f_occ = _safe_load(
+            job, "output/electronic_structure/occupancy_matrix"
+        ).flatten()
+        ev_mat = _safe_load(
+            job, "output/electronic_structure/eigenvalue_matrix"
+        ).flatten()
     else:
         print("get_e_band(): ", job.job_name, job.status)
         f_occ = np.array([0.0])
