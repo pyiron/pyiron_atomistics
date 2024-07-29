@@ -13,9 +13,7 @@ from pyiron_atomistics.atomistics.structure.atoms import Atoms, pyiron_to_ase
 
 def _get_value_from_incar(job, key):
     data_dict = job.content["input/incar/data_dict"]
-    value = data_dict["Value"][
-        data_dict["Parameter"].index(key)
-    ]
+    value = data_dict["Value"][data_dict["Parameter"].index(key)]
     if isinstance(value, str):
         return ast.literal_eval(value)
     else:
@@ -56,7 +54,9 @@ def get_encut(job):
 
 
 def get_n_kpts(job):
-    return {"n_kpts": eval(job.content["input/kpoints/data_dict"]["Value"][3].split()[0])}
+    return {
+        "n_kpts": eval(job.content["input/kpoints/data_dict"]["Value"][3].split()[0])
+    }
 
 
 def get_n_equ_kpts(job):
@@ -200,7 +200,9 @@ def get_energy_int(job):
 def get_f_states(job):
     if "occ_matrix" in job.content["output/electronic_structure"].list_nodes():
         return {
-            "f_states": job.content["output/electronic_structure/occ_matrix"].flatten().tolist()
+            "f_states": job.content["output/electronic_structure/occ_matrix"]
+            .flatten()
+            .tolist()
         }
     elif "occupancy_matrix" in job.content["output/electronic_structure"].list_nodes():
         return {
