@@ -1015,7 +1015,7 @@ def _suppress_notfound(meth):
     def f(*args, **kwargs):
         try:
             return meth(*args, **kwargs)
-        except ValueError:
+        except (ValueError, KeyError):
             logger.warning(f"Could not access {meth.__name__}, returning None!")
             return None
 
@@ -1086,7 +1086,7 @@ class GenericOutput(object):
                 "output/generic/unwrapped_positions"
             ]
             return unwrapped_positions
-        except ValueError:
+        except KeyError:
             return self._job.structure.positions + self.total_displacements
 
     @property
@@ -1117,7 +1117,7 @@ class GenericOutput(object):
                 np.append([self._job.structure.positions], unwrapped_positions, axis=0),
                 axis=0,
             )
-        except ValueError:
+        except KeyError:
             return self.get_displacements(
                 self._job.structure, self.positions, self.cells
             )
@@ -1170,12 +1170,12 @@ class GenericOutput(object):
                 "output/generic/unwrapped_positions"
             ]
             return unwrapped_positions - self._job.structure.positions
-        except ValueError:
+        except KeyError:
             return np.cumsum(self.displacements, axis=0)
 
     def __dir__(self):
         try:
             hdf5_path = self._job.content["output/generic"]
             return hdf5_path.list_nodes()
-        except ValueError:
+        except KeyError:
             return []
