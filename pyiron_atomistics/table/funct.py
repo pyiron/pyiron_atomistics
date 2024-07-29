@@ -10,9 +10,14 @@ import numpy as np
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, pyiron_to_ase
 
+def _safe_load(job, key):
+    try:
+        return job.content[key]
+    except KeyError:
+        return None
 
 def _get_value_from_incar(job, key):
-    data_dict = job.content["input/incar/data_dict"]
+    data_dict = _safe_load(job, "input/incar/data_dict")
     value = data_dict["Value"][data_dict["Parameter"].index(key)]
     if isinstance(value, str):
         return ast.literal_eval(value)
@@ -35,7 +40,7 @@ def get_majority(lst, minority=False):
 
 
 def get_incar(job):
-    data_dict = job.content["input/incar/data_dict"]
+    data_dict = _safe_load(job, "input/incar/data_dict")
     return {
         key: value for key, value in zip(data_dict["Parameter"], data_dict["Value"])
     }
@@ -54,51 +59,49 @@ def get_encut(job):
 
 
 def get_n_kpts(job):
-    return {
-        "n_kpts": eval(job.content["input/kpoints/data_dict"]["Value"][3].split()[0])
-    }
+    return {"n_kpts": eval(_safe_load(job, "input/kpoints/data_dict")["Value"][3].split()[0])}
 
 
 def get_n_equ_kpts(job):
-    return {"n_equ_kpts": len(job.content["output/generic/dft/bands/k_points"])}
+    return {"n_equ_kpts": len(_safe_load(job, "output/generic/dft/bands/k_points"))}
 
 
 def get_total_number_of_atoms(job):
-    return {"Number_of_atoms": len(job.content["input/structure/indices"])}
+    return {"Number_of_atoms": len(_safe_load(job, "input/structure/indices"))}
 
 
 def get_average_waves(job):
-    weights = job.content["output/outcar/irreducible_kpoint_weights"]
-    planewaves = job.content["output/outcar/number_plane_waves"]
+    weights = _safe_load(job, "output/outcar/irreducible_kpoint_weights")
+    planewaves = _safe_load(job, "output/outcar/number_plane_waves")
     return {"avg. plane waves": sum(weights * planewaves) / sum(weights)}
 
 
 def get_plane_waves(job):
-    _, weights, planewaves = job.content["output/outcar/irreducible_kpoints"]
+    _, weights, planewaves = _safe_load(job, "output/outcar/irreducible_kpoints")
     return {"plane waves": sum(weights * planewaves)}
 
 
 def get_ekin_error(job):
     return {
-        "energy_tot_wo_kin_corr": job.content["output/outcar/kin_energy_error"]
-        + job.content["output/generic/energy_tot"][-1]
+        "energy_tot_wo_kin_corr": _safe_load(job, "output/outcar/kin_energy_error")
+        + _safe_load(job, "output/generic/energy_tot")[-1]
     }
 
 
 def get_volume(job):
-    return {"volume": job.content["output/generic/volume"][-1]}
+    return {"volume": _safe_load(job, "output/generic/volume")[-1]}
 
 
 def get_volume_per_atom(job):
     return {
-        "volume": job.content["output/generic/volume"][-1]
+        "volume": _safe_load(job, "output/generic/volume")[-1]
         / get_total_number_of_atoms(job=job)["Number_of_atoms"]
     }
 
 
 def get_elements(job):
-    species = job.content["input/structure/species"]
-    indices = job.content["input/structure/indices"]
+    species = _safe_load(job, "input/structure/species")
+    indices = _safe_load(job, "input/structure/indices")
     return {s: sum(indices == i) for i, s in enumerate(species)}
 
 
@@ -111,15 +114,15 @@ def get_convergence_check(job):
 
 
 def get_number_of_species(job):
-    return {"Number_of_species": len(job.content["output/structure/species"])}
+    return {"Number_of_species": len(_safe_load(job, "output/structure/species"))}
 
 
 def get_number_of_ionic_steps(job):
-    return {"Number_of_ionic_steps": len(job.content["output/generic/energy_tot"])}
+    return {"Number_of_ionic_steps": len(_safe_load(job, "output/generic/energy_tot"))}
 
 
 def get_number_of_final_electronic_steps(job):
-    el_steps = job.content["output/generic/scf_energies"]
+    el_steps = _safe_load(job, "output/generic/scf_energies")
     if len(el_steps) != 0:
         return {"Number_of_final_electronic_steps": len(el_steps[-1])}
     else:
@@ -127,8 +130,8 @@ def get_number_of_final_electronic_steps(job):
 
 
 def get_majority_species(job):
-    indices_lst = job.content["input/structure/indices"].tolist()
-    element_lst = job.content["input/structure/species"]
+    indices_lst = _safe_load(job, "input/structure/indices").tolist()
+    element_lst = _safe_load(job, "input/structure/species")
     majority_element, minority_lst = get_majority(
         [element_lst[ind] for ind in indices_lst], minority=True
     )
@@ -136,7 +139,7 @@ def get_majority_species(job):
 
 
 def get_majority_crystal_structure(job):
-    basis = Atoms().from_hdf(job.content["input"])
+    basis = Atoms().from_hdf(job.project_hdf5["input"])
     majority_element = basis.get_majority_species()["symbol"]
     majority_index = [
         ind for ind, el in enumerate(basis) if el.symbol == majority_element
@@ -155,58 +158,56 @@ def get_job_name(job):
 
 def get_energy_tot_per_atom(job):
     return {
-        "energy_tot": job.content["output/generic/energy_tot"][-1]
+        "energy_tot": _safe_load(job, "output/generic/energy_tot")[-1]
         / get_total_number_of_atoms(job=job)["Number_of_atoms"]
     }
 
 
 def get_energy_tot(job):
-    return {"energy_tot": job.content["output/generic/energy_tot"][-1]}
+    return {"energy_tot": _safe_load(job, "output/generic/energy_tot")[-1]}
 
 
 def get_energy_pot_per_atom(job):
     return {
-        "energy_pot": job.content["output/generic/energy_pot"][-1]
+        "energy_pot": _safe_load(job, "output/generic/energy_pot")[-1]
         / get_total_number_of_atoms(job=job)["Number_of_atoms"]
     }
 
 
 def get_energy_pot(job):
-    return {"energy_pot": job.content["output/generic/energy_pot"][-1]}
+    return {"energy_pot": _safe_load(job, "output/generic/energy_pot")[-1]}
 
 
 def get_energy_free_per_atom(job):
     return {
-        "energy_free": job.content["output/generic/dft/energy_free"][-1]
+        "energy_free": _safe_load(job, "output/generic/dft/energy_free")[-1]
         / get_total_number_of_atoms(job=job)["Number_of_atoms"]
     }
 
 
 def get_energy_free(job):
-    return {"energy_free": job.content["output/generic/dft/energy_free"][-1]}
+    return {"energy_free": _safe_load(job, "output/generic/dft/energy_free")[-1]}
 
 
 def get_energy_int_per_atom(job):
     return {
-        "energy_int": job.content["output/generic/dft/energy_int"][-1]
+        "energy_int": _safe_load(job, "output/generic/dft/energy_int")[-1]
         / get_total_number_of_atoms(job=job)["Number_of_atoms"]
     }
 
 
 def get_energy_int(job):
-    return {"energy_int": job.content["output/generic/dft/energy_int"][-1]}
+    return {"energy_int": _safe_load(job, "output/generic/dft/energy_int")[-1]}
 
 
 def get_f_states(job):
-    if "occ_matrix" in job.content["output/electronic_structure"].list_nodes():
+    if "occ_matrix" in _safe_load(job, "output/electronic_structure").list_nodes():
         return {
-            "f_states": job.content["output/electronic_structure/occ_matrix"]
-            .flatten()
-            .tolist()
+            "f_states": _safe_load(job, "output/electronic_structure/occ_matrix").flatten().tolist()
         }
-    elif "occupancy_matrix" in job.content["output/electronic_structure"].list_nodes():
+    elif "occupancy_matrix" in _safe_load(job, "output/electronic_structure").list_nodes():
         return {
-            "f_states": job.content["output/electronic_structure/occupancy_matrix"]
+            "f_states": _safe_load(job, "output/electronic_structure/occupancy_matrix")
             .flatten()
             .tolist()
         }
@@ -216,12 +217,12 @@ def get_f_states(job):
 
 
 def get_e_band(job):
-    if "occ_matrix" in job.content["output/electronic_structure"].list_nodes():
-        f_occ = job.content["output/electronic_structure/occ_matrix"].flatten()
-        ev_mat = job.content["output/electronic_structure/eig_matrix"].flatten()
-    elif "occupancy_matrix" in job.content["output/electronic_structure"].list_nodes():
-        f_occ = job.content["output/electronic_structure/occupancy_matrix"].flatten()
-        ev_mat = job.content["output/electronic_structure/eigenvalue_matrix"].flatten()
+    if "occ_matrix" in _safe_load(job, "output/electronic_structure").list_nodes():
+        f_occ = _safe_load(job, "output/electronic_structure/occ_matrix").flatten()
+        ev_mat = _safe_load(job, "output/electronic_structure/eig_matrix").flatten()
+    elif "occupancy_matrix" in _safe_load(job, "output/electronic_structure").list_nodes():
+        f_occ = _safe_load(job, "output/electronic_structure/occupancy_matrix").flatten()
+        ev_mat = _safe_load(job, "output/electronic_structure/eigenvalue_matrix").flatten()
     else:
         print("get_e_band(): ", job.job_name, job.status)
         f_occ = np.array([0.0])
@@ -231,7 +232,7 @@ def get_e_band(job):
 
 def get_equilibrium_parameters(job):
     return {
-        key: job.content["output/" + key]
+        key: _safe_load(job, "output/" + key)
         for key in [
             "equilibrium_energy",
             "equilibrium_b_prime",
@@ -268,11 +269,11 @@ def get_structure(job):
 
 
 def get_forces(job):
-    return {"forces": json.dumps(job.content["output/generic/forces"][-1].tolist())}
+    return {"forces": json.dumps(_safe_load(job, "output/generic/forces")[-1].tolist())}
 
 
 def get_magnetic_structure(job):
-    basis = Atoms().from_hdf(job.content["input"])
+    basis = Atoms().from_hdf(job.project_hdf5["input"])
     magmons = basis.get_initial_magnetic_moments()
     if all(magmons == None):
         return {"magnetic_structure": "non magnetic"}
@@ -293,8 +294,8 @@ def get_e_conv_level(job):
     return {
         "el_conv": np.max(
             np.abs(
-                job.content["output/generic/dft/scf_energy_free"][0]
-                - job.content["output/generic/dft/scf_energy_free"][0][-1]
+                _safe_load(job, "output/generic/dft/scf_energy_free")[0]
+                - _safe_load(job, "output/generic/dft/scf_energy_free")[0][-1]
             )[-10:]
         )
     }
