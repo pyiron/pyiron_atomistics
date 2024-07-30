@@ -1066,10 +1066,8 @@ class VaspBase(GenericDFTJob):
         self.input.incar["NSW"] = ionic_steps
         if algorithm is not None:
             self.set_algorithm(algorithm=algorithm)
-        if retain_charge_density:
-            self.write_charge_density = retain_charge_density
-        if retain_electrostatic_potential:
-            self.write_electrostatic_potential = retain_electrostatic_potential
+        self.write_charge_density = retain_charge_density
+        self.write_electrostatic_potential = retain_electrostatic_potential
         self.set_convergence_precision(
             ionic_force_tolerance=ionic_force_tolerance,
             ionic_energy_tolerance=ionic_energy_tolerance,
@@ -1100,10 +1098,8 @@ class VaspBase(GenericDFTJob):
         if algorithm is not None:
             if algorithm is not None:
                 self.set_algorithm(algorithm=algorithm)
-        if retain_charge_density:
-            self.write_charge_density = retain_charge_density
-        if retain_electrostatic_potential:
-            self.write_electrostatic_potential = retain_electrostatic_potential
+        self.write_charge_density = retain_charge_density
+        self.write_electrostatic_potential = retain_electrostatic_potential
 
     def calc_md(
         self,
@@ -1149,10 +1145,8 @@ class VaspBase(GenericDFTJob):
         self.input.incar["POTIM"] = time_step
         if "ISYM" not in self.input.incar.keys():
             self.input.incar["ISYM"] = 0
-        if retain_charge_density:
-            self.write_charge_density = retain_charge_density
-        if retain_electrostatic_potential:
-            self.write_electrostatic_potential = retain_electrostatic_potential
+        self.write_charge_density = retain_charge_density
+        self.write_electrostatic_potential = retain_electrostatic_potential
         for key in kwargs.keys():
             self.logger.warning("Tag {} not relevant for vasp".format(key))
 
