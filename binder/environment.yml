@@ -15,7 +15,7 @@ dependencies:
 - pint =0.24.3
 - pyiron_base =0.9.10
 - pyiron_snippets =0.1.3
-- pylammpsmpi =0.2.22
+- pylammpsmpi =0.2.23
 - pyscal3 =3.2.6
 - scikit-learn =1.5.1
 - scipy =1.14.0
@@ -23,12 +23,12 @@ dependencies:
 - spglib =2.5.0
 - structuretoolkit =0.0.27
 - pyxtal =0.6.2
-- pyiron-data >=0.0.22
-- sqsgenerator
+- pyiron-data =0.0.30
+- sqsgenerator =0.3
 - lammps =2024.06.27=*_openmpi_*
-- iprpy-data
-- gpaw
-- sphinxdft >=2.7.0
-- sphinxdft-data
-- nglview
-- seaborn
+- iprpy-data =2022.11.02
+- gpaw =24.6.0
+- sphinxdft =3.1
+- sphinxdft-data =0.0.1
+- nglview =3.1.2
+- seaborn =0.13.2
