@@ -713,10 +713,8 @@ class Outcar(object):
         for line in lines:
             if trigger in line:
                 steps += 1
-            if nblock is None and "NBLOCK" in line:
-                line = line.strip()
-                line = _clean_line(line)
-                nblock = int(nblock_regex.findall(line)[0])
+            if nblock is None and (match := nblock_regex.search(line)):
+                nblock = int(match[1])
         if nblock is None:
             nblock = 1
         return np.arange(0, steps * nblock, nblock)
