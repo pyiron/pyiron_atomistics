@@ -1015,7 +1015,7 @@ def _suppress_notfound(meth):
     def f(*args, **kwargs):
         try:
             return meth(*args, **kwargs)
-        except ValueError:
+        except (ValueError, KeyError):
             logger.warning(f"Could not access {meth.__name__}, returning None!")
             return None
 
@@ -1029,22 +1029,22 @@ class GenericOutput(object):
     @property
     @_suppress_notfound
     def cells(self):
-        return self._job.project_hdf5["output/generic/cells"]
+        return self._job.content["output/generic/cells"]
 
     @property
     @_suppress_notfound
     def energy_pot(self):
-        return self._job.project_hdf5["output/generic/energy_pot"]
+        return self._job.content["output/generic/energy_pot"]
 
     @property
     @_suppress_notfound
     def energy_tot(self):
-        return self._job.project_hdf5["output/generic/energy_tot"]
+        return self._job.content["output/generic/energy_tot"]
 
     @property
     @_suppress_notfound
     def forces(self):
-        return self._job.project_hdf5["output/generic/forces"]
+        return self._job.content["output/generic/forces"]
 
     @property
     def force_max(self):
@@ -1057,47 +1057,47 @@ class GenericOutput(object):
     @property
     @_suppress_notfound
     def positions(self):
-        return self._job.project_hdf5["output/generic/positions"]
+        return self._job.content["output/generic/positions"]
 
     @property
     @_suppress_notfound
     def pressures(self):
-        return self._job.project_hdf5["output/generic/pressures"]
+        return self._job.content["output/generic/pressures"]
 
     @property
     @_suppress_notfound
     def steps(self):
-        return self._job.project_hdf5["output/generic/steps"]
+        return self._job.content["output/generic/steps"]
 
     @property
     @_suppress_notfound
     def temperature(self):
-        return self._job.project_hdf5["output/generic/temperature"]
+        return self._job.content["output/generic/temperature"]
 
     @property
     @_suppress_notfound
     def computation_time(self):
-        return self._job.project_hdf5["output/generic/computation_time"]
+        return self._job.content["output/generic/computation_time"]
 
     @property
     def unwrapped_positions(self):
         try:
-            unwrapped_positions = self._job.project_hdf5[
+            unwrapped_positions = self._job.content[
                 "output/generic/unwrapped_positions"
             ]
             return unwrapped_positions
-        except ValueError:
+        except KeyError:
             return self._job.structure.positions + self.total_displacements
 
     @property
     @_suppress_notfound
     def volume(self):
-        return self._job.project_hdf5["output/generic/volume"]
+        return self._job.content["output/generic/volume"]
 
     @property
     @_suppress_notfound
     def indices(self):
-        return self._job.project_hdf5["output/generic/indices"]
+        return self._job.content["output/generic/indices"]
 
     @property
     def displacements(self):
@@ -1110,14 +1110,14 @@ class GenericOutput(object):
                 two snapshots (due to periodic boundary conditions)
         """
         try:
-            unwrapped_positions = self._job.project_hdf5[
+            unwrapped_positions = self._job.content[
                 "output/generic/unwrapped_positions"
             ]
             return np.diff(
                 np.append([self._job.structure.positions], unwrapped_positions, axis=0),
                 axis=0,
             )
-        except ValueError:
+        except KeyError:
             return self.get_displacements(
                 self._job.structure, self.positions, self.cells
             )
@@ -1166,16 +1166,16 @@ class GenericOutput(object):
                 two snapshots (due to periodic boundary conditions)
         """
         try:
-            unwrapped_positions = self._job.project_hdf5[
+            unwrapped_positions = self._job.content[
                 "output/generic/unwrapped_positions"
             ]
             return unwrapped_positions - self._job.structure.positions
-        except ValueError:
+        except KeyError:
             return np.cumsum(self.displacements, axis=0)
 
     def __dir__(self):
         try:
-            hdf5_path = self._job.project_hdf5["output/generic"]
+            hdf5_path = self._job.content["output/generic"]
             return hdf5_path.list_nodes()
-        except ValueError:
+        except KeyError:
             return []
