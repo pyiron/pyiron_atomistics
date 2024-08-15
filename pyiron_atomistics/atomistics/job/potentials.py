@@ -158,26 +158,20 @@ class PotentialAbstract(ABC):
         files = cls._get_resolver().search(file_name_lst)
         return pandas.concat(map(read_csv, files), ignore_index=True)
 
-    @staticmethod
+    @classmethod
     def _get_potential_default_df(
-        plugin_name,
-        file_name_lst={"potentials_vasp_pbe_default.csv"},
+            cls, file_name_lst={"potentials_vasp_pbe_default.csv"},
     ):
         """
 
         Args:
-            plugin_name (str):
             file_name_lst (set):
 
         Returns:
             pandas.DataFrame:
         """
         try:
-            file = ResourceResolver(
-                    state.settings.resource_paths,
-                    plugin_name, "potentials",
-            ).first(file_name_lst)
-            return pandas.read_csv(file, index_col=0)
+            return pandas.read_csv(cls._get_resolver().first(file_name_lst), index_col=0)
         except ResourceNotFound:
             raise ValueError("Was not able to locate the potential files.") from None
 
