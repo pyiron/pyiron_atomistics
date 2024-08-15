@@ -13,7 +13,7 @@ from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract
 )
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_snippets.resources import ResourceResolver, ResourceNotFound
+from pyiron_snippets.resources import ResourceResolver
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -66,7 +66,6 @@ class LammpsPotential(GenericParameters):
     @property
     def files(self):
         env = os.environ
-        resolver = LammpsPotentialFile._get_resolver()
         if len(self._df["Filename"].values[0]) > 0 and self._df["Filename"].values[
             0
         ] != [""]:
@@ -79,12 +78,7 @@ class LammpsPotential(GenericParameters):
                 if not os.path.isabs(files)
             ]
             for path in relative_file_paths:
-                try:
-                    absolute_file_paths.append(
-                            resolver.first(path)
-                    )
-                except ResourceNotFound:
-                    raise ValueError("Was not able to locate the potentials.") from None
+                absolute_file_paths.append(LammpsPotentialFile.find_potential_file(path))
             return absolute_file_paths
 
     def copy_pot_files(self, working_directory):
