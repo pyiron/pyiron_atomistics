@@ -257,16 +257,6 @@ class VaspPotentialSetter(object):
         return self._potential_dict.__repr__()
 
 
-def find_potential_file(path):
-    try:
-        return ResourceResolver(
-                state.settings.resource_paths,
-                "vasp", "potentials",
-        ).first(path)
-    except ResourceNotFound:
-        return None
-
-
 @deprecate(
     "use get_enmax_among_potentials and note the adjustment to the signature (*args instead of list)"
 )
@@ -333,7 +323,7 @@ def get_enmax_among_potentials(*names, return_list=False, xc="PBE"):
 
     enmax_lst = []
     for n in names:
-        with open(find_potential_file(path=_get_potcar_filename(n, xc))) as pf:
+        with open(self.vasp_potentials.find_potential_file(path=_get_potcar_filename(n, xc))) as pf:
             for i, line in enumerate(pf):
                 if i == 14:
                     encut_str = line.split()[2][:-1]
@@ -431,7 +421,7 @@ class Potcar(GenericParameters):
                 self.vasp_potentials.add_new_element(
                     parent_element=el, new_element=new_element
                 )
-                el_path = find_potential_file(
+                el_path = self.vasp_potentials.find_potential_file(
                     path=self.vasp_potentials.find_default(new_element)[
                         "Filename"
                     ].values[0][0]
@@ -446,13 +436,13 @@ class Potcar(GenericParameters):
                     self.vasp_potentials.add_new_element(
                         parent_element=el, new_element=new_element
                     )
-                    el_path = find_potential_file(
+                    el_path = self.vasp_potentials.find_potential_file(
                         path=self.vasp_potentials.find_default(new_element)[
                             "Filename"
                         ].values[0][0]
                     )
             else:
-                el_path = find_potential_file(
+                el_path = self.vasp_potentials.find_potential_file(
                     path=self.vasp_potentials.find_default(el)["Filename"].values[0][0]
                 )
 
