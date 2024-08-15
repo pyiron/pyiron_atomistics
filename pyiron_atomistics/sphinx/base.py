@@ -38,9 +38,6 @@ from pyiron_atomistics.sphinx.output_parser import (
     collect_spins_dat,
 )
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
-from pyiron_atomistics.sphinx.potential import (
-    find_potential_file as find_potential_file_jth,
-)
 from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
@@ -48,9 +45,6 @@ from pyiron_atomistics.vasp.potential import (
     VaspPotentialFile,
     VaspPotentialSetter,
     strip_xc_from_potential_name,
-)
-from pyiron_atomistics.vasp.potential import (
-    find_potential_file as find_potential_file_vasp,
 )
 
 __author__ = "Osamu Waseda, Jan Janssen"
@@ -1293,11 +1287,9 @@ class SphinxBase(GenericDFTJob):
 
         if potformat == "JTH":
             potentials = SphinxJTHPotentialFile(xc=xc)
-            find_potential_file = find_potential_file_jth
             pot_path_dict.setdefault("PBE", "jth-gga-pbe")
         elif potformat == "VASP":
             potentials = VaspPotentialFile(xc=xc)
-            find_potential_file = find_potential_file_vasp
             pot_path_dict.setdefault("PBE", "paw-gga-pbe")
             pot_path_dict.setdefault("LDA", "paw-lda")
         else:
@@ -1313,7 +1305,7 @@ class SphinxBase(GenericDFTJob):
             if "pseudo_potcar_file" in species_obj.tags.keys():
                 new_element = species_obj.tags["pseudo_potcar_file"]
                 potentials.add_new_element(parent_element=elem, new_element=new_element)
-                potential_path = find_potential_file(
+                potential_path = potentials.find_potential_file(
                     path=potentials.find_default(new_element)["Filename"].values[0][0]
                 )
                 assert os.path.isfile(
@@ -1327,14 +1319,14 @@ class SphinxBase(GenericDFTJob):
                     potentials.add_new_element(
                         parent_element=elem, new_element=new_element
                     )
-                    potential_path = find_potential_file(
+                    potential_path = potentials.find_potential_file(
                         path=potentials.find_default(new_element)["Filename"].values[0][
                             0
                         ]
                     )
             else:
                 ori_paths.append(
-                    find_potential_file(
+                    potentials.find_potential_file(
                         path=potentials.find_default(elem)["Filename"].values[0][0]
                     )
                 )

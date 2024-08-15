@@ -66,15 +66,7 @@ class LammpsPotential(GenericParameters):
     @property
     def files(self):
         env = os.environ
-        resolver = ResourceResolver(
-                    state.settings.resource_paths,
-                    "lammps", "potentials",
-        ).chain(
-            ResourceResolver(
-                [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
-                "share", "iprpy",
-            )
-        )
+        resolver = LammpsPotentialFile._get_resolver()
         if len(self._df["Filename"].values[0]) > 0 and self._df["Filename"].values[
             0
         ] != [""]:
@@ -247,10 +239,21 @@ class LammpsPotentialFile(PotentialAbstract):
         selected_atoms:
     """
 
+    resource_plugin_name = "lammps"
+
+    @classmethod
+    def _get_resolver(cls):
+        env = os.environ
+        return super()._get_resolver().chain(
+            ResourceResolver(
+                [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
+                "share", "iprpy",
+            )
+        )
+
     def __init__(self, potential_df=None, default_df=None, selected_atoms=None):
         if potential_df is None:
             potential_df = self._get_potential_df(
-                plugin_name="lammps",
                 file_name_lst={"potentials_lammps.csv"},
             )
         super(LammpsPotentialFile, self).__init__(

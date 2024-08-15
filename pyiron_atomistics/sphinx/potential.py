@@ -30,9 +30,20 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
         xc (str): Exchange correlation functional ['PBE', 'LDA']
     """
 
+    resource_plugin_name = "sphinx"
+
+    @classmethod
+    def _get_resolver(cls):
+        env = os.environ
+        return super()._get_resolver().chain(
+            ResourceResolver(
+                [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
+                "share", "sphinxdft",
+            )
+        )
+
     def __init__(self, xc=None, selected_atoms=None):
         potential_df = self._get_potential_df(
-            plugin_name="sphinx",
             file_name_lst={"potentials_sphinx.csv"},
         )
         if xc == "PBE":
@@ -73,16 +84,3 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
         ds.name = new_element
         ds["Name"] = "-".join(name_list)
         self._default_df = self._default_df.append(ds)
-
-
-def find_potential_file(path):
-    env = os.environ
-    return ResourceResolver(
-            state.settings.resource_paths,
-            "sphinx", "potentials"
-    ).chain(
-        ResourceResolver(
-            [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
-            "share", "sphinxdft",
-        )
-    ).first(path)
