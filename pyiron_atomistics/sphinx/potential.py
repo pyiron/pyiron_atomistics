@@ -7,7 +7,7 @@ import os
 import pandas
 from pyiron_base import state
 from pyiron_atomistics.vasp.potential import VaspPotentialAbstract
-from pyiron_snippets.resources import ResourceResolver, ResourceNotFound
+from pyiron_snippets.resources import ResourceResolver
 
 __author__ = "Osamu Waseda"
 __copyright__ = (

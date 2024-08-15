@@ -9,7 +9,7 @@ import numpy as np
 import pandas
 from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
-from pyiron_snippets.resources import ResourceResolver, ResourceNotFound
+from pyiron_snippets.resources import ResourceResolver
 
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
