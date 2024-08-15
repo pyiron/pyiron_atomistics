@@ -7,6 +7,7 @@ An abstract Potential class to provide an easy access for the available potentia
 OpenKim https://openkim.org database.
 """
 
+from abc import ABC, abstractmethod
 import os
 
 import pandas
@@ -25,7 +26,7 @@ __status__ = "development"
 __date__ = "Sep 1, 2017"
 
 
-class PotentialAbstract(object):
+class PotentialAbstract(ABC):
     """
     The PotentialAbstract class loads a list of available potentials and sorts them. Afterwards the potentials can be
     accessed through:
@@ -36,6 +37,14 @@ class PotentialAbstract(object):
         default_df:
         selected_atoms:
     """
+
+    @property
+    @abstractmethod
+    def resource_plugin_name(self) -> str:
+        """Return the name of the folder of this plugin/code in the pyiron resources.
+
+        One of lammps/vasp/sphinx, to be overriden in the specific sub classes."""
+        pass
 
     def __init__(self, potential_df, default_df=None, selected_atoms=None):
         self._potential_df = potential_df
@@ -104,28 +113,25 @@ class PotentialAbstract(object):
         return str(self.list())
 
     @classmethod
-    def _get_resolver(cls, plugin_name):
+    def _get_resolver(cls):
         """Return a ResourceResolver that can be searched for potential files or potential dataframes.
 
         This exists primarily so that the lammps and sphinx sub classes can overload it to add their conda package
         specific resource paths.
 
-        Args:
-            plugin_name (str): one of "lammps", "vasp", "sphinx"; i.e. the name of the resource folder to search
         Returns:
             :class:`.ResourceResolver`
         """
         return ResourceResolver(
                 state.settings.resource_paths,
-                plugin_name, "potentials",
+                cls.resource_plugin_name, "potentials",
         )
 
     @classmethod
-    def _get_potential_df(cls, plugin_name, file_name_lst):
+    def _get_potential_df(cls, file_name_lst):
         """
 
         Args:
-            plugin_name (str):
             file_name_lst (set):
 
         Returns:
@@ -149,17 +155,7 @@ class PotentialAbstract(object):
                         .split(", "),
                     },
             )
-        files = cls._get_resolver(plugin_name).chain(
-            # support iprpy-data package; data paths in the iprpy are of a different form than in
-            # pyiron resources, so we cannot add it as an additional path to the resolver above.
-            # Instead make a new resolver and chain it after the first one.
-            # TODO: this is a fix specific for lammps potentials; it could be moved to the lammps
-            # subclass
-            ResourceResolver(
-                [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
-                "share", "iprpy",
-            ),
-        ).search(file_name_lst)
+        files = cls._get_resolver().search(file_name_lst)
         return pandas.concat(map(read_csv, files), ignore_index=True)
 
     @staticmethod
@@ -185,15 +181,10 @@ class PotentialAbstract(object):
         except ResourceNotFound:
             raise ValueError("Was not able to locate the potential files.") from None
 
-def find_potential_file_base(path, resource_path_lst, rel_path):
-    try:
-        return ResourceResolver(
-                resource_path_lst,
-                rel_path,
-        ).first(path)
-    except ResourceNotFound:
-        raise ValueError(
-            "Either the filename or the functional has to be defined.",
-            path,
-            resource_path_lst,
-        ) from None
+    @classmethod
+    def find_potential_file(cls, path):
+        res = cls._get_resolver()
+        try:
+            return res.first(path)
+        except ResourceNotFound:
+            raise ValueError(f"Could not find file '{path}' in {res}!") from None

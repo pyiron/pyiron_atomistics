@@ -36,10 +36,11 @@ class VaspPotentialAbstract(PotentialAbstract):
         selected_atoms:
     """
 
+    resource_plugin_name = "vasp"
+
     def __init__(self, potential_df=None, default_df=None, selected_atoms=None):
         if potential_df is None:
             potential_df = self._get_potential_df(
-                plugin_name="vasp",
                 file_name_lst={"potentials_vasp.csv"},
             )
         super(VaspPotentialAbstract, self).__init__(
@@ -150,7 +151,6 @@ class VaspPotentialFile(VaspPotentialAbstract):
 
     def __init__(self, xc=None, selected_atoms=None):
         potential_df = self._get_potential_df(
-            plugin_name="vasp",
             file_name_lst={"potentials_vasp.csv"},
         )
         if xc == "PBE":
