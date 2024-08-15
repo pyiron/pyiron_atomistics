@@ -103,8 +103,25 @@ class PotentialAbstract(object):
     def __str__(self):
         return str(self.list())
 
-    @staticmethod
-    def _get_potential_df(plugin_name, file_name_lst):
+    @classmethod
+    def _get_resolver(cls, plugin_name):
+        """Return a ResourceResolver that can be searched for potential files or potential dataframes.
+
+        This exists primarily so that the lammps and sphinx sub classes can overload it to add their conda package
+        specific resource paths.
+
+        Args:
+            plugin_name (str): one of "lammps", "vasp", "sphinx"; i.e. the name of the resource folder to search
+        Returns:
+            :class:`.ResourceResolver`
+        """
+        return ResourceResolver(
+                state.settings.resource_paths,
+                plugin_name, "potentials",
+        )
+
+    @classmethod
+    def _get_potential_df(cls, plugin_name, file_name_lst):
         """
 
         Args:
@@ -115,7 +132,6 @@ class PotentialAbstract(object):
             pandas.DataFrame:
         """
         env = os.environ
-        resource_path_lst = state.settings.resource_paths
         def read_csv(path):
             return pandas.read_csv(
                     path,
@@ -133,10 +149,7 @@ class PotentialAbstract(object):
                         .split(", "),
                     },
             )
-        files = ResourceResolver(
-                resource_path_lst,
-                plugin_name, "potentials",
-            ).chain(
+        files = cls._get_resolver(plugin_name).chain(
             # support iprpy-data package; data paths in the iprpy are of a different form than in
             # pyiron resources, so we cannot add it as an additional path to the resolver above.
             # Instead make a new resolver and chain it after the first one.
