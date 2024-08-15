@@ -155,19 +155,16 @@ class VaspPotentialFile(VaspPotentialAbstract):
         )
         if xc == "PBE":
             default_df = self._get_potential_default_df(
-                plugin_name="vasp",
                 file_name_lst={"potentials_vasp_pbe_default.csv"},
             )
             potential_df = potential_df[(potential_df["Model"] == "gga-pbe")]
         elif xc == "GGA":
             default_df = self._get_potential_default_df(
-                plugin_name="vasp",
                 file_name_lst={"potentials_vasp_pbe_default.csv"},
             )
             potential_df = potential_df[(potential_df["Model"] == "gga-pbe")]
         elif xc == "LDA":
             default_df = self._get_potential_default_df(
-                plugin_name="vasp",
                 file_name_lst={"potentials_vasp_lda_default.csv"},
             )
             potential_df = potential_df[(potential_df["Model"] == "lda")]
