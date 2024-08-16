@@ -9,10 +9,10 @@ import numpy as np
 import pandas
 from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.resources import ResourceResolver
 
 from pyiron_atomistics.atomistics.job.potentials import (
     PotentialAbstract,
-    find_potential_file_base,
 )
 
 __author__ = "Jan Janssen"
@@ -36,10 +36,11 @@ class VaspPotentialAbstract(PotentialAbstract):
         selected_atoms:
     """
 
+    resource_plugin_name = "vasp"
+
     def __init__(self, potential_df=None, default_df=None, selected_atoms=None):
         if potential_df is None:
             potential_df = self._get_potential_df(
-                plugin_name="vasp",
                 file_name_lst={"potentials_vasp.csv"},
             )
         super(VaspPotentialAbstract, self).__init__(
@@ -121,16 +122,6 @@ class VaspPotentialAbstract(PotentialAbstract):
         else:
             return []
 
-    @staticmethod
-    def _return_potential_file(file_name):
-        for resource_path in state.settings.resource_paths:
-            resource_path_potcar = os.path.join(
-                resource_path, "vasp", "potentials", file_name
-            )
-            if os.path.exists(resource_path_potcar):
-                return resource_path_potcar
-        return None
-
     def __dir__(self):
         return [val.replace("-", "_") for val in self.list_potential_names()]
 
@@ -138,7 +129,7 @@ class VaspPotentialAbstract(PotentialAbstract):
         item_replace = item.replace("_gga_pbe", "-gga-pbe").replace("_lda", "-lda")
         if item_replace in self.list_potential_names():
             df = self.list()
-            return self._return_potential_file(
+            return return_potential_file(
                 file_name=list(df[df["Name"] == item_replace]["Filename"])[0][0]
             )
         selected_atoms = self._selected_atoms + [item]
@@ -160,24 +151,20 @@ class VaspPotentialFile(VaspPotentialAbstract):
 
     def __init__(self, xc=None, selected_atoms=None):
         potential_df = self._get_potential_df(
-            plugin_name="vasp",
             file_name_lst={"potentials_vasp.csv"},
         )
         if xc == "PBE":
             default_df = self._get_potential_default_df(
-                plugin_name="vasp",
                 file_name_lst={"potentials_vasp_pbe_default.csv"},
             )
             potential_df = potential_df[(potential_df["Model"] == "gga-pbe")]
         elif xc == "GGA":
             default_df = self._get_potential_default_df(
-                plugin_name="vasp",
                 file_name_lst={"potentials_vasp_pbe_default.csv"},
             )
             potential_df = potential_df[(potential_df["Model"] == "gga-pbe")]
         elif xc == "LDA":
             default_df = self._get_potential_default_df(
-                plugin_name="vasp",
                 file_name_lst={"potentials_vasp_lda_default.csv"},
             )
             potential_df = potential_df[(potential_df["Model"] == "lda")]
@@ -267,14 +254,6 @@ class VaspPotentialSetter(object):
         return self._potential_dict.__repr__()
 
 
-def find_potential_file(path):
-    return find_potential_file_base(
-        path=path,
-        resource_path_lst=state.settings.resource_paths,
-        rel_path=os.path.join("vasp", "potentials"),
-    )
-
-
 @deprecate(
     "use get_enmax_among_potentials and note the adjustment to the signature (*args instead of list)"
 )
@@ -341,7 +320,9 @@ def get_enmax_among_potentials(*names, return_list=False, xc="PBE"):
 
     enmax_lst = []
     for n in names:
-        with open(find_potential_file(path=_get_potcar_filename(n, xc))) as pf:
+        with open(
+            VaspPotentialFile.find_potential_file(path=_get_potcar_filename(n, xc))
+        ) as pf:
             for i, line in enumerate(pf):
                 if i == 14:
                     encut_str = line.split()[2][:-1]
@@ -439,7 +420,7 @@ class Potcar(GenericParameters):
                 self.vasp_potentials.add_new_element(
                     parent_element=el, new_element=new_element
                 )
-                el_path = find_potential_file(
+                el_path = self.vasp_potentials.find_potential_file(
                     path=self.vasp_potentials.find_default(new_element)[
                         "Filename"
                     ].values[0][0]
@@ -454,13 +435,13 @@ class Potcar(GenericParameters):
                     self.vasp_potentials.add_new_element(
                         parent_element=el, new_element=new_element
                     )
-                    el_path = find_potential_file(
+                    el_path = self.vasp_potentials.find_potential_file(
                         path=self.vasp_potentials.find_default(new_element)[
                             "Filename"
                         ].values[0][0]
                     )
             else:
-                el_path = find_potential_file(
+                el_path = self.vasp_potentials.find_potential_file(
                     path=self.vasp_potentials.find_default(el)["Filename"].values[0][0]
                 )
 
