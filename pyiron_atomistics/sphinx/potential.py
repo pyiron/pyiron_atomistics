@@ -6,8 +6,9 @@ import os
 
 import pandas
 from pyiron_base import state
-from pyiron_atomistics.vasp.potential import VaspPotentialAbstract
 from pyiron_snippets.resources import ResourceResolver
+
+from pyiron_atomistics.vasp.potential import VaspPotentialAbstract
 
 __author__ = "Osamu Waseda"
 __copyright__ = (
@@ -35,10 +36,15 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
     @classmethod
     def _get_resolver(cls):
         env = os.environ
-        return super()._get_resolver().chain(
-            ResourceResolver(
-                [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
-                "share", "sphinxdft",
+        return (
+            super()
+            ._get_resolver()
+            .chain(
+                ResourceResolver(
+                    [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
+                    "share",
+                    "sphinxdft",
+                )
             )
         )
 

@@ -7,12 +7,12 @@ An abstract Potential class to provide an easy access for the available potentia
 OpenKim https://openkim.org database.
 """
 
-from abc import ABC, abstractmethod
 import os
+from abc import ABC, abstractmethod
 
 import pandas
 from pyiron_base import state
-from pyiron_snippets.resources import ResourceResolver, ResourceNotFound
+from pyiron_snippets.resources import ResourceNotFound, ResourceResolver
 
 __author__ = "Martin Boeckmann, Jan Janssen"
 __copyright__ = (
@@ -123,8 +123,9 @@ class PotentialAbstract(ABC):
             :class:`.ResourceResolver`
         """
         return ResourceResolver(
-                state.settings.resource_paths,
-                cls.resource_plugin_name, "potentials",
+            state.settings.resource_paths,
+            cls.resource_plugin_name,
+            "potentials",
         )
 
     @classmethod
@@ -138,29 +139,28 @@ class PotentialAbstract(ABC):
             pandas.DataFrame:
         """
         env = os.environ
+
         def read_csv(path):
             return pandas.read_csv(
-                    path,
-                    index_col=0,
-                    converters={
-                        "Species": lambda x: x.replace("'", "")
-                        .strip("[]")
-                        .split(", "),
-                        "Config": lambda x: x.replace("'", "")
-                        .replace("\\n", "\n")
-                        .strip("[]")
-                        .split(", "),
-                        "Filename": lambda x: x.replace("'", "")
-                        .strip("[]")
-                        .split(", "),
-                    },
+                path,
+                index_col=0,
+                converters={
+                    "Species": lambda x: x.replace("'", "").strip("[]").split(", "),
+                    "Config": lambda x: x.replace("'", "")
+                    .replace("\\n", "\n")
+                    .strip("[]")
+                    .split(", "),
+                    "Filename": lambda x: x.replace("'", "").strip("[]").split(", "),
+                },
             )
+
         files = cls._get_resolver().search(file_name_lst)
         return pandas.concat(map(read_csv, files), ignore_index=True)
 
     @classmethod
     def _get_potential_default_df(
-            cls, file_name_lst={"potentials_vasp_pbe_default.csv"},
+        cls,
+        file_name_lst={"potentials_vasp_pbe_default.csv"},
     ):
         """
 
@@ -171,7 +171,9 @@ class PotentialAbstract(ABC):
             pandas.DataFrame:
         """
         try:
-            return pandas.read_csv(cls._get_resolver().first(file_name_lst), index_col=0)
+            return pandas.read_csv(
+                cls._get_resolver().first(file_name_lst), index_col=0
+            )
         except ResourceNotFound:
             raise ValueError("Was not able to locate the potential files.") from None
 
