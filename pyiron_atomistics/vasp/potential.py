@@ -321,7 +321,7 @@ def get_enmax_among_potentials(*names, return_list=False, xc="PBE"):
     enmax_lst = []
     for n in names:
         with open(
-            self.vasp_potentials.find_potential_file(path=_get_potcar_filename(n, xc))
+            VaspPotentialFile.find_potential_file(path=_get_potcar_filename(n, xc))
         ) as pf:
             for i, line in enumerate(pf):
                 if i == 14:
