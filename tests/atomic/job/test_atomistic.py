@@ -111,7 +111,7 @@ class TestAtomisticGenericJob(TestWithCleanProject):
             cwd,
         )
         shutil.copy(os.path.join(tests_loc, "static/lammps_test_files/export.csv"), cwd)
-        self.project.unpack("get_structure_test")
+        self.project.unpack("get_structure_test.tar.gz")
         job = self.project.load("inter_calculator")
         os.unlink("export.csv")
         os.unlink("get_structure_test.tar.gz")

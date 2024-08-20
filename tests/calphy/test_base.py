@@ -159,7 +159,7 @@ class TestCalphy(unittest.TestCase):
             os.path.join(filepath, "calphy_test_files/test_files.tar.gz"), os.getcwd()
         )
         shutil.copy(os.path.join(filepath, "calphy_test_files/export.csv"), os.getcwd())
-        self.output_project.unpack("test_files")
+        self.output_project.unpack("test_files.tar.gz")
         self.assertEqual(
             float(
                 self.output_project["calphy_unittest/solid_job"].output.spring_constant
