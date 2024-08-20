@@ -161,9 +161,7 @@ class TestCalphy(unittest.TestCase):
         shutil.copy(os.path.join(filepath, "calphy_test_files/export.csv"), os.getcwd())
         self.output_project.unpack("test_files.tar.gz")
         self.assertEqual(
-            float(
-                self.output_project["solid_job"].output.spring_constant
-            ),
+            float(self.output_project["solid_job"].output.spring_constant),
             2.33,
         )
         self.assertEqual(
@@ -175,9 +173,7 @@ class TestCalphy(unittest.TestCase):
             1100,
         )
         self.assertEqual(
-            int(
-                self.output_project["solid_job"].output.temperature[-1]
-            ),
+            int(self.output_project["solid_job"].output.temperature[-1]),
             1400,
         )
 
