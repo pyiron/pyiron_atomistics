@@ -162,21 +162,25 @@ class TestCalphy(unittest.TestCase):
         self.output_project.unpack("test_files.tar.gz")
         self.assertEqual(
             float(
-                self.output_project["calphy_unittest/solid_job"].output.spring_constant
+                self.output_project["solid_job"].output.spring_constant
             ),
             2.33,
         )
         self.assertEqual(
-            self.output_project["calphy_unittest/solid_job"].output.energy_free[0],
+            self.output_project["solid_job"].output.energy_free[0],
             -3.996174590429723,
         )
         self.assertEqual(
-            int(self.output_project["calphy_unittest/solid_job"].output.temperature[0]),
+            int(self.output_project["solid_job"].output.temperature[0]),
             1100,
         )
         self.assertEqual(
             int(
-                self.output_project["calphy_unittest/solid_job"].output.temperature[-1]
+                self.output_project["solid_job"].output.temperature[-1]
             ),
             1400,
         )
+
+
+if __name__ == "__main__":
+    unittest.main()
