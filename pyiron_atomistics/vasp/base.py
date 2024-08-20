@@ -738,13 +738,13 @@ class VaspBase(GenericDFTJob):
         job_dict["input/potential_dict"] = self._potential.to_dict()
         return job_dict
 
-    def from_dict(self, job_dict):
-        super().from_dict(job_dict=job_dict)
-        self._structure_from_dict(job_dict=job_dict)
-        self.input.from_dict(input_dict=job_dict["input"])
-        if "potential_dict" in job_dict["input"].keys():
+    def from_dict(self, obj_dict):
+        super().from_dict(obj_dict=obj_dict)
+        self._structure_from_dict(obj_dict=obj_dict)
+        self.input.from_dict(obj_dict=obj_dict["input"])
+        if "potential_dict" in obj_dict["input"].keys():
             self._potential.from_dict(
-                potential_dict=job_dict["input"]["potential_dict"]
+                obj_dict=obj_dict["input"]["potential_dict"]
             )
 
     def to_hdf(self, hdf=None, group_name=None):
@@ -1953,13 +1953,13 @@ class Input:
         input_dict.update({"potcar/" + k: v for k, v in self.potcar.to_dict().items()})
         return input_dict
 
-    def from_dict(self, input_dict):
-        self.incar.from_dict(obj_dict=input_dict["incar"])
-        self.kpoints.from_dict(obj_dict=input_dict["kpoints"])
-        self.potcar.from_dict(obj_dict=input_dict["potcar"])
+    def from_dict(self, obj_dict):
+        self.incar.from_dict(obj_dict=obj_dict["incar"])
+        self.kpoints.from_dict(obj_dict=obj_dict["kpoints"])
+        self.potcar.from_dict(obj_dict=obj_dict["potcar"])
         self._eddrmm = "ignore"
-        if "vasp_dict" in input_dict.keys():
-            vasp_dict = input_dict["vasp_dict"]
+        if "vasp_dict" in obj_dict.keys():
+            vasp_dict = obj_dict["vasp_dict"]
             if "eddrmm_handling" in vasp_dict.keys():
                 self._eddrmm = self._eddrmm_backwards_compatibility(
                     vasp_dict["eddrmm_handling"]

@@ -277,11 +277,11 @@ class ChemicalElement(object):
         hdf_el.update({"tagData/" + key: self.tags[key] for key in self.tags.keys()})
         return hdf_el
 
-    def from_dict(self, element_dict):
+    def from_dict(self, obj_dict):
         pse = PeriodicTable()
         elname = self.sub.name
-        if "elementData" in element_dict.keys():
-            element_data = element_dict["elementData"]
+        if "elementData" in obj_dict.keys():
+            element_data = obj_dict["elementData"]
             for key, val in zip(element_data["Parameter"], element_data["Value"]):
                 if key in "Parent":
                     self.sub = pse.dataframe.loc[val]
@@ -291,8 +291,8 @@ class ChemicalElement(object):
                     self.sub["Parent"] = None
                     self._element_str = elname
                 self.sub.name = elname
-        if "tagData" in element_dict.keys():
-            self.sub["tags"] = element_dict["tagData"]
+        if "tagData" in obj_dict.keys():
+            self.sub["tags"] = obj_dict["tagData"]
 
     def to_hdf(self, hdf):
         """
@@ -312,7 +312,7 @@ class ChemicalElement(object):
         """
         elname = self.sub.name
         with hdf.open(elname) as hdf_el:
-            self.from_dict(hdf_el.read_dict_from_hdf(recursive=True))
+            self.from_dict(obj_dict=hdf_el.read_dict_from_hdf(recursive=True))
 
 
 class PeriodicTable:
@@ -356,12 +356,12 @@ class PeriodicTable:
         # https://docs.python.org/release/3.11.2/library/pickle.html#object.__getstate__
         return self.__dict__
 
-    def from_dict(self, pse_dict):
-        for el, el_dict in pse_dict.items():
+    def from_dict(self, obj_dict):
+        for el, el_dict in obj_dict.items():
             sub = pandas.Series(dtype=object)
             new_element = ChemicalElement(sub)
             new_element.sub.name = el
-            new_element.from_dict(element_dict=el_dict)
+            new_element.from_dict(obj_dict=el_dict)
             new_element.sub["Abbreviation"] = el
 
             if "sub_tags" in new_element.tags:
@@ -399,7 +399,7 @@ class PeriodicTable:
         Returns:
 
         """
-        self.from_dict(hdf.read_dict_from_hdf(recursive=True))
+        self.from_dict(obj_dict=hdf.read_dict_from_hdf(recursive=True))
 
     def element(self, arg, **qwargs):
         """

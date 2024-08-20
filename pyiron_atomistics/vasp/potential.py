@@ -246,8 +246,8 @@ class VaspPotentialSetter(object):
     def to_dict(self):
         return self._potential_dict
 
-    def from_dict(self, potential_dict):
-        for key, value in potential_dict.items():
+    def from_dict(self, obj_dict):
+        for key, value in obj_dict.items():
             self._potential_dict[key] = value
 
     def __repr__(self):
