@@ -2,52 +2,50 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH -Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-import numpy as np
 import os
 import posixpath
 import stat
-from shutil import move as movefile
-import scipy.constants
-import warnings
-import spglib
 import subprocess
-from subprocess import PIPE
 import tarfile
+import warnings
+from shutil import move as movefile
+from subprocess import PIPE
 from tempfile import TemporaryDirectory
+
+import numpy as np
+import scipy.constants
+import spglib
+from pyiron_base import DataContainer, job_status_successful_lst, state
+from pyiron_snippets.deprecate import deprecate
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
-from pyiron_atomistics.vasp.potential import (
-    VaspPotentialFile,
-    strip_xc_from_potential_name,
-    find_potential_file as find_potential_file_vasp,
-    VaspPotentialSetter,
+from pyiron_atomistics.sphinx.input_writer import (
+    Group,
+    copy_potentials,
+    get_structure_group,
+    write_spin_constraints,
 )
-from pyiron_atomistics.sphinx.potential import (
-    find_potential_file as find_potential_file_jth,
-)
-from pyiron_atomistics.sphinx.structure import read_atoms
-from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.output_parser import (
     SphinxLogParser,
     collect_energy_dat,
-    collect_residue_dat,
-    collect_spins_dat,
-    collect_relaxed_hist,
     collect_energy_struct,
     collect_eps_dat,
+    collect_relaxed_hist,
+    collect_residue_dat,
+    collect_spins_dat,
 )
-from pyiron_atomistics.sphinx.input_writer import (
-    write_spin_constraints,
-    copy_potentials,
-    Group,
-    get_structure_group,
-)
+from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
+from pyiron_atomistics.sphinx.structure import read_atoms
 from pyiron_atomistics.sphinx.util import sxversions
 from pyiron_atomistics.sphinx.volumetric_data import SphinxVolumetricData
-from pyiron_base import state, DataContainer, job_status_successful_lst, deprecate
+from pyiron_atomistics.vasp.potential import (
+    VaspPotentialFile,
+    VaspPotentialSetter,
+    strip_xc_from_potential_name,
+)
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -483,10 +481,8 @@ class SphinxBase(GenericDFTJob):
                 self.input.sphinx.main[optimizer]["dF"] = str(
                     self.input["dF"] / HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
                 )
-            self.input.sphinx.main[optimizer].create_group("bornOppenheimer")
-            self.input.sphinx.main[optimizer]["bornOppenheimer"][
-                "scfDiag"
-            ] = self.get_scf_group()
+            bgroup = self.input.sphinx.main[optimizer].create_group("bornOppenheimer")
+            bgroup["scfDiag"] = self.get_scf_group()
         else:
             scf = self.input.sphinx.main.get("scfDiag", create=True)
             if self._generic_input["restart_for_band_structure"]:
@@ -495,9 +491,8 @@ class SphinxBase(GenericDFTJob):
                 scf.append(self.get_scf_group())
             if self.executable.version is not None:
                 if self.get_version_float() > 2.5:
-                    self.input.sphinx.main.create_group("evalForces")[
-                        "file"
-                    ] = '"relaxHist.sx"'
+                    efgroup = self.input.sphinx.main.create_group("evalForces")
+                    efgroup["file"] = '"relaxHist.sx"'
             else:
                 warnings.warn("executable version could not be identified")
 
@@ -612,13 +607,7 @@ class SphinxBase(GenericDFTJob):
         if "noWavesStorage" not in guess:
             guess["noWavesStorage"] = not self.input["WriteWaves"]
 
-    def calc_static(
-        self,
-        electronic_steps=100,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
-    ):
+    def calc_static(self, electronic_steps=100):
         """
         Setup the hamiltonian to perform a static SCF run.
 
@@ -626,24 +615,14 @@ class SphinxBase(GenericDFTJob):
         main Group.
 
         Args:
-            electronic_steps (float): max # of electronic steps
-            retain_electrostatic_potential:
-            retain_charge_density:
-            algorithm (str): CCG or blockCCG (not implemented)
-            electronic_steps (int): maximum number of electronic steps
-                which can be used to achieve convergence
+            electronic_steps (int): max # of electronic steps
         """
         if electronic_steps is not None:
             self.input["Estep"] = electronic_steps
         for arg in ["Istep", "dF", "dE"]:
             if arg in self.input:
                 del self.input[arg]
-        super(SphinxBase, self).calc_static(
-            electronic_steps=electronic_steps,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
-        )
+        super().calc_static(electronic_steps=electronic_steps)
         self.load_default_groups()
 
     def calc_minimize(
@@ -652,9 +631,6 @@ class SphinxBase(GenericDFTJob):
         ionic_steps=None,
         max_iter=None,
         pressure=None,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
         ionic_energy=None,
         ionic_forces=None,
         ionic_energy_tolerance=None,
@@ -676,9 +652,6 @@ class SphinxBase(GenericDFTJob):
             in an error.
 
         Args:
-            retain_electrostatic_potential:
-            retain_charge_density:
-            algorithm:
             pressure:
             max_iter:
             electronic_steps (int): maximum number of electronic steps
@@ -717,9 +690,6 @@ class SphinxBase(GenericDFTJob):
             ionic_steps=ionic_steps,
             max_iter=max_iter,
             pressure=pressure,
-            algorithm=algorithm,
-            retain_charge_density=retain_charge_density,
-            retain_electrostatic_potential=retain_electrostatic_potential,
             ionic_energy_tolerance=ionic_energy_tolerance,
             ionic_force_tolerance=ionic_force_tolerance,
             volume_only=volume_only,
@@ -727,14 +697,7 @@ class SphinxBase(GenericDFTJob):
         self.load_default_groups()
 
     def calc_md(
-        self,
-        temperature=None,
-        n_ionic_steps=1000,
-        n_print=1,
-        time_step=1.0,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
-        **kwargs,
+        self, temperature=None, n_ionic_steps=1000, n_print=1, time_step=1.0, **kwargs
     ):
         raise NotImplementedError("calc_md() not implemented in SPHInX.")
 
@@ -1324,11 +1287,9 @@ class SphinxBase(GenericDFTJob):
 
         if potformat == "JTH":
             potentials = SphinxJTHPotentialFile(xc=xc)
-            find_potential_file = find_potential_file_jth
             pot_path_dict.setdefault("PBE", "jth-gga-pbe")
         elif potformat == "VASP":
             potentials = VaspPotentialFile(xc=xc)
-            find_potential_file = find_potential_file_vasp
             pot_path_dict.setdefault("PBE", "paw-gga-pbe")
             pot_path_dict.setdefault("LDA", "paw-lda")
         else:
@@ -1344,7 +1305,7 @@ class SphinxBase(GenericDFTJob):
             if "pseudo_potcar_file" in species_obj.tags.keys():
                 new_element = species_obj.tags["pseudo_potcar_file"]
                 potentials.add_new_element(parent_element=elem, new_element=new_element)
-                potential_path = find_potential_file(
+                potential_path = potentials.find_potential_file(
                     path=potentials.find_default(new_element)["Filename"].values[0][0]
                 )
                 assert os.path.isfile(
@@ -1358,14 +1319,14 @@ class SphinxBase(GenericDFTJob):
                     potentials.add_new_element(
                         parent_element=elem, new_element=new_element
                     )
-                    potential_path = find_potential_file(
+                    potential_path = potentials.find_potential_file(
                         path=potentials.find_default(new_element)["Filename"].values[0][
                             0
                         ]
                     )
             else:
                 ori_paths.append(
-                    find_potential_file(
+                    potentials.find_potential_file(
                         path=potentials.find_default(elem)["Filename"].values[0][0]
                     )
                 )
@@ -1387,6 +1348,7 @@ class SphinxBase(GenericDFTJob):
 
         Automatically called by job.run()
         """
+        super().write_input()
 
         # If the structure group was not modified directly by the
         # user, via job.input.structure (which is likely True),
@@ -1588,11 +1550,12 @@ class SphinxBase(GenericDFTJob):
                     "Energy cut-off value wrong or not modified from default "
                     + "340 eV; change it via job.set_encut()"
                 )
-            if not (
-                isinstance(self.input.sphinx.basis["kPoint"]["coords"], np.ndarray)
-                or len(self.input.sphinx.basis["kPoint"]["coords"]) != 3
-            ):
-                warnings.warn("K point coordinates seem to be inappropriate")
+            if "kPoint" in self.input.sphinx.basis:
+                if not (
+                    isinstance(self.input.sphinx.basis["kPoint"]["coords"], np.ndarray)
+                    or len(self.input.sphinx.basis["kPoint"]["coords"]) != 3
+                ):
+                    warnings.warn("K point coordinates seem to be inappropriate")
             if (
                 not (
                     isinstance(self.input.sphinx.PAWHamiltonian["ekt"], int)
@@ -2160,9 +2123,12 @@ class Output:
             if self.charge_density.total_data is not None:
                 self.charge_density.to_hdf(hdf5_output, group_name="charge_density")
             if "bands_occ" in self.generic.dft:
-                es = self._get_electronic_structure_object()
-                if len(es.kpoint_list) > 0:
-                    es.to_hdf(hdf5_output)
+                try:
+                    es = self._get_electronic_structure_object()
+                    if len(es.kpoint_list) > 0:
+                        es.to_hdf(hdf5_output)
+                except IndexError:
+                    warnings.warn("Electronic structure parsing failed")
             with hdf5_output.open("electronic_structure") as hdf5_es:
                 if "dos" not in hdf5_es.list_groups():
                     hdf5_es.create_group("dos")

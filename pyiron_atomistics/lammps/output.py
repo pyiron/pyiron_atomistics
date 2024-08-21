@@ -1,20 +1,21 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Tuple, TYPE_CHECKING, Union
-import h5py
-from io import StringIO
-import numpy as np
 import os
-import pandas as pd
 import warnings
-from pyiron_base import extract_data_from_file
-from pyiron_atomistics.lammps.units import UnitConverter
+from dataclasses import asdict, dataclass, field
+from io import StringIO
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
+import h5py
+import numpy as np
+import pandas as pd
+from pyiron_base import extract_data_from_file
+
+from pyiron_atomistics.lammps.structure import UnfoldingPrism
+from pyiron_atomistics.lammps.units import UnitConverter
 
 if TYPE_CHECKING:
     from pyiron_atomistics.atomistics.structure.atoms import Atoms
-    from pyiron_atomistics.lammps.structure import UnfoldingPrism
 
 
 @dataclass
@@ -34,23 +35,29 @@ class DumpData:
 
 
 def parse_lammps_output(
-    dump_h5_full_file_name: str,
-    dump_out_full_file_name: str,
-    log_lammps_full_file_name: str,
-    prism: UnfoldingPrism,
+    working_directory: str,
     structure: Atoms,
     potential_elements: Union[np.ndarray, List],
     units: str,
+    prism: Optional[UnfoldingPrism] = None,
+    dump_h5_file_name: str = "dump.h5",
+    dump_out_file_name: str = "dump.out",
+    log_lammps_file_name: str = "log.lammps",
 ) -> Dict:
+    if prism is None:
+        prism = UnfoldingPrism(structure.cell)
     dump_dict = _parse_dump(
-        dump_h5_full_file_name,
-        dump_out_full_file_name,
-        prism,
-        structure,
-        potential_elements,
+        dump_h5_full_file_name=os.path.join(working_directory, dump_h5_file_name),
+        dump_out_full_file_name=os.path.join(working_directory, dump_out_file_name),
+        prism=prism,
+        structure=structure,
+        potential_elements=potential_elements,
     )
 
-    generic_keys_lst, pressure_dict, df = _parse_log(log_lammps_full_file_name, prism)
+    generic_keys_lst, pressure_dict, df = _parse_log(
+        log_lammps_full_file_name=os.path.join(working_directory, log_lammps_file_name),
+        prism=prism,
+    )
 
     convert_units = UnitConverter(units).convert_array_to_pyiron_units
 

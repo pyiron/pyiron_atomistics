@@ -6,9 +6,13 @@
 An abstract Potential class to provide an easy access for the available potentials. Currently implemented for the
 OpenKim https://openkim.org database.
 """
-import pandas
+
 import os
+from abc import ABC, abstractmethod
+
+import pandas
 from pyiron_base import state
+from pyiron_snippets.resources import ResourceNotFound, ResourceResolver
 
 __author__ = "Martin Boeckmann, Jan Janssen"
 __copyright__ = (
@@ -22,7 +26,7 @@ __status__ = "development"
 __date__ = "Sep 1, 2017"
 
 
-class PotentialAbstract(object):
+class PotentialAbstract(ABC):
     """
     The PotentialAbstract class loads a list of available potentials and sorts them. Afterwards the potentials can be
     accessed through:
@@ -33,6 +37,14 @@ class PotentialAbstract(object):
         default_df:
         selected_atoms:
     """
+
+    @property
+    @abstractmethod
+    def resource_plugin_name(self) -> str:
+        """Return the name of the folder of this plugin/code in the pyiron resources.
+
+        One of lammps/vasp/sphinx, to be overriden in the specific sub classes."""
+        pass
 
     def __init__(self, potential_df, default_df=None, selected_atoms=None):
         self._potential_df = potential_df
@@ -100,111 +112,75 @@ class PotentialAbstract(object):
     def __str__(self):
         return str(self.list())
 
-    @staticmethod
-    def _get_potential_df(plugin_name, file_name_lst, backward_compatibility_name):
+    @classmethod
+    def _get_resolver(cls):
+        """Return a ResourceResolver that can be searched for potential files or potential dataframes.
+
+        This exists primarily so that the lammps and sphinx sub classes can overload it to add their conda package
+        specific resource paths.
+
+        Returns:
+            :class:`.ResourceResolver`
+        """
+        return ResourceResolver(
+            state.settings.resource_paths,
+            cls.resource_plugin_name,
+            "potentials",
+        )
+
+    @classmethod
+    def _get_potential_df(cls, file_name_lst):
         """
 
         Args:
-            plugin_name (str):
             file_name_lst (set):
-            backward_compatibility_name (str):
 
         Returns:
             pandas.DataFrame:
         """
         env = os.environ
-        resource_path_lst = state.settings.resource_paths
-        for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
-            if conda_var in env.keys():  # support iprpy-data package
-                path_to_add = os.path.join(env[conda_var], "share", "iprpy")
-                if path_to_add not in resource_path_lst:
-                    resource_path_lst += [path_to_add]
-        df_lst = []
-        for resource_path in resource_path_lst:
-            if os.path.exists(os.path.join(resource_path, plugin_name, "potentials")):
-                resource_path = os.path.join(resource_path, plugin_name, "potentials")
-            if "potentials" in resource_path or "iprpy" in resource_path:
-                for path, folder_lst, file_lst in os.walk(resource_path):
-                    for periodic_table_file_name in file_name_lst:
-                        if (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".csv")
-                        ):
-                            df_lst.append(
-                                pandas.read_csv(
-                                    os.path.join(path, periodic_table_file_name),
-                                    index_col=0,
-                                    converters={
-                                        "Species": lambda x: x.replace("'", "")
-                                        .strip("[]")
-                                        .split(", "),
-                                        "Config": lambda x: x.replace("'", "")
-                                        .replace("\\n", "\n")
-                                        .strip("[]")
-                                        .split(", "),
-                                        "Filename": lambda x: x.replace("'", "")
-                                        .strip("[]")
-                                        .split(", "),
-                                    },
-                                )
-                            )
-        if len(df_lst) > 0:
-            return pandas.concat(df_lst)
-        else:
-            raise ValueError("Was not able to locate the potential files.")
 
-    @staticmethod
+        def read_csv(path):
+            return pandas.read_csv(
+                path,
+                index_col=0,
+                converters={
+                    "Species": lambda x: x.replace("'", "").strip("[]").split(", "),
+                    "Config": lambda x: x.replace("'", "")
+                    .replace("\\n", "\n")
+                    .strip("[]")
+                    .split(", "),
+                    "Filename": lambda x: x.replace("'", "").strip("[]").split(", "),
+                },
+            )
+
+        files = cls._get_resolver().search(file_name_lst)
+        return pandas.concat(map(read_csv, files), ignore_index=True)
+
+    @classmethod
     def _get_potential_default_df(
-        plugin_name,
+        cls,
         file_name_lst={"potentials_vasp_pbe_default.csv"},
-        backward_compatibility_name="defaultvasppbe",
     ):
         """
 
         Args:
-            plugin_name (str):
             file_name_lst (set):
-            backward_compatibility_name (str):
 
         Returns:
             pandas.DataFrame:
         """
-        for resource_path in state.settings.resource_paths:
-            pot_path = os.path.join(resource_path, plugin_name, "potentials")
-            if os.path.exists(pot_path):
-                resource_path = pot_path
-            if "potentials" in resource_path:
-                for path, folder_lst, file_lst in os.walk(resource_path):
-                    for periodic_table_file_name in file_name_lst:
-                        if (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".csv")
-                        ):
-                            return pandas.read_csv(
-                                os.path.join(path, periodic_table_file_name),
-                                index_col=0,
-                            )
-                        elif (
-                            periodic_table_file_name in file_lst
-                            and periodic_table_file_name.endswith(".h5")
-                        ):
-                            return pandas.read_hdf(
-                                os.path.join(path, periodic_table_file_name), mode="r"
-                            )
-        raise ValueError("Was not able to locate the potential files.")
+        try:
+            return pandas.read_csv(
+                cls._get_resolver().first(file_name_lst), index_col=0
+            )
+        except ResourceNotFound:
+            raise ValueError("Was not able to locate the potential files.") from None
 
-
-def find_potential_file_base(path, resource_path_lst, rel_path):
-    if path is not None:
-        for resource_path in resource_path_lst:
-            path_direct = os.path.join(resource_path, path)
-            path_indirect = os.path.join(resource_path, rel_path, path)
-            if os.path.exists(path_direct):
-                return path_direct
-            elif os.path.exists(path_indirect):
-                return path_indirect
-    raise ValueError(
-        "Either the filename or the functional has to be defined.",
-        path,
-        resource_path_lst,
-    )
+    @classmethod
+    def find_potential_file(cls, path):
+        res = cls._get_resolver()
+        try:
+            return res.first(path)
+        except ResourceNotFound:
+            raise ValueError(f"Could not find file '{path}' in {res}!") from None

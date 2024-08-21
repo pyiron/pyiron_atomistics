@@ -67,11 +67,13 @@ class TestVolumetricData(unittest.TestCase):
         n_x, n_y, n_z = (10, 15, 20)
         vd.total_data = np.random.rand(n_x, n_y, n_z)
         struct = self.structure_factory.bulk("Al")
-        cyl_avg = vd.cylindrical_average_potential(struct, spherical_center=[0, 0, 0],
-                                                   axis_of_cyl=2, rad=2, fwhm=0.529177)
+        cyl_avg = vd.cylindrical_average_potential(
+            struct, spherical_center=[0, 0, 0], axis_of_cyl=2, rad=2, fwhm=0.529177
+        )
         self.assertIsInstance(cyl_avg, float)
-        sph_avg = vd.spherical_average_potential(struct, spherical_center=[0, 0, 0],
-                                                 rad=2, fwhm=0.529177)
+        sph_avg = vd.spherical_average_potential(
+            struct, spherical_center=[0, 0, 0], rad=2, fwhm=0.529177
+        )
         self.assertIsInstance(sph_avg, float)
 
     def test_write_cube(self):

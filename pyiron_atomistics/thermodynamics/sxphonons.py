@@ -3,14 +3,17 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
+
 import os
+
 import numpy as np
 import scipy.constants
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.sphinx.base import InputWriter, Output
 from pyiron_base import GenericJob, GenericParameters, JobGenerator
+
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.sphinx.base import InputWriter, Output
 
 __author__ = "Jan Janssen"
 __copyright__ = (

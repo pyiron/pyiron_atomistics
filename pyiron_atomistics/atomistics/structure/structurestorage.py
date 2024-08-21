@@ -11,13 +11,14 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pyiron_base import FlattenedStorage
+from pyiron_snippets.import_alarm import ImportAlarm
+from structuretoolkit.common.error import SymmetryError
 
-from pyiron_base import FlattenedStorage, ImportAlarm
+import pyiron_atomistics.atomistics.structure.has_structure as pa_has_structure
 from pyiron_atomistics.atomistics.structure.atom import Atom
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from structuretoolkit.common.error import SymmetryError
 from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
-import pyiron_atomistics.atomistics.structure.has_structure as pa_has_structure
 
 with ImportAlarm(
     "Some plotting functionality requires the seaborn library."

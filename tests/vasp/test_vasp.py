@@ -26,7 +26,13 @@ class TestVasp(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        state.update({'resource_paths': os.path.join(os.path.dirname(os.path.abspath(__file__)), "../static")})
+        state.update(
+            {
+                "resource_paths": os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), "../static"
+                )
+            }
+        )
         cls.execution_path = os.path.dirname(os.path.abspath(__file__))
         cls.project = Project(os.path.join(cls.execution_path, "test_vasp"))
         cls.job = cls.project.create_job("Vasp", "trial")
@@ -45,7 +51,8 @@ class TestVasp(unittest.TestCase):
         )
         cls.job_complete.structure = read_atoms(poscar_file, species_from_potcar=True)
         poscar_file = posixpath.join(
-            cls.execution_path, "../static/vasp_test_files/poscar_samples/POSCAR_metadyn"
+            cls.execution_path,
+            "../static/vasp_test_files/poscar_samples/POSCAR_metadyn",
         )
         cls.job_metadyn.structure = read_atoms(poscar_file)
 
@@ -76,20 +83,40 @@ class TestVasp(unittest.TestCase):
 
     def test_list_potentials(self):
         self.assertRaises(ValueError, self.job.list_potentials)
-        self.assertEqual(sorted([
-            'Fe', 'Fe_GW', 'Fe_pv', 'Fe_sv', 'Fe_sv_GW', 'Se', 'Se_GW',
-            'O', 'O_GW', 'O_GW_new', 'O_h', 'O_s', 'O_s_GW'
-        ]), sorted(self.job_spin.list_potentials()))
         self.assertEqual(
-            sorted(['Fe', 'Fe_GW', 'Fe_pv', 'Fe_sv', 'Fe_sv_GW']),
-            sorted(self.job_complete.list_potentials())
+            sorted(
+                [
+                    "Fe",
+                    "Fe_GW",
+                    "Fe_pv",
+                    "Fe_sv",
+                    "Fe_sv_GW",
+                    "Se",
+                    "Se_GW",
+                    "O",
+                    "O_GW",
+                    "O_GW_new",
+                    "O_h",
+                    "O_s",
+                    "O_s_GW",
+                ]
+            ),
+            sorted(self.job_spin.list_potentials()),
         )
-        self.job_spin.potential["Fe"] = 'Fe_sv_GW'
-        self.job_complete.potential.Fe = 'Fe_sv_GW'
-        self.assertEqual('Fe_sv_GW', list(self.job_spin.potential.to_dict().values())[0])
-        self.assertEqual('Fe_sv_GW', list(self.job_complete.potential.to_dict().values())[0])
-        self.job_complete.potential["Fe"] = 'Fe'
-        self.job_spin.potential.Fe = 'Fe'
+        self.assertEqual(
+            sorted(["Fe", "Fe_GW", "Fe_pv", "Fe_sv", "Fe_sv_GW"]),
+            sorted(self.job_complete.list_potentials()),
+        )
+        self.job_spin.potential["Fe"] = "Fe_sv_GW"
+        self.job_complete.potential.Fe = "Fe_sv_GW"
+        self.assertEqual(
+            "Fe_sv_GW", list(self.job_spin.potential.to_dict().values())[0]
+        )
+        self.assertEqual(
+            "Fe_sv_GW", list(self.job_complete.potential.to_dict().values())[0]
+        )
+        self.job_complete.potential["Fe"] = "Fe"
+        self.job_spin.potential.Fe = "Fe"
 
     def test_init(self):
         self.assertEqual(self.job.__name__, "Vasp")
@@ -118,9 +145,15 @@ class TestVasp(unittest.TestCase):
         rwigs_dict_wrong_2 = {"Fe": 1.1}
 
         self.assertIsNone(self.job_spin.get_rwigs())
-        self.assertRaises(AssertionError, self.job_spin.set_rwigs, rwigs_dict="not a dict")
-        self.assertRaises(ValueError, self.job_spin.set_rwigs, rwigs_dict=rwigs_dict_wrong_1)
-        self.assertRaises(ValueError, self.job_spin.set_rwigs, rwigs_dict=rwigs_dict_wrong_2)
+        self.assertRaises(
+            AssertionError, self.job_spin.set_rwigs, rwigs_dict="not a dict"
+        )
+        self.assertRaises(
+            ValueError, self.job_spin.set_rwigs, rwigs_dict=rwigs_dict_wrong_1
+        )
+        self.assertRaises(
+            ValueError, self.job_spin.set_rwigs, rwigs_dict=rwigs_dict_wrong_2
+        )
 
         self.job_spin.set_rwigs(rwigs_dict)
         rwigs_dict_out = self.job_spin.get_rwigs()
@@ -146,7 +179,7 @@ class TestVasp(unittest.TestCase):
             lamb=0.5,
             rwigs_dict=rwigs_dict,
             direction="not a bool",
-            norm=False
+            norm=False,
         )
         self.assertRaises(
             AssertionError,
@@ -154,7 +187,7 @@ class TestVasp(unittest.TestCase):
             lamb=0.5,
             rwigs_dict=rwigs_dict,
             direction=True,
-            norm="not a bool"
+            norm="not a bool",
         )
         self.assertRaises(
             AssertionError,
@@ -162,7 +195,7 @@ class TestVasp(unittest.TestCase):
             lamb="not a float",
             rwigs_dict=rwigs_dict,
             direction=True,
-            norm=False
+            norm=False,
         )
         self.assertRaises(
             ValueError,
@@ -170,7 +203,7 @@ class TestVasp(unittest.TestCase):
             lamb=0.5,
             rwigs_dict=rwigs_dict,
             direction=False,
-            norm=False
+            norm=False,
         )
         self.assertRaises(
             ValueError,
@@ -178,17 +211,21 @@ class TestVasp(unittest.TestCase):
             lamb=0.5,
             rwigs_dict=rwigs_dict,
             direction=False,
-            norm=True
+            norm=True,
         )
 
-        self.job_spin.set_spin_constraint(lamb=0.5, rwigs_dict=rwigs_dict, direction=True, norm=False)
+        self.job_spin.set_spin_constraint(
+            lamb=0.5, rwigs_dict=rwigs_dict, direction=True, norm=False
+        )
         self.assertEqual(self.job_spin.input.incar["LAMBDA"], 0.5)
         self.assertEqual(self.job_spin.input.incar["I_CONSTRAINED_M"], 1)
         rwigs_dict_out = self.job_spin.get_rwigs()
         for key in rwigs_dict_out.keys():
             self.assertEqual(rwigs_dict_out[key], rwigs_dict[key])
 
-        self.job_spin.set_spin_constraint(lamb=0.5, rwigs_dict=rwigs_dict, direction=True, norm=True)
+        self.job_spin.set_spin_constraint(
+            lamb=0.5, rwigs_dict=rwigs_dict, direction=True, norm=True
+        )
         self.assertEqual(self.job_spin.input.incar["I_CONSTRAINED_M"], 2)
 
     def test_potential(self):
@@ -219,16 +256,17 @@ class TestVasp(unittest.TestCase):
         self.assertEqual(self.job.get_nelect(), 10)
 
     def test_write_magmoms(self):
-        magmom = np.arange(8.)
+        magmom = np.arange(8.0)
         magmom_ncl = np.zeros([8, 3])
         magmom_ncl[:, 0] = magmom / 2
         magmom_ncl[:, 1] = magmom
-        magmom_ncl[:, 2] = magmom ** 2
+        magmom_ncl[:, 2] = magmom**2
 
         magmom_str = "0.0   1.0   2.0   3.0   4.0   5.0   6.0   7.0"
-        magmom_ncl_str =\
-            "0.0 0.0 0.0   0.5 1.0 1.0   1.0 2.0 4.0   1.5 3.0 9.0   " \
+        magmom_ncl_str = (
+            "0.0 0.0 0.0   0.5 1.0 1.0   1.0 2.0 4.0   1.5 3.0 9.0   "
             "2.0 4.0 16.0   2.5 5.0 25.0   3.0 6.0 36.0   3.5 7.0 49.0"
+        )
 
         self.job.structure = CrystalStructure("Fe", BravaisBasis="bcc", a=2.83)
         self.job.structure = self.job.structure.repeat(2)
@@ -247,7 +285,9 @@ class TestVasp(unittest.TestCase):
 
         del self.job.input.incar["MAGMOM"]
         self.job.structure.set_initial_magnetic_moments(magmom_ncl)
-        self.job.set_spin_constraint(lamb=1.0, rwigs_dict={"Fe": 2.5}, direction=True, norm=True)
+        self.job.set_spin_constraint(
+            lamb=1.0, rwigs_dict={"Fe": 2.5}, direction=True, norm=True
+        )
         self.job.write_magmoms()
         self.assertEqual(self.job.input.incar["LNONCOLLINEAR"], True)
         self.assertEqual(self.job.input.incar["MAGMOM"], magmom_ncl_str)
@@ -292,7 +332,9 @@ class TestVasp(unittest.TestCase):
             job_smear.set_occupancy_smearing(smearing="Gaussian", ismear=10)
             self.assertEqual(job_smear.input.incar["ISMEAR"], 10)
             self.assertEqual(len(w), 1)
-        self.assertRaises(ValueError, job_smear.set_occupancy_smearing, smearing="gibberish")
+        self.assertRaises(
+            ValueError, job_smear.set_occupancy_smearing, smearing="gibberish"
+        )
 
     def test_calc_static(self):
         self.job.calc_static(
@@ -387,6 +429,7 @@ class TestVasp(unittest.TestCase):
             with example_job.project_hdf5.open(group_name) as h_gr:
                 self.assertTrue(h_gr.list_nodes() == [])
                 self.assertTrue(h_gr.list_groups() == [])
+
         check_group_is_empty(job_chg_den, "output")
 
         job_chg_wave = self.job_complete.restart_from_wave_and_charge(
@@ -406,32 +449,41 @@ class TestVasp(unittest.TestCase):
         check_group_is_empty(job_chg_wave, "output")
 
         job = self.job_complete.restart()
-        job.restart_file_list.append(
-            posixpath.join(file_directory, "vasprun.xml")
-        )
-        job.restart_file_list.append(
-            posixpath.join(file_directory, "OUTCAR")
-        )
+        job.restart_file_list.append(posixpath.join(file_directory, "vasprun.xml"))
+        job.restart_file_list.append(posixpath.join(file_directory, "OUTCAR"))
         job.run(run_mode="manual")
         job.status.collect = True
         job.run()
         # Check if error raised if the files don't exist
-        self.assertRaises(FileNotFoundError, job.restart_from_wave_functions, "wave_restart")
-        self.assertRaises(FileNotFoundError, job.restart_from_charge_density, "chg_restart")
-        self.assertRaises(FileNotFoundError, job.restart_from_wave_and_charge, "wave_chg_restart")
+        self.assertRaises(
+            FileNotFoundError, job.restart_from_wave_functions, "wave_restart"
+        )
+        self.assertRaises(
+            FileNotFoundError, job.restart_from_charge_density, "chg_restart"
+        )
+        self.assertRaises(
+            FileNotFoundError, job.restart_from_wave_and_charge, "wave_chg_restart"
+        )
 
     def test_vasp_metadyn(self):
-        self.job_metadyn.set_primitive_constraint("bond_1", "bond", atom_indices=[0, 2], increment=1e-4)
-        self.job_metadyn.set_primitive_constraint("bond_2", "bond", atom_indices=[0, 3], increment=1e-4)
-        self.job_metadyn.set_complex_constraint("combine", "linear_combination", {"bond_1": 1, "bond_2": -1},
-                                                increment=1e-4)
+        self.job_metadyn.set_primitive_constraint(
+            "bond_1", "bond", atom_indices=[0, 2], increment=1e-4
+        )
+        self.job_metadyn.set_primitive_constraint(
+            "bond_2", "bond", atom_indices=[0, 3], increment=1e-4
+        )
+        self.job_metadyn.set_complex_constraint(
+            "combine", "linear_combination", {"bond_1": 1, "bond_2": -1}, increment=1e-4
+        )
         self.job_metadyn.write_constraints()
         constraints = self.job_metadyn.input.iconst._dataset["Value"]
-        for val in ['R 1 6 0', 'R 1 2 0', 'S 1 -1 0']:
+        for val in ["R 1 6 0", "R 1 2 0", "S 1 -1 0"]:
             self.assertTrue(val in constraints)
 
     def test_setting_input(self):
-        self.job.set_convergence_precision(electronic_energy=1e-7, ionic_force_tolerance=0.1)
+        self.job.set_convergence_precision(
+            electronic_energy=1e-7, ionic_force_tolerance=0.1
+        )
         self.assertAlmostEqual(self.job.input.incar["EDIFF"], 1e-7)
         self.assertAlmostEqual(self.job.input.incar["EDIFFG"], -0.1)
         self.job.set_convergence_precision(ionic_force_tolerance=0.001)
@@ -439,17 +491,23 @@ class TestVasp(unittest.TestCase):
         self.job.calc_minimize()
         self.assertAlmostEqual(self.job.input.incar["EDIFFG"], -0.01)
         self.job.calc_minimize(ionic_energy_tolerance=1e-5)
-        self.assertAlmostEqual(self.job.input.incar["EDIFFG"], 1e-5,
-                         'ionic energy tolerance not set correctly by calc_minimize')
+        self.assertAlmostEqual(
+            self.job.input.incar["EDIFFG"],
+            1e-5,
+            "ionic energy tolerance not set correctly by calc_minimize",
+        )
         self.job.calc_minimize(ionic_force_tolerance=1e-3)
-        self.assertAlmostEqual(self.job.input.incar["EDIFFG"], -0.001,
-                         'ionic force tolerance not set correctly by calc_minimize')
+        self.assertAlmostEqual(
+            self.job.input.incar["EDIFFG"],
+            -0.001,
+            "ionic force tolerance not set correctly by calc_minimize",
+        )
         self.assertAlmostEqual(self.job.input.incar["EDIFF"], 1e-7)
 
     def test_mixing_parameter(self):
-        job = self.project.create_job('Vasp', 'mixing_parameter')
+        job = self.project.create_job("Vasp", "mixing_parameter")
         job.set_mixing_parameters(density_mixing_parameter=0.1)
-        self.assertEqual(job.input.incar['IMIX'], 4)
+        self.assertEqual(job.input.incar["IMIX"], 4)
         with self.assertRaises(NotImplementedError):
             job.set_mixing_parameters(density_residual_scaling=0.1)
 
@@ -457,12 +515,17 @@ class TestVasp(unittest.TestCase):
         # Assert that no warnings are raised
         with warnings.catch_warnings(record=True) as w:
             structure = self.project.create.structure.bulk("Al", cubic=True)
-            element = self.project.create.structure.element(new_element_name='Al_GW', parent_element="Al", potential_file='Al_GW')
+            element = self.project.create.structure.element(
+                new_element_name="Al_GW", parent_element="Al", potential_file="Al_GW"
+            )
             structure[:] = element
             job = self.project.create.job.Vasp("test")
             job.structure = structure
             job.run(run_mode="manual")
-            self.assertTrue(len(w) <= 1, msg=f'Expected one warnings but got {[warn.message for warn in w]}.')
+            self.assertTrue(
+                len(w) <= 1,
+                msg=f"Expected one warnings but got {[warn.message for warn in w]}.",
+            )
 
     def test_kspacing(self):
         job_kspace = self.project.create_job("Vasp", "job_kspacing")
@@ -470,11 +533,16 @@ class TestVasp(unittest.TestCase):
         job_kspace.input.incar["KSPACING"] = 0.5
         with warnings.catch_warnings(record=True) as w:
             job_kspace.run(run_mode="manual")
-            self.assertNotIn("KPOINTS", job_kspace.files.list(), "'KPOINTS' file written even when "
-                                                                 "KPACING tag is present in INCAR")
+            self.assertNotIn(
+                "KPOINTS",
+                job_kspace.files.list(),
+                "'KPOINTS' file written even when " "KPACING tag is present in INCAR",
+            )
 
             self.assertTrue(len(w) <= 2)
-            self.assertEqual(str(w[0].message), "'KSPACING' found in INCAR, no KPOINTS file written")
+            self.assertEqual(
+                str(w[0].message), "'KSPACING' found in INCAR, no KPOINTS file written"
+            )
 
 
 if __name__ == "__main__":

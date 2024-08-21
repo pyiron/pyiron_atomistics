@@ -1,0 +1,10 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.1
+    hooks:
+      - id: ruff
+        name: ruff lint
+        args: ["--select", "I", "--fix"]
+        files: ^pyiron_atomistics/
+      - id: ruff-format
+        name: ruff format

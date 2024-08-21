@@ -3,41 +3,47 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import division, print_function
-from ase.atoms import Atoms as ASEAtoms, Atom as ASEAtom
-from ase.symbols import Symbols as ASESymbols
+
 import ast
-from copy import copy
-from collections import OrderedDict
-import numpy as np
-import warnings
-import seekpath
 import importlib
+import warnings
+from collections import OrderedDict
+from collections.abc import Sequence
+from copy import copy
+
+import numpy as np
+import seekpath
+from ase.atoms import Atom as ASEAtom
+from ase.atoms import Atoms as ASEAtoms
+from ase.symbols import Symbols as ASESymbols
+from pyiron_base import state
+from pyiron_snippets.deprecate import deprecate
 from structuretoolkit.analyse import (
-    get_symmetry,
-    get_neighbors,
-    get_neighborhood,
-    get_distances_array,
     find_mic,
+    get_distances_array,
+    get_neighborhood,
+    get_neighbors,
+    get_symmetry,
 )
 from structuretoolkit.common import (
-    center_coordinates_in_unit_cell,
     ase_to_pymatgen,
+    center_coordinates_in_unit_cell,
     pymatgen_to_ase,
 )
-from structuretoolkit.visualize import plot3d
+
+from pyiron_atomistics.atomistics.structure.analyse import Analyse
 from pyiron_atomistics.atomistics.structure.atom import (
     Atom,
+)
+from pyiron_atomistics.atomistics.structure.atom import (
     ase_to_pyiron as ase_to_pyiron_atom,
 )
-from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
-from pyiron_atomistics.atomistics.structure.analyse import Analyse
 from pyiron_atomistics.atomistics.structure.periodic_table import (
-    PeriodicTable,
     ChemicalElement,
+    PeriodicTable,
     chemical_element_dict_to_hdf,
 )
-from pyiron_base import state, deprecate
-from collections.abc import Sequence
+from pyiron_atomistics.atomistics.structure.pyscal import pyiron_to_pyscal_system
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal"
 __copyright__ = (
@@ -1201,6 +1207,8 @@ class Atoms(ASEAtoms):
             * Many features only work with space-filling atoms (e.g. coloring by a scalar field).
             * The colour interpretation of some hex codes is weird, e.g. 'green'.
         """
+        from structuretoolkit.visualize import plot3d
+
         return plot3d(
             structure=pyiron_to_ase(self),
             mode=mode,

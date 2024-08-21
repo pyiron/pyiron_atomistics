@@ -5,8 +5,9 @@
 import numpy as np
 import structuretoolkit as stk
 from pyiron_base import state
+from pyiron_snippets.deprecate import Deprecator
+
 import pyiron_atomistics.atomistics.structure.atoms
-from pyiron_base import Deprecator
 
 deprecate = Deprecator()
 

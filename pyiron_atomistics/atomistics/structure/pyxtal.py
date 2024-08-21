@@ -1,12 +1,11 @@
-from typing import Union, List, Tuple
 import warnings
+from typing import List, Tuple, Union
 
 import ase.atoms
 from structuretoolkit.build import pyxtal as _pyxtal
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.structurestorage import StructureStorage
-
 
 publication = {
     "pyxtal": {

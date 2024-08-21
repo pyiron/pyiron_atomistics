@@ -2,16 +2,16 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import pandas as pd
-import shutil
 import os
-from pyiron_base import state, GenericParameters
-from pyiron_atomistics.atomistics.job.potentials import (
-    PotentialAbstract,
-    find_potential_file_base,
-)
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
+import shutil
 from typing import List
+
+import pandas as pd
+from pyiron_base import GenericParameters, state
+from pyiron_snippets.resources import ResourceResolver
+
+from pyiron_atomistics.atomistics.job.potentials import PotentialAbstract
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -64,6 +64,7 @@ class LammpsPotential(GenericParameters):
 
     @property
     def files(self):
+        env = os.environ
         if len(self._df["Filename"].values[0]) > 0 and self._df["Filename"].values[
             0
         ] != [""]:
@@ -75,27 +76,11 @@ class LammpsPotential(GenericParameters):
                 for files in list(self._df["Filename"])[0]
                 if not os.path.isabs(files)
             ]
-            env = os.environ
-            resource_path_lst = state.settings.resource_paths
-            for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
-                if conda_var in env.keys():  # support iprpy-data package
-                    path_to_add = state.settings.convert_path_to_abs_posix(
-                        os.path.join(env[conda_var], "share", "iprpy")
-                    )
-                    if path_to_add not in resource_path_lst:
-                        resource_path_lst.append(path_to_add)
             for path in relative_file_paths:
                 absolute_file_paths.append(
-                    find_potential_file_base(
-                        path=path,
-                        resource_path_lst=resource_path_lst,
-                        rel_path=os.path.join("lammps", "potentials"),
-                    )
+                    LammpsPotentialFile.find_potential_file(path)
                 )
-            if len(absolute_file_paths) != len(list(self._df["Filename"])[0]):
-                raise ValueError("Was not able to locate the potentials.")
-            else:
-                return absolute_file_paths
+            return absolute_file_paths
 
     def copy_pot_files(self, working_directory):
         if self.files is not None:
@@ -249,12 +234,27 @@ class LammpsPotentialFile(PotentialAbstract):
         selected_atoms:
     """
 
+    resource_plugin_name = "lammps"
+
+    @classmethod
+    def _get_resolver(cls):
+        env = os.environ
+        return (
+            super()
+            ._get_resolver()
+            .chain(
+                ResourceResolver(
+                    [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
+                    "share",
+                    "iprpy",
+                )
+            )
+        )
+
     def __init__(self, potential_df=None, default_df=None, selected_atoms=None):
         if potential_df is None:
             potential_df = self._get_potential_df(
-                plugin_name="lammps",
                 file_name_lst={"potentials_lammps.csv"},
-                backward_compatibility_name="lammpspotentials",
             )
         super(LammpsPotentialFile, self).__init__(
             potential_df=potential_df,

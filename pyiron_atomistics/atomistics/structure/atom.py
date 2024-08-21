@@ -3,11 +3,12 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.structure.periodic_table import (
-    PeriodicTable,
-    ChemicalElement,
-)
 from ase.atom import Atom as ASEAtom
+
+from pyiron_atomistics.atomistics.structure.periodic_table import (
+    ChemicalElement,
+    PeriodicTable,
+)
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (

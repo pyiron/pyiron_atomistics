@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
@@ -43,7 +43,7 @@ class Report(object):
             ]
             rel_lines = [lines[i] for i, line in enumerate(lines) if "cc>" in line]
             cv = np.genfromtxt(rel_lines, usecols=[2])
-            fe = cumtrapz(lam, cv)
+            fe = cumulative_trapezoid(lam, cv)
             self.parse_dict["cv_full"] = cv
             self.parse_dict["derivative"] = lam
             self.parse_dict["cv"] = cv[:-1]

@@ -2,18 +2,21 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import numpy as np
-import subprocess
 import os
-import time
 import posixpath
+import subprocess
+import time
 import warnings
-from pyiron_base import state, GenericParameters, Executable, deprecate
+
+import numpy as np
+from pyiron_base import Executable, GenericParameters, state
+from pyiron_snippets.deprecate import deprecate
+
+from pyiron_atomistics.atomistics.job.interactive import InteractiveInterface
 from pyiron_atomistics.atomistics.job.interactivewrapper import (
     InteractiveWrapper,
     ReferenceJobOutput,
 )
-from pyiron_atomistics.atomistics.job.interactive import InteractiveInterface
 from pyiron_atomistics.sphinx.base import get_structure_group
 
 __author__ = "Jan Janssen, Osamu Waseda"
@@ -100,7 +103,6 @@ class SxExtOpt(InteractiveInterface):
         selective_dynamics=False,
     ):
         if selective_dynamics:
-            structure_to_write = structure.copy()
             file_name = posixpath.join(self.working_directory, "input.sx")
             with open(file_name, "w") as f:
                 f.write(get_structure_group(structure, keep_angstrom=True).to_sphinx())
@@ -131,7 +133,7 @@ class SxExtOpt(InteractiveInterface):
                         stderr=f_err,
                         universal_newlines=True,
                     )
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             raise ValueError("run_job.py crashed")
         while not self._interactive_pipes_initialized(self.working_directory):
             time.sleep(1)
@@ -286,7 +288,7 @@ class SxExtOptInteractive(InteractiveWrapper):
         )
         self._executable_activate()
         self.input = Input()
-        self.output = SxExtOptOutput(job=self)
+        self.output = ReferenceJobOutput(job=self)
         self._interactive_interface = None
         self._interactive_number_of_steps = 0
 
@@ -347,7 +349,7 @@ class SxExtOptInteractive(InteractiveWrapper):
     def get_forces(self):
         ff = np.array(self.ref_job.output.forces[-1])
         if hasattr(self.ref_job.structure, "selective_dynamics"):
-            ff[np.array(self.ref_job.structure.selective_dynamics) == False] = 0
+            ff[~np.array(self.ref_job.structure.selective_dynamics)] = 0
             return ff
         return ff
 
@@ -395,8 +397,3 @@ class Input(GenericParameters):
             "soft_mode_damping = 1.0 // Tikhonov damper\n"
         )
         self.load_string(file_content)
-
-
-class SxExtOptOutput(ReferenceJobOutput):
-    def __init__(self, job):
-        super(SxExtOptOutput, self).__init__(job=job)

@@ -3,22 +3,28 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import copy
-import warnings
-import numpy as np
 import numbers
 import os
-from typing import Callable, Union, Tuple
-from ase.io import write as ase_write
 import posixpath
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
-from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+import warnings
+from functools import wraps
+from typing import Callable, Tuple, Union
+
+import numpy as np
+from ase.io import write as ase_write
 from pyiron_base import (
-    GenericParameters,
-    GenericMaster,
     GenericJob as GenericJobCore,
-    deprecate,
 )
+from pyiron_base import (
+    GenericMaster,
+    GenericParameters,
+)
+from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.logger import logger
+
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
+from pyiron_atomistics.atomistics.structure.neighbors import NeighborsTrajectory
 
 try:
     from pyiron_base import ProjectGUI
@@ -1004,25 +1010,41 @@ structure=atoms # atoms, continue_final
         self.load_string(file_content)
 
 
+def _suppress_notfound(meth):
+    @wraps(meth)
+    def f(*args, **kwargs):
+        try:
+            return meth(*args, **kwargs)
+        except (ValueError, KeyError):
+            logger.warning(f"Could not access {meth.__name__}, returning None!")
+            return None
+
+    return f
+
+
 class GenericOutput(object):
     def __init__(self, job):
         self._job = job
 
     @property
+    @_suppress_notfound
     def cells(self):
-        return self._job["output/generic/cells"]
+        return self._job.content["output/generic/cells"]
 
     @property
+    @_suppress_notfound
     def energy_pot(self):
-        return self._job["output/generic/energy_pot"]
+        return self._job.content["output/generic/energy_pot"]
 
     @property
+    @_suppress_notfound
     def energy_tot(self):
-        return self._job["output/generic/energy_tot"]
+        return self._job.content["output/generic/energy_tot"]
 
     @property
+    @_suppress_notfound
     def forces(self):
-        return self._job["output/generic/forces"]
+        return self._job.content["output/generic/forces"]
 
     @property
     def force_max(self):
@@ -1033,40 +1055,49 @@ class GenericOutput(object):
         return np.linalg.norm(self.forces, axis=-1).max(axis=-1)
 
     @property
+    @_suppress_notfound
     def positions(self):
-        return self._job["output/generic/positions"]
+        return self._job.content["output/generic/positions"]
 
     @property
+    @_suppress_notfound
     def pressures(self):
-        return self._job["output/generic/pressures"]
+        return self._job.content["output/generic/pressures"]
 
     @property
+    @_suppress_notfound
     def steps(self):
-        return self._job["output/generic/steps"]
+        return self._job.content["output/generic/steps"]
 
     @property
+    @_suppress_notfound
     def temperature(self):
-        return self._job["output/generic/temperature"]
+        return self._job.content["output/generic/temperature"]
 
     @property
+    @_suppress_notfound
     def computation_time(self):
-        return self._job["output/generic/computation_time"]
+        return self._job.content["output/generic/computation_time"]
 
     @property
     def unwrapped_positions(self):
-        unwrapped_positions = self._job["output/generic/unwrapped_positions"]
-        if unwrapped_positions is not None:
+        try:
+            unwrapped_positions = self._job.content[
+                "output/generic/unwrapped_positions"
+            ]
             return unwrapped_positions
-        else:
+        except KeyError:
             return self._job.structure.positions + self.total_displacements
 
     @property
+    @_suppress_notfound
     def volume(self):
-        return self._job["output/generic/volume"]
+        return self._job.content["output/generic/volume"]
 
     @property
+    @_suppress_notfound
     def indices(self):
-        return self._job["output/generic/indices"]
+        return self._job.content["output/generic/indices"]
 
     @property
     def displacements(self):
@@ -1078,13 +1109,18 @@ class GenericOutput(object):
             - there are atoms which move by more than half a box length in any direction within
                 two snapshots (due to periodic boundary conditions)
         """
-        unwrapped_positions = self._job["output/generic/unwrapped_positions"]
-        if unwrapped_positions is not None:
+        try:
+            unwrapped_positions = self._job.content[
+                "output/generic/unwrapped_positions"
+            ]
             return np.diff(
                 np.append([self._job.structure.positions], unwrapped_positions, axis=0),
                 axis=0,
             )
-        return self.get_displacements(self._job.structure, self.positions, self.cells)
+        except KeyError:
+            return self.get_displacements(
+                self._job.structure, self.positions, self.cells
+            )
 
     @staticmethod
     def get_displacements(structure, positions, cells):
@@ -1129,14 +1165,17 @@ class GenericOutput(object):
             - there are atoms which move by more than half a box length in any direction within
                 two snapshots (due to periodic boundary conditions)
         """
-        unwrapped_positions = self._job["output/generic/unwrapped_positions"]
-        if unwrapped_positions is not None:
+        try:
+            unwrapped_positions = self._job.content[
+                "output/generic/unwrapped_positions"
+            ]
             return unwrapped_positions - self._job.structure.positions
-        return np.cumsum(self.displacements, axis=0)
+        except KeyError:
+            return np.cumsum(self.displacements, axis=0)
 
     def __dir__(self):
-        hdf5_path = self._job["output/generic"]
-        if hdf5_path is not None:
+        try:
+            hdf5_path = self._job.content["output/generic"]
             return hdf5_path.list_nodes()
-        else:
+        except KeyError:
             return []

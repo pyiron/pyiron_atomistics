@@ -5,7 +5,9 @@
 """
 This module is supposed to be common for both electronic and phonon band structures
 """
+
 from __future__ import print_function
+
 import numpy as np
 from numpy import transpose as tr
 from numpy.linalg import inv, norm

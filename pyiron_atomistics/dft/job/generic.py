@@ -2,13 +2,17 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import warnings
+
 import numpy as np
+
 from pyiron_atomistics.atomistics.job.atomistic import (
     AtomisticGenericJob,
+)
+from pyiron_atomistics.atomistics.job.atomistic import (
     MapFunctions as AtomisticMapFunctions,
 )
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
-import warnings
 
 __author__ = "Jan Janssen"
 __copyright__ = (
@@ -320,13 +324,9 @@ class GenericDFTJob(AtomisticGenericJob):
 
     def calc_static(
         self,
-        electronic_steps=100,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
+        electronic_steps=60,
     ):
-        self._generic_input["fix_symmetry"] = True
-        super(GenericDFTJob, self).calc_static()
+        super().calc_static()
 
     def calc_minimize(
         self,
@@ -334,17 +334,13 @@ class GenericDFTJob(AtomisticGenericJob):
         ionic_steps=100,
         max_iter=None,
         pressure=None,
-        algorithm=None,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
         ionic_energy_tolerance=None,
         ionic_force_tolerance=None,
         ionic_energy=None,
         ionic_forces=None,
         volume_only=False,
     ):
-        self._generic_input["fix_symmetry"] = True
-        super(GenericDFTJob, self).calc_minimize(max_iter=max_iter, pressure=pressure)
+        super().calc_minimize(max_iter=max_iter, pressure=pressure)
 
     def calc_md(
         self,
@@ -352,12 +348,10 @@ class GenericDFTJob(AtomisticGenericJob):
         n_ionic_steps=1000,
         n_print=1,
         time_step=1.0,
-        retain_charge_density=False,
-        retain_electrostatic_potential=False,
         **kwargs,
     ):
         self._generic_input["fix_symmetry"] = False
-        super(GenericDFTJob, self).calc_md(
+        super().calc_md(
             temperature=temperature,
             n_ionic_steps=n_ionic_steps,
             n_print=n_print,

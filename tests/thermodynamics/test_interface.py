@@ -11,47 +11,57 @@ from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 import pyiron_atomistics
 from pyiron_base import Project
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.thermodynamics.interfacemethod import half_velocity, \
-    freeze_one_half, fix_iso, fix_z_dir, create_job_template, check_diamond
+from pyiron_atomistics.thermodynamics.interfacemethod import (
+    half_velocity,
+    freeze_one_half,
+    fix_iso,
+    fix_z_dir,
+    create_job_template,
+    check_diamond,
+)
 
 
 class TestHessianJob(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
-        cls.project = Project(
-            os.path.join(cls.file_location, "interface")
-        )
+        cls.project = Project(os.path.join(cls.file_location, "interface"))
         cls.project.remove_jobs(recursive=True, silently=True)
         cls.structure = Atoms(
             positions=[[0, 0, 0], [1, 1, 1]], elements=["Fe", "Fe"], cell=2 * np.eye(3)
         )
         cls.temperature = 500.0
         cls.cpu_cores = 2
-        potential = pandas.DataFrame({
-            'Name': ['Fe Morse'],
-            'Filename': [[]],
-            'Model': ['Morse'],
-            'Species': [['Fe']],
-            'Config': [['atom_style full\n',
-                        'pair_coeff 1 2 morse 0.019623 1.8860 3.32833\n']]
-        })
+        potential = pandas.DataFrame(
+            {
+                "Name": ["Fe Morse"],
+                "Filename": [[]],
+                "Model": ["Morse"],
+                "Species": [["Fe"]],
+                "Config": [
+                    [
+                        "atom_style full\n",
+                        "pair_coeff 1 2 morse 0.019623 1.8860 3.32833\n",
+                    ]
+                ],
+            }
+        )
         project_dict = {
             "job_type": "Lammps",
             "project": cls.project,
             "potential": potential,
-            "cpu_cores": cls.cpu_cores
+            "cpu_cores": cls.cpu_cores,
         }
         cls.job = create_job_template(
             job_name="test_fix_iso",
             structure=cls.structure,
-            project_parameter=project_dict
+            project_parameter=project_dict,
         )
         cls.job.calc_md(
             temperature=cls.temperature,
             temperature_damping_timescale=100.0,
             pressure=0.0,
-            pressure_damping_timescale=1000.0
+            pressure_damping_timescale=1000.0,
         )
 
     def test_freeze_one_half(self):
@@ -68,12 +78,16 @@ class TestHessianJob(unittest.TestCase):
         job = self.job.copy()
         md_str = job.input.control["fix___ensemble"]
         job_fixed = fix_iso(job=job)
-        self.assertEqual(job_fixed.input.control["fix___ensemble"], md_str + " couple xyz")
+        self.assertEqual(
+            job_fixed.input.control["fix___ensemble"], md_str + " couple xyz"
+        )
 
     def test_half_velocity(self):
         job = self.job.copy()
         job_half = half_velocity(job=job, temperature=self.temperature)
-        self.assertEqual(float(job_half.input.control['velocity'].split()[2]), self.temperature)
+        self.assertEqual(
+            float(job_half.input.control["velocity"].split()[2]), self.temperature
+        )
 
     def test_fix_z_dir(self):
         job = self.job.copy()
@@ -81,9 +95,15 @@ class TestHessianJob(unittest.TestCase):
             temperature=self.temperature,
             temperature_damping_timescale=100.0,
             pressure=[0.0, 0.0, 0.0],
-            pressure_damping_timescale=1000.0
+            pressure_damping_timescale=1000.0,
         )
-        md_str = "all npt temp " + str(self.temperature) + " " + str(self.temperature) + " 0.1 z 0.0 0.0 1.0"
+        md_str = (
+            "all npt temp "
+            + str(self.temperature)
+            + " "
+            + str(self.temperature)
+            + " 0.1 z 0.0 0.0 1.0"
+        )
         job_z = fix_z_dir(job=job)
         self.assertEqual(md_str, job_z.input.control["fix___ensemble"])
 

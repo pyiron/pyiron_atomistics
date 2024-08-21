@@ -2,14 +2,16 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+from collections import defaultdict
+
 import numpy as np
-from pyiron_base import state, InteractiveBase
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
+from pyiron_base import InteractiveBase, state
+
 from pyiron_atomistics.atomistics.job.atomistic import (
     AtomisticGenericJob,
     GenericOutput,
 )
-from collections import defaultdict
+from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
@@ -174,11 +176,16 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
                 del self.interactive_input_functions["cell"]
 
     def interactive_positions_organizer(self):
-        if self._generic_input["calc_mode"] != "static" or not np.allclose(
-            self._structure_current.positions,
-            self._structure_previous.positions,
-            rtol=1e-15,
-            atol=1e-15,
+        if (
+            self._generic_input["calc_mode"] != "static"
+            or len(self._structure_current.positions)
+            != len(self._structure_previous.positions)
+            or not np.allclose(
+                self._structure_current.positions,
+                self._structure_previous.positions,
+                rtol=1e-15,
+                atol=1e-15,
+            )
         ):
             self._logger.debug("Generic library: positions changed!")
             self.interactive_positions_setter(self._structure_current.positions)
@@ -190,6 +197,8 @@ class GenericInteractive(AtomisticGenericJob, InteractiveBase):
             del self.interactive_input_functions["magnetic_moments"]
         elif (
             None in self._structure_previous.get_initial_magnetic_moments()
+            or len(self._structure_current.get_initial_magnetic_moments())
+            != len(self._structure_previous.get_initial_magnetic_moments())
             or not np.allclose(
                 self._structure_current.get_initial_magnetic_moments(),
                 self._structure_previous.get_initial_magnetic_moments(),
@@ -410,7 +419,10 @@ class GenericInteractiveOutput(GenericOutput):
         Returns:
 
         """
-        fetched = self._job["output/interactive/" + key]
+        try:
+            fetched = self._job.project_hdf5["output/interactive/" + key]
+        except ValueError:
+            fetched = None
         if fetched is None or len(fetched) == 0:
             fetched = getattr(super(), key)
         return fetched

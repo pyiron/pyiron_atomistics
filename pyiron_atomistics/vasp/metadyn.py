@@ -2,13 +2,15 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-import numpy as np
-from pyiron_base import GenericParameters
-from pyiron_atomistics.vasp.vasp import Vasp
-from pyiron_atomistics.vasp.base import Input, Output
-from pyiron_atomistics.vasp.parser.report import Report
 import os
 import posixpath
+
+import numpy as np
+from pyiron_base import GenericParameters
+
+from pyiron_atomistics.vasp.base import Input, Output
+from pyiron_atomistics.vasp.parser.report import Report
+from pyiron_atomistics.vasp.vasp import Vasp
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (

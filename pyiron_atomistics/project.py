@@ -3,41 +3,47 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
+
 import os
 import posixpath
+from shutil import copyfile
 
 # import warnings
 from string import punctuation
-from shutil import copyfile
+
 from pyiron_base import (
-    ProjectHDFio,
+    Creator as CreatorCore,
+)
+from pyiron_base import (
     JobType,
     JobTypeChoice,
-    Project as ProjectCore,
-    Creator as CreatorCore,
-    deprecate,
+    ProjectHDFio,
 )
-from pyiron_base.state.logger import logger
-from pyiron_base.project.maintenance import Maintenance, LocalMaintenance
+from pyiron_base import (
+    Project as ProjectCore,
+)
+from pyiron_base.project.maintenance import LocalMaintenance, Maintenance
+from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.logger import logger
 
 try:
     from pyiron_base import ProjectGUI
 except (ImportError, TypeError, AttributeError):
     pass
+import numpy as np
+
+import pyiron_atomistics.atomistics.structure.pyironase as ase
 from pyiron_atomistics.atomistics.generic.object_type import (
     ObjectType,
     ObjectTypeChoice,
 )
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
-from pyiron_atomistics.lammps.potential import LammpsPotentialFile
-from pyiron_atomistics.vasp.potential import VaspPotential
-from pyiron_atomistics.vasp.base import _vasp_generic_energy_free_affected
-import pyiron_atomistics.atomistics.structure.pyironase as ase
+from pyiron_atomistics.atomistics.master.parallel import pipe
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from pyiron_atomistics.atomistics.master.parallel import pipe
-
-import numpy as np
+from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
+from pyiron_atomistics.lammps.potential import LammpsPotentialFile
+from pyiron_atomistics.vasp.base import _vasp_generic_energy_free_affected
+from pyiron_atomistics.vasp.potential import VaspPotential
 
 __author__ = "Joerg Neugebauer, Jan Janssen"
 __copyright__ = (

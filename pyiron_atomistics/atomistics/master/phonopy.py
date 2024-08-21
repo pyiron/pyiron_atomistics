@@ -4,22 +4,24 @@
 
 import codecs
 import pickle
+import posixpath
 from typing import Optional
 
 import numpy as np
-import posixpath
 import scipy.constants
+import structuretoolkit
 from phonopy import Phonopy
-from phonopy.units import VaspToTHz
 from phonopy.file_IO import write_FORCE_CONSTANTS
+from phonopy.units import VaspToTHz
+from pyiron_base import JobGenerator, state
+from pyiron_snippets.deprecate import deprecate
+from pyiron_snippets.import_alarm import ImportAlarm
 
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.master.parallel import AtomisticParallelMaster
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.phonopy import (
     publication as phonopy_publication,
 )
-from pyiron_base import state, JobGenerator, ImportAlarm, deprecate
-import structuretoolkit
 
 __author__ = "Jan Janssen, Yury Lysogorskiy"
 __copyright__ = (
@@ -144,6 +146,21 @@ class PhonopyJob(AtomisticParallelMaster):
             "'distance' parameter, i.e., all atoms in supercell are displaced with the same displacement distance in "
             "direct space. (Copied directly from phonopy docs. Requires the alm package to work.)",
         )
+        self.input["eigenvectors"] = (
+            False,
+            "whether or not to save the eigenvectors of the dynamical matrix at each irreducible qpoint, "
+            "which are necessary to obtain the projected DOS (which can be done with a post-processing script). "
+            "They are accessed using job.phonopy.get_mesh_dict()['eigenvectors']. WARNING: "
+            "Setting this to True can result in a very large .h5 file (~GBs) or hit memory limits. "
+            "Only set to True if you know what you are doing!",
+        )
+        self.input["tetrahedron_method"] = (
+            True,
+            "use the tetrahedron method for the BZ integration. "
+            "If set to False, the Gaussian smearing method is used. "
+            "The 'sigma' value for the smearing is determined internally by phonopy. "
+            "See https://phonopy.github.io/phonopy/setting-tags.html#sigma .",
+        )
 
         self.phonopy = None
         self._job_generator = PhonopyJobGenerator(self)
@@ -264,9 +281,14 @@ class PhonopyJob(AtomisticParallelMaster):
         self.phonopy.produce_force_constants(
             fc_calculator=None if self.input["number_of_snapshots"] is None else "alm"
         )
-        self.phonopy.run_mesh(mesh=[self.input["dos_mesh"]] * 3)
+        self.phonopy.run_mesh(
+            mesh=[self.input["dos_mesh"]] * 3,
+            with_eigenvectors=self.input["eigenvectors"],
+        )
         mesh_dict = self.phonopy.get_mesh_dict()
-        self.phonopy.run_total_dos()
+        self.phonopy.run_total_dos(
+            use_tetrahedron_method=self.input["tetrahedron_method"]
+        )
         dos_dict = self.phonopy.get_total_dos_dict()
 
         self.to_hdf()

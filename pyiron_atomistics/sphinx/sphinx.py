@@ -3,6 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import warnings
+
 from pyiron_atomistics.sphinx.interactive import SphinxInteractive
 
 __author__ = "Osamu Waseda, Jan Janssen"

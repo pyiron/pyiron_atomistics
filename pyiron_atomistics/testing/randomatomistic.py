@@ -3,14 +3,16 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 from __future__ import print_function
-import numpy as np
+
 import posixpath
-from pyiron_base import GenericParameters, GenericJob, Logstatus
+from collections import defaultdict
+
+import numpy as np
+import pint
+from pyiron_base import GenericJob, GenericParameters, Logstatus
+
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.testing.executable import ExampleExecutable
-from collections import defaultdict
-import pint
-
 
 """
 Example Job class for testing the pyiron classes

@@ -2,11 +2,12 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
-from collections import OrderedDict
-import numpy as np
-import warnings
-import scipy.constants
 import re
+import warnings
+from collections import OrderedDict
+
+import numpy as np
+import scipy.constants
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
@@ -22,6 +23,11 @@ __date__ = "Sep 1, 2017"
 KBAR_TO_EVA = (
     scipy.constants.physical_constants["joule-electron volt relationship"][0] / 1e22
 )
+
+
+# derives from ValueError, because that was the exception previously raised
+class OutcarCollectError(ValueError):
+    pass
 
 
 class Outcar(object):
@@ -52,6 +58,7 @@ class Outcar(object):
         energies_int = self.get_energy_without_entropy(filename=filename, lines=lines)
         energies_zero = self.get_energy_sigma_0(filename=filename, lines=lines)
         scf_energies = self.get_all_total_energies(filename=filename, lines=lines)
+        ediel_sol = self.get_ediel_sol(filename=filename, lines=lines)
         n_atoms = self.get_number_of_atoms(filename=filename, lines=lines)
         forces = self.get_forces(filename=filename, lines=lines, n_atoms=n_atoms)
         positions = self.get_positions(filename=filename, lines=lines, n_atoms=n_atoms)
@@ -96,6 +103,7 @@ class Outcar(object):
         self.parse_dict["energies_int"] = energies_int
         self.parse_dict["energies_zero"] = energies_zero
         self.parse_dict["scf_energies"] = scf_energies
+        self.parse_dict["ediel_sol"] = ediel_sol
         self.parse_dict["forces"] = forces
         self.parse_dict["positions"] = positions
         self.parse_dict["cells"] = cells
@@ -480,6 +488,31 @@ class Outcar(object):
         )
 
     @staticmethod
+    def get_ediel_sol(filename="OUTCAR", lines=None):
+        """
+        Gets the ediel_sol for every ionic step from the OUTCAR file
+
+        Args:
+            filename (str): Filename of the OUTCAR file to parse
+            lines (list/None): lines read from the file
+
+        Returns:
+            numpy.ndarray: A 1xM array of the total energies in $eV$
+
+            where M is the number of time steps
+        """
+
+        def get_ediel_sol_from_line(line):
+            return float(_clean_line(line.strip()).split()[-1])
+
+        trigger_indices, lines = _get_trigger(
+            lines=lines,
+            filename=filename,
+            trigger="Solvation  Ediel_sol  = ",
+        )
+        return np.array([get_ediel_sol_from_line(lines[j]) for j in trigger_indices])
+
+    @staticmethod
     def get_all_total_energies(filename="OUTCAR", lines=None):
         """
         Gets the energy at every electronic step
@@ -680,10 +713,8 @@ class Outcar(object):
         for line in lines:
             if trigger in line:
                 steps += 1
-            if nblock is None and "NBLOCK" in line:
-                line = line.strip()
-                line = _clean_line(line)
-                nblock = int(nblock_regex.findall(line)[0])
+            if nblock is None and (match := nblock_regex.search(line)):
+                nblock = int(match[1])
         if nblock is None:
             nblock = 1
         return np.arange(0, steps * nblock, nblock)
@@ -934,7 +965,9 @@ class Outcar(object):
         if len(trigger_indices) != 0:
             return int(lines[trigger_indices[0]].split(ions_trigger)[-1])
         else:
-            raise ValueError()
+            raise OutcarCollectError(
+                "Failed to read number of atoms, can't find NIONS!"
+            )
 
     @staticmethod
     def get_band_properties(filename="OUTCAR", lines=None):

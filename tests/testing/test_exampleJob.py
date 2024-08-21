@@ -34,7 +34,9 @@ class TestExampleJob(unittest.TestCase):
             self.job.run(run_again=True)
             self.assertEqual(len(w), 1)
         self.assertTrue(self.job.status.finished)
-        self.job = self.project.create_job("ExampleJob", "job_test_delete_existing_job", delete_existing_job=True)
+        self.job = self.project.create_job(
+            "ExampleJob", "job_test_delete_existing_job", delete_existing_job=True
+        )
         self.assertTrue(self.job.status.initialized)
 
     def test_input(self):
@@ -58,7 +60,7 @@ class TestExampleJob(unittest.TestCase):
             "sigma 2.4 #distance unit of lennard jones\n",
             "cutoff 4.0 #cutoff length (relative to sigma)\n",
             "write_restart True\n",
-            "read_restart False\n"
+            "read_restart False\n",
         ]
         self.assertEqual(input_lst, lines)
 

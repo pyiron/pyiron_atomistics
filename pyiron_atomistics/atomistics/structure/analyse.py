@@ -3,26 +3,25 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_atomistics.atomistics.structure.pyscal import (
-    get_steinhardt_parameter_structure,
-    analyse_cna_adaptive,
-    analyse_centro_symmetry,
-    analyse_diamond_structure,
-    analyse_voronoi_volume,
-    analyse_find_solids,
-)
+from pyiron_snippets.deprecate import deprecate
 from structuretoolkit.analyse import (
-    get_strain,
+    get_cluster_positions,
+    get_delaunay_neighbors,
     get_interstitials,
     get_layers,
-    get_voronoi_vertices,
+    get_strain,
     get_voronoi_neighbors,
-    get_delaunay_neighbors,
-    get_cluster_positions,
+    get_voronoi_vertices,
 )
-from pyiron_base import Deprecator
 
-deprecate = Deprecator()
+from pyiron_atomistics.atomistics.structure.pyscal import (
+    analyse_centro_symmetry,
+    analyse_cna_adaptive,
+    analyse_diamond_structure,
+    analyse_find_solids,
+    analyse_voronoi_volume,
+    get_steinhardt_parameter_structure,
+)
 
 __author__ = "Joerg Neugebauer, Sam Waseda"
 __copyright__ = (
@@ -53,7 +52,6 @@ class Analyse:
         min_distance=1,
         use_voronoi=False,
         variance_buffer=0.01,
-        n_iterations=2,
         eps=0.1,
     ):
         return get_interstitials(
@@ -63,7 +61,6 @@ class Analyse:
             min_distance=min_distance,
             use_voronoi=use_voronoi,
             variance_buffer=variance_buffer,
-            n_iterations=n_iterations,
             eps=eps,
         )
 

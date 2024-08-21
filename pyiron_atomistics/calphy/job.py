@@ -1,23 +1,22 @@
-import os
-import numpy as np
-from typing import Union, List, Tuple
-import pandas as pd
 import copy
+import os
+from typing import List, Tuple, Union
+
+import numpy as np
+import pandas as pd
 import yaml
 from ase.io import read
+from pyiron_base import DataContainer, GenericJob
+from pyiron_snippets.import_alarm import ImportAlarm
 
-from pyiron_base import DataContainer
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
+from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
-from pyiron_base import GenericJob, ImportAlarm
 from pyiron_atomistics.lammps.structure import (
     LammpsStructure,
     UnfoldingPrism,
     structure_to_lammps,
 )
-
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
-from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 
 calphy_version = "1.0.0"
 
@@ -25,9 +24,9 @@ with ImportAlarm(
     "Calphy functionality requires the `calphy` module (and its dependencies) specified as extra"
     "requirements. Please install it and try again."
 ) as calphy_alarm:
-    from calphy import Calculation, Solid, Liquid, Alchemy
-    from calphy.routines import routine_fe, routine_ts, routine_alchemy, routine_pscale
+    from calphy import Alchemy, Calculation, Liquid, Solid
     from calphy import __version__ as calphy_version
+    from calphy.routines import routine_alchemy, routine_fe, routine_pscale, routine_ts
     from pyscal.trajectory import Trajectory as PyscalTrajectory
 
 __author__ = "Sarath Menon"

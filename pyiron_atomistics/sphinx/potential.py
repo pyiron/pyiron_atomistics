@@ -3,12 +3,12 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import os
+
 import pandas
 from pyiron_base import state
-from pyiron_atomistics.vasp.potential import (
-    VaspPotentialAbstract,
-    find_potential_file_base,
-)
+from pyiron_snippets.resources import ResourceResolver
+
+from pyiron_atomistics.vasp.potential import VaspPotentialAbstract
 
 __author__ = "Osamu Waseda"
 __copyright__ = (
@@ -31,17 +31,30 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
         xc (str): Exchange correlation functional ['PBE', 'LDA']
     """
 
+    resource_plugin_name = "sphinx"
+
+    @classmethod
+    def _get_resolver(cls):
+        env = os.environ
+        return (
+            super()
+            ._get_resolver()
+            .chain(
+                ResourceResolver(
+                    [env[var] for var in ("CONDA_PREFIX", "CONDA_DIR") if var in env],
+                    "share",
+                    "sphinxdft",
+                )
+            )
+        )
+
     def __init__(self, xc=None, selected_atoms=None):
         potential_df = self._get_potential_df(
-            plugin_name="sphinx",
             file_name_lst={"potentials_sphinx.csv"},
-            backward_compatibility_name="sphinxpotentials",
         )
         if xc == "PBE":
             default_df = self._get_potential_default_df(
-                plugin_name="sphinx",
                 file_name_lst={"potentials_sphinx_jth_default.csv"},
-                backward_compatibility_name="defaultsphinxjth",
             )
             potential_df = potential_df[(potential_df["Model"] == "jth-gga-pbe")]
         else:
@@ -76,18 +89,3 @@ class SphinxJTHPotentialFile(VaspPotentialAbstract):
         ds.name = new_element
         ds["Name"] = "-".join(name_list)
         self._default_df = self._default_df.append(ds)
-
-
-def find_potential_file(path):
-    env = os.environ
-    resource_path_lst = state.settings.resource_paths
-    for conda_var in ["CONDA_PREFIX", "CONDA_DIR"]:
-        if conda_var in env.keys():  # support sphinx-data package
-            path_to_add = os.path.join(env[conda_var], "share", "sphinxdft")
-            if path_to_add not in resource_path_lst:
-                resource_path_lst += [path_to_add]
-    return find_potential_file_base(
-        path=path,
-        resource_path_lst=resource_path_lst,
-        rel_path=os.path.join("sphinx", "potentials"),
-    )
