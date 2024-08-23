@@ -525,10 +525,7 @@ class Atoms(ASEAtoms):
         if position_tag not in obj_dict.keys():
             position_tag = "coordinates"
         self.arrays["positions"] = obj_dict[position_tag]
-        if (
-            "is_absolute" in obj_dict.keys()
-            and not tr_dict[obj_dict["is_absolute"]]
-        ):
+        if "is_absolute" in obj_dict.keys() and not tr_dict[obj_dict["is_absolute"]]:
             self.set_scaled_positions(self.arrays["positions"])
 
         self.arrays["numbers"] = self.get_atomic_numbers()

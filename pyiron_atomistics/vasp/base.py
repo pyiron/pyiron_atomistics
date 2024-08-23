@@ -743,9 +743,7 @@ class VaspBase(GenericDFTJob):
         self._structure_from_dict(obj_dict=obj_dict)
         self.input.from_dict(obj_dict=obj_dict["input"])
         if "potential_dict" in obj_dict["input"].keys():
-            self._potential.from_dict(
-                obj_dict=obj_dict["input"]["potential_dict"]
-            )
+            self._potential.from_dict(obj_dict=obj_dict["input"]["potential_dict"])
 
     def to_hdf(self, hdf=None, group_name=None):
         """

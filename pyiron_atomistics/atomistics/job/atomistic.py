@@ -823,9 +823,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             "structure" in obj_dict["input"].keys()
             and self._generic_input["structure"] == "atoms"
         ):
-            self.structure = Atoms().from_dict(
-                obj_dict=obj_dict["input"]["structure"]
-            )
+            self.structure = Atoms().from_dict(obj_dict=obj_dict["input"]["structure"])
 
     def _structure_to_hdf(self):
         data_dict = self._structure_to_dict()
