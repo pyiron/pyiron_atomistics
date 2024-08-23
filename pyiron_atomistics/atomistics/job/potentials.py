@@ -154,8 +154,11 @@ class PotentialAbstract(ABC):
                 },
             )
 
-        files = cls._get_resolver().search(file_name_lst)
-        return pandas.concat(map(read_csv, files), ignore_index=True)
+        files = cls._get_resolver().list(file_name_lst)
+        if len(files) > 0:
+            return pandas.concat(map(read_csv, files), ignore_index=True)
+        else:
+            raise ValueError(f"Was not able to locate the potential files in {cls._get_resolver()}!")
 
     @classmethod
     def _get_potential_default_df(
