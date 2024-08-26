@@ -18,12 +18,13 @@ jobs:
         run: |
           cp .ci_support/environment.yml environment.yml
           tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
+          cat "channels:\n  - conda-forge" > .condarc
       - name: Setup Mambaforge
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: '3.12'
           miniforge-version: latest
-          miniforge-variant: Miniforge3
+          condarc-file: .condarc
           activate-environment: my-env
           environment-file: environment.yml
       - name: Test
