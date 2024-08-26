@@ -18,7 +18,7 @@ jobs:
         run: |
           cp .ci_support/environment.yml environment.yml
           tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
-          echo "channels:\n  - conda-forge\npkgs_dirs:\n  - /home/runner/conda_pkgs_dir" > .condarc
+          echo "auto_update_conda: False\nauto_activate_base: True\nnotify_outdated_conda: False\nchangeps1: False\npkgs_dirs:\n  - /home/runner/conda_pkgs_dir\nchannels:\n  - conda-forge\nalways_yes: True\nsolver: libmamba\n" > .condarc
       - name: Setup Mambaforge
         uses: conda-incubator/setup-miniconda@v3
         with:
