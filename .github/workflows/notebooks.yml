@@ -23,6 +23,7 @@ jobs:
         with:
           python-version: '3.12'
           miniforge-version: latest
+          miniforge-variant: Miniforge3
           activate-environment: my-env
           environment-file: environment.yml
       - name: Test
