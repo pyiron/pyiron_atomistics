@@ -24,7 +24,7 @@ jobs:
           python-version: '3.12'
           miniforge-variant: Mambaforge
           miniforge-version: latest
-          channels: conda-forge
+          channels: conda-forge, nodefaults
           channel-priority: strict
           activate-environment: my-env
           environment-file: environment.yml
