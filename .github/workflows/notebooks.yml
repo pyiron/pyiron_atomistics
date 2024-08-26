@@ -18,7 +18,6 @@ jobs:
         run: |
           cp .ci_support/environment.yml environment.yml
           tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
-          rm /home/runner/.condarc
       - name: Setup Mambaforge
         uses: conda-incubator/setup-miniconda@v3
         with:
