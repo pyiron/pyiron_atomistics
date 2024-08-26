@@ -23,6 +23,7 @@ jobs:
         with:
           python-version: '3.12'
           miniforge-variant: Mambaforge
+          miniforge-version: latest
           channels: conda-forge
           channel-priority: strict
           activate-environment: my-env
