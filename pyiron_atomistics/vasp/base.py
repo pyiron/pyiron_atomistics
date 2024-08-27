@@ -354,6 +354,14 @@ class VaspBase(GenericDFTJob):
             }
         }
 
+    def collect_output(self):
+        self.save_output(
+            output_dict=self._collect_output_funct(
+                working_directory=self.working_directory,
+                **self.get_output_parameter_dict(),
+            )
+        )
+
     def get_kpoints(self):
         return [int(v) for v in self.input.kpoints[3].split()]
 
@@ -705,12 +713,7 @@ class VaspBase(GenericDFTJob):
             self._write_chemical_formular_to_database()
             self._import_directory = directory
             self.status.collect = True
-            self.save_output(
-                output_dict=self._collect_output_funct(
-                    working_directory=self.working_directory,
-                    **self.get_output_parameter_dict(),
-                )
-            )
+            self.collect_output()
             self.to_hdf()
             self.status.finished = True
         else:
