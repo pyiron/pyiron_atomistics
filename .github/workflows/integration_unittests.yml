@@ -24,7 +24,7 @@ jobs:
         tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
         echo -e "channels:\n  - conda-forge\n" > .condarc
     - name: Setup Mambaforge
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         python-version: '3.12'
         miniforge-version: latest
