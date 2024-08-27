@@ -10,16 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Conda config
+      run: echo -e "channels:\n  - conda-forge\n" > .condarc
     - name: Setup Mambaforge
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         python-version: '3.10'
-        miniforge-variant: Mambaforge
-        channels: conda-forge
-        channel-priority: strict
-        activate-environment: my-env
+        miniforge-version: latest
+        condarc-file: .condarc
         environment-file: .ci_support/environment-old.yml
-        use-mamba: true
     - name: Test
       shell: bash -l {0}
       timeout-minutes: 30
