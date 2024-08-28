@@ -1890,6 +1890,9 @@ class Output:
 
     def __init__(self, job):
         self._job = job
+        self.generic = None
+        self.charge_density = None
+        self.electrostatic_potential = None
         self.clear_output_for_restart()
         self.old_version = False
 
