@@ -837,7 +837,7 @@ class SphinxBase(GenericDFTJob):
         if recreate_guess:
             new_job.load_guess_group()
 
-        new_job.output.clear_output_for_restart() # temporary fix for clearing output for restarted jobs (restarted jobs copy output of parent job)
+        new_job.output.clear_output_for_restart()  # temporary fix for clearing output for restarted jobs (restarted jobs copy output of parent job)
         return new_job
 
     def relocate_hdf5(self, h5_path=None):
@@ -2155,11 +2155,10 @@ class Output:
 
     def clear_output_for_restart(self):
         """Clears the output for restarted job. Temporary fix."""
-        self.generic = DataContainer (table_name="output/generic")
-        self.charge_density = SphinxVolumetricData ()
-        self.electrostatic_potential = SphinxVolumetricData ()
-        self.generic.create_group ("dft")
-
+        self.generic = DataContainer(table_name="output/generic")
+        self.charge_density = SphinxVolumetricData()
+        self.electrostatic_potential = SphinxVolumetricData()
+        self.generic.create_group("dft")
 
 
 def _update_datacontainer(job):
