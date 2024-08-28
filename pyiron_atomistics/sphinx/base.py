@@ -1890,6 +1890,7 @@ class Output:
 
     def __init__(self, job):
         self._job = job
+        # --- define internal variables (overwritten in clear_output_for_restart) as None to silence code linters
         self.generic = None
         self.charge_density = None
         self.electrostatic_potential = None
