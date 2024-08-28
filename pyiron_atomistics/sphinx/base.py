@@ -1890,10 +1890,7 @@ class Output:
 
     def __init__(self, job):
         self._job = job
-        self.generic = DataContainer(table_name="output/generic")
-        self.charge_density = SphinxVolumetricData()
-        self.electrostatic_potential = SphinxVolumetricData()
-        self.generic.create_group("dft")
+        self.clear_output_for_restart()
         self.old_version = False
 
     def collect_spins_dat(self, file_name="spins.dat", cwd=None):
