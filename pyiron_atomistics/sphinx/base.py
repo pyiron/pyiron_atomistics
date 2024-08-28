@@ -2154,7 +2154,9 @@ class Output:
             pass
 
     def clear_output_for_restart(self):
-        """Clears the output for restarted job. Temporary fix."""
+        """(Re)set  to a clean state."""
+        # This function is part of a temporary fix for restart jobs (see SphinxBase.restart).
+        # It could also be used when existing jobs should be reparsed (e.g. after code fixes, updates, etc.)
         self.generic = DataContainer(table_name="output/generic")
         self.charge_density = SphinxVolumetricData()
         self.electrostatic_potential = SphinxVolumetricData()
