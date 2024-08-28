@@ -837,7 +837,7 @@ class SphinxBase(GenericDFTJob):
         if recreate_guess:
             new_job.load_guess_group()
 
-        new_job.output.clear_output_for_restart()  # temporary fix for clearing output for restarted jobs (restarted jobs copy output of parent job)
+        new_job.output.clear()  # temporary fix for clearing output for restarted jobs (restarted jobs copy output of parent job)
         return new_job
 
     def relocate_hdf5(self, h5_path=None):
@@ -1894,7 +1894,7 @@ class Output:
         self.generic = None
         self.charge_density = None
         self.electrostatic_potential = None
-        self.clear_output_for_restart()
+        self.clear()
         self.old_version = False
 
     def collect_spins_dat(self, file_name="spins.dat", cwd=None):
@@ -2154,7 +2154,7 @@ class Output:
             self.old_version = True
             pass
 
-    def clear_output_for_restart(self):
+    def clear(self):
         """(Re)set  to a clean state."""
         # This function is part of a temporary fix for restart jobs (see SphinxBase.restart).
         # It could also be used when existing jobs should be reparsed (e.g. after code fixes, updates, etc.)
