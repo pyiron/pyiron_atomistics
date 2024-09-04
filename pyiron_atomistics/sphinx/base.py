@@ -1235,7 +1235,7 @@ class SphinxBase(GenericDFTJob):
             if self._spin_enabled:
                 self.input["EmptyStates"] = int(1.5 * len(self.structure) + 3)
             else:
-                self.input["EmptyStates"] = int(len(self.structure) + 3)
+                self.input["EmptyStates"] = int(0.5 * len(self.structure) + 3)
 
         if not self.input.sphinx.basis.read_only:
             self.load_basis_group()
@@ -1606,8 +1606,11 @@ class SphinxBase(GenericDFTJob):
                 else:
                     warnings.warn(
                         "Number of empty states was not specified. Default: "
-                        + "3+NIONS for non-magnetic systems"
+                        + "3+NIONS*0.5 for non-magnetic systems"
                     )
+            else:
+                if self.input["EmptyStates"] < 0.5*int(len(self.structure) + 3):
+                    warnings.warn("Number of empty states seem to be too low. Hopefully you know what you are doing.")
 
             return len(w) == 0
 
