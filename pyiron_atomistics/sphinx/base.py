@@ -1488,7 +1488,21 @@ class SphinxBase(GenericDFTJob):
         """
         # Checks if sufficient empty states are present
         if not self.nbands_convergence_check():
+            print(
+                """
+                Number of empty states might be too few.
+                Try changing to a higher number of empty states or use default values.
+                """
+            )
             return False
+        if not self.output.generic.dft.scf_convergence[-1]:
+            print(
+                """
+                scf convergence not reached. Check residue and number of steps. 
+                If residue is low, try increasing number of steps. 
+                If residue is high, decreasing rho mixing might help.
+                """
+            )
         return self.output.generic.dft.scf_convergence[-1]
 
     def collect_logfiles(self):
