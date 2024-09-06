@@ -243,7 +243,7 @@ class SphinxLogParser:
 
     @property
     def spin_enabled(self):
-        return len(re.findall("The spin for the label", self.log_file)) > 0
+        return len(re.findall("Spin moment:", self.log_file)) > 0
 
     @property
     def log_main(self):
