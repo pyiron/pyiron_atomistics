@@ -1334,6 +1334,10 @@ class VaspBase(GenericDFTJob):
         """
         n_elect = self.get_nelect()
         if n_empty_states is not None:
+            if n_empty_states < 0:
+                raise ValueError(
+                    f"Number of empty states must be a positive integer or zero, not {n_empty_states}!"
+                )
             self.input.incar["NBANDS"] = int(round(n_elect / 2)) + int(n_empty_states)
 
     def get_nelect(self):
