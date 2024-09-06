@@ -354,6 +354,14 @@ class VaspBase(GenericDFTJob):
             }
         }
 
+    def collect_output(self):
+        self.save_output(
+            output_dict=self._collect_output_funct(
+                working_directory=self.working_directory,
+                **self.get_output_parameter_dict(),
+            )
+        )
+
     def get_kpoints(self):
         return [int(v) for v in self.input.kpoints[3].split()]
 
@@ -705,12 +713,7 @@ class VaspBase(GenericDFTJob):
             self._write_chemical_formular_to_database()
             self._import_directory = directory
             self.status.collect = True
-            self.save_output(
-                output_dict=self._collect_output_funct(
-                    working_directory=self.working_directory,
-                    **self.get_output_parameter_dict(),
-                )
-            )
+            self.collect_output()
             self.to_hdf()
             self.status.finished = True
         else:
@@ -738,14 +741,12 @@ class VaspBase(GenericDFTJob):
         job_dict["input/potential_dict"] = self._potential.to_dict()
         return job_dict
 
-    def from_dict(self, job_dict):
-        super().from_dict(job_dict=job_dict)
-        self._structure_from_dict(job_dict=job_dict)
-        self.input.from_dict(input_dict=job_dict["input"])
-        if "potential_dict" in job_dict["input"].keys():
-            self._potential.from_dict(
-                potential_dict=job_dict["input"]["potential_dict"]
-            )
+    def from_dict(self, obj_dict):
+        super().from_dict(obj_dict=obj_dict)
+        self._structure_from_dict(obj_dict=obj_dict)
+        self.input.from_dict(obj_dict=obj_dict["input"])
+        if "potential_dict" in obj_dict["input"].keys():
+            self._potential.from_dict(obj_dict=obj_dict["input"]["potential_dict"])
 
     def to_hdf(self, hdf=None, group_name=None):
         """
@@ -1333,6 +1334,10 @@ class VaspBase(GenericDFTJob):
         """
         n_elect = self.get_nelect()
         if n_empty_states is not None:
+            if n_empty_states < 0:
+                raise ValueError(
+                    f"Number of empty states must be a positive integer or zero, not {n_empty_states}!"
+                )
             self.input.incar["NBANDS"] = int(round(n_elect / 2)) + int(n_empty_states)
 
     def get_nelect(self):
@@ -1953,13 +1958,13 @@ class Input:
         input_dict.update({"potcar/" + k: v for k, v in self.potcar.to_dict().items()})
         return input_dict
 
-    def from_dict(self, input_dict):
-        self.incar.from_dict(obj_dict=input_dict["incar"])
-        self.kpoints.from_dict(obj_dict=input_dict["kpoints"])
-        self.potcar.from_dict(obj_dict=input_dict["potcar"])
+    def from_dict(self, obj_dict):
+        self.incar.from_dict(obj_dict=obj_dict["incar"])
+        self.kpoints.from_dict(obj_dict=obj_dict["kpoints"])
+        self.potcar.from_dict(obj_dict=obj_dict["potcar"])
         self._eddrmm = "ignore"
-        if "vasp_dict" in input_dict.keys():
-            vasp_dict = input_dict["vasp_dict"]
+        if "vasp_dict" in obj_dict.keys():
+            vasp_dict = obj_dict["vasp_dict"]
             if "eddrmm_handling" in vasp_dict.keys():
                 self._eddrmm = self._eddrmm_backwards_compatibility(
                     vasp_dict["eddrmm_handling"]

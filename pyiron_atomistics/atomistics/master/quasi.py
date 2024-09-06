@@ -271,6 +271,6 @@ class QuasiHarmonicJob(AtomisticParallelMaster):
         )
         scalarmappaple = matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap)
         scalarmappaple.set_array(temperatures)
-        cbar = matplotlib.pyplot.colorbar(scalarmappaple)
+        cbar = matplotlib.pyplot.colorbar(scalarmappaple, ax=axis)
         cbar.set_label("Temperature")
         return axis

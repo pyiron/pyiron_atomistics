@@ -7,7 +7,7 @@ dependencies:
 - myst-parser
 - aimsgb =1.1.0
 - ase =3.23.0
-- atomistics =0.1.31
+- atomistics =0.1.32
 - defusedxml =0.7.1
 - h5py =3.11.0
 - matplotlib-base =3.9.2
@@ -17,14 +17,14 @@ dependencies:
 - pandas =2.2.2
 - phonopy =2.26.6
 - pint =0.24.3
-- pyiron_base =0.9.12
+- pyiron_base =0.10.1
 - pyiron_snippets =0.1.4
-- pylammpsmpi =0.2.23
+- pylammpsmpi =0.2.25
 - pyscal3 =3.2.7
 - scikit-learn =1.5.1
-- scipy =1.14.0
+- scipy =1.14.1
 - seekpath =2.1.0
 - spglib =2.5.0
-- structuretoolkit =0.0.27
+- structuretoolkit =0.0.28
 - pyxtal =0.6.2
 - jupyter-book =1.0.0
