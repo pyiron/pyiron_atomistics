@@ -1611,8 +1611,10 @@ class SphinxBase(GenericDFTJob):
                         + "3+NIONS*0.5 for non-magnetic systems"
                     )
             else:
-                if self.input["EmptyStates"] < 0.5*int(len(self.structure) + 3):
-                    warnings.warn("Number of empty states seem to be too low. Hopefully you know what you are doing.")
+                if self.input["EmptyStates"] < 0.5 * int(len(self.structure) + 3):
+                    warnings.warn(
+                        "Number of empty states seem to be too low. Hopefully you know what you are doing."
+                    )
 
             return len(w) == 0
 
