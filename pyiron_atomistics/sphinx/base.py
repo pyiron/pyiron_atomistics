@@ -1075,9 +1075,9 @@ class SphinxBase(GenericDFTJob):
             # will be converted later; see load_default_groups
             self.input["EmptyStates"] = "auto"
         else:
-            if n_empty_states <= 0:
+            if n_empty_states < 0:
                 raise ValueError(
-                    f"Number of empty states must be a positive integer, not {n_empty_states}!"
+                    f"Number of empty states must be a positive integer or zero, not {n_empty_states}!"
                 )
             self.input["EmptyStates"] = n_empty_states
         self.input.sphinx.PAWHamiltonian.nEmptyStates = self.input["EmptyStates"]
