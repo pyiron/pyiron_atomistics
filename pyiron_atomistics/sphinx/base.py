@@ -1498,7 +1498,7 @@ class SphinxBase(GenericDFTJob):
             print(
                 """
                 scf convergence not reached. Check residue and number of steps. 
-                If residue is low, try increasing number of steps. 
+                If residue goes down systematically, but slowly, try increasing number of steps. 
                 If residue is high, decreasing rho mixing might help.
                 """
             )
