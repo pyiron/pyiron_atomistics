@@ -1488,6 +1488,7 @@ class SphinxBase(GenericDFTJob):
         if not self.nbands_convergence_check():
             print(
                 """
+                The highest orbital is not empty (has a finite occupation).
                 Number of empty states might be too few.
                 Try changing to a higher number of empty states or use default values.
                 """
