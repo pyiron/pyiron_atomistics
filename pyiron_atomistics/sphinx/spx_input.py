@@ -13,16 +13,10 @@ def to_lower_camel_case(snake_str):
     return snake_str[0].lower() + camel_string[1:]
 
 
-def is_group(obj):
-    return isinstance(obj, dict) or (
-        isinstance(obj, list) and isinstance(obj[0], dict)
-    )
-
-
 def format_value(v, indent=0):
     if isinstance(v, bool):
         return f" = {v};".lower()
-    elif is_group(v):
+    elif isinstance(v, dict) or isinstance(v, list):
         if len(v) == 0:
             return " {}"
         else:
