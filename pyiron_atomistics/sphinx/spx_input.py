@@ -36,11 +36,12 @@ def format_value(v, indent=0):
 def to_sphinx(obj, indent=0):
     line = ""
     for k, v in obj.items():
+        current_line = indent * "\t" + k.split("___")[0]
         if isinstance(v, list):
             for vv in v:
-                line += indent * "\t" + k.split("___")[0] + format_value(vv, indent) + "\n"
+                line += current_line + format_value(vv, indent) + "\n"
         else:
-            line += indent * "\t" + k.split("___")[0] + format_value(v, indent) + "\n"
+            line += current_line + format_value(v, indent) + "\n"
     return line
 
 
@@ -55,6 +56,37 @@ def fill_values(group=None, **kwargs):
             else:
                 group[k] = v
     return group
+
+
+def get_structure_group(
+    cell: np.ndarray,
+    movable: Optional[bool] = None,
+    movable_x: Optional[bool] = None,
+    movable_y: Optional[bool] = None,
+    movable_z: Optional[bool] = None,
+    species: Optional[list] = None,
+) -> dict:
+    """
+    Args:
+        cell (np.ndarray): Cell matrix
+        movable (bool): Allow atoms to move. Default: all atoms are movable,
+            unless any movable tag is used for any species/atom.
+        movable_x (bool): Allow atoms to move in the x direction.
+            Default: movable, unless movableY or movableZ are used.
+        movable_y (bool): Allow atoms to move in the y direction.
+            Default: movable, unless movableX or movableZ are used.
+        movable_z (bool): Allow atoms to move in the z direction.
+            Default: movable, unless movableX or movableY are used.
+        species (list): Species
+    """
+    return fill_values(
+        cell=cell,
+        movable=movable,
+        movableX=movable_x,
+        movableY=movable_y,
+        movableZ=movable_z,
+        species=species,
+    )
 
 
 def get_CCG_group(
