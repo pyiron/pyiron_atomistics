@@ -83,6 +83,78 @@ def get_structure_group(
     )
 
 
+def get_species_group(
+    element: str,
+    atom: Optional[dict] = None,
+) -> dict:
+    """
+    Args:
+        element (str): Element
+        atom (list): Atom
+    """
+    return fill_values(element=element, atom=atom)
+
+
+def get_atom_group(
+    coords: np.ndarray,
+    relative: Optional[bool] = None,
+    movable_line: Optional[list] = None,
+    label: Optional[str] = None,
+) -> dict:
+    """
+    Args:
+        coords (np.ndarray): The atomic coordinates as a 3-vector. Un- less the
+            relative tag is employed, the coordinates are Cartesian (in bohr)
+        relative (bool): The coordinates are given relative to the unit cell vectors.
+        movable_line (list): The movement of the atom is restricted to a line.
+            The value gives the direction of the line as a 3-vector.
+        label (str): Assign a label (or rather a tag) to this atom. If labels
+            are used, atoms with different labels are considered inequivalent.
+            Think of spin congurations for a use-case.
+    """
+    return fill_values(coords=coords, relative=relative, movableLine=movable_line, label=label)
+
+
+def get_symmetry_group(
+    operator: dict
+) -> dict:
+    """
+    Args:
+        operator (np.ndarray): Symmetry operator
+    """
+    return fill_values(operator=operator)
+
+
+def get_basis_group(
+    e_cut: float,
+    g_cut: Optional[float] = None,
+    folding: Optional[int] = None,
+    mesh: Optional[list] = None,
+    mesh_accuracy: Optional[float] = None,
+    save_memory: Optional[bool] = None,
+    k_points: Optional[dict] = None,
+) -> dict:
+    """
+    Args:
+        e_cut (float): Energy cutoff
+        g_cut (float): Gradient cutoff
+        folding (int): Folding
+        mesh (list): Mesh
+        mesh_accuracy (float): Mesh accuracy
+        save_memory (bool): Save memory
+        k_points (dict): K points
+    """
+    return fill_values(
+        eCut=e_cut,
+        gCut=g_cut,
+        folding=folding,
+        mesh=mesh,
+        meshAccuracy=mesh_accuracy,
+        saveMemory=save_memory,
+        kPoints=k_points,
+    )
+
+
 def get_CCG_group(
     d_energy: Optional[float] = None,
     max_steps: Optional[int] = None,
@@ -95,7 +167,7 @@ def get_CCG_group(
     dipole_correction: Optional[bool] = None,
     no_rho_storage: Optional[bool] = None,
     no_wave_storage: Optional[bool] = None,
-):
+) -> dict:
     """
     Args:
         d_energy (float): Energy convergence criterion
@@ -129,7 +201,7 @@ def get_scf_CCG_group(
     d_rel_eps: Optional[float] = None,
     max_steps_CCG: Optional[int] = None,
     d_energy: Optional[float] = None,
-):
+) -> dict:
     """
     Args:
         d_rel_eps (float): Relative energy convergence criterion
@@ -151,7 +223,7 @@ def get_scf_block_CCG_group(
     d_energy: Optional[float] = None,
     verbose: Optional[bool] = None,
     numerical_limit: Optional[bool] = None,
-):
+) -> dict:
     """
     Args:
         d_rel_eps (float): Relative energy convergence criterion
@@ -179,7 +251,7 @@ def get_preconditioner_group(
     spin_scaling: Optional[float] = None,
     kerker_camping: Optional[float] = None,
     dielec_constant: Optional[float] = None,
-):
+) -> dict:
     return fill_values(
         type=type,
         scaling=scaling,
@@ -209,7 +281,7 @@ def get_scf_diag_group(
     CCG: Optional[dict] = None,
     block_CCG: Optional[dict] = None,
     preconditioner: Optional[dict] = None,
-):
+) -> dict:
     """
     Args:
         d_energy (float): Energy convergence criterion
@@ -257,7 +329,7 @@ def get_scf_diag_group(
 
 def get_born_oppenheimer_group(
     scf_diag: Optional[dict] = None,
-):
+) -> dict:
     """
     Args:
         scf_diag (dict): SCF diagonalization
@@ -274,7 +346,7 @@ def get_QN_group(
     hessian: Optional[str] = None,
     drift_filter: Optional[bool] = None,
     born_oppenheimer: Optional[dict] = None,
-):
+) -> dict:
     """
     Args:
         max_steps (int): Maximum number of steps
@@ -308,7 +380,7 @@ def get_linQN_group(
     hessian: Optional[str] = None,
     drift_filter: Optional[bool] = None,
     born_oppenheimer: Optional[dict] = None,
-):
+) -> dict:
     """
     Args:
         max_steps (int): Maximum number of steps
@@ -344,7 +416,7 @@ def get_ricQN_group(
     soft_mode_damping: Optional[float] = None,
     drift_filter: Optional[bool] = None,
     born_oppenheimer: Optional[dict] = None,
-):
+) -> dict:
     """
     Args:
         max_steps (int): Maximum number of steps
@@ -378,7 +450,7 @@ def get_ric_group(
     with_angles: Optional[bool] = None,
     bvk_atoms: Optional[str] = None,
     born_oppenheimer: Optional[dict] = None,
-):
+) -> dict:
     """
     Args:
         max_dist (float): Maximum distance
@@ -417,7 +489,7 @@ def get_ricTS_group(
     scheme: Optional[int] = None,
     drift_filter: Optional[bool] = None,
     born_oppenheimer: Optional[dict] = None,
-):
+) -> dict:
     """
     Args:
         max_steps (int): Maximum number of steps
