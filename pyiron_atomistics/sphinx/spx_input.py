@@ -142,7 +142,7 @@ def get_basis_group(
         mesh (list): Mesh
         mesh_accuracy (float): Mesh accuracy
         save_memory (bool): Save memory
-        k_points (dict): K points
+        k_point (dict): K point
     """
     return fill_values(
         eCut=e_cut,
@@ -151,8 +151,23 @@ def get_basis_group(
         mesh=mesh,
         meshAccuracy=mesh_accuracy,
         saveMemory=save_memory,
-        kPoints=k_points,
+        kPoint=k_point,
     )
+
+
+def get_k_point_group(
+    coords: np.ndarray,
+    relative: Optional[bool] = None,
+    weight: Optional[float] = None,
+) -> dict:
+    """
+    Args:
+        coords (np.ndarray): The k-point coordinates as a 3-vector. Unless the
+            relative tag is employed, the coordinates are Cartesian.
+        relative (bool): The coordinates are given relative to the unit cell vectors.
+        weight (float): The weight of the k-point in the sampling.
+    """
+    return fill_values(coords=coords, relative=relative, weight=weight)
 
 
 def get_CCG_group(
