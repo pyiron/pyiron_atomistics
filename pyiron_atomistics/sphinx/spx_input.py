@@ -2,17 +2,6 @@ import numpy as np
 from typing import Optional
 
 
-def to_camel_case(snake_str):
-    return "".join(x.capitalize() for x in snake_str.lower().split("_"))
-
-
-def to_lower_camel_case(snake_str):
-    # We capitalize the first letter of each component except the first one
-    # with the 'capitalize' method and join them together.
-    camel_string = to_camel_case(snake_str)
-    return snake_str[0].lower() + camel_string[1:]
-
-
 def format_value(v, indent=0):
     if isinstance(v, bool):
         return f" = {v};".lower()
@@ -703,6 +692,105 @@ def get_exchange_group(file: str) -> dict:
         file (str): Read exchange from this file.
     """
     return fill_values(file=file)
+
+
+def get_pseudo_pot_group(species: dict) -> dict:
+    """
+    Args:
+        species (dict): Species
+    """
+    return fill_values(species=species)
+
+
+def get_pseudo_pot_species_group(
+    name: str,
+    potential: str,
+    valence_charge: float,
+    l_max: str,
+    l_loc: str,
+    lcao_orbitals: list,
+    r_gauss: float,
+    reciprocal_mass: float,
+    damping_mass: float,
+    ionic_mass: float,
+    element: Optional[str] = None,
+) -> dict:
+    """
+    Args:
+        name (str): The name of the species
+        potential (str): The potential file
+        valence_charge (float): The valence charge
+        l_max (str): The maximum l value
+        l_loc (str): The l value for the local part
+        lcao_orbitals (list): The LCAO orbitals
+        r_gauss (float): The Gaussian radius
+        reciprocal_mass (float): The reciprocal mass
+        damping_mass (float): The damping mass
+        ionic_mass (float): The ionic mass
+        element (str): The element
+    """
+    return fill_values(
+        name=name,
+        potential=potential,
+        valenceCharge=valence_charge,
+        lMax=l_max,
+        lLoc=l_loc,
+        lcaoOrbitals=lcao_orbitals,
+        rGauss=r_gauss,
+        reciprocalMass=reciprocal_mass,
+        dampingMass=damping_mass,
+        ionicMass=ionic_mass,
+        element=element,
+    )
+
+
+def get_PW_hamiltonian_group(
+    xc: str,
+    ekt: Optional[float] = None,
+    methfessel_paxton: Optional[float] = None,
+    fermi_dirac: Optional[float] = None,
+    n_empty_states: Optional[int] = None,
+    n_excess_electrons: Optional[int] = None,
+    spin_polarized: Optional[bool] = None,
+    dipole_correction: Optional[bool] = None,
+    z_field: Optional[float] = None,
+) -> dict:
+    """
+    Args:
+        xc (str): The exchange-correlation functional to use.
+        ekt (float): The electronic temperature in eV.
+        methfessel_paxton (float): If ≥0, use Methfessel-Paxton smearing of
+            indicated order. Order 0 is same as Gaussian smearing.
+        fermi_dirac (float): If ≥0, use FermiDirac smearing of indicated
+            order. Order 0 is the default; order 1 corresponds to first-order
+            corrections. Higher orders are not yet implemented.
+        n_empty_states (int): The number of empty states to include in the
+            calculation.
+        n_excess_electrons (int): The number of excess electrons to include in
+            the calculation.
+        spin_polarized (bool): Whether to perform a spin-polarized calculation.
+        dipole_correction (bool): Use the dipole correction for slab systems.
+            The in-plane lattice must be perpendicular to the z- axis, and the
+            third basis vector must be aligned with the z-axis. For charged
+            calculation, this requests the generalized dipole correction,
+            which may need some care for initializing the charge (see charged
+            in the initialGuess group).
+        z_field (float): Use an additional electric field along z when using
+            the dipole correction (eV/bohr)
+    """
+    return fill_values(
+        xc=xc,
+        ekt=ekt,
+        MethfesselPaxton=methfessel_paxton,
+        FermiDirac=fermi_dirac,
+        nEmptyStates=n_empty_states,
+        nExcessElectrons=n_excess_electrons,
+        spinPolarized=spin_polarized,
+        dipoleCorrection=dipole_correction,
+        zField=z_field,
+    )
+
+
 
 
 def get_CCG_group(
