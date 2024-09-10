@@ -1,5 +1,6 @@
-import numpy as np
 from typing import Optional
+
+import numpy as np
 
 
 def format_value(v, indent=0):
@@ -125,12 +126,12 @@ def get_atom_group(
             are used, atoms with different labels are considered inequivalent.
             Think of spin congurations for a use-case.
     """
-    return fill_values(coords=coords, relative=relative, movableLine=movable_line, label=label)
+    return fill_values(
+        coords=coords, relative=relative, movableLine=movable_line, label=label
+    )
 
 
-def get_symmetry_group(
-    operator: dict
-) -> dict:
+def get_symmetry_group(operator: dict) -> dict:
     """
     Args:
         operator (np.ndarray): Symmetry operator
@@ -397,9 +398,7 @@ def get_vdw_correction_group(
     return fill_values(method=method, combinationRule=combination_rule)
 
 
-def get_hubbard_u_group(
-    site: dict | list, verbose: Optional[bool] = None
-) -> dict:
+def get_hubbard_u_group(site: dict | list, verbose: Optional[bool] = None) -> dict:
     """
     Args:
         site (dict): Site
