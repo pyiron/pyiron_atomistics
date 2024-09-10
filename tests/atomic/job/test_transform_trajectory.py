@@ -34,7 +34,7 @@ class TestTransformTrajectory(TestWithCleanProject):
             cwd,
         )
         shutil.copy(os.path.join(tests_loc, "static/lammps_test_files/export.csv"), cwd)
-        self.project.unpack("get_structure_test")
+        self.project.unpack("get_structure_test.tar.gz")
         traj = self.job.trajectory()
         self.assertIsInstance(traj, Trajectory)
         self.assertEqual(len(traj), len(self.job.output.positions))

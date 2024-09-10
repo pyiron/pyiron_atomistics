@@ -500,46 +500,43 @@ class Atoms(ASEAtoms):
             hdf_structure["calculator"] = calc_dict
         return hdf_structure
 
-    def from_dict(self, atoms_dict):
-        if "new_species" in atoms_dict.keys():
-            self._pse.from_dict(pse_dict=atoms_dict["new_species"])
+    def from_dict(self, obj_dict):
+        if "new_species" in obj_dict.keys():
+            self._pse.from_dict(obj_dict=obj_dict["new_species"])
 
         el_object_list = [
-            self.convert_element(el, self._pse) for el in atoms_dict["species"]
+            self.convert_element(el, self._pse) for el in obj_dict["species"]
         ]
-        self.arrays["indices"] = atoms_dict["indices"]
+        self.arrays["indices"] = obj_dict["indices"]
 
         self.set_species(el_object_list)
         self.bonds = None
 
         tr_dict = {1: True, 0: False}
-        self.dimension = atoms_dict["dimension"]
-        self.units = atoms_dict["units"]
+        self.dimension = obj_dict["dimension"]
+        self.units = obj_dict["units"]
 
-        if "cell" in atoms_dict.keys():
-            self.cell = atoms_dict["cell"]["cell"]
-            self.pbc = atoms_dict["cell"]["pbc"]
+        if "cell" in obj_dict.keys():
+            self.cell = obj_dict["cell"]["cell"]
+            self.pbc = obj_dict["cell"]["pbc"]
 
         # Backward compatibility
         position_tag = "positions"
-        if position_tag not in atoms_dict.keys():
+        if position_tag not in obj_dict.keys():
             position_tag = "coordinates"
-        self.arrays["positions"] = atoms_dict[position_tag]
-        if (
-            "is_absolute" in atoms_dict.keys()
-            and not tr_dict[atoms_dict["is_absolute"]]
-        ):
+        self.arrays["positions"] = obj_dict[position_tag]
+        if "is_absolute" in obj_dict.keys() and not tr_dict[obj_dict["is_absolute"]]:
             self.set_scaled_positions(self.arrays["positions"])
 
         self.arrays["numbers"] = self.get_atomic_numbers()
 
-        if "explicit_bonds" in atoms_dict.keys():
+        if "explicit_bonds" in obj_dict.keys():
             # print "bonds: "
-            self.bonds = atoms_dict["explicit_bonds"]
-        if "spins" in atoms_dict.keys():
-            self.spins = atoms_dict["spins"]
-        if "tags" in atoms_dict.keys():
-            tags_dict = atoms_dict["tags"]
+            self.bonds = obj_dict["explicit_bonds"]
+        if "spins" in obj_dict.keys():
+            self.spins = obj_dict["spins"]
+        if "tags" in obj_dict.keys():
+            tags_dict = obj_dict["tags"]
             for tag, tag_item in tags_dict.items():
                 if tag in ["initial_magmoms"]:
                     continue
@@ -550,20 +547,20 @@ class Atoms(ASEAtoms):
                     raise NotImplementedError()
                 self.set_array(tag, np.asarray(my_list))
 
-        if "bonds" in atoms_dict.keys():
-            self.bonds = atoms_dict["explicit_bonds"]
+        if "bonds" in obj_dict.keys():
+            self.bonds = obj_dict["explicit_bonds"]
 
         self._high_symmetry_points = None
-        if "high_symmetry_points" in atoms_dict.keys():
-            self._high_symmetry_points = atoms_dict["high_symmetry_points"]
+        if "high_symmetry_points" in obj_dict.keys():
+            self._high_symmetry_points = obj_dict["high_symmetry_points"]
 
         self._high_symmetry_path = None
-        if "high_symmetry_path" in atoms_dict.keys():
-            self._high_symmetry_path = atoms_dict["high_symmetry_path"]
-        if "info" in atoms_dict.keys():
-            self.info = atoms_dict["info"]
-        if "calculator" in atoms_dict.keys():
-            calc_dict = atoms_dict["calculator"]
+        if "high_symmetry_path" in obj_dict.keys():
+            self._high_symmetry_path = obj_dict["high_symmetry_path"]
+        if "info" in obj_dict.keys():
+            self.info = obj_dict["info"]
+        if "calculator" in obj_dict.keys():
+            calc_dict = obj_dict["calculator"]
             class_path = calc_dict.pop("class")
             calc_module = importlib.import_module(".".join(class_path.split(".")[:-1]))
             calc_class = getattr(calc_module, class_path.split(".")[-1])
@@ -595,7 +592,7 @@ class Atoms(ASEAtoms):
 
         """
         return self.from_dict(
-            atoms_dict=hdf.open(group_name).read_dict_from_hdf(recursive=True)
+            obj_dict=hdf.open(group_name).read_dict_from_hdf(recursive=True)
         )
 
     def select_index(self, el):

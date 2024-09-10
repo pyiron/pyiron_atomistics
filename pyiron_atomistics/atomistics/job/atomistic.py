@@ -297,9 +297,9 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
             self._generic_input["time_step"] = int(time_step)
         self._generic_input.remove_keys(["max_iter"])
 
-    def from_dict(self, job_dict):
-        super().from_dict(job_dict=job_dict)
-        self._generic_input.from_dict(obj_dict=job_dict["input"]["generic"])
+    def from_dict(self, obj_dict):
+        super().from_dict(obj_dict=obj_dict)
+        self._generic_input.from_dict(obj_dict=obj_dict["input"]["generic"])
 
     def to_dict(self):
         job_dict = super(AtomisticGenericJob, self).to_dict()
@@ -818,14 +818,12 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         else:
             return None
 
-    def _structure_from_dict(self, job_dict):
+    def _structure_from_dict(self, obj_dict):
         if (
-            "structure" in job_dict["input"].keys()
+            "structure" in obj_dict["input"].keys()
             and self._generic_input["structure"] == "atoms"
         ):
-            self.structure = Atoms().from_dict(
-                atoms_dict=job_dict["input"]["structure"]
-            )
+            self.structure = Atoms().from_dict(obj_dict=obj_dict["input"]["structure"])
 
     def _structure_to_hdf(self):
         data_dict = self._structure_to_dict()
@@ -840,7 +838,7 @@ class AtomisticGenericJob(GenericJobCore, HasStructure):
         ):
             with self.project_hdf5.open("input/structure") as hdf5_input:
                 self.structure = Atoms().from_dict(
-                    hdf5_input.read_dict_from_hdf(recursive=True)
+                    obj_dict=hdf5_input.read_dict_from_hdf(recursive=True)
                 )
 
     def _write_chemical_formular_to_database(self):
