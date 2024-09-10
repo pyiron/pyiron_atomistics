@@ -1,5 +1,6 @@
 import posixpath
 from shutil import copyfile
+from typing import Optional
 
 import numpy as np
 import scipy.constants
