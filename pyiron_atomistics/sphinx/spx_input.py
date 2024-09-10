@@ -304,10 +304,6 @@ def get_paw_hamiltonian_group(
     xc_mesh: Optional[dict] = None,
     vdw_correction: Optional[dict] = None,
     hubbard_u: Optional[dict] = None,
-    site: Optional[dict] = None,
-    AO: Optional[dict] = None,
-    MO: Optional[dict] = None,
-    orbital: Optional[dict] = None,
 ) -> dict:
     """
     Args:
@@ -335,10 +331,6 @@ def get_paw_hamiltonian_group(
         xc_mesh (dict): Mesh for the exchange-correlation potential
         vdw_correction (dict): Van der Waals correction
         hubbard_u (dict): Hubbard U
-        site (dict): Site
-        AO (dict): Atomic orbital
-        MO (dict): Molecular orbital
-        orbital (dict): Orbital
     """
     return fill_values(
         xc=xc,
@@ -354,11 +346,363 @@ def get_paw_hamiltonian_group(
         xcMesh=xc_mesh,
         vdwCorrection=vdw_correction,
         HubbardU=hubbard_u,
-        site=site,
-        AO=AO,
-        MO=MO,
-        orbital=orbital,
     )
+
+
+def get_v_ext_group(file: str) -> dict:
+    """
+    Args:
+        file (str): The file containing the external potential.
+    """
+    return fill_values(file=file)
+
+
+def get_xc_mesh_group(
+    e_cut: float,
+    mesh: Optional[list] = None,
+    mesh_accuracy: Optional[float] = None,
+) -> dict:
+    """
+    Args:
+        e_cut (float): The energy cutoff for the mesh.
+        mesh (list): The mesh for the exchange-correlation potential.
+        mesh_accuracy (float): The accuracy of the mesh.
+    """
+    return fill_values(eCut=e_cut, mesh=mesh, meshAccuracy=mesh_accuracy)
+
+
+def get_vdw_correction_group(
+    method: str,
+    combination_rule: Optional[str] = None,
+) -> dict:
+    """
+    Args:
+        method (str): The method to use for the van der Waals correction.
+        combination_rule (str): The combination rule to use for the van der
+            Waals correction.
+    """
+    return fill_values(method=method, combinationRule=combination_rule)
+
+
+def get_hubbard_u_group(
+    site: dict | list, verbose: Optional[bool] = None
+) -> dict:
+    """
+    Args:
+        site (dict): Site
+        verbose (bool): Verbose output
+    """
+    return fill_values(site=site, verbose=verbose)
+
+
+def get_hubbard_u_site_group(
+    element: str,
+    species: Optional[int] = None,
+    label: Optional[str] = None,
+    projector_type: Optional[str] = None,
+    l: Optional[int] = None,
+    U: Optional[float] = None,
+    shift: Optional[float] = None,
+) -> dict:
+    """
+    Args:
+        element (str): defines the element via its name
+        species (str): defines the element via its species number (1,2,3...)
+            within the input file
+        label (str): defines the relevant atoms via their label. All atoms
+            must belong to the same species. See also label in the atom group
+        projector_type (str): use a single projector from the PAW potential.
+            Counting starts at 1. l-channel is chosen automatically.
+        l (int): use all projectors of a particular l-channel for projection.
+            A radial truncation inside the PAW sphere is applied. Use rPAW in
+            the pawPot group to change the radius.
+        U (float): The Hubbard U value (in eV)
+        shift (float): An additional energy shift of the projector (in eV)
+    """
+    return fill_values(
+        element=element,
+        species=species,
+        label=label,
+        projectorType=projector_type,
+        l=l,
+        U=U,
+        shift=shift,
+    )
+
+
+def get_hubbard_u_AO_group(
+    orbital: dict,
+    element: Optional[str] = None,
+    species: Optional[int] = None,
+    label: Optional[str] = None,
+    n_rad_grid: Optional[int] = None,
+    r_cut: Optional[float] = None,
+    cut_width: Optional[float] = None,
+    U: Optional[float] = None,
+    shift: Optional[float] = None,
+) -> dict:
+    """
+    Args:
+        orbital (dict): Orbital
+        element (str): defines the element via its name
+        species (str): defines the element via its species number (1,2,3...)
+            within the input file
+        label (str): defines the relevant atoms via their label. All atoms
+            must belong to the same species. See also label in the atom group
+        n_rad_grid (int): number of radial points to represent atomic orbital
+            projector. Default: 200
+        r_cut (float): The cutoff radius for the atomic orbital (in bohr).
+        cut_width (float): The width of the cutoff region (in bohr) Default 0.7 bohr.
+        U (float): The Hubbard U value (in eV)
+        shift (float): An additional energy shift of the projector (in eV)
+    """
+    return fill_values(
+        orbital=orbital,
+        element=element,
+        species=species,
+        label=label,
+        nRadGrid=n_rad_grid,
+        rCut=r_cut,
+        cutWidth=cut_width,
+        U=U,
+        shift=shift,
+    )
+
+
+def get_hubbard_u_MO_group(
+    orbital: dict,
+    element: str,
+    species: Optional[int] = None,
+    label: Optional[str] = None,
+    max_dist: Optional[float] = None,
+    min_dist: Optional[float] = None,
+    n_interpolate: Optional[int] = None,
+    n_rad_grid: Optional[int] = None,
+    r_cut: Optional[float] = None,
+    cut_width: Optional[float] = None,
+    m_MO: Optional[int] = None,
+    sign: Optional[int] = None,
+    U: Optional[float] = None,
+    shift: Optional[float] = None,
+) -> dict:
+    """
+    Args:
+        orbital (dict): Orbital
+        element (str): defines the element via its name
+        species (str): defines the element via its species number (1,2,3...)
+            within the input file
+        label (str): defines the relevant atoms via their label. All atoms
+            must belong to the same species. See also label in the atom group
+        max_dist (float): Maximum distance for interpolation
+        min_dist (float): Minimum distance for interpolation
+        n_interpolate (int): Number of points for interpolation
+        n_rad_grid (int): number of radial points to represent atomic orbital
+            projector. Default: 200
+        r_cut (float): The cutoff radius for the atomic orbital (in bohr).
+        cut_width (float): The width of the cutoff region (in bohr) Default 0.7 bohr.
+        m_MO (int): The m value of the MO
+        sign (int): The sign of the MO
+        U (float): The Hubbard U value (in eV)
+        shift (float): An additional energy shift of the projector (in eV)
+    """
+    return fill_values(
+        orbital=orbital,
+        element=element,
+        species=species,
+        label=label,
+        maxDist=max_dist,
+        minDist=min_dist,
+        nInterpolate=n_interpolate,
+        nRadGrid=n_rad_grid,
+        rCut=r_cut,
+        cutWidth=cut_width,
+        mMO=m_MO,
+        sign=sign,
+        U=U,
+        shift=shift,
+    )
+
+
+def get_orbital_group(
+    file: str,
+    iot: int,
+    from_potential: Optional[bool] = None,
+    is: Optional[int] = None,
+) -> dict:
+    """
+    Args:
+        file (str): Get orbital shape from this quamol-type sxb file.
+        iot (int): Which orbital to take. Starts at 0.
+        from_potential (bool): Get orbital shape from potential. This is not
+            recommended.
+        is (int): species id within file (starts at 0). If not given, assumes
+            same species ordering in sxb file as in input file.
+    """
+    return fill_values(file=file, iot=iot, fromPotential=from_potential, is=is)
+
+
+def get_spin_constraint_group(
+    label: Optional[str] = None,
+    constraint: Optional[float] = None,
+    file: Optional[str] = None,
+) -> dict:
+    """
+    Args:
+        label (str): The present constraint applies to atoms with the given label.
+        constraint (float): Value of the desired atomic spin
+        file (str): Read all spin constraints from this file.
+    """
+    return fill_values(label=label, constraint=constraint, file=file)
+
+
+def get_initial_guess_group(
+    no_waves_storage: Optional[bool] = None,
+    no_rho_storage: Optional[bool] = None,
+    waves: Optional[dict] = None,
+    rho: Optional[dict] = None,
+    occupations: Optional[dict] = None,
+    exchange: Optional[dict] = None,
+) -> dict:
+    """
+    Args:
+        no_waves_storage (bool): Do not save wavefunctions after the initial
+            guess
+        no_rho_storage (bool): Do not save the density after the initial
+            guess.
+        waves (dict): Waves
+        rho (dict): Rho
+        occupations (dict): Occupations
+        exchange (dict): Exchange
+    """
+    return fill_values(
+        noWavesStorage=no_waves_storage,
+        noRhoStorage=no_rho_storage,
+        waves=waves,
+        rho=rho,
+        occupations=occupations,
+        exchange=exchange,
+    )
+
+
+def get_waves_group(
+    file: Optional[str] = None,
+    random: Optional[bool] = None,
+    keep_waves_on_disk: Optional[bool] = None,
+    lcao: Optional[dict] = None,
+) -> dict:
+    """
+    Args:
+        file (str): Read wave functions from this file.
+        random (bool): Initialize wave functions randomly.
+        keep_waves_on_disk (bool): Keep waves on disk, load only a single
+            k-point at each time. May save a lot of RAM, but can be quite a
+            bottleneck on small systems.
+        lcao (dict): LCAO
+    """
+    return fill_values(
+        file=file, random=random, keepWavesOnDisk=keep_waves_on_disk, lcao=lcao
+    )
+
+
+def get_lcao_group(
+    max_steps: Optional[int] = None,
+    d_energy: Optional[float] = None,
+) -> dict:
+    """
+    The lcao group within the initialGuess.waves group finetunes the LCAO
+    calculation, if necessary. Notably, you can iterate the LCAO calculation to
+    self-consistency. This is generally no good idea.
+
+    Args:
+        max_steps (int): Maximum number of SCF steps
+        d_energy (float): Energy convergence criterion
+    """
+    return fill_values(maxSteps=max_steps, dEnergy=d_energy)
+
+
+def get_rho_group(
+    file: Optional[str] = None,
+    from_wave: Optional[bool] = None,
+    random: Optional[bool] = None,
+    atomic_orbitals: Optional[bool] = None,
+    spin_moment: Optional[bool] = None,
+    atomic_spin: Optional[dict] = None,
+    charged: Optional[dict] = None,
+) -> dict:
+    """
+    Args:
+        file (str): Read density from this file.
+        from_wave (bool): Compute from the wave functions (which must be from
+            file in this case).
+        random (bool): Initialize density randomly.
+        atomic_orbitals (bool): Initialize density from atomic orbitals.
+        spin_moment (bool): When from atomic densities, apply a global spin
+            polarization.
+        atomic_spin (dict): Atomic spin
+        charged (dict): Charged
+    """
+    return fill_values(
+        file=file,
+        fromWave=from_wave,
+        random=random,
+        atomicOrbitals=atomic_orbitals,
+        spinMoment=spin_moment,
+        atomicSpin=atomic_spin,
+        charged=charged,
+    )
+
+
+def get_atomic_spin_group(
+    spin: Optional[float] = None,
+    label: Optional[str] = None,
+    file: Optional[str] = None,
+) -> dict:
+    """
+    Args:
+        spin (float): The spin of the atom.
+        label (str): For which atoms to apply this spin
+        file (str): Read atomic spins from this file (one spin per line), one
+            per atom, in sequential order.
+    """
+    return fill_values(spin=spin, label=label, file=file)
+
+
+def get_charged_group(
+    charge: float,
+    beta: Optional[float] = None,
+    z: Optional[float] = None,
+    coords: Optional[np.ndarray] = None,
+) -> dict:
+    """
+    Args:
+        charge (float): The classical charge (i.e. -nExcessElectrons from the
+            PAWHamiltonian or PWHamiltonian group).
+        beta (float): Gaussian broadening
+        z (float): Request a sheet charge at this z
+        coords (np.ndarray): Request a Gaussian charge at this position
+            (in bohr).
+    """
+    return fill_values(charge=charge, beta=beta, z=z, coords=coords)
+
+
+def get_occupations_group(
+    values: Optional[list] = None,
+    range: Optional[list] = None,
+) -> dict:
+    """
+    Args:
+        values (list): The occupation numbers for each orbital.
+        range (list): The range of occupation numbers.
+    """
+    return fill_values(values=values, range=range)
+
+
+def get_exchange_group(file: str) -> dict:
+    """
+    Args:
+        file (str): Read exchange from this file.
+    """
+    return fill_values(file=file)
 
 
 def get_CCG_group(
