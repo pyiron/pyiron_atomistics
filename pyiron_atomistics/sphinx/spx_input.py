@@ -1,5 +1,6 @@
-import numpy as np
 from typing import Optional
+
+import numpy as np
 
 
 def format_value(v, indent=0):
