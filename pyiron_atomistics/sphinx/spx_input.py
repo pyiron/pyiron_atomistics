@@ -115,22 +115,23 @@ def get_atom_group(
     label: Optional[str] = None,
 ) -> dict:
     """
-    Args:
-        coords (np.ndarray): The atomic coordinates as a 3-vector. Un- less the
-            relative tag is employed, the coordinates are Cartesian (in bohr)
-        relative (bool): The coordinates are given relative to the unit cell vectors.
-        movable_line (list): The movement of the atom is restricted to a line.
-            The value gives the direction of the line as a 3-vector.
-        label (str): Assign a label (or rather a tag) to this atom. If labels
-            are used, atoms with different labels are considered inequivalent.
-            Think of spin congurations for a use-case.
+        Args:
+            coords (np.ndarray): The atomic coordinates as a 3-vector. Un- less the
+                relative tag is employed, the coordinates are Cartesian (in bohr)
+            relative (bool): The coordinates are given relative to the unit cell vectors.
+            movable_line (list): The movement of the atom is restricted to a line.
+                The value gives the direction of the line as a 3-vector.
+            label (str): Assign a label (or rather a tag) to this atom. If labels
+                are used, atoms with different labels are considered inequivalent.
+                Think of spin con
+    gurations for a use-case.
     """
-    return fill_values(coords=coords, relative=relative, movableLine=movable_line, label=label)
+    return fill_values(
+        coords=coords, relative=relative, movableLine=movable_line, label=label
+    )
 
 
-def get_symmetry_group(
-    operator: dict
-) -> dict:
+def get_symmetry_group(operator: dict) -> dict:
     """
     Args:
         operator (np.ndarray): Symmetry operator
@@ -397,9 +398,7 @@ def get_vdw_correction_group(
     return fill_values(method=method, combinationRule=combination_rule)
 
 
-def get_hubbard_u_group(
-    site: dict | list, verbose: Optional[bool] = None
-) -> dict:
+def get_hubbard_u_group(site: dict | list, verbose: Optional[bool] = None) -> dict:
     """
     Args:
         site (dict): Site
