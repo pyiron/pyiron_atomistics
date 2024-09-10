@@ -32,6 +32,8 @@ def fill_values(group=None, **kwargs):
     if group is None:
         group = {}
     for k, v in kwargs.items():
+        while k.endswith("_"):
+            k = k[:-1]
         if v is not None and v is not False:
             if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
                 for i, vv in enumerate(v):
@@ -39,6 +41,28 @@ def fill_values(group=None, **kwargs):
             else:
                 group[k] = v
     return group
+
+
+def get_all_group(
+    structure: Optional[dict] = None,
+    basis: Optional[dict] = None,
+    pseudo_pot: Optional[dict] = None,
+    pw_hamiltonian: Optional[dict] = None,
+    paw_pot: Optional[dict] = None,
+    paw_hamiltonian: Optional[dict] = None,
+    initial_guess: Optional[dict] = None,
+    main: Optional[dict] = None,
+):
+    return fill_values(
+        structure=structure,
+        basis=basis,
+        pseudoPot=pseudo_pot,
+        pwHamiltonian=pw_hamiltonian,
+        pawPot=paw_pot,
+        pawHamiltonian=paw_hamiltonian,
+        initialGuess=initial_guess,
+        main=main,
+    )
 
 
 def get_structure_group(
@@ -162,7 +186,7 @@ def get_k_point_group(
 def get_k_points_group(
     relative: Optional[bool] = None,
     dK: Optional[float] = None,
-    from: Optional[dict | list] = None,
+    from_: Optional[dict | list] = None,
     to: Optional[dict | list] = None,
 ) -> dict:
     """
@@ -177,7 +201,7 @@ def get_k_points_group(
             k-points from the previous one to a new position. The number of
             points is set directly with nPoints or indirectly via dK.
     """
-    return fill_values(relative=relative, dK=dK, from=from, to=to)
+    return fill_values(relative=relative, dK=dK, from_=from_, to=to)
 
 
 def get_k_points_from_group(
@@ -516,7 +540,7 @@ def get_orbital_group(
     file: str,
     iot: int,
     from_potential: Optional[bool] = None,
-    is: Optional[int] = None,
+    is_: Optional[int] = None,
 ) -> dict:
     """
     Args:
@@ -524,10 +548,10 @@ def get_orbital_group(
         iot (int): Which orbital to take. Starts at 0.
         from_potential (bool): Get orbital shape from potential. This is not
             recommended.
-        is (int): species id within file (starts at 0). If not given, assumes
+        is_ (int): species id within file (starts at 0). If not given, assumes
             same species ordering in sxb file as in input file.
     """
-    return fill_values(file=file, iot=iot, fromPotential=from_potential, is=is)
+    return fill_values(file=file, iot=iot, fromPotential=from_potential, is_=is_)
 
 
 def get_spin_constraint_group(
@@ -791,6 +815,12 @@ def get_PW_hamiltonian_group(
     )
 
 
+def get_main_group(**kwargs) -> dict:
+    """
+    Args:
+        steps (dict): Steps
+    """
+    return fill_values(**kwargs)
 
 
 def get_CCG_group(
