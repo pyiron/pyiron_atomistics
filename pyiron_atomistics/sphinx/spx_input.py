@@ -290,6 +290,77 @@ def get_paw_pot_species_group(
     )
 
 
+def get_paw_hamiltonian_group(
+    xc: str,
+    ekt: Optional[float] = None,
+    methfessel_paxton: Optional[float] = None,
+    fermi_dirac: Optional[float] = None,
+    n_empty_states: Optional[int] = None,
+    n_excess_electrons: Optional[int] = None,
+    spin_polarized: Optional[bool] = None,
+    dipole_correction: Optional[bool] = None,
+    z_field: Optional[float] = None,
+    v_ext: Optional[dict] = None,
+    xc_mesh: Optional[dict] = None,
+    vdw_correction: Optional[dict] = None,
+    hubbard_u: Optional[dict] = None,
+    site: Optional[dict] = None,
+    AO: Optional[dict] = None,
+    MO: Optional[dict] = None,
+    orbital: Optional[dict] = None,
+) -> dict:
+    """
+    Args:
+        xc (str): The exchange-correlation functional to use.
+        ekt (float): The electronic temperature in eV.
+        methfessel_paxton (float): If ≥0, use Methfessel-Paxton smearing of
+            indicated order. Order 0 is same as Gaussian smearing.
+        fermi_dirac (float): If ≥0, use FermiDirac smearing of indicated
+            order. Order 0 is the default; order 1 corresponds to first-order
+            corrections. Higher orders are not yet implemented.
+        n_empty_states (int): The number of empty states to include in the
+            calculation.
+        n_excess_electrons (int): The number of excess electrons to include in
+            the calculation.
+        spin_polarized (bool): Whether to perform a spin-polarized calculation.
+        dipole_correction (bool): Use the dipole correction for slab systems.
+            The in-plane lattice must be perpendicular to the z- axis, and the
+            third basis vector must be aligned with the z-axis. For charged
+            calculation, this requests the generalized dipole correction,
+            which may need some care for initializing the charge (see charged
+            in the initialGuess group).
+        z_field (float): Use an additional electric field along z when using
+            the dipole correction (eV/bohr)
+        v_ext (dict): External potential
+        xc_mesh (dict): Mesh for the exchange-correlation potential
+        vdw_correction (dict): Van der Waals correction
+        hubbard_u (dict): Hubbard U
+        site (dict): Site
+        AO (dict): Atomic orbital
+        MO (dict): Molecular orbital
+        orbital (dict): Orbital
+    """
+    return fill_values(
+        xc=xc,
+        ekt=ekt,
+        MethfesselPaxton=methfessel_paxton,
+        FermiDirac=fermi_dirac,
+        nEmptyStates=n_empty_states,
+        nExcessElectrons=n_excess_electrons,
+        spinPolarized=spin_polarized,
+        dipoleCorrection=dipole_correction,
+        zField=z_field,
+        vExt=v_ext,
+        xcMesh=xc_mesh,
+        vdwCorrection=vdw_correction,
+        HubbardU=hubbard_u,
+        site=site,
+        AO=AO,
+        MO=MO,
+        orbital=orbital,
+    )
+
+
 def get_CCG_group(
     d_energy: Optional[float] = None,
     max_steps: Optional[int] = None,
