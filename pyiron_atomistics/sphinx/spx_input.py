@@ -58,7 +58,7 @@ def get_structure_group(
     movable_x: Optional[bool] = None,
     movable_y: Optional[bool] = None,
     movable_z: Optional[bool] = None,
-    species: Optional[list] = None,
+    species: Optional[dict | list] = None,
 ) -> dict:
     """
     Args:
@@ -132,7 +132,7 @@ def get_basis_group(
     mesh: Optional[list] = None,
     mesh_accuracy: Optional[float] = None,
     save_memory: Optional[bool] = None,
-    k_points: Optional[dict] = None,
+    k_point: Optional[dict] = None,
 ) -> dict:
     """
     Args:
@@ -168,6 +168,69 @@ def get_k_point_group(
         weight (float): The weight of the k-point in the sampling.
     """
     return fill_values(coords=coords, relative=relative, weight=weight)
+
+
+def get_k_points_group(
+    relative: Optional[bool] = None,
+    dK: Optional[float] = None,
+    from: Optional[dict | list] = None,
+    to: Optional[dict | list] = None,
+) -> dict:
+    """
+    Args:
+        relative (bool): The coordinates are given relative to the unit cell
+            vectors.
+        dK (float): Set the number of intermediate k-points such that the
+            distance is at most dK (in 1/bohr).
+        from (dict): The from group (within the kPoints group) adds a single
+            k-point at the desired position. It may be used multiple times.
+        to (dict): The to group (within the kPoints group) adds a line of
+            k-points from the previous one to a new position. The number of
+            points is set directly with nPoints or indirectly via dK.
+    """
+    return fill_values(relative=relative, dK=dK, from=from, to=to)
+
+
+def get_k_points_from_group(
+    coords: np.ndarray,
+    relative: Optional[bool] = None,
+    label: Optional[str] = None,
+) -> dict:
+    """
+    Args:
+        coords (np.ndarray): The k-point coordinates as a 3-vector. If
+            relative flag is not given, the units are 1/bohr.
+        relative (bool): The coordinates are given relative to the unit cell
+            vectors.
+        label (str): Assign a label (or rather a tag) to this k-point. If labels
+            are used, k-points with different labels are considered inequivalent.
+    """
+    return fill_values(coords=coords, relative=relative, label=label)
+
+
+def get_k_points_to_group(
+    coords: np.ndarray,
+    relative: Optional[bool] = None,
+    label: Optional[str] = None,
+    dK: Optional[float] = None,
+    n_points: Optional[int] = None,
+) -> dict:
+    """
+    Args:
+        coords (np.ndarray): The k-point coordinates as a 3-vector. If
+            relative flag is not given, the units are 1/bohr.
+        relative (bool): The coordinates are given relative to the unit cell
+            vectors.
+        label (str): Assign a label (or rather a tag) to this k-point. If labels
+            are used, k-points with different labels are considered inequivalent.
+        dK (float): Set the number of intermediate k-points such that the
+            distance is at most dK (in 1/bohr).
+        n_points (int): Specify number of points to add. The final one will be
+            at coords.
+    """
+    return fill_values(
+        coords=coords, relative=relative, label=label, dK=dK, nPoints=n_points
+    )
 
 
 def get_CCG_group(
