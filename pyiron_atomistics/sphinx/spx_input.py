@@ -29,6 +29,18 @@ def to_sphinx(obj, indent=0):
     return line
 
 
+def append_item(group, key, value, n_max=int(1e8)):
+    if key not in group:
+        group[key] = value
+        return group
+    else:
+        for ii in range(n_max):
+            if f"{key}___{ii}" not in group:
+                group[f"{key}___{ii}"] = value
+                return group
+    raise ValueError("Too many items in group")
+
+
 def fill_values(group=None, **kwargs):
     if group is None:
         group = {}
@@ -38,9 +50,9 @@ def fill_values(group=None, **kwargs):
         if v is not None and v is not False:
             if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
                 for i, vv in enumerate(v):
-                    group[f"{k}___{i}"] = vv
+                    group = append_item(group, k, vv)
             else:
-                group[k] = v
+                group = append_item(group, k, v)
     return group
 
 
