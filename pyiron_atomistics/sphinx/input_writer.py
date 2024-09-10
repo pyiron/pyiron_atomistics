@@ -1,10 +1,10 @@
 import posixpath
 from shutil import copyfile
+from typing import Optional
 
 import numpy as np
 import scipy.constants
 from pyiron_base import DataContainer
-from typing import Optional
 
 BOHR_TO_ANGSTROM = (
     scipy.constants.physical_constants["Bohr radius"][0] / scipy.constants.angstrom
