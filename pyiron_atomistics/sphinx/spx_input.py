@@ -233,6 +233,63 @@ def get_k_points_to_group(
     )
 
 
+def get_paw_pot_group(species: dict) -> dict:
+    """
+    Args:
+        species (dict): Species
+    """
+    return fill_values(species=species)
+
+
+def get_paw_pot_species_group(
+    potential: str,
+    pot_type: str,
+    name: Optional[str] = None,
+    element: Optional[str] = None,
+    l_max_rho: Optional[int] = None,
+    angular_grid: Optional[int] = None,
+    n_rad_grid: Optional[int] = None,
+    check_overlap: Optional[bool] = None,
+    r_paw: Optional[float] = None,
+) -> dict:
+    """
+    Args:
+        potential (str): Name of the potential file.
+        pot_type (str): Type of the potential file, see table below
+        name (str): English name of the element
+        element (str): Chemical symbol of the element
+        l_max_rho (int): Truncate the spherical expansion of densities (and
+            compensation charges) at this l.
+        angular_grid (int): Choose a different angular grid for xc calculation
+            in the PAW sphere. Larger is finer. Default is 7 (110 points).
+        n_rad_grid (int): Interpolate to a different radial grid.
+        check_overlap (bool): Check that PAW norm is garantueed to be positive
+            definite in the limit of large cutoffs. This is on by default.
+            Some problematic PAW potentials may fail the check, but work
+            normally in some circumstances, so you can switch off the check here.
+        r_paw (float): Change the PAW radius used for atomic quantities
+            "inside the PAW sphere".
+
+    Potentials:
+        - "AbInit": conventional abinit format (non-xml)
+        - "AtomPAW": potentials from the atompaw generator (output 2, .atomicdata)
+        - "CPPAW": potentials of Blöchl's original PAW code
+        - "VASP": vasp potential file
+        - "xml": PAW-XML format (abinit, atompaw, gpaw)
+    """
+    return fill_values(
+        potential=potential,
+        potType=pot_type,
+        name=name,
+        element=element,
+        lMaxRho=l_max_rho,
+        angularGrid=angular_grid,
+        nRadGrid=n_rad_grid,
+        checkOverlap=check_overlap,
+        rPAW=r_paw,
+    )
+
+
 def get_CCG_group(
     d_energy: Optional[float] = None,
     max_steps: Optional[int] = None,
