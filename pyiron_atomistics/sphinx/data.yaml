@@ -7,19 +7,23 @@ Sphinx:
     movable:
       data_type: bool
       required: false
-      description: Allow atoms to move. Default: all atoms are movable, unless any movable tag is used for any species/atom.
+      default: true
+      description: Allow atoms to move.
     movableX:
       data_type: bool
       required: false
-      description: Allow atoms to move in the x direction. Default: movable, unless movableY or movableZ are used.
+      default: true
+      description: Allow atoms to move in the x direction.
     movableY:
       data_type: bool
       required: false
-      description: Allow atoms to move in the y direction. Default: movable, unless movableX or movableZ are used.
+      default: true
+      description: Allow atoms to move in the y direction.
     movableZ:
       data_type: bool
       required: false
-      description: Allow atoms to move in the z direction. Default: movable, unless movableX or movableY are used.
+      default: true
+      description: Allow atoms to move in the z direction.
     species:
       element:
         data_type: str
@@ -154,6 +158,7 @@ pawPot:
     angularGrid:
       data_type: int
       required: false
+      default: 7
       description: Choose a different angular grid for xc calculation in the PAW sphere. Larger is finer. Default is 7 (110 points).
     nRadGrid:
       data_type: int
@@ -162,7 +167,8 @@ pawPot:
     checkOverlap:
       data_type: bool
       required: false
-      description: Check that PAW norm is garantueed to be positive definite in the limit of large cutoffs. This is on by default. Some problematic PAW potentials may fail the check, but work normally in some circumstances, so you can switch off the check here.
+      default: true
+      description: Check that PAW norm is garantueed to be positive definite in the limit of large cutoffs. Some problematic PAW potentials may fail the check, but work normally in some circumstances, so you can switch off the check here.
     rPAW:
       data_type: float
       required: false
@@ -181,9 +187,10 @@ pawHamiltonian:
     required: false
     description: If ≥0, use Methfessel-Paxton smearing of indicated order. Order 0 is same as Gaussian smearing.
   FermiDirac:
-    data_type: float
+    data_type: int
     required: false
-    description: If ≥0, use FermiDirac smearing of indicated order. Order 0 is the default; order 1 corresponds to first-order corrections. Higher orders are not yet implemented.
+    default: 0
+    description: If ≥0, use FermiDirac smearing of indicated order. Order 1 corresponds to first-order corrections. Higher orders are not yet implemented.
   nEmptyStates:
     data_type: int
     required: false
@@ -332,7 +339,7 @@ pawHamiltonian:
         required: false
         unit: bohr
         default: 0.5 * maxDist
-        description: minimum distance of two atoms to be considered a molecule. Defaults to 50% of maxDist.
+        description: minimum distance of two atoms to be considered a molecule.
       nInterpolate:
         data_type: int
         required: false
@@ -386,7 +393,7 @@ spinConstraint:
     required: false
     description: Read all spin constraints from this file.
 initialGuess:
-  description: In order to start a DFT calculations, one must set up an initial guess for the density and for the wave functions. The initialGuess group defines how this is done, as well as a few other settings (such as keeping the waves on disk to save RAM).  The default is to set up the density from a superposition of atomic densities, and the wave-functions from a single-step LCAO calculation, using the atomic valence orbitals. This works exceptionally well. If you want to finetune the behavior, the initialGuess group must contain a waves or a rho group. Otherwise, you may omit the waves and rho groups to get the default behavior. Additionally, the initialGuess group may contain an occupations group to set up initial occupations (notably when keeping them fixed), and an exchange group for hybrid functionals.
+  description: In order to start a DFT calculations, one must set up an initial guess for the density and for the wave functions. The initialGuess group defines how this is done, as well as a few other settings (such as keeping the waves on disk to save RAM). The default is to set up the density from a superposition of atomic densities, and the wave-functions from a single-step LCAO calculation, using the atomic valence orbitals. This works exceptionally well. If you want to finetune the behavior, the initialGuess group must contain a waves or a rho group. Otherwise, you may omit the waves and rho groups to get the default behavior. Additionally, the initialGuess group may contain an occupations group to set up initial occupations (notably when keeping them fixed), and an exchange group for hybrid functionals.
   noWavesStorage:
     data_type: bool
     required: false
@@ -560,7 +567,8 @@ PWHamiltonian:
   FermiDirac:
     data_type: float
     required: false
-    description: If ≥0, use FermiDirac smearing of indicated order. Order 0 is the default; order 1 corresponds to first-order corrections. Higher orders are not yet implemented.
+    default: 0
+    description: If ≥0, use FermiDirac smearing of indicated order. Order 1 corresponds to first-order corrections. Higher orders are not yet implemented.
   nEmptyStates:
     data_type: int
     required: false
@@ -608,7 +616,7 @@ main:
       data_type: str
       required: false
       default: 2
-      description: Method for the density mixing. Constants dened in parameters.sx. Can be PULAY (default, 2) or LINEAR (0).
+      description: Method for the density mixing. Constants dened in parameters.sx. Can be PULAY (2) or LINEAR (0).
     nPulaySteps:
       data_type: int
       required: false
@@ -618,7 +626,7 @@ main:
       data_type: float
       required: false
       default: 1
-      description: Additional linear mixing factor for density updates (1=full update (default), 0=no change). Low values may lead to a more stable convergence, but will slow down the calculation if set too low.
+      description: Additional linear mixing factor for density updates (1=full update, 0=no change). Low values may lead to a more stable convergence, but will slow down the calculation if set too low.
     spinMixing:
       data_type: float
       required: false
@@ -747,7 +755,8 @@ main:
       initialDiag:
         data_type: bool
         required: false
-        description: Perform iterative wave-function optimization based on the initial density (this is the default)
+        default: true
+        description: Perform iterative wave-function optimization based on the initial density
       finalDiag:
         data_type: bool
         required: false
