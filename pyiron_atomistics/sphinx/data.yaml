@@ -1,0 +1,1003 @@
+Sphinx:
+  structure:
+    cell:
+      data_type: list
+      required: true
+      description: Cell matrix
+    movable:
+      data_type: bool
+      required: false
+      description: Allow atoms to move. Default: all atoms are movable, unless any movable tag is used for any species/atom.
+    movableX:
+      data_type: bool
+      required: false
+      description: Allow atoms to move in the x direction. Default: movable, unless movableY or movableZ are used.
+    movableY:
+      data_type: bool
+      required: false
+      description: Allow atoms to move in the y direction. Default: movable, unless movableX or movableZ are used.
+    movableZ:
+      data_type: bool
+      required: false
+      description: Allow atoms to move in the z direction. Default: movable, unless movableX or movableY are used.
+    species:
+      element:
+        data_type: str
+        description: Element
+      atom:
+        coords:
+          data_type: np.ndarray
+          description: Atomic coordinates
+        relative:
+          data_type: bool
+          required: false
+          description: The coordinates are given relative to the unit cell vectors.
+        movableLine:
+          data_type: list
+          required: false
+          description: The movement of the atom is restricted to a line. The value gives the direction of the line as a 3-vector.
+        label:
+          data_type: str
+          required: false
+          description: Assign a label (or rather a tag) to this atom. If labels are used, atoms with different labels are considered inequivalent. Think of spin configurations for a use-case.
+    symmetry:
+      operator:
+        data_type: list 
+        required: true
+        description: Symmetry operator
+basis:
+  eCut:
+    data_type: float
+    required: true
+    description: Energy cutoff
+  gCut:
+    data_type: float
+    required: false
+    description: Gradient cutoff
+  folding:
+    data_type: int
+    required: false
+    description: Folding
+  mesh:
+    data_type: list
+    required: false
+    description: Mesh
+  meshAccuracy:
+    data_type: float
+    required: false
+    description: Mesh accuracy
+  saveMemory:
+    data_type: bool
+    required: false
+    description: Save memory
+  kPoint:
+    coords:
+      data_type: np.ndarray
+      required: true
+      description: The k-point coordinates as a 3-vector. Unless the relative tag is employed, the coordinates are Cartesian.
+    relative:
+      data_type: bool
+      required: false
+      description: The coordinates are given relative to the unit cell vectors.
+    weight:
+      data_type: float
+      required: false
+      description: The weight of the k-point in the sampling.
+  kPoints:
+    relative:
+      data_type: bool
+      required: false
+      description: The coordinates are given relative to the unit cell vectors.
+    dK:
+      data_type: float
+      required: false
+      description: Set the number of intermediate k-points such that the distance is at most dK (in 1/bohr).
+    from:
+      description: The from group (within the kPoints group) adds a single k-point at the desired position. It may be used multiple times.
+      relative:
+        data_type: bool
+        required: false
+        description: The coordinates are given relative to the unit cell vectors.
+      coords:
+        data_type: np.ndarray
+        required: true
+        description: The k-point coordinates as a 3-vector. If the relative flag is not given, the units are 1/bohr.
+      label:
+        data_type: str
+        required: false
+        description: Assign a label (or rather a tag) to this k-point. If labels are used, k-points with different labels are considered inequivalent.
+    to:
+      description: The to group (within the kPoints group) adds a line of k-points from the previous one to a new position. The number of points is set directly with nPoints or indirectly via dK.
+      relative:
+        data_type: bool
+        required: false
+        description: The coordinates are given relative to the unit cell vectors.
+      coords:
+        data_type: np.ndarray
+        required: true
+        description: The k-point coordinates as a 3-vector. If the relative flag is not given, the units are 1/bohr.
+      label:
+        data_type: str
+        required: false
+        description: Assign a label (or rather a tag) to this k-point. If labels are used, k-points with different labels are considered inequivalent.
+      dK:
+        data_type: float
+        required: false
+        description: Set the number of intermediate k-points such that the distance is at most dK (in 1/bohr).
+      nPoints:
+        data_type: int
+        required: false
+        description: Specify number of points to add. The final one will be at coords.
+pawPot:
+  description: The pawPot group defines the PAW potentials, by a sequence of species groups. The order of species must agree with the structure group.
+  species:
+    name:
+      data_type: str
+      required: false
+      description: English name of the element
+    element:
+      data_type: str
+      required: false
+      description: Chemical symbol of the element
+    potential:
+      data_type: str
+      required: true
+      description: Name of the potential file.
+    potType:
+      data_type: str
+      required: true
+      description: Type of the potential file
+    lMaxRho:
+      data_type: int
+      required: false
+      description: Truncate the spherical expansion of densities (and compensation charges) at this l.
+    angularGrid:
+      data_type: int
+      required: false
+      description: Choose a different angular grid for xc calculation in the PAW sphere. Larger is finer. Default is 7 (110 points).
+    nRadGrid:
+      data_type: int
+      required: false
+      description: Interpolate to a different radial grid.
+    checkOverlap:
+      data_type: bool
+      required: false
+      description: Check that PAW norm is garantueed to be positive definite in the limit of large cutoffs. This is on by default. Some problematic PAW potentials may fail the check, but work normally in some circumstances, so you can switch off the check here.
+    rPAW:
+      data_type: float
+      required: false
+      description: Change the PAW radius used for atomic quantities "inside the PAW sphere".
+pawHamiltonian:
+  xc:
+    data_type: str
+    required: true
+    description: The exchange-correlation functional to use.
+  ekt:
+    data_type: float
+    required: false
+    description: The electronic temperature in eV.
+  MethfesselPaxton:
+    data_type: float
+    required: false
+    description: If ≥0, use Methfessel-Paxton smearing of indicated order. Order 0 is same as Gaussian smearing.
+  FermiDirac:
+    data_type: float
+    required: false
+    description: If ≥0, use FermiDirac smearing of indicated order. Order 0 is the default; order 1 corresponds to first-order corrections. Higher orders are not yet implemented.
+  nEmptyStates:
+    data_type: int
+    required: false
+    description: The number of empty states to include in the calculation.
+  nExcessElectrons:
+    data_type: int
+    required: false
+    description: The number of excess electrons to include in the calculation.
+  spinPolarized:
+    data_type: bool
+    required: false
+    description: Whether to perform a spin-polarized calculation.
+  dipoleCorrection:
+    data_type: bool
+    required: false
+    description: Use the dipole correction for slab systems. The in-plane lattice must be perpendicular to the z- axis, and the third basis vector must be aligned with the z-axis. For charged calculation, this requests the generalized dipole correction, which may need some care for initializing the charge (see charged in the initialGuess group).
+  zField:
+    data_type: float
+    required: false
+    description: Use an additional electric field along z when using the dipole correction (eV/bohr)
+  vExt:
+    description: External potential
+    file:
+      data_type: str
+      required: true
+      description: The file containing the external potential.
+  xcMesh:
+    description: Mesh for the exchange-correlation potential
+    eCut:
+      data_type: float
+      required: true
+      description: The energy cutoff for the mesh.
+    mesh:
+      data_type: list
+      required: false
+      description: The mesh for the exchange-correlation potential.
+    meshAccuracy:
+      data_type: float
+      required: false
+      description: The accuracy of the mesh.
+  vdwCorrection:
+    description: Van der Waals correction
+    method:
+      data_type: str
+      required: true
+      description: The method to use for the van der Waals correction.
+    combinationRule:
+      data_type: str
+      required: false
+      description: The combination rule to use for the van der Waals correction.
+  HubbardU:
+    description: Hubbard U
+    verbose:
+      data_type: bool
+      required: false
+      description: Verbose output
+      site:
+        description: Site
+        element:
+          data_type: str
+          required: true
+          description: defines the element via its name
+        species:
+          data_type: int
+          required: false
+          description: defines the element via its species number (1,2,3...) within the input file
+        label:
+          data_type: str
+          required: false
+          description: defines the relevant atoms via their label. All atoms must belong to the same species. See also label in the atom group
+        projectorType:
+          data_type: str
+          required: false
+          description: use a single projector from the PAW potential. Counting starts at 1. l-channel is chosen automatically.
+        l:
+          data_type: int
+          required: false
+          description: use all projectors of a particular l-channel for projection. A radial truncation inside the PAW sphere is applied. Use rPAW in the pawPot group to change the radius.
+        U:
+          data_type: float
+          required: false
+          description: The Hubbard U value (in eV)
+        shift:
+          data_type: float
+          required: false
+          description: An additional energy shift of the projector (in eV)
+    AO:
+      description: AO
+      orbital:
+        description: Orbital
+        file:
+          data_type: str
+          required: true
+          description: Get orbital shape from this quamol-data_type sxb file.
+        iot:
+          data_type: int
+          required: true
+          description: Which orbital to take. Starts at 0.
+        fromPotential:
+          data_type: bool
+          required: false
+          description: Get orbital shape from potential. This is not recommended.
+        is_:
+          data_type: int
+          required: false
+          description: species id within file (starts at 0). If not given, assumes same species ordering in sxb file as in input file.
+    MO:
+      description: The MO group within the HubbardU group defines on-site correlation corrections using MO orbital projectors. The molecular orbitals (MOs) are constructed from atomic orbitals (AOs) of given radial shape. This shape is defined in the orbital group. The MO projectors are constructed from AO projectors such that a normalized MO is projected to unity. The AO projectors include also the atomic PAW normalization.
+      orbital:
+        description: Orbital
+        file:
+          data_type: str
+          required: true
+          description: Get orbital shape from this quamol-data_type sxb file.
+        iot:
+          data_type: int
+          required: true
+          description: Which orbital to take. Starts at 0.
+        fromPotential:
+          data_type: bool
+          required: false
+          description: Get orbital shape from potential. This is not recommended.
+        is_:
+          data_type: int
+          required: false
+          description: species id within file (starts at 0). If not given, assumes same species ordering in sxb file as in input file.
+      element:
+        data_type: str
+        required: true
+        description: defines the element via its name
+      species:
+        data_type: int
+        required: false
+        description: defines the element via its species number (1,2,3...) within the input file
+      label:
+        data_type: str
+        required: false
+        description: defines the relevant atoms via their label. All atoms must belong to the same species. See also label in the atom group
+      maxDist:
+        data_type: float
+        required: false
+        unit: bohr
+        description: maximum distance of two atoms to be considered a molecule
+      minDist:
+        data_type: float
+        required: false
+        unit: bohr
+        default: 0.5 * maxDist
+        description: minimum distance of two atoms to be considered a molecule. Defaults to 50% of maxDist.
+      nInterpolate:
+        data_type: int
+        required: false
+        default: 100
+        description: number of distance points used to interpolate orbital normalization.
+      nRadGrid:
+        data_type: int
+        required: false
+        default: 200
+        description: number of radial points to represent atomic orbital projector.
+      rCut:
+        data_type: float
+        required: false
+        unit: bohr
+        description: The cutoff radius for the atomic orbital (in bohr).
+      cutWidth:
+        data_type: float
+        required: false
+        unit: bohr
+        default: 0.7
+        description: The width of the cutoff region
+      mMO:
+        data_type: int
+        required: false
+        description: rotational constant of orbital symmetry (σ=0, π=1)
+      sign:
+        data_type: int
+        required: false
+        description: relative sign of orbitals on both atoms. Can be +1 or −1.
+      U:
+        data_type: float
+        required: false
+        unit: eV
+        description: The Hubbard U value
+      shift:
+        data_type: float
+        required: false
+        unit: eV
+        description: An additional energy shift of the
+spinConstraint:
+  label:
+    data_type: str
+    required: false
+    description: The present constraint applies to atoms with the given label.
+  constraint:
+    data_type: float
+    required: false
+    description: Value of the desired atomic spin
+  file:
+    data_type: str
+    required: false
+    description: Read all spin constraints from this file.
+initialGuess:
+  description: In order to start a DFT calculations, one must set up an initial guess for the density and for the wave functions. The initialGuess group defines how this is done, as well as a few other settings (such as keeping the waves on disk to save RAM).  The default is to set up the density from a superposition of atomic densities, and the wave-functions from a single-step LCAO calculation, using the atomic valence orbitals. This works exceptionally well. If you want to finetune the behavior, the initialGuess group must contain a waves or a rho group. Otherwise, you may omit the waves and rho groups to get the default behavior. Additionally, the initialGuess group may contain an occupations group to set up initial occupations (notably when keeping them fixed), and an exchange group for hybrid functionals.
+  noWavesStorage:
+    data_type: bool
+    required: false
+    description: Do not save wavefunctions after the initial guess
+  noRhoStorage:
+    data_type: bool
+    required: false
+    description: Do not save the density after the initial guess.
+  waves:
+    file:
+      data_type: str
+      required: false
+      description: Read wave functions from this file.
+    random:
+      data_type: bool
+      required: false
+      description: Initialize wave functions randomly.
+    keepWavesOnDisk:
+      data_type: bool
+      required: false
+      description: Keep waves on disk, load only a single k-point at each time. May save a lot of RAM, but can be quite a bottleneck on small systems.
+    lcao:
+      maxSteps:
+        data_type: int
+        required: false
+        description: Maximum number of SCF steps
+      dEnergy:
+        data_type: float
+        required: false
+        description: Energy convergence criterion
+  rho:
+    file:
+      data_type: str
+      required: false
+      description: Read density from this file.
+    fromWave:
+      data_type: bool
+      required: false
+      description: Compute from the wave functions (which must be from file in this case).
+    random:
+      data_type: bool
+      required: false
+      description: Initialize density randomly.
+    atomicOrbitals:
+      data_type: bool
+      required: false
+      description: Initialize density from atomic orbitals.
+    spinMoment:
+      data_type: bool
+      required: false
+      description: When from atomic densities, apply a global spin polarization.
+    atomicSpin:
+      description: Atomic spin
+      spin:
+        data_type: float
+        required: false
+        description: The spin of the atom.
+      label:
+        data_type: str
+        required: false
+        description: For which atoms to apply this spin
+      file:
+        data_type: str
+        required: false
+        description: Read atomic spins from this file (one spin per line), one per atom, in sequential order.
+    charged:
+      charge:
+        data_type: float
+        required: true
+        description: The classical charge (i.e. -nExcessElectrons from the PAWHamiltonian or PWHamiltonian group).
+      beta:
+        data_type: float
+        required: false
+        description: Gaussian broadening
+      z:
+        data_type: float
+        required: false
+        description: Request a sheet charge at this z
+      coords:
+        data_type: np.ndarray
+        required: false
+        unit: bohr
+        description: Request a Gaussian charge at this position
+  occupations:
+    description: The occupations group within the initialGuess group defines the initial oc- cupations. This makes sense if the density is computed from wave functions, or if the occupations are going to be fixed at these values.
+    bands:
+      value:
+        data_type: list
+        required: true
+        description: Specifically list the indices affected.
+      range:
+        data_type: list
+        required: true
+        description: Specify start and end index.
+      focc:
+        data_type: int
+        required: true
+        description: The occupation value.
+  exchange:
+    description: Note: hybrid functionals are experimental and slow. The exchange group allows to set waves for the non-local exchange operator at the initialization stage. This is necessary if you want to initialize the waves from an LCAO calculation. The exchange group contains a single parameter,
+file, which contains the filename of the waves file to be used.
+    file:
+      data_type: str
+      required: false
+      description: Read exchange-correlation potential from this file.
+pseudoPot:
+  description: The pseudoPot group defines the norm-conserving pseudopotentials by a sequence of species groups. The order of species must agree with the structure group.  Note; PAW and norm-conserving pseudopotentials cannot be mixed. Using pseudoPot requires to use PWHamiltonian to define the Hamiltonian.
+  species:
+    name:
+      data_type: str
+      required: true
+      description: English name of the element
+    element:
+      data_type: str
+      required: false
+      description: Element
+    potential:
+      data_type: str
+      required: true
+      description: Name of the potential file.
+    valenceCharge:
+      data_type: float
+      required: true
+      description: The valence charge of the atom.
+    lMax:
+      data_type: int
+      required: true
+      description: The maximum l value to include in the pseudopotential.
+    lLoc:
+      data_type: int
+      required: true
+      description: The l value to use for the local part of the pseudopotential.
+    lcaoOrbital:
+      data_type: int
+      required: false
+      description: Which orbitals should be used for lcao initialization. Note; s,p,d, and f are predefined constants in parameters.sx.
+    rGauss:
+      data_type: float
+      required: true
+      description: Broadening of compensation charge, usually 1.
+    atomicRhoOcc:
+      data_type: float
+      required: true
+      description: Occupation numbers for charge initialization.
+    reciprocalMass:
+      data_type: float
+      required: true
+      description: Mass of the ion.
+    dampingMass:
+      data_type: float
+      required: true
+      description: Damping for damped-Newton geometry optimization. (curretly not used)
+    ionicMass:
+      data_type: float
+      required: true
+      description: Mass of the ion.
+PWHamiltonian:
+  xc:
+    data_type: str
+    required: true
+    description: The exchange-correlation functional to use.
+  ekt:
+    data_type: float
+    required: false
+    unit: eV
+    description: The electronic temperature
+  MethfesselPaxton:
+    data_type: float
+    required: false
+    description: If ≥0, use Methfessel-Paxton smearing of indicated order. Order 0 is same as Gaussian smearing.
+  FermiDirac:
+    data_type: float
+    required: false
+    description: If ≥0, use FermiDirac smearing of indicated order. Order 0 is the default; order 1 corresponds to first-order corrections. Higher orders are not yet implemented.
+  nEmptyStates:
+    data_type: int
+    required: false
+    description: The number of empty states to include in the calculation.
+  nExcessElectrons:
+    data_type: int
+    required: false
+    description: The number of excess electrons to include in the calculation.
+  spinPolarized:
+    data_type: bool
+    required: false
+    description: Whether to perform a spin-polarized calculation.
+  dipoleCorrection:
+    data_type: bool
+    required: false
+    description: Use the dipole correction for slab systems. The in-plane lattice must be perpendicular to the z- axis, and the third basis vector must be aligned with the z-axis. For charged calculation, this requests the generalized dipole correction, which may need some care for initializing the charge (see charged in the initialGuess group).
+  zField:
+    data_type: float
+    required: false
+    unit: eV/bohr
+    description: Use an additional electric field along z when using the dipole correction
+main:
+  scfDiag:
+    description: The scfDiag group selects and controls the iterative diagonalization + density mixing algorithm for the solution of the Kohn-Sham DFT equations.
+    dEnergy:
+      data_type: float
+      required: false
+      unit: Hartree
+      default: 1e-8
+      description: Free energy convergence criterium
+    maxSteps:
+      data_type: int
+      required: false
+      description: Max. number of steps (density updates).
+    maxResidue:
+      data_type: float
+      required: false
+      description: Additional requirement for convergence; density residue must fall below this threshold.
+    printSteps:
+      data_type: int
+      required: false
+      default: 10
+      description: Print convergence status every n steps.
+    mixingMethod:
+      data_type: str
+      required: false
+      default: 2
+      description: Method for the density mixing. Constants dened in parameters.sx. Can be PULAY (default, 2) or LINEAR (0).
+    nPulaySteps:
+      data_type: int
+      required: false
+      default: 7
+      description: Number of previous steps (densities) to use in Pulay mixing
+    rhoMixing:
+      data_type: float
+      required: false
+      default: 1
+      description: Additional linear mixing factor for density updates (1=full update (default), 0=no change). Low values may lead to a more stable convergence, but will slow down the calculation if set too low.
+    spinMixing:
+      data_type: float
+      required: false
+      description: Linear mixing parameter for spin densities.
+    keepRhoFixed:
+      data_type: bool
+      required: false
+      description: Do not update the density (for band structures).
+    keepOccFixed:
+      data_type: bool
+      required: false
+      description: Do not update the occupation numbers
+    keepSpinFixed:
+      data_type: bool
+      required: false
+      description: Do not update the spin density
+    spinMoment:
+      data_type: float
+      required: false
+      description: Keep the spin moment at this value.
+    ekt:
+      data_type: float
+      required: false
+      unit: eV
+      description: The electronic temperature
+    dipoleCorrection:
+      data_type: bool
+      required: false
+      description: Override the dipole correction setting in the Hamiltonian group.
+    dSpinMoment:
+      data_type: float
+      required: false
+      default: 1e-8
+      description: accuracy of iterative enforcement of spin constraints.
+    noRhoStorage:
+      data_type: bool
+      required: false
+      description: Do not write rho.sxb.
+    noWavesStorage:
+      data_type: bool
+      required: false
+      description: Do not write waves.sxb
+    CCG:
+      description: The CCG group (within the scfDiag group) selects conjugate-gradient algorithm for (inner-loop) iterative diagonalization. After all states have been updated, a subspace diagonalization is performed. This algorithm works best for very small systems. For larger systems (> 5 states), the blockCCG is superior.
+      dRelEps:
+        data_type: float
+        required: false
+        description: Stop iterating when the change in eigen- value falls below this fraction of the change in the first (steepest-descent) step.
+      maxStepsCCG:
+        data_type: int
+        required: false
+        default: 5
+        description: Max. number of steps to perform
+      dEnergy:
+        data_type: float
+        required: false
+        description: Use these settings until energy change fall below this threshold.
+    blockCCG:
+      description: The blockCCG group (within the scfDiag group) selects the block-conjugate-gradient algorithm for (inner-loop) iterative diagonalization. After all states have been updated, a subspace diagonalization is performed. This algorithm works best for larger systems (> 5 states).
+      dRelEps:
+        data_type: float
+        required: false
+        description: Stop iterating when the change in eigen- value falls below this fraction of the change in the first (steepest-descent) step.
+      maxStepsCCG:
+        data_type: int
+        required: false
+        default: 5
+        description: Max. number of steps to perform
+      blockSize:
+        data_type: int
+        required: false
+        default: 64
+        description: Block size
+      nSloppy:
+        data_type: int
+        required: false
+        description: Number of sloppy steps
+      dEnergy:
+        data_type: float
+        required: false
+        description: Use these settings until energy change fall below this threshold.
+      verbose:
+        data_type: bool
+        required: false
+        description: Verbose output
+      numericalLimit:
+        data_type: float
+        required: false
+        description: Stop iterating when approaching the numerical limit.
+    preconditioner:
+      description: The preconditioner group defines the density preconditioner, i.e., a transformation of the observed (or predicted) difference between the input and output density to the applied changes to the input density. An ideal preconditioner models the screening behavior of the system and is able to include the expected screening response into the suggested density change. Selecting an appropriate preconditioner, that reects the screening properties of the system at hand, is a key to an efficient (i.e. fast) convergence. The preconditioner does not affect the converged result.
+      type:
+        data_type: str
+        required: true
+        description: NONE (0). No preconditioning. Ideal for atoms/molecules in vacuum; KERKER (1). Kerker preconditioner. Ideal for metals; CSRB (3). Preconditioner for semiconductors based on the Cappellini-del- Sole-Reining-Bechstedt model dielectric function. Requires dielecConstant; ELLIPTIC (5). An explicit-solver preconditioner. No screening in vacuum region, Thomas-Fermi screening (Kerker-like) elsewhere. Ideal for metallic
+      scaling:
+        data_type: float
+        required: false
+        default: 1.0
+        description: Scaling factor for the preconditioner.
+      spinScaling:
+        data_type: float
+        required: false
+        default: 1.0
+        description: Scaling factor for the spin part of the preconditioner.
+      dielecConstant:
+        data_type: float
+        required: false
+        description: Dielectric constant for the CSRB preconditioner.
+    CCG:
+      description: The CCG group selects and controls the direct minimization algorithm for the solution of the Kohn-Sham DFT equations
+      dEnergy:
+        data_type: float
+        required: false
+        default: 1e-8
+        description: Use these settings until energy change fall below this threshold.
+      maxSteps:
+        data_type: int
+        required: false
+        description: Max. number of steps to perform
+      printSteps:
+        data_type: int
+        required: false
+        default: 10
+        description: Print convergence status every n steps
+      initialDiag:
+        data_type: bool
+        required: false
+        description: Perform iterative wave-function optimization based on the initial density (this is the default)
+      finalDiag:
+        data_type: bool
+        required: false
+        description: Perform iterative wave-function optimization based on the final density
+      kappa:
+        data_type: float
+        required: false
+        description: Perform subspace diagonalization at the end. (optional) Initial mixing between subspace Hamiltonian and wave-function updates. If set to a negative value, the value of κ will be fixed at the absolute value. Otherwise, κ is adapted on the fly.
+      keepOccFixed:
+        data_type: bool
+        required: false
+        description: Do not update the occupation numbers
+      ekt:
+        data_type: float
+        required: false
+        unit: eV
+        description: Override electronic temperature setting in the Hamiltonian group.
+      dipoleCorrection:
+        data_type: bool
+        required: false
+        description: Override the dipole correction setting in the Hamiltonian group.
+      noRhoStorage:
+        data_type: bool
+        required: false
+        description: Do not write rho.sxb.
+      noWavesStorage:
+        data_type: bool
+        required: false
+        description: Do not write waves.sxb
+  QN:
+    description: The QN group selects and controls the geometry optimization via quasi-Newton scheme with BFGS updates. Note; In general, ricQN is the faster algorithm.
+    maxSteps:
+      data_type: int
+      required: false
+      default: 50
+      description: Max. number of steps to perform
+    dX:
+      data_type: float
+      required: false
+      unit: bohr
+      default: 0.01
+      description: Stop iterating when the change in geometry falls below this threshold.
+    dF:
+      data_type: float
+      required: false
+      unit: Hartree/bohr
+      default: 0.01
+      description: Stop iterating when the change in forces falls below this threshold.
+    dEnergy:
+      data_type: float
+      required: false
+      unit: Hartree
+      default: 1e-4
+      description: Use these settings until energy change fall below this threshold.
+    maxStepLength:
+      data_type: float
+      required: false
+      unit: bohr
+      default: 0.3
+      description: maximum allowed displacement (length of displacement vector for a single atom) in bohr. Larger steps are reduced by scaling
+    hessian:
+      data_type: str
+      required: false
+      description: Initialize Hessian from file.
+    driftFilter:
+      data_type: bool
+      required: false
+      default: true
+      description: Project out the average force and displacement.
+    bornOppenheimer:
+      description: The bornOppenheimer group defines the electronic loop within a geometry optimization. It contains one or more of the electronic loop groups. If more than one minimizer is used, the complete electronic loop sequence is executed at each ionic step.
+      scfDiag:
+        data_type: dict
+        required: false
+        description: SCF diagonalization
+  linQN:
+    description: The linQN group selects and controls the geometry optimization via linear quasi-Newton scheme with BFGS updates. Note; In general, ricQN is the faster algorithm.
+    maxSteps:
+      data_type: int
+      required: false
+      default: 50
+      description: Max. number of steps to perform
+    dX:
+      data_type: float
+      required: false
+      unit: bohr
+      default: 0.01
+      description: Stop iterating when the change in geometry falls below this threshold.
+    dF:
+      data_type: float
+      required: false
+      unit: Hartree/bohr
+      default: 0.001
+      description: Stop iterating when the change in forces falls below this threshold.
+    dEnergy:
+      data_type: float
+      required: false
+      unit: Hartree
+      default: 1e-4
+      description: Use these settings until energy change fall below this threshold.
+    maxStepLength:
+      data_type: float
+      required: false
+      unit: bohr
+      default: 0.3
+      description: maximum allowed displacement (length of displacement vector for a single atom) in bohr. Larger steps are reduced by scaling
+    nProjectors:
+      data_type: int
+      required: false
+      description: Number of projectors
+    hessian:
+      data_type: str
+      required: false
+      description: Initialize Hessian from file.
+    driftFilter:
+      data_type: bool
+      required: false
+      default: true
+      description: Project out the average force and displacement.
+    bornOppenheimer:
+      description: The bornOppenheimer group defines the electronic loop within a geometry optimization. It contains one or more of the electronic loop groups. If more than one minimizer is used, the complete electronic loop sequence is executed at each ionic step.
+      scfDiag:
+        data_type: dict
+        required: false
+        description: SCF diagonalization
+  ricQN:
+    maxSteps:
+      data_type: int
+      required: false
+      default: 50
+      description: Max. number of steps to perform
+    dX:
+      data_type: float
+      required: false
+      unit: bohr
+      default: 0.01
+      description: Stop iterating when the change in geometry falls below this threshold.
+    dF:
+      data_type: float
+      required: false
+      unit: Hartree/bohr
+      default: 0.001
+      description: Stop iterating when the change in forces falls below this threshold.
+    dEnergy:
+      data_type: float
+      required: false
+      unit: Hartree
+      default: 1e-4
+      description: Use these settings until energy change fall below this threshold.
+    maxStepLength:
+      data_type: float
+      required: false
+      unit: bohr
+      default: 0.3
+      description: maximum allowed displacement (length of displacement vector for a single atom) in bohr. Larger steps are reduced by scaling
+    nProjectors:
+      data_type: int
+      required: false
+      description: Number of projectors
+    softModeDamping:
+      data_type: float
+      required: false
+      default: 0.01
+      unit: Hartree/bohr**2
+      description: Initial value for Hessian shift (in Hartree/bohr2). This is overriden with the first successful fit of a positive shift parameter.
+    driftFilter:
+      data_type: bool
+      required: false
+      default: true
+      description: Project out the average force and displacement.
+  ric:
+    description: The ric group denes the parameters for internal coordinate generation.
+    maxDist:
+      data_type: float
+      required: false
+      unit: bohr
+      default: 10
+      description: maximum possible distance for considering neighbors
+    typifyThreshold:
+      data_type: float
+      required: false
+      default: 0.05
+      description: minimum bond length separation of distinct bond types (the f parameter in [10]). After sorting the bond lengthes, the logarithm of subsequent lengthes are compared. If they differ by less than the threshold, the two bonds are assigned the same bond type.
+    rmsThreshold:
+      data_type: float
+      required: false
+      default: 3
+      description: minimum distance between two bond length clusters in units of their root-mean-square displacements (the R parameter of [10]).
+    planeCutLimit:
+      data_type: float
+      required: false
+      default: 0.95
+      description: Relative size of coordination polyhedra to separate the nearest neighbors from further atoms (the P parameter of [10]). Larger values allow for more neighbors.
+    withAngles:
+      data_type: bool
+      required: false
+      description: add bond angle coordinates for all bonds
+    bvkAtoms:
+      data_type: str
+      required: false
+      description: (experimental) List of atom ids (starting from 1) for which born-von-Karman transversal force constants are added. The comma-separated list must be enclosed by square brackets []. This adds a bond-directional coordinate to each bond of the atoms in the list.
+    bornOppenheimer:
+      data_type: dict
+      required: false
+      description: Born-Oppenheimer
+  ricTS:
+    description: The ricTS group requests a quasi-Newton optimization for 1st-order saddle points (transition states) using updates [11] of an on-the-fly optimized internal- coordinate based initial guess for the Hessian [10]. An initial guess for the reaction coordinate must be known. Note; This is an experimental feature. The optimization should be started within the saddle point region (one negative eigenvalue of the Hesse matrix), otherwise, the algorithm may converge to a different stationary point (a mini- mum, or a higher-order saddle point).
+    maxSteps:
+      data_type: int
+      required: false
+      description: Maximum number of steps
+    dX:
+      data_type: float
+      required: false
+      description: Position convergence criterion
+    dF:
+      data_type: float
+      required: false
+      description: Force convergence criterion
+    dEnergy:
+      data_type: float
+      required: false
+      description: Energy convergence criterion
+    nProjectors:
+      data_type: int
+      required: false
+      description: Number of projectors
+    maxStepLength:
+      data_type: float
+      required: false
+      description: Maximum step length
+    transCurvature:
+      data_type: float
+      required: false
+      description: Transversal curvature
+    anyStationaryPoint:
+      data_type: bool
+      required: false
+      description: Any stationary point
+    maxDirRot:
+      data_type: float
+      required: false
+      default: 0.5
+      description: Control updates of transition direction. Parameter between 0 (no updates) and 1 (full updates).
+    scheme:
+      data_type: int
+      required: false
+      default: 1
+      description: Hesse update scheme (0=Murtagh-Sargent, 1=Powell symmetric Broyden, 2=Borrell, 3=Farkas-Schlegel, see [11], Eqs. 6-10)
+    driftFilter:
+      data_type: bool
+      required: false
+      description: Drift filter
