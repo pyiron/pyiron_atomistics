@@ -28,7 +28,7 @@ class TestVasp(unittest.TestCase):
         state.update(
             {
                 "resource_paths": os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), "../static"
+                    os.path.dirname(os.path.abspath(__file__)), "..", "static"
                 )
             }
         )
