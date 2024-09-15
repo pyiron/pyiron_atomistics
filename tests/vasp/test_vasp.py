@@ -431,6 +431,8 @@ class TestVasp(unittest.TestCase):
         working_directory = os.path.join(
             self.execution_path, "test_vasp", "vasp_complete_hdf5", "vasp_complete"
         )
+        print("restart_file_list:", job_chg_den.restart_file_list)
+        print("test_file:", os.path.join(working_directory, "CHGCAR"))
         self.assertTrue(
             os.path.join(working_directory, "CHGCAR") in job_chg_den.restart_file_list
         )
