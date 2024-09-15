@@ -46,11 +46,21 @@ class TestVasp(unittest.TestCase):
             job_name="vasp_complete",
         )
         poscar_file = os.path.join(
-            cls.execution_path, "..", "static", "vasp_test_files", "full_job_sample", "POSCAR"
+            cls.execution_path,
+            "..",
+            "static",
+            "vasp_test_files",
+            "full_job_sample",
+            "POSCAR",
         )
         cls.job_complete.structure = read_atoms(poscar_file, species_from_potcar=True)
         poscar_file = os.path.join(
-            cls.execution_path, "..", "static", "vasp_test_files", "poscar_samples", "POSCAR_metadyn",
+            cls.execution_path,
+            "..",
+            "static",
+            "vasp_test_files",
+            "poscar_samples",
+            "POSCAR_metadyn",
         )
         cls.job_metadyn.structure = read_atoms(poscar_file)
 
