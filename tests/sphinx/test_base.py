@@ -9,7 +9,6 @@ import shutil
 import numpy as np
 import unittest
 import tempfile
-import posixpath
 from pathlib import Path
 import warnings
 import scipy.constants
@@ -442,8 +441,8 @@ class TestSphinx(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # create temporary files to pass file existence checks
-            rho_file = posixpath.join(tmpdir, "rho.sxb")
-            waves_file = posixpath.join(tmpdir, "waves.sxb")
+            rho_file = os.path.join(tmpdir, "rho.sxb")
+            waves_file = os.path.join(tmpdir, "waves.sxb")
             Path(rho_file).touch()
             Path(waves_file).touch()
 
