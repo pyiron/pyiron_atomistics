@@ -1544,7 +1544,9 @@ class VaspBase(GenericDFTJob):
         if job_specifier is None and path is None:
             raise ValueError("Either 'job_specifier' or 'path' has to be given!")
         elif job_specifier is not None:
-            self.restart_file_list.append(self.project.inspect(job_specifier=job_specifier).files.CHGCAR)
+            self.restart_file_list.append(
+                self.project.inspect(job_specifier=job_specifier).files.CHGCAR
+            )
         elif os.path.basename(path) == "CHGCAR":
             self.restart_file_list.append(path)
         else:
@@ -1646,7 +1648,9 @@ class VaspBase(GenericDFTJob):
         if job_specifier is None and path is None:
             raise ValueError("Either 'job_specifier' or 'path' has to be given!")
         elif job_specifier is not None:
-            self.restart_file_list.append(self.project.inspect(job_specifier=job_specifier).files.WAVECAR)
+            self.restart_file_list.append(
+                self.project.inspect(job_specifier=job_specifier).files.WAVECAR
+            )
         elif os.path.basename(path) == "WAVECAR":
             self.restart_file_list.append(path)
         else:
