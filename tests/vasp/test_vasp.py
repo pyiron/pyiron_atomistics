@@ -431,10 +431,8 @@ class TestVasp(unittest.TestCase):
         working_directory = os.path.join(
             self.execution_path, "test_vasp", "vasp_complete_hdf5", "vasp_complete"
         )
-        print("restart_file_list:", job_chg_den.restart_file_list)
-        print("test_file:", os.path.join(working_directory, "CHGCAR"))
         self.assertTrue(
-            os.path.join(working_directory, "CHGCAR") in job_chg_den.restart_file_list
+            os.path.join(working_directory, "CHGCAR") in [os.path.abspath(f) for f in job_chg_den.restart_file_list]
         )
 
         def check_group_is_empty(example_job, group_name):
@@ -449,10 +447,10 @@ class TestVasp(unittest.TestCase):
         )
         self.assertEqual(job_chg_wave.structure, self.job_complete.get_structure(-1))
         self.assertTrue(
-            os.path.join(working_directory, "WAVECAR") in job_chg_wave.restart_file_list
+            os.path.join(working_directory, "WAVECAR") in [os.path.abspath(f) for f in job_chg_wave.restart_file_list]
         )
         self.assertTrue(
-            os.path.join(working_directory, "CHGCAR") in job_chg_wave.restart_file_list
+            os.path.join(working_directory, "CHGCAR") in [os.path.abspath(f) for f in job_chg_wave.restart_file_list]
         )
         for key, val in job_chg_wave.restart_file_dict.items():
             self.assertTrue(key, val)
