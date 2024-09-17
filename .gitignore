@@ -11,3 +11,4 @@ apidoc/
 .ipynb_checkpoints/
 test_times.dat
 core.*
+.vscode/settings.json
