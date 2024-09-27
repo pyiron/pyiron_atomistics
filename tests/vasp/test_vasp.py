@@ -4,7 +4,6 @@
 
 import unittest
 import os
-import posixpath
 from pyiron_atomistics.atomistics.structure.atoms import CrystalStructure
 from pyiron_atomistics.vasp.base import Input, Output
 from pyiron_atomistics import Project
@@ -29,7 +28,7 @@ class TestVasp(unittest.TestCase):
         state.update(
             {
                 "resource_paths": os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), "../static"
+                    os.path.dirname(os.path.abspath(__file__)), "..", "static"
                 )
             }
         )
@@ -46,13 +45,22 @@ class TestVasp(unittest.TestCase):
             project=ProjectHDFio(project=cls.project, file_name="vasp_complete"),
             job_name="vasp_complete",
         )
-        poscar_file = posixpath.join(
-            cls.execution_path, "../static/vasp_test_files/full_job_sample/POSCAR"
+        poscar_file = os.path.join(
+            cls.execution_path,
+            "..",
+            "static",
+            "vasp_test_files",
+            "full_job_sample",
+            "POSCAR",
         )
         cls.job_complete.structure = read_atoms(poscar_file, species_from_potcar=True)
-        poscar_file = posixpath.join(
+        poscar_file = os.path.join(
             cls.execution_path,
-            "../static/vasp_test_files/poscar_samples/POSCAR_metadyn",
+            "..",
+            "static",
+            "vasp_test_files",
+            "poscar_samples",
+            "POSCAR_metadyn",
         )
         cls.job_metadyn.structure = read_atoms(poscar_file)
 
@@ -366,20 +374,20 @@ class TestVasp(unittest.TestCase):
         self.assertEqual(self.job_complete.input.incar["SIGMA"], 0.2)
         self.assertEqual(self.job_complete.input.incar["LVTOT"], False)
         self.assertEqual(self.job_complete.input.incar["EDIFF"], 1e-7)
-        file_directory = posixpath.join(
-            self.execution_path, "../static/vasp_test_files/full_job_sample"
+        file_directory = os.path.join(
+            self.execution_path, "..", "static", "vasp_test_files", "full_job_sample"
         )
         self.job_complete.restart_file_list.append(
-            posixpath.join(file_directory, "vasprun.xml")
+            os.path.join(file_directory, "vasprun.xml")
         )
         self.job_complete.restart_file_list.append(
-            posixpath.join(file_directory, "OUTCAR")
+            os.path.join(file_directory, "OUTCAR")
         )
         self.job_complete.restart_file_list.append(
-            posixpath.join(file_directory, "CHGCAR")
+            os.path.join(file_directory, "CHGCAR")
         )
         self.job_complete.restart_file_list.append(
-            posixpath.join(file_directory, "WAVECAR")
+            os.path.join(file_directory, "WAVECAR")
         )
         self.job_complete.run(run_mode="manual")
         self.job_complete.status.collect = True
@@ -420,9 +428,12 @@ class TestVasp(unittest.TestCase):
             self.assertTrue(all([node in hdf_nodes for node in nodes]))
         job_chg_den = self.job_complete.restart_from_charge_density(job_name="chg")
         self.assertEqual(job_chg_den.structure, self.job_complete.get_structure(-1))
+        working_directory = os.path.join(
+            self.execution_path, "test_vasp", "vasp_complete_hdf5", "vasp_complete"
+        )
         self.assertTrue(
-            posixpath.join(self.job_complete.working_directory, "CHGCAR")
-            in job_chg_den.restart_file_list
+            os.path.join(working_directory, "CHGCAR")
+            in [os.path.abspath(f) for f in job_chg_den.restart_file_list]
         )
 
         def check_group_is_empty(example_job, group_name):
@@ -437,20 +448,20 @@ class TestVasp(unittest.TestCase):
         )
         self.assertEqual(job_chg_wave.structure, self.job_complete.get_structure(-1))
         self.assertTrue(
-            posixpath.join(self.job_complete.working_directory, "WAVECAR")
-            in job_chg_wave.restart_file_list
+            os.path.join(working_directory, "WAVECAR")
+            in [os.path.abspath(f) for f in job_chg_wave.restart_file_list]
         )
         self.assertTrue(
-            posixpath.join(self.job_complete.working_directory, "CHGCAR")
-            in job_chg_wave.restart_file_list
+            os.path.join(working_directory, "CHGCAR")
+            in [os.path.abspath(f) for f in job_chg_wave.restart_file_list]
         )
         for key, val in job_chg_wave.restart_file_dict.items():
             self.assertTrue(key, val)
         check_group_is_empty(job_chg_wave, "output")
 
         job = self.job_complete.restart()
-        job.restart_file_list.append(posixpath.join(file_directory, "vasprun.xml"))
-        job.restart_file_list.append(posixpath.join(file_directory, "OUTCAR"))
+        job.restart_file_list.append(os.path.join(file_directory, "vasprun.xml"))
+        job.restart_file_list.append(os.path.join(file_directory, "OUTCAR"))
         job.run(run_mode="manual")
         job.status.collect = True
         job.run()

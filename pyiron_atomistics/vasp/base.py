@@ -1544,11 +1544,13 @@ class VaspBase(GenericDFTJob):
         if job_specifier is None and path is None:
             raise ValueError("Either 'job_specifier' or 'path' has to be given!")
         elif job_specifier is not None:
-            path = self.project.inspect(job_specifier=job_specifier).working_directory
-        if os.path.basename(path) == "CHGCAR":
+            self.restart_file_list.append(
+                self.project.inspect(job_specifier=job_specifier).files.CHGCAR
+            )
+        elif os.path.basename(path) == "CHGCAR":
             self.restart_file_list.append(path)
         else:
-            self.restart_file_list.append(posixpath.join(path, "CHGCAR"))
+            self.restart_file_list.append(os.path.join(path, "CHGCAR"))
 
     def restart_from_wave_and_charge(
         self,
@@ -1646,8 +1648,10 @@ class VaspBase(GenericDFTJob):
         if job_specifier is None and path is None:
             raise ValueError("Either 'job_specifier' or 'path' has to be given!")
         elif job_specifier is not None:
-            path = self.project.inspect(job_specifier=job_specifier).working_directory
-        if os.path.basename(path) == "WAVECAR":
+            self.restart_file_list.append(
+                self.project.inspect(job_specifier=job_specifier).files.WAVECAR
+            )
+        elif os.path.basename(path) == "WAVECAR":
             self.restart_file_list.append(path)
         else:
             self.restart_file_list.append(posixpath.join(path, "WAVECAR"))

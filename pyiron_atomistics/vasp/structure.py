@@ -2,6 +2,7 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import os
 import warnings
 from collections import OrderedDict
 
@@ -41,8 +42,7 @@ def read_atoms(
         pyiron.atomistics.structure.atoms.Atoms: The generated structure object
 
     """
-    directory = "/".join(filename.split("/")[0:-1])
-    potcar_file = "/".join([directory, "POTCAR"])
+    potcar_file = os.path.join(os.path.dirname(filename), "POTCAR")
     if (species_list is None) and species_from_potcar:
         species_list = get_species_list_from_potcar(potcar_file)
         if len(species_list) == 0:
