@@ -44,7 +44,7 @@ class TestVaspVolumetricData(unittest.TestCase):
                 self.assertTrue(np.array_equal(total_data_old, self.vd_obj.total_data))
                 self.assertTrue(np.array_equal(diff_data_old, self.vd_obj.diff_data))
 
-            if chgcar_file.split("/")[-1] == "CHGCAR_no_spin":
+            if chgcar_file.split("/")[-1] in ["CHGCAR_no_spin", "CHGCAR_slash"]:
                 atoms, [total_data] = self.vd_obj._read_vol_data(
                     chgcar_file, normalize=True
                 )
