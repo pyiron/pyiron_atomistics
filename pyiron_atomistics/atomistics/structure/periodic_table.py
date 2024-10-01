@@ -138,7 +138,6 @@ MENDELEEV_PROPERTY_LIST = [
     "vdw_radius_rt",
     "vdw_radius_truhlar",
     "vdw_radius_uff",
-    "zeff",
 ]
 
 
