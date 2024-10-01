@@ -119,6 +119,7 @@ MENDELEEV_PROPERTY_LIST = [
     "proton_affinity",
     "protons",
     "registry",
+    "scattering_factors",
     "sconst",
     "screening_constants",
     "series",
@@ -138,6 +139,7 @@ MENDELEEV_PROPERTY_LIST = [
     "vdw_radius_rt",
     "vdw_radius_truhlar",
     "vdw_radius_uff",
+    "zeff",
 ]
 
 
