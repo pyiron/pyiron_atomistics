@@ -119,6 +119,7 @@ MENDELEEV_PROPERTY_LIST = [
     "proton_affinity",
     "protons",
     "registry",
+    "scattering_factors",
     "sconst",
     "screening_constants",
     "series",
