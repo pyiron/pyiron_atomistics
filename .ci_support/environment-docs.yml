@@ -9,7 +9,7 @@ dependencies:
 - ase =3.23.0
 - atomistics =0.1.32
 - defusedxml =0.7.1
-- h5py =3.11.0
+- h5py =3.12.1
 - matplotlib-base =3.9.2
 - mendeleev =0.18.1
 - mp-api =0.42.2
