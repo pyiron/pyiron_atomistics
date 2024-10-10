@@ -4,14 +4,15 @@
 
 from __future__ import print_function
 
-from typing import Iterable
 import dataclasses
+from typing import Iterable
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.optimize as so
 from scipy.constants import Boltzmann, eV
+
 kB = Boltzmann / eV
 import scipy.special
 
@@ -868,6 +869,7 @@ class Band(object):
     def resolved_dos_matrix(self, val):
         self._resolved_dos_matrix = val
 
+
 @dataclasses.dataclass(frozen=True)
 class FermiSmearing:
     """
@@ -885,8 +887,9 @@ class FermiSmearing:
         weights     (numpy.array of floats): the k point weights from a DFT calculations
         n_electrons (int): the number of electrons in the underlying structure
     """
-    eigenvalues: npt.NDArray[float] # shape of (#spin channels, #kpoints, #bands)
-    weights:     npt.NDArray[float] # shape of (#spin channels, #kpoints, #bands)
+
+    eigenvalues: npt.NDArray[float]  # shape of (#spin channels, #kpoints, #bands)
+    weights: npt.NDArray[float]  # shape of (#spin channels, #kpoints, #bands)
     n_electrons: int
 
     def __post_init__(self):
@@ -897,9 +900,9 @@ class FermiSmearing:
     def from_vasp(cls, job: "Vasp") -> "Self":
         if not job.status.finished:
             raise ValueError(f"Can only instantiate {cls.__name__} from finished jobs!")
-        eigenvals = job.content['output/generic/dft/bands/eig_matrix']
+        eigenvals = job.content["output/generic/dft/bands/eig_matrix"]
         # bring the weights in the same shape as eig values
-        weights = job.content['output/electronic_structure/k_weights'].reshape(1, -1, 1)
+        weights = job.content["output/electronic_structure/k_weights"].reshape(1, -1, 1)
         # adjust for (non-) spin polarized
         weights *= 3 - eigenvals.shape[0]
         return cls(eigenvals, weights, job.get_nelect())
@@ -908,15 +911,17 @@ class FermiSmearing:
     def from_sphinx(cls, job: "Sphinx") -> "Self":
         if not job.status.finished:
             raise ValueError(f"Can only instantiate {cls.__name__} from finished jobs!")
-        eigenvals = job.content['output/electronic_structure/eig_matrix']
-        weights = job.content['output/electronic_structure/k_weights'].reshape(1, -1, 1)
+        eigenvals = job.content["output/electronic_structure/eig_matrix"]
+        weights = job.content["output/electronic_structure/k_weights"].reshape(1, -1, 1)
         weights *= 3 - eigenvals.shape[0]
-        occ = job.content['output/electronic_structure/occ_matrix']
+        occ = job.content["output/electronic_structure/occ_matrix"]
         n_elect = int((weights * occ).sum())
         return cls(eigenvals, weights, n_elect)
 
     @classmethod
-    def from_electronic_structure(cls, electronic_structure: ElectronicStructure) -> "Self":
+    def from_electronic_structure(
+        cls, electronic_structure: ElectronicStructure
+    ) -> "Self":
         eigenvals = electronic_structure.eigenvalue_matrix.copy()
         weights = electronic_structure.kpoint_weights.copy().reshape(1, -1, 1)
         weights *= 3 - eigenvals.shape[0]
@@ -927,7 +932,7 @@ class FermiSmearing:
     def _efermi(e, T, mu):
         if T != 0:
             # avoid overflow warnings by restricting range of exponent, 1/1+e-/+100 is 0/1 anyway.
-            exponent = np.clip((e-mu)/kB/T, -100, 100)
+            exponent = np.clip((e - mu) / kB / T, -100, 100)
             return 1 / (1 + np.exp(exponent))
         else:
             return 1 * (e <= mu)
@@ -955,18 +960,22 @@ class FermiSmearing:
         Returns:
             float: chemical potential or fermi level
         """
-        ret = so.root_scalar(lambda mu: self.occupation(T, mu) - self.n_electrons,
-                             bracket=(self.eigenvalues.min(), self.eigenvalues.max()),
-                             xtol=1e-5)
+        ret = so.root_scalar(
+            lambda mu: self.occupation(T, mu) - self.n_electrons,
+            bracket=(self.eigenvalues.min(), self.eigenvalues.max()),
+            xtol=1e-5,
+        )
         ef = ret.root
         occ = self.occupation(T, ef)
         if not ret.converged or (ret.converged and abs(occ - self.n_electrons) > 0.01):
-            logger.warning(f"Failed to find fermi level at {T}K! Got {self.occupation(T, ef)} electrons "
-                           f"instead of {self.n_electrons}!")
+            logger.warning(
+                f"Failed to find fermi level at {T}K! Got {self.occupation(T, ef)} electrons "
+                f"instead of {self.n_electrons}!"
+            )
         return ef
 
     def density_at_fermi_level(
-            self, T: float | Iterable[float]
+        self, T: float | Iterable[float]
     ) -> float | npt.NDArray[float]:
         """
         Calculate the electronic density at the fermi level.
@@ -974,14 +983,16 @@ class FermiSmearing:
         if isinstance(T, Iterable):
             return np.array([self.density_at_fermi_level_fermi(Ti, smear) for Ti in T])
         ef = self.find_fermi_level(T)
-        smear = kB*T
+        smear = kB * T
         # avoid overflow warnings by restricting range of exponent, 1/1+cosh-/+100 is 0 anyway.
-        ediff = np.clip((self.eigenvalues - ef)/smear, -100, 100)
+        ediff = np.clip((self.eigenvalues - ef) / smear, -100, 100)
         # 1/cosh+1 is the "delta" function corresponding to Fermi smearing, see:
         # https://doi.org/10.1103/PhysRevB.107.195122
-        return 1/smear * (self.weights * ( 1/2 * 1/(np.cosh(ediff) + 1) )).sum()
+        return 1 / smear * (self.weights * (1 / 2 * 1 / (np.cosh(ediff) + 1))).sum()
 
-    def energy_entropy(self, T: float | Iterable[float]) -> dict[str, float] | pd.DataFrame:
+    def energy_entropy(
+        self, T: float | Iterable[float]
+    ) -> dict[str, float] | pd.DataFrame:
         """
         Calculate the electronic free energy properties.
 
@@ -1008,16 +1019,23 @@ class FermiSmearing:
             return pd.DataFrame([self.energy_entropy(Ti) for Ti in T])
         ef = self.find_fermi_level(T)
         f = self._efermi(self.eigenvalues, T, ef)
-        U = ( ((f - (self.eigenvalues <= ef)*1) * (self.eigenvalues - ef)) * self.weights ).sum()
-        S = kB * ( self.weights*(scipy.special.entr(f) + scipy.special.entr(1-f)) ).sum()
+        U = (
+            ((f - (self.eigenvalues <= ef) * 1) * (self.eigenvalues - ef))
+            * self.weights
+        ).sum()
+        S = (
+            kB
+            * (self.weights * (scipy.special.entr(f) + scipy.special.entr(1 - f))).sum()
+        )
         F = U - T * S
         return {
-            'F': F,
-            'U': U,
-            'S': S,
-            'T': T,
-            'mu': ef,
+            "F": F,
+            "U": U,
+            "S": S,
+            "T": T,
+            "mu": ef,
         }
+
 
 def electronic_structure_dict_to_hdf(data_dict, hdf, group_name):
     with hdf.open(group_name) as h_es:
