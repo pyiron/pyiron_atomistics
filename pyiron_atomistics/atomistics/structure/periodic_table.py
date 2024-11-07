@@ -74,6 +74,7 @@ MENDELEEV_PROPERTY_LIST = [
     "electrophilicity",
     "en_allen",
     "en_ghosh",
+    "en_miedema",
     "en_pauling",
     "evaporation_heat",
     "fusion_heat",
