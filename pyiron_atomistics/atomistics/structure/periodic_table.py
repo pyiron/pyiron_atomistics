@@ -104,6 +104,7 @@ MENDELEEV_PROPERTY_LIST = [
     "metadata",
     "metallic_radius",
     "metallic_radius_c12",
+    "miedema_electron_density",
     "molar_heat_capacity",
     "molcas_gv_color",
     "name",
