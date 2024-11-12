@@ -10,7 +10,7 @@ import h5py
 import numpy as np
 import pandas as pd
 from pyiron_base import extract_data_from_file
-
+from pyiron_snippets.logger import logger
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.units import UnitConverter
 
@@ -327,6 +327,9 @@ def _collect_output_log(
             if read_thermo:
                 if l.startswith("Loop") or l.startswith("ERROR"):
                     read_thermo = False
+                    continue
+                elif l.startswith("WARNING:"):
+                    logger.warning(f"A warning was found in the log:\n{l}")
                     continue
                 thermo_lines += l
 
