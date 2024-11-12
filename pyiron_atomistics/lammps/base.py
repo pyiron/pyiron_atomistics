@@ -14,6 +14,7 @@ import pandas
 from pyiron_base import state
 from pyiron_snippets.deprecate import deprecate
 
+from pyiron_snippets.logger import logger
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.output import (
@@ -427,10 +428,18 @@ class LammpsBase(AtomisticGenericJob):
             data_dict=output_dict,
             group_name="output",
         )
-        final_structure = self.structure.copy()
-        final_structure.indices = hdf_dict["output/generic/indices"][-1]
-        final_structure.positions = hdf_dict["output/generic/positions"][-1]
-        final_structure.cell = hdf_dict["output/generic/cells"][-1]
+        try:
+            final_structure = self.structure.copy()
+            final_structure.indices = hdf_dict["output/generic/indices"][-1]
+            final_structure.positions = hdf_dict["output/generic/positions"][-1]
+            final_structure.cell = hdf_dict["output/generic/cells"][-1]
+        except ValueError as e:
+            logger.warning(
+                f"Caught ValueError: {e}\n"
+                "This can happen if the number of atoms changes during a simulation\n"
+                "Not storing output/structure to HDF"
+            )
+            final_structure = None
         if final_structure is not None:
             hdf_dict.update(
                 {
