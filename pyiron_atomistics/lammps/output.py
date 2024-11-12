@@ -75,7 +75,11 @@ def parse_lammps_output(
 
     for k, v in dump_dict.items():
         if len(v) > 0:
-            hdf_generic[k] = convert_units(np.array(v), label=k)
+            try:
+                hdf_generic[k] = convert_units(np.array(v), label=k)
+            except ValueError:
+                vals = [convert_units(np.array(val), label=k) for val in v]
+                hdf_generic[k] = vals
 
     if df is not None and pressure_dict is not None and generic_keys_lst is not None:
         for k, v in df.items():
