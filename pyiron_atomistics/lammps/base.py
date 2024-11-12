@@ -437,7 +437,7 @@ class LammpsBase(AtomisticGenericJob):
             logger.warning(
                 f"Caught ValueError: {e}\n"
                 "This can happen if the number of atoms changes during a simulation\n"
-                "Not storing output/structure to HDF"
+                "Not storing 'output/structure' to HDF"
             )
             final_structure = None
         if final_structure is not None:
