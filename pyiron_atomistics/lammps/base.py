@@ -440,8 +440,8 @@ class LammpsBase(AtomisticGenericJob):
                 }
             )
         else:
-            logger.warning("
-                "The number of atoms changed during the simulation. This can be a sign of massive issues in your simulation."
+            logger.warning(
+                "The number of atoms changed during the simulation. This can be a sign of massive issues in your simulation.\n"
                 "Not storing 'output/structure' to HDF"
             )
         self.project_hdf5.write_dict_to_hdf(data_dict=hdf_dict)
