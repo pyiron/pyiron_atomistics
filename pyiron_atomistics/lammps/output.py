@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from pyiron_base import extract_data_from_file
 from pyiron_snippets.logger import logger
+
 from pyiron_atomistics.lammps.structure import UnfoldingPrism
 from pyiron_atomistics.lammps.units import UnitConverter
 
