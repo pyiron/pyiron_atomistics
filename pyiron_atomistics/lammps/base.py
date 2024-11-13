@@ -428,24 +428,21 @@ class LammpsBase(AtomisticGenericJob):
             data_dict=output_dict,
             group_name="output",
         )
-        try:
+        if len(self.structure) == len(hdf_dict["output/generic/indices"][-1]):
             final_structure = self.structure.copy()
             final_structure.indices = hdf_dict["output/generic/indices"][-1]
             final_structure.positions = hdf_dict["output/generic/positions"][-1]
             final_structure.cell = hdf_dict["output/generic/cells"][-1]
-        except ValueError as e:
-            logger.warning(
-                f"Caught ValueError: {e}\n"
-                "This can happen if the number of atoms changes during a simulation\n"
-                "Not storing 'output/structure' to HDF"
-            )
-            final_structure = None
-        if final_structure is not None:
             hdf_dict.update(
                 {
                     "output/structure/" + k: v
                     for k, v in final_structure.to_dict().items()
                 }
+            )
+        else:
+            logger.warning("
+                "The number of atoms changed during the simulation. This can be a sign of massive issues in your simulation."
+                "Not storing 'output/structure' to HDF"
             )
         self.project_hdf5.write_dict_to_hdf(data_dict=hdf_dict)
 
