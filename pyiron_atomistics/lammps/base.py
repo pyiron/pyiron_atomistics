@@ -13,8 +13,8 @@ import numpy as np
 import pandas
 from pyiron_base import state
 from pyiron_snippets.deprecate import deprecate
-
 from pyiron_snippets.logger import logger
+
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.lammps.control import LammpsControl
 from pyiron_atomistics.lammps.output import (
