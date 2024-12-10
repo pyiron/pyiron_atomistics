@@ -27,7 +27,12 @@ with ImportAlarm(
     from calphy import Alchemy, Calculation, Liquid, Solid
     from calphy import __version__ as calphy_version
     from calphy.routines import routine_alchemy, routine_fe, routine_pscale, routine_ts
-    from pyscal.trajectory import Trajectory as PyscalTrajectory
+    # both trajectory classes behave the same, so we can use either depending
+    # on the env
+    try:
+        from pyscal.trajectory import Trajectory as PyscalTrajectory
+    except ImportError:
+        from pyscal3.trajectory import Trajectory as PyscalTrajectory
 
 __author__ = "Sarath Menon"
 __copyright__ = (
