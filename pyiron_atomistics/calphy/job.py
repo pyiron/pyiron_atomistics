@@ -27,6 +27,7 @@ with ImportAlarm(
     from calphy import Alchemy, Calculation, Liquid, Solid
     from calphy import __version__ as calphy_version
     from calphy.routines import routine_alchemy, routine_fe, routine_pscale, routine_ts
+
     # both trajectory classes behave the same, so we can use either depending
     # on the env
     try:
