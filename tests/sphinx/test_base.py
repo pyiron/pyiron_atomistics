@@ -383,7 +383,7 @@ class TestSphinx(unittest.TestCase):
         self.sphinx_band_structure.input["nSloppy"] = 0
         self.sphinx_band_structure.input["WriteWaves"] = False
         test_scf = self.sphinx_band_structure.get_scf_group()
-        self.assertEqual(test_scf, ref_scf)
+        self.assertEqual(test_scf.to_builtin(), ref_scf)
 
     def test_check_setup(self):
         self.assertFalse(self.sphinx.check_setup())
