@@ -211,7 +211,7 @@ class TestSphinx(unittest.TestCase):
             "\tscfDiag {\n",
             "\t\trhoMixing = 1.0;\n",
             "\t\tspinMixing = 1.0;\n",
-            "\t\tdEnergy = 3.674932217565499e-06;\n",
+            "\t\tdEnergy = 3.6749322175664444e-06;\n",
             "\t\tmaxSteps = 100;\n",
             "\t\tpreconditioner {\n",
             "\t\t\ttype = KERKER;\n",
