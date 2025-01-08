@@ -363,7 +363,7 @@ class TestSphinx(unittest.TestCase):
                 "maxSteps": "100",
                 "blockCCG": {},
             }
-            self.assertEqual(test_scf, ref_scf)
+            self.assertEqual(test_scf.to_builtin(), ref_scf)
 
         ref_scf = {
             "rhoMixing": "1.0",
