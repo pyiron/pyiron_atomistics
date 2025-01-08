@@ -363,13 +363,13 @@ class TestSphinx(unittest.TestCase):
                 "maxSteps": "100",
                 "blockCCG": {},
             }
-            self.assertEqual(test_scf.to_builtin(), ref_scf)
+            self.assertEqual(test_scf, ref_scf)
 
         ref_scf = {
             "rhoMixing": "1.0",
             "spinMixing": "1.0",
             "nPulaySteps": "0",
-            "dEnergy": 3.674932217565499e-06,
+            "dEnergy": 3.6749322175664444e-06,
             "maxSteps": "100",
             "preconditioner": {"type": 0},
             "blockCCG": {"maxStepsCCG": 0, "blockSize": 0, "nSloppy": 0},
@@ -383,7 +383,7 @@ class TestSphinx(unittest.TestCase):
         self.sphinx_band_structure.input["nSloppy"] = 0
         self.sphinx_band_structure.input["WriteWaves"] = False
         test_scf = self.sphinx_band_structure.get_scf_group()
-        self.assertEqual(test_scf.to_builtin(), ref_scf)
+        self.assertEqual(test_scf, ref_scf)
 
     def test_check_setup(self):
         self.assertFalse(self.sphinx.check_setup())
