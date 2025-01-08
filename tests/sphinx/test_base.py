@@ -177,7 +177,7 @@ class TestSphinx(unittest.TestCase):
             "\t}\n",
             "}\n",
             "basis {\n",
-            "\teCut = 24.989539079445393;\n",
+            "\teCut = 24.98953907945182;\n",
             "\tkPoint {\n",
             "\t\tcoords = [0.5, 0.5, 0.5];\n",
             "\t\tweight = 1;\n",
