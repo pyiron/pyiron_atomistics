@@ -354,7 +354,7 @@ class TestSphinx(unittest.TestCase):
             ref_scf = {
                 "rhoMixing": "1.0",
                 "spinMixing": "1.0",
-                "dEnergy": 3.674932217565499e-06,
+                "dEnergy": 3.6749322175664444e-06,
                 "preconditioner": {
                     "type": "KERKER",
                     "scaling": 1.0,
