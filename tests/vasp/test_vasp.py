@@ -547,7 +547,7 @@ class TestVasp(unittest.TestCase):
             self.assertNotIn(
                 "KPOINTS",
                 job_kspace.files.list(),
-                "'KPOINTS' file written even when " "KPACING tag is present in INCAR",
+                "'KPOINTS' file written even when KPACING tag is present in INCAR",
             )
 
             self.assertTrue(len(w) <= 2)
