@@ -858,10 +858,13 @@ class TestLammps(TestWithCleanProject):
         file_directory = os.path.join(
             self.execution_path, "..", "static", "lammps_test_files"
         )
-        _generic_keys_lst, _pressure_dict, _df = _collect_output_log(
+        _generic_keys_lst, _pressure_dict, df = _collect_output_log(
             file_name=os.path.join(file_directory, "multi_log_step_test.lammps"),
             prism=UnfoldingPrism(structure.cell),
         )
+        self.assertEqual(len(df[df.LogStep == 0]), 6)
+        self.assertEqual(len(df[df.LogStep == 1]), 6)
+        self.assertEqual(len(df.columns), 6)
 
 
 def collect_dump_file_old(job, file_name="dump.out", cwd=None):
