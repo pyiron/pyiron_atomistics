@@ -511,8 +511,8 @@ class SphinxWavesReader:
         ispin = np.arange(self.n_spin)[ispin]
 
         off = self._n_gk[ik] * (i + ispin * self.n_states)
-        psire = self.wfile[f"psi-{ik+1}.re"][off : off + self._n_gk[ik]]
-        psiim = self.wfile[f"psi-{ik+1}.im"][off : off + self._n_gk[ik]]
+        psire = self.wfile[f"psi-{ik + 1}.re"][off : off + self._n_gk[ik]]
+        psiim = self.wfile[f"psi-{ik + 1}.im"][off : off + self._n_gk[ik]]
         compact_wave = psire + 1j * psiim
         if compact:
             return compact_wave

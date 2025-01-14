@@ -120,7 +120,7 @@ class TestMurnaghan(TestWithCleanProject):
                 ax=ax,
                 plot_kwargs={"color": "black", "label": f"plot{i}", "marker": "x"},
             )
-            ax.set_title(f"Axis {i+1}")
+            ax.set_title(f"Axis {i + 1}")
             self.assertEqual(len(ax.lines), 2)
         with self.subTest(msg="standard polynomial fit"):
             self.assertAlmostEqual(-90.71969974284912, murn.equilibrium_energy)
