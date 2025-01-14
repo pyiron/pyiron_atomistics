@@ -1032,15 +1032,15 @@ class SphinxBase(GenericDFTJob):
             ionic_force_tolerance = ionic_forces
         if ionic_energy is not None:
             ionic_energy_tolerance = ionic_energy
-        assert (
-            ionic_energy_tolerance is None or ionic_energy_tolerance > 0
-        ), "ionic_energy_tolerance must be a positive float"
-        assert (
-            ionic_force_tolerance is None or ionic_force_tolerance > 0
-        ), "ionic_force_tolerance must be a positive float"
-        assert (
-            electronic_energy is None or electronic_energy > 0
-        ), "electronic_energy must be a positive float"
+        assert ionic_energy_tolerance is None or ionic_energy_tolerance > 0, (
+            "ionic_energy_tolerance must be a positive float"
+        )
+        assert ionic_force_tolerance is None or ionic_force_tolerance > 0, (
+            "ionic_force_tolerance must be a positive float"
+        )
+        assert electronic_energy is None or electronic_energy > 0, (
+            "electronic_energy must be a positive float"
+        )
         if ionic_energy_tolerance is not None or ionic_force_tolerance is not None:
             # self.input["dE"] = ionic_energy_tolerance
             # self.input["dF"] = ionic_force_tolerance
@@ -1312,9 +1312,9 @@ class SphinxBase(GenericDFTJob):
                 potential_path = potentials.find_potential_file(
                     path=potentials.find_default(new_element)["Filename"].values[0][0]
                 )
-                assert os.path.isfile(
-                    potential_path
-                ), "such a file does not exist in the pp directory"
+                assert os.path.isfile(potential_path), (
+                    "such a file does not exist in the pp directory"
+                )
             elif elem in modified_elements.keys():
                 new_element = modified_elements[elem]
                 if os.path.isabs(new_element):
