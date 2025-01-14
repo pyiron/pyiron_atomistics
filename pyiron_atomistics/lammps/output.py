@@ -323,25 +323,27 @@ def _collect_output_log(
     general purpose routine to extract static from a lammps log file
     """
     with open(file_name, "r") as f:
+        dfs = []
         read_thermo = False
-        thermo_lines = ""
         for l in f:
             l = l.lstrip()
+
+            if l.startswith("Step"):
+                thermo_lines = ""
+                read_thermo = True
 
             if read_thermo:
                 if l.startswith("Loop") or l.startswith("ERROR"):
                     read_thermo = False
-                    continue
+                    dfs.append(
+                        pd.read_csv(StringIO(thermo_lines), sep="\s+", engine="c")
+                    )
+
                 elif l.startswith("WARNING:"):
                     logger.warning(f"A warning was found in the log:\n{l}")
-                    continue
-                thermo_lines += l
 
-            if l.startswith("Step"):
-                read_thermo = True
-                thermo_lines += l
-
-    df = pd.read_csv(StringIO(thermo_lines), sep="\s+", engine="c")
+                else:
+                    thermo_lines += l
 
     h5_dict = {
         "Step": "steps",
@@ -350,6 +352,14 @@ def _collect_output_log(
         "TotEng": "energy_tot",
         "Volume": "volume",
     }
+    if len(dfs) == 1:
+        df = dfs[0]
+    else:
+        h5_dict["LogStep"] = "LogStep"
+        for i in range(len(dfs)):
+            df = dfs[i]
+            df["LogStep"] = np.ones(len(df)) * i
+        df = pd.concat(dfs, ignore_index=True)
 
     for key in df.columns[df.columns.str.startswith("f_mean")]:
         h5_dict[key] = key.replace("f_", "")
