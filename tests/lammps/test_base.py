@@ -11,7 +11,7 @@ from pyiron_base import state, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 from pyiron_atomistics.lammps.base import LammpsStructure, UnfoldingPrism
-from pyiron_atomistics.lammps.output import to_amat
+from pyiron_atomistics.lammps.output import to_amat, _collect_output_log
 from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS, UnitConverter
 from pyiron_atomistics.lammps.output import parse_lammps_output
 import ase.units as units
@@ -843,6 +843,25 @@ class TestLammps(TestWithCleanProject):
 
         bond_str = "2 bond types\n"
         self.assertTrue(self.job["structure.inp"][4][-1], bond_str)
+
+    def test_multistep_log_parse(self):
+        structure = Atoms(
+            symbols=["Cu", "Cu", "Cu", "Cu"],
+            positions=[
+                [0.0, 0.0, 0.0],
+                [0.0, 1.805, 1.805],
+                [1.805, 0.0, 1.805],
+                [1.805, 1.805, 0.0],
+            ],
+            cell=[3.61, 3.61, 3.61],
+        )
+        file_directory = os.path.join(
+            self.execution_path, "..", "static", "lammps_test_files"
+        )
+        _generic_keys_lst, _pressure_dict, _df = _collect_output_log(
+            file_name=os.path.join(file_directory, "multi_log_step_test.lammps"),
+            prism=UnfoldingPrism(structure.cell),
+        )
 
 
 def collect_dump_file_old(job, file_name="dump.out", cwd=None):
