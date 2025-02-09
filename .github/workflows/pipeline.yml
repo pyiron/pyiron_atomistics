@@ -1,0 +1,234 @@
+name: Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: psf/black@stable
+      with:
+        options: "--check --diff"
+        src: ./${{ github.event.repository.name }}
+
+  black_fix:  # in most cases pre-commit is faster
+    needs: [black]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.DEPENDABOT_WORKFLOW_TOKEN }}
+        ref: ${{ github.event.pull_request.head.ref }} # Check out the head of the actual branch, not the PR
+        fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
+    - name: format black
+      uses: psf/black@stable
+      with:
+        options: ""
+        src: "./${{ github.event.repository.name }}"
+    - name: commit
+      run: |
+        git config --local user.email "pyiron@mpie.de"
+        git config --local user.name "pyiron-runner"
+        git commit -m "Format black" -a
+    - name: push
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.DEPENDABOT_WORKFLOW_TOKEN }}
+        branch: ${{ github.event.pull_request.head.ref }}
+
+  pip_check:
+    needs: [black]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Conda config
+      run: echo -e "channels:\n  - conda-forge\n" > .condarc
+    - name: Setup Mambaforge
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: '3.12'
+        miniforge-version: latest
+        condarc-file: .condarc
+        environment-file: .ci_support/environment.yml
+    - name: Pip check
+      shell: bash -l {0}
+      run: |
+        pip install versioneer[toml]==0.29
+        pip install . --no-deps --no-build-isolation
+        pip check
+
+  backwards:
+    needs: [black]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Merge environments
+      run: |
+        cp .ci_support/environment.yml environment.yml
+        tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
+        echo -e "channels:\n  - conda-forge\n" > .condarc
+    - name: Setup Mambaforge
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: '3.10'
+        miniforge-version: latest
+        condarc-file: .condarc
+        environment-file: environment.yml
+    - name: Test
+      shell: bash -l {0}
+      run: |
+        python .ci_support/pyironconfig.py
+        ./.ci_support/test_backwards.sh
+
+  benchmark:
+    needs: [black]
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        include:
+          - operating-system: macos-latest
+            python-version: '3.12'
+
+          - operating-system: windows-latest
+            python-version: '3.12'
+
+          - operating-system: ubuntu-latest
+            python-version: '3.12'
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Conda config
+        shell: bash -l {0}
+        run: echo -e "channels:\n  - conda-forge\n" > .condarc
+      - name: Setup Mambaforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          miniforge-version: latest
+          condarc-file: .condarc
+          environment-file: .ci_support/environment.yml
+      - name: Tests
+        shell: bash -l {0}
+        timeout-minutes: 30
+        run: |
+          python .ci_support/pyironconfig.py
+          pip install versioneer[toml]==0.29
+          pip install . --no-deps --no-build-isolation
+          python -m unittest discover test_benchmarks
+
+  notebooks:
+    needs: [black]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Merge environment
+        run: |
+          cp .ci_support/environment.yml environment.yml
+          tail --lines=+4 .ci_support/environment-notebooks.yml >> environment.yml
+          echo -e "channels:\n  - conda-forge\n" > .condarc
+      - name: Setup Mambaforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: '3.12'
+          miniforge-version: latest
+          condarc-file: .condarc
+          environment-file: environment.yml
+      - name: Test
+        shell: bash -l {0}
+        run: |
+          pip install versioneer[toml]==0.29
+          pip install . --no-deps --no-build-isolation
+          ./.ci_support/build_notebooks.sh
+
+  unittest_matrix:
+    needs: [black]
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        include:
+          - operating-system: macos-latest
+            python-version: '3.12'
+            label: osx-64-py-3-12
+
+          - operating-system: windows-latest
+            python-version: '3.12'
+            label: win-64-py-3-12
+
+          - operating-system: ubuntu-latest
+            python-version: '3.12'
+            label: linux-64-py-3-12
+
+          - operating-system: ubuntu-latest
+            python-version: '3.11'
+            label: linux-64-py-3-11
+
+          - operating-system: ubuntu-latest
+            python-version: '3.10'
+            label: linux-64-py-3-10
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Conda config
+        shell: bash -l {0}
+        run: echo -e "channels:\n  - conda-forge\n" > .condarc
+      - name: Setup Mambaforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          miniforge-version: latest
+          condarc-file: .condarc
+          environment-file: .ci_support/environment.yml
+      - name: Test
+        shell: bash -l {0}
+        timeout-minutes: 30
+        run: |
+          python .ci_support/pyironconfig.py
+          pip install versioneer[toml]==0.29
+          pip install . --no-deps --no-build-isolation
+          coverage run --omit="pyiron_atomistics/_version.py,tests/*" -m unittest discover tests
+          coverage xml
+      - name: Coveralls
+        if: matrix.label == 'linux-64-py-3-12'
+        uses: coverallsapp/github-action@v2
+
+  unittest_old:
+    needs: [black]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Conda config
+      run: echo -e "channels:\n  - conda-forge\n" > .condarc
+    - name: Setup Mambaforge
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: '3.10'
+        miniforge-version: latest
+        condarc-file: .condarc
+        environment-file: .ci_support/environment-old.yml
+    - name: Test
+      shell: bash -l {0}
+      timeout-minutes: 30
+      run: |
+        python .ci_support/pyironconfig.py
+        pip install versioneer[toml]==0.29
+        pip install . --no-deps --no-build-isolation
+        python -m unittest discover tests
+
+  autobot:
+    needs: [unittest_old, unittest_matrix, pip_check, notebooks, benchmark, backwards]
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    if: (github.event.pull_request.user.login == 'dependabot[bot]' || github.event.pull_request.user.login == 'pre-commit-ci[bot]')
+    steps:
+      - name: Enable auto-merge for bot PRs
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
