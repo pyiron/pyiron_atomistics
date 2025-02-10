@@ -15,7 +15,7 @@ dependencies:
 - mp-api =0.45.1
 - numpy =1.26.4
 - pandas =2.2.3
-- phonopy =2.36.0
+- phonopy =2.37.0
 - pint =0.24.4
 - pyiron_base =0.11.1
 - pyiron_snippets =0.1.4
