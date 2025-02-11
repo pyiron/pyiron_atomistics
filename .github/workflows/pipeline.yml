@@ -192,9 +192,11 @@ jobs:
           pip install . --no-deps --no-build-isolation
           coverage run --omit="pyiron_atomistics/_version.py,tests/*" -m unittest discover tests
           coverage xml
-      - name: Coveralls
+      - name: Upload coverage reports to Codecov
         if: matrix.label == 'linux-64-py-3-12'
-        uses: coverallsapp/github-action@v2
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   unittest_old:
     needs: [black]
