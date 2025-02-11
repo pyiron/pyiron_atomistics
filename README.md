@@ -1,5 +1,6 @@
 # pyiron_atomistics
 
+[![codecov](https://codecov.io/gh/pyiron/pyiron_atomistics/graph/badge.svg?token=lM9AE7780p)](https://codecov.io/gh/pyiron/pyiron_atomistics)
 [![Pipeline](https://github.com/pyiron/pyiron_atomistics/actions/workflows/pipeline.yml/badge.svg)](https://github.com/pyiron/pyiron_atomistics/actions/workflows/pipeline.yml)
 ![Anaconda](https://anaconda.org/conda-forge/pyiron_atomistics/badges/downloads.svg)
 ![Release](https://anaconda.org/conda-forge/pyiron_atomistics/badges/latest_release_date.svg)
