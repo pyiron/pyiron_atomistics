@@ -37,7 +37,7 @@ dependencies = [
     "pint==0.24.4",
     "pyiron_base==0.11.1",
     "pyiron_snippets==0.1.4",
-    "pylammpsmpi==0.2.29",
+    "pylammpsmpi==0.2.30",
     "pyscal3==3.2.7",
     "scipy==1.15.1",
     "scikit-learn==1.6.1",
