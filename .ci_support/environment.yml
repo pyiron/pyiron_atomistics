@@ -7,7 +7,7 @@ dependencies:
 - coverage
 - codacy-coverage
 - defusedxml =0.7.1
-- h5py =3.12.1
+- h5py =3.13.0
 - matplotlib-base =3.10.0
 - mendeleev =0.19.0
 - mp-api =0.45.2
