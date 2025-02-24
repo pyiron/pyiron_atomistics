@@ -30,7 +30,10 @@ class LammpsStructure(LammpsStructureASE):
     """
 
     def __init__(self, bond_dict=None, job=None):
-        super().__init__(bond_dict=bond_dict, units=job.units)
+        if job is not None:
+            super().__init__(bond_dict=bond_dict, units=job.units)
+        else:
+            super().__init__(bond_dict=bond_dict, units=None)
         self._molecule_ids = []
 
     @property
