@@ -10,8 +10,7 @@ from collections import OrderedDict
 
 import numpy as np
 from pyiron_base import GenericParameters, state
-
-from pyiron_atomistics.lammps.units import LAMMPS_UNIT_CONVERSIONS
+from pyiron_lammps.units import LAMMPS_UNIT_CONVERSIONS
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
