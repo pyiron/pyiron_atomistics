@@ -12,12 +12,14 @@ from typing import Optional
 import numpy as np
 import pandas
 from pyiron_base import state
+from pyiron_lammps.output import parse_lammps_output
+from pyiron_lammps.structure import UnfoldingPrism, structure_to_lammps
+from pyiron_lammps.units import LAMMPS_UNIT_CONVERSIONS
 from pyiron_snippets.deprecate import deprecate
 from pyiron_snippets.logger import logger
 
 from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.lammps.control import LammpsControl
-from pyiron_lammps.output import parse_lammps_output
 from pyiron_atomistics.lammps.output import remap_indices
 from pyiron_atomistics.lammps.potential import (
     LammpsPotential,
@@ -27,8 +29,6 @@ from pyiron_atomistics.lammps.potential import (
     view_potentials,
 )
 from pyiron_atomistics.lammps.structure import LammpsStructure
-from pyiron_lammps.structure import UnfoldingPrism, structure_to_lammps
-from pyiron_lammps.units import LAMMPS_UNIT_CONVERSIONS
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Jan Janssen"
 __copyright__ = (
@@ -970,7 +970,9 @@ class LammpsBase(AtomisticGenericJob):
                         )
 
     def _get_lammps_structure(self, structure=None, cutoff_radius=None):
-        lmp_structure = LammpsStructure(bond_dict=self.input.bond_dict, units=self.units)
+        lmp_structure = LammpsStructure(
+            bond_dict=self.input.bond_dict, units=self.units
+        )
         lmp_structure._force_skewed = self.input.control._force_skewed
         lmp_structure.potential = self.input.potential
         lmp_structure.atom_type = self.input.control["atom_style"]

@@ -7,16 +7,16 @@ import pandas as pd
 import yaml
 from ase.io import read
 from pyiron_base import DataContainer, GenericJob
+from pyiron_lammps.structure import (
+    UnfoldingPrism,
+    structure_to_lammps,
+)
 from pyiron_snippets.import_alarm import ImportAlarm
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.has_structure import HasStructure
 from pyiron_atomistics.lammps.potential import LammpsPotential, LammpsPotentialFile
 from pyiron_atomistics.lammps.structure import LammpsStructure
-from pyiron_lammps.structure import (
-    UnfoldingPrism,
-    structure_to_lammps,
-)
 
 calphy_version = "1.0.0"
 

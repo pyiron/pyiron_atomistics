@@ -7,13 +7,13 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from pyiron_lammps.structure import UnfoldingPrism
+from pyiron_lammps.units import UnitConverter
 from pyiron_snippets.import_alarm import ImportAlarm
 
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.lammps.base import LammpsBase
 from pyiron_atomistics.lammps.control import LammpsControl
-from pyiron_lammps.structure import UnfoldingPrism
-from pyiron_lammps.units import UnitConverter
 
 with ImportAlarm(
     "Lammps interactive relies on the lammps module but this is unavailable. Please ensure your python environment"
