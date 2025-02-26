@@ -1995,10 +1995,14 @@ class Output:
         Returns:
 
         """
+        if cwd is not None:
+            file_name = os.path.join(cwd, file_name)
 
         try:
+            with open(file_name, "r") as f:
+                file_content = f.readlines()
             results = SphinxLogParser(
-                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
+                file_content=file_content, index_permutation=self._job.id_spx_to_pyi
             ).results
         except FileNotFoundError:
             return None
