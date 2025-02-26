@@ -2000,10 +2000,9 @@ class Output:
 
         try:
             with open(file_name, "r") as f:
-                file_content = f.readlines()
-            results = SphinxLogParser(
-                file_content=file_content, index_permutation=self._job.id_spx_to_pyi
-            ).results
+                results = SphinxLogParser(
+                    file_content=f.read(), index_permutation=self._job.id_spx_to_pyi
+                ).results
         except FileNotFoundError:
             return None
         if len(results) == 0:
