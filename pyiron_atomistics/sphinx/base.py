@@ -1967,7 +1967,7 @@ class Output:
             )
             for k, v in results.items():
                 if k not in self.generic.dft:
-                    self.generic.dft[k] = v * HARTREE_TO_EV
+                    self.generic.dft[k] = v
         except FileNotFoundError:
             return
 
@@ -2015,10 +2015,13 @@ class Output:
             self._job.status.aborted = True
         for key, value in results["generic"].items():
             if key not in self.generic:
-                self.generic[key] = value
+                self.generic[key] = value if key != "forces" else value * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
         for key, value in results["dft"].items():
             if key not in self.generic.dft:
-                self.generic.dft[key] = value
+                if key not in ["scf_energy_int", "scf_energy_free", "scf_magnetic_forces"]:
+                    self.generic.dft[key] = value
+                else:
+                    self.generic.dft[key] = [(np.array(el) * HARTREE_TO_EV).tolist() for el in value]
 
     def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=None):
         """
