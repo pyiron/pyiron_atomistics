@@ -1929,7 +1929,10 @@ class Output:
         except FileNotFoundError:
             return
         for k, v in results.items():
-            self.generic.dft[k] = v * HARTREE_TO_EV
+            if k != "scf_computation_time":
+                self.generic.dft[k] = [el * HARTREE_TO_EV for el in v]
+            else:
+                self.generic.dft[k] = v
 
     def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         """
