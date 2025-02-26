@@ -2017,11 +2017,12 @@ class Output:
             self._job.status.aborted = True
         for key, value in results["generic"].items():
             if key not in self.generic:
-                self.generic[key] = (
-                    value
-                    if key != "forces"
-                    else value * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-                )
+                if key == "forces":
+                    self.generic[key] = value * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+                elif key == "volume":
+                    self.generic[key] = value * BOHR_TO_ANGSTROM**3
+                else:
+                    self.generic[key] = value
         for key, value in results["dft"].items():
             if key not in self.generic.dft:
                 if key not in [
