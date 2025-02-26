@@ -9,7 +9,7 @@ dependencies:
 - matplotlib-base =3.5.3
 - mendeleev =0.19.0
 - mp-api =0.37.0
-- numpy =1.26.0
+- numpy =1.26.2
 - pandas =2.0.3
 - phonopy =2.20.0
 - pint =0.18
@@ -25,3 +25,4 @@ dependencies:
 - seekpath =1.9.5
 - spglib =2.0.2
 - structuretoolkit =0.0.29
+- sphinx_parser =0.0.1

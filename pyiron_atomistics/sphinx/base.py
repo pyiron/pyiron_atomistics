@@ -28,12 +28,12 @@ from pyiron_atomistics.sphinx.input_writer import (
     get_structure_group,
     write_spin_constraints,
 )
-from pyiron_atomistics.sphinx.output_parser import (
+from sphinx_parser.output import (
     SphinxLogParser,
     collect_energy_dat,
     collect_energy_struct,
     collect_eps_dat,
-    collect_relaxed_hist,
+    collect_eval_forces,
     collect_residue_dat,
     collect_spins_dat,
 )
@@ -2025,7 +2025,7 @@ class Output:
 
         """
         try:
-            results = collect_relaxed_hist(
+            results = collect_eval_forces(
                 file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
             )
         except FileNotFoundError:
