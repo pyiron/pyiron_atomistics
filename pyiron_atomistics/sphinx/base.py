@@ -1929,7 +1929,7 @@ class Output:
         except FileNotFoundError:
             return
         for k, v in results.items():
-            self.generic.dft[k] = v
+            self.generic.dft[k] = v * HARTREE_TO_EV
 
     def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         """
@@ -1964,7 +1964,7 @@ class Output:
             )
             for k, v in results.items():
                 if k not in self.generic.dft:
-                    self.generic.dft[k] = v
+                    self.generic.dft[k] = v * HARTREE_TO_EV
         except FileNotFoundError:
             return
 
@@ -1983,7 +1983,7 @@ class Output:
         except FileNotFoundError:
             return
         for k, v in results.items():
-            self.generic.dft[k] = v
+            self.generic.dft[k] = v * HARTREE_TO_EV
 
     def collect_sphinx_log(self, file_name="sphinx.log", cwd=None):
         """
@@ -2034,7 +2034,7 @@ class Output:
         except FileNotFoundError:
             return
         for k, v in results.items():
-            self.generic[k] = v
+            self.generic[k] = v if k != "forces" else v * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
 
     def collect_charge_density(self, file_name, cwd):
         if (
