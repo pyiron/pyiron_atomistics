@@ -1930,7 +1930,9 @@ class Output:
             return
         for k, v in results.items():
             if k != "scf_computation_time":
-                self.generic.dft[k] = [(np.array(el) * HARTREE_TO_EV).tolist() for el in v]
+                self.generic.dft[k] = [
+                    (np.array(el) * HARTREE_TO_EV).tolist() for el in v
+                ]
             else:
                 self.generic.dft[k] = v
 
