@@ -6,7 +6,10 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     dict_group_to_hdf,
     structure_dict_to_hdf,
 )
-from pyiron_atomistics.dft.waves.electronic import electronic_structure_dict_to_hdf, ElectronicStructure
+from pyiron_atomistics.dft.waves.electronic import (
+    ElectronicStructure,
+    electronic_structure_dict_to_hdf,
+)
 
 
 class GenericOutput:
