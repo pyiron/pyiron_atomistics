@@ -8,7 +8,11 @@ import posixpath
 import numpy as np
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.dft.waves.electronic import from_hdf_old, from_hdf, electronic_structure_dict_to_hdf
+from pyiron_atomistics.dft.waves.electronic import (
+    from_hdf_old,
+    from_hdf,
+    electronic_structure_dict_to_hdf,
+)
 from pyiron_vasp.vasp.vasprun import Vasprun
 from pyiron_vasp.dft.waves.dos import Dos
 from pyiron_vasp.dft.waves.electronic import ElectronicStructure
@@ -110,7 +114,9 @@ class TestElectronicStructure(unittest.TestCase):
         abs_filename = os.path.abspath(filename)
         hdf_obj = FileHDFio(abs_filename)
         es_obj_old = self.es_list[1]
-        electronic_structure_dict_to_hdf(data_dict=es_obj_old.to_dict(), hdf=hdf_obj, group_name="written_es")
+        electronic_structure_dict_to_hdf(
+            data_dict=es_obj_old.to_dict(), hdf=hdf_obj, group_name="written_es"
+        )
         es_obj_new = ElectronicStructure()
         from_hdf(self=es_obj_new, hdf=hdf_obj, group_name="written_es")
         self.assertTrue(
