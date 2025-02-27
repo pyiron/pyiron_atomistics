@@ -7,7 +7,7 @@ import os
 import posixpath
 import numpy as np
 from pyiron_atomistics.vasp.base import Output, VaspCollectError
-from pyiron_atomistics.vasp.parser.outcar import Outcar, OutcarCollectError
+from pyiron_vasp.vasp.parser.outcar import Outcar, OutcarCollectError
 
 
 class TestOutcar(unittest.TestCase):

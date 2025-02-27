@@ -7,8 +7,8 @@ import os
 import posixpath
 import numpy as np
 
-from pyiron_atomistics.vasp.vasprun import Vasprun
-from pyiron_atomistics.dft.waves.dos import Dos, NoResolvedDosError
+from pyiron_vasp.vasp.vasprun import Vasprun
+from pyiron_vasp.dft.waves.dos import Dos, NoResolvedDosError
 
 """
 @author: surendralal

@@ -6,9 +6,9 @@ import unittest
 import os
 import posixpath
 import numpy as np
-from pyiron_atomistics.vasp.vasprun import Vasprun, VasprunError
+from pyiron_vasp.vasp.vasprun import Vasprun, VasprunError
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
+from pyiron_vasp.dft.waves.electronic import ElectronicStructure
 
 __author__ = "surendralal"
 

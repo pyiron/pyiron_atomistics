@@ -9,7 +9,7 @@ import numpy as np
 from pyiron_base import GenericParameters
 
 from pyiron_atomistics.vasp.base import Input, Output
-from pyiron_atomistics.vasp.parser.report import Report
+from pyiron_vasp.vasp.parser.report import Report
 from pyiron_atomistics.vasp.vasp import Vasp
 
 __author__ = "Sudarsan Surendralal"

@@ -30,7 +30,7 @@ from sphinx_parser.output import (
 )
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
-from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
+from pyiron_vasp.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.sphinx.input_writer import (
     Group,
     copy_potentials,
