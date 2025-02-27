@@ -8,11 +8,10 @@ import posixpath
 import numpy as np
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.vasp.structure import read_atoms, atoms_from_string
 from pyiron_vasp.vasp.structure import (
-    read_atoms,
     write_poscar,
     vasp_sorter,
-    atoms_from_string,
     manip_contcar,
 )
 import warnings

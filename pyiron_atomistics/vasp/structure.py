@@ -13,6 +13,15 @@ __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
+from ase.atoms import Atoms as ASEAtoms
+
+from pyiron_vasp.vasp.structure import (
+    read_atoms as _read_atoms,
+    atoms_from_string as _atoms_from_string,
+)
+
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+
 
 def get_poscar_content(structure, write_species=True, cartesian=True):
     endline = "\n"
@@ -61,3 +70,28 @@ def get_poscar_content(structure, write_species=True, cartesian=True):
             x, y, z = vec
             line_lst.append("{0:.15f} {1:.15f} {2:.15f}".format(x, y, z) + endline)
     return line_lst
+
+
+def read_atoms(
+    filename="CONTCAR",
+    return_velocities=False,
+    species_list=None,
+    species_from_potcar=False,
+):
+    return ase_to_pyiron(
+        ase_obj=_read_atoms(
+            filename=filename,
+            return_velocities=return_velocities,
+            species_list=species_list,
+            species_from_potcar=species_from_potcar,
+        )
+    )
+
+
+def atoms_from_string(string, read_velocities=False, species_list=None):
+    output = _atoms_from_string(string=string, read_velocities=read_velocities, species_list=species_list)
+    if not read_velocities:
+        return ase_to_pyiron(ase_obj=output)
+    else:
+        atoms, velocities = output
+        return ase_to_pyiron(ase_obj=atoms), velocities
