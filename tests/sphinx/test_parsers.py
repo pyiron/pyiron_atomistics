@@ -6,14 +6,8 @@ import numpy as np
 import unittest
 from pathlib import Path
 
-from pyiron_atomistics.sphinx.output_parser import (
-    SphinxLogParser,
+from sphinx_parser.output import (
     collect_energy_dat,
-    collect_residue_dat,
-    collect_spins_dat,
-    collect_relaxed_hist,
-    collect_energy_struct,
-    collect_eps_dat,
     SphinxWavesReader,
 )
 

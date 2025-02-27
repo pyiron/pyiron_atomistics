@@ -25,4 +25,5 @@ dependencies:
 - seekpath =2.1.0
 - spglib =2.5.0
 - structuretoolkit =0.0.31
+- sphinx_parser =0.0.1
 - pyxtal =0.6.2

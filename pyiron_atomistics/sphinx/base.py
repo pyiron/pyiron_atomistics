@@ -19,6 +19,15 @@ import scipy.constants
 import spglib
 from pyiron_base import DataContainer, job_status_successful_lst, state
 from pyiron_snippets.deprecate import deprecate
+from sphinx_parser.output import (
+    SphinxLogParser,
+    collect_energy_dat,
+    collect_energy_struct,
+    collect_eps_dat,
+    collect_eval_forces,
+    collect_residue_dat,
+    collect_spins_dat,
+)
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
@@ -27,15 +36,6 @@ from pyiron_atomistics.sphinx.input_writer import (
     copy_potentials,
     get_structure_group,
     write_spin_constraints,
-)
-from pyiron_atomistics.sphinx.output_parser import (
-    SphinxLogParser,
-    collect_energy_dat,
-    collect_energy_struct,
-    collect_eps_dat,
-    collect_relaxed_hist,
-    collect_residue_dat,
-    collect_spins_dat,
 )
 from pyiron_atomistics.sphinx.potential import SphinxJTHPotentialFile
 from pyiron_atomistics.sphinx.structure import read_atoms
@@ -1929,7 +1929,12 @@ class Output:
         except FileNotFoundError:
             return
         for k, v in results.items():
-            self.generic.dft[k] = v
+            if k != "scf_computation_time":
+                self.generic.dft[k] = [
+                    (np.array(el) * HARTREE_TO_EV).tolist() for el in v
+                ]
+            else:
+                self.generic.dft[k] = v
 
     def collect_residue_dat(self, file_name="residue.dat", cwd=None):
         """
@@ -1983,7 +1988,7 @@ class Output:
         except FileNotFoundError:
             return
         for k, v in results.items():
-            self.generic.dft[k] = v
+            self.generic.dft[k] = v * HARTREE_TO_EV
 
     def collect_sphinx_log(self, file_name="sphinx.log", cwd=None):
         """
@@ -1995,11 +2000,14 @@ class Output:
         Returns:
 
         """
+        if cwd is not None:
+            file_name = os.path.join(cwd, file_name)
 
         try:
-            results = SphinxLogParser(
-                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
-            ).results
+            with open(file_name, "r") as f:
+                results = SphinxLogParser(
+                    file_content=f.read(), index_permutation=self._job.id_spx_to_pyi
+                ).results
         except FileNotFoundError:
             return None
         if len(results) == 0:
@@ -2008,11 +2016,23 @@ class Output:
         if not results["generic"].pop("job_finished"):
             self._job.status.aborted = True
         for key, value in results["generic"].items():
-            if key not in self.generic:
+            if key not in self.generic and key == "forces":
+                self.generic[key] = value * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+            elif key not in self.generic and key == "volume":
+                self.generic[key] = value * BOHR_TO_ANGSTROM**3
+            elif key not in self.generic:
                 self.generic[key] = value
         for key, value in results["dft"].items():
-            if key not in self.generic.dft:
+            if key not in self.generic.dft and key not in [
+                "scf_energy_int",
+                "scf_energy_free",
+                "scf_magnetic_forces",
+            ]:
                 self.generic.dft[key] = value
+            elif key not in self.generic.dft:
+                self.generic.dft[key] = [
+                    (np.array(el) * HARTREE_TO_EV).tolist() for el in value
+                ]
 
     def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=None):
         """
@@ -2025,13 +2045,15 @@ class Output:
 
         """
         try:
-            results = collect_relaxed_hist(
+            results = collect_eval_forces(
                 file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
             )
         except FileNotFoundError:
             return
         for k, v in results.items():
-            self.generic[k] = v
+            self.generic[k] = (
+                v if k != "forces" else v * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+            )
 
     def collect_charge_density(self, file_name, cwd):
         if (
