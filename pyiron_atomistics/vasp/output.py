@@ -1,13 +1,12 @@
 from __future__ import print_function
 
-from pyiron_vasp.dft.waves.electronic import ElectronicStructure
 from pyiron_vasp.vasp.volumetric_data import volumetric_data_dict_to_hdf
 
 from pyiron_atomistics.atomistics.structure.atoms import (
     dict_group_to_hdf,
     structure_dict_to_hdf,
 )
-from pyiron_atomistics.dft.waves.electronic import electronic_structure_dict_to_hdf, from_hdf
+from pyiron_atomistics.dft.waves.electronic import electronic_structure_dict_to_hdf, ElectronicStructure
 
 
 class GenericOutput:
@@ -75,7 +74,7 @@ class GenericOutput:
                     for node in hdf_dft.list_nodes():
                         self.dft_log_dict[node] = hdf_dft[node]
                     if "bands" in hdf_dft.list_groups():
-                        from_hdf(es=self.bands, hdf=hdf_dft, group_name="bands")
+                        self.bands.from_hdf(hdf=hdf_dft, group_name="bands")
 
 
 class DFTOutput:

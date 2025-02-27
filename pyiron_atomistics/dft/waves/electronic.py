@@ -5,7 +5,7 @@
 from __future__ import print_function
 
 import numpy as np
-from pyiron_vasp.dft.waves.dos import Dos
+from pyiron_vasp.dft.waves.electronic import ElectronicStructure as _ElectronicStructure
 
 from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
@@ -37,72 +37,83 @@ def electronic_structure_dict_to_hdf(data_dict, hdf, group_name):
         dict_group_to_hdf(data_dict=data_dict, hdf=h_es, group="dos")
 
 
-def from_hdf(es, hdf, group_name="electronic_structure"):
-    """
-    Retrieve the object from the hdf5 file
-    Args:
-        hdf: Path to the hdf5 file/group in the file
-        group_name: Name of the group under which the attributes are stored
-    """
-    if "dos" not in hdf[group_name].list_groups():
-        from_hdf_old(es=es, hdf=hdf, group_name=group_name)
-    else:
+class ElectronicStructure(_ElectronicStructure):
+    def to_hdf(self, hdf, group_name="electronic_structure"):
+        """
+        Store the object to hdf5 file
+        Args:
+            hdf: Path to the hdf5 file/group in the file
+            group_name: Name of the group under which the attributes are o be stored
+        """
+        electronic_structure_dict_to_hdf(
+            data_dict=self.to_dict(), hdf=hdf, group_name=group_name
+        )
+
+    def from_hdf(self, hdf, group_name="electronic_structure"):
+        """
+        Retrieve the object from the hdf5 file
+        Args:
+            hdf: Path to the hdf5 file/group in the file
+            group_name: Name of the group under which the attributes are stored
+        """
+        if "dos" not in hdf[group_name].list_groups():
+            self.from_hdf_old(hdf=hdf, group_name=group_name)
+        else:
+            with hdf.open(group_name) as h_es:
+                if "TYPE" not in h_es.list_nodes():
+                    h_es["TYPE"] = str(type(self))
+                nodes = h_es.list_nodes()
+                if self.structure is not None:
+                    self.structure.to_hdf(h_es)
+                self.kpoint_list = h_es["k_points"]
+                self.kpoint_weights = h_es["k_weights"]
+                if len(h_es["eig_matrix"].shape) == 2:
+                    self.eigenvalue_matrix = np.array([h_es["eig_matrix"]])
+                    self.occupancy_matrix = np.array([h_es["occ_matrix"]])
+                else:
+                    self._eigenvalue_matrix = h_es["eig_matrix"]
+                    self._occupancy_matrix = h_es["occ_matrix"]
+                self.n_spins = len(self._eigenvalue_matrix)
+                if "efermi" in nodes:
+                    self.efermi = h_es["efermi"]
+                with h_es.open("dos") as h_dos:
+                    nodes = h_dos.list_nodes()
+                    self.dos_energies = h_dos["energies"]
+                    self.dos_densities = h_dos["tot_densities"]
+                    self.dos_idensities = h_dos["int_densities"]
+                    if "grand_dos_matrix" in nodes:
+                        self.grand_dos_matrix = h_dos["grand_dos_matrix"]
+                    if "resolved_densities" in nodes:
+                        self.resolved_densities = h_dos["resolved_densities"]
+                self._output_dict = h_es.copy()
+            self.generate_from_matrices()
+
+    def from_hdf_old(self, hdf, group_name="electronic_structure"):
+        """
+        Retrieve the object from the hdf5 file
+        Args:
+            hdf: Path to the hdf5 file/group in the file
+            group_name: Name of the group under which the attributes are stored
+        """
         with hdf.open(group_name) as h_es:
-            if "TYPE" not in h_es.list_nodes():
-                h_es["TYPE"] = str(type(es))
+            if "structure" in h_es.list_nodes():
+                self.structure = Atoms().from_hdf(h_es)
             nodes = h_es.list_nodes()
-            if es.structure is not None:
-                es.structure.to_hdf(h_es)
-            es.kpoint_list = h_es["k_points"]
-            es.kpoint_weights = h_es["k_weights"]
-            if len(h_es["eig_matrix"].shape) == 2:
-                es.eigenvalue_matrix = np.array([h_es["eig_matrix"]])
-                es.occupancy_matrix = np.array([h_es["occ_matrix"]])
-            else:
-                es._eigenvalue_matrix = h_es["eig_matrix"]
-                es._occupancy_matrix = h_es["occ_matrix"]
-            es.n_spins = len(es._eigenvalue_matrix)
-            if "efermi" in nodes:
-                es.efermi = h_es["efermi"]
-            with h_es.open("dos") as h_dos:
-                nodes = h_dos.list_nodes()
-                es.dos_energies = h_dos["energies"]
-                es.dos_densities = h_dos["tot_densities"]
-                es.dos_idensities = h_dos["int_densities"]
-                if "grand_dos_matrix" in nodes:
-                    es.grand_dos_matrix = h_dos["grand_dos_matrix"]
-                if "resolved_densities" in nodes:
-                    es.resolved_densities = h_dos["resolved_densities"]
-            es._output_dict = h_es.copy()
-        es.generate_from_matrices()
-
-
-def from_hdf_old(es, hdf, group_name="electronic_structure"):
-    """
-    Retrieve the object from the hdf5 file
-    Args:
-        hdf: Path to the hdf5 file/group in the file
-        group_name: Name of the group under which the attributes are stored
-    """
-    with hdf.open(group_name) as h_es:
-        if "structure" in h_es.list_nodes():
-            es.structure = Atoms().from_hdf(h_es)
-        nodes = h_es.list_nodes()
-        es.kpoint_list = h_es["k_points"]
-        es.kpoint_weights = h_es["k_point_weights"]
-        es.eigenvalue_matrix = np.array([h_es["eigenvalue_matrix"]])
-        es.occupancy_matrix = np.array([h_es["occupancy_matrix"]])
-        try:
-            es.dos_energies = h_es["dos_energies"]
-            es.dos_densities = h_es["dos_densities"]
-            es.dos_idensities = h_es["dos_idensities"]
-        except ValueError:
-            pass
-        if "fermi_level" in nodes:
-            es.efermi = h_es["fermi_level"]
-        if "grand_dos_matrix" in nodes:
-            es.grand_dos_matrix = h_es["grand_dos_matrix"]
-        if "resolved_densities" in nodes:
-            es.resolved_densities = h_es["resolved_densities"]
-        es._output_dict = h_es.copy()
-    es.generate_from_matrices()
+            self.kpoint_list = h_es["k_points"]
+            self.kpoint_weights = h_es["k_point_weights"]
+            self.eigenvalue_matrix = np.array([h_es["eigenvalue_matrix"]])
+            self.occupancy_matrix = np.array([h_es["occupancy_matrix"]])
+            try:
+                self.dos_energies = h_es["dos_energies"]
+                self.dos_densities = h_es["dos_densities"]
+                self.dos_idensities = h_es["dos_idensities"]
+            except ValueError:
+                pass
+            if "fermi_level" in nodes:
+                self.efermi = h_es["fermi_level"]
+            if "grand_dos_matrix" in nodes:
+                self.grand_dos_matrix = h_es["grand_dos_matrix"]
+            if "resolved_densities" in nodes:
+                self.resolved_densities = h_es["resolved_densities"]
+            self._output_dict = h_es.copy()
+        self.generate_from_matrices()
