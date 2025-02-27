@@ -2,8 +2,10 @@ from __future__ import print_function
 
 from pyiron_base import state
 from pyiron_vasp.vasp.output import (
-    Output as _Output,
     GenericOutput as _GenericOutput,
+)
+from pyiron_vasp.vasp.output import (
+    Output as _Output,
 )
 from pyiron_vasp.vasp.volumetric_data import volumetric_data_dict_to_hdf
 
