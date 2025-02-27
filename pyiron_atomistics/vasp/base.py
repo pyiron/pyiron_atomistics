@@ -22,7 +22,7 @@ from pyiron_vasp.vasp.structure import vasp_sorter
 from pyiron_vasp.vasp.vasprun import VasprunError
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_atomistics.dft.bader import get_valence_and_total_charge_density, Bader
+from pyiron_atomistics.dft.bader import Bader, get_valence_and_total_charge_density
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
