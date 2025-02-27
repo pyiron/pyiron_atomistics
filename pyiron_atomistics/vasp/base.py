@@ -13,20 +13,19 @@ from typing import Optional
 import numpy as np
 from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
-from pyiron_vasp.dft.bader import get_valence_and_total_charge_density
+from pyiron_atomistics.dft.bader import get_valence_and_total_charge_density
 from pyiron_vasp.vasp.output import (
     VaspCollectError,
     get_final_structure_from_file,
     parse_vasp_output,
 )
-from pyiron_vasp.vasp.structure import vasp_sorter
+from pyiron_vasp.vasp.structure import vasp_sorter, get_species_list_from_potcar
 from pyiron_vasp.vasp.vasprun import VasprunError
 from pyiron_vasp.vasp.volumetric_data import VaspVolumetricData
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
-from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.vasp.output import Output, output_dict_to_hdf
 from pyiron_atomistics.vasp.potential import (
     Potcar,
@@ -36,7 +35,7 @@ from pyiron_atomistics.vasp.potential import (
     get_enmax_among_potentials,
     strip_xc_from_potential_name,
 )
-from pyiron_atomistics.vasp.structure import get_poscar_content, read_atoms
+from pyiron_atomistics.vasp.structure import get_poscar_content, read_atoms, atoms_from_string
 from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
@@ -645,7 +644,6 @@ class VaspBase(GenericDFTJob):
                 if "vasprun.xml" in files:
                     vp_new.from_file(filename=posixpath.join(directory, "vasprun.xml"))
                     self.structure = vp_new.get_initial_structure()
-                    print("from_directory 1: ", type(self.structure))
             except (IOError, VasprunError):  # except AssertionError:
                 pass
                 # raise AssertionError("OUTCAR/vasprun.xml should be present in order to import from directory")
@@ -682,7 +680,6 @@ class VaspBase(GenericDFTJob):
             else:
                 raise ValueError("Unable to import job because structure not present")
             self.structure = structure
-            print("from_directory 2: ", type(self.structure))
             # Always set the sorted_indices to the original order when importing from jobs
             self.sorted_indices = np.arange(len(self.structure), dtype=int)
             # Read initial magnetic moments from the INCAR file and set it to the structure
@@ -717,9 +714,7 @@ class VaspBase(GenericDFTJob):
             self._write_chemical_formular_to_database()
             self._import_directory = directory
             self.status.collect = True
-            print("from_directory 3: ", type(self.structure))
             self.collect_output()
-            print("from_directory 4: ", type(self.structure))
             self.to_hdf()
             self.status.finished = True
         else:
@@ -1394,7 +1389,10 @@ class VaspBase(GenericDFTJob):
             return
         else:
             with self.project_hdf5.open("output") as ho:
-                cd_obj = VaspVolumetricData()
+                cd_obj = VaspVolumetricData(
+                    atoms_from_string_funct=atoms_from_string,
+                    get_species_list_from_potcar_funct=get_species_list_from_potcar,
+                )
                 cd_obj.from_hdf(ho, "charge_density")
             return cd_obj
 
@@ -1406,7 +1404,7 @@ class VaspBase(GenericDFTJob):
             tuple: The required charge densities
         """
         return get_valence_and_total_charge_density(
-            working_directory=self.working_directory
+            working_directory=self.working_directory,
         )
 
     def get_electrostatic_potential(self):

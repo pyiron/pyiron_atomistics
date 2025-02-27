@@ -18,9 +18,9 @@ import warnings
 from collections import OrderedDict
 
 import numpy as np
-from pyiron_vasp.vasp.structure import _dict_to_atoms, get_species_list_from_potcar
+from pyiron_vasp.vasp.structure import get_species_list_from_potcar
 
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
 
 
 def read_atoms(
@@ -185,9 +185,9 @@ def atoms_from_string(string, read_velocities=False, species_list=None):
             atoms_dict["positions"] *= (-atoms_dict["scaling_factor"]) ** (1.0 / 3.0)
     velocities = list()
     try:
-        atoms = ase_to_pyiron(_dict_to_atoms(atoms_dict, species_list=species_list))
+        atoms = _dict_to_atoms(atoms_dict, species_list=species_list)
     except ValueError:
-        atoms = ase_to_pyiron(_dict_to_atoms(atoms_dict, read_from_first_line=True))
+        atoms = _dict_to_atoms(atoms_dict, read_from_first_line=True)
     if atoms_dict["selective_dynamics"]:
         selective_dynamics = np.array(selective_dynamics)
         unique_sel_dyn, inverse, counts = np.unique(
@@ -217,3 +217,70 @@ def atoms_from_string(string, read_velocities=False, species_list=None):
         return atoms, velocities
     else:
         return atoms
+
+
+def _dict_to_atoms(atoms_dict, species_list=None, read_from_first_line=False):
+    """
+    Function to convert a generated dict into an structure object
+
+    Args:
+        atoms_dict (dict): Dictionary with the details (from string_to_atom)
+        species_list (list/numpy.ndarray): List of species
+        read_from_first_line (bool): True if we are to read the species information from the first line in the file
+
+    Returns:
+        pyiron.atomistics.structure.atoms.Atoms: The required structure object
+    """
+    is_absolute = not (atoms_dict["relative"])
+    positions = atoms_dict["positions"]
+    cell = atoms_dict["cell"]
+    symbol = str()
+    elements = list()
+    el_list = list()
+    for i, sp_key in enumerate(atoms_dict["species_dict"].keys()):
+        if species_list is not None:
+            try:
+                el_list = np.array([species_list[i]])
+                el_list = np.tile(el_list, atoms_dict["species_dict"][sp_key]["count"])
+                if isinstance(species_list[i], str):
+                    symbol += species_list[i] + str(
+                        atoms_dict["species_dict"][sp_key]["count"]
+                    )
+                else:
+                    symbol += species_list[i].Abbreviation + str(
+                        atoms_dict["species_dict"][sp_key]["count"]
+                    )
+            except IndexError:
+                raise ValueError(
+                    "Number of species in the specified species list does not match that in the file"
+                )
+        elif "species" in atoms_dict["species_dict"][sp_key].keys():
+            el_list = np.array([atoms_dict["species_dict"][sp_key]["species"]])
+            el_list = np.tile(el_list, atoms_dict["species_dict"][sp_key]["count"])
+            symbol += atoms_dict["species_dict"][sp_key]["species"]
+            symbol += str(atoms_dict["species_dict"][sp_key]["count"])
+        elif read_from_first_line:
+            if not (
+                len(atoms_dict["first_line"].split())
+                == len(atoms_dict["species_dict"].keys())
+            ):
+                raise AssertionError()
+            el_list = np.array(atoms_dict["first_line"].split()[i])
+            el_list = np.tile(el_list, atoms_dict["species_dict"][sp_key]["count"])
+            symbol += atoms_dict["first_line"].split()[i]
+            symbol += str(atoms_dict["species_dict"][sp_key]["count"])
+        elif species_list is None:
+            raise ValueError(
+                "Species list should be provided since pyiron can't detect species information"
+            )
+        elements.append(el_list)
+    elements_new = list()
+    for ele in elements:
+        for e in ele:
+            elements_new.append(e.replace("/", ""))
+    elements = elements_new
+    if is_absolute:
+        atoms = Atoms(elements, positions=positions, cell=cell, pbc=True)
+    else:
+        atoms = Atoms(elements, scaled_positions=positions, cell=cell, pbc=True)
+    return atoms

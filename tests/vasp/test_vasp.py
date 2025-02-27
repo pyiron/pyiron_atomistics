@@ -11,7 +11,7 @@ from pyiron_base import state, ProjectHDFio
 from pyiron_atomistics.vasp.potential import VaspPotentialSetter
 from pyiron_atomistics.vasp.vasp import Vasp
 from pyiron_atomistics.vasp.metadyn import VaspMetadyn
-from pyiron_vasp.vasp.structure import read_atoms
+from pyiron_atomistics.vasp.structure import read_atoms
 import numpy as np
 import warnings
 

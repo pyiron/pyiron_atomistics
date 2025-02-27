@@ -18,12 +18,15 @@ from pyiron_atomistics.dft.waves.electronic import (
     ElectronicStructure,
     electronic_structure_dict_to_hdf,
 )
+from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 
 
 class Output(_Output):
     def __init__(self):
         super(Output, self).__init__()
         self.generic_output = GenericOutput()
+        self.charge_density = VaspVolumetricData()
+        self.electrostatic_potential = VaspVolumetricData()
         self.dft_output = DFTOutput()
         self.electronic_structure = ElectronicStructure()
 

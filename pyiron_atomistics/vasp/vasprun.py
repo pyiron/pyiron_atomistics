@@ -1,4 +1,6 @@
 from collections import OrderedDict
+import os
+import warnings
 
 import numpy as np
 from pyiron_base import state
@@ -7,6 +9,10 @@ from pyiron_vasp.vasp.vasprun import (
 )
 from pyiron_vasp.vasp.vasprun import (
     clean_character,
+)
+from pyiron_atomistics.vasp.structure import (
+    atoms_from_string,
+    get_species_list_from_potcar,
 )
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
@@ -126,3 +132,82 @@ class Vasprun(_Vasprun):
             for sp in np.tile([key], species_dict[key]["n_atoms"]):
                 species_list.append(clean_character(sp))
         d["species_list"] = species_list
+
+    def _read_vol_data(self, filename, normalize=True):
+        """
+        Parses the VASP volumetric type files (CHGCAR, LOCPOT, PARCHG etc). Rather than looping over individual values,
+        this function utilizes numpy indexing resulting in a parsing efficiency of at least 10%.
+
+        Args:
+            filename (str): File to be parsed
+            normalize (bool): Normalize the data with respect to the volume (Recommended for CHGCAR files)
+
+        Returns:
+            pyiron.atomistics.structure.atoms.Atoms: The structure of the volumetric snapshot
+            list: A list of the volumetric data (length >1 for CHGCAR files with spin)
+
+        """
+        if not os.path.getsize(filename) > 0:
+            warnings.warn("File:" + filename + "seems to be empty! ")
+            return None, None
+        with open(filename, "r") as f:
+            struct_lines = list()
+            get_grid = False
+            n_x = 0
+            n_y = 0
+            n_z = 0
+            n_grid = 0
+            n_grid_str = None
+            total_data_list = list()
+            atoms = None
+            for line in f:
+                strip_line = line.strip()
+                if not get_grid:
+                    if strip_line == "":
+                        get_grid = True
+                    struct_lines.append(strip_line)
+                elif n_grid_str is None:
+                    n_x, n_y, n_z = [int(val) for val in strip_line.split()]
+                    n_grid = n_x * n_y * n_z
+                    n_grid_str = " ".join([str(val) for val in [n_x, n_y, n_z]])
+                    load_txt = np.genfromtxt(f, max_rows=int(n_grid / 5))
+                    load_txt = np.hstack(load_txt)
+                    if n_grid % 5 != 0:
+                        add_line = np.genfromtxt(f, max_rows=1)
+                        load_txt = np.append(load_txt, np.hstack(add_line))
+                    total_data = self._fastest_index_reshape(load_txt, [n_x, n_y, n_z])
+                    try:
+                        atoms = atoms_from_string(struct_lines)
+                    except ValueError:
+                        pot_str = filename.split("/")
+                        pot_str[-1] = "POTCAR"
+                        potcar_file = "/".join(pot_str)
+                        species = get_species_list_from_potcar(potcar_file)
+                        atoms = atoms_from_string(struct_lines, species_list=species)
+                    if normalize:
+                        total_data /= atoms.get_volume()
+                    total_data_list.append(total_data)
+                elif atoms is not None:
+                    grid_str = n_grid_str.replace(" ", "")
+                    if grid_str == strip_line.replace(" ", ""):
+                        load_txt = np.genfromtxt(f, max_rows=int(n_grid / 5))
+                        load_txt = np.hstack(load_txt)
+                        if n_grid % 5 != 0:
+                            add_line = np.genfromtxt(f, max_rows=1)
+                            load_txt = np.hstack(
+                                np.append(load_txt, np.hstack(add_line))
+                            )
+                        total_data = self._fastest_index_reshape(
+                            load_txt, [n_x, n_y, n_z]
+                        )
+                        if normalize:
+                            total_data /= atoms.get_volume()
+                        total_data_list.append(total_data)
+            if len(total_data_list) == 0:
+                warnings.warn(
+                    "File:"
+                    + filename
+                    + "seems to be corrupted/empty even after parsing!"
+                )
+                return None, None
+            return atoms, total_data_list
