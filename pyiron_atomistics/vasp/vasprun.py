@@ -1,6 +1,6 @@
-from collections import OrderedDict
 import os
 import warnings
+from collections import OrderedDict
 
 import numpy as np
 from pyiron_base import state
@@ -10,13 +10,13 @@ from pyiron_vasp.vasp.vasprun import (
 from pyiron_vasp.vasp.vasprun import (
     clean_character,
 )
+
+from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 from pyiron_atomistics.vasp.structure import (
     atoms_from_string,
     get_species_list_from_potcar,
 )
-
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 
 
 class Vasprun(_Vasprun):
