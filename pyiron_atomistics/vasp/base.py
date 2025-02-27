@@ -25,7 +25,6 @@ from pyiron_vasp.vasp.vasprun import Vasprun as Vr
 from pyiron_vasp.vasp.vasprun import VasprunError
 from pyiron_vasp.vasp.volumetric_data import VaspVolumetricData
 
-from pyiron_atomistics.vasp.structure import get_poscar_content
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
@@ -38,6 +37,7 @@ from pyiron_atomistics.vasp.potential import (
     get_enmax_among_potentials,
     strip_xc_from_potential_name,
 )
+from pyiron_atomistics.vasp.structure import get_poscar_content
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
 __copyright__ = (
