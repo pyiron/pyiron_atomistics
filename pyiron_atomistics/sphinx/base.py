@@ -31,6 +31,10 @@ from sphinx_parser.output import (
 )
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
+from pyiron_atomistics.dft.waves.electronic import (
+    electronic_structure_dict_to_hdf,
+    from_hdf,
+)
 from pyiron_atomistics.sphinx.input_writer import (
     Group,
     copy_potentials,
@@ -46,7 +50,6 @@ from pyiron_atomistics.vasp.potential import (
     VaspPotentialSetter,
     strip_xc_from_potential_name,
 )
-from pyiron_atomistics.dft.waves.electronic import electronic_structure_dict_to_hdf, from_hdf
 
 __author__ = "Osamu Waseda, Jan Janssen"
 __copyright__ = (
