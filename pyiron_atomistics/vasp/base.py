@@ -441,6 +441,7 @@ class VaspBase(GenericDFTJob):
         return {
             "structure": self.structure,
             "sorted_indices": self.sorted_indices,
+            "read_atoms_funct": read_atoms,
         }
 
     def convergence_check(self):
