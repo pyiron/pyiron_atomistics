@@ -18,9 +18,8 @@ from pyiron_vasp.vasp.output import (
     get_final_structure_from_file,
     parse_vasp_output,
 )
-from pyiron_vasp.vasp.structure import get_species_list_from_potcar, vasp_sorter
+from pyiron_vasp.vasp.structure import vasp_sorter
 from pyiron_vasp.vasp.vasprun import VasprunError
-from pyiron_vasp.vasp.volumetric_data import VaspVolumetricData
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.dft.bader import get_valence_and_total_charge_density
@@ -36,11 +35,11 @@ from pyiron_atomistics.vasp.potential import (
     strip_xc_from_potential_name,
 )
 from pyiron_atomistics.vasp.structure import (
-    atoms_from_string,
     get_poscar_content,
     read_atoms,
 )
 from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
+from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
 __copyright__ = (
@@ -1393,10 +1392,7 @@ class VaspBase(GenericDFTJob):
             return
         else:
             with self.project_hdf5.open("output") as ho:
-                cd_obj = VaspVolumetricData(
-                    atoms_from_string_funct=atoms_from_string,
-                    get_species_list_from_potcar_funct=get_species_list_from_potcar,
-                )
+                cd_obj = VaspVolumetricData()
                 cd_obj.from_hdf(ho, "charge_density")
             return cd_obj
 
