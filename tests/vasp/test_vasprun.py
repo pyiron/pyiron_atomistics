@@ -9,7 +9,7 @@ import numpy as np
 from pyiron_atomistics.vasp.vasprun import Vasprun
 from pyiron_vasp.vasp.vasprun import VasprunError
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_vasp.dft.waves.electronic import ElectronicStructure
+from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 
 __author__ = "surendralal"
 
