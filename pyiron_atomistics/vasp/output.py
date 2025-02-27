@@ -1,8 +1,11 @@
 from __future__ import print_function
 
+from pyiron_base import state
 from pyiron_vasp.vasp.volumetric_data import volumetric_data_dict_to_hdf
+from pyiron_vasp.vasp.output import Output as _Output
 
 from pyiron_atomistics.atomistics.structure.atoms import (
+    Atoms,
     dict_group_to_hdf,
     structure_dict_to_hdf,
 )
@@ -10,6 +13,44 @@ from pyiron_atomistics.dft.waves.electronic import (
     ElectronicStructure,
     electronic_structure_dict_to_hdf,
 )
+
+
+class Output(_Output):
+    def to_hdf(self, hdf):
+        """
+        Save the object in a HDF5 file
+        Args:
+            hdf (pyiron_base.generic.hdfio.ProjectHDFio): HDF path to which the object is to be saved
+        """
+        output_dict_to_hdf(data_dict=self.to_dict(), hdf=hdf, group_name="output")
+
+    def from_hdf(self, hdf):
+        """
+        Reads the attributes and reconstructs the object from a hdf file
+        Args:
+            hdf: The hdf5 instance
+        """
+        with hdf.open("output") as hdf5_output:
+            # self.description = hdf5_output["description"]
+            if self.structure is None:
+                self.structure = Atoms()
+            self.structure.from_hdf(hdf5_output)
+            self.generic_output.from_hdf(hdf5_output)
+            try:
+                if "electrostatic_potential" in hdf5_output.list_groups():
+                    self.electrostatic_potential.from_hdf(
+                        hdf5_output, group_name="electrostatic_potential"
+                    )
+                if "charge_density" in hdf5_output.list_groups():
+                    self.charge_density.from_hdf(
+                        hdf5_output, group_name="charge_density"
+                    )
+                if "electronic_structure" in hdf5_output.list_groups():
+                    self.electronic_structure.from_hdf(hdf=hdf5_output)
+                if "outcar" in hdf5_output.list_groups():
+                    self.outcar.from_hdf(hdf=hdf5_output, group_name="outcar")
+            except (TypeError, IOError, ValueError):
+                state.logger.warning("Routine from_hdf() not completely successful")
 
 
 class GenericOutput:

@@ -15,7 +15,6 @@ from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
 from pyiron_vasp.dft.bader import get_valence_and_total_charge_density
 from pyiron_vasp.vasp.output import (
-    Output,
     VaspCollectError,
     get_final_structure_from_file,
     parse_vasp_output,
@@ -28,7 +27,7 @@ from pyiron_vasp.vasp.volumetric_data import VaspVolumetricData
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
-from pyiron_atomistics.vasp.output import output_dict_to_hdf
+from pyiron_atomistics.vasp.output import Output, output_dict_to_hdf
 from pyiron_atomistics.vasp.potential import (
     Potcar,
     VaspPotential,
