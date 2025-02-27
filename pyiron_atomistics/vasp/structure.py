@@ -14,10 +14,11 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 from ase.atoms import Atoms as ASEAtoms
-
+from pyiron_vasp.vasp.structure import (
+    atoms_from_string as _atoms_from_string,
+)
 from pyiron_vasp.vasp.structure import (
     read_atoms as _read_atoms,
-    atoms_from_string as _atoms_from_string,
 )
 
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
@@ -89,7 +90,9 @@ def read_atoms(
 
 
 def atoms_from_string(string, read_velocities=False, species_list=None):
-    output = _atoms_from_string(string=string, read_velocities=read_velocities, species_list=species_list)
+    output = _atoms_from_string(
+        string=string, read_velocities=read_velocities, species_list=species_list
+    )
     if not read_velocities:
         return ase_to_pyiron(ase_obj=output)
     else:
