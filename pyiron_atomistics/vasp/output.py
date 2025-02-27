@@ -25,6 +25,7 @@ class Output(_Output):
         super(Output, self).__init__()
         self.generic_output = GenericOutput()
         self.dft_output = DFTOutput()
+        self.electronic_structure = ElectronicStructure()
 
     def to_hdf(self, hdf):
         """
