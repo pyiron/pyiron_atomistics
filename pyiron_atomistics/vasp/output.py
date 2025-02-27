@@ -1,7 +1,10 @@
 from __future__ import print_function
 
 from pyiron_base import state
-from pyiron_vasp.vasp.output import Output as _Output
+from pyiron_vasp.vasp.output import (
+    Output as _Output,
+    GenericOutput as _GenericOutput,
+)
 from pyiron_vasp.vasp.volumetric_data import volumetric_data_dict_to_hdf
 
 from pyiron_atomistics.atomistics.structure.atoms import (
@@ -16,6 +19,11 @@ from pyiron_atomistics.dft.waves.electronic import (
 
 
 class Output(_Output):
+    def __init__(self):
+        super(Output, self).__init__()
+        self.generic_output = GenericOutput()
+        self.dft_output = DFTOutput()
+
     def to_hdf(self, hdf):
         """
         Save the object in a HDF5 file
@@ -53,7 +61,7 @@ class Output(_Output):
                 state.logger.warning("Routine from_hdf() not completely successful")
 
 
-class GenericOutput:
+class GenericOutput(_GenericOutput):
     """
 
     This class stores the generic output like different structures, energies and forces from a simulation in a highly
@@ -64,18 +72,8 @@ class GenericOutput:
     """
 
     def __init__(self):
-        self.log_dict = dict()
-        self.dft_log_dict = dict()
-        self.description = "generic_output contains generic output static"
+        super(GenericOutput, self).__init__()
         self._bands = ElectronicStructure()
-
-    @property
-    def bands(self):
-        return self._bands
-
-    @bands.setter
-    def bands(self, val):
-        self._bands = val
 
     def to_hdf(self, hdf):
         """
@@ -88,17 +86,6 @@ class GenericOutput:
         generic_output_dict_to_hdf(
             data_dict=self.to_dict(), hdf=hdf, group_name="generic"
         )
-
-    def to_dict(self):
-        hdf_go, hdf_dft = {}, {}
-        for key, val in self.log_dict.items():
-            hdf_go[key] = val
-        for key, val in self.dft_log_dict.items():
-            hdf_dft[key] = val
-        hdf_go["dft"] = hdf_dft
-        if self.bands.eigenvalue_matrix is not None:
-            hdf_go["dft"]["bands"] = self.bands.to_dict()
-        return hdf_go
 
     def from_hdf(self, hdf):
         """
