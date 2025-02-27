@@ -22,9 +22,10 @@ from pyiron_vasp.vasp.structure import vasp_sorter
 from pyiron_vasp.vasp.vasprun import VasprunError
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_atomistics.dft.bader import get_valence_and_total_charge_density
+from pyiron_atomistics.dft.bader import get_valence_and_total_charge_density, Bader
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
+from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.vasp.output import Output, output_dict_to_hdf
 from pyiron_atomistics.vasp.potential import (
     Potcar,
@@ -445,6 +446,8 @@ class VaspBase(GenericDFTJob):
             "structure": self.structure,
             "sorted_indices": self.sorted_indices,
             "read_atoms_funct": read_atoms,
+            "bader_class": Bader,
+            "es_class": ElectronicStructure,
         }
 
     def convergence_check(self):
