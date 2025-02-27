@@ -2051,9 +2051,12 @@ class Output:
         except FileNotFoundError:
             return
         for k, v in results.items():
-            self.generic[k] = (
-                v if k != "forces" else v * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-            )
+            if k == "forces":
+                self.generic[k] = v * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+            elif k in ["positions", "cell"]:
+                self.generic[k] = v * BOHR_TO_ANGSTROM
+            else:
+                self.generic[k] = v
 
     def collect_charge_density(self, file_name, cwd):
         if (
