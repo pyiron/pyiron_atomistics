@@ -20,7 +20,6 @@ from pyiron_vasp.vasp.output import (
     parse_vasp_output,
 )
 from pyiron_vasp.vasp.structure import vasp_sorter
-from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
 from pyiron_vasp.vasp.vasprun import VasprunError
 from pyiron_vasp.vasp.volumetric_data import VaspVolumetricData
 
@@ -37,6 +36,7 @@ from pyiron_atomistics.vasp.potential import (
     strip_xc_from_potential_name,
 )
 from pyiron_atomistics.vasp.structure import get_poscar_content, read_atoms
+from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
 __copyright__ = (
