@@ -7,7 +7,7 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     dict_group_to_hdf,
     structure_dict_to_hdf,
 )
-from pyiron_atomistics.dft.waves.electronic import electronic_structure_dict_to_hdf
+from pyiron_atomistics.dft.waves.electronic import electronic_structure_dict_to_hdf, from_hdf
 
 
 class GenericOutput:
@@ -75,7 +75,7 @@ class GenericOutput:
                     for node in hdf_dft.list_nodes():
                         self.dft_log_dict[node] = hdf_dft[node]
                     if "bands" in hdf_dft.list_groups():
-                        self.bands.from_hdf(hdf_dft, "bands")
+                        from_hdf(es=self.bands, hdf=hdf_dft, group_name="bands")
 
 
 class DFTOutput:
