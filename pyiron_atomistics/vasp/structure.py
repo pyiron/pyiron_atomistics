@@ -14,11 +14,10 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 import os
-from collections import OrderedDict
 import warnings
+from collections import OrderedDict
 
 import numpy as np
-
 from pyiron_vasp.vasp.structure import _dict_to_atoms, get_species_list_from_potcar
 
 
