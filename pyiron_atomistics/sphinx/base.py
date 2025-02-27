@@ -2016,25 +2016,23 @@ class Output:
         if not results["generic"].pop("job_finished"):
             self._job.status.aborted = True
         for key, value in results["generic"].items():
-            if key not in self.generic:
-                if key == "forces":
-                    self.generic[key] = value * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
-                elif key == "volume":
-                    self.generic[key] = value * BOHR_TO_ANGSTROM**3
-                else:
-                    self.generic[key] = value
+            if key not in self.generic and key == "forces":
+                self.generic[key] = value * HARTREE_OVER_BOHR_TO_EV_OVER_ANGSTROM
+            elif key not in self.generic and key == "volume":
+                self.generic[key] = value * BOHR_TO_ANGSTROM**3
+            elif key not in self.generic:
+                self.generic[key] = value
         for key, value in results["dft"].items():
-            if key not in self.generic.dft:
-                if key not in [
-                    "scf_energy_int",
-                    "scf_energy_free",
-                    "scf_magnetic_forces",
-                ]:
-                    self.generic.dft[key] = value
-                else:
-                    self.generic.dft[key] = [
-                        (np.array(el) * HARTREE_TO_EV).tolist() for el in value
-                    ]
+            if key not in self.generic.dft and key not in [
+                "scf_energy_int",
+                "scf_energy_free",
+                "scf_magnetic_forces",
+            ]:
+                self.generic.dft[key] = value
+            elif key not in self.generic.dft:
+                self.generic.dft[key] = [
+                    (np.array(el) * HARTREE_TO_EV).tolist() for el in value
+                ]
 
     def collect_relaxed_hist(self, file_name="relaxHist.sx", cwd=None):
         """
