@@ -6,12 +6,12 @@ import os
 from subprocess import PIPE, Popen
 
 import numpy as np
-from pyiron_atomistics.vasp.output import Output
 from pyiron_vasp.vasp.parser.outcar import Outcar
 from pyiron_vasp.vasp.structure import vasp_sorter
 
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.vasp.base import VaspBase
+from pyiron_atomistics.vasp.output import Output
 
 # as of pyiron_atomistics <= 0.5.4 this module defined subclasses that are now removed; the base classes are still
 # imported here in case HDF5 files in the wild refer to them.  The imports can be removed on the next big version bump.
