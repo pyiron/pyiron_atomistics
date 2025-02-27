@@ -26,6 +26,7 @@ from pyiron_vasp.vasp.volumetric_data import VaspVolumetricData
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
+from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from pyiron_atomistics.vasp.output import Output, output_dict_to_hdf
 from pyiron_atomistics.vasp.potential import (
     Potcar,
@@ -644,6 +645,7 @@ class VaspBase(GenericDFTJob):
                 if "vasprun.xml" in files:
                     vp_new.from_file(filename=posixpath.join(directory, "vasprun.xml"))
                     self.structure = vp_new.get_initial_structure()
+                    print("from_directory 1: ", type(self.structure))
             except (IOError, VasprunError):  # except AssertionError:
                 pass
                 # raise AssertionError("OUTCAR/vasprun.xml should be present in order to import from directory")
@@ -680,6 +682,7 @@ class VaspBase(GenericDFTJob):
             else:
                 raise ValueError("Unable to import job because structure not present")
             self.structure = structure
+            print("from_directory 2: ", type(self.structure))
             # Always set the sorted_indices to the original order when importing from jobs
             self.sorted_indices = np.arange(len(self.structure), dtype=int)
             # Read initial magnetic moments from the INCAR file and set it to the structure
@@ -714,7 +717,9 @@ class VaspBase(GenericDFTJob):
             self._write_chemical_formular_to_database()
             self._import_directory = directory
             self.status.collect = True
+            print("from_directory 3: ", type(self.structure))
             self.collect_output()
+            print("from_directory 4: ", type(self.structure))
             self.to_hdf()
             self.status.finished = True
         else:

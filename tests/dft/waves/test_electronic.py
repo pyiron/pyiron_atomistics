@@ -39,7 +39,7 @@ class TestElectronicStructure(unittest.TestCase):
             )
             filename = posixpath.join(direc, f)
             vp.from_file(filename)
-            es = vp.get_electronic_structure()
+            es = vp.get_electronic_structure(es_class=ElectronicStructure)
             cls.es_list.append(es)
 
     @classmethod
