@@ -4,6 +4,8 @@ import numpy as np
 from pyiron_base import state
 from pyiron_vasp.vasp.vasprun import (
     Vasprun as _Vasprun,
+)
+from pyiron_vasp.vasp.vasprun import (
     clean_character,
 )
 
@@ -31,7 +33,7 @@ class Vasprun(_Vasprun):
             if "selective_dynamics" in self.vasprun_dict["init_structure"].keys():
                 basis.add_tag(selective_dynamics=[True, True, True])
                 for i, val in enumerate(
-                        self.vasprun_dict["init_structure"]["selective_dynamics"]
+                    self.vasprun_dict["init_structure"]["selective_dynamics"]
                 ):
                     basis[i].selective_dynamics = val
             return basis
