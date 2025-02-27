@@ -20,6 +20,8 @@ from collections import OrderedDict
 import numpy as np
 from pyiron_vasp.vasp.structure import _dict_to_atoms, get_species_list_from_potcar
 
+from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
+
 
 def read_atoms(
     filename="CONTCAR",
@@ -183,9 +185,9 @@ def atoms_from_string(string, read_velocities=False, species_list=None):
             atoms_dict["positions"] *= (-atoms_dict["scaling_factor"]) ** (1.0 / 3.0)
     velocities = list()
     try:
-        atoms = _dict_to_atoms(atoms_dict, species_list=species_list)
+        atoms = ase_to_pyiron(_dict_to_atoms(atoms_dict, species_list=species_list))
     except ValueError:
-        atoms = _dict_to_atoms(atoms_dict, read_from_first_line=True)
+        atoms = ase_to_pyiron(_dict_to_atoms(atoms_dict, read_from_first_line=True))
     if atoms_dict["selective_dynamics"]:
         selective_dynamics = np.array(selective_dynamics)
         unique_sel_dyn, inverse, counts = np.unique(
