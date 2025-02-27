@@ -8,7 +8,7 @@ import os
 from pyiron_atomistics.atomistics.volumetric.generic import VolumetricData
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
-from pyiron_vasp.vasp.volumetric_data import VaspVolumetricData
+from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 
 
 """
