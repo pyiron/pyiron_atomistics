@@ -13,7 +13,7 @@ from pyiron_atomistics.dft.waves.electronic import (
     from_hdf,
     electronic_structure_dict_to_hdf,
 )
-from pyiron_vasp.vasp.vasprun import Vasprun
+from pyiron_atomistics.vasp.vasprun import Vasprun
 from pyiron_vasp.dft.waves.dos import Dos
 from pyiron_vasp.dft.waves.electronic import ElectronicStructure
 from pyiron_base import FileHDFio

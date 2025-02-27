@@ -20,7 +20,7 @@ from pyiron_vasp.vasp.output import (
     parse_vasp_output,
 )
 from pyiron_vasp.vasp.structure import vasp_sorter
-from pyiron_vasp.vasp.vasprun import Vasprun as Vr
+from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
 from pyiron_vasp.vasp.vasprun import VasprunError
 from pyiron_vasp.vasp.volumetric_data import VaspVolumetricData
 
