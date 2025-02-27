@@ -33,7 +33,6 @@ from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.electronic import (
     ElectronicStructure,
     electronic_structure_dict_to_hdf,
-    from_hdf,
 )
 from pyiron_atomistics.sphinx.input_writer import (
     Group,
