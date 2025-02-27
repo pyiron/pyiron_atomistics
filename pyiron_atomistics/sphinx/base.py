@@ -19,7 +19,7 @@ import scipy.constants
 import spglib
 from pyiron_base import DataContainer, job_status_successful_lst, state
 from pyiron_snippets.deprecate import deprecate
-from pyiron_vasp.dft.waves.electronic import ElectronicStructure
+from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 from sphinx_parser.output import (
     SphinxLogParser,
     collect_energy_dat,

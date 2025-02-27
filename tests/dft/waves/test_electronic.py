@@ -9,13 +9,11 @@ import numpy as np
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.dft.waves.electronic import (
-    from_hdf_old,
-    from_hdf,
+    ElectronicStructure,
     electronic_structure_dict_to_hdf,
 )
 from pyiron_atomistics.vasp.vasprun import Vasprun
 from pyiron_vasp.dft.waves.dos import Dos
-from pyiron_vasp.dft.waves.electronic import ElectronicStructure
 from pyiron_base import FileHDFio
 
 """
@@ -95,9 +93,9 @@ class TestElectronicStructure(unittest.TestCase):
         abs_filename = os.path.abspath(filename)
         hdf_obj = FileHDFio(abs_filename)
         es_obj_old = ElectronicStructure()
-        from_hdf_old(self=es_obj_old, hdf=hdf_obj, group_name="es_old")
+        es_obj_old.from_hdf_old(hdf=hdf_obj, group_name="es_old")
         es_obj_new = ElectronicStructure()
-        from_hdf(self=es_obj_new, hdf=hdf_obj, group_name="es_new")
+        es_obj_new.from_hdf(hdf=hdf_obj, group_name="es_new")
         self.assertEqual(es_obj_old.efermi, es_obj_new.efermi)
         self.assertEqual(es_obj_old.is_metal, es_obj_new.is_metal)
         self.assertEqual(es_obj_old.vbm, es_obj_new.vbm)
@@ -118,7 +116,7 @@ class TestElectronicStructure(unittest.TestCase):
             data_dict=es_obj_old.to_dict(), hdf=hdf_obj, group_name="written_es"
         )
         es_obj_new = ElectronicStructure()
-        from_hdf(self=es_obj_new, hdf=hdf_obj, group_name="written_es")
+        es_obj_new.from_hdf(hdf=hdf_obj, group_name="written_es")
         self.assertTrue(
             np.array_equal(
                 hdf_obj["written_es/dos/grand_dos_matrix"],
