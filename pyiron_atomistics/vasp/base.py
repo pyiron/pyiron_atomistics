@@ -13,14 +13,14 @@ from typing import Optional
 import numpy as np
 from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
+from pyiron_vasp.dft.bader import get_valence_and_total_charge_density
 from pyiron_vasp.vasp.output import (
     Output,
     VaspCollectError,
     get_final_structure_from_file,
     parse_vasp_output,
 )
-from pyiron_vasp.dft.bader import get_valence_and_total_charge_density
-from pyiron_vasp.vasp.structure import read_atoms, vasp_sorter
+from pyiron_vasp.vasp.structure import get_poscar_content, read_atoms, vasp_sorter
 from pyiron_vasp.vasp.vasprun import Vasprun as Vr
 from pyiron_vasp.vasp.vasprun import VasprunError
 from pyiron_vasp.vasp.volumetric_data import VaspVolumetricData
@@ -37,7 +37,6 @@ from pyiron_atomistics.vasp.potential import (
     get_enmax_among_potentials,
     strip_xc_from_potential_name,
 )
-from pyiron_vasp.vasp.structure import get_poscar_content
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
 __copyright__ = (

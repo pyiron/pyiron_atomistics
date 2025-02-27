@@ -5,13 +5,13 @@
 from __future__ import print_function
 
 import numpy as np
+from pyiron_vasp.dft.waves.dos import Dos
 
 from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
     dict_group_to_hdf,
     structure_dict_to_hdf,
 )
-from pyiron_vasp.dft.waves.dos import Dos
 
 __author__ = "Sudarsan Surendralal"
 __copyright__ = (
