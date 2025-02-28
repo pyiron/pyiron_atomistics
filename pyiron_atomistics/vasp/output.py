@@ -62,7 +62,9 @@ class Output(_Output):
                 if "electronic_structure" in hdf5_output.list_groups():
                     self.electronic_structure.from_hdf(hdf=hdf5_output)
                 if "outcar" in hdf5_output.list_groups():
-                    self.outcar.from_hdf(hdf=hdf5_output, group_name="outcar")
+                    with hdf.open("outcar") as hdf5_output:
+                        for key in hdf5_output.list_nodes():
+                            self.outcar.parse_dict[key]: hdf5_output[key]
             except (TypeError, IOError, ValueError):
                 state.logger.warning("Routine from_hdf() not completely successful")
 

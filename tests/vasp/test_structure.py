@@ -7,14 +7,39 @@ import os
 import posixpath
 import numpy as np
 
-from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from pyiron_atomistics.vasp.structure import read_atoms, atoms_from_string
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron, pyiron_to_ase
+# from pyiron_atomistics.vasp.structure import read_atoms, atoms_from_string
 from pyiron_vasp.vasp.structure import (
-    write_poscar,
+    read_atoms as _read_atoms,
+    atoms_from_string as _atoms_from_string,
+    write_poscar as _write_poscar,
     vasp_sorter,
     manip_contcar,
 )
 import warnings
+
+
+def atoms_from_string(string, read_velocities=False, species_list=None):
+    return ase_to_pyiron(_atoms_from_string(string=string, read_velocities=read_velocities, species_list=species_list))
+
+
+def read_atoms(
+    filename="CONTCAR",
+    return_velocities=False,
+    species_list=None,
+    species_from_potcar=False,
+):
+    if return_velocities:
+        atoms, velocities = _read_atoms(filename=filename, return_velocities=return_velocities, species_list=species_list, species_from_potcar=species_from_potcar)
+        return ase_to_pyiron(atoms), velocities
+    else:
+        atoms = _read_atoms(filename=filename, return_velocities=return_velocities,
+                                        species_list=species_list, species_from_potcar=species_from_potcar)
+        return ase_to_pyiron(atoms)
+
+
+def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=True):
+    _write_poscar(structure=pyiron_to_ase(structure), filename=filename, write_species=write_species, cartesian=cartesian)
 
 
 class TestVaspStructure(unittest.TestCase):
