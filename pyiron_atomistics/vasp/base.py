@@ -16,7 +16,7 @@ from pyiron_snippets.deprecate import deprecate
 from pyiron_vasp.vasp.output import (
     VaspCollectError,
     get_final_structure_from_file,
-    parse_vasp_output,
+    # parse_vasp_output,
 )
 from pyiron_vasp.vasp.structure import vasp_sorter
 from pyiron_vasp.vasp.vasprun import VasprunError
@@ -26,7 +26,7 @@ from pyiron_atomistics.dft.bader import Bader, get_valence_and_total_charge_dens
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
 from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
-from pyiron_atomistics.vasp.output import Output, output_dict_to_hdf
+from pyiron_atomistics.vasp.output import Output, output_dict_to_hdf, parse_vasp_output
 from pyiron_atomistics.vasp.potential import (
     Potcar,
     VaspPotential,
@@ -448,6 +448,7 @@ class VaspBase(GenericDFTJob):
             "read_atoms_funct": read_atoms,
             "bader_class": Bader,
             "es_class": ElectronicStructure,
+            "output_parser_class": Output,
         }
 
     def convergence_check(self):
