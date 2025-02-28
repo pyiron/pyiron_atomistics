@@ -9,7 +9,7 @@ from pyiron_vasp.vasp.vasprun import (
     clean_character,
 )
 
-from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron, Atoms
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 from pyiron_atomistics.atomistics.structure.periodic_table import PeriodicTable
 
 
@@ -31,7 +31,7 @@ class Vasprun(_Vasprun):
             if "selective_dynamics" in self.vasprun_dict["init_structure"].keys():
                 basis.add_tag(selective_dynamics=[True, True, True])
                 for i, val in enumerate(
-                        self.vasprun_dict["init_structure"]["selective_dynamics"]
+                    self.vasprun_dict["init_structure"]["selective_dynamics"]
                 ):
                     basis[i].selective_dynamics = val
             return basis
