@@ -15,8 +15,8 @@ import numpy as np
 import seekpath
 from ase.atoms import Atom as ASEAtom
 from ase.atoms import Atoms as ASEAtoms
-from ase.symbols import Symbols as ASESymbols
 from ase.constraints import FixCartesian
+from ase.symbols import Symbols as ASESymbols
 from pyiron_base import state
 from pyiron_snippets.deprecate import deprecate
 from structuretoolkit.analyse import (

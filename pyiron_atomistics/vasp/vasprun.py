@@ -101,7 +101,9 @@ class Vasprun(_Vasprun):
             list: A list of the volumetric data (length >1 for CHGCAR files with spin)
 
         """
-        atoms, total_data_list = super()._read_vol_data(filename=filename, normalize=normalize)
+        atoms, total_data_list = super()._read_vol_data(
+            filename=filename, normalize=normalize
+        )
         if atoms is not None:
             atoms = ase_to_pyiron(atoms)
         return atoms, total_data_list

@@ -5,6 +5,7 @@
 from pyiron_vasp.vasp.volumetric_data import (
     VaspVolumetricData as _VaspVolumetricData,
 )
+
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 
 __author__ = "Sudarsan Surendralal"
@@ -66,7 +67,9 @@ class VaspVolumetricData(_VaspVolumetricData):
             normalize (boolean): Flag to normalize by the volume of the cell
 
         """
-        atoms, total_data_list = super()._read_vol_data_old(filename=filename, normalize=normalize)
+        atoms, total_data_list = super()._read_vol_data_old(
+            filename=filename, normalize=normalize
+        )
         if atoms is not None:
             atoms = ase_to_pyiron(atoms)
         return atoms, total_data_list
@@ -85,7 +88,9 @@ class VaspVolumetricData(_VaspVolumetricData):
             list: A list of the volumetric data (length >1 for CHGCAR files with spin)
 
         """
-        atoms, total_data_list = super()._read_vol_data(filename=filename, normalize=normalize)
+        atoms, total_data_list = super()._read_vol_data(
+            filename=filename, normalize=normalize
+        )
         if atoms is not None:
             atoms = ase_to_pyiron(atoms)
         return atoms, total_data_list

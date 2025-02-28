@@ -14,9 +14,15 @@ __status__ = "production"
 __date__ = "Sep 1, 2017"
 
 from pyiron_vasp.vasp.structure import (
-    get_poscar_content as _get_poscar_content,
     atoms_from_string as _atoms_from_string,
+)
+from pyiron_vasp.vasp.structure import (
+    get_poscar_content as _get_poscar_content,
+)
+from pyiron_vasp.vasp.structure import (
     read_atoms as _read_atoms,
+)
+from pyiron_vasp.vasp.structure import (
     write_poscar as _write_poscar,
 )
 
@@ -44,17 +50,27 @@ def read_atoms(
 
     """
     if return_velocities:
-        atoms, velocities = _read_atoms(filename=filename, return_velocities=return_velocities,
-                                        species_list=species_list, species_from_potcar=species_from_potcar)
+        atoms, velocities = _read_atoms(
+            filename=filename,
+            return_velocities=return_velocities,
+            species_list=species_list,
+            species_from_potcar=species_from_potcar,
+        )
         return ase_to_pyiron(atoms), velocities
     else:
-        atoms = _read_atoms(filename=filename, return_velocities=return_velocities,
-                            species_list=species_list, species_from_potcar=species_from_potcar)
+        atoms = _read_atoms(
+            filename=filename,
+            return_velocities=return_velocities,
+            species_list=species_list,
+            species_from_potcar=species_from_potcar,
+        )
         return ase_to_pyiron(atoms)
 
 
 def get_poscar_content(structure, write_species=True, cartesian=True):
-    return _get_poscar_content(pyiron_to_ase(structure), write_species=write_species, cartesian=cartesian)
+    return _get_poscar_content(
+        pyiron_to_ase(structure), write_species=write_species, cartesian=cartesian
+    )
 
 
 def atoms_from_string(string, read_velocities=False, species_list=None):
@@ -71,12 +87,24 @@ def atoms_from_string(string, read_velocities=False, species_list=None):
 
     """
     if read_velocities:
-        atoms, velocities =_atoms_from_string(string=string, read_velocities=read_velocities, species_list=species_list)
+        atoms, velocities = _atoms_from_string(
+            string=string, read_velocities=read_velocities, species_list=species_list
+        )
         return ase_to_pyiron(atoms), velocities
     else:
-        return ase_to_pyiron(_atoms_from_string(string=string, read_velocities=read_velocities,
-                                               species_list=species_list))
+        return ase_to_pyiron(
+            _atoms_from_string(
+                string=string,
+                read_velocities=read_velocities,
+                species_list=species_list,
+            )
+        )
 
 
 def write_poscar(structure, filename="POSCAR", write_species=True, cartesian=True):
-    _write_poscar(structure=pyiron_to_ase(structure), filename=filename, write_species=write_species, cartesian=cartesian)
+    _write_poscar(
+        structure=pyiron_to_ase(structure),
+        filename=filename,
+        write_species=write_species,
+        cartesian=cartesian,
+    )
