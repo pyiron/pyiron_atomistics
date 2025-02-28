@@ -30,7 +30,10 @@ from sphinx_parser.output import (
 )
 
 from pyiron_atomistics.dft.job.generic import GenericDFTJob
-from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
+from pyiron_atomistics.dft.waves.electronic import (
+    ElectronicStructure,
+    electronic_structure_dict_to_hdf,
+)
 from pyiron_atomistics.sphinx.input_writer import (
     Group,
     copy_potentials,
@@ -2153,7 +2156,11 @@ class Output:
                 try:
                     es = self._get_electronic_structure_object()
                     if len(es.kpoint_list) > 0:
-                        es.to_hdf(hdf5_output)
+                        electronic_structure_dict_to_hdf(
+                            data_dict=es.to_dict(),
+                            hdf=hdf5_output,
+                            group_name="electronic_structure",
+                        )
                 except IndexError:
                     warnings.warn("Electronic structure parsing failed")
             with hdf5_output.open("electronic_structure") as hdf5_es:

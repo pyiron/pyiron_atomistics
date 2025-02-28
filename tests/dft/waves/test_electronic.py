@@ -8,9 +8,12 @@ import posixpath
 import numpy as np
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
+from pyiron_atomistics.dft.waves.electronic import (
+    ElectronicStructure,
+    electronic_structure_dict_to_hdf,
+)
 from pyiron_atomistics.vasp.vasprun import Vasprun
-from pyiron_atomistics.dft.waves.dos import Dos
-from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
+from pyiron_vasp.dft.waves.dos import Dos
 from pyiron_base import FileHDFio
 
 """
@@ -36,7 +39,7 @@ class TestElectronicStructure(unittest.TestCase):
             )
             filename = posixpath.join(direc, f)
             vp.from_file(filename)
-            es = vp.get_electronic_structure()
+            es = vp.get_electronic_structure(es_class=ElectronicStructure)
             cls.es_list.append(es)
 
     @classmethod
@@ -90,7 +93,7 @@ class TestElectronicStructure(unittest.TestCase):
         abs_filename = os.path.abspath(filename)
         hdf_obj = FileHDFio(abs_filename)
         es_obj_old = ElectronicStructure()
-        es_obj_old.from_hdf_old(hdf_obj, "es_old")
+        es_obj_old.from_hdf_old(hdf=hdf_obj, group_name="es_old")
         es_obj_new = ElectronicStructure()
         es_obj_new.from_hdf(hdf=hdf_obj, group_name="es_new")
         self.assertEqual(es_obj_old.efermi, es_obj_new.efermi)
@@ -109,7 +112,9 @@ class TestElectronicStructure(unittest.TestCase):
         abs_filename = os.path.abspath(filename)
         hdf_obj = FileHDFio(abs_filename)
         es_obj_old = self.es_list[1]
-        es_obj_old.to_hdf(hdf_obj, group_name="written_es")
+        electronic_structure_dict_to_hdf(
+            data_dict=es_obj_old.to_dict(), hdf=hdf_obj, group_name="written_es"
+        )
         es_obj_new = ElectronicStructure()
         es_obj_new.from_hdf(hdf=hdf_obj, group_name="written_es")
         self.assertTrue(

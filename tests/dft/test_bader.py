@@ -5,8 +5,8 @@
 import unittest
 import numpy as np
 import os
-from pyiron_atomistics.dft.bader import parse_charge_vol_file
-from pyiron_atomistics.vasp.structure import read_atoms
+from pyiron_vasp.dft.bader import parse_charge_vol_file
+from pyiron_vasp.vasp.structure import read_atoms
 
 
 class TestBader(unittest.TestCase):

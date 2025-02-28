@@ -13,18 +13,20 @@ from typing import Optional
 import numpy as np
 from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
-
-from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
-from pyiron_atomistics.dft.bader import get_valence_and_total_charge_density
-from pyiron_atomistics.dft.job.generic import GenericDFTJob
-from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
-from pyiron_atomistics.vasp.output import (
-    Output,
+from pyiron_vasp.vasp.output import (
     VaspCollectError,
     get_final_structure_from_file,
-    output_dict_to_hdf,
     parse_vasp_output,
 )
+from pyiron_vasp.vasp.structure import vasp_sorter
+from pyiron_vasp.vasp.vasprun import VasprunError
+
+from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
+from pyiron_atomistics.dft.bader import Bader, get_valence_and_total_charge_density
+from pyiron_atomistics.dft.job.generic import GenericDFTJob
+from pyiron_atomistics.dft.waves.bandstructure import Bandstructure
+from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
+from pyiron_atomistics.vasp.output import Output, output_dict_to_hdf
 from pyiron_atomistics.vasp.potential import (
     Potcar,
     VaspPotential,
@@ -33,9 +35,11 @@ from pyiron_atomistics.vasp.potential import (
     get_enmax_among_potentials,
     strip_xc_from_potential_name,
 )
-from pyiron_atomistics.vasp.structure import get_poscar_content, read_atoms, vasp_sorter
+from pyiron_atomistics.vasp.structure import (
+    get_poscar_content,
+    read_atoms,
+)
 from pyiron_atomistics.vasp.vasprun import Vasprun as Vr
-from pyiron_atomistics.vasp.vasprun import VasprunError
 from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 
 __author__ = "Sudarsan Surendralal, Felix Lochner"
@@ -441,6 +445,10 @@ class VaspBase(GenericDFTJob):
         return {
             "structure": self.structure,
             "sorted_indices": self.sorted_indices,
+            "read_atoms_funct": read_atoms,
+            "bader_class": Bader,
+            "es_class": ElectronicStructure,
+            "output_parser_class": Output,
         }
 
     def convergence_check(self):
@@ -1400,7 +1408,7 @@ class VaspBase(GenericDFTJob):
             tuple: The required charge densities
         """
         return get_valence_and_total_charge_density(
-            working_directory=self.working_directory
+            working_directory=self.working_directory,
         )
 
     def get_electrostatic_potential(self):

@@ -15,6 +15,7 @@ import numpy as np
 import seekpath
 from ase.atoms import Atom as ASEAtom
 from ase.atoms import Atoms as ASEAtoms
+from ase.constraints import FixCartesian
 from ase.symbols import Symbols as ASESymbols
 from pyiron_base import state
 from pyiron_snippets.deprecate import deprecate
@@ -3077,7 +3078,13 @@ def ase_to_pyiron(ase_obj):
                 if "selective_dynamics" not in pyiron_atoms.arrays.keys():
                     pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
                 pyiron_atoms.selective_dynamics[constraint_dict["kwargs"]["a"]] = (
-                    constraint_dict["kwargs"]["mask"]
+                    np.invert(constraint_dict["kwargs"]["mask"])
+                )
+            elif constraint_dict["name"] == "FixCartesian":
+                if "selective_dynamics" not in pyiron_atoms.arrays.keys():
+                    pyiron_atoms.add_tag(selective_dynamics=[True, True, True])
+                pyiron_atoms.selective_dynamics[constraint_dict["kwargs"]["a"]] = (
+                    np.invert(constraint_dict["kwargs"]["mask"])
                 )
             else:
                 warnings.warn("Unsupported ASE constraint: " + constraint_dict["name"])
@@ -3098,6 +3105,57 @@ def pyiron_to_ase(pyiron_obj):
         atoms = ASEAtoms(
             symbols=element_list, positions=positions, pbc=pbc, cell=cell, magmoms=spins
         )
+    if "selective_dynamics" in pyiron_obj.get_tags():
+        constraints_dict = {
+            label: []
+            for label in ["TTT", "TTF", "FTT", "TFT", "TFF", "FFT", "FTF", "FFF"]
+        }
+        for i, val in enumerate(pyiron_obj.selective_dynamics):
+            if val[0] and val[1] and val[2]:
+                constraints_dict["TTT"].append(i)
+            elif val[0] and val[1] and not val[2]:
+                constraints_dict["TTF"].append(i)
+            elif not val[0] and val[1] and val[2]:
+                constraints_dict["FTT"].append(i)
+            elif val[0] and not val[1] and val[2]:
+                constraints_dict["TFT"].append(i)
+            elif val[0] and not val[1] and not val[2]:
+                constraints_dict["TFF"].append(i)
+            elif not val[0] and val[1] and not val[2]:
+                constraints_dict["FTF"].append(i)
+            elif not val[0] and not val[1] and val[2]:
+                constraints_dict["FFT"].append(i)
+            elif not val[0] and not val[1] and not val[2]:
+                constraints_dict["FFF"].append(i)
+            else:
+                raise ValueError("Selective Dynamics Error: " + str(val))
+
+        constraints_lst = []
+        for k, v in constraints_dict.items():
+            if len(v) > 0:
+                if k == "TTT":
+                    constraints_lst.append(
+                        FixCartesian(a=v, mask=(False, False, False))
+                    )
+                elif k == "TTF":
+                    constraints_lst.append(FixCartesian(a=v, mask=(False, False, True)))
+                elif k == "FTT":
+                    constraints_lst.append(FixCartesian(a=v, mask=(True, False, False)))
+                elif k == "TFT":
+                    constraints_lst.append(FixCartesian(a=v, mask=(False, True, False)))
+                elif k == "TFF":
+                    constraints_lst.append(FixCartesian(a=v, mask=(False, True, True)))
+                elif k == "FTF":
+                    constraints_lst.append(FixCartesian(a=v, mask=(True, False, True)))
+                elif k == "FFT":
+                    constraints_lst.append(FixCartesian(a=v, mask=(True, True, False)))
+                elif k == "FFF":
+                    constraints_lst.append(FixCartesian(a=v, mask=(True, True, True)))
+                else:
+                    raise ValueError(
+                        "Selective Dynamics Error: " + str(k) + ": " + str(v)
+                    )
+        atoms.set_constraint(constraints_lst)
     return atoms
 
 

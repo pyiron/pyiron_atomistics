@@ -6,7 +6,8 @@ import unittest
 import os
 import posixpath
 import numpy as np
-from pyiron_atomistics.vasp.vasprun import Vasprun, VasprunError
+from pyiron_atomistics.vasp.vasprun import Vasprun
+from pyiron_vasp.vasp.vasprun import VasprunError
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 
@@ -176,7 +177,7 @@ class TestVasprun(unittest.TestCase):
 
     def test_get_electronic_structure(self):
         for vp in self.vp_list:
-            es_obj = vp.get_electronic_structure()
+            es_obj = vp.get_electronic_structure(es_class=ElectronicStructure)
             self.assertIsInstance(es_obj, ElectronicStructure)
             if "grand_dos_matrix" in vp.vasprun_dict.keys():
                 [_, n_kpts, n_bands, _, _] = np.shape(
