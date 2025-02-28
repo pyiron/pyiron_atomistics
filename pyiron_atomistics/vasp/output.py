@@ -7,7 +7,6 @@ from pyiron_vasp.vasp.output import (
 from pyiron_vasp.vasp.output import (
     Output as _Output,
 )
-from pyiron_vasp.vasp.volumetric_data import volumetric_data_dict_to_hdf
 
 from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
@@ -18,7 +17,7 @@ from pyiron_atomistics.dft.waves.electronic import (
     ElectronicStructure,
     electronic_structure_dict_to_hdf,
 )
-from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
+from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData, volumetric_data_dict_to_hdf
 
 
 class Output(_Output):

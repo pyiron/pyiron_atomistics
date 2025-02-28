@@ -53,8 +53,7 @@ class VaspVolumetricData(_VaspVolumetricData):
             if "diff" in hdf_vd.list_nodes():
                 self._diff_data = hdf_vd["diff"]
 
-    @staticmethod
-    def _read_vol_data_old(filename, normalize=True):
+    def _read_vol_data_old(self, filename, normalize=True):
         """
         Convenience method to parse a generic volumetric static file in the vasp like format.
         Used by subclasses for parsing the file. This routine is adapted from the pymatgen vasp VolumetricData
