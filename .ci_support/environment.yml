@@ -5,10 +5,9 @@ dependencies:
 - ase =3.24.0
 - atomistics =0.2.1
 - coverage
-- codacy-coverage
 - defusedxml =0.7.1
 - h5py =3.13.0
-- matplotlib-base =3.10.0
+- matplotlib-base =3.10.1
 - mendeleev =0.19.0
 - mp-api =0.45.3
 - numpy =1.26.4
@@ -17,7 +16,7 @@ dependencies:
 - pint =0.24.4
 - pyiron_base =0.11.6
 - pyiron_lammps =0.4.0
-- pyiron_vasp =0.2.2
+- pyiron_vasp =0.2.3
 - pyiron_snippets =0.1.4
 - pylammpsmpi =0.2.31
 - pyscal3 =3.2.7
