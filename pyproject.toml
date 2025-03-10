@@ -44,7 +44,7 @@ dependencies = [
     "scipy==1.15.2",
     "scikit-learn==1.6.1",
     "seekpath==2.1.0",
-    "spglib==2.5.0",
+    "spglib==2.6.0",
     "structuretoolkit==0.0.31",
     "sphinx-parser==0.0.1",
 ]
