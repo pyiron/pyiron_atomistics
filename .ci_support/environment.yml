@@ -3,7 +3,7 @@ channels:
 dependencies:
 - aimsgb =1.1.0
 - ase =3.24.0
-- atomistics =0.2.4
+- atomistics =0.2.5
 - coverage
 - defusedxml =0.7.1
 - h5py =3.13.0
@@ -14,9 +14,9 @@ dependencies:
 - pandas =2.2.3
 - phonopy =2.38.0
 - pint =0.24.4
-- pyiron_base =0.11.9
-- pyiron_lammps =0.4.0
-- pyiron_vasp =0.2.4
+- pyiron_base =0.11.10
+- pyiron_lammps =0.4.1
+- pyiron_vasp =0.2.5
 - pyiron_snippets =0.1.4
 - pylammpsmpi =0.2.32
 - pyscal3 =3.2.7
@@ -24,6 +24,6 @@ dependencies:
 - scipy =1.15.2
 - seekpath =2.1.0
 - spglib =2.6.0
-- structuretoolkit =0.0.31
+- structuretoolkit =0.0.32
 - sphinx_parser =0.0.1
 - pyxtal =0.6.2
