@@ -13,11 +13,11 @@ dependencies:
 - pandas =2.2.3
 - phonopy =2.38.1
 - pint =0.24.4
-- pyiron_base =0.11.11
+- pyiron_base =0.11.12
 - pyiron_lammps =0.4.1
 - pyiron_snippets =0.1.4
 - pyiron_vasp =0.2.5
-- pylammpsmpi =0.2.33
+- pylammpsmpi =0.2.34
 - pyscal3 =3.2.7
 - scikit-learn =1.6.1
 - scipy =1.15.2
