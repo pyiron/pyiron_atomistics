@@ -3088,6 +3088,13 @@ def ase_to_pyiron(ase_obj):
                 )
             else:
                 warnings.warn("Unsupported ASE constraint: " + constraint_dict["name"])
+    if not np.all(
+        np.isclose(
+            ase_obj.get_velocities(),
+            np.array([[0.0, 0.0, 0.0]] * len(ase_obj)),
+        )
+    ):
+        pyiron_atoms.set_velocities(ase_obj.get_velocities())
     return pyiron_atoms
 
 
@@ -3156,6 +3163,8 @@ def pyiron_to_ase(pyiron_obj):
                         "Selective Dynamics Error: " + str(k) + ": " + str(v)
                     )
         atoms.set_constraint(constraints_lst)
+    if pyiron_obj.velocities is not None:
+        atoms.set_velocities(pyiron_obj.velocities)
     return atoms
 
 
