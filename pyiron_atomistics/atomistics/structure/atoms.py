@@ -3090,7 +3090,8 @@ def ase_to_pyiron(ase_obj):
                 warnings.warn("Unsupported ASE constraint: " + constraint_dict["name"])
     if not np.all(
         np.isclose(
-            ase_obj.get_velocities(), np.array([[0.0, 0.0, 0.0]] * len(ase_obj)),
+            ase_obj.get_velocities(),
+            np.array([[0.0, 0.0, 0.0]] * len(ase_obj)),
         )
     ):
         pyiron_atoms.set_velocities(ase_obj.get_velocities())
