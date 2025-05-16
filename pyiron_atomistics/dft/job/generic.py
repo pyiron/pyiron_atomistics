@@ -5,7 +5,7 @@
 import warnings
 
 import numpy as np
-from pyiron_vasp.dft.waves.electronic import ElectronicStructure
+from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 
 from pyiron_atomistics.atomistics.job.atomistic import (
     AtomisticGenericJob,
