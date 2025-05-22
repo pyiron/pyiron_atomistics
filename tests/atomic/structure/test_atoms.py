@@ -13,6 +13,7 @@ from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
     CrystalStructure,
     ase_to_pyiron,
+    pyiron_to_ase,
 )
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 from pyiron_atomistics.atomistics.structure.periodic_table import (
@@ -1789,6 +1790,17 @@ class TestAtoms(unittest.TestCase):
         unpickled = pickle.loads(pickled)
         self.assertEqual(unpickled, self.C3)
         self.assertTrue(np.allclose(unpickled.cell, self.C3.cell))
+
+    def test_pyiron_to_ase_magmoms(self):
+        structure = Atoms(positions=[[0, 0, 0]], elements=["Fe"], cell=np.eye(3), pbc=3 * [True])
+        atoms = pyiron_to_ase(structure)
+        self.assertNotIn("initial_magmoms", atoms.arrays)
+        structure.set_initial_magnetic_moments([1])
+        atoms = pyiron_to_ase(structure)
+        self.assertEqual(atoms.arrays["initial_magmoms"].tolist(), [1])
+        structure.set_initial_magnetic_moments([[0, 0, 1]])
+        atoms = pyiron_to_ase(structure)
+        self.assertEqual(atoms.arrays["initial_magmoms"].tolist(), [[0, 0, 1]])
 
 
 def generate_fcc_lattice(a=4.2):
