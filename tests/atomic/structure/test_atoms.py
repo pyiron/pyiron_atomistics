@@ -1792,7 +1792,9 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(np.allclose(unpickled.cell, self.C3.cell))
 
     def test_pyiron_to_ase_magmoms(self):
-        structure = Atoms(positions=[[0, 0, 0]], elements=["Fe"], cell=np.eye(3), pbc=3 * [True])
+        structure = Atoms(
+            positions=[[0, 0, 0]], elements=["Fe"], cell=np.eye(3), pbc=3 * [True]
+        )
         atoms = pyiron_to_ase(structure)
         self.assertNotIn("initial_magmoms", atoms.arrays)
         structure.set_initial_magnetic_moments([1])
