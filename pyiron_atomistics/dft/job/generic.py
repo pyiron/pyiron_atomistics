@@ -5,7 +5,6 @@
 import warnings
 
 import numpy as np
-from pyiron_vasp.dft.waves.electronic import ElectronicStructure
 
 from pyiron_atomistics.atomistics.job.atomistic import (
     AtomisticGenericJob,
@@ -13,6 +12,7 @@ from pyiron_atomistics.atomistics.job.atomistic import (
 from pyiron_atomistics.atomistics.job.atomistic import (
     MapFunctions as AtomisticMapFunctions,
 )
+from pyiron_atomistics.dft.waves.electronic import ElectronicStructure
 
 __author__ = "Jan Janssen"
 __copyright__ = (

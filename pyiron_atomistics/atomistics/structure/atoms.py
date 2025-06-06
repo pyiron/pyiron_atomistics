@@ -3088,6 +3088,13 @@ def ase_to_pyiron(ase_obj):
                 )
             else:
                 warnings.warn("Unsupported ASE constraint: " + constraint_dict["name"])
+    if not np.all(
+        np.isclose(
+            ase_obj.get_velocities(),
+            np.array([[0.0, 0.0, 0.0]] * len(ase_obj)),
+        )
+    ):
+        pyiron_atoms.set_velocities(ase_obj.get_velocities())
     return pyiron_atoms
 
 
@@ -3097,11 +3104,9 @@ def pyiron_to_ase(pyiron_obj):
     positions = pyiron_obj.positions
     pbc = pyiron_obj.get_pbc()
     spins = pyiron_obj.get_initial_magnetic_moments()
-    if all(spins == np.array(None)) or sum(np.abs(spins)) == 0.0:
+    if np.linalg.norm(spins) == 0.0:
         atoms = ASEAtoms(symbols=element_list, positions=positions, pbc=pbc, cell=cell)
     else:
-        if any(spins == np.array(None)):
-            spins[spins == np.array(None)] = 0.0
         atoms = ASEAtoms(
             symbols=element_list, positions=positions, pbc=pbc, cell=cell, magmoms=spins
         )
@@ -3156,6 +3161,8 @@ def pyiron_to_ase(pyiron_obj):
                         "Selective Dynamics Error: " + str(k) + ": " + str(v)
                     )
         atoms.set_constraint(constraints_lst)
+    if pyiron_obj.velocities is not None:
+        atoms.set_velocities(pyiron_obj.velocities)
     return atoms
 
 
