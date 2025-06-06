@@ -15,6 +15,8 @@ from pyiron_base import (
     Creator as CreatorCore,
 )
 from pyiron_base import (
+    LocalMaintenance,
+    Maintenance,
     JobType,
     JobTypeChoice,
     ProjectHDFio,
@@ -22,7 +24,6 @@ from pyiron_base import (
 from pyiron_base import (
     Project as ProjectCore,
 )
-from pyiron_base.project.maintenance import LocalMaintenance, Maintenance
 from pyiron_snippets.deprecate import deprecate
 from pyiron_snippets.logger import logger
 
