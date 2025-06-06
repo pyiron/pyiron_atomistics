@@ -13,13 +13,13 @@ dependencies:
 - pandas =2.0.3
 - phonopy =2.20.0
 - pint =0.18
-- pyiron_base =0.10.0
+- pyiron_base =0.13.0
 - pyiron_lammps =0.3.2
 - pyiron_snippets =0.1.3
 - pyiron_vasp =0.2.2
 - pylammpsmpi =0.2.18
 - pyscal3 =3.2.5
-- monty =2024.3.31
+- monty =2025.1.3
 - pyxtal =0.6.1
 - scikit-learn =1.2.1
 - scipy =1.15.0

@@ -17,12 +17,13 @@ from pyiron_base import (
 from pyiron_base import (
     JobType,
     JobTypeChoice,
+    LocalMaintenance,
+    Maintenance,
     ProjectHDFio,
 )
 from pyiron_base import (
     Project as ProjectCore,
 )
-from pyiron_base.project.maintenance import LocalMaintenance, Maintenance
 from pyiron_snippets.deprecate import deprecate
 from pyiron_snippets.logger import logger
 
