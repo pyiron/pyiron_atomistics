@@ -297,9 +297,9 @@ class PhonopyJob(AtomisticParallelMaster):
             hdf5_out["dos_energies"] = dos_dict["frequency_points"]
             hdf5_out["qpoints"] = mesh_dict["qpoints"]
             hdf5_out["supercell_matrix"] = self._phonopy_supercell_matrix()
-            hdf5_out["displacement_dataset"] = self.phonopy.get_displacement_dataset()
+            hdf5_out["displacement_dataset"] = self.phonopy.dataset
             hdf5_out["dynamical_matrix"] = (
-                self.phonopy.dynamical_matrix.get_dynamical_matrix()
+                self.phonopy.dynamical_matrix.dynamical_matrix
             )
             hdf5_out["force_constants"] = self.phonopy.force_constants
 
