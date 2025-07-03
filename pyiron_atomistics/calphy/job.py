@@ -966,13 +966,13 @@ class Calphy(GenericJob, HasStructure):
 
             def get_pos_cell(block):
                 di = block.to_dict()[0]
-                cc = di['box']
-                if cc.shape[1] == 3: # triclinic box, bail
+                cc = di["box"]
+                if cc.shape[1] == 3:  # triclinic box, bail
                     aseobj = block.to_ase(species=self._get_element_list())[0]
                     return aseobj.positions, list(aseobj.cell)
-                pos = np.stack([di['atoms']['x'], di['atoms']['y'], di['atoms']['z']]).T
-                a, b, c = cc[:,1] - cc[:,0]
-                cell = list(np.diag([a,b,c]))
+                pos = np.stack([di["atoms"]["x"], di["atoms"]["y"], di["atoms"]["z"]]).T
+                a, b, c = cc[:, 1] - cc[:, 0]
+                cell = list(np.diag([a, b, c]))
                 return pos, cell
 
             if os.path.exists(fwdfilename):
