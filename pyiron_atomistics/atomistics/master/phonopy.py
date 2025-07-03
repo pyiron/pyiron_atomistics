@@ -62,7 +62,6 @@ class PhonopyJobGenerator(JobGenerator):
         Returns:
             (list)
         """
-        supercells = self._master.phonopy.get_supercells_with_displacements()
         return [
             [
                 "{}_{}".format(self._master.ref_job.job_name, ind),
@@ -70,7 +69,7 @@ class PhonopyJobGenerator(JobGenerator):
                     ase_to_pyiron(structuretoolkit.common.phonopy_to_atoms(sc))
                 ),
             ]
-            for ind, sc in enumerate(supercells)
+            for ind, sc in enumerate(self._master.phonopy.supercells_with_displacements)
         ]
 
     def _restore_magmoms(self, structure):
