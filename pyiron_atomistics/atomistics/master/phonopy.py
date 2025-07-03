@@ -276,7 +276,7 @@ class PhonopyJob(AtomisticParallelMaster):
                 pr_job.inspect(job_name)["output/generic/forces"][-1]
                 for job_name in self._get_jobs_sorted()
             ]
-        self.phonopy.set_forces(forces_lst)
+        self.phonopy.forces = forces_lst
         self.phonopy.produce_force_constants(
             fc_calculator=None if self.input["number_of_snapshots"] is None else "alm"
         )
