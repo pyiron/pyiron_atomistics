@@ -966,14 +966,14 @@ class Calphy(GenericJob, HasStructure):
 
             if os.path.exists(fwdfilename):
                 traj = PyscalTrajectory(fwdfilename)
-                for x in traj.nblocks:
-                    aseobj = traj[x].to_ase(species=self._get_element_list())
+                for x in range(traj.nblocks):
+                    aseobj = traj[x].to_ase(species=self._get_element_list())[0]
                     fp.append(aseobj.positions)
                     fc.append(list(aseobj.cell))
             if os.path.exists(bkdfilename):
                 traj = PyscalTrajectory(bkdfilename)
-                for x in traj.nblocks:
-                    aseobj = traj[x].to_ase(species=self._get_element_list())
+                for x in range(traj.nblocks):
+                    aseobj = traj[x].to_ase(species=self._get_element_list())[0]
                     bp.append(aseobj.positions)
                     bc.append(list(aseobj.cell))
 
