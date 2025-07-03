@@ -62,7 +62,6 @@ class PhonopyJobGenerator(JobGenerator):
         Returns:
             (list)
         """
-        supercells = self._master.phonopy.get_supercells_with_displacements()
         return [
             [
                 "{}_{}".format(self._master.ref_job.job_name, ind),
@@ -70,7 +69,7 @@ class PhonopyJobGenerator(JobGenerator):
                     ase_to_pyiron(structuretoolkit.common.phonopy_to_atoms(sc))
                 ),
             ]
-            for ind, sc in enumerate(supercells)
+            for ind, sc in enumerate(self._master.phonopy.supercells_with_displacements)
         ]
 
     def _restore_magmoms(self, structure):
@@ -277,7 +276,7 @@ class PhonopyJob(AtomisticParallelMaster):
                 pr_job.inspect(job_name)["output/generic/forces"][-1]
                 for job_name in self._get_jobs_sorted()
             ]
-        self.phonopy.set_forces(forces_lst)
+        self.phonopy.forces = forces_lst
         self.phonopy.produce_force_constants(
             fc_calculator=None if self.input["number_of_snapshots"] is None else "alm"
         )
@@ -298,9 +297,9 @@ class PhonopyJob(AtomisticParallelMaster):
             hdf5_out["dos_energies"] = dos_dict["frequency_points"]
             hdf5_out["qpoints"] = mesh_dict["qpoints"]
             hdf5_out["supercell_matrix"] = self._phonopy_supercell_matrix()
-            hdf5_out["displacement_dataset"] = self.phonopy.get_displacement_dataset()
+            hdf5_out["displacement_dataset"] = self.phonopy.dataset
             hdf5_out["dynamical_matrix"] = (
-                self.phonopy.dynamical_matrix.get_dynamical_matrix()
+                self.phonopy.dynamical_matrix.dynamical_matrix
             )
             hdf5_out["force_constants"] = self.phonopy.force_constants
 
