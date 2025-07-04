@@ -964,18 +964,29 @@ class Calphy(GenericJob, HasStructure):
             bp = []
             bc = []
 
+            def get_pos_cell(block):
+                di = block.to_dict()[0]
+                cc = di["box"]
+                if cc.shape[1] == 3:  # triclinic box, bail
+                    aseobj = block.to_ase(species=self._get_element_list())[0]
+                    return aseobj.positions, list(aseobj.cell)
+                pos = np.stack([di["atoms"]["x"], di["atoms"]["y"], di["atoms"]["z"]]).T
+                a, b, c = cc[:, 1] - cc[:, 0]
+                cell = list(np.diag([a, b, c]))
+                return pos, cell
+
             if os.path.exists(fwdfilename):
                 traj = PyscalTrajectory(fwdfilename)
-                for x in traj.nblocks:
-                    aseobj = traj[x].to_ase(species=self._get_element_list())
-                    fp.append(aseobj.positions)
-                    fc.append(list(aseobj.cell))
+                for x in range(traj.nblocks):
+                    pos, cell = get_pos_cell(traj[x])
+                    fp.append(pos)
+                    fc.append(cell)
             if os.path.exists(bkdfilename):
                 traj = PyscalTrajectory(bkdfilename)
-                for x in traj.nblocks:
-                    aseobj = traj[x].to_ase(species=self._get_element_list())
-                    bp.append(aseobj.positions)
-                    bc.append(list(aseobj.cell))
+                for x in range(traj.nblocks):
+                    pos, cell = get_pos_cell(traj[x])
+                    bp.append(pos)
+                    bc.append(cell)
 
             fwd_positions.append(fp)
             bkd_positions.append(bp)
