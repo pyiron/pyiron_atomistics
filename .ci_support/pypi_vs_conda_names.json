@@ -1,4 +1,4 @@
 {
   "tables": "pytables",
-  "matplotlib": "matplotlib-base",
+  "matplotlib": "matplotlib-base"
 }
