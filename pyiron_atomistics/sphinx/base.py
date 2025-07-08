@@ -1910,7 +1910,7 @@ class Output:
         """
         try:
             results = collect_spins_dat(
-                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
+                file_name=os.path.join(cwd, file_name), index_permutation=self._job.id_spx_to_pyi
             )
         except FileNotFoundError:
             return
@@ -1928,7 +1928,7 @@ class Output:
 
         """
         try:
-            results = collect_energy_dat(file_name=file_name, cwd=cwd)
+            results = collect_energy_dat(file_name=os.path.join(cwd, file_name))
         except FileNotFoundError:
             return
         for k, v in results.items():
@@ -1950,7 +1950,7 @@ class Output:
 
         """
         try:
-            results = collect_residue_dat(file_name=file_name, cwd=cwd)
+            results = collect_residue_dat(file_name=os.path.join(cwd, file_name))
         except FileNotFoundError:
             return
         for k, v in results.items():
@@ -1968,7 +1968,7 @@ class Output:
         """
         try:
             results = collect_eps_dat(
-                file_name=file_name, cwd=cwd, spins=self._job._spin_enabled
+                file_name=os.path.join(cwd, file_name), spins=self._job._spin_enabled
             )
             for k, v in results.items():
                 if k not in self.generic.dft:
@@ -2049,7 +2049,7 @@ class Output:
         """
         try:
             results = collect_eval_forces(
-                file_name=file_name, cwd=cwd, index_permutation=self._job.id_spx_to_pyi
+                file_name=os.path.join(cwd, file_name), index_permutation=self._job.id_spx_to_pyi
             )
         except FileNotFoundError:
             return
