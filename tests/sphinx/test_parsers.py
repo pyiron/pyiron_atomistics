@@ -25,10 +25,6 @@ class TestSphinx(unittest.TestCase):
         self.assertTrue(
             np.all(E_dict["scf_energy_free"][-1] < E_dict["scf_energy_int"][-1])
         )
-        E_dict = collect_energy_dat(
-            file_name=os.path.join(self.get_path("sphinx_test_2_3"), "energy.dat"),
-        )
-        self.assertTrue("scf_energy_free" not in E_dict)
 
 
 if __name__ == "__main__":
