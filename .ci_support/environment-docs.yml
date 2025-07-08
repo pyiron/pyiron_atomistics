@@ -30,4 +30,4 @@ dependencies:
 - structuretoolkit =0.0.32
 - pyxtal =0.6.2
 - jupyter-book =1.0.0
-- sphinx_parser =0.0.1
+- sphinx_parser =0.0.2
