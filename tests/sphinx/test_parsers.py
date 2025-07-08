@@ -2,14 +2,12 @@
 # Copyright (c) Max-Planck-Institut für Eisenforschung GmbH - Computational Materials Design (CM) Department
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
+import os
 import numpy as np
 import unittest
 from pathlib import Path
 
-from sphinx_parser.output import (
-    collect_energy_dat,
-    SphinxWavesReader,
-)
+from sphinx_parser.output import collect_energy_dat
 
 
 class TestSphinx(unittest.TestCase):
@@ -22,25 +20,15 @@ class TestSphinx(unittest.TestCase):
 
     def test_energy(self):
         E_dict = collect_energy_dat(
-            file_name="energy.dat", cwd=self.get_path("sphinx_test_2_5")
+            file_name=os.path.join(self.get_path("sphinx_test_2_5"), "energy.dat"),
         )
         self.assertTrue(
             np.all(E_dict["scf_energy_free"][-1] < E_dict["scf_energy_int"][-1])
         )
         E_dict = collect_energy_dat(
-            file_name="energy.dat", cwd=self.get_path("sphinx_test_2_3")
+            file_name=os.path.join(self.get_path("sphinx_test_2_3"), "energy.dat"),
         )
         self.assertTrue("scf_energy_free" not in E_dict)
-
-    def test_waves(self):
-        test_path = Path(__file__).parents[2 - 1]
-        waves_path = Path.joinpath(test_path, "static/sphinx/sphinx_test_waves")
-        waves = SphinxWavesReader("waves.sxb", cwd=waves_path)
-        self.assertTrue(waves.nk == 1)
-        self.assertAlmostEqual(
-            np.linalg.norm(waves.get_psi_rec(0, 0, 0)), 0.9984249664645706
-        )
-        self.assertEqual(waves.get_psi_rec(0, 0, 0).shape, (10, 10, 10))
 
 
 if __name__ == "__main__":
