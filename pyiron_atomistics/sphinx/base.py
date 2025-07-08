@@ -1987,7 +1987,7 @@ class Output:
 
         """
         try:
-            results = collect_energy_struct(file_name=file_name, cwd=cwd)
+            results = collect_energy_struct(file_name=os.path.join(cwd, file_name))
         except FileNotFoundError:
             return
         for k, v in results.items():
