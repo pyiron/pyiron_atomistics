@@ -1969,9 +1969,7 @@ class Output:
         """
         try:
             results = collect_eps_dat(
-                file_name=(
-                    os.path.join(cwd, file_name) if file_name is not None else None
-                ),
+                cwd=cwd,
                 spins=self._job._spin_enabled,
             )
             for k, v in results.items():
