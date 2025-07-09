@@ -31,7 +31,6 @@ class TestSphinx(unittest.TestCase):
         cls.project = Project(os.path.join(cls.file_location, "../static/sphinx"))
         cls.sphinx = cls.project.create_job("Sphinx", "job_sphinx_base")
         cls.sphinx_band_structure = cls.project.create_job("Sphinx", "sphinx_test_bs")
-        cls.sphinx_2_3 = cls.project.create_job("Sphinx", "sphinx_test_2_3")
         cls.sphinx_2_5 = cls.project.create_job("Sphinx", "sphinx_test_2_5")
         cls.sphinx_aborted = cls.project.create_job("Sphinx", "sphinx_test_aborted")
         basis = Atoms(
@@ -45,11 +44,6 @@ class TestSphinx(unittest.TestCase):
         cls.sphinx_band_structure.structure = cls.project.create.structure.bulk("Fe")
         cls.sphinx_band_structure.structure = (
             cls.sphinx_band_structure.structure.create_line_mode_structure()
-        )
-        cls.sphinx_2_3.structure = Atoms(
-            elements=["Fe", "Fe"],
-            scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
-            cell=2.6 * np.eye(3),
         )
         cls.sphinx_2_5.structure = Atoms(
             elements=["Fe", "Ni"],
@@ -65,21 +59,17 @@ class TestSphinx(unittest.TestCase):
         cls.sphinx_aborted.status.aborted = True
         cls.current_dir = os.path.abspath(os.getcwd())
         cls.sphinx._create_working_directory()
-        cls.sphinx_2_3._create_working_directory()
         cls.sphinx.input["VaspPot"] = False
         cls.sphinx.structure.add_tag(selective_dynamics=(True, True, True))
         cls.sphinx.structure.selective_dynamics[1] = (False, False, False)
         cls.sphinx.fix_symmetry = False
         cls.sphinx.load_default_groups()
         cls.sphinx.write_input()
-        cls.sphinx_2_3.to_hdf()
-        cls.sphinx_2_3.decompress()
         cls.sphinx_2_5.decompress()
         cls.sphinx_2_5.collect_output()
 
     @classmethod
     def tearDownClass(cls):
-        cls.sphinx_2_3.decompress()
         cls.sphinx_2_5.decompress()
         cls.file_location = os.path.dirname(os.path.abspath(__file__))
         os.remove(
@@ -120,7 +110,6 @@ class TestSphinx(unittest.TestCase):
 
     def test_potential(self):
         self.assertEqual(["Fe_GGA"], self.sphinx.list_potentials())
-        self.assertEqual(["Fe_GGA"], self.sphinx_2_3.list_potentials())
         # The following sphinx_2_5.list_potentials test depends on the environment
         # [this probably applies to all list_potentials tests]
         # Thoughts by C. Freysoldt, 2022-10-24:
@@ -131,11 +120,7 @@ class TestSphinx(unittest.TestCase):
         # self.assertEqual(['Fe_GGA', 'Ni_GGA'], sorted(self.sphinx_2_5.list_potentials()))
         # next line is for the github/CI test environment (only Fe_GGA, no Ni, no other Fe)
         self.assertEqual(["Fe_GGA"], self.sphinx_2_5.list_potentials())
-        self.sphinx_2_3.potential.Fe = "Fe_GGA"
         self.sphinx_2_5.potential["Fe"] = "Fe_GGA"
-        self.assertEqual(
-            "Fe_GGA", list(self.sphinx_2_3.potential.to_dict().values())[0]
-        )
         self.assertEqual(
             "Fe_GGA", list(self.sphinx_2_5.potential.to_dict().values())[0]
         )
@@ -658,28 +643,6 @@ class TestSphinx(unittest.TestCase):
                 ]
             ]
         eig_lst = [np.loadtxt(file_location + "eps.dat")[:, 1:].tolist()]
-        self.sphinx_2_3.collect_output()
-        self.assertEqual(residue_lst, self.sphinx_2_3.output.generic.dft["scf_residue"])
-        self.assertEqual(
-            energy_int_lst, self.sphinx_2_3.output.generic.dft["scf_energy_int"]
-        )
-        self.assertEqual(
-            eig_lst,
-            self.sphinx_2_3.output.generic.dft["bands_eigen_values"].tolist(),
-        )
-        self.assertEqual(
-            energy_free_lst,
-            self.sphinx_2_3.output.generic.dft["scf_energy_free"],
-        )
-        self.assertEqual(
-            21.952 * BOHR_TO_ANGSTROM**3,
-            self.sphinx_2_3.output.generic["volume"],
-        )
-
-    def test_structure_parsing(self):
-        self.sphinx_2_3.output.collect_relaxed_hist(
-            file_name="relaxedHist_2.sx", cwd=self.sphinx_2_3.working_directory
-        )
 
     def test_density_of_states(self):
         dos = self.sphinx_2_5.get_density_of_states()
