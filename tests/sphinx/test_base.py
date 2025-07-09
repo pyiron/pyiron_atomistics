@@ -93,9 +93,6 @@ class TestSphinx(unittest.TestCase):
         shutil.rmtree(
             os.path.join(cls.file_location, "../static/sphinx/job_sphinx_base_hdf5")
         )
-        os.remove(
-            os.path.join(cls.file_location, "../static/sphinx/sphinx_test_2_3.h5")
-        )
 
     def test_id_pyi_to_spx(self):
         spx = self.project.create_job("Sphinx", "check_order")
@@ -625,24 +622,6 @@ class TestSphinx(unittest.TestCase):
     def test_check_band_occupancy(self):
         self.assertTrue(self.sphinx_2_5.output.check_band_occupancy())
         self.assertTrue(self.sphinx_2_5.nbands_convergence_check())
-
-    def test_collect_2_3(self):
-        file_location = os.path.join(
-            self.file_location, "../static/sphinx/sphinx_test_2_3_hdf5/sphinx_test_2_3/"
-        )
-        residue_lst = np.loadtxt(file_location + "residue.dat")[:, 1].reshape(1, -1)
-        residue_lst = (residue_lst).tolist()
-        energy_int_lst = np.loadtxt(file_location + "energy.dat")[:, 2].reshape(1, -1)
-        energy_int_lst = (energy_int_lst * HARTREE_TO_EV).tolist()
-        with open(file_location + "sphinx.log") as ffile:
-            energy_free_lst = [
-                [
-                    float(line.split("=")[-1]) * HARTREE_TO_EV
-                    for line in ffile
-                    if line.startswith("F(")
-                ]
-            ]
-        eig_lst = [np.loadtxt(file_location + "eps.dat")[:, 1:].tolist()]
 
     def test_density_of_states(self):
         dos = self.sphinx_2_5.get_density_of_states()
