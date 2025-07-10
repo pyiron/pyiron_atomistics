@@ -16,7 +16,7 @@ dependencies:
 - pint =0.24.4
 - pyiron_base =0.13.2
 - pyiron_lammps =0.4.3
-- pyiron_vasp =0.2.6
+- pyiron_vasp =0.2.7
 - pyiron_snippets =0.1.4
 - pylammpsmpi =0.2.36
 - pyscal3 =3.2.7
