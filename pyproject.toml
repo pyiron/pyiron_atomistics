@@ -45,7 +45,7 @@ dependencies = [
     "scikit-learn==1.6.1",
     "seekpath==2.1.0",
     "spglib==2.6.0",
-    "structuretoolkit==0.0.32",
+    "structuretoolkit==0.0.33",
     "sphinx-parser==0.0.2",
 ]
 dynamic = ["version"]
