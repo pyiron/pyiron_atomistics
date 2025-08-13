@@ -14,9 +14,9 @@ dependencies:
 - pandas =2.3.1
 - phonopy =2.43.1
 - pint =0.24.4
-- pyiron_base =0.13.4
-- pyiron_lammps =0.4.4
-- pyiron_vasp =0.2.8
+- pyiron_base =0.13.5
+- pyiron_lammps =0.4.5
+- pyiron_vasp =0.2.9
 - pyiron_snippets =0.2.0
 - pylammpsmpi =0.2.39
 - pyscal3 =3.2.7
@@ -24,6 +24,6 @@ dependencies:
 - scipy =1.15.2
 - seekpath =2.1.0
 - spglib =2.6.0
-- structuretoolkit =0.0.33
-- sphinx_parser =0.0.2
+- structuretoolkit =0.0.34
+- sphinx_parser =0.0.3
 - pyxtal =0.6.2
