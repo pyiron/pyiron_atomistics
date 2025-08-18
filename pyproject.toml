@@ -1,6 +1,6 @@
 [build-system]
-requires = ["ase", "atomistics", "defusedxml", "h5py", "matplotlib", "mendeleev", "mp-api", "numpy", "pandas", "phonopy", "pint", "pyiron_base", "pylammpsmpi", "scipy", "scikit-learn", "seekpath", "setuptools", "spglib", "structuretoolkit", "versioneer[toml]==0.29"]
-build-backend = "setuptools.build_meta"
+requires = ["ase", "atomistics", "defusedxml", "h5py", "matplotlib", "mendeleev", "mp-api", "numpy", "pandas", "phonopy", "pint", "pyiron_base", "pylammpsmpi", "scipy", "scikit-learn", "seekpath", "setuptools", "spglib", "structuretoolkit", "hatchling==1.27.0", "hatch-vcs==0.5.0"]
+build-backend = "hatchling.build"
 
 [project]
 name = "pyiron_atomistics"
@@ -55,18 +55,28 @@ Homepage = "https://pyiron.org"
 Documentation = "https://pyiron.readthedocs.io"
 Repository = "https://github.com/pyiron/pyiron_atomistics"
 
-[tool.setuptools.packages.find]
-include = ["pyiron_atomistics*"]
+[tool.hatch.build]
+include = [
+    "pyiron_atomistics"
+]
 
-[tool.setuptools.package-data]
-"*" = ["data/*.csv"]
+[tool.hatch.build.hooks.vcs]
+version-file = "pyiron_atomistics/_version.py"
 
-[tool.setuptools.dynamic]
-version = {attr = "pyiron_atomistics.__version__"}
+[tool.hatch.build.targets.sdist]
+include = [
+    "pyiron_atomistics"
+]
 
-[tool.versioneer]
-VCS = "git"
-style = "pep440-pre"
-versionfile_source = "pyiron_atomistics/_version.py"
-parentdir_prefix = "pyiron_atomistics"
-tag_prefix = "pyiron_atomistics-"
+[tool.hatch.build.targets.wheel]
+packages = [
+    "pyiron_atomistics"
+]
+
+[tool.hatch.version]
+source = "vcs"
+path = "pyiron_atomistics/_version.py"
+
+[tool.coverage.run]
+omit = ["pyiron_atomistics/_version.py", "tests/*"]
+command_line = "-m unittest discover tests"

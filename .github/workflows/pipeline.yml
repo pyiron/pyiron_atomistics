@@ -58,7 +58,6 @@ jobs:
     - name: Pip check
       shell: bash -l {0}
       run: |
-        pip install versioneer[toml]==0.29
         pip install . --no-deps --no-build-isolation
         pip check
 
@@ -117,7 +116,6 @@ jobs:
         timeout-minutes: 30
         run: |
           python .ci_support/pyironconfig.py
-          pip install versioneer[toml]==0.29
           pip install . --no-deps --no-build-isolation
           python -m unittest discover test_benchmarks
 
@@ -141,7 +139,6 @@ jobs:
       - name: Test
         shell: bash -l {0}
         run: |
-          pip install versioneer[toml]==0.29
           pip install . --no-deps --no-build-isolation
           ./.ci_support/build_notebooks.sh
 
@@ -184,9 +181,8 @@ jobs:
         timeout-minutes: 30
         run: |
           python .ci_support/pyironconfig.py
-          pip install versioneer[toml]==0.29
           pip install . --no-deps --no-build-isolation
-          coverage run --omit="pyiron_atomistics/_version.py,tests/*" -m unittest discover tests
+          coverage run
           coverage xml
       - name: Upload coverage reports to Codecov
         if: matrix.label == 'linux-64-py-3-12'
@@ -213,7 +209,6 @@ jobs:
       timeout-minutes: 30
       run: |
         python .ci_support/pyironconfig.py
-        pip install versioneer[toml]==0.29
         pip install . --no-deps --no-build-isolation
         python -m unittest discover tests
 
