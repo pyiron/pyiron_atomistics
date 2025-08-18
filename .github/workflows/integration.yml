@@ -33,6 +33,5 @@ jobs:
       - name: Test
         shell: bash -l {0}
         run: |
-          pip install versioneer[toml]==0.29
           pip install . --no-deps --no-build-isolation
           ./.ci_support/build_integration_notebooks.sh

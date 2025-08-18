@@ -1,6 +1,7 @@
 from pyiron_base import JOB_CLASS_DICT, Notebook, install_dialog
 from pyiron_base import Project as ProjectBase
 
+import pyiron_atomistics._version
 from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
     ase_to_pyiron,
@@ -57,9 +58,7 @@ JOB_CLASS_DICT.update(
     }
 )
 
-from ._version import get_versions
-
-__version__ = get_versions()["version"]
+__version__ = pyiron_atomistics._version.__version__
 
 
 def install():

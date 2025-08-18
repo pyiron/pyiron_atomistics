@@ -27,14 +27,12 @@ jobs:
         miniforge-version: latest
         condarc-file: .condarc
         environment-file: .ci_support/environment.yml
-    - name: Convert dependencies
-      run: |
-        cp .ci_support/environment-old.yml environment.yml
-        python .ci_support/release.py; cat pyproject.toml
     - name: Build
       shell: bash -l {0}
       run: |
-        pip install versioneer[toml]==0.29
-        python setup.py sdist bdist_wheel
+        cp .ci_support/environment-old.yml environment.yml
+        python .ci_support/release.py; cat pyproject.toml
+        git update-index --assume-unchanged pyproject.toml pyiron_atomistics/_version.py
+        hatchling build -t sdist -t wheel
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
