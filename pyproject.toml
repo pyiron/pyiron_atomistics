@@ -79,3 +79,4 @@ path = "pyiron_atomistics/_version.py"
 
 [tool.coverage.run]
 omit = ["pyiron_atomistics/_version.py", "tests/*"]
+command_line = "-m unittest discover tests"
