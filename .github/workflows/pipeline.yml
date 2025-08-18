@@ -75,7 +75,7 @@ jobs:
     - name: Setup Mambaforge
       uses: conda-incubator/setup-miniconda@v3
       with:
-        python-version: '3.10'
+        python-version: '3.11'
         miniforge-version: latest
         condarc-file: .condarc
         environment-file: environment.yml
@@ -166,10 +166,6 @@ jobs:
           - operating-system: ubuntu-latest
             python-version: '3.11'
             label: linux-64-py-3-11
-
-          - operating-system: ubuntu-latest
-            python-version: '3.10'
-            label: linux-64-py-3-10
 
     steps:
       - uses: actions/checkout@v2
