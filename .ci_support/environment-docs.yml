@@ -30,6 +30,6 @@ dependencies:
 - structuretoolkit =0.0.34
 - pyxtal =0.6.2
 - jupyter-book =1.0.0
-- sphinx_parser =0.0.3
+- sphinx_parser =0.1.0
 - hatchling =1.27.0
 - hatch-vcs =0.5.0
