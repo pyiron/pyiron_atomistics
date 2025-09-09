@@ -5,7 +5,7 @@ import os
 from typing import Optional, Union
 
 from ase.atoms import Atoms
-from pyiron_base import ProjectHDFio, Project
+from pyiron_base import Project, ProjectHDFio
 
 from pyiron_atomistics.atomistics.structure.atoms import ase_to_pyiron
 from pyiron_atomistics.vasp.interactive import VaspInteractive
