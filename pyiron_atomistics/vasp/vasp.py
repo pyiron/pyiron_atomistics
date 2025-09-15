@@ -76,22 +76,22 @@ def vasp_function(
     fix_spin_constraint: Optional[bool] = None,
     fix_symmetry: Optional[bool] = None,
     eddrmm_handling: str = "ignore",
-    coulomb_interactions_kwargs: dict = {},
-    algorithm_kwargs: dict = {},
+    coulomb_interactions_kwargs: Optional[dict] = None,
+    algorithm_kwargs: Optional[dict] = None,
     calc_mode: str = "static",
-    calc_kwargs: dict = {},
-    band_structure_calc_kwargs: dict = {},
-    convergence_precision_kwargs: dict = {},
-    dipole_correction_kwargs: dict = {},
-    electric_field_kwargs: dict = {},
-    occupancy_smearing_kwargs: dict = {},
-    fft_mesh_kwargs: dict = {},
-    mixing_parameters_kwargs: dict = {},
+    calc_kwargs: Optional[dict] = None,
+    band_structure_calc_kwargs: Optional[dict] = None,
+    convergence_precision_kwargs: Optional[dict] = None,
+    dipole_correction_kwargs: Optional[dict] = None,
+    electric_field_kwargs: Optional[dict] = None,
+    occupancy_smearing_kwargs: Optional[dict] = None,
+    fft_mesh_kwargs: Optional[dict] = None,
+    mixing_parameters_kwargs: Optional[dict] = None,
     n_empty_states: Optional[int] = None,
-    rwigs_kwargs: dict = {},
-    spin_constraint_kwargs: dict = {},
-    kpoints_kwargs: dict = {},
-    server_kwargs: dict = {},
+    rwigs_kwargs: Optional[dict] = None,
+    spin_constraint_kwargs: Optional[dict] = None,
+    kpoints_kwargs: Optional[dict] = None,
+    server_kwargs: Optional[dict] = None,
     executable_version: Optional[str] = None,
     executable_path: Optional[str] = None,
     incar_file: Optional[Union[str, list, dict]] = None,
@@ -138,6 +138,35 @@ def vasp_function(
         str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
                          the execution raised an accepted error.
     """
+    if coulomb_interactions_kwargs is None:
+        coulomb_interactions_kwargs = {}
+    if algorithm_kwargs is None:
+        algorithm_kwargs = {}
+    if calc_kwargs is None:
+        calc_kwargs = {}
+    if band_structure_calc_kwargs is None:
+        band_structure_calc_kwargs = {}
+    if convergence_precision_kwargs is None:
+        convergence_precision_kwargs = {}
+    if dipole_correction_kwargs is None:
+        dipole_correction_kwargs = {}
+    if electric_field_kwargs is None:
+        electric_field_kwargs = {}
+    if occupancy_smearing_kwargs is None:
+        occupancy_smearing_kwargs = {}
+    if fft_mesh_kwargs is None:
+        fft_mesh_kwargs = {}
+    if mixing_parameters_kwargs is None:
+        mixing_parameters_kwargs = {}
+    if rwigs_kwargs is None:
+        rwigs_kwargs = {}
+    if spin_constraint_kwargs is None:
+        spin_constraint_kwargs = {}
+    if kpoints_kwargs is None:
+        kpoints_kwargs = {}
+    if server_kwargs is None:
+        server_kwargs = {}
+
     os.makedirs(working_directory, exist_ok=True)
     job = Vasp(
         project=ProjectHDFio(

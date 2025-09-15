@@ -60,11 +60,11 @@ def lammps_function(
     structure: Atoms,
     potential: str,
     calc_mode: str = "static",
-    calc_kwargs: dict = {},
+    calc_kwargs: Optional[dict] = None,
     cutoff_radius: Optional[float] = None,
     units: str = "metal",
-    bonds_kwargs: dict = {},
-    server_kwargs: dict = {},
+    bonds_kwargs: Optional[dict] = None,
+    server_kwargs: Optional[dict] = None,
     enable_h5md: bool = False,
     write_restart_file: bool = False,
     read_restart_file: bool = False,
@@ -130,6 +130,13 @@ def lammps_function(
         str, dict, bool: Tuple consisting of the shell output (str), the parsed output (dict) and a boolean flag if
                          the execution raised an accepted error.
     """
+    if calc_kwargs is None:
+        calc_kwargs = {}
+    if bonds_kwargs is None:
+        bonds_kwargs = {}
+    if server_kwargs is None:
+        server_kwargs = {}
+
     os.makedirs(working_directory, exist_ok=True)
     job = Lammps(
         project=ProjectHDFio(
