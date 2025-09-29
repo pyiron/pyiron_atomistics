@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "ase==3.25.0",
-    "atomistics==0.2.5",
+    "atomistics==0.3.0",
     "defusedxml==0.7.1",
     "h5py==3.13.0",
     "matplotlib==3.10.1",
