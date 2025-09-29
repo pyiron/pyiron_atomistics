@@ -23,7 +23,7 @@ dependencies:
 - scipy =1.15.2
 - seekpath =2.1.0
 - spglib =2.6.0
-- structuretoolkit =0.0.34
+- structuretoolkit =0.0.35
 - pyxtal =0.6.2
 - pyiron-data =0.0.30
 - sqsgenerator =0.3
