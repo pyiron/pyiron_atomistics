@@ -28,7 +28,7 @@ dependencies = [
     "h5py==3.13.0",
     "matplotlib==3.10.1",
     "mendeleev==1.1.0",
-    "mp-api==0.45.9",
+    "mp-api==0.45.11",
     "numpy==2.3.3",
     "pandas==2.3.2",
     "phonopy==2.43.2",
