@@ -76,14 +76,14 @@ class TestElectronicStructure(unittest.TestCase):
             for i in range(es.n_spins):
                 self.assertEqual(
                     len(es.eigenvalues[i]),
-                    np.product(np.shape(es.eigenvalue_matrix[i])),
+                    np.prod(np.shape(es.eigenvalue_matrix[i])),
                 )
 
     def test_occupancies(self):
         for es in self.es_list:
             for i in range(es.n_spins):
                 self.assertEqual(
-                    len(es.occupancies[i]), np.product(np.shape(es.occupancy_matrix[i]))
+                    len(es.occupancies[i]), np.prod(np.shape(es.occupancy_matrix[i]))
                 )
 
     def test_from_hdf(self):

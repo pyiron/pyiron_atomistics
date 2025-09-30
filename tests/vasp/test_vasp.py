@@ -81,13 +81,19 @@ class TestVasp(unittest.TestCase):
         job_pot.potential["Fe"] = "Fe_sv_GW"
         structure = CrystalStructure("Fe", BravaisBasis="bcc", a=2.9)
         job_pot.structure = structure
-        self.assertEqual(str(job_pot.potential), str({"Fe": "Fe_sv_GW"}))
+        self.assertEqual(str(job_pot.potential), str({np.str_("Fe"): "Fe_sv_GW"}))
         structure[0] = "Al"
         job_pot.structure = structure
-        self.assertEqual(str(job_pot.potential), str({"Fe": "Fe_sv_GW", "Al": None}))
+        self.assertEqual(
+            str(job_pot.potential),
+            str({np.str_("Fe"): "Fe_sv_GW", np.str_("Al"): None}),
+        )
         structure[:] = "Al"
         job_pot.structure = structure
-        self.assertEqual(str(job_pot.potential), str({"Fe": "Fe_sv_GW", "Al": None}))
+        self.assertEqual(
+            str(job_pot.potential),
+            str({np.str_("Fe"): "Fe_sv_GW", np.str_("Al"): None}),
+        )
 
     def test_list_potentials(self):
         self.assertRaises(ValueError, self.job.list_potentials)

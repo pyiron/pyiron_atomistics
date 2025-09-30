@@ -675,14 +675,12 @@ class TestAtoms(unittest.TestCase):
         len_before = len(basis)
         sel_dyn_before = np.array(basis.selective_dynamics)
         self.assertTrue(
-            np.alltrue(
-                np.logical_not(
-                    np.alltrue(sel_dyn_before[basis.select_index("O")], axis=1)
-                )
+            np.all(
+                np.logical_not(np.all(sel_dyn_before[basis.select_index("O")], axis=1))
             )
         )
         self.assertTrue(
-            np.alltrue(np.alltrue(sel_dyn_before[basis.select_index("Mg")], axis=1))
+            np.all(np.all(sel_dyn_before[basis.select_index("Mg")], axis=1))
         )
         basis.set_repeat([3, 3, 2])
         sel_dyn_after = np.array(basis.selective_dynamics)
@@ -690,15 +688,11 @@ class TestAtoms(unittest.TestCase):
         self.assertEqual(len(sel_dyn_before) * 18, len(sel_dyn_after))
         self.assertEqual(len_before * 18, len(basis))
         self.assertTrue(
-            np.alltrue(
-                np.logical_not(
-                    np.alltrue(sel_dyn_after[basis.select_index("O")], axis=1)
-                )
+            np.all(
+                np.logical_not(np.all(sel_dyn_after[basis.select_index("O")], axis=1))
             )
         )
-        self.assertTrue(
-            np.alltrue(np.alltrue(sel_dyn_after[basis.select_index("Mg")], axis=1))
-        )
+        self.assertTrue(np.all(np.all(sel_dyn_after[basis.select_index("Mg")], axis=1)))
         basis = basis_Mg + basis_O
         basis.add_tag(spin=None)
         basis.spin[basis.select_index("Mg")] = 1

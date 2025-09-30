@@ -11,15 +11,13 @@ authors = [
 readme = "README.md"
 license = { file = "LICENSE" }
 keywords = ["pyiron"]
-requires-python = ">=3.9, <3.13"
+requires-python = ">=3.11, <3.13"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Topic :: Scientific/Engineering :: Physics",
     "License :: OSI Approved :: BSD License",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
@@ -29,9 +27,9 @@ dependencies = [
     "defusedxml==0.7.1",
     "h5py==3.13.0",
     "matplotlib==3.10.1",
-    "mendeleev==0.19.0",
+    "mendeleev==1.1.0",
     "mp-api==0.45.9",
-    "numpy==1.26.4",
+    "numpy==2.3.3",
     "pandas==2.3.2",
     "phonopy==2.43.2",
     "pint==0.24.4",

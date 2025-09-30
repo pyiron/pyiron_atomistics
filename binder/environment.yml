@@ -7,9 +7,9 @@ dependencies:
 - defusedxml =0.7.1
 - h5py =3.13.0
 - matplotlib-base =3.10.1
-- mendeleev =0.19.0
+- mendeleev =1.1.0
 - mp-api =0.45.9
-- numpy =1.26.4
+- numpy =2.3.3
 - pandas =2.3.2
 - phonopy =2.43.2
 - pint =0.24.4
@@ -27,9 +27,9 @@ dependencies:
 - pyxtal =0.6.2
 - pyiron-data =0.0.30
 - sqsgenerator =0.3
-- lammps =2024.06.27=*_openmpi_*
+- lammps =2024.08.29=*_openmpi_*
 - iprpy-data =2022.11.02
-- gpaw =24.6.0
+- gpaw =25.6.0
 - sphinx_parser =0.1.1
 - sphinxdft =3.1
 - sphinxdft-data =0.0.1
