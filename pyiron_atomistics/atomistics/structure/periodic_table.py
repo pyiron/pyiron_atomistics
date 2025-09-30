@@ -28,7 +28,6 @@ pandas.options.mode.chained_assignment = None
 MENDELEEV_PROPERTY_LIST = [
     "abundance_crust",
     "abundance_sea",
-    "annotation",
     "atomic_number",
     "atomic_radius",
     "atomic_radius_rahm",

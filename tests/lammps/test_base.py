@@ -391,7 +391,7 @@ class TestLammps(TestWithCleanProject):
         self.assertLessEqual(neigh_traj_obj.distances[:, o_indices, :2].max(), 1.2)
         self.assertGreaterEqual(neigh_traj_obj.distances[:, o_indices, :2].min(), 0.8)
         self.assertTrue(
-            np.alltrue(
+            np.all(
                 [
                     np.in1d(np.unique(ind_mat.flatten()), h_indices)
                     for ind_mat in neigh_traj_obj.indices[:, o_indices, :2]
