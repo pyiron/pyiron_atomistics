@@ -677,12 +677,12 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(
             np.all(
                 np.logical_not(
-                    np.alltrue(sel_dyn_before[basis.select_index("O")], axis=1)
+                    np.all(sel_dyn_before[basis.select_index("O")], axis=1)
                 )
             )
         )
         self.assertTrue(
-            np.all(np.alltrue(sel_dyn_before[basis.select_index("Mg")], axis=1))
+            np.all(np.all(sel_dyn_before[basis.select_index("Mg")], axis=1))
         )
         basis.set_repeat([3, 3, 2])
         sel_dyn_after = np.array(basis.selective_dynamics)
@@ -692,12 +692,12 @@ class TestAtoms(unittest.TestCase):
         self.assertTrue(
             np.all(
                 np.logical_not(
-                    np.alltrue(sel_dyn_after[basis.select_index("O")], axis=1)
+                    np.all(sel_dyn_after[basis.select_index("O")], axis=1)
                 )
             )
         )
         self.assertTrue(
-            np.all(np.alltrue(sel_dyn_after[basis.select_index("Mg")], axis=1))
+            np.all(np.all(sel_dyn_after[basis.select_index("Mg")], axis=1))
         )
         basis = basis_Mg + basis_O
         basis.add_tag(spin=None)
