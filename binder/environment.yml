@@ -12,7 +12,7 @@ dependencies:
 - numpy =2.3.3
 - pandas =2.3.2
 - phonopy =2.43.2
-- pint =0.24.4
+- pint =0.25
 - pyiron_base =0.15.2
 - pyiron_lammps =0.4.7
 - pyiron_snippets =0.2.0
