@@ -13,7 +13,7 @@ dependencies:
 - numpy =2.3.3
 - pandas =2.3.3
 - phonopy =2.43.2
-- pint =0.24.4
+- pint =0.25
 - pyiron_base =0.15.3
 - pyiron_lammps =0.4.8
 - pyiron_vasp =0.2.14
@@ -25,7 +25,7 @@ dependencies:
 - seekpath =2.1.0
 - spglib =2.6.0
 - structuretoolkit =0.0.35
-- sphinx_parser =0.1.1
+- sphinx_parser =0.1.2
 - pyxtal =0.6.2
 - hatchling =1.27.0
 - hatch-vcs =0.5.0
