@@ -2,6 +2,7 @@ channels:
 - conda-forge
 dependencies:
 - gpaw =24.1.0
+- gpaw-data <1
 - jupyter
 - lammps =2024.06.27=*_openmpi_*
 - nglview

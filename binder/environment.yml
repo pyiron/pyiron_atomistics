@@ -3,7 +3,7 @@ channels:
 dependencies:
 - aimsgb =1.1.0
 - ase =3.25.0
-- atomistics =0.2.5
+- atomistics =0.3.0
 - defusedxml =0.7.1
 - h5py =3.13.0
 - matplotlib-base =3.10.1
@@ -14,10 +14,10 @@ dependencies:
 - phonopy =2.43.2
 - pint =0.24.4
 - pyiron_base =0.15.1
-- pyiron_lammps =0.4.6
+- pyiron_lammps =0.4.7
 - pyiron_snippets =0.2.0
-- pyiron_vasp =0.2.12
-- pylammpsmpi =0.3.2
+- pyiron_vasp =0.2.13
+- pylammpsmpi =0.3.3
 - pyscal3 =3.3.0
 - scikit-learn =1.6.1
 - scipy =1.15.2
@@ -30,7 +30,7 @@ dependencies:
 - lammps =2024.06.27=*_openmpi_*
 - iprpy-data =2022.11.02
 - gpaw =24.6.0
-- sphinx_parser =0.1.0
+- sphinx_parser =0.1.1
 - sphinxdft =3.1
 - sphinxdft-data =0.0.1
 - nglview =3.1.2
