@@ -8,7 +8,7 @@ dependencies:
 - h5py =3.13.0
 - matplotlib-base =3.10.0
 - mendeleev =1.1.0
-- mp-api =0.45.9
+- mp-api =0.37.0
 - numpy =2.2.1
 - pandas =2.2.3
 - phonopy =2.43.2
@@ -21,7 +21,7 @@ dependencies:
 - pyscal3 =3.3.0
 - scikit-learn =1.6.1
 - scipy =1.15.0
-- seekpath =2.1.0
+- seekpath =1.9.5
 - spglib =2.6.0
 - structuretoolkit =0.0.35
 - sphinx_parser =0.1.1
