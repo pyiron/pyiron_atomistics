@@ -2,7 +2,7 @@ channels:
 - conda-forge
 dependencies:
 - aimsgb =1.1.0
-- ase =3.25.0
+- ase =3.26.0
 - atomistics =0.3.0
 - coverage
 - defusedxml =0.7.1

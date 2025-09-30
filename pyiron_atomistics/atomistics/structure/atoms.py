@@ -2287,6 +2287,13 @@ class Atoms(ASEAtoms):
 
     def set_constraint(self, constraint=None):
         super(Atoms, self).set_constraint(constraint)
+        if isinstance(constraint, list):
+            if len(constraint) == 0:
+                constraint = None
+            elif len(constraint) == 1:
+                constraint = constraint[0]
+            else:
+                raise ValueError("Only a single constraint is supported.")
         if constraint is not None:
             if constraint.todict()["name"] != "FixAtoms":
                 raise ValueError(
