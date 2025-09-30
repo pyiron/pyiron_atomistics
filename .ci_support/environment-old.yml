@@ -21,7 +21,7 @@ dependencies:
 - pyscal3 =3.3.0
 - scikit-learn =1.6.1
 - scipy =1.15.2
-- seekpath =2.1.0
+- seekpath =1.9.5
 - spglib =2.6.0
 - structuretoolkit =0.0.35
 - sphinx_parser =0.1.1
