@@ -85,12 +85,12 @@ class TestVasp(unittest.TestCase):
         structure[0] = "Al"
         job_pot.structure = structure
         self.assertEqual(
-            str(job_pot.potential), str({np.str_("Fe"): "Fe_sv_GW", "Al": None})
+            str(job_pot.potential), str({np.str_("Fe"): "Fe_sv_GW", np.str_("Al"): None})
         )
         structure[:] = "Al"
         job_pot.structure = structure
         self.assertEqual(
-            str(job_pot.potential), str({np.str_("Fe"): "Fe_sv_GW", "Al": None})
+            str(job_pot.potential), str({np.str_("Fe"): "Fe_sv_GW", np.str_("Al"): None})
         )
 
     def test_list_potentials(self):
