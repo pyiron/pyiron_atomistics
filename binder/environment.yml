@@ -24,7 +24,7 @@ dependencies:
 - seekpath =2.1.0
 - spglib =2.6.0
 - structuretoolkit =0.0.35
-- pyxtal =0.6.2
+- pyxtal =1.1.1
 - pyiron-data =0.0.30
 - sqsgenerator =0.3
 - lammps =2024.08.29=*_openmpi_*
