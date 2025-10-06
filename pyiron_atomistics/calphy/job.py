@@ -22,7 +22,7 @@ calphy_version = "1.0.0"
 
 with ImportAlarm(
     "Calphy functionality requires the `calphy` module (and its dependencies) specified as extra"
-    "requirements. Please install it and try again."
+    "requirements. Please install it and try  again."
 ) as calphy_alarm:
     from calphy import Alchemy, Calculation, Liquid, Solid
     from calphy import __version__ as calphy_version
