@@ -36,7 +36,7 @@ dependencies = [
     "pint==0.25",
     "pyiron_base==0.15.3",
     "pyiron_lammps==0.4.8",
-    "pyiron_snippets==0.2.0",
+    "pyiron_snippets==1.0.0",
     "pyiron_vasp==0.2.14",
     "pylammpsmpi==0.3.3",
     "pyscal3==3.3.0",
