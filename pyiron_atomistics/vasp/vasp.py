@@ -226,7 +226,7 @@ def vasp_function(
         job.set_kpoints(**kpoints_kwargs)
     server_dict = job.server.to_dict()
     server_dict.update(server_kwargs)
-    job.server.from_dict(server_dict=server_dict)
+    job.server.from_dict(obj_dict=server_dict)
     if calc_mode == "static":
         job.calc_static()
     elif calc_mode == "md":
