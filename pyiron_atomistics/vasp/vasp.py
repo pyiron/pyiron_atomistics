@@ -171,11 +171,11 @@ def vasp_function(
     job = Vasp(
         project=ProjectHDFio(
             project=Project(working_directory),
-            file_name="lmp_funct_job",
+            file_name="vasp_funct_job",
             h5_path=None,
             mode=None,
         ),
-        job_name="lmp_funct_job",
+        job_name="vasp_funct_job",
     )
     job.structure = ase_to_pyiron(structure)
     if plane_wave_cutoff is not None:
