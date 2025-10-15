@@ -6,7 +6,7 @@ dependencies:
 - atomistics =0.3.0
 - coverage
 - defusedxml =0.7.1
-- h5py =3.14.0
+- h5py =3.15.0
 - matplotlib-base =3.10.6
 - mendeleev =1.1.0
 - mp-api =0.45.12
@@ -14,10 +14,10 @@ dependencies:
 - pandas =2.3.3
 - phonopy =2.43.2
 - pint =0.25
-- pyiron_base =0.15.4
+- pyiron_base =0.15.5
 - pyiron_lammps =0.4.8
 - pyiron_vasp =0.2.14
-- pyiron_snippets =1.0.1
+- pyiron_snippets =1.0.2
 - pylammpsmpi =0.3.3
 - pyscal3 =3.3.0
 - scikit-learn =1.7.2
