@@ -30,7 +30,7 @@ dependencies:
 - lammps =2024.08.29=*_openmpi_*
 - iprpy-data =2022.11.02
 - gpaw =25.6.0
-- sphinx_parser =0.1.2
+- sphinx_parser =0.1.3
 - sphinxdft =3.1
 - sphinxdft-data =0.0.1
 - nglview =3.1.2
