@@ -1,5 +1,5 @@
 [build-system]
-requires = ["ase", "atomistics", "defusedxml", "h5py", "matplotlib", "mendeleev", "mp-api", "numpy", "pandas", "phonopy", "pint", "pyiron_base", "pylammpsmpi", "scipy", "scikit-learn", "seekpath", "setuptools", "spglib", "structuretoolkit", "hatchling==1.27.0", "hatch-vcs==0.5.0"]
+requires = ["ase", "assyst", "atomistics", "defusedxml", "h5py", "matplotlib", "mendeleev", "mp-api", "numpy", "pandas", "phonopy", "pint", "pyiron_base", "pylammpsmpi", "scipy", "scikit-learn", "seekpath", "setuptools", "spglib", "structuretoolkit", "hatchling==1.27.0", "hatch-vcs==0.5.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -24,6 +24,7 @@ classifiers = [
 ]
 dependencies = [
     "ase==3.26.0",
+    "assyst==0.8.1",
     "atomistics==0.3.2",
     "defusedxml==0.7.1",
     "h5py==3.15.1",
