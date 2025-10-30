@@ -17,7 +17,7 @@ dependencies:
 - pandas =2.3.3
 - phonopy =2.43.2
 - pint =0.25
-- pyiron_base =0.15.6
+- pyiron_base =0.15.7
 - pyiron_lammps =0.4.9
 - pyiron_snippets =1.0.2
 - pyiron_vasp =0.2.15
