@@ -210,7 +210,7 @@ class PhonopyJob(AtomisticParallelMaster):
             supercell_range = np.ceil(
                 self.input["interaction_range"]
                 / np.array(
-                    [np.linalg.norm(vec) for vec in self._phonopy_unit_cell.get_cell()]
+                    [np.linalg.norm(vec) for vec in self._phonopy_unit_cell.cell]
                 )
             )
             return np.eye(3) * supercell_range
