@@ -35,7 +35,7 @@ dependencies = [
     "pandas==2.3.3",
     "phonopy==2.43.6",
     "pint==0.25.2",
-    "pyiron_base==0.15.8",
+    "pyiron_base==0.15.9",
     "pyiron_lammps==0.4.9",
     "pyiron_snippets==1.0.2",
     "pyiron_vasp==0.2.15",
@@ -46,7 +46,7 @@ dependencies = [
     "seekpath==2.1.0",
     "spglib==2.6.0",
     "structuretoolkit==0.0.37",
-    "sphinx-parser==0.1.4",
+    "sphinx-parser==0.1.5",
 ]
 dynamic = ["version"]
 
