@@ -180,7 +180,7 @@ def lammps_function(
     if enable_h5md:
         job.enable_h5md()
     if write_restart_file:
-        job.write_restart_file(filename=restart_file)
+        job.write_restart_file(filename=os.path.basename(restart_file))
     if read_restart_file:
         job.read_restart_file(filename=os.path.basename(restart_file))
         job.restart_file_list.append(restart_file)
