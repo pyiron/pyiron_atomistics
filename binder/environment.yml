@@ -14,7 +14,7 @@ dependencies:
 - pandas =2.3.3
 - phonopy =2.43.6
 - pint =0.25.2
-- pyiron_base =0.15.8
+- pyiron_base =0.15.9
 - pyiron_lammps =0.4.9
 - pyiron_snippets =1.0.2
 - pyiron_vasp =0.2.15
@@ -31,7 +31,7 @@ dependencies:
 - lammps =2024.08.29=*_openmpi_*
 - iprpy-data =2022.11.02
 - gpaw =25.6.0
-- sphinx_parser =0.1.4
+- sphinx_parser =0.1.5
 - sphinxdft =3.1
 - sphinxdft-data =0.0.1
 - nglview =3.1.2
