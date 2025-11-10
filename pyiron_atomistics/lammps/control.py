@@ -62,6 +62,7 @@ class LammpsControl(GenericParameters):
         )
         block_dict["compute"] = (
             "compute",
+            "compute_modify",
             "fix",
             "variable",
             "fix_modify",
