@@ -18,7 +18,7 @@ pyiron_atomistics - an integrated development environment (IDE) for atomistic si
 ![Screenshot of pyiron_atomistics running inside jupyterlab.](https://raw.githubusercontent.com/pyiron/pyiron_atomistics/main/docs/images/screenshots.png)
 
 pyiron (called pyron) is developed in the [Computational Materials Design department](https://www.mpie.de/CM) of
-[Joerg Neugebauer](https://www.mpie.de/person/43010/2763386) at the [Max Planck Institut für Eisenforschung (Max Planck Institute for iron research)](https://www.mpie.de/2281/en).
+[Joerg Neugebauer](https://www.mpie.de/person/43010/2763386) at the [Max Planck Institut für Nachhaltige Materialien (Max Planck Institute for Sustainable Materials)](https://www.mpie.de/2281/en).
 While its original focus was to provide a framework to develop and run complex simulation protocols as needed for ab
 initio thermodynamics it quickly evolved into a versatile tool to manage a wide variety of simulation tasks. In 2016 the
 [Interdisciplinary Centre for Advanced Materials Simulation (ICAMS)](http://www.icams.de) joined the development of the
