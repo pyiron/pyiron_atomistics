@@ -25,7 +25,7 @@ initio thermodynamics it quickly evolved into a versatile tool to manage a wide 
 [Interdisciplinary Centre for Advanced Materials Simulation (ICAMS)](http://www.icams.de) joined the development of the
 framework with a specific focus on high throughput applications. In 2018 pyiron was released as open-source project.
 
-**pyiron_atomistics**: This is the documentation page for the basic infrastructure moduls of pyiron.  If you're new to
+**pyiron_atomistics**: This is the documentation page for the atomistic simulation moduls of pyiron.  If you're new to
 pyiron and want to get an overview head over to [pyiron](https://pyiron.readthedocs.io/en/latest/).  If you're looking
 for the API docs of pyiron_base check [pyiron_base](https://pyiron_base.readthedocs.io/en/latest/).
 
