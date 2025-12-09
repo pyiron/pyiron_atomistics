@@ -32,5 +32,5 @@ dependencies:
 - pyxtal =1.1.1
 - jupyter-book =1.0.0
 - sphinx_parser =0.1.5
-- hatchling =1.28.0
+- hatchling =1.27.0
 - hatch-vcs =0.5.0
