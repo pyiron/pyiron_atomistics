@@ -21,12 +21,12 @@ dependencies:
 - pyiron_snippets =1.0.2
 - pylammpsmpi =0.3.7
 - pyscal3 =3.3.0
-- scikit-learn =1.7.2
+- scikit-learn =1.8.0
 - scipy =1.16.3
 - seekpath =2.1.0
 - spglib =2.6.0
 - structuretoolkit =0.0.38
 - sphinx_parser =0.1.5
 - pyxtal =1.1.1
-- hatchling =1.28.0
+- hatchling =1.27.0
 - hatch-vcs =0.5.0
