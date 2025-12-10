@@ -2,7 +2,7 @@
 
 Finished VASP calculations that were created outside of pyiron_atomistics can be imported using the following script:
 ```python
-from pyiron.project import Project
+from pyiron_atomistics import Project
 pr = Project('imported_jobs')
 # Searches and imports vasp jobs from 'vasp_directory'
 path_to_import = "vasp_directory"
