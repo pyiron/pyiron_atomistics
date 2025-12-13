@@ -9,8 +9,8 @@ import scipy.constants
 import spglib
 from atomistics.workflows.elastic.elastic_moduli import ElasticProperties
 from atomistics.workflows.elastic.helper import (
-    analyse_structures_helper,
-    generate_structures_helper,
+    analyse_results_for_elastic_matrix,
+    get_tasks_for_elastic_matrix,
 )
 from pyiron_base import JobGenerator
 
@@ -49,7 +49,7 @@ class ElasticMatrixCalculator(object):
         Returns:
 
         """
-        self._data, self._structure_dict = generate_structures_helper(
+        task_dict, self._data = get_tasks_for_elastic_matrix(
             structure=self.basis_ref.copy(),
             eps_range=self.eps_range,
             num_of_point=self.num_of_point,
@@ -63,6 +63,7 @@ class ElasticMatrixCalculator(object):
         self.v0 = self._data["v0"]
         self.LC = self._data["LC"]
         self.SGN = self._data["SGN"]
+        self._structure_dict = task_dict["calc_energy"]
         return self._structure_dict
 
     def analyse_structures(self, output_dict):
@@ -71,7 +72,7 @@ class ElasticMatrixCalculator(object):
         Returns:
 
         """
-        sym_dict, elastic = analyse_structures_helper(
+        elastic, sym_dict = analyse_results_for_elastic_matrix(
             output_dict=output_dict,
             sym_dict=self._data,
             fit_order=self.fit_order,
