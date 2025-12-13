@@ -432,9 +432,8 @@ class Calphy(GenericJob, HasStructure):
         Returns:
             None
         """
-        lmp_structure = LammpsStructure()
+        lmp_structure = LammpsStructure(atom_type="atomic")
         lmp_structure.potential = self._potential_initial
-        lmp_structure.atom_type = "atomic"
         lmp_structure.el_eam_lst = self._potential_initial.get_element_lst()
         lmp_structure.structure = structure_to_lammps(structure)
 

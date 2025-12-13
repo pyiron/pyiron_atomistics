@@ -973,10 +973,10 @@ class LammpsBase(AtomisticGenericJob):
         lmp_structure = LammpsStructure(
             bond_dict=self.input.bond_dict,
             job=self,
+            atom_type=self.input.control["atom_style"],
         )
         lmp_structure._force_skewed = self.input.control._force_skewed
         lmp_structure.potential = self.input.potential
-        lmp_structure.atom_type = self.input.control["atom_style"]
         if cutoff_radius is not None:
             lmp_structure.cutoff_radius = cutoff_radius
         else:
