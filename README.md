@@ -5,8 +5,7 @@
 ![Anaconda](https://anaconda.org/conda-forge/pyiron_atomistics/badges/downloads.svg)
 ![Release](https://anaconda.org/conda-forge/pyiron_atomistics/badges/latest_release_date.svg)
 
-pyiron - an integrated development environment (IDE) for computational materials science. It combines several tools in
-a common platform:
+pyiron_atomistics - an integrated development environment (IDE) for atomistic simulation in computational materials science. It combines several tools in a common platform:
 
 * Atomic structure objects – compatible to the [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/).
 * Atomistic simulation codes – like [LAMMPS](http://lammps.sandia.gov) and [VASP](https://www.vasp.at).
@@ -19,13 +18,13 @@ a common platform:
 ![Screenshot of pyiron_atomistics running inside jupyterlab.](https://raw.githubusercontent.com/pyiron/pyiron_atomistics/main/docs/images/screenshots.png)
 
 pyiron (called pyron) is developed in the [Computational Materials Design department](https://www.mpie.de/CM) of
-[Joerg Neugebauer](https://www.mpie.de/person/43010/2763386) at the [Max Planck Institut für Eisenforschung (Max Planck Institute for iron research)](https://www.mpie.de/2281/en).
+[Joerg Neugebauer](https://www.mpie.de/person/43010/2763386) at the [Max Planck Institut für Nachhaltige Materialien (Max Planck Institute for Sustainable Materials)](https://www.mpie.de/2281/en).
 While its original focus was to provide a framework to develop and run complex simulation protocols as needed for ab
 initio thermodynamics it quickly evolved into a versatile tool to manage a wide variety of simulation tasks. In 2016 the
 [Interdisciplinary Centre for Advanced Materials Simulation (ICAMS)](http://www.icams.de) joined the development of the
 framework with a specific focus on high throughput applications. In 2018 pyiron was released as open-source project.
 
-**pyiron_atomistics**: This is the documentation page for the basic infrastructure moduls of pyiron.  If you're new to
+**pyiron_atomistics**: This is the documentation page for the atomistic simulation moduls of pyiron.  If you're new to
 pyiron and want to get an overview head over to [pyiron](https://pyiron.readthedocs.io/en/latest/).  If you're looking
 for the API docs of pyiron_base check [pyiron_base](https://pyiron_base.readthedocs.io/en/latest/).
 
