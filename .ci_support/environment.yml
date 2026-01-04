@@ -3,7 +3,7 @@ channels:
 dependencies:
 - aimsgb =1.1.0
 - ase =3.27.0
-- assyst =0.9.0
+- assyst =0.10.0
 - atomistics =0.3.5
 - coverage
 - defusedxml =0.7.1
