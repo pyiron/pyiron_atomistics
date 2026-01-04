@@ -4,7 +4,7 @@ dependencies:
 - aimsgb =1.1.0
 - ase =3.26.0
 - assyst =0.9.0
-- atomistics =0.3.4
+- atomistics =0.3.5
 - coverage
 - defusedxml =0.7.1
 - h5py =3.15.1
@@ -16,17 +16,17 @@ dependencies:
 - phonopy =2.46.1
 - pint =0.25.2
 - pyiron_base =0.15.11
-- pyiron_lammps =0.5.1
-- pyiron_vasp =0.2.16
+- pyiron_lammps =0.5.2
+- pyiron_vasp =0.2.18
 - pyiron_snippets =1.0.2
-- pylammpsmpi =0.3.7
+- pylammpsmpi =0.3.8
 - pyscal3 =3.3.0
 - scikit-learn =1.8.0
 - scipy =1.16.3
 - seekpath =2.1.0
-- spglib =2.6.0
-- structuretoolkit =0.0.38
-- sphinx_parser =0.1.5
+- spglib =2.7.0
+- structuretoolkit =0.0.39
+- sphinx_parser =0.1.6
 - pyxtal =1.1.1
 - hatchling =1.27.0
 - hatch-vcs =0.5.0
