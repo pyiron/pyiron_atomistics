@@ -7,6 +7,7 @@
 
 pyiron_atomistics - an integrated development environment (IDE) for atomistic simulation in computational materials science. It combines several tools in a common platform:
 
+
 * Atomic structure objects – compatible to the [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/).
 * Atomistic simulation codes – like [LAMMPS](http://lammps.sandia.gov) and [VASP](https://www.vasp.at).
 * Feedback Loops – to construct dynamic simulation life cycles.
