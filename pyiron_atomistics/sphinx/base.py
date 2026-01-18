@@ -1207,8 +1207,7 @@ class SphinxBase(GenericDFTJob):
             self.input.sphinx.basis["kPoints"] = kpoints
         else:
             raise ValueError(
-                "only Monkhorst-Pack mesh and Line mode\
-                are currently implemented in Pyiron for SPHInX"
+                "only Monkhorst-Pack mesh and Line mode are currently implemented in Pyiron for SPHInX"
             )
 
     def load_default_groups(self):
@@ -1501,10 +1500,7 @@ class SphinxBase(GenericDFTJob):
         """
         Collects warnings from the SPHInX run
         """
-        self._logger.info(
-            "collect_warnings() is not yet \
-            implemented for SPHInX"
-        )
+        self._logger.info("collect_warnings() is not yet implemented for SPHInX")
 
     def collect_errors(self):
         """
