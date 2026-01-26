@@ -22,7 +22,7 @@ dependencies:
 - pyiron_lammps =0.5.2
 - pyiron_snippets =1.0.2
 - pyiron_vasp =0.2.18
-- pylammpsmpi =0.3.8
+- pylammpsmpi =0.3.9
 - pyscal3 =3.3.0
 - scikit-learn =1.8.0
 - scipy =1.16.3
