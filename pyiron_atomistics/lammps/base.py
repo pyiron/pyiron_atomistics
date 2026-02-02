@@ -11,10 +11,10 @@ from typing import Optional
 
 import numpy as np
 import pandas
+from lammpsparser.output import parse_lammps_output
+from lammpsparser.structure import UnfoldingPrism, structure_to_lammps
+from lammpsparser.units import LAMMPS_UNIT_CONVERSIONS
 from pyiron_base import state
-from pyiron_lammps.output import parse_lammps_output
-from pyiron_lammps.structure import UnfoldingPrism, structure_to_lammps
-from pyiron_lammps.units import LAMMPS_UNIT_CONVERSIONS
 from pyiron_snippets.deprecate import deprecate
 from pyiron_snippets.logger import logger
 

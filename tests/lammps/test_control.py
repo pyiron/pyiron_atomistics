@@ -6,7 +6,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 import unittest
 from pyiron_atomistics.lammps.control import LammpsControl
-from pyiron_lammps.units import LAMMPS_UNIT_CONVERSIONS
+from lammpsparser.units import LAMMPS_UNIT_CONVERSIONS
 
 
 class TestLammps(unittest.TestCase):
