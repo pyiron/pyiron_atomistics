@@ -22,7 +22,7 @@ dependencies:
 - pylammpsmpi =0.3.9
 - pyscal3 =3.3.0
 - scikit-learn =1.8.0
-- scipy =1.16.3
+- scipy =1.17.0
 - seekpath =2.2.1
 - spglib =2.7.0
 - structuretoolkit =0.0.39
