@@ -16,7 +16,7 @@ dependencies:
 - phonopy =2.47.1
 - pint =0.25.2
 - pyiron_base =0.15.12
-- pyiron_lammps =0.5.2
+- lammpsparser =0.0.1
 - pyiron_vasp =0.2.18
 - pyiron_snippets =1.0.2
 - pylammpsmpi =0.3.9

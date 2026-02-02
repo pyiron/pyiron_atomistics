@@ -9,7 +9,7 @@ from pyiron_base import Project, ProjectHDFio
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 from pyiron_atomistics.lammps.lammps import Lammps
 from pylammpsmpi import LammpsASELibrary
-from pyiron_lammps.structure import UnfoldingPrism
+from lammpsparser.structure import UnfoldingPrism
 
 
 class InteractiveLibrary(object):

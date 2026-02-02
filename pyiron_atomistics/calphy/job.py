@@ -6,11 +6,11 @@ import numpy as np
 import pandas as pd
 import yaml
 from ase.io import read
-from pyiron_base import DataContainer, GenericJob
-from pyiron_lammps.structure import (
+from lammpsparser.structure import (
     UnfoldingPrism,
     structure_to_lammps,
 )
+from pyiron_base import DataContainer, GenericJob
 from pyiron_snippets.import_alarm import ImportAlarm
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron

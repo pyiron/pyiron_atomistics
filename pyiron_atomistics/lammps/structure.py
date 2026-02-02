@@ -7,8 +7,8 @@ from __future__ import print_function
 from collections import OrderedDict
 
 import numpy as np
-from pyiron_lammps.structure import LammpsStructure as LammpsStructureASE
-from pyiron_lammps.units import UnitConverter
+from lammpsparser.structure import LammpsStructure as LammpsStructureASE
+from lammpsparser.units import UnitConverter
 
 __author__ = "Joerg Neugebauer, Sudarsan Surendralal, Yury Lysogorskiy, Jan Janssen, Markus Tautschnig"
 __copyright__ = (

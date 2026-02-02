@@ -7,8 +7,8 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from pyiron_lammps.structure import UnfoldingPrism
-from pyiron_lammps.units import UnitConverter
+from lammpsparser.structure import UnfoldingPrism
+from lammpsparser.units import UnitConverter
 from pyiron_snippets.import_alarm import ImportAlarm
 
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
