@@ -6,8 +6,8 @@ import os
 from subprocess import PIPE, Popen
 
 import numpy as np
-from pyiron_vasp.vasp.parser.outcar import Outcar
-from pyiron_vasp.vasp.structure import vasp_sorter
+from vaspparser.vasp.parser.outcar import Outcar
+from vaspparser.vasp.structure import vasp_sorter
 
 from pyiron_atomistics.atomistics.job.interactive import GenericInteractive
 from pyiron_atomistics.vasp.base import VaspBase

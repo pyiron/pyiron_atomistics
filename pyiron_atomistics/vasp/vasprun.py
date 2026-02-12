@@ -2,10 +2,10 @@ from collections import OrderedDict
 
 import numpy as np
 from pyiron_base import state
-from pyiron_vasp.vasp.vasprun import (
+from vaspparser.vasp.vasprun import (
     Vasprun as _Vasprun,
 )
-from pyiron_vasp.vasp.vasprun import (
+from vaspparser.vasp.vasprun import (
     clean_character,
 )
 

@@ -8,7 +8,7 @@ import os
 from pyiron_atomistics.project import Project
 from pyiron_atomistics.vasp.vasp import Vasp
 from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
-from pyiron_vasp.vasp.vasprun import VasprunWarning
+from vaspparser.vasp.vasprun import VasprunWarning
 import warnings
 
 

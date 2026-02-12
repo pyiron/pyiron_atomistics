@@ -14,7 +14,7 @@ from pyiron_atomistics.atomistics.structure.atoms import (
 )
 
 # from pyiron_atomistics.vasp.structure import read_atoms, atoms_from_string
-from pyiron_vasp.vasp.structure import (
+from vaspparser.vasp.structure import (
     read_atoms as _read_atoms,
     atoms_from_string as _atoms_from_string,
     write_poscar as _write_poscar,

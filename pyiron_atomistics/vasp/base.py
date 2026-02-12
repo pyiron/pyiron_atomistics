@@ -13,13 +13,13 @@ from typing import Optional
 import numpy as np
 from pyiron_base import GenericParameters, state
 from pyiron_snippets.deprecate import deprecate
-from pyiron_vasp.vasp.output import (
+from vaspparser.vasp.output import (
     VaspCollectError,
     get_final_structure_from_file,
     parse_vasp_output,
 )
-from pyiron_vasp.vasp.structure import vasp_sorter
-from pyiron_vasp.vasp.vasprun import VasprunError
+from vaspparser.vasp.structure import vasp_sorter
+from vaspparser.vasp.vasprun import VasprunError
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, CrystalStructure
 from pyiron_atomistics.dft.bader import Bader, get_valence_and_total_charge_density

@@ -13,16 +13,16 @@ __email__ = "surendralal@mpie.de"
 __status__ = "production"
 __date__ = "Sep 1, 2017"
 
-from pyiron_vasp.vasp.structure import (
+from vaspparser.vasp.structure import (
     atoms_from_string as _atoms_from_string,
 )
-from pyiron_vasp.vasp.structure import (
+from vaspparser.vasp.structure import (
     get_poscar_content as _get_poscar_content,
 )
-from pyiron_vasp.vasp.structure import (
+from vaspparser.vasp.structure import (
     read_atoms as _read_atoms,
 )
-from pyiron_vasp.vasp.structure import (
+from vaspparser.vasp.structure import (
     write_poscar as _write_poscar,
 )
 
