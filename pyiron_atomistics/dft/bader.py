@@ -1,6 +1,6 @@
 import os
 
-from pyiron_vasp.dft.bader import Bader as _Bader
+from vaspparser.dft.bader import Bader as _Bader
 
 from pyiron_atomistics.vasp.volumetric_data import VaspVolumetricData
 

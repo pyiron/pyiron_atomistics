@@ -3,7 +3,7 @@
 # Distributed under the terms of "New BSD License", see the LICENSE file.
 
 import numpy as np
-from pyiron_vasp.vasp.structure import write_poscar
+from vaspparser.vasp.structure import write_poscar
 
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
 

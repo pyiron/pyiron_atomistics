@@ -1,10 +1,10 @@
 from __future__ import print_function
 
 from pyiron_base import state
-from pyiron_vasp.vasp.output import (
+from vaspparser.vasp.output import (
     GenericOutput as _GenericOutput,
 )
-from pyiron_vasp.vasp.output import (
+from vaspparser.vasp.output import (
     Output as _Output,
 )
 

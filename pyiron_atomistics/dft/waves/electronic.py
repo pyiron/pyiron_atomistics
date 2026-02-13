@@ -5,7 +5,7 @@
 from __future__ import print_function
 
 import numpy as np
-from pyiron_vasp.dft.waves.electronic import ElectronicStructure as _ElectronicStructure
+from vaspparser.dft.waves.electronic import ElectronicStructure as _ElectronicStructure
 
 from pyiron_atomistics.atomistics.structure.atoms import (
     Atoms,
