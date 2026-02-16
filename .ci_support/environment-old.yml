@@ -24,7 +24,7 @@ dependencies:
 - scipy =1.15.0
 - seekpath =1.9.5
 - spglib =2.7.0
-- structuretoolkit =0.0.35
+- structuretoolkit =0.0.39
 - sphinx_parser =0.1.1
 - pyxtal =1.0.7
 - hatchling =1.27.0
