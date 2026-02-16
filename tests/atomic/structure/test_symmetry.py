@@ -4,8 +4,9 @@
 
 import unittest
 import numpy as np
+from spglib.error import SpglibError
+
 from pyiron_atomistics.atomistics.structure.atoms import Atoms
-from structuretoolkit.common.error import SymmetryError
 from pyiron_atomistics.atomistics.structure.factory import StructureFactory
 
 
@@ -188,7 +189,7 @@ class TestAtoms(unittest.TestCase):
 
         structure = StructureFactory().bulk("Al")
         structure += structure[-1]
-        with self.assertRaises(SymmetryError):
+        with self.assertRaises(SpglibError):
             structure.get_symmetry()
 
 
