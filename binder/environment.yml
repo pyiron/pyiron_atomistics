@@ -12,14 +12,14 @@ dependencies:
 - mp-api =0.46.0
 - numpy =2.3.5
 - pandas =2.3.3
-- phonopy =2.48.0
+- phonopy =3.1.0
 - pint =0.25.2
-- pyiron_base =0.15.12
+- pyiron_base =0.15.13
 - lammpsparser =0.0.1
 - pyiron_snippets =1.0.2
 - vaspparser =0.0.1
 - pylammpsmpi =0.3.10
-- pyscal3 =3.3.0
+- pyscal3 =3.3.2
 - scikit-learn =1.8.0
 - scipy =1.16.3
 - seekpath =2.2.1
@@ -36,5 +36,5 @@ dependencies:
 - sphinxdft-data =0.0.1
 - nglview =3.1.2
 - seaborn =0.13.2
-- hatchling =1.28.0
+- hatchling =1.29.0
 - hatch-vcs =0.5.0
