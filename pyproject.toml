@@ -35,7 +35,7 @@ dependencies = [
     "pandas==2.3.3",
     "phonopy==3.0.1",
     "pint==0.25.2",
-    "pyiron_base==0.15.12",
+    "pyiron_base==0.15.13",
     "lammpsparser==0.0.1",
     "pyiron_snippets==1.0.2",
     "vaspparser==0.0.1",
