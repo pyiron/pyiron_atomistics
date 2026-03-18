@@ -229,7 +229,7 @@ jobs:
         python -m unittest discover tests
 
   autobot:
-    needs: [unittest_old, unittest_matrix, pip_check, notebooks, benchmark, backwards]
+    needs: [unittest_old, unittest_matrix, pip_check, notebooks, benchmark, backwards, uv_check]
     permissions:
       contents: write
       pull-requests: write
