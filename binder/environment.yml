@@ -27,7 +27,7 @@ dependencies:
 - structuretoolkit =0.0.41
 - pyxtal =1.1.1
 - pyiron-data =0.0.30
-- sqsgenerator =0.3
+- sqsgenerator =0.5.5
 - lammps =2024.08.29=*_openmpi_*
 - iprpy-data =2022.11.02
 - gpaw =25.6.0
