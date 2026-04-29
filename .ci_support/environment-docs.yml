@@ -11,7 +11,7 @@ dependencies:
 - atomistics =0.3.6
 - defusedxml =0.7.1
 - h5py =3.16.0
-- matplotlib-base =3.10.8
+- matplotlib-base =3.10.9
 - mendeleev =1.1.0
 - mp-api =0.46.0
 - numpy =2.3.5
