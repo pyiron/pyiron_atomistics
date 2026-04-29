@@ -12,5 +12,5 @@ dependencies:
 - sphinxdft-data =0.0.1
 - iprpy-data =2022.11.02
 - pyiron-data =0.0.29
-- sqsgenerator =0.3
+- sqsgenerator =0.5.5
 - openmpi =5.0.8=*_110
