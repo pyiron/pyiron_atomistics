@@ -239,7 +239,7 @@ class LammpsStructure(LammpsStructureASE):
                                     <= cutoff_dist
                                 )
                                 act_ind = ind[bool_1]
-                                bool_2 = np.in1d(act_ind, el_2_list)
+                                bool_2 = np.isin(act_ind, el_2_list)
                                 final_ind = act_ind[bool_2]
                                 # Get the bond and angle type
                                 bond_type = val["bond_type_list"][i]

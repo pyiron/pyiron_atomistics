@@ -394,7 +394,7 @@ class TestLammps(TestWithCleanProject):
         self.assertTrue(
             np.all(
                 [
-                    np.in1d(np.unique(ind_mat.flatten()), h_indices)
+                    np.isin(np.unique(ind_mat.flatten()), h_indices)
                     for ind_mat in neigh_traj_obj.indices[:, o_indices, :2]
                 ]
             )
