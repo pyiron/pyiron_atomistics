@@ -46,7 +46,7 @@ def remap_indices(
     structure_symbol_order = np.array([el.Abbreviation for el in structure.species])
     map_ = np.array(
         [
-            int(np.argwhere(lammps_symbol_order == symbol)[0]) + 1
+            int(np.argwhere(lammps_symbol_order == symbol)[0][0]) + 1
             for symbol in structure_symbol_order
         ]
     )
