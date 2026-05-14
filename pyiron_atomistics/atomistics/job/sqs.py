@@ -241,7 +241,7 @@ class SQSJob(AtomisticGenericJob):
     def run_static(self):
         structure_lst, decmp, iterations, cycle_time = sqs_structures(
             structure=self.structure,
-            mole_fractions={k: v for k, v in self.input.mole_fractions.items()},
+            composition={k: v for k, v in self.input.mole_fractions.items()},
             weights=self.input.weights,
             objective=self.input.objective,
             iterations=self.input.iterations,
