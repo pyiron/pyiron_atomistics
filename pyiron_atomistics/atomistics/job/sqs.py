@@ -15,8 +15,7 @@ from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 
 try:
-    from sqsgenerator import IterationMode, process_settings, sqs_optimize
-    from sqsgenerator.settings import BadSettings
+    import sqsgenerator
 
     import_alarm = ImportAlarm()
 except ImportError:
