@@ -247,8 +247,8 @@ class SQSJob(AtomisticGenericJob):
             },
             weights=self.input.weights,
             objective=self.input.objective,
-            iterations=self.input.iterations,
-            num_threads=self.server.cores,
+            iterations=int(self.input.iterations),
+            num_threads=int(self.server.cores),
         )
         self._lst_of_struct = [ase_to_pyiron(s.atoms()) for s in results]
         for i, structure in enumerate(self._lst_of_struct):
