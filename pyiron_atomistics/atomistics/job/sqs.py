@@ -15,8 +15,7 @@ from pyiron_atomistics.atomistics.job.atomistic import AtomisticGenericJob
 from pyiron_atomistics.atomistics.structure.atoms import Atoms, ase_to_pyiron
 
 try:
-    from sqsgenerator import IterationMode, process_settings, sqs_optimize
-    from sqsgenerator.settings import BadSettings
+    import sqsgenerator
 
     import_alarm = ImportAlarm()
 except ImportError:
@@ -240,24 +239,23 @@ class SQSJob(AtomisticGenericJob):
 
     # This function is executed
     def run_static(self):
-        structure_lst, decmp, iterations, cycle_time = sqs_structures(
+        results = sqs_structures(
             structure=self.structure,
-            mole_fractions={k: v for k, v in self.input.mole_fractions.items()},
+            composition={
+                k: round(v * len(self.structure))
+                for k, v in self.input.mole_fractions.items()
+            },
             weights=self.input.weights,
             objective=self.input.objective,
-            iterations=self.input.iterations,
-            output_structures=self.input.n_output_structures,
-            num_threads=self.server.cores,
-            return_statistics=True,
+            iterations=int(self.input.iterations),
+            num_threads=int(self.server.cores),
         )
-        self._lst_of_struct = [ase_to_pyiron(s) for s in structure_lst]
+        self._lst_of_struct = [ase_to_pyiron(s.atoms()) for s in results]
         for i, structure in enumerate(self._lst_of_struct):
             with self.project_hdf5.open("output/structures/structure_" + str(i)) as h5:
                 structure.to_hdf(h5)
         with self.project_hdf5.open("output") as h5:
-            h5["decmp"] = decmp
-            h5["cycle_time"] = cycle_time
-            h5["iterations"] = iterations
+            h5["iterations"] = int(self.input.iterations)
         self.status.finished = True
         self.project.db.item_update(self._runtime(), self.job_id)
 
