@@ -255,7 +255,7 @@ class SQSJob(AtomisticGenericJob):
             with self.project_hdf5.open("output/structures/structure_" + str(i)) as h5:
                 structure.to_hdf(h5)
         with self.project_hdf5.open("output") as h5:
-            h5["iterations"] = self.input.iteration
+            h5["iterations"] = int(self.input.iterations)
         self.status.finished = True
         self.project.db.item_update(self._runtime(), self.job_id)
 
