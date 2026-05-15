@@ -242,7 +242,7 @@ class SQSJob(AtomisticGenericJob):
         results = sqs_structures(
             structure=self.structure,
             composition={
-                k: int(v * len(self.structure))
+                k: round(v * len(self.structure))
                 for k, v in self.input.mole_fractions.items()
             },
             weights=self.input.weights,
