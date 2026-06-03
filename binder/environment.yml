@@ -20,7 +20,7 @@ dependencies:
 - vaspparser =0.0.4
 - pylammpsmpi =0.3.12
 - pyscal3 =3.3.2
-- scikit-learn =1.8.0
+- scikit-learn =1.9.0
 - scipy =1.17.1
 - seekpath =2.2.1
 - spglib =2.7.0
