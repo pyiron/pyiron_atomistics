@@ -189,6 +189,14 @@ class Calphy(GenericJob, HasStructure):
                 "thermostat_damping": 100.0,
                 "barostat_damping": 100.0,
             },
+            "monte_carlo": {
+                "n_steps": 1,
+                "n_swaps": 0,
+                "forward_swap_types": [],
+                "reverse_swap_types": [],
+                "allow_all_swaps": True,
+                "use_custom_lammps": False,
+            },
         }
 
     def set_potentials(self, potential_filenames: Union[list, str]):
@@ -476,21 +484,12 @@ class Calphy(GenericJob, HasStructure):
         """
         calc = copy.deepcopy(self._default_input)
 
-        for key in self._default_input.keys():
-            if key not in ["md", "tolerance", "nose_hoover", "berendsen"]:
+        for key, value in self._default_input.items():
+            if isinstance(value, dict):
+                for subkey in value:
+                    calc[key][subkey] = self.input[key][subkey]
+            else:
                 calc[key] = self.input[key]
-
-        for key in self._default_input["md"].keys():
-            calc["md"][key] = self.input["md"][key]
-
-        for key in self._default_input["tolerance"].keys():
-            calc["tolerance"][key] = self.input["tolerance"][key]
-
-        for key in self._default_input["nose_hoover"].keys():
-            calc["nose_hoover"][key] = self.input["nose_hoover"][key]
-
-        for key in self._default_input["berendsen"].keys():
-            calc["berendsen"][key] = self.input["berendsen"][key]
 
         calc["lattice"] = os.path.join(self.working_directory, "conf.data")
 
@@ -505,8 +504,7 @@ class Calphy(GenericJob, HasStructure):
         calc["queue"] = {}
         calc["queue"]["cores"] = self.server.cores
 
-        calculations = {}
-        calculations["calculations"] = [calc]
+        calculations = {"calculations": [calc]}
 
         with open(os.path.join(self.working_directory, "input.yaml"), "w") as fout:
             yaml.safe_dump(calculations, fout)
