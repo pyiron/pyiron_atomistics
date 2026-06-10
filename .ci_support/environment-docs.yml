@@ -8,7 +8,7 @@ dependencies:
 - aimsgb =1.1.0
 - ase =3.28.0
 - assyst =0.15.0
-- atomistics =0.3.6
+- atomistics =0.3.7
 - defusedxml =0.7.1
 - h5py =3.16.0
 - matplotlib-base =3.10.9
