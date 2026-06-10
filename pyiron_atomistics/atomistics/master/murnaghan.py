@@ -265,7 +265,10 @@ class Murnaghan(AtomisticParallelMaster):
 
     def poly_fit(self, fit_order=3, vol_erg_dic=None):
         self._set_fit_module(vol_erg_dic=vol_erg_dic)
-        fit_dict = self.fit_module.fit_polynomial(fit_order=fit_order)
+        try:
+            fit_dict = self.fit_module.fit_polynomial(fit_order=fit_order)
+        except ValueError:
+            fit_dict = None
         if fit_dict is None:
             self._logger.warning("Minimum could not be found!")
         else:
