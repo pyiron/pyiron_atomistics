@@ -8,7 +8,7 @@ dependencies:
 - coverage
 - defusedxml =0.7.1
 - h5py =3.16.0
-- matplotlib-base =3.10.9
+- matplotlib-base =3.11.0
 - mendeleev =1.1.0
 - mp-api =0.46.3
 - numpy =2.4.3
