@@ -485,7 +485,13 @@ class Calphy(GenericJob, HasStructure):
         calc = copy.deepcopy(self._default_input)
 
         for key in self._default_input.keys():
-            if key not in ["md", "tolerance", "nose_hoover", "berendsen", "monte_carlo"]:
+            if key not in [
+                "md",
+                "tolerance",
+                "nose_hoover",
+                "berendsen",
+                "monte_carlo",
+            ]:
                 calc[key] = self.input[key]
 
         for key in self._default_input["md"].keys():
