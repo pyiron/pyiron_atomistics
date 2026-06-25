@@ -484,12 +484,27 @@ class Calphy(GenericJob, HasStructure):
         """
         calc = copy.deepcopy(self._default_input)
 
-        for key, value in self._default_input.items():
-            if isinstance(value, dict):
-                for subkey in value:
-                    calc[key][subkey] = self.input[key][subkey]
-            else:
+        for key in self._default_input.keys():
+            if key not in ["md", "tolerance", "nose_hoover", "berendsen", "monte_carlo"]:
                 calc[key] = self.input[key]
+
+        for key in self._default_input["md"].keys():
+            calc["md"][key] = self.input["md"][key]
+
+        for key in self._default_input["tolerance"].keys():
+            calc["tolerance"][key] = self.input["tolerance"][key]
+
+        for key in self._default_input["nose_hoover"].keys():
+            calc["nose_hoover"][key] = self.input["nose_hoover"][key]
+
+        for key in self._default_input["berendsen"].keys():
+            calc["berendsen"][key] = self.input["berendsen"][key]
+
+        for key, default_val in self._default_input["monte_carlo"].items():
+            inp_val = self.input["monte_carlo"][key]
+            if isinstance(default_val, list):
+                inp_val = list(inp_val)
+            calc["monte_carlo"][key] = inp_val
 
         calc["lattice"] = os.path.join(self.working_directory, "conf.data")
 
