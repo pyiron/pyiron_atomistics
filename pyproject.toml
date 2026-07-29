@@ -38,7 +38,7 @@ dependencies = [
     "pyiron_base==0.15.16",
     "lammpsparser==0.0.7",
     "pyiron_snippets==1.4.0",
-    "vaspparser==0.0.7",
+    "vaspparser==0.0.8",
     "pylammpsmpi==0.3.12",
     "pyscal3==3.3.2",
     "scipy==1.17.1",
