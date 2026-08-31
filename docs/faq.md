@@ -24,7 +24,8 @@ To read structure formats you can use ASE and then convert the structure to a py
 ```python
 from ase.build import bulk
 from pyiron_atomistics import ase_to_pyiron
-pyiron_structure = ase_to_pyiron(bulk("Al")) 
+
+pyiron_structure = ase_to_pyiron(bulk("Al"))
 ```
 
 ## How to install pyiron_atomistics?
@@ -56,10 +57,10 @@ Or alternatively you can change the pseudo potential of a single atom by creatin
 
 ```python
 my_fe = pr.create_element(
-    new_element_name="Fe", 
-    parent_element="Fe", 
-    potential_file="~/resources/vasp/potentials/potpaw_PBE/Fe/POTCAR"
-) 
+    new_element_name="Fe",
+    parent_element="Fe",
+    potential_file="~/resources/vasp/potentials/potpaw_PBE/Fe/POTCAR",
+)
 job_vasp.structure[0] = my_fe
 ```
 
@@ -68,41 +69,47 @@ The underlying input of any simulation code in pyiron can be directly accessed. 
 parameters using the VASP specific syntax: 
 
 ```python
-job_vasp.input.incar["ENCUT"] = 320.0  # eV 
+job_vasp.input.incar["ENCUT"] = 320.0  # eV
 ```
 
 ## How to use a custom potential in LAMMPS?
 A custom empirical potential (here, a hybrid potential) can be defined in the following format:
 ```python
-custom_potential = pd.DataFrame({    
-    'Name': ['SrTiO3_Pedone'],
-    'Filename': [[]],
-    'Model': ['Custom'],
-    'Species': [['O', 'Sr', 'Ti']],
-    'Config': [['atom_style full\n',  # I use 'full' here as atom_style 'charge' gives the same result
-                '## create groups ###\n', 
-                'group O type 1\n', 
-                'group Sr type 2\n', 
-                'group Ti type 3\n', 
-                '\n', 
-                '## set charges - beside manually ###\n', 
-                'set group O charge -1.2000\n',  
-                'set group Sr charge 1.2000\n',
-                'set group Ti charge 2.4000\n',
-                '\n', 
-                'pair_style hybrid/overlay morse 15.0 mie/cut 15.0 coul/long 15.0 beck 15.0\n', 
-                'pair_coeff * * coul/long\n', 
-                'pair_coeff 1 2 beck 3.0 0 0 0 0\n', 
-                'pair_coeff 1 3 beck 1.0 0 0 0 0\n', 
-                'pair_coeff 1 1 beck 22.0 0 0 0 0\n', 
-                'pair_coeff 1 2 mie/cut 3.0 1.0 12.0 0\n', 
-                'pair_coeff 1 3 mie/cut 1.0 1.0 12.0 0\n', 
-                'pair_coeff 1 1 mie/cut 22.0 1.0 12.0 0\n', 
-                'pair_coeff 1 2 morse 0.019623 1.8860 3.32833\n', 
-                'pair_coeff 1 3 morse 0.024235 2.2547 2.708943\n', 
-                'pair_coeff 1 1 morse 0.042395 1.3793 3.618701\n', 
-                'kspace_style ewald 1.0e-8\n']]
-  })
+custom_potential = pd.DataFrame(
+    {
+        "Name": ["SrTiO3_Pedone"],
+        "Filename": [[]],
+        "Model": ["Custom"],
+        "Species": [["O", "Sr", "Ti"]],
+        "Config": [
+            [
+                "atom_style full\n",  # I use 'full' here as atom_style 'charge' gives the same result
+                "## create groups ###\n",
+                "group O type 1\n",
+                "group Sr type 2\n",
+                "group Ti type 3\n",
+                "\n",
+                "## set charges - beside manually ###\n",
+                "set group O charge -1.2000\n",
+                "set group Sr charge 1.2000\n",
+                "set group Ti charge 2.4000\n",
+                "\n",
+                "pair_style hybrid/overlay morse 15.0 mie/cut 15.0 coul/long 15.0 beck 15.0\n",
+                "pair_coeff * * coul/long\n",
+                "pair_coeff 1 2 beck 3.0 0 0 0 0\n",
+                "pair_coeff 1 3 beck 1.0 0 0 0 0\n",
+                "pair_coeff 1 1 beck 22.0 0 0 0 0\n",
+                "pair_coeff 1 2 mie/cut 3.0 1.0 12.0 0\n",
+                "pair_coeff 1 3 mie/cut 1.0 1.0 12.0 0\n",
+                "pair_coeff 1 1 mie/cut 22.0 1.0 12.0 0\n",
+                "pair_coeff 1 2 morse 0.019623 1.8860 3.32833\n",
+                "pair_coeff 1 3 morse 0.024235 2.2547 2.708943\n",
+                "pair_coeff 1 1 morse 0.042395 1.3793 3.618701\n",
+                "kspace_style ewald 1.0e-8\n",
+            ]
+        ],
+    }
+)
 ```
 
 The lines in `Config` will be written to the LAMMPS `potential.inp` file. Make sure that the arrangement of the species
@@ -140,10 +147,10 @@ Just like executing calculation in the background it is also possible to submit 
 
 ```python
 job.server.list_queues()  # returns a list of queues available on the system
-job.server.view_queues()  # returns a DataFrame listing queues and their settings 
-job.server.queue = "my_queue"  # select a queue 
-job.server.cores = 80          # set the number of cores 
-job.server.run_time = 3600     # set the run time in seconds
+job.server.view_queues()  # returns a DataFrame listing queues and their settings
+job.server.queue = "my_queue"  # select a queue
+job.server.cores = 80  # set the number of cores
+job.server.run_time = 3600  # set the run time in seconds
 job.run()
 ```
 
