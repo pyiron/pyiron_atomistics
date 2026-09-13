@@ -25,10 +25,12 @@ class Testpyscal(TestWithCleanProject):
 
     def test_simple_system(self):
         """
-        Test a simple ase to pyscal conversion
+        pyscal3 >= 4.0 analyses ase.Atoms objects directly.
         """
-        sysp = pc.System(self.structure, format="ase")
-        self.assertEqual(len(sysp.atoms), 256)
+        atoms = self.structure.to_ase()
+        pc.find_neighbors(atoms, method="cutoff", cutoff=0)
+        self.assertEqual(len(atoms), 256)
+        self.assertEqual(len(atoms.arrays["pyscal_neighbors"]), 256)
 
     def test_steinhardt_parameters_returns(self):
         self.assertEqual(

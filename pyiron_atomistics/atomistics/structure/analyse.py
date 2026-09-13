@@ -235,8 +235,8 @@ class Analyse:
         return_sys=False,
     ):
         """
-        Get the number of solids or the corresponding pyscal system.
-        Calls necessary pyscal methods as described in https://pyscal.org/en/latest/methods/03_solidliquid.html.
+        Get the number of solid atoms or the analysed structure.
+        Calls necessary pyscal methods as described in https://pyscal.org/methods/03_solidliquid.
 
         Args:
             neighbor_method (str, optional): Method used to get neighborlist. See pyscal documentation. Defaults to "cutoff".
@@ -247,11 +247,13 @@ class Analyse:
             cluster (bool, optional): See pyscal documentation. Defaults to False.
             q (int, optional): Steinhard parameter to calculate. Defaults to 6.
             right (bool, optional): See pyscal documentation. Defaults to True.
-            return_sys (bool, optional): Whether to return number of solid atoms or pyscal system. Defaults to False.
+            return_sys (bool, optional): Whether to return the number of solid atoms or the
+                analysed structure. Defaults to False.
 
         Returns:
             int: number of solids,
-            pyscal system: pyscal system when return_sys=True
+            ase.atoms.Atoms: the analysed structure carrying the pyscal3 results in its
+            arrays (pyscal_solid, pyscal_bonds, ...) when return_sys=True
         """
         return analyse_find_solids(
             structure=self._structure,

@@ -136,21 +136,24 @@ def analyse_voronoi_volume(structure):
     return stk.analyse.get_voronoi_volumes(structure=structure)
 
 
+@deprecate(
+    "pyscal3 >= 4.0 works on ase.Atoms objects directly, use Atoms.to_ase() instead."
+)
 def pyiron_to_pyscal_system(structure):
     """
-    Converts atoms to ase atoms and than to a pyscal system.
-    Also adds the pyscal publication.
+    Convert a pyiron structure to the object pyscal expects.
+
+    pyscal3 4.0 dropped the System class and analyses ase.Atoms objects, so
+    this only converts to ase and no longer builds a pyscal object.
 
     Args:
         structure (pyiron atoms): Structure to convert.
 
     Returns:
-        Pyscal system: See the pyscal documentation.
+        ase.atoms.Atoms: The structure as an ase Atoms object.
     """
     state.publications.add(publication())
-    return stk.common.ase_to_pyscal(
-        pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(structure)
-    )
+    return pyiron_atomistics.atomistics.structure.atoms.pyiron_to_ase(structure)
 
 
 def analyse_find_solids(
@@ -178,11 +181,13 @@ def analyse_find_solids(
         cluster (bool, optional): See pyscal documentation. Defaults to False.
         q (int, optional): Steinhard parameter to calculate. Defaults to 6.
         right (bool, optional): See pyscal documentation. Defaults to True.
-        return_sys (bool, optional): Whether to return number of solid atoms or pyscal system. Defaults to False.
+        return_sys (bool, optional): Whether to return the number of solid atoms or the
+            analysed structure. Defaults to False.
 
     Returns:
         int: number of solids,
-        pyscal system: pyscal system when return_sys=True
+        ase.atoms.Atoms: the analysed structure carrying the pyscal3 results in its
+        arrays (pyscal_solid, pyscal_bonds, ...) when return_sys=True
     """
     state.publications.add(publication())
     return stk.analyse.find_solids(

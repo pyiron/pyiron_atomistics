@@ -96,7 +96,10 @@ class TestAtoms(unittest.TestCase):
 
     def test_pyscal_cna_adaptive(self):
         basis = Atoms(
-            "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
+            "FeFe",
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
         )
         self.assertTrue(basis.analyse.pyscal_cna_adaptive()["bcc"] == 2)
 

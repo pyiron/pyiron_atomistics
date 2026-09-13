@@ -907,7 +907,10 @@ class TestAtoms(unittest.TestCase):
 
     def test_analyse_ovito_cna_adaptive(self):
         basis = Atoms(
-            "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
+            "FeFe",
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
         )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -934,7 +937,10 @@ class TestAtoms(unittest.TestCase):
     # @unittest.skip("skip ovito because it is not installed in the test environment")
     def test_analyse_ovito_voronoi_volume(self):
         basis = Atoms(
-            "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
+            "FeFe",
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
         )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -943,7 +949,10 @@ class TestAtoms(unittest.TestCase):
 
     def test_analyse_pyscal_steinhardt_parameter(self):
         basis = Atoms(
-            "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
+            "FeFe",
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
         )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -954,7 +963,10 @@ class TestAtoms(unittest.TestCase):
 
     def test_analyse_pyscal_cna_adaptive(self):
         basis = Atoms(
-            "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
+            "FeFe",
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
         )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -979,7 +991,10 @@ class TestAtoms(unittest.TestCase):
 
     def test_analyse_pyscal_diamond_structure(self):
         basis = Atoms(
-            "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
+            "FeFe",
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
         )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -990,7 +1005,10 @@ class TestAtoms(unittest.TestCase):
 
     def test_analyse_pyscal_voronoi_volume(self):
         basis = Atoms(
-            "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
+            "FeFe",
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
         )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -999,7 +1017,10 @@ class TestAtoms(unittest.TestCase):
 
     def test_get_voronoi_volume(self):
         basis = Atoms(
-            "FeFe", scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)], cell=np.identity(3)
+            "FeFe",
+            scaled_positions=[(0, 0, 0), (0.5, 0.5, 0.5)],
+            cell=np.identity(3),
+            pbc=True,
         )
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")

@@ -2558,6 +2558,9 @@ class Atoms(ASEAtoms):
     def to_ovito(self):
         return pyiron_to_ovito(self)
 
+    @deprecate(
+        "pyscal3 >= 4.0 works on ase.Atoms objects directly, use Atoms.to_ase() instead."
+    )
     def to_pyscal_system(self):
         return pyiron_to_pyscal_system(self)
 
