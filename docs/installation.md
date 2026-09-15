@@ -612,7 +612,8 @@ project, setting up an initial structure of bcc Fe, and visualising it using NGL
 
 ```python
 from pyiron_atomistics import Project
-pr = Project('test')
+
+pr = Project("test")
 basis = pr.create.structure.bulk("Fe", cubic=True)
 basis.plot3d()
 ```
@@ -620,7 +621,7 @@ basis.plot3d()
 Finally a first lammps calculation can be executed by:
 
 ```python
-ham = pr.create_job(pr.job_type.Lammps, 'lammpstestjob')
+ham = pr.create_job(pr.job_type.Lammps, "lammpstestjob")
 ham.structure = basis
 ham.potential = ham.list_potentials()[0]
 ham.run()
