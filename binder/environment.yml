@@ -14,7 +14,7 @@ dependencies:
 - pandas =2.3.3
 - phonopy =4.5.0
 - pint =0.25.2
-- pyiron_base =0.15.16
+- pyiron_base =0.15.19
 - lammpsparser =0.0.9
 - pyiron_snippets =1.5.0
 - vaspparser =0.0.10
@@ -36,5 +36,5 @@ dependencies:
 - sphinxdft-data =0.0.1
 - nglview =3.1.2
 - seaborn =0.13.2
-- hatchling =1.30.1
+- hatchling =1.32.0
 - hatch-vcs =0.5.0
