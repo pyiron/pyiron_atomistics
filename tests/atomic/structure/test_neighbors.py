@@ -490,7 +490,7 @@ class TestAtoms(unittest.TestCase):
             _ = neigh.get_neighborhood(np.random.random(3), num_neighbors=51)
             self.assertEqual(len(w), 3)
             _ = neigh.get_neighborhood(np.random.random(3), num_neighbors=51).distances
-            self.assertEqual(len(w), 4)
+            self.assertEqual(len(w), 6)
 
     def test_repr(self):
         basis = CrystalStructure(
