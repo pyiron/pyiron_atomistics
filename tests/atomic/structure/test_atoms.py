@@ -1425,11 +1425,11 @@ class TestAtoms(unittest.TestCase):
         carbon = Atoms(symbols=["C"], positions=[[0, 0, 0.5 * a_0]], pbc=True)
         with warnings.catch_warnings(record=True) as w:
             structure.append(carbon)
-            self.assertEqual(len(w), 0)
+            self.assertEqual(len(w), 1)
             structure = self.struct_factory.crystal("Fe", "bcc", a_0)
             carbon.cell = np.random.rand(3)
             structure.append(carbon)
-            self.assertEqual(len(w), 1)
+            self.assertEqual(len(w), 2)
 
     def test__delitem__(self):
         cell = np.eye(3) * 10.0

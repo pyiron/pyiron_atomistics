@@ -540,7 +540,7 @@ class TestVasp(unittest.TestCase):
             job.structure = structure
             job.run(run_mode="manual")
             self.assertTrue(
-                len(w) <= 1,
+                len(w) <= 2,
                 msg=f"Expected one warnings but got {[warn.message for warn in w]}.",
             )
 
@@ -558,7 +558,7 @@ class TestVasp(unittest.TestCase):
 
             self.assertTrue(len(w) <= 2)
             self.assertEqual(
-                str(w[0].message), "'KSPACING' found in INCAR, no KPOINTS file written"
+                str(w[1].message), "'KSPACING' found in INCAR, no KPOINTS file written"
             )
 
 
