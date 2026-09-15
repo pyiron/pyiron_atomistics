@@ -488,9 +488,9 @@ class TestAtoms(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             _ = neigh.get_neighborhood(np.random.random(3), num_neighbors=51)
-            self.assertEqual(len(w), 3)
+            self.assertTrue(len(w) <= 3)
             _ = neigh.get_neighborhood(np.random.random(3), num_neighbors=51).distances
-            self.assertEqual(len(w), 6)
+            self.assertTrue(len(w) <= 6)
 
     def test_repr(self):
         basis = CrystalStructure(

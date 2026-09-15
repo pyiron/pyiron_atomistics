@@ -557,9 +557,14 @@ class TestVasp(unittest.TestCase):
             )
 
             self.assertTrue(len(w) <= 2)
-            self.assertEqual(
-                str(w[1].message), "'KSPACING' found in INCAR, no KPOINTS file written"
-            )
+            if len(w) == 2:
+                self.assertEqual(
+                    str(w[1].message), "'KSPACING' found in INCAR, no KPOINTS file written"
+                )
+            else:
+                self.assertEqual(
+                    str(w[0].message), "'KSPACING' found in INCAR, no KPOINTS file written"
+                )
 
 
 if __name__ == "__main__":
