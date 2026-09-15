@@ -11,7 +11,7 @@ dependencies:
 - matplotlib-base =3.11.1
 - mendeleev =1.1.0
 - mp-api =0.46.5
-- numpy =2.4.3
+- numpy =2.5.3
 - pandas =2.3.3
 - phonopy =4.5.0
 - pint =0.25.2
@@ -19,14 +19,14 @@ dependencies:
 - lammpsparser =0.0.9
 - vaspparser =0.0.10
 - pyiron_snippets =1.5.0
-- pylammpsmpi =0.3.12
+- pylammpsmpi =0.5.1
 - pyscal3 =3.3.2
 - scikit-learn =1.9.1
 - scipy =1.17.1
 - seekpath =2.2.1
 - spglib =2.7.0
 - structuretoolkit =0.0.46
-- sphinx_parser =0.1.10
+- sphinx_parser =0.1.11
 - pyxtal =1.1.1
 - hatchling =1.32.0
 - hatch-vcs =0.5.0

@@ -3,7 +3,7 @@ channels:
 dependencies:
 - gpaw =25.7.0
 - jupyter
-- lammps =2024.08.29=*_openmpi_*
+- lammps =2025.07.22=*_mpi_openmpi_*
 - nglview
 - ipywidgets
 - papermill
@@ -13,4 +13,3 @@ dependencies:
 - iprpy-data =2022.11.02
 - pyiron-data =0.0.29
 - sqsgenerator =0.5.5
-- openmpi =5.0.8=*_110
