@@ -23,7 +23,7 @@ dependencies:
 - pyiron_snippets =1.5.0
 - vaspparser =0.0.10
 - pylammpsmpi =0.5.1
-- pyscal3 =3.3.2
+- pyscal3 =4.0.0
 - scikit-learn =1.9.1
 - scipy =1.17.1
 - seekpath =2.2.1
