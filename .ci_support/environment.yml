@@ -28,5 +28,5 @@ dependencies:
 - structuretoolkit =0.0.46
 - sphinx_parser =0.1.11
 - pyxtal =1.1.1
-- hatchling =1.32.0
+- hatchling =1.32.4
 - hatch-vcs =0.5.0
