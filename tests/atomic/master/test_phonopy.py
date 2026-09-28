@@ -4,6 +4,7 @@
 
 from pyiron_atomistics._tests import TestWithCleanProject
 import numpy as np
+from unittest.mock import patch
 
 
 class TestPhonopy(TestWithCleanProject):
@@ -51,3 +52,15 @@ class TestPhonopy(TestWithCleanProject):
         phonopy_job.ref_job = phon_ref_job
         with self.assertRaises(ValueError):
             phonopy_job.validate_ready_to_run()
+
+    def test_enable_phonopy_uses_c_backend(self):
+        job = self.project.create.job.HessianJob("job_test")
+        job.set_reference_structure(self.project.create.structure.bulk("Fe"))
+        phonopy_job = self.project.create.job.PhonopyJob("phonopy_job")
+        phonopy_job.ref_job = job
+        phonopy_job.phonopy_pickling_disabled = True
+
+        with patch("pyiron_atomistics.atomistics.master.phonopy.Phonopy") as phonopy:
+            phonopy_job._enable_phonopy()
+
+        self.assertEqual("C", phonopy.call_args.kwargs["lang"])
