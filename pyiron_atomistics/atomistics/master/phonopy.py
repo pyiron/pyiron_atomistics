@@ -184,6 +184,7 @@ class PhonopyJob(AtomisticParallelMaster):
                     unitcell=self._phonopy_unit_cell,
                     supercell_matrix=self._phonopy_supercell_matrix(),
                     primitive_matrix=self.input["primitive_matrix"],
+                    lang="C",
                 )
                 self.phonopy.generate_displacements(
                     distance=self.input["displacement"],
