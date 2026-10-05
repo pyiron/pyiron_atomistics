@@ -201,6 +201,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          use_pypi: true
 
   unittest_old:
     needs: [black]
