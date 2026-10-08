@@ -1,6 +1,7 @@
 channels:
 - conda-forge
 dependencies:
+- python =3.12
 - aimsgb =1.1.0
 - ase =3.29.0
 - assyst =0.16.0
@@ -30,7 +31,7 @@ dependencies:
 - sqsgenerator =0.5.5
 - lammps =2024.08.29=*_openmpi_*
 - iprpy-data =2022.11.02
-- gpaw =25.6.0
+- gpaw =26.7.0
 - sphinx_parser =0.1.11
 - sphinxdft =3.1
 - sphinxdft-data =0.0.1
