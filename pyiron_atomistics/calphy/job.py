@@ -189,6 +189,14 @@ class Calphy(GenericJob, HasStructure):
                 "thermostat_damping": 100.0,
                 "barostat_damping": 100.0,
             },
+            "monte_carlo": {
+                "n_steps": 1,
+                "n_swaps": 0,
+                "forward_swap_types": [],
+                "reverse_swap_types": [],
+                "allow_all_swaps": True,
+                "use_custom_lammps": False,
+            },
         }
 
     def set_potentials(self, potential_filenames: Union[list, str]):
@@ -477,7 +485,13 @@ class Calphy(GenericJob, HasStructure):
         calc = copy.deepcopy(self._default_input)
 
         for key in self._default_input.keys():
-            if key not in ["md", "tolerance", "nose_hoover", "berendsen"]:
+            if key not in [
+                "md",
+                "tolerance",
+                "nose_hoover",
+                "berendsen",
+                "monte_carlo",
+            ]:
                 calc[key] = self.input[key]
 
         for key in self._default_input["md"].keys():
@@ -492,6 +506,12 @@ class Calphy(GenericJob, HasStructure):
         for key in self._default_input["berendsen"].keys():
             calc["berendsen"][key] = self.input["berendsen"][key]
 
+        for key, default_val in self._default_input["monte_carlo"].items():
+            inp_val = self.input["monte_carlo"][key]
+            if isinstance(default_val, list):
+                inp_val = list(inp_val)
+            calc["monte_carlo"][key] = inp_val
+
         calc["lattice"] = os.path.join(self.working_directory, "conf.data")
 
         pair_style, pair_coeff = self._prepare_pair_styles()
@@ -505,8 +525,7 @@ class Calphy(GenericJob, HasStructure):
         calc["queue"] = {}
         calc["queue"]["cores"] = self.server.cores
 
-        calculations = {}
-        calculations["calculations"] = [calc]
+        calculations = {"calculations": [calc]}
 
         with open(os.path.join(self.working_directory, "input.yaml"), "w") as fout:
             yaml.safe_dump(calculations, fout)
