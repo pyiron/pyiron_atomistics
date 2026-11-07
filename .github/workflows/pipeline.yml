@@ -69,9 +69,7 @@ jobs:
     - uses: astral-sh/setup-uv@v7
     - name: Install the project and pip check
       shell: bash -l {0}
-      run: |
-        uv sync --all-extras --dev
-        pip check
+      run: uv run --all-extras --dev -- uv pip check
 
   backwards:
     needs: [black]
