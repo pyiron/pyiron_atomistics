@@ -70,6 +70,7 @@ jobs:
     - name: Install the project and pip check
       shell: bash -l {0}
       run: |
+        uv add charset-normalizer passlib
         uv sync --all-extras --dev
         pip check
 
