@@ -13,7 +13,7 @@ dependencies:
 - h5py =3.16.0
 - matplotlib-base =3.11.2
 - mendeleev =1.1.0
-- mp-api =0.46.5
+- mp-api =0.47.0
 - numpy =2.5.3
 - pandas =2.3.3
 - phonopy =4.8.6
