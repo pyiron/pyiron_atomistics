@@ -11,7 +11,7 @@ dependencies:
 - matplotlib-base =3.11.2
 - mendeleev =1.1.0
 - mp-api =0.47.2
-- numpy =2.5.3
+- numpy =2.5.5
 - pandas =2.3.3
 - phonopy =4.11.0
 - pint =0.25.3
